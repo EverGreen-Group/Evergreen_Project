@@ -8,7 +8,7 @@ class Pages extends controller{
 
     }
     public function about(){
-        //echo 'Hi' .$name;
+                  
         $this->view('v_about');
         
     }
