@@ -1,5 +1,5 @@
 <?php
-class Pages{
+class Pages extends controller{
     public function __construct(){
        // echo 'This is the pages controller';
     }
@@ -7,8 +7,9 @@ class Pages{
     public function index(){
 
     }
-    public function about($name){
+    public function about(){
         //echo 'Hi' .$name;
+        $this->view('v_about');
         
     }
 }
