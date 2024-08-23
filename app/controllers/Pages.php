@@ -8,7 +8,7 @@ class Pages{
 
     }
     public function about($name){
-        echo 'Hi' .$name;
+        //echo 'Hi' .$name;
         
     }
 }
