@@ -14,7 +14,7 @@
             require_once '../app/views/' .$view. '.php';
         }else{
             die('corresponding view does not exsist');
-        }
+        } 
     }
 
    }
