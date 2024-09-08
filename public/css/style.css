@@ -1,4 +1,10 @@
+/*component*/
+@import url('components/topnavbar_style.css');
+
+
 h1{
-    color: blue;
+    color:red;
     
 }
+
+
