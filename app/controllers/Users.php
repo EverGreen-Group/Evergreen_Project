@@ -9,4 +9,6 @@ class Users extends controller {
 
         $this->view('users/v_register',$data);
     }
+
+    
 }

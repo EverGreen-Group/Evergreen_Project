@@ -12,4 +12,10 @@ class Pages extends controller{
         $this->view('v_about');
         
     }
+
+    public function dashboard(){
+        $data=[];
+
+        $this->view('inventory/v_dashboard',$data);
+    }
 }
