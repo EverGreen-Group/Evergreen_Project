@@ -7,6 +7,81 @@
 
 <!-- MAIN -->
 <main>
+
+  <!-- Route Management Section -->
+  <div class="head-title">
+      <div class="left">
+          <h1>Route Management</h1>
+          <ul class="breadcrumb">
+              <li><a href="#">Dashboard</a></li>
+          </ul>
+      </div>
+  </div>
+
+  <ul class="route-box-info">
+    <li>
+        <i class='bx bxs-map'></i>
+        <span class="text">
+          <p>Total Routes</p>
+          <h3>20</h3>
+        </span>
+    </li>
+    <li>
+        <i class='bx bxs-check-circle'></i>
+        <span class="text">
+          <p>Total Active</p>
+          <h3>18</h3>
+        </span>
+    </li>
+    <li>
+        <i class='bx bxs-x-circle'></i>
+        <span class="text">
+          <p>Total Inactive</p>
+          <h3>2</h3>
+        </span>
+    </li>
+  </ul>
+
+  <!-- Team Information Table -->
+  <div class="table-data">
+    <div class="order">
+      <div class="head">
+        <h3>Route details</h3>
+        <i class='bx bx-search'></i>
+      </div>
+      <table>
+        <thead>
+          <tr>
+            <th>Route ID</th>
+            <th>Name</th>
+            <th>Suppliers</th>
+            <th>Req Capacity (kg)</th>
+            <th>Total distance (km)</th>
+            <th>Status</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>1</td>
+            <td>North</td>
+            <td>30</td>
+            <td>8000</td>
+            <td>20</td>
+            <td><span class="status completed">Active</span></td>
+          </tr>
+          <tr>
+            <td>2</td>
+            <td>East</td>
+            <td>20</td>
+            <td>10,000</td>
+            <td>18</td>
+            <td><span class="status error">Inactive</span></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
   <div class="routes-section">
     <h2>All Routes</h2>
     <button id="createRouteButton" class="create-route-btn">Create Route</button>
@@ -46,136 +121,287 @@
       </form>
     </div>
   </div>
+
+
+  <!-- Unallocated Collection Table -->
+  <div class="table-data">
+    <div class="order">
+      <div class="head">
+        <h3>Unallocated Collections</h3>
+        <i class='bx bx-search'></i>
+      </div>
+      <table>
+        <thead>
+          <tr>
+            <th>Supplier ID</th>
+            <th>Name</th>
+            <th>Address</th>
+            <th>Avg Collection</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>1</td>
+            <td>North</td>
+            <td>30</td>
+            <td>8000</td>
+          </tr>
+          <tr>
+            <td>2</td>
+            <td>East</td>
+            <td>20</td>
+            <td>10,000</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Row containing both charts side by side -->
+
+  <div class="table-data">
+    <div class="order">
+    <h3>Route Efficiency and Weight Distribution</h3>
+    <div class="chart-row-wrapper">
+      <div id="chartContainer" class="chart-container">
+        <canvas id="routeEfficiencyChart"></canvas>
+      </div>
+
+      <div id="avgKgChartContainer" class="chart-container">
+        <canvas id="avgKgChart"></canvas>
+      </div>
+    </div>
+  </div>
+  </div>
+
+
 </main>
 
+
+
 <style>
-  /* Button Styles */
-.create-route-btn {
-  padding: 10px 20px;
-  background-color: #007bff;
-  color: white;
-  border: none;
-  border-radius: 5px;
-  cursor: pointer;
-  margin-top: 20px;
-}
+  .route-box-info {
+    display: flex;
+    justify-content: space-between;
+    gap: 24px;
+    margin-top: 36px;
+    list-style: none;
+    padding: 0;
+  }
 
-.create-route-btn:hover {
-  background-color: #0056b3;
-}
+  .route-box-info li {
+    flex: 1;
+    background: var(--light);
+    border-radius: 20px;
+    padding: 24px;
+    display: flex;
+    align-items: center;
+    gap: 24px;
+  }
 
-/* Routes Container */
-.routes-section {
-  margin-top: 30px;
-}
+  .route-box-info li i {
+    font-size: 36px;
+    color: var(--main);
+    background: var(--light-main);
+    border-radius: 10%;
+    padding: 16px;
+  }
 
-.routes-container {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 20px;
-  margin-top: 20px;
-  background-color: #f0f0f0;
-  padding: 20px;
-  border-radius: 10px;
-}
+  .route-box-info li .text h3 {
+    font-size: 24px;
+    font-weight: 600;
+    color: var(--dark);
+    margin: 0;
+  }
 
-/* Route Card Styles */
-.route-card {
-  background: var(--light);
-  border-radius: 10px;
-  padding: 15px;
-  width: calc(25% - 15px);
-  transition: transform 0.3s ease;
-  cursor: pointer;
-  box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-}
+  .route-box-info li .text p {
+    font-size: 14px;
+    color: var(--dark-grey);
+    margin: 0;
+  }
 
-.route-card:hover {
-  transform: translateY(-5px);
-}
+  .routes-section {
+    margin-top: 40px;
+  }
 
-.route-card h3 {
-  margin-top: 0;
-  color: var(--dark);
-}
+  .create-route-btn {
+    padding: 10px 20px;
+    background-color: var(--main);
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    margin-top: 20px;
+  }
 
-.route-card p {
-  margin: 5px 0;
-  color: var(--dark-grey);
-}
+  .create-route-btn:hover {
+    background-color: var(--main-dark);
+  }
 
-/* Modal Styles */
-.modal {
-  display: none;
-  position: fixed;
-  z-index: 1000;
-  left: 0;
-  top: 0;
-  width: 100%;
-  height: 100%;
-  background-color: rgba(0, 0, 0, 0.5);
-}
+  .routes-container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 20px;
+    margin-top: 20px;
+  }
 
-.modal-content {
-  background-color: #fff;
-  margin: 5% auto;
-  padding: 20px;
-  border-radius: 10px;
-  width: 50%;
-}
+  .route-card {
+    background: var(--light);
+    border-radius: 10px;
+    padding: 15px;
+    width: calc(25% - 15px);
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    cursor: pointer;
+    transition: transform 0.3s ease;
+  }
 
-.close {
-  color: #aaa;
-  float: right;
-  font-size: 28px;
-  font-weight: bold;
-  cursor: pointer;
-}
+  .route-card:hover {
+    transform: translateY(-5px);
+  }
 
-.close:hover {
-  color: black;
-}
+  .route-card h3 {
+    margin-top: 0;
+    color: var(--dark);
+  }
 
-.submit-btn {
-  padding: 10px 20px;
-  background-color: #28a745;
-  color: white;
-  border: none;
-  border-radius: 5px;
-  cursor: pointer;
-}
+  .route-card p {
+    margin: 5px 0;
+    color: var(--dark-grey);
+  }
 
-.submit-btn:hover {
-  background-color: #218838;
-}
+  .modal {
+    display: none;
+    position: fixed;
+    z-index: 1000;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    overflow-y: auto;
+  }
 
-form label {
-  display: block;
-  margin: 15px 0 5px;
-}
+  .modal-content {
+    background-color: var(--light);
+    margin: 5% auto;
+    padding: 20px;
+    border-radius: 10px;
+    width: 80%;
+    max-width: 600px;
+  }
 
-form input,
-form select {
-  width: 100%;
-  padding: 8px;
-  margin-bottom: 10px;
-  border-radius: 5px;
-  border: 1px solid #ccc;
-}
+  .close {
+    color: var(--dark-grey);
+    float: right;
+    font-size: 28px;
+    font-weight: bold;
+    cursor: pointer;
+  }
 
-.remove-stop {
-  color: red;
-  cursor: pointer;
-  margin-left: 10px;
-}
+  .close:hover {
+    color: var(--dark);
+  }
 
+  #routeForm {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+  }
+
+  #routeForm label {
+    font-weight: bold;
+    color: var(--dark);
+  }
+
+  #routeForm input,
+  #routeForm select {
+    width: 100%;
+    padding: 8px;
+    border: 1px solid var(--dark-grey);
+    border-radius: 5px;
+    font-size: 14px;
+  }
+
+  .submit-btn {
+    padding: 10px 20px;
+    background-color: var(--main);
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    align-self: flex-start;
+  }
+
+  .submit-btn:hover {
+    background-color: var(--main-dark);
+  }
+
+  #stopList {
+    list-style-type: none;
+    padding: 0;
+  }
+
+  #stopList li {
+    margin-bottom: 5px;
+  }
+
+  .remove-stop {
+    color: red;
+    cursor: pointer;
+    margin-left: 10px;
+  }
+
+  @media screen and (max-width: 1024px) {
+    .route-card {
+      width: calc(33.33% - 13.33px);
+    }
+  }
+
+  @media screen and (max-width: 768px) {
+    .route-card {
+      width: calc(50% - 10px);
+    }
+  }
+
+  @media screen and (max-width: 480px) {
+    .route-card {
+      width: 100%;
+    }
+  }
+
+
+  /* Styles for full-width charts */
+  #chartContainer, #avgKgChartContainer {
+    width: 30%;
+    margin-top: 30px; /* Add some space between the graphs */
+  }
+
+  .chart-row-wrapper {
+      display: flex;
+      justify-content: center;   /* Centers the entire row of charts horizontally */
+      align-items: center;       /* Aligns the charts vertically in the row */
+      margin: 30px 0;            /* Adds spacing above and below the charts */
+    }
+
+    /* Chart container to control the width and height */
+    .chart-container {
+      width: 50%;                /* Each chart takes 45% of the row's width */
+      height: 300px;             /* Set a fixed height */
+      margin: 0 20px;            /* Adds space between the two charts */
+    }
+
+    /* Ensures the canvas takes full width/height of its container */
+    canvas {
+      width: 100% !important;
+      height: 100% !important;
+    }
 </style>
 
 <script>
 document.addEventListener('DOMContentLoaded', () => {
   const routes = [
-    { id: 'R1', name: 'Route 1', status: 'Active', stops: [] },
-    { id: 'R2', name: 'Route 2', status: 'Inactive', stops: [] },
+    { id: 'R1', name: 'Route 1', status: 'Active', stops: [], distance: 45, reqCapacity: 10000 },
+    { id: 'R2', name: 'Route 2', status: 'Inactive', stops: [], distance: 85, reqCapacity: 12000 },
   ];
 
   const suppliers = [
@@ -278,6 +504,8 @@ document.addEventListener('DOMContentLoaded', () => {
         <h3>${route.name}</h3>
         <p>Status: ${route.status}</p>
         <p>Stops: ${route.stops.length}</p>
+        <p>Distance: ${route.distance}</p>
+        <p>Capacity: ${route.reqCapacity}</p>
       `;
       card.addEventListener('click', () => openRouteModal(route));
       routesContainer.appendChild(card);
@@ -348,6 +576,113 @@ function initMap() {
   const event = new Event('googlemapsloaded');
   window.dispatchEvent(event);
 }
+</script>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+  // Example route data with average kg of tea leaves added
+  const routeData = [
+    { routeName: 'Route 1', distance: 120, fuelCost: 50, capacityUtilization: 80, avgKg: 500 },
+    { routeName: 'Route 2', distance: 150, fuelCost: 65, capacityUtilization: 90, avgKg: 700 },
+    { routeName: 'Route 3', distance: 200, fuelCost: 100, capacityUtilization: 70, avgKg: 450 },
+    { routeName: 'Route 4', distance: 90, fuelCost: 40, capacityUtilization: 50, avgKg: 600 },
+    { routeName: 'Route 5', distance: 110, fuelCost: 55, capacityUtilization: 85, avgKg: 650 },
+  ];
+
+  // Function to calculate efficiency score for each route
+  function calculateEfficiencyScore(route) {
+    return (route.distance * route.fuelCost) / route.capacityUtilization;
+  }
+
+  // Prepare data for the efficiency scatter plot
+  const scatterData = routeData.map(route => ({
+    x: route.distance,
+    y: calculateEfficiencyScore(route),
+    label: route.routeName
+  }));
+
+  // Create the scatter plot using Chart.js
+  const ctxEfficiency = document.getElementById('routeEfficiencyChart').getContext('2d');
+  new Chart(ctxEfficiency, {
+    type: 'scatter',
+    data: {
+      datasets: [{
+        label: 'Route Efficiency Score vs Distance',
+        data: scatterData,
+        backgroundColor: 'rgba(75, 192, 192, 0.6)',
+        borderColor: 'rgba(75, 192, 192, 1)',
+        borderWidth: 1,
+        pointRadius: 5
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      scales: {
+        x: {
+          title: {
+            display: true,
+            text: 'Distance (km)'
+          }
+        },
+        y: {
+          title: {
+            display: true,
+            text: 'Efficiency Score'
+          }
+        }
+      },
+      plugins: {
+        tooltip: {
+          callbacks: {
+            label: function(tooltipItem) {
+              const route = scatterData[tooltipItem.dataIndex];
+              return `${route.label}: Efficiency Score = ${route.y.toFixed(2)}, Distance = ${route.x} km`;
+            }
+          }
+        }
+      }
+    }
+  });
+
+  // Prepare data for the bar chart (average KG of tea leaves per route)
+  const avgKgData = routeData.map(route => route.avgKg);
+  const routeNames = routeData.map(route => route.routeName);
+
+  // Create the bar chart for average KG per route
+  const ctxAvgKg = document.getElementById('avgKgChart').getContext('2d');
+  new Chart(ctxAvgKg, {
+    type: 'bar',
+    data: {
+      labels: routeNames,
+      datasets: [{
+        label: 'Average KG of Tea Leaves',
+        data: avgKgData,
+        backgroundColor: 'rgba(54, 162, 235, 0.6)',
+        borderColor: 'rgba(54, 162, 235, 1)',
+        borderWidth: 1
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      scales: {
+        y: {
+          beginAtZero: true,
+          title: {
+            display: true,
+            text: 'Average KG of Tea Leaves'
+          }
+        },
+        x: {
+          title: {
+            display: true,
+            text: 'Routes'
+          }
+        }
+      }
+    }
+  });
 </script>
 
 <!-- Google Maps API Script -->
