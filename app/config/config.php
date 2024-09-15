@@ -9,7 +9,7 @@ define('DB_NAME','evergreen_db');
 define('APPROOT',dirname(dirname(__FILE__)));
 
 //URLROOT
-define('URLROOT','http://localhost/Evergreen');
+define('URLROOT', 'http://localhost/Evergreen_Project');
 
 //website
 define('SITENAME', 'EverGreen');
