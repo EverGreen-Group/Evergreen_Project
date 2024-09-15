@@ -1,10 +1,6 @@
 /*component*/
 @import url('components/topnavbar_style.css');
-
-
-h1{
-    color:red;
-    
-}
-
-
+@import url('pages/item.css');
+@import url('components/sidebar.css');
+@import url('pages/product.css');
+@import url('pages/dashboard.css');

@@ -1,0 +1,188 @@
+/* General Styles */
+
+.product-page {
+    max-width: 1200px;
+    margin: 0 auto;
+    background-color: #fff;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+}
+
+.breadcrumb {
+    font-size: 14px;
+    margin-bottom: 10px;
+    color: #27ae60;
+}
+
+.breadcrumb a {
+    text-decoration: none;
+    color: #27ae60;
+}
+
+.product-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid #e0e0e0;
+    padding-bottom: 10px;
+}
+
+.product-header h1 {
+    font-size: 28px;
+    color: #333;
+}
+
+.product-code {
+    background-color: #f1f3f6;
+    padding: 8px 15px;
+    border-radius: 8px;
+    font-size: 14px;
+    color: #333;
+}
+
+/* Product Details Section */
+.product-detail {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 20px;
+}
+
+/* Image Gallery */
+.product-image-gallery {
+    flex: 1;
+    background-color: #f1f3f6;
+    border-radius: 8px;
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.main-image {
+    width: 200px;
+    height: 200px;
+    background-color: #ccc;
+    border-radius: 8px;
+    margin-bottom: 20px;
+}
+
+.gallery-navigation {
+    display: flex;
+    align-items: center;
+}
+
+.gallery-navigation button {
+    background-color: #fff;
+    border: none;
+    cursor: pointer;
+    font-size: 18px;
+    margin: 0 5px;
+}
+
+.dot {
+    width: 10px;
+    height: 10px;
+    background-color: #ddd;
+    border-radius: 50%;
+    margin: 0 5px;
+    cursor: pointer;
+}
+
+.dot.active {
+    background-color: #27ae60;
+}
+
+/* Product Info */
+.product-info {
+    flex: 2;
+    padding: 20px;
+}
+
+.stock-info {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 20px;
+}
+
+.stock-info div {
+    text-align: center;
+    background-color: #f9f9f9;
+    padding: 10px;
+    border-radius: 8px;
+    width: 30%;
+}
+
+.stock-info h2 {
+    margin: 0;
+    color: #27ae60;
+    font-size: 24px;
+}
+
+/* Basic Information */
+.basic-info,
+.sale-info,
+.inventory-info {
+    margin-bottom: 20px;
+}
+
+h3 {
+    color: #333;
+    margin-bottom: 10px;
+    font-size: 18px;
+}
+
+p {
+    color: #666;
+    margin: 5px 0;
+}
+
+.margin {
+    color: #27ae60;
+    font-size: 12px;
+}
+
+/* Action Buttons */
+.action-buttons {
+    display: flex;
+    gap: 15px;
+}
+
+.btn {
+    padding: 10px 20px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 14px;
+    border: none;
+}
+
+.create-plan {
+    background-color: #27ae60;
+    color: #fff;
+}
+
+.edit {
+    background-color: #fff;
+    color: #333;
+    border: 1px solid #ccc;
+}
+
+.update-quantity {
+    background-color: #fff;
+    color: #27ae60;
+    border: 1px solid #27ae60;
+}
+
+/* Barcode Section */
+.barcode-section {
+    background-color: #f9f9f9;
+    padding: 20px;
+    border-radius: 8px;
+    text-align: center;
+    margin-top: 20px;
+}
+
+.barcode-section h3 {
+    color: #333;
+    margin-bottom: 10px;
+}
