@@ -34,11 +34,11 @@ class Inventory extends controller
         $this->view('inventory/v_fertilizer_available', $data);
     }
 
-    public function ish()
+    public function machine()
     {
         $data = [];
 
-        $this->view('inventory/v_fertilizer_dashboard', $data);
+        $this->view('inventory/v_machineallocation', $data);
     }
 
 }

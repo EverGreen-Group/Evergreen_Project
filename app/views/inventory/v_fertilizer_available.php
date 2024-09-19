@@ -27,7 +27,9 @@
                     <input type="text" placeholder="Search">
                     <button class="filter-btn">Filter</button>
                 </div>
-                <button class="create-btn">+ Create New Plan</button>
+                <a href="<?php echo URLROOT; ?>/inventory/fertilizerdashboard">
+                    <button class="create-btn">Fertilizer Dashboard</button>
+                </a>
             </header>
 
             <section class="orders">
