@@ -62,7 +62,7 @@
 				<i class='bx bx-plus'></i>
 				<i class='bx bx-filter'></i>
 			</div>
-
+			<canvas id="machineAllocationChart"></canvas>
 		</div>
 	</div>
 	<div class="top-selling-section">
@@ -110,5 +110,46 @@
 <!-- MAIN -->
 </section>
 <!-- CONTENT -->
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        var ctx = document.getElementById('machineAllocationChart').getContext('2d');
+        var machineAllocationChart = new Chart(ctx, {
+            type: 'pie',
+            data: {
+                labels: ['Machine A', 'Machine B', 'Machine C', 'Machine D'],
+                datasets: [{
+                    data: [20, 25, 20, 25],
+                    backgroundColor: [
+                        'rgba(255, 99, 132, 0.8)',
+                        'rgba(54, 162, 235, 0.8)',
+                        'rgba(255, 206, 86, 0.8)',
+                        'rgba(75, 192, 192, 0.8)'
+                    ],
+                    borderColor: [
+                        'rgba(255, 99, 132, 1)',
+                        'rgba(54, 162, 235, 1)',
+                        'rgba(255, 206, 86, 1)',
+                        'rgba(75, 192, 192, 1)'
+                    ],
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    legend: {
+                        position: 'bottom',
+                    },
+                    title: {
+                        display: true,
+                        text: 'Machine Allocation'
+                    }
+                }
+            }
+        });
+    });
+</script>
 
 <?php require APPROOT . '/views/inc/components/footer.php' ?>
