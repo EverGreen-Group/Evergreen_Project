@@ -20,6 +20,13 @@ class Inventory extends controller
         $this->view('inventory/v_product', $data);
     }
 
+    public function createproduct()
+    {
+        $data = [];
+
+        $this->view('inventory/v_createproduct', $data);
+    }
+
     public function fertilizerdashboard()
     {
         $data = [];
@@ -33,6 +40,12 @@ class Inventory extends controller
 
         $this->view('inventory/v_fertilizer_available', $data);
     }
+    public function createfertilizer()
+    {
+        $data = [];
+
+        $this->view('inventory/v_create_fertilizer', $data);
+    }
 
     public function machine()
     {
@@ -40,5 +53,13 @@ class Inventory extends controller
 
         $this->view('inventory/v_machineallocation', $data);
     }
+
+    public function item(){
+        $data=[];
+
+        $this->view('inventory/v_item',$data);
+    }
+
+   
 
 }

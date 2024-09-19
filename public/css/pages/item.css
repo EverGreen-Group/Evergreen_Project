@@ -1,39 +1,44 @@
-/* General Styles */
-
-.container {
-    max-width: auto;
-    margin: 0 auto;
-    padding: 20px;
-    background-color: #ffffff;
-    border-radius: 10px;
-    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
 }
+
+body {
+    font-family: Arial, sans-serif;
+    background-color: #f4f6f8;
+    color: #333;
+}
+
 .product-page {
     max-width: 1200px;
-    margin: 0 auto;
-    background-color: #fff;
+    margin: 20px auto;
     padding: 20px;
-    border-radius: 8px;
+    background: #fff;
+    border-radius: 10px;
     box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
 }
 
 .breadcrumb {
+    color: #777;
     font-size: 14px;
     margin-bottom: 10px;
-    color: #27ae60;
 }
 
 .breadcrumb a {
+    color: #5A8F5A;
     text-decoration: none;
-    color: #27ae60;
+}
+
+.breadcrumb a:hover {
+    text-decoration: underline;
 }
 
 .product-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    border-bottom: 1px solid #e0e0e0;
-    padding-bottom: 10px;
+    margin: 20px;
 }
 
 .product-header h1 {
@@ -42,155 +47,102 @@
 }
 
 .product-code {
-    background-color: #f1f3f6;
-    padding: 8px 15px;
-    border-radius: 8px;
-    font-size: 14px;
-    color: #333;
+    font-size: 16px;
+    color: #777;
 }
 
-/* Product Details Section */
-.product-detail {
+.product-details {
     display: flex;
     justify-content: space-between;
-    margin-top: 20px;
 }
 
-/* Image Gallery */
-.product-image-gallery {
+.product-image-carousel {
     flex: 1;
-    background-color: #f1f3f6;
-    border-radius: 8px;
-    padding: 20px;
+    margin-right: 40px;
+    
+    
+}
+
+.carousel {
+    width: 400px;
+    height: 400px;
+    background-color: #ffff;
+    border-radius: 10px;
     display: flex;
-    flex-direction: column;
+    justify-content: center;
     align-items: center;
+    margin-left: 10px;
 }
 
-.main-image {
-    width: 200px;
-    height: 200px;
-    background-color: #ccc;
-    border-radius: 8px;
-    margin-bottom: 20px;
-}
-
-.gallery-navigation {
+.carousel-dots {
     display: flex;
-    align-items: center;
-}
-
-.gallery-navigation button {
-    background-color: #fff;
-    border: none;
-    cursor: pointer;
-    font-size: 18px;
-    margin: 0 5px;
+    justify-content: center;
+    margin-top: 10px;
 }
 
 .dot {
     width: 10px;
     height: 10px;
-    background-color: #ddd;
+    background-color: #ccc;
     border-radius: 50%;
     margin: 0 5px;
     cursor: pointer;
 }
 
 .dot.active {
-    background-color: #27ae60;
+    background-color: #5A8F5A;
 }
 
-/* Product Info */
 .product-info {
     flex: 2;
-    padding: 20px;
+    
 }
 
-.stock-info {
+.product-quantity {
     display: flex;
-    justify-content: space-between;
+    justify-content: space-evenly;
     margin-bottom: 20px;
 }
 
-.stock-info div {
+.info-block {
     text-align: center;
-    background-color: #f9f9f9;
+    background-color: #81f398;
     padding: 10px;
-    border-radius: 8px;
-    width: 30%;
+    border-radius: 5px;
 }
 
-.stock-info h2 {
-    margin: 0;
-    color: #27ae60;
-    font-size: 24px;
-}
-
-/* Basic Information */
-.basic-info,
-.sale-info,
-.inventory-info {
+.product-basic-info, .product-sale-info, .product-inventory {
     margin-bottom: 20px;
 }
 
-h3 {
+h2 {
     color: #333;
     margin-bottom: 10px;
-    font-size: 18px;
 }
 
-p {
-    color: #666;
-    margin: 5px 0;
-}
-
-.margin {
-    color: #27ae60;
-    font-size: 12px;
-}
-
-/* Action Buttons */
-.action-buttons {
+.product-actions {
     display: flex;
-    gap: 15px;
+    justify-content: flex-end;
 }
 
 .btn {
-    padding: 10px 20px;
-    border-radius: 8px;
-    cursor: pointer;
-    font-size: 14px;
-    border: none;
-}
-
-.create-plan {
-    background-color: #27ae60;
+    background-color: #5A8F5A;
     color: #fff;
+    padding: 10px 20px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    margin-left: 10px;
 }
 
-.edit {
-    background-color: #fff;
-    color: #333;
-    border: 1px solid #ccc;
+.btn.edit {
+    background-color: #f1c40f;
 }
 
-.update-quantity {
-    background-color: #fff;
-    color: #27ae60;
-    border: 1px solid #27ae60;
+.btn.update {
+    background-color: #27ae60;
 }
 
-/* Barcode Section */
-.barcode-section {
-    background-color: #f9f9f9;
-    padding: 20px;
-    border-radius: 8px;
-    text-align: center;
-    margin-top: 20px;
-}
-
-.barcode-section h3 {
-    color: #333;
-    margin-bottom: 10px;
+.btn:hover {
+    opacity: 0.9;
 }
