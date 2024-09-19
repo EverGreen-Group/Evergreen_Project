@@ -1,0 +1,145 @@
+
+@import url("https://fonts.googleapis.com/css2?family=Lato:wght@400;700&family=Poppins:wght@400;500;600;700&display=swap");
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+
+.container {
+    max-width: 1200px;
+    margin: 0 auto;
+    background-color: white;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+}
+
+header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+}
+
+h1 {
+    color: #333;
+    font-size: 24px;
+}
+
+.search-filter {
+    display: flex;
+    align-items: center;
+}
+
+.search-filter input {
+    padding: 8px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    margin-right: 10px;
+}
+
+.filter-btn {
+    padding: 8px 12px;
+    background-color: #00bfa6;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+.create-btn {
+    padding: 8px 12px;
+    background-color: #28a745;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+.orders h2 {
+    font-size: 18px;
+    margin-bottom: 10px;
+}
+
+.inventory-count {
+    font-weight: normal;
+    color: #888;
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 20px;
+}
+
+table thead th {
+    text-align: left;
+    padding: 12px;
+    background-color: #f5f5f5;
+}
+
+table tbody td {
+    padding: 12px;
+    border-bottom: 1px solid #e5e5e5;
+}
+
+.profile-icon {
+    width: 30px;
+    height: 30px;
+    background-color: #00bfa6;
+    color: white;
+    border-radius: 50%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-weight: bold;
+}
+
+.status {
+    display: inline-block;
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 12px;
+}
+
+.accept {
+    background-color: #00bfa6;
+    color: white;
+}
+
+.reject {
+    background-color: #ffc107;
+    color: white;
+}
+
+.action-btn {
+    padding: 8px 12px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+.accept-btn {
+    background-color: #28a745;
+    color: white;
+}
+
+.reject-btn {
+    background-color: #ffc107;
+    color: white;
+}
+
+.completed-orders, .cancel-orders {
+    margin-top: 20px;
+}
+
+.completed-orders h3, .cancel-orders h3 {
+    font-size: 16px;
+    margin-bottom: 10px;
+}
+
+.completed-orders p, .cancel-orders p {
+    color: #888;
+}

@@ -26,4 +26,19 @@ class Inventory extends controller
 
         $this->view('inventory/v_fertilizer_dashboard', $data);
     }
+
+    public function fertilizer()
+    {
+        $data = [];
+
+        $this->view('inventory/v_fertilizer_available', $data);
+    }
+
+    public function ish()
+    {
+        $data = [];
+
+        $this->view('inventory/v_fertilizer_dashboard', $data);
+    }
+
 }

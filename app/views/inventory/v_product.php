@@ -5,20 +5,20 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title><?php echo SITENAME; ?></title>
-    <link rel="stylesheet" href="<?php echo URLROOT; ?>/css/pages/item.css" />
+    <link rel="stylesheet" href="<?php echo URLROOT; ?>/css/pages/product.css" />
     <link rel="stylesheet" href="<?php echo URLROOT; ?>/css/components/topnavbar_style.css" />
     <link href="https://unpkg.com/boxicons@2.0.9/css/boxicons.min.css" rel="stylesheet" />
 
 </head>
 
 <body>
-
-    <!-- Top nav bar -->
-    <?php require APPROOT . '/views/inc/components/topnavbar.php' ?>
-    <!-- Side bar -->
-    <?php require APPROOT . '/views/inc/components/sidebar_inventory.php' ?>
-
     <main>
+
+        <!-- Top nav bar -->
+        <?php require APPROOT . '/views/inc/components/topnavbar.php' ?>
+        <!-- Side bar -->
+        <?php require APPROOT . '/views/inc/components/sidebar_inventory.php' ?>
+
         <!-- Header Section -->
         <header>
             <div class="head-title">
@@ -62,6 +62,33 @@
                         <span class="low-stock-alert">Low-Stock Alerts</span>
                     </div>
                 </div>
+
+                <div class="product-card low-stock">
+                    <div class="product-info">
+                        <span class="product-code">Code: BTS</span>
+                        <h3>Blue Tea</h3>
+                        <p>On hand: 200 items</p>
+                        <span class="low-stock-alert">Low-Stock Alerts</span>
+                    </div>
+                </div>
+
+                <div class="product-card low-stock">
+                    <div class="product-info">
+                        <span class="product-code">Code: BTS</span>
+                        <h3>Blue Tea</h3>
+                        <p>On hand: 200 items</p>
+                        <span class="low-stock-alert">Low-Stock Alerts</span>
+                    </div>
+                </div>
+
+                <div class="product-card low-stock">
+                    <div class="product-info">
+                        <span class="product-code">Code: BTS</span>
+                        <h3>Blue Tea</h3>
+                        <p>On hand: 200 items</p>
+                        <span class="low-stock-alert">Low-Stock Alerts</span>
+                    </div>
+                </div>
                 <!-- Additional product cards go here -->
             </div>
         </div>
@@ -75,6 +102,6 @@
             <button class="next">&gt;</button>
         </div>
         </div>
-    </main>
 
+    </main>
     <?php require APPROOT . '/views/inc/components/footer.php' ?>
