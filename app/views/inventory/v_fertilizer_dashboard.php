@@ -22,7 +22,9 @@
         <div class="container">
             <header>
                 <h1>Fertilizer</h1>
-                <button class="filter-btn">Filter</button>
+                <a href="<?php echo URLROOT; ?>/inventory/createfertilizer">
+                <button class="filter-btn">+ New fertilizer</button>
+                </a>
             </header>
 
             <section class="summary">

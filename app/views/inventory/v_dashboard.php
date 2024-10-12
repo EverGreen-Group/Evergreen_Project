@@ -68,7 +68,7 @@
 	<div class="top-selling-section">
 		<div class="section-header">
 			<h2>Top Selling Products</h2>
-			<a href="#" class="view-all">View all &gt;</a>
+			<a href="<?php echo URLROOT; ?>/inventory/product" class="view-all">View all &gt;</a>
 		</div>
 
 		<div class="product-grid">

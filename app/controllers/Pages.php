@@ -19,9 +19,5 @@ class Pages extends controller{
         $this->view('inventory/v_dashboard',$data);
     }
     
-    public function item(){
-        $data=[];
-
-        $this->view('inventory/v_item',$data);
-    }
+   
 }
