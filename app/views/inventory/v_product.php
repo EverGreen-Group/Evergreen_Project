@@ -38,7 +38,7 @@
                         <option value="category">Category</option>
                     </select>
                 </div>
-                <button class="create-product">+ Create New Product</button>
+                <button  class="create-product">+ Create New Product</button>
             </div>
         </header>
 

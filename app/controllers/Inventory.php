@@ -41,4 +41,11 @@ class Inventory extends controller
         $this->view('inventory/v_machineallocation', $data);
     }
 
+    public function create()
+    {
+        $data = [];
+
+        $this->view('inventory/v_create_product', $data);
+    }
+
 }
