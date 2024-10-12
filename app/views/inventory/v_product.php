@@ -38,7 +38,7 @@
                         <option value="category">Category</option>
                     </select>
                 </div>
-                <a href="<?php echo URLROOT; ?>/inventory/createproduct">
+                <a href="<?php echo URLROOT; ?>/inventory/create">
                 <button class="create-product">+ Create New Product</button>
                 </a>
             </div>
