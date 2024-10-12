@@ -56,41 +56,14 @@
                         <p>On hand: 200 items</p>
                     </div>
                 </div>
-                <div class="product-card low-stock">
-                    <div class="product-info">
-                        <span class="product-code">Code: BTS</span>
-                        <h3>Blue Tea</h3>
-                        <p>On hand: 200 items</p>
-                        <span class="low-stock-alert">Low-Stock Alerts</span>
-                    </div>
-                </div>
+                
+                <?php require APPROOT . '/views/inventory/components/product_card.php' ?>
+                <?php require APPROOT . '/views/inventory/components/product_card.php' ?>
+                <?php require APPROOT . '/views/inventory/components/product_card.php' ?>
+                <?php require APPROOT . '/views/inventory/components/product_card.php' ?>
+                
 
-                <div class="product-card low-stock">
-                    <div class="product-info">
-                        <span class="product-code">Code: BTS</span>
-                        <h3>Blue Tea</h3>
-                        <p>On hand: 200 items</p>
-                        <span class="low-stock-alert">Low-Stock Alerts</span>
-                    </div>
-                </div>
-
-                <div class="product-card low-stock">
-                    <div class="product-info">
-                        <span class="product-code">Code: BTS</span>
-                        <h3>Blue Tea</h3>
-                        <p>On hand: 200 items</p>
-                        <span class="low-stock-alert">Low-Stock Alerts</span>
-                    </div>
-                </div>
-
-                <div class="product-card low-stock">
-                    <div class="product-info">
-                        <span class="product-code">Code: BTS</span>
-                        <h3>Blue Tea</h3>
-                        <p>On hand: 200 items</p>
-                        <span class="low-stock-alert">Low-Stock Alerts</span>
-                    </div>
-                </div>
+                
                 <!-- Additional product cards go here -->
             </div>
         </div>
