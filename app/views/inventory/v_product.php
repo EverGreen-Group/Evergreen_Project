@@ -62,11 +62,11 @@
                 <?php require APPROOT . '/views/inventory/components/product_card.php' ?>
                 <?php require APPROOT . '/views/inventory/components/product_card.php' ?>
                 
-
-                
+  
                 <!-- Additional product cards go here -->
             </div>
         </div>
+
 
         <!-- Pagination -->
         <div class="pagination">
