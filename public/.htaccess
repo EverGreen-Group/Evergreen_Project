@@ -1,14 +1,11 @@
 <IfModule mod_rewrite.c>
-    Options -Multiviews
-    RewriteEngine on
-
-    # Adjust RewriteBase if needed
-    RewriteBase /Evergreen_Project/public
-
-    # Only rewrite if the request is not for an existing file or directory
+    RewriteEngine On
+    RewriteBase /Evergreen_Project/
+    
+    # Redirect root to index
+    RewriteRule ^$ index.php?url=pages/index [L]
+    
     RewriteCond %{REQUEST_FILENAME} !-d
     RewriteCond %{REQUEST_FILENAME} !-f
-
-    # Rewrite all other requests to index.php
     RewriteRule ^(.+)$ index.php?url=$1 [QSA,L]
 </IfModule>

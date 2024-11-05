@@ -1,21 +1,14 @@
 <?php
-class Pages extends controller{
-    public function __construct(){
-       // echo 'This is the pages controller';
+class Pages extends Controller {
+    public function __construct() {
+        // Any constructor logic if needed
     }
 
-    public function index(){
-
-    }
-    public function about(){
-                  
-        $this->view('v_about');
+    public function index() {
+        $data = [
+            'title' => 'Welcome to Evergreen'
+        ];
         
-    }
-
-    public function dashboard(){
-        $data=[];
-
-        $this->view('inventory/v_dashboard',$data);
+        $this->view('pages/landing', $data);
     }
 }
