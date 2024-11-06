@@ -1,9 +1,30 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Evergreen Project</title>
+<?php require APPROOT . '/views/inc/components/header_public.php'; ?>
+<?php require_once APPROOT . '/helpers/RoleHelper.php'; ?>
+
+<main>
+    <div class="container">
+            <?php if(isset($_SESSION['user_id'])) : ?>
+                <h1>Welcome, <?php echo $_SESSION['first_name']; ?>!</h1>
+                
+                
+                <div class="role-buttons">
+                    <?php if(RoleHelper::hasAnyRole([RoleHelper::ADMIN, RoleHelper::VEHICLE_MANAGER])) : ?>
+                        <a href="<?php echo URLROOT; ?>/vehiclemanager/" class="role-button">
+                            Vehicle Management Dashboard
+                        </a>
+                    <?php endif; ?>
+                    
+                    <?php if(RoleHelper::hasAnyRole([RoleHelper::ADMIN, RoleHelper::DRIVER])) : ?>
+                        <a href="<?php echo URLROOT; ?>/vehicledriver/" class="role-button">
+                            Driver Dashboard
+                        </a>
+                    <?php endif; ?>
+                </div>
+            <?php else : ?>
+                <h1>Welcome to Evergreen</h1>
+            <?php endif; ?>
+    </div>
+
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -50,14 +71,4 @@
             background: #124212;
         }
     </style>
-</head>
-<body>
-    <div class="container">
-        <h1>Welcome to Evergreen</h1>
-        <div class="role-buttons">
-            <a href="<?php echo URLROOT; ?>/vehiclemanager" class="role-button">Vehicle Manager</a>
-            <a href="<?php echo URLROOT; ?>/vehicledriver" class="role-button">Vehicle Driver</a>
-        </div>
-    </div>
-</body>
-</html> 
+</main>

@@ -21,4 +21,22 @@ class Controller {
             die('The view does not exist.');
         }
     }
+
+    protected function isLoggedIn() {
+        return isset($_SESSION['user_id']);
+    }
+
+    protected function requireLogin() {
+        if (!$this->isLoggedIn()) {
+            header('Location: ' . URLROOT . '/auth/login');
+            exit();
+        }
+    }
+
+    protected function preventLoginAccess() {
+        if ($this->isLoggedIn()) {
+            header('Location: ' . URLROOT . '/');
+            exit();
+        }
+    }
 }

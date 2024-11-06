@@ -145,9 +145,13 @@ class Database
     }
 
     //execute the prepared statement
-    public function execute()
-    {
-        return $this->statement->execute();
+    public function execute() {
+        try {
+            return $this->statement->execute();
+        } catch (PDOException $e) {
+            // Log error if needed
+            return false;
+        }
     }
 
     //Get multiple records as the result

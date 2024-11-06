@@ -1,7 +1,12 @@
 <?php
 class VehicleDriver extends controller {
     public function __construct() {
-        // Initialization code if needed
+        if (!RoleHelper::hasAnyRole([RoleHelper::ADMIN, RoleHelper::DRIVER])) {
+            // Redirect unauthorized access
+            flash('message', 'Unauthorized access', 'alert alert-danger');
+            redirect('');
+            exit();
+        }
     }
 
     public function index() {

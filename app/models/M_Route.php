@@ -135,6 +135,24 @@ class M_Route {
         return $this->db->resultSet();
     }
 
+    // for the table, must recorrect the naming issue here
+    public function getUnallocatedSupplierDetails() {
+        $this->db->query("
+            SELECT s.supplier_id, 
+                   CONCAT(u.first_name, ' ', u.last_name) as full_name,
+                   s.street, s.city, s.coordinates
+            FROM suppliers s
+            JOIN users u ON s.user_id = u.user_id
+            WHERE s.status = 'Active'
+            AND s.supplier_id NOT IN (
+                SELECT DISTINCT supplier_id 
+                FROM route_suppliers
+            )
+            AND u.approval_status = 'Approved'
+        ");
+        return $this->db->resultSet();
+    }
+
     public function getRouteSuppliers($routeId) {
         $this->db->query("
             SELECT 

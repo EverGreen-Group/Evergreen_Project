@@ -5,6 +5,7 @@ require_once '../app/models/M_Team.php';       // Add Team model
 require_once '../app/models/M_Vehicle.php';    // Add Vehicle model
 require_once '../app/models/M_Shift.php';      // Add Shift model
 require_once '../app/models/M_CollectionSkeleton.php';  // Add CollectionSkeleton model
+require_once '../app/helpers/auth_middleware.php';
 
 class VehicleManager extends Controller {
     private $vehicleManagerModel;
@@ -16,6 +17,17 @@ class VehicleManager extends Controller {
     
 
     public function __construct() {
+        // Check if user is logged in
+        requireAuth();
+        
+        // Check if user has Vehicle Manager OR Admin role
+        if (!RoleHelper::hasAnyRole([RoleHelper::ADMIN, RoleHelper::VEHICLE_MANAGER])) {
+            // Redirect unauthorized access
+            flash('message', 'Unauthorized access', 'alert alert-danger');
+            redirect('');
+            exit();
+        }
+
         // Initialize models
         $this->vehicleManagerModel = new M_VehicleManager();
         $this->routeModel = new M_Route();        // Instantiate Route model
@@ -119,6 +131,7 @@ class VehicleManager extends Controller {
         $totalActive = $this->routeModel->getTotalActiveRoutes();
         $totalInactive = $this->routeModel->getTotalInactiveRoutes();
         $unallocatedSuppliers = $this->routeModel->getUnallocatedSuppliers();
+        $unassignedSuppliersList = $this->routeModel->getUnallocatedSupplierDetails();
         
         // Convert suppliers data to format expected by the map
         $suppliersForMap = array_map(function($supplier) {
@@ -137,7 +150,8 @@ class VehicleManager extends Controller {
             'totalRoutes' => $totalRoutes,
             'totalActive' => $totalActive,
             'totalInactive' => $totalInactive,
-            'unallocatedSuppliers' => $suppliersForMap
+            'unallocatedSuppliers' => $suppliersForMap,
+            'unassignedSuppliersList' => $unassignedSuppliersList
         ];
         
         $this->view('vehicle_manager/v_route', $data);

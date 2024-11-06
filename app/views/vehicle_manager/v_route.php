@@ -185,7 +185,7 @@
   </div>
 
 
-  <!-- Unallocated Collection Table -->
+  <!-- Unallocated Suppliers Table -->
   <div class="table-data">
     <div class="order">
       <div class="head">
@@ -198,21 +198,35 @@
             <th>Supplier ID</th>
             <th>Name</th>
             <th>Address</th>
+            <th>Location</th>
           </tr>
         </thead>
         <tbody>
-          <tr>
-            <td>1</td>
-            <td>North</td>
-            <td>30</td>
-          </tr>
-          <tr>
-            <td>2</td>
-            <td>East</td>
-            <td>20</td>
-          </tr>
+          <?php foreach ($data['unassignedSuppliersList'] as $supplier): ?>
+              <tr>
+                  <td><?php echo htmlspecialchars($supplier->supplier_id); ?></td>
+                  <td><?php echo htmlspecialchars($supplier->full_name); ?></td>
+                  <td><?php echo htmlspecialchars($supplier->street . ', ' . $supplier->city); ?></td>
+                  <td>
+                      <a href="#" class="location-link" 
+                         data-coordinates="<?php echo htmlspecialchars($supplier->coordinates); ?>"
+                         data-name="<?php echo htmlspecialchars($supplier->full_name); ?>">
+                          <?php echo htmlspecialchars($supplier->coordinates); ?>
+                      </a>
+                  </td>
+              </tr>
+          <?php endforeach; ?>
         </tbody>
       </table>
+    </div>
+  </div>
+
+  <!-- Location Modal -->
+  <div id="locationModal" class="modal">
+    <div class="modal-content">
+        <span class="close">&times;</span>
+        <h2 id="locationTitle">Supplier Location</h2>
+        <div id="locationMap" style="width: 100%; height: 400px;"></div>
     </div>
   </div>
 
@@ -527,6 +541,29 @@
         color: white;
         border: none;
     }
+
+    /* Add to your existing styles */
+    .location-link {
+        color: var(--main);
+        text-decoration: underline;
+        cursor: pointer;
+    }
+
+    #locationModal {
+        display: none;
+        position: fixed;
+        z-index: 1001;
+        left: 0;
+        top: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0,0,0,0.5);
+    }
+
+    #locationModal .modal-content {
+        width: 80%;
+        max-width: 800px;
+    }
 </style>
 
 <script>
@@ -596,8 +633,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function initMap() {
         map = new google.maps.Map(document.getElementById("map"), {
-            zoom: 8,
-            center: { lat: 7.8731, lng: 80.7718 } // Center of Sri Lanka
+            zoom: 15,
+            center: { lat: 6.2173037, lng: 80.2538636 } // Center of Sri Lanka
         });
         directionsService = new google.maps.DirectionsService();
         directionsRenderer = new google.maps.DirectionsRenderer();
@@ -611,32 +648,64 @@ document.addEventListener('DOMContentLoaded', () => {
         );
     }
 
-    function orderStopsByNearestNeighbor(startPoint, stops) {
-        let orderedStops = [];
-        let remainingStops = [...stops];
-        let currentPoint = startPoint;
-
-        while (remainingStops.length > 0) {
-            // Find the closest stop to current point
-            let shortestDistance = Infinity;
-            let closestStopIndex = 0;
-
-            remainingStops.forEach((stop, index) => {
-                const distance = calculateDistance(currentPoint, stop.location);
-                if (distance < shortestDistance) {
-                    shortestDistance = distance;
-                    closestStopIndex = index;
+    function dijkstraRoute(startPoint, stops) {
+        if (stops.length === 0) return [];
+        
+        // Create distances object to store shortest distances
+        const distances = {};
+        const previous = {};
+        const unvisited = new Set();
+        
+        // Initialize distances
+        stops.forEach(stop => {
+            distances[stop.id] = Infinity;
+            previous[stop.id] = null;
+            unvisited.add(stop.id);
+        });
+        
+        // Set distance to first stop from factory
+        const firstStop = stops[0];
+        distances[firstStop.id] = calculateDistance(startPoint, firstStop.location);
+        
+        while (unvisited.size > 0) {
+            // Get stop with minimum distance
+            let current = null;
+            let minDistance = Infinity;
+            
+            unvisited.forEach(stopId => {
+                if (distances[stopId] < minDistance) {
+                    minDistance = distances[stopId];
+                    current = stopId;
                 }
             });
-
-            // Add the closest stop to ordered list
-            orderedStops.push(remainingStops[closestStopIndex]);
-            currentPoint = remainingStops[closestStopIndex].location;
             
-            // Remove the used stop from remaining stops
-            remainingStops.splice(closestStopIndex, 1);
+            if (!current) break;
+            
+            unvisited.delete(current);
+            
+            // Update distances to all other unvisited stops
+            const currentStop = stops.find(stop => stop.id === current);
+            unvisited.forEach(stopId => {
+                const targetStop = stops.find(stop => stop.id === stopId);
+                const distance = calculateDistance(currentStop.location, targetStop.location);
+                const totalDistance = distances[current] + distance;
+                
+                if (totalDistance < distances[stopId]) {
+                    distances[stopId] = totalDistance;
+                    previous[stopId] = current;
+                }
+            });
         }
-
+        
+        // Reconstruct the ordered route
+        const orderedStops = [];
+        let current = stops[stops.length - 1].id;
+        
+        while (current) {
+            orderedStops.unshift(stops.find(stop => stop.id === current));
+            current = previous[current];
+        }
+        
         return orderedStops;
     }
 
@@ -646,84 +715,43 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
 
-        clearMarkers();
-
-        directionsRenderer.setOptions({
-            suppressMarkers: true
-        });
+        clearMarkers(); // Clear existing markers
 
         const factoryLocation = { 
             lat: <?php echo M_Route::FACTORY_LAT; ?>, 
             lng: <?php echo M_Route::FACTORY_LONG; ?> 
         };
 
-        // Order stops by nearest neighbor
+        // Add factory marker
+        const factoryMarker = new google.maps.Marker({
+            position: factoryLocation,
+            map: map,
+            label: {
+                text: 'F',
+                color: 'white'
+            },
+            title: 'Factory (Start)'
+        });
+        markers.push(factoryMarker);
+
+        // If there are stops, calculate optimal order and add numbered markers
         if (currentRoute.stops.length > 0) {
-            currentRoute.stops = orderStopsByNearestNeighbor(factoryLocation, currentRoute.stops);
+            const orderedStops = dijkstraRoute(factoryLocation, currentRoute.stops);
+            
+            // Add numbered markers for suppliers in optimal order
+            orderedStops.forEach((stop, index) => {
+                const supplierMarker = new google.maps.Marker({
+                    position: stop.location,
+                    map: map,
+                    label: {
+                        text: (index + 1).toString(),
+                        color: 'white'
+                    },
+                    title: `Stop ${index + 1}: ${stop.name}`
+                });
+                markers.push(supplierMarker);
+            });
         }
-
-        const routePoints = [
-            {
-                location: factoryLocation,
-                name: 'Factory (Start)'
-            },
-            ...currentRoute.stops
-        ];
-
-        if (routePoints.length < 2) {
-            directionsRenderer.setDirections({routes: []});
-            return;
-        }
-
-        const origin = routePoints[0].location;
-        const destination = routePoints[routePoints.length - 1].location;
-        const waypoints = routePoints.slice(1, -1).map(stop => ({
-            location: stop.location,
-            stopover: true
-        }));
-
-        directionsService.route(
-            {
-                origin: origin,
-                destination: destination,
-                waypoints: waypoints,
-                optimizeWaypoints: false, // Set to false since we're doing our own optimization
-                travelMode: google.maps.TravelMode.DRIVING,
-            },
-            (response, status) => {
-                if (status === "OK" && response) {
-                    directionsRenderer.setDirections(response);
-                    
-                    // Add factory start marker
-                    const factoryMarker = new google.maps.Marker({
-                        position: origin,
-                        map: map,
-                        label: {
-                            text: 'F',
-                            color: 'white'
-                        },
-                        title: 'Factory (Start)',
-                    });
-                    markers.push(factoryMarker);
-
-                    // Add numbered markers for suppliers
-                    currentRoute.stops.forEach((stop, index) => {
-                        const supplierMarker = new google.maps.Marker({
-                            position: stop.location,
-                            map: map,
-                            label: {
-                                text: (index + 1).toString(),
-                                color: 'white'
-                            },
-                            title: `Stop ${index + 1}: ${stop.name}`
-                        });
-                        markers.push(supplierMarker);
-                    });
-                } else {
-                    console.error("Directions request failed due to " + status);
-                }
-            }
-        );
     }
 
     function populateSupplierDropdown() {
@@ -740,7 +768,7 @@ document.addEventListener('DOMContentLoaded', () => {
         stopList.innerHTML = '';
         currentRoute.stops.forEach((stop, index) => {
             const li = document.createElement('li');
-            li.innerHTML = `${index + 1}. ${stop.name} <span class="remove-stop" data-id="${stop.id}">Remove</span>`;
+            li.innerHTML = `${stop.name} <span class="remove-stop" data-id="${stop.id}">Remove</span>`;
             stopList.appendChild(li);
         });
 
@@ -761,7 +789,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
                 
                 updateStopList();
-                updateMap();
+                updateMap(); // This will recalculate Dijkstra's and update markers
             });
         });
     }
@@ -808,14 +836,15 @@ document.addEventListener('DOMContentLoaded', () => {
                 name: selectedSupplier.name,
                 location: selectedSupplier.location
             });
-            updateStopList();
-            updateMap();
             
-            // Remove the selected supplier from the dropdown
+            // Remove from dropdown
             const option = supplierSelect.querySelector(`option[value="${selectedSupplierId}"]`);
             if (option) {
                 option.remove();
             }
+            
+            updateStopList();
+            updateMap(); // This will recalculate Dijkstra's and update markers
         }
     });
 
@@ -1195,6 +1224,57 @@ function initMap() {
     const event = new Event('googlemapsloaded');
     window.dispatchEvent(event);
 }
+
+document.addEventListener('DOMContentLoaded', function() {
+    const locationModal = document.getElementById('locationModal');
+    const locationMap = document.getElementById('locationMap');
+    const locationTitle = document.getElementById('locationTitle');
+    let locationGoogleMap = null;
+
+    // Close modal when clicking the X
+    document.querySelector('#locationModal .close').onclick = function() {
+        locationModal.style.display = 'none';
+    };
+
+    // Close modal when clicking outside
+    window.onclick = function(event) {
+        if (event.target == locationModal) {
+            locationModal.style.display = 'none';
+        }
+    };
+
+    // Handle location link clicks
+    document.querySelectorAll('.location-link').forEach(link => {
+        link.addEventListener('click', function(e) {
+            e.preventDefault();
+            const coordinates = this.dataset.coordinates.split(',');
+            const name = this.dataset.name;
+            const lat = parseFloat(coordinates[0]);
+            const lng = parseFloat(coordinates[1]);
+
+            locationModal.style.display = 'block';
+            locationTitle.textContent = `Location of ${name}`;
+
+            // Initialize map if not already done
+            if (!locationGoogleMap) {
+                locationGoogleMap = new google.maps.Map(locationMap, {
+                    zoom: 15,
+                    center: { lat, lng }
+                });
+            }
+
+            // Center map on new coordinates
+            locationGoogleMap.setCenter({ lat, lng });
+
+            // Add marker
+            new google.maps.Marker({
+                position: { lat, lng },
+                map: locationGoogleMap,
+                title: name
+            });
+        });
+    });
+});
 </script>
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
