@@ -30,7 +30,7 @@
       </a>
     </li>
     <li>
-      <a href="<?php echo URLROOT; ?>/vehicledriver/logout" class="logout">
+      <a href="<?php echo URLROOT; ?>/auth/logout" class="logout">
         <i class="bx bxs-log-out-circle"></i>
         <span class="text">Logout</span>
       </a>

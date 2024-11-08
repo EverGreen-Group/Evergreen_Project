@@ -579,8 +579,8 @@ body {
 }
 
 .auth-form-section {
-  width: 100%;
-  max-width: 480px;
+  width: auto;
+  max-width: 1200px;
 }
 
 .auth-form-container {
@@ -593,7 +593,7 @@ body {
 /* Existing form styles */
 .auth-form-container h2 {
   font-size: 28px;
-  font-weight: 600;
+  font-weight: 300;
   margin-bottom: 30px;
   color: #333;
 }

@@ -29,7 +29,7 @@ body {
     align-items: center;
     justify-content: space-between;
     padding: 15px 30px;
-    background-color: white;
+    background-color: rgba(255, 255, 255, 0.95);
     border-radius: 50px;
     box-shadow: 0 2px 15px rgba(0, 0, 0, 0.05);
     position: relative;
@@ -114,8 +114,8 @@ body {
                    class="<?php echo ($_GET['url'] ?? '') === 'pages/store' ? 'active' : ''; ?>">
                    STORE
                 </a>
-                <a href="<?php echo URLROOT;?>/pages/profile" 
-                   class="<?php echo ($_GET['url'] ?? '') === 'pages/profile' ? 'active' : ''; ?>">
+                <a href="<?php echo URLROOT;?>/profile" 
+                   class="<?php echo ($_GET['url'] ?? '') === 'profile/' ? 'active' : ''; ?>">
                    PROFILE
                 </a>
             </div>

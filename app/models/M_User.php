@@ -8,12 +8,11 @@ class M_User {
     }
 
     public function register($data) {
-        $sql = "INSERT INTO users (email, title, first_name, last_name, nic, gender, date_of_birth, password, role_id, approval_status) 
-                VALUES (:email, :title, :first_name, :last_name, :nic, :gender, :date_of_birth, :password, :role_id, :approval_status)";
+        $sql = "INSERT INTO users (email, first_name, last_name, nic, gender, date_of_birth, password, role_id, approval_status) 
+                VALUES (:email, :first_name, :last_name, :nic, :gender, :date_of_birth, :password, :role_id, :approval_status)";
         
         $this->db->query($sql);
         $this->db->bind(':email', $data['email']);
-        $this->db->bind(':title', $data['title']);
         $this->db->bind(':first_name', $data['first_name']);
         $this->db->bind(':last_name', $data['last_name']);
         $this->db->bind(':nic', $data['nic']);

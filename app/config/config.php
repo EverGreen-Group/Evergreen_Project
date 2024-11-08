@@ -14,4 +14,7 @@ define('URLROOT', 'http://localhost/Evergreen_Project');
 
 //website
 define('SITENAME', 'EverGreen');
+
+// Add this with your other constants
+define('UPLOADROOT', dirname(dirname(__DIR__)) . '/public/uploads');
 ?>
