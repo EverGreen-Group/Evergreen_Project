@@ -1,8 +1,12 @@
 <IfModule mod_rewrite.c>
- Options -Multiviews
- RewriteEngine on
- RewriteBase /Evergreen/public
- RewriteCond %{REQUEST_FILENAME} !-d
- RewriteCond %{REQUEST_FILENAME} !-f
- RewriteRule ^(.+)$ index.php?url=$1 [QSA,L]
- </IfModule>
+    Options -Multiviews
+    RewriteEngine On
+    RewriteBase /Evergreen_Project/
+    
+    # Redirect root to index
+    RewriteRule ^$ index.php?url=pages/index [L]
+    
+    RewriteCond %{REQUEST_FILENAME} !-d
+    RewriteCond %{REQUEST_FILENAME} !-f
+    RewriteRule ^(.+)$ index.php?url=$1 [QSA,L]
+</IfModule>
