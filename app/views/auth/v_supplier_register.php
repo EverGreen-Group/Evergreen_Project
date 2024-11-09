@@ -145,6 +145,17 @@
                             </div>
                         </div>
 
+                        <!-- Add this new section for location picking -->
+                        <div class="auth-form-group">
+                            <label for="location">Your Location</label>
+                            <div id="map" style="height: 200px; margin-bottom: 0.5rem;"></div>
+                            <div class="location-inputs">
+                                <input type="hidden" id="latitude" name="latitude" required>
+                                <input type="hidden" id="longitude" name="longitude" required>
+                                <small class="input-help">Drag the marker to set your exact location</small>
+                            </div>
+                        </div>
+
                         <div class="form-navigation">
                             <button type="button" class="prev-btn">Previous</button>
                             <button type="button" class="next-btn">Next</button>
@@ -668,6 +679,20 @@ input[type="file"]:hover {
     margin-top: 0.2em;
     display: block;
 }
+
+/* Add to your existing styles */
+.location-search-input {
+    width: 100%;
+    padding: 8px;
+    margin-top: 10px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+}
+
+#map {
+    border: 1px solid #ddd;
+    border-radius: 4px;
+}
 </style>
 
 <script>
@@ -934,6 +959,93 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
 });
+</script>
+
+<!-- Add Google Maps JavaScript API -->
+<script async defer src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCdt_khahhXrKdrA8cLgKeQB2CZtde-_Vc&callback=initMap"></script>
+
+<script>
+// Replace the existing initMap function with this version
+function initMap() {
+    // Default center (Sri Lanka)
+    const defaultCenter = { lat: 7.8731, lng: 80.7718 };
+    
+    // Create map
+    const map = new google.maps.Map(document.getElementById('map'), {
+        zoom: 8,
+        center: defaultCenter,
+        mapTypeId: 'roadmap', // Plain map view
+        streetViewControl: false,
+        mapTypeControl: false,
+        zoomControl: true,
+        fullscreenControl: false
+    });
+
+    // Create marker
+    let marker = new google.maps.Marker({
+        position: defaultCenter,
+        map: map,
+        draggable: true
+    });
+
+    // Try to get user's location
+    if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(
+            (position) => {
+                const pos = {
+                    lat: position.coords.latitude,
+                    lng: position.coords.longitude
+                };
+                
+                // Check if position is within Sri Lanka bounds
+                const sriLankaBounds = {
+                    north: 9.9,
+                    south: 5.9,
+                    west: 79.5,
+                    east: 81.9
+                };
+
+                if (pos.lat >= sriLankaBounds.south && 
+                    pos.lat <= sriLankaBounds.north && 
+                    pos.lng >= sriLankaBounds.west && 
+                    pos.lng <= sriLankaBounds.east) {
+                    
+                    map.setCenter(pos);
+                    map.setZoom(15);
+                    marker.setPosition(pos);
+                    updateFormValues(pos);
+                }
+            },
+            () => {
+                // Handle location error silently
+                console.log('Location access denied or error occurred');
+            }
+        );
+    }
+
+    // Allow both click and drag
+    map.addListener('click', (e) => {
+        marker.setPosition(e.latLng);
+        updateFormValues(e.latLng);
+    });
+
+    marker.addListener('dragend', () => {
+        const position = marker.getPosition();
+        updateFormValues(position);
+    });
+
+    // Helper function to update form values
+    function updateFormValues(position) {
+        document.getElementById('latitude').value = position.lat();
+        document.getElementById('longitude').value = position.lng();
+    }
+
+    // Set initial form values
+    updateFormValues(defaultCenter);
+}
+
+// Initialize map when page loads
+document.addEventListener('DOMContentLoaded', initMap);
 </script>
 
 <?php require APPROOT . '/views/inc/components/footer.php'; ?>

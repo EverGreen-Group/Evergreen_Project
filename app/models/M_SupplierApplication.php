@@ -28,8 +28,10 @@ class M_SupplierApplication {
             error_log("Application ID generated: " . $applicationId);
 
             // 2. Insert address
-            $this->db->query('INSERT INTO application_addresses (application_id, line1, line2, city, district, postal_code) 
-                             VALUES (:application_id, :line1, :line2, :city, :district, :postal_code)');
+            $this->db->query('INSERT INTO application_addresses 
+                (application_id, line1, line2, city, district, postal_code, latitude, longitude) 
+                VALUES 
+                (:application_id, :line1, :line2, :city, :district, :postal_code, :latitude, :longitude)');
             
             $this->db->bind(':application_id', $applicationId);
             $this->db->bind(':line1', $data['address']['line1']);
@@ -37,6 +39,8 @@ class M_SupplierApplication {
             $this->db->bind(':city', $data['address']['city']);
             $this->db->bind(':district', $data['address']['district']);
             $this->db->bind(':postal_code', $data['address']['postal_code']);
+            $this->db->bind(':latitude', $data['address']['latitude']);
+            $this->db->bind(':longitude', $data['address']['longitude']);
             
             if (!$this->db->execute()) {
                 throw new Exception("Failed to insert address");
@@ -351,5 +355,22 @@ class M_SupplierApplication {
         
         $this->db->bind(':application_id', $applicationId);
         return $this->db->single();
+    }
+
+
+    public function hasApplied($user_id) {
+        // Add debug logging
+        error_log("Checking hasApplied for user_id: " . $user_id);
+        
+        $this->db->query('SELECT COUNT(*) as count FROM supplier_applications WHERE user_id = :user_id');
+        $this->db->bind(':user_id', $user_id);
+        
+        $result = $this->db->single();
+        $hasApplied = ($result->count > 0);
+        
+        // Add debug logging
+        error_log("hasApplied result: " . ($hasApplied ? 'true' : 'false'));
+        
+        return $hasApplied;
     }
 }

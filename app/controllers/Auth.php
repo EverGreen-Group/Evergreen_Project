@@ -153,12 +153,27 @@ class Auth extends Controller {
 
 
     public function supplier_register() {
-        // Start output buffering to prevent unwanted output
-        ob_start();
-        
+        // First, check login status
         if (!isLoggedIn()) {
             redirect('auth/login');
+            return; // Add return to ensure the function stops
         }
+
+        // Move this up before any other processing
+        $supplierApplicationModel = $this->model('M_SupplierApplication');
+        
+        // Add debug logging
+        error_log("Checking application status for user: " . $_SESSION['user_id']);
+        
+        // Check if user has already applied and redirect if true
+        if ($supplierApplicationModel->hasApplied($_SESSION['user_id'])) {
+            error_log("User has already applied, redirecting to status page");
+            redirect('pages/supplier_application_status');
+            return; // Add return to ensure the function stops
+        }
+
+        // Start output buffering only if we're continuing with the registration
+        ob_start();
 
         if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             try {
@@ -169,7 +184,7 @@ class Auth extends Controller {
                 ini_set('display_errors', 0);
                 error_reporting(E_ALL);
                 
-                $supplierApplicationModel = $this->model('M_SupplierApplication');
+                
                 
                 // Validate postal code length 
                 if (strlen($_POST['postalCode']) > 6) {
@@ -188,7 +203,9 @@ class Auth extends Controller {
                         'line2' => !empty($_POST['line2']) ? $_POST['line2'] : null,
                         'city' => $_POST['city'],
                         'district' => $_POST['district'],
-                        'postal_code' => $_POST['postalCode']
+                        'postal_code' => $_POST['postalCode'],
+                        'latitude' => $_POST['latitude'],
+                        'longitude' => $_POST['longitude']
                     ],
                     
                     'teaVarieties' => isset($_POST['tea_varieties']) ? $_POST['tea_varieties'] : [],
@@ -258,6 +275,19 @@ class Auth extends Controller {
                     }
 
                     $documents[$doc] = $_FILES[$doc];
+                }
+
+                // Add validation for latitude and longitude before the file validation
+                if (empty($_POST['latitude']) || empty($_POST['longitude'])) {
+                    throw new Exception('Location coordinates are required');
+                }
+
+                // Validate coordinate ranges for Sri Lanka
+                $lat = floatval($_POST['latitude']);
+                $lng = floatval($_POST['longitude']);
+
+                if ($lat < 5.9 || $lat > 9.9 || $lng < 79.5 || $lng > 81.9) {
+                    throw new Exception('Location must be within Sri Lanka');
                 }
 
                 // Try to save the application
