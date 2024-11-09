@@ -49,7 +49,7 @@ class VehicleManager extends Controller {
         $skeletons = $this->skeletonModel->getAllSkeletons();
 
         // Pass the stats and data for the dropdowns to the view
-        $this->view('vehicle_manager/v_dashboard', [
+        $this->view('vehicle_manager/v_collection', [
             'stats' => $stats,
             'routes' => $routes,
             'teams' => $teams,

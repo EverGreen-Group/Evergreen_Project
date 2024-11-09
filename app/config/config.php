@@ -17,4 +17,11 @@ define('SITENAME', 'EverGreen');
 
 // Add this with your other constants
 define('UPLOADROOT', dirname(dirname(__DIR__)) . '/public/uploads');
+
+// URL for web access
+define('UPLOADURL', URLROOT . '/uploads');  // For web URLs
+
+// Server filesystem paths
+define('PUBLICPATH', dirname(APPROOT) . '/public');
+define('UPLOADPATH', PUBLICPATH . '/uploads');  // For file operations
 ?>
