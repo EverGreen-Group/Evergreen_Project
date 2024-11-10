@@ -21,25 +21,25 @@
         <li>
             <i class='bx bxs-car'></i>
             <span class="text">
-                <h3>20</h3>
+                <h3><?php echo $stats['vehicles']->total_vehicles; ?></h3>
                 <p>Vehicles</p>
-                <small>10 Available</small>
+                <small><?php echo $stats['vehicles']->total_vehicles; ?> Available</small>
             </span>
         </li>
         <li>
             <i class='bx bxs-user'></i>
             <span class="text">
-                <h3>15</h3>
+                <h3><?php echo $stats['drivers']->total_drivers; ?></h3>
                 <p>Drivers</p>
-                <small>4 Available</small>
+                <small><?php echo $stats['drivers']->available_drivers; ?> Available</small>
             </span>
         </li>
         <li>
             <i class='bx bxs-group'></i>
             <span class="text">
-                <h3>15</h3>
+                <h3><?php echo $stats['partners']->total_partners; ?></h3>
                 <p>Driving Partners</p>
-                <small>4 Available</small>
+                <small><?php echo $stats['partners']->available_partners; ?> Available</small>
             </span>
         </li>
     </ul>
@@ -68,41 +68,192 @@
         </div>
     </div>
 
-    <!-- Collection Assignment Section -->
+
+    <!-- Collection Skeletons Section -->
     <div class="table-data">
         <div class="order">
             <div class="head">
-                <h3>Assign Collection</h3>
+                <h3>Created Collections</h3>
             </div>
-            <form id="assignCollectionForm">
-                <div class="form-group">
-                    <label for="route">Route:</label>
-                    <select id="route">
-                        <option value="route1">Route 1 - 10 Suppliers</option>
-                        <option value="route2">Route 2 - 15 Suppliers</option>
-                    </select>
-                </div>
-
-                <div class="form-group">
-                    <label for="team">Team:</label>
-                    <select id="team">
-                        <option value="team1">Team 1 - Driver: John, Partner: Emily, Vehicle: Truck 1</option>
-                        <option value="team2">Team 2 - Driver: Mike, Partner: Sarah, Vehicle: Van 2</option>
-                    </select>
-                </div>
-
-                <div class="form-group">
-                    <label for="shift">Shift:</label>
-                    <select id="shift">
-                        <option value="morning">Morning Shift</option>
-                        <option value="afternoon">Afternoon Shift</option>
-                    </select>
-                </div>
-
-                <button type="submit" class="btn-submit">Assign Collection</button>
-            </form>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Skeleton ID</th>
+                        <th>Route ID</th>
+                        <th>Team ID</th>
+                        <th>Vehicle ID</th>
+                        <th>Shift ID</th>
+                        <th>Created At</th>
+                        <th>Status</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <?php if(isset($data['skeletons']) && !empty($data['skeletons'])): ?>
+                        <?php foreach($data['skeletons'] as $skeleton): ?>
+                            <tr>
+                                <td>CS<?php echo str_pad($skeleton->skeleton_id, 3, '0', STR_PAD_LEFT); ?></td>
+                                <td><?php echo $skeleton->route_id; ?></td>
+                                <td><?php echo $skeleton->team_id; ?></td>
+                                <td><?php echo $skeleton->vehicle_id; ?></td>
+                                <td><?php echo $skeleton->shift_id; ?></td>
+                                <td><?php echo date('Y-m-d H:i', strtotime($skeleton->created_at)); ?></td>
+                                <td>
+                                    <form action="<?php echo URLROOT; ?>/collectionskeletons/toggleActive" method="POST" style="display: inline;">
+                                        <input type="hidden" name="skeleton_id" value="<?php echo $skeleton->skeleton_id; ?>">
+                                        <button type="submit" class="status-btn <?php echo $skeleton->is_active ? 'active' : 'inactive'; ?>">
+                                            <?php echo $skeleton->is_active ? 'Active' : 'Inactive'; ?>
+                                        </button>
+                                    </form>
+                                </td>
+                                <td>
+                                    <form action="<?php echo URLROOT; ?>/collectionskeletons/delete" method="POST" style="display: inline;" 
+                                          onsubmit="return confirm('Are you sure you want to delete this skeleton?');">
+                                        <input type="hidden" name="skeleton_id" value="<?php echo $skeleton->skeleton_id; ?>">
+                                        <button type="submit" class="delete-btn">
+                                            <i class='bx bx-trash'></i>
+                                        </button>
+                                    </form>
+                                </td>
+                            </tr>
+                        <?php endforeach; ?>
+                    <?php else: ?>
+                        <tr>
+                            <td colspan="8" class="text-center">No collections found</td>
+                        </tr>
+                    <?php endif; ?>
+                </tbody>
+            </table>
         </div>
     </div>
+
+    <!-- Create and Edit Collection Skeleton Section -->
+    <div class="table-data">
+        <div class="order" style="display: flex; gap: 20px;">
+            <!-- Create Form -->
+            <div style="flex: 1;">
+                <div class="head">
+                    <h3>Create New Collection</h3>
+                </div>
+                <form id="createSkeletonForm" method="POST" action="<?php echo URLROOT; ?>/collectionskeletons/create">
+                    <div class="form-group">
+                        <label for="route">Route:</label>
+                        <select id="route" name="route_id" required>
+                            <?php foreach ($data['routes'] as $route): ?>
+                                <option value="<?= $route->route_id; ?>">Route ID: <?= $route->route_id . ", Number of Suppliers: " . $route->number_of_suppliers; ?></option>
+                            <?php endforeach; ?>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="team">Team:</label>
+                        <select id="team" name="team_id" required>
+                            <?php foreach ($data['teams'] as $team): ?>
+                                <option value="<?= $team->team_id; ?>"><?= $team->team_name; ?></option>
+                            <?php endforeach; ?>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="vehicle">Vehicle:</label>
+                        <select id="vehicle" name="vehicle_id" required>
+                            <?php foreach ($data['vehicles'] as $vehicle): ?>
+                                <option value="<?= $vehicle->vehicle_id; ?>"><?= $vehicle->license_plate; ?></option>
+                            <?php endforeach; ?>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="shift">Shift:</label>
+                        <select id="shift" name="shift_id" required>
+                            <?php foreach ($data['shifts'] as $shift): ?>
+                                <option value="<?= $shift->shift_id; ?>"><?= $shift->shift_name; ?></option>
+                            <?php endforeach; ?>
+                        </select>
+                    </div>
+
+                    <button type="submit" class="btn-submit">Create Collection</button>
+                </form>
+            </div>
+
+            <!-- Edit Form -->
+            <div style="flex: 1;">
+                <div class="head">
+                    <h3>Edit Collection</h3>
+                </div>
+                <form id="editSkeletonForm" method="POST" action="<?php echo URLROOT; ?>/collectionskeletons/update">
+                    <div class="form-group">
+                        <label for="skeleton_id">Select Skeleton:</label>
+                        <select id="skeleton_id" name="skeleton_id" required onchange="loadSkeletonData(this.value)">
+                            <option value="">Select a collection</option>
+                            <?php foreach ($data['skeletons'] as $skeleton): ?>
+                                <option value="<?= $skeleton->skeleton_id; ?>">
+                                    CS<?= str_pad($skeleton->skeleton_id, 3, '0', STR_PAD_LEFT); ?>
+                                </option>
+                            <?php endforeach; ?>
+                        </select>
+                    </div>
+
+                    <!-- Route and Team in same row -->
+                    <div style="display: flex; gap: 20px;">
+                        <div class="form-group" style="flex: 1;">
+                            <label for="edit_route">Route:</label>
+                            <select id="edit_route" name="route_id" required>
+                                <?php foreach ($data['routes'] as $route): ?>
+                                    <option value="<?= $route->route_id; ?>">Route ID: <?= $route->route_id . ", Number of Suppliers: " . $route->number_of_suppliers; ?></option>
+                                <?php endforeach; ?>
+                            </select>
+                        </div>
+
+                        <div class="form-group" style="flex: 1;">
+                            <label for="edit_team">Team:</label>
+                            <select id="edit_team" name="team_id" required>
+                                <?php foreach ($data['teams'] as $team): ?>
+                                    <option value="<?= $team->team_id; ?>"><?= $team->team_name; ?></option>
+                                <?php endforeach; ?>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="edit_vehicle">Vehicle:</label>
+                        <select id="edit_vehicle" name="vehicle_id" required>
+                            <?php foreach ($data['vehicles'] as $vehicle): ?>
+                                <option value="<?= $vehicle->vehicle_id; ?>"><?= $vehicle->license_plate; ?></option>
+                            <?php endforeach; ?>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="edit_shift">Shift:</label>
+                        <select id="edit_shift" name="shift_id" required>
+                            <?php foreach ($data['shifts'] as $shift): ?>
+                                <option value="<?= $shift->shift_id; ?>"><?= $shift->shift_name; ?></option>
+                            <?php endforeach; ?>
+                        </select>
+                    </div>
+
+                    <button type="submit" class="btn-submit">Update Collection</button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script>
+    function loadSkeletonData(skeletonId) {
+        // Find the skeleton data from the existing skeletons
+        <?php echo 'const skeletons = ' . json_encode($data['skeletons']) . ';'; ?>
+        
+        const skeleton = skeletons.find(s => s.skeleton_id === skeletonId);
+        if (skeleton) {
+            // Populate the edit form fields
+            document.getElementById('edit_route').value = skeleton.route_id;
+            document.getElementById('edit_team').value = skeleton.team_id;
+            document.getElementById('edit_vehicle').value = skeleton.vehicle_id;
+            document.getElementById('edit_shift').value = skeleton.shift_id;
+        }
+    }
+    </script>
 
     <!-- Weekly Collection Section -->
     <div class="table-data">
@@ -305,6 +456,7 @@
             </table>
         </div>
     </div>
+
 </main>
 
 <script async defer src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCdt_khahhXrKdrA8cLgKeQB2CZtde-_Vc&callback=initMap"></script>
@@ -443,7 +595,7 @@ window.onload = function() {
 
 <style>
     .form-group {
-        margin-bottom: 1rem;
+        margin-bottom: 15px;
     }
     
     .form-group label {
@@ -453,8 +605,8 @@ window.onload = function() {
     
     .form-group select {
         width: 100%;
-        padding: 0.5rem;
-        border-radius: 5px;
+        padding: 8px;
+        border-radius: 4px;
         border: 1px solid #ddd;
     }
     
@@ -498,5 +650,44 @@ window.onload = function() {
     border: 1px solid #ddd;
 }
 </style>
+
+<style>
+.status-btn {
+    padding: 5px 10px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.status-btn.active {
+    background-color: #4CAF50;
+    color: white;
+}
+
+.status-btn.inactive {
+    background-color: #f44336;
+    color: white;
+}
+
+.status-btn:hover {
+    opacity: 0.8;
+}
+
+.delete-btn {
+    padding: 5px 10px;
+    border: none;
+    border-radius: 4px;
+    background-color: #f44336;
+    color: white;
+    cursor: pointer;
+}
+
+.delete-btn:hover {
+    background-color: #da190b;
+}
+</style>
+
+
 
 <?php require APPROOT . '/views/inc/components/footer.php'; ?>
