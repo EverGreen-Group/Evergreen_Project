@@ -45,5 +45,10 @@ class M_Driver{
         return $this->db->single();
     }
 
+    public function softDeleteDriver($driverId) {
+        $this->db->query('UPDATE drivers SET is_deleted = 1 WHERE driver_id = :driver_id');
+        $this->db->bind(':driver_id', $driverId);
+        return $this->db->execute();
+    }
 
 }

@@ -125,5 +125,16 @@ class M_Team {
     
         return $this->db->resultSet();
     }
+
+    public function getTotalTeamsInCollection() {
+        $this->db->query('
+            SELECT COUNT(*) AS total_teams 
+            FROM teams
+            LEFT JOIN collection_skeletons c ON teams.team_id = c.team_id
+            WHERE c.skeleton_id IS NOT NULL;
+
+        ');
+        return $this->db->single()->total_teams;
+    }
 }
 ?>

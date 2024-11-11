@@ -5,6 +5,9 @@ require_once '../app/models/M_Team.php';       // Add Team model
 require_once '../app/models/M_Vehicle.php';    // Add Vehicle model
 require_once '../app/models/M_Shift.php';      // Add Shift model
 require_once '../app/models/M_CollectionSkeleton.php';  // Add CollectionSkeleton model
+require_once '../app/models/M_Staff.php';
+require_once '../app/models/M_Driver.php';
+require_once '../app/models/M_Partner.php';
 require_once '../app/helpers/auth_middleware.php';
 
 class VehicleManager extends Controller {
@@ -14,6 +17,9 @@ class VehicleManager extends Controller {
     private $vehicleModel;     // Declare a variable for Vehicle model
     private $shiftModel;       // Declare a variable for Shift model
     private $skeletonModel;     // Declare a variable for CollectionSkeleton model
+    private $driverModel; // Declare a variable for Driver model
+    private $partnerModel; // Add this line
+    private $staffModel;
     
 
     public function __construct() {
@@ -35,6 +41,9 @@ class VehicleManager extends Controller {
         $this->vehicleModel = new M_Vehicle();    // Instantiate Vehicle model
         $this->shiftModel = new M_Shift();        // Instantiate Shift model
         $this->skeletonModel = new M_CollectionSkeleton();  // Instantiate CollectionSkeleton model
+        $this->driverModel = new M_Driver(); // Instantiate Driver model
+        $this->partnerModel = new M_Partner(); // Add this line
+        $this->staffModel = $this->model('M_Staff');
     }
 
     public function index() {
@@ -158,12 +167,131 @@ class VehicleManager extends Controller {
     }
 
     public function shift() {
-        $data = [];
+        if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+            // Create a specific array for shift data only
+            $shiftData = [
+                'shift_name' => trim($_POST['shift_name']),
+                'start_time' => trim($_POST['start_time']),
+                'end_time' => trim($_POST['end_time'])
+            ];
+
+            // Validate
+            if (empty($shiftData['shift_name']) || empty($shiftData['start_time']) || empty($shiftData['end_time'])) {
+                flash('shift_error', 'Please fill in all fields', 'alert alert-danger');
+            } else {
+                try {
+                    // Pass only the shift-specific data to the model
+                    if ($this->shiftModel->addShift($shiftData)) {
+                        flash('shift_success', 'Shift added successfully');
+                        redirect('vehiclemanager/shift');
+                    } else {
+                        $error = $this->shiftModel->getError();
+                        flash('shift_error', 'Database Error: ' . $error, 'alert alert-danger');
+                    }
+                } catch (Exception $e) {
+                    flash('shift_error', 'Exception: ' . $e->getMessage(), 'alert alert-danger');
+                }
+            }
+        }
+
+        // Get all shifts for display
+        $data['shifts'] = $this->shiftModel->getAllShifts();
+        $data['totalShifts'] = $this->shiftModel->getTotalShifts();
+        $data['totalTeamsInCollection'] = $this->teamModel->getTotalTeamsInCollection();
+        
+        // Get schedules for next 7 days
+        $data['schedules'] = [];
+        for ($i = 0; $i < 7; $i++) {
+            $date = date('Y-m-d', strtotime("+$i days"));
+            $schedules = $this->skeletonModel->getSchedulesByDate($date);
+            foreach ($schedules as $schedule) {
+                $data['schedules'][$schedule->shift_id][$date][] = $schedule;
+            }
+        }
+
+        // Get leave type statistics
+        $leaveTypeStats = $this->staffModel->getLeaveTypeDistribution();
+        
+        $data['leaveTypeStats'] = $leaveTypeStats;
+        
         $this->view('vehicle_manager/v_shift', $data);
     }
 
+    // Add method for handling shift deletion
+    public function deleteShift($id) {
+        if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+            try {
+                if ($this->shiftModel->deleteShift($id)) {
+                    echo json_encode(['success' => true]);
+                } else {
+                    echo json_encode(['success' => false, 'error' => 'Failed to delete shift']);
+                }
+            } catch (Exception $e) {
+                echo json_encode(['success' => false, 'error' => $e->getMessage()]);
+            }
+            exit;
+        }
+    }
+
+    public function getShift($id) {
+        try {
+            $shift = $this->shiftModel->getShiftById($id);
+            if ($shift) {
+                echo json_encode($shift);
+            } else {
+                echo json_encode(['error' => 'Shift not found']);
+            }
+        } catch (Exception $e) {
+            echo json_encode(['error' => $e->getMessage()]);
+        }
+        exit;
+    }
+
+    public function updateShift($id) {
+        if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+            $data = [
+                'shift_id' => $id,
+                'shift_name' => trim($_POST['shift_name']),
+                'start_time' => trim($_POST['start_time']),
+                'end_time' => trim($_POST['end_time'])
+            ];
+
+            try {
+                if ($this->shiftModel->updateShift($data)) {
+                    flash('shift_success', 'Shift updated successfully');
+                } else {
+                    flash('shift_error', $this->shiftModel->getError(), 'alert alert-danger');
+                }
+            } catch (Exception $e) {
+                flash('shift_error', $e->getMessage(), 'alert alert-danger');
+            }
+            redirect('vehiclemanager/shift');
+        }
+    }
+
     public function staff() {
-        $data = [];
+        // Get manager_id and add debug logging
+        $manager_id = $this->staffModel->getManagerIdByUserId($_SESSION['user_id']);
+        error_log("Controller got manager_id: " . $manager_id);
+        
+        $data = [
+            'drivers' => $this->staffModel->getAllDrivers(),
+            'partners' => $this->staffModel->getAllPartners(),
+            'managers' => $this->staffModel->getAllManagers(),
+            'totalDrivers' => $this->staffModel->getTotalDrivers(),
+            'totalPartners' => $this->staffModel->getTotalPartners(),
+            'totalUnavailableDriver' => $this->staffModel->getTotalUnavailableDriver(),
+            'totalUnavailablePartner' => $this->staffModel->getTotalUnavailablePartner(),
+            'currentLeaves' => $this->staffModel->getUpcomingLeaves(),
+            'pendingLeaves' => $this->staffModel->getPendingLeaves(),
+            'manager_id' => $manager_id,
+            'leaveTypeStats' => $this->staffModel->getLeaveTypeDistribution(),
+            'monthlyLeaveStats' => $this->staffModel->getMonthlyLeaveDistribution()
+        ];
+        
+        // Add debug logging
+        error_log("Data being sent to view: " . print_r($data, true));
+        
         $this->view('vehicle_manager/v_staff', $data);
     }
 
@@ -386,6 +514,93 @@ class VehicleManager extends Controller {
             error_log('Error in getRouteSuppliers: ' . $e->getMessage()); // Debug log
             header('Content-Type: application/json');
             echo json_encode(['error' => $e->getMessage()]);
+        }
+    }
+
+    public function remove_staff() {
+        if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+            // Set JSON header
+            header('Content-Type: application/json');
+
+            $data = json_decode(file_get_contents("php://input"), true);
+            if (isset($data['staffId']) && isset($data['role'])) {
+                $staffId = $data['staffId'];
+                $role = $data['role'];
+
+                $success = false;
+                if ($role === 'driver') {
+                    $success = $this->driverModel->softDeleteDriver($staffId);
+                } elseif ($role === 'partner') {
+                    $success = $this->partnerModel->softDeletePartner($staffId);
+                }
+
+                echo json_encode(['success' => $success]);
+            } else {
+                echo json_encode(['success' => false, 'error' => 'Invalid input']);
+            }
+        } else {
+            // If the request method is not POST, return an error
+            header('Content-Type: application/json');
+            echo json_encode(['success' => false, 'error' => 'Method not allowed']);
+        }
+    }
+
+    public function update_leave_status() {
+        header('Content-Type: application/json');
+        
+        if ($_SERVER['REQUEST_METHOD'] != 'POST') {
+            echo json_encode(['success' => false, 'message' => 'Invalid request method']);
+            return;
+        }
+
+        try {
+            $rawInput = file_get_contents("php://input");
+            error_log("Received raw input: " . $rawInput);
+            
+            $data = json_decode($rawInput);
+
+            if (!$data || !isset($data->requestId) || !isset($data->status) || !isset($data->vehicle_manager_id)) {
+                echo json_encode([
+                    'success' => false, 
+                    'message' => 'Missing required data',
+                    'received' => $data
+                ]);
+                return;
+            }
+
+            // Validate status value
+            if (!in_array($data->status, ['approved', 'rejected'])) {
+                echo json_encode([
+                    'success' => false,
+                    'message' => 'Invalid status value'
+                ]);
+                return;
+            }
+
+            $result = $this->staffModel->updateLeaveStatus(
+                (int)$data->requestId,
+                $data->status,
+                (int)$data->vehicle_manager_id
+            );
+
+            if ($result) {
+                echo json_encode([
+                    'success' => true,
+                    'message' => 'Leave status updated successfully'
+                ]);
+            } else {
+                echo json_encode([
+                    'success' => false,
+                    'message' => 'Failed to update leave status'
+                ]);
+            }
+
+        } catch (Exception $e) {
+            error_log("Exception in update_leave_status: " . $e->getMessage());
+            echo json_encode([
+                'success' => false,
+                'message' => 'Server error: ' . $e->getMessage()
+            ]);
         }
     }
 }

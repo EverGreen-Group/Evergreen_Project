@@ -7,10 +7,14 @@
 
 <!-- MAIN -->
 <main>
+  <!-- Add this right after the opening <main> tag -->
+
+
+
   <!-- Shift Management Section -->
   <div class="head-title">
     <div class="left">
-      <h1>Weekly Shift Schedule Management</h1>
+      <h1>Shift Management</h1>
       <ul class="breadcrumb">
         <li><a href="#">Dashboard</a></li>
         <li>Shift Management</li>
@@ -23,311 +27,196 @@
       <i class='bx bxs-calendar'></i>
       <span class="text">
         <p>Total Shifts</p>
-        <h3 id="totalShifts">35</h3>
+        <h3 id="totalShifts"><?php echo $data['totalShifts']; ?></h3>
       </span>
     </li>
     <li>
       <i class='bx bxs-group'></i>
       <span class="text">
         <p>Total Teams</p>
-        <h3 id="totalTeams">8</h3>
+        <h3 id="totalTeams"><?php echo $data['totalTeamsInCollection']; ?></h3>
       </span>
     </li>
   </ul>
 
-  <div class="shifts-section">
-    <h2>Weekly Schedule</h2>
-    <button class="create-shift-btn" onclick="openCreateShiftModal()">Create New Shift</button>
-
-    <div class="shifts-container" id="shiftsContainer">
-      <!-- Shifts will be dynamically added here -->
+  <!-- Then your shift-management-row div continues below -->
+  <div class="shift-management-row">
+    <!-- Create Shift Form -->
+    <div class="shift-form-container">
+        <h2>Create New Shift</h2>
+        <?php flash('shift_success'); ?>
+        <?php flash('shift_error'); ?>
+        <form action="<?php echo URLROOT; ?>/vehiclemanager/shift" method="POST" class="create-shift-form">
+            <div class="form-group">
+                <label for="shift_name">Shift Name</label>
+                <input type="text" id="shift_name" name="shift_name" required 
+                       placeholder="e.g., Morning Shift">
+            </div>
+            
+            <div class="form-group">
+                <label for="start_time">Start Time</label>
+                <input type="time" id="start_time" name="start_time" required>
+            </div>
+            
+            <div class="form-group">
+                <label for="end_time">End Time</label>
+                <input type="time" id="end_time" name="end_time" required>
+            </div>
+            
+            <button type="submit" class="btn btn-primary">Create Shift</button>
+        </form>
     </div>
-  </div>
 
-  <div class="team-cards-section">
-    <h2>All Teams</h2>
-    <button id="createTeamButton" class="create-team-btn">Create Team</button>
-    <div class="team-cards-container" id="teamCardsContainer">
-      <!-- Team cards will be dynamically added here -->
+    <!-- Shifts Table -->
+    <div class="shifts-table-container">
+        <h2>Current Shifts</h2>
+        <table class="shifts-table">
+            <thead>
+                <tr>
+                    <th>Shift Name</th>
+                    <th>Start Time</th>
+                    <th>End Time</th>
+                    <th>Duration</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                <?php if(isset($data['shifts']) && !empty($data['shifts'])): ?>
+                    <?php foreach($data['shifts'] as $shift): ?>
+                        <tr>
+                            <td><?php echo htmlspecialchars($shift->shift_name); ?></td>
+                            <td><?php echo date('h:i A', strtotime($shift->start_time)); ?></td>
+                            <td><?php echo date('h:i A', strtotime($shift->end_time)); ?></td>
+                            <td>
+                                <?php 
+                                    $start = strtotime($shift->start_time);
+                                    $end = strtotime($shift->end_time);
+                                    $duration = round(($end - $start) / 3600, 1);
+                                    echo $duration . ' hours';
+                                ?>
+                            </td>
+                            <td>
+                                <button class="btn-edit" onclick="editShift(<?php echo $shift->shift_id; ?>)">
+                                    <i class='bx bx-edit'></i>
+                                </button>
+                                <button class="btn-delete" onclick="deleteShift(<?php echo $shift->shift_id; ?>)">
+                                    <i class='bx bx-trash'></i>
+                                </button>
+                            </td>
+                        </tr>
+                    <?php endforeach; ?>
+                <?php else: ?>
+                    <tr>
+                        <td colspan="5" class="no-data">No shifts available</td>
+                    </tr>
+                <?php endif; ?>
+            </tbody>
+        </table>
     </div>
-  </div>
 
-  <div class="swap-requests-section">
-    <h2>Shift Swap Requests</h2>
-    <div id="swapRequestsContainer"></div>
-  </div>
 
-  <div class="shift-log-section">
-    <h2>Shift Change Log</h2>
-    <div id="shiftLogContainer"></div>
   </div>
-  
+      <!-- After the shifts-table-container div -->
+      <div class="weekly-schedule-container">
+        <h2>Upcoming Schedule</h2>
+        <div class="schedule-table-wrapper">
+            <table class="schedule-table">
+                <thead>
+                    <tr>
+                        <th>Shift Time</th>
+                        <?php 
+                        // Generate next 7 days
+                        for ($i = 0; $i < 7; $i++) {
+                            $date = date('D, M j', strtotime("+$i days"));
+                            echo "<th>$date</th>";
+                        }
+                        ?>
+                    </tr>
+                </thead>
+                <tbody>
+                    <?php foreach ($data['shifts'] as $shift): ?>
+                        <tr>
+                            <td class="shift-time">
+                                <?php 
+                                echo htmlspecialchars($shift->shift_name) . '<br>';
+                                echo date('h:i A', strtotime($shift->start_time)) . ' - ' . 
+                                     date('h:i A', strtotime($shift->end_time));
+                                ?>
+                            </td>
+                            <?php 
+                            // For each day, show the collections scheduled for this shift
+                            for ($i = 0; $i < 7; $i++) {
+                                $date = date('Y-m-d', strtotime("+$i days"));
+                                echo "<td class='schedule-cell'>";
+                                
+                                // Get collections for this shift and date
+                                if (isset($data['schedules'][$shift->shift_id][$date])) {
+                                    foreach ($data['schedules'][$shift->shift_id][$date] as $schedule) {
+                                        echo "<div class='collection-item'>";
+                                        if (isset($schedule->team_name) && !empty($schedule->team_name)) {
+                                            echo "<div class='team-info'>";
+                                            echo "<strong>Team:</strong> " . htmlspecialchars($schedule->team_name) . "<br>";
+                                            if (isset($schedule->driver_name) || isset($schedule->partner_name)) {
+                                                echo "<div class='team-members'>";
+                                                if (isset($schedule->driver_name)) {
+                                                    echo "<div class='member'>Driver: " . htmlspecialchars($schedule->driver_name) . "</div>";
+                                                }
+                                                if (isset($schedule->partner_name)) {
+                                                    echo "<div class='member'>Partner: " . htmlspecialchars($schedule->partner_name) . "</div>";
+                                                }
+                                                echo "</div>";
+                                            }
+                                            echo "</div>";
+                                        } else {
+                                            echo "<div class='no-team'>No team assigned</div>";
+                                        }
+                                        echo "<strong>Route:</strong> " . htmlspecialchars($schedule->route_name) . "<br>";
+                                        echo "<strong>Vehicle:</strong> " . htmlspecialchars($schedule->vehicle_number);
+                                        echo "</div>";
+                                    }
+                                }
+                                
+                                echo "</td>";
+                            }
+                            ?>
+                        </tr>
+                    <?php endforeach; ?>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
 </main>
 
-<!-- Modal for creating a new shift -->
-<div id="createShiftModal" class="modal">
-  <div class="modal-content">
-    <span class="close" onclick="closeModal('createShiftModal')">&times;</span>
-    <h2>Create New Shift</h2>
-    <form id="createShiftForm">
-      <input type="text" name="name" placeholder="Shift Name" required>
-      <select name="day" required>
-        <option value="">Select Day</option>
-        <option value="Monday">Monday</option>
-        <option value="Tuesday">Tuesday</option>
-        <option value="Wednesday">Wednesday</option>
-        <option value="Thursday">Thursday</option>
-        <option value="Friday">Friday</option>
-        <option value="Saturday">Saturday</option>
-        <option value="Sunday">Sunday</option>
-      </select>
-      <input type="time" name="start_time" required>
-      <input type="time" name="end_time" required>
-      <button type="submit" class="btn btn-primary">Create Shift</button>
-    </form>
-  </div>
-</div>
+<!--style section -->
+<style>
+.swap-requests-section,
+.shift-log-section {
+  margin-top: 40px;
+  background-color: #f5f5f5;
+  padding: 20px;
+  border-radius: 10px;
+}
 
-<!-- Modal for shift details and assignment -->
-<div id="shiftDetailsModal" class="modal">
-  <div class="modal-content">
-    <span class="close" onclick="closeModal('shiftDetailsModal')">&times;</span>
-    <h2>Shift Details</h2>
-    <div id="shiftDetails"></div>
-    <h3>Assign Team</h3>
-    <select id="teamSelect">
-      <option value="">Select a team</option>
-      <!-- Team options will be dynamically added here -->
-    </select>
-    <button onclick="assignTeamToShift()" class="btn btn-primary">Assign Team</button>
-    <button onclick="removeTeamFromShift()" class="btn btn-danger">Remove Team</button>
-    <button onclick="editShiftTime()" class="btn btn-primary">Edit Shift Time</button>
-    <button onclick="deleteShift()" class="btn btn-danger">Delete Shift</button>
-  </div>
-</div>
+.swap-request,
+.log-entry {
+  background-color: white;
+  padding: 15px;
+  margin-bottom: 10px;
+  border-radius: 5px;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+}
 
-<!-- Modal for team details -->
-<div id="teamDetailsModal" class="modal">
-  <div class="modal-content">
-    <span class="close" onclick="closeModal('teamDetailsModal')">&times;</span>
-    <h2>Team Details</h2>
-    <div id="teamDetails"></div>
-  </div>
-</div>
+.swap-request button {
+  margin-right: 10px;
+}
 
-<!-- Modal for creating a team -->
-<div id="createTeamModal" class="modal">
-  <div class="modal-content">
-    <span class="close" onclick="closeModal('createTeamModal')">&times;</span>
-    <h2>Create New Team</h2>
-    <form id="createTeamForm">
-      <div class="form-group">
-        <label for="teamName">Team Name</label>
-        <input type="text" id="teamName" name="teamName" required>
-      </div>
-      <div class="form-group">
-        <label for="teamDriver">Driver Name</label>
-        <input type="text" id="teamDriver" name="teamDriver" required>
-      </div>
-      <div class="form-group">
-        <label for="teamPartner">Driving Partner Name</label>
-        <input type="text" id="teamPartner" name="teamPartner" required>
-      </div>
-      <div class="modal-actions">
-        <button type="submit" class="btn btn-primary">Save Team</button>
-        <button type="button" class="btn btn-danger" onclick="closeModal('createTeamModal')">Cancel</button>
-      </div>
-    </form>
-  </div>
-</div>
-
-
-
-<script>
-  // Hardcoded team data for demonstration
-  let teams = [
-    { id: 1, name: 'Team A', driver: 'John Doe', partner: 'Alice Smith' },
-    { id: 2, name: 'Team B', driver: 'Jane Smith', partner: 'Bob Johnson' },
-    { id: 3, name: 'Team C', driver: 'Mike Johnson', partner: 'Eve Brown' },
-  ];
-
-  // Hardcoded shift data for demonstration
-  let shifts = [
-    { id: 1, name: 'Morning Shift', day: 'Monday', start_time: '08:00', end_time: '16:00', team_name: 'Team A' },
-    { id: 2, name: 'Evening Shift', day: 'Monday', start_time: '16:00', end_time: '00:00', team_name: null },
-    { id: 3, name: 'Night Shift', day: 'Tuesday', start_time: '00:00', end_time: '08:00', team_name: 'Team B' },
-  ];
-
-  // Function to render team cards
-  function renderTeamCards() {
-    const container = document.getElementById('teamCardsContainer');
-    container.innerHTML = '';
-    teams.forEach(team => {
-      const card = document.createElement('div');
-      card.className = 'team-card';
-      card.innerHTML = `
-        <div class="team-images">
-          <img src="/api/placeholder/120/120" alt="${team.driver}">
-          <img src="/api/placeholder/120/120" alt="${team.partner}">
-        </div>
-        <div class="team-card-info">
-          <h3>${team.name}</h3>
-          <p>Driver: ${team.driver}</p>
-          <p>Partner: ${team.partner}</p>
-        </div>
-      `;
-      card.onclick = () => openTeamDetailsModal(team.id);
-      container.appendChild(card);
-    });
-    document.getElementById('totalTeams').textContent = teams.length;
-  }
-
-  // Function to render shifts
-  function renderShifts() {
-    const container = document.getElementById('shiftsContainer');
-    container.innerHTML = '';
-    const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
-    days.forEach(day => {
-      const dayColumn = document.createElement('div');
-      dayColumn.className = 'day-column';
-      dayColumn.innerHTML = `<h3>${day}</h3>`;
-      const dayShifts = shifts.filter(shift => shift.day === day);
-      dayShifts.forEach(shift => {
-        const shiftCard = document.createElement('div');
-        shiftCard.className = 'shift-card';
-        shiftCard.innerHTML = `
-          <h4>${shift.name}</h4>
-          <p>Time: ${shift.start_time} - ${shift.end_time}</p>
-          <p>Team: ${shift.team_name || 'Unassigned'}</p>
-        `;
-        shiftCard.onclick = () => openShiftDetailsModal(shift.id);
-        dayColumn.appendChild(shiftCard);
-      });
-      container.appendChild(dayColumn);
-    });
-    document.getElementById('totalShifts').textContent = shifts.length;
-  }
-
-  // Call these functions when the page loads
-  renderTeamCards();
-  renderShifts();
-
-  function openCreateShiftModal() {
-    document.getElementById('createShiftModal').style.display = 'block';
-  }
-
-  function openShiftDetailsModal(shiftId) {
-    const shift = shifts.find(s => s.id === shiftId);
-    if (shift) {
-      document.getElementById('shiftDetails').innerHTML = `
-        <p>Name: ${shift.name}</p>
-        <p>Day: ${shift.day}</p>
-        <p>Time: ${shift.start_time} - ${shift.end_time}</p>
-        <p>Team: ${shift.team_name || 'Unassigned'}</p>
-      `;
-      document.getElementById('shiftDetailsModal').style.display = 'block';
-    }
-  }
-
-  function assignTeamToShift() {
-    const teamSelect = document.getElementById('teamSelect');
-    const selectedTeam = teamSelect.options[teamSelect.selectedIndex].text;
-    alert(`Assigned ${selectedTeam} to the shift!`);
-    closeModal('shiftDetailsModal');
-    renderShifts();
-  }
-
-  function removeTeamFromShift() {
-    alert('Team removed from the shift!');
-    closeModal('shiftDetailsModal');
-    renderShifts();
-  }
-
-  function editShiftTime() {
-    const newStartTime = prompt('Enter new start time (HH:MM):', '09:00');
-    const newEndTime = prompt('Enter new end time (HH:MM):', '17:00');
-    if (newStartTime && newEndTime) {
-      alert(`Shift time updated to ${newStartTime} - ${newEndTime}`);
-      closeModal('shiftDetailsModal');
-      renderShifts();
-    }
-  }
-
-  function deleteShift() {
-    if (confirm('Are you sure you want to delete this shift?')) {
-      alert('Shift deleted successfully!');
-      closeModal('shiftDetailsModal');
-      renderShifts();
-    }
-  }
-
-  function openTeamDetailsModal(teamId) {
-    const team = teams.find(t => t.id === teamId);
-    if (team) {
-      document.getElementById('teamDetails').innerHTML = `
-        <h3>${team.name}</h3>
-        <p>Driver: ${team.driver}</p>
-        <p>Driving Partner: ${team.partner}</p>
-      `;
-      document.getElementById('teamDetailsModal').style.display = 'block';
-    }
-  }
-
-  document.getElementById('createTeamButton').addEventListener('click', function() {
-    document.getElementById('createTeamModal').style.display = 'block';
-  });
-
-  document.getElementById('createTeamForm').addEventListener('submit', function(e) {
-    e.preventDefault();
-    const teamName = document.getElementById('teamName').value;
-    const teamDriver = document.getElementById('teamDriver').value;
-    const teamPartner = document.getElementById('teamPartner').value;
-    
-    // In a real application, you would save this data to your backend
-    const newTeam = {
-      id: teams.length + 1,
-      name: teamName,
-      driver: teamDriver,
-      partner: teamPartner
-    };
-    teams.push(newTeam);
-    alert(`Team "${teamName}" created successfully!`);
-    closeModal('createTeamModal');
-    renderTeamCards();
-  });
-
-  document.getElementById('createShiftForm').addEventListener('submit', function(e) {
-    e.preventDefault();
-    const shiftName = this.elements['name'].value;
-    const shiftDay = this.elements['day'].value;
-    const startTime = this.elements['start_time'].value;
-    const endTime = this.elements['end_time'].value;
-    
-    const newShift = {
-      id: shifts.length + 1,
-      name: shiftName,
-      day: shiftDay,
-      start_time: startTime,
-      end_time: endTime,
-      team_name: null
-    };
-    shifts.push(newShift);
-    alert('New shift created successfully!');
-    closeModal('createShiftModal');
-    renderShifts();
-  });
-
-  function closeModal(modalId) {
-    document.getElementById(modalId).style.display = 'none';
-  }
-
-  // Close modals when clicking outside
-  window.onclick = function(event) {
-    if (event.target.className === 'modal') {
-      event.target.style.display = 'none';
-    }
-  }
-</script>
+.log-entry small {
+  color: #888;
+  display: block;
+  margin-top: 5px;
+}
+</style>
 
 <style>
   .shift-box-info {
@@ -578,140 +467,275 @@
   }
 </style>
 
-<script>
-// Simulated data for swap requests
-let swapRequests = [
-  { id: 1, requesterName: 'John Doe', requesterTeam: 'Team A', requestedTeam: 'Team B', shiftDate: '2024-09-20', status: 'pending' },
-  { id: 2, requesterName: 'Jane Smith', requesterTeam: 'Team C', requestedTeam: 'Team A', shiftDate: '2024-09-22', status: 'pending' }
-];
-
-// Simulated data for shift log
-let shiftLog = [
-  { id: 1, action: 'Shift Created', details: 'Morning Shift created for Monday', timestamp: '2024-09-15 09:00:00' },
-  { id: 2, action: 'Team Assigned', details: 'Team A assigned to Morning Shift on Monday', timestamp: '2024-09-15 10:30:00' }
-];
-
-function renderSwapRequests() {
-  const container = document.getElementById('swapRequestsContainer');
-  container.innerHTML = '';
-  swapRequests.forEach(request => {
-    const requestElement = document.createElement('div');
-    requestElement.className = 'swap-request';
-    requestElement.innerHTML = `
-      <p><strong>${request.requesterName}</strong> from ${request.requesterTeam} requests to swap with ${request.requestedTeam} for shift on ${request.shiftDate}</p>
-      <button onclick="handleSwapRequest(${request.id}, 'accept')" class="btn btn-primary">Accept</button>
-      <button onclick="handleSwapRequest(${request.id}, 'deny')" class="btn btn-danger">Deny</button>
-    `;
-    container.appendChild(requestElement);
-  });
-}
-
-function handleSwapRequest(requestId, action) {
-  const request = swapRequests.find(r => r.id === requestId);
-  if (request) {
-    request.status = action === 'accept' ? 'accepted' : 'denied';
-    alert(`Swap request ${action}`);
-    renderSwapRequests();
-    addToShiftLog(`Swap Request ${action.charAt(0).toUpperCase() + action.slice(1)}ed`, 
-                  `${request.requesterName}'s request to swap with ${request.requestedTeam} for ${request.shiftDate} was ${action}ed`);
-  }
-}
-
-function renderShiftLog() {
-  const container = document.getElementById('shiftLogContainer');
-  container.innerHTML = '';
-  shiftLog.forEach(log => {
-    const logElement = document.createElement('div');
-    logElement.className = 'log-entry';
-    logElement.innerHTML = `
-      <p><strong>${log.action}</strong>: ${log.details}</p>
-      <small>${log.timestamp}</small>
-    `;
-    container.appendChild(logElement);
-  });
-}
-
-function addToShiftLog(action, details) {
-  const newLog = {
-    id: shiftLog.length + 1,
-    action: action,
-    details: details,
-    timestamp: new Date().toISOString().replace('T', ' ').substr(0, 19)
-  };
-  shiftLog.unshift(newLog);
-  renderShiftLog();
-}
-
-// Call these functions to render swap requests and shift log
-renderSwapRequests();
-renderShiftLog();
-
-// Modify existing functions to add logs
-function assignTeamToShift() {
-  const teamSelect = document.getElementById('teamSelect');
-  const selectedTeam = teamSelect.options[teamSelect.selectedIndex].text;
-  alert(`Assigned ${selectedTeam} to the shift!`);
-  closeModal('shiftDetailsModal');
-  renderShifts();
-  addToShiftLog('Team Assigned', `${selectedTeam} assigned to shift`);
-}
-
-function removeTeamFromShift() {
-  alert('Team removed from the shift!');
-  closeModal('shiftDetailsModal');
-  renderShifts();
-  addToShiftLog('Team Removed', 'Team removed from shift');
-}
-
-function editShiftTime() {
-  const newStartTime = prompt('Enter new start time (HH:MM):', '09:00');
-  const newEndTime = prompt('Enter new end time (HH:MM):', '17:00');
-  if (newStartTime && newEndTime) {
-    alert(`Shift time updated to ${newStartTime} - ${newEndTime}`);
-    closeModal('shiftDetailsModal');
-    renderShifts();
-    addToShiftLog('Shift Time Updated', `Shift time changed to ${newStartTime} - ${newEndTime}`);
-  }
-}
-
-function deleteShift() {
-  if (confirm('Are you sure you want to delete this shift?')) {
-    alert('Shift deleted successfully!');
-    closeModal('shiftDetailsModal');
-    renderShifts();
-    addToShiftLog('Shift Deleted', 'A shift was deleted from the schedule');
-  }
-}
-</script>
-
-<!--style section -->
 <style>
-.swap-requests-section,
-.shift-log-section {
-  margin-top: 40px;
-  background-color: #f5f5f5;
-  padding: 20px;
-  border-radius: 10px;
+.shift-management-row {
+    display: flex;
+    gap: 24px;
+    margin-top: 36px;
 }
 
-.swap-request,
-.log-entry {
-  background-color: white;
-  padding: 15px;
-  margin-bottom: 10px;
-  border-radius: 5px;
-  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+.shift-form-container,
+.shifts-table-container {
+    flex: 1;
+    background: var(--light);
+    border-radius: 20px;
+    padding: 24px;
 }
 
-.swap-request button {
-  margin-right: 10px;
+.create-shift-form {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
 }
 
-.log-entry small {
-  color: #888;
-  display: block;
-  margin-top: 5px;
+.form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+}
+
+.form-group label {
+    font-weight: 600;
+    color: var(--dark);
+}
+
+.form-group input,
+.form-group select {
+    padding: 8px 12px;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    font-size: 14px;
+}
+
+.shifts-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 15px;
+}
+
+.shifts-table th,
+.shifts-table td {
+    padding: 12px;
+    text-align: left;
+    border-bottom: 1px solid #ddd;
+}
+
+.shifts-table th {
+    font-weight: 600;
+    color: var(--dark);
+    background-color: var(--light-main);
+}
+
+.shifts-table tr:hover {
+    background-color: var(--light-main);
+}
+
+.btn-edit,
+.btn-delete {
+    padding: 6px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    margin-right: 5px;
+}
+
+.btn-edit {
+    background-color: var(--main);
+    color: white;
+}
+
+.btn-delete {
+    background-color: #e74c3c;
+    color: white;
+}
+
+.btn-edit:hover,
+.btn-delete:hover {
+    opacity: 0.8;
+}
+
+.no-data {
+    text-align: center;
+    color: var(--dark-grey);
+    padding: 20px;
+}
+
+h2 {
+    color: var(--dark);
+    margin-bottom: 20px;
+}
+
+@media screen and (max-width: 768px) {
+    .shift-management-row {
+        flex-direction: column;
+    }
 }
 </style>
+
+<style>
+.alert {
+    padding: 15px;
+    margin-bottom: 20px;
+    border: 1px solid transparent;
+    border-radius: 4px;
+}
+
+.alert-success {
+    color: #155724;
+    background-color: #d4edda;
+    border-color: #c3e6cb;
+}
+
+.alert-danger {
+    color: #721c24;
+    background-color: #f8d7da;
+    border-color: #f5c6cb;
+}
+</style>
+
+<style>
+.weekly-schedule-container {
+    margin-top: 36px;
+    background: var(--light);
+    border-radius: 20px;
+    padding: 24px;
+    overflow-x: auto;
+}
+
+.schedule-table-wrapper {
+    overflow-x: auto;
+}
+
+.schedule-table {
+    width: 100%;
+    border-collapse: collapse;
+    min-width: 1000px; /* Ensure table doesn't get too narrow */
+}
+
+.schedule-table th,
+.schedule-table td {
+    border: 1px solid #ddd;
+    padding: 12px;
+    text-align: left;
+}
+
+.schedule-table th {
+    background-color: var(--light-main);
+    color: var(--dark);
+    font-weight: 600;
+}
+
+.shift-time {
+    background-color: var(--light-main);
+    font-weight: 600;
+    min-width: 150px;
+}
+
+.schedule-cell {
+    vertical-align: top;
+    min-height: 100px;
+}
+
+.collection-item {
+    background-color: var(--light-main);
+    padding: 12px;
+    border-radius: 4px;
+    margin-bottom: 8px;
+    font-size: 0.9em;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+}
+
+.team-info {
+    border-bottom: 1px solid rgba(0,0,0,0.1);
+    padding-bottom: 8px;
+    margin-bottom: 8px;
+}
+
+.team-members {
+    margin-top: 4px;
+    padding-left: 12px;
+    font-size: 0.9em;
+    color: var(--dark-grey);
+}
+
+.member {
+    margin: 2px 0;
+    padding: 2px 0;
+}
+
+.no-team {
+    color: #999;
+    font-style: italic;
+    margin-bottom: 8px;
+    padding: 4px 0;
+}
+</style>
+
+<script>
+function editShift(shiftId) {
+    fetch(`<?php echo URLROOT; ?>/vehiclemanager/getShift/${shiftId}`)
+        .then(response => response.json())
+        .then(shift => {
+            if (shift.error) {
+                alert(shift.error);
+                return;
+            }
+            
+            document.getElementById('shift_name').value = shift.shift_name;
+            document.getElementById('start_time').value = shift.start_time.slice(0, 5);
+            document.getElementById('end_time').value = shift.end_time.slice(0, 5);
+            
+            const form = document.querySelector('.create-shift-form');
+            form.action = `<?php echo URLROOT; ?>/vehiclemanager/updateShift/${shiftId}`;
+            
+            document.querySelector('.create-shift-form button').textContent = 'Update Shift';
+            
+            if (!document.querySelector('.btn-cancel')) {
+                const cancelBtn = document.createElement('button');
+                cancelBtn.type = 'button';
+                cancelBtn.className = 'btn btn-danger btn-cancel';
+                cancelBtn.textContent = 'Cancel';
+                cancelBtn.onclick = resetForm;
+                form.appendChild(cancelBtn);
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Failed to fetch shift details');
+        });
+}
+
+function deleteShift(shiftId) {
+    if (confirm('Are you sure you want to delete this shift?')) {
+        fetch(`<?php echo URLROOT; ?>/vehiclemanager/deleteShift/${shiftId}`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                window.location.reload();
+            } else {
+                alert(data.error || 'Failed to delete shift');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Failed to delete shift');
+        });
+    }
+}
+
+function resetForm() {
+    const form = document.querySelector('.create-shift-form');
+    form.reset();
+    form.action = `<?php echo URLROOT; ?>/vehiclemanager/shift`;
+    document.querySelector('.create-shift-form button').textContent = 'Create Shift';
+    const cancelBtn = document.querySelector('.btn-cancel');
+    if (cancelBtn) cancelBtn.remove();
+}
+</script>
 
 <?php require APPROOT . '/views/inc/components/footer.php'; ?>
