@@ -136,5 +136,67 @@ class M_Team {
         ');
         return $this->db->single()->total_teams;
     }
+
+    public function updateTeam($data) {
+        $this->db->query('UPDATE teams SET 
+            team_name = :team_name,
+            driver_id = :driver_id,
+            partner_id = :partner_id,
+            status = :status
+            WHERE team_id = :team_id');
+
+        // Bind values
+        $this->db->bind(':team_id', $data['team_id']);
+        $this->db->bind(':team_name', $data['team_name']);
+        $this->db->bind(':driver_id', $data['driver_id'] ?: null);  // Convert empty string to null
+        $this->db->bind(':partner_id', $data['partner_id'] ?: null); // Convert empty string to null
+        $this->db->bind(':status', $data['status']);
+
+        return $this->db->execute();
+    }
+
+    public function createTeam($data) {
+        $this->db->query('INSERT INTO teams (
+            team_name, 
+            driver_id, 
+            partner_id, 
+            manager_id,
+            status,
+            is_visible
+        ) VALUES (
+            :team_name, 
+            :driver_id, 
+            :partner_id, 
+            :manager_id,
+            :status,
+            1
+        )');
+
+        // Bind values
+        $this->db->bind(':team_name', $data['team_name']);
+        $this->db->bind(':driver_id', $data['driver_id'] ?: null);  // Convert empty string to null
+        $this->db->bind(':partner_id', $data['partner_id'] ?: null); // Convert empty string to null
+        $this->db->bind(':manager_id', $data['manager_id']); // Assuming manager_id is the logged-in user's ID
+        $this->db->bind(':status', $data['status']);
+
+        return $this->db->execute();
+    }
+
+    // Modify getTeams to include current team members
+    public function getTeams() {
+        $this->db->query("
+            SELECT t.*, 
+                d.driver_id as current_driver_id, 
+                d.driver_name as current_driver_name,
+                p.partner_id as current_partner_id,
+                p.partner_name as current_partner_name
+            FROM teams t
+            LEFT JOIN drivers d ON t.driver_id = d.driver_id
+            LEFT JOIN partners p ON t.partner_id = p.partner_id
+            WHERE t.is_visible = 1
+        ");
+        
+        return $this->db->resultSet();
+    }
 }
 ?>

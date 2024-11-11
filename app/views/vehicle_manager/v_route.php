@@ -44,71 +44,7 @@
     </li>
 </ul>
 
-  <!-- Team Information Table -->
-  <div class="table-data">
-    <div class="order">
-      <div class="head">
-        <h3>Route details</h3>
-        <i class='bx bx-search'></i>
-      </div>
-      <table>
-        <thead>
-          <tr>
-            <th>Route ID</th>
-            <th>Name</th>
-            <th>Suppliers</th>
-            <th>Date</th>
-            <th>Status</th>
-            <th></th> <!-- Empty header for expand button -->
-          </tr>
-        </thead>
-        <tbody>
-          <?php foreach ($allRoutes as $route): ?>
-              <tr class="route-row" data-route-id="<?php echo htmlspecialchars($route->route_id); ?>">
-                  <td><?php echo htmlspecialchars($route->route_id); ?></td>
-                  <td><?php echo htmlspecialchars($route->route_name); ?></td>
-                  <td><?php echo htmlspecialchars($route->number_of_suppliers); ?></td>
-                  <td><?php echo htmlspecialchars($route->date); ?></td>
-                  <td>
-                      <span class="status <?php echo htmlspecialchars($route->status === 'Active' ? 'completed' : 'error'); ?>">
-                          <?php echo htmlspecialchars($route->status); ?>
-                      </span>
-                  </td>
-                  <td>
-                      <button class="expand-btn">
-                          <i class='bx bx-chevron-down'></i>
-                      </button>
-                  </td>
-              </tr>
-              <tr class="expanded-content" style="display: none;">
-                  <td colspan="6">
-                      <div class="expanded-details">
-                          <div class="route-map" style="height: 400px;"></div>
-                          <div class="supplier-management">
-                              <div class="current-suppliers">
-                                  <h4>Current Suppliers</h4>
-                                  <ul class="supplier-list"></ul>
-                              </div>
-                              <div class="add-supplier">
-                                  <h4>Add Supplier</h4>
-                                  <select class="supplier-select">
-                                      <option value="" disabled selected>Select a supplier</option>
-                                  </select>
-                                  <button class="add-supplier-btn">Add</button>
-                              </div>
-                          </div>
-                          <div class="action-buttons">
-                              <button class="save-changes-btn">Save Changes</button>
-                              <button class="cancel-changes-btn">Cancel</button>
-                          </div>
-                      </div>
-                  </td>
-              </tr>
-          <?php endforeach; ?>
-        </tbody>
-      </table>
-    </div>
-  </div>
+
 
   <div class="routes-section">
     <h2>All Routes</h2>
@@ -185,39 +121,95 @@
   </div>
 
 
-  <!-- Unallocated Suppliers Table -->
+  <!-- First row with two tables -->
+  <div class="table-data table-container">
+    <!-- Left table: Unallocated Suppliers -->
+    <div class="order">
+        <div class="head">
+            <h3>Unallocated Suppliers</h3>
+            <i class='bx bx-search'></i>
+        </div>
+        <table>
+            <thead>
+                <tr>
+                    <th>Supplier ID</th>
+                    <th>Name</th>
+                    <th>Address</th>
+                    <th>Location</th>
+                </tr>
+            </thead>
+            <tbody>
+                <?php foreach ($data['unassignedSuppliersList'] as $supplier): ?>
+                    <tr>
+                        <td><?php echo htmlspecialchars($supplier->supplier_id); ?></td>
+                        <td><?php echo htmlspecialchars($supplier->full_name); ?></td>
+                        <td><?php echo htmlspecialchars($supplier->street . ', ' . $supplier->city); ?></td>
+                        <td>
+                            <a href="#" class="location-link" 
+                               data-coordinates="<?php echo htmlspecialchars($supplier->coordinates); ?>"
+                               data-name="<?php echo htmlspecialchars($supplier->full_name); ?>">
+                                <?php echo htmlspecialchars($supplier->coordinates); ?>
+                            </a>
+                        </td>
+                    </tr>
+                <?php endforeach; ?>
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Right table: Routes - NO SUPPLIER DETAILS HERE -->
+    <div class="order">
+        <div class="head">
+            <h3>Routes</h3>
+            <i class='bx bx-search'></i>
+        </div>
+        <table>
+            <thead>
+                <tr>
+                    <th>Route ID</th>
+                    <th>Name</th>
+                    <th>Suppliers</th>
+                    <th>Status</th>
+                </tr>
+            </thead>
+            <tbody>
+                <?php foreach ($allRoutes as $route): ?>
+                    <tr class="route-row" data-route-id="<?php echo htmlspecialchars($route->route_id); ?>">
+                        <td><?php echo htmlspecialchars($route->route_id); ?></td>
+                        <td><?php echo htmlspecialchars($route->route_name); ?></td>
+                        <td><?php echo htmlspecialchars($route->number_of_suppliers); ?></td>
+                        <td>
+                            <span class="status <?php echo htmlspecialchars($route->status === 'Active' ? 'completed' : 'error'); ?>">
+                                <?php echo htmlspecialchars($route->status); ?>
+                            </span>
+                        </td>
+                    </tr>
+                <?php endforeach; ?>
+            </tbody>
+        </table>
+    </div>
+  </div>
+
+  <!-- Separate row for Route Suppliers table -->
   <div class="table-data">
     <div class="order">
-      <div class="head">
-        <h3>Unallocated Suppliers</h3>
-        <i class='bx bx-search'></i>
-      </div>
-      <table>
-        <thead>
-          <tr>
-            <th>Supplier ID</th>
-            <th>Name</th>
-            <th>Address</th>
-            <th>Location</th>
-          </tr>
-        </thead>
-        <tbody>
-          <?php foreach ($data['unassignedSuppliersList'] as $supplier): ?>
-              <tr>
-                  <td><?php echo htmlspecialchars($supplier->supplier_id); ?></td>
-                  <td><?php echo htmlspecialchars($supplier->full_name); ?></td>
-                  <td><?php echo htmlspecialchars($supplier->street . ', ' . $supplier->city); ?></td>
-                  <td>
-                      <a href="#" class="location-link" 
-                         data-coordinates="<?php echo htmlspecialchars($supplier->coordinates); ?>"
-                         data-name="<?php echo htmlspecialchars($supplier->full_name); ?>">
-                          <?php echo htmlspecialchars($supplier->coordinates); ?>
-                      </a>
-                  </td>
-              </tr>
-          <?php endforeach; ?>
-        </tbody>
-      </table>
+        <div class="head">
+            <h3>Route Suppliers</h3>
+            <p class="route-name">Select a route to view suppliers</p>
+        </div>
+        <table id="routeSupplierTable">
+            <thead>
+                <tr>
+                    <th>Order</th>
+                    <th>Supplier ID</th>
+                    <th>Supplier Name</th>
+                    <th>Location (Lat, Long)</th>
+                </tr>
+            </thead>
+            <tbody>
+                <!-- Will be populated via JavaScript -->
+            </tbody>
+        </table>
     </div>
   </div>
 
@@ -484,8 +476,42 @@
 
     .expanded-details {
         padding: 20px;
-        background: #f8f9fa;
-        border-radius: 5px;
+        background: var(--light);
+        border-radius: 8px;
+        margin: 10px;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    }
+
+    .supplier-list-container {
+        width: 100%;
+    }
+
+    .supplier-list-header {
+        display: grid;
+        grid-template-columns: 80px 2fr 1fr 2fr 1fr;
+        gap: 20px;
+        padding: 15px 20px;
+        background: var(--main);
+        color: var(--light);
+        font-weight: 600;
+    }
+
+    .supplier-list-content {
+        max-height: 300px;
+        overflow-y: auto;
+    }
+
+    .supplier-item {
+        display: grid;
+        grid-template-columns: 80px 2fr 1fr 2fr 1fr;
+        gap: 20px;
+        padding: 15px 20px;
+        border-bottom: 1px solid var(--grey);
+        align-items: center;
+    }
+
+    .supplier-item:hover {
+        background: var(--grey);
     }
 
     .supplier-management {
@@ -563,6 +589,180 @@
     #locationModal .modal-content {
         width: 80%;
         max-width: 800px;
+    }
+
+    .supplier-timeline {
+        padding: 20px;
+        background: #fff;
+        border-radius: 8px;
+        margin-top: 20px;
+    }
+
+    .timeline-header {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 10px;
+    }
+
+    .timeline-content {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+    }
+
+    .expanded-content {
+        display: none; /* Hidden by default */
+    }
+
+    .expanded-content td {
+        padding: 0; /* Remove padding from td */
+    }
+
+    .supplier-list {
+        width: 100%;
+        background: var(--light);
+    }
+
+    .supplier-list-header {
+        display: grid;
+        grid-template-columns: 80px 2fr 1fr 2fr 1fr;
+        gap: 20px;
+        padding: 15px 20px;
+        background: var(--main);
+        color: var(--light);
+        font-weight: 600;
+    }
+
+    .supplier-list-content {
+        max-height: 300px;
+        overflow-y: auto;
+    }
+
+    .supplier-item {
+        display: grid;
+        grid-template-columns: 80px 2fr 1fr 2fr 1fr;
+        gap: 20px;
+        padding: 15px 20px;
+        border-bottom: 1px solid var(--grey);
+        align-items: center;
+    }
+
+    .supplier-item:hover {
+        background: var(--grey);
+    }
+
+    .expanded-content {
+        display: none;
+        position: relative;
+    }
+
+    .expanded-content::after {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: var(--light);
+        z-index: 1;
+    }
+
+    .supplier-list {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        z-index: 2;
+        background: var(--light);
+    }
+
+    .supplier-list-header {
+        display: grid;
+        grid-template-columns: 80px 2fr 1fr 2fr 1fr;
+        gap: 20px;
+        padding: 15px 20px;
+        background: var(--main);
+        color: var(--light);
+        font-weight: 600;
+    }
+
+    .supplier-list-content {
+        max-height: 300px;
+        overflow-y: auto;
+    }
+
+    .supplier-item {
+        display: grid;
+        grid-template-columns: 80px 2fr 1fr 2fr 1fr;
+        gap: 20px;
+        padding: 15px 20px;
+        border-bottom: 1px solid var(--grey);
+        align-items: center;
+    }
+
+    .supplier-item:hover {
+        background: var(--grey);
+    }
+
+    .table-container {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 24px;
+    }
+
+    .route-row {
+        cursor: pointer;
+    }
+
+    .route-row:hover {
+        background-color: var(--grey);
+    }
+
+    .route-row.selected {
+        background-color: var(--grey);
+    }
+
+    .route-name {
+        color: var(--dark-grey);
+        font-size: 14px;
+        margin: 0;
+    }
+
+    .supplier-details {
+        padding: 15px;
+        background: var(--light);
+        border-radius: 4px;
+        margin: 10px;
+    }
+
+    .supplier-details h4 {
+        margin-bottom: 10px;
+        color: var(--dark);
+    }
+
+    .supplier-details-table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+
+    .supplier-details-table th,
+    .supplier-details-table td {
+        padding: 8px;
+        text-align: left;
+        border-bottom: 1px solid var(--grey);
+    }
+
+    .supplier-details-table th {
+        background-color: var(--grey);
+        font-weight: 600;
+    }
+
+    .route-row.active {
+        background-color: var(--grey);
+    }
+
+    #routeSupplierTable {
+        margin-top: 10px;
     }
 </style>
 
@@ -946,51 +1146,39 @@ document.addEventListener('DOMContentLoaded', () => {
             id: route.route_id,
             name: route.route_name,
             status: route.status,
+            start_location: {
+                lat: parseFloat(route.start_location_lat),
+                lng: parseFloat(route.start_location_long)
+            },
+            end_location: {
+                lat: parseFloat(route.end_location_lat),
+                lng: parseFloat(route.end_location_long)
+            },
             stops: []
         };
 
-        // Fetch route suppliers
         try {
             const url = `<?php echo URLROOT; ?>/vehiclemanager/getRouteSuppliers/${route.route_id}`;
-            console.log('Fetching from URL:', url); // Debug log
+            console.log('Fetching suppliers for route:', route.route_id); // Debug log
             
             const response = await fetch(url);
-            console.log('Response:', response); // Debug log
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
             
             const routeSuppliers = await response.json();
-            console.log('Route suppliers:', routeSuppliers); // Debug log
+            console.log('Received suppliers:', routeSuppliers); // Debug log
             
-            editingRoute.stops = routeSuppliers.map(supplier => ({
-                id: 'S' + supplier.supplier_id,
-                name: supplier.supplier_name,
-                location: {
-                    lat: parseFloat(supplier.coordinates.split(',')[0]),
-                    lng: parseFloat(supplier.coordinates.split(',')[1])
-                }
-            }));
+            // Update the stops array with the received suppliers
+            editingRoute.stops = routeSuppliers;
+            
+            // Update the UI
+            updateEditStopList();
+            
         } catch (error) {
-            console.error('Detailed error:', error); // More detailed error log
-            alert('Error loading route details');
-            return;
+            console.error('Error fetching route suppliers:', error);
+            alert('Error loading route details: ' + error.message);
         }
-
-        // Populate form
-        document.getElementById('editRouteId').value = editingRoute.id;
-        document.getElementById('editRouteName').value = editingRoute.name;
-        document.getElementById('editStatus').value = editingRoute.status;
-
-        // Populate supplier dropdown
-        populateEditSupplierDropdown();
-        updateEditStopList();
-
-        // Show modal
-        editModal.style.display = 'block';
-
-        // Initialize map
-        setTimeout(() => {
-            initEditMap();
-            updateEditMap();
-        }, 100);
     }
 
     function populateEditSupplierDropdown() {
@@ -1101,7 +1289,8 @@ document.addEventListener('DOMContentLoaded', () => {
             const row = this.closest('.route-row');
             const expandedRow = row.nextElementSibling;
             const routeId = row.dataset.routeId;
-            const mapContainer = expandedRow.querySelector('.route-map');
+            
+            console.log('Route ID:', routeId); // Debug
             
             this.classList.toggle('active');
             
@@ -1109,79 +1298,27 @@ document.addEventListener('DOMContentLoaded', () => {
                 expandedRow.style.display = 'table-row';
                 
                 try {
-                    const response = await fetch(`<?php echo URLROOT; ?>/vehiclemanager/getRouteSuppliers/${routeId}`);
-                    const suppliers = await response.json();
+                    const url = `<?php echo URLROOT; ?>/vehiclemanager/getRouteSuppliers/${routeId}`;
+                    console.log('Fetching from URL:', url); // Debug
                     
-                    // Use the existing map logic
-                    const expandedMap = new google.maps.Map(mapContainer, {
-                        zoom: 8,
-                        center: { lat: 7.8731, lng: 80.7718 }
-                    });
-
-                    const expandedDirectionsService = new google.maps.DirectionsService();
-                    const expandedDirectionsRenderer = new google.maps.DirectionsRenderer({
-                        suppressMarkers: true
-                    });
-                    expandedDirectionsRenderer.setMap(expandedMap);
-
-                    // Convert suppliers to the format expected by the existing logic
-                    const routeStops = suppliers.map(supplier => ({
-                        id: 'S' + supplier.supplier_id,
-                        name: supplier.supplier_name,
-                        location: {
-                            lat: parseFloat(supplier.coordinates.split(',')[0]),
-                            lng: parseFloat(supplier.coordinates.split(',')[1])
-                        }
-                    }));
-
-                    // Use the existing route optimization and display logic
-                    const factoryLocation = { 
-                        lat: <?php echo M_Route::FACTORY_LAT; ?>, 
-                        lng: <?php echo M_Route::FACTORY_LONG; ?> 
-                    };
-
-                    const orderedStops = orderStopsByNearestNeighbor(factoryLocation, routeStops);
-                    const routePoints = [
-                        {
-                            location: factoryLocation,
-                            name: 'Factory (Start)'
-                        },
-                        ...orderedStops
-                    ];
-
-                    // Add markers and calculate route using existing logic
-                    if (routePoints.length >= 2) {
-                        const origin = routePoints[0].location;
-                        const destination = routePoints[routePoints.length - 1].location;
-                        const waypoints = routePoints.slice(1, -1).map(stop => ({
-                            location: stop.location,
-                            stopover: true
-                        }));
-
-                        expandedDirectionsService.route(
-                            {
-                                origin: origin,
-                                destination: destination,
-                                waypoints: waypoints,
-                                optimizeWaypoints: false,
-                                travelMode: google.maps.TravelMode.DRIVING,
-                            },
-                            (response, status) => {
-                                if (status === "OK" && response) {
-                                    expandedDirectionsRenderer.setDirections(response);
-                                    
-                                    // Add markers using existing marker logic
-                                    addRouteMarkers(expandedMap, routePoints);
-                                }
-                            }
-                        );
+                    const response = await fetch(url);
+                    console.log('Response status:', response.status); // Debug
+                    
+                    if (!response.ok) {
+                        const errorText = await response.text();
+                        console.log('Error response:', errorText); // Debug
+                        throw new Error(`HTTP error! status: ${response.status}, message: ${errorText}`);
                     }
-
+                    
+                    const suppliers = await response.json();
+                    console.log('Received suppliers:', suppliers); // Debug
+                    
+                    // Update the supplier list
                     updateSupplierList(expandedRow, suppliers);
                     
                 } catch (error) {
-                    console.error('Error:', error);
-                    alert('Error loading route details');
+                    console.error('Detailed error:', error); // More detailed error logging
+                    alert('Error loading route details: ' + error.message);
                 }
             } else {
                 expandedRow.style.display = 'none';
@@ -1215,6 +1352,65 @@ document.addEventListener('DOMContentLoaded', () => {
             });
         });
     }
+
+    function updateSupplierList(expandedRow, suppliers) {
+        const listContent = expandedRow.querySelector('.supplier-list-content');
+        listContent.innerHTML = '';
+        
+        suppliers.forEach((supplier, index) => {
+            const supplierItem = document.createElement('div');
+            supplierItem.className = 'supplier-item';
+            supplierItem.innerHTML = `
+                <div>${index + 1}</div>
+                <div>${supplier.supplier_name}</div>
+                <div>${supplier.contact_number}</div>
+                <div>${supplier.address}</div>
+                <div>${supplier.daily_capacity} kg</div>
+            `;
+            listContent.appendChild(supplierItem);
+        });
+    }
+
+    const routeRows = document.querySelectorAll('.route-row');
+    const supplierTableBody = document.querySelector('#routeSupplierTable tbody');
+    const routeNameDisplay = document.querySelector('.route-name');
+
+    routeRows.forEach(row => {
+        row.addEventListener('click', async function() {
+            // Remove selected class from all rows
+            document.querySelectorAll('.route-row').forEach(r => r.classList.remove('selected'));
+            // Add selected class to clicked row
+            this.classList.add('selected');
+
+            const routeId = this.dataset.routeId;
+            const routeName = this.querySelector('td:nth-child(2)').textContent;
+
+            try {
+                const response = await fetch(`<?php echo URLROOT; ?>/vehiclemanager/getRouteSuppliers/${routeId}`);
+                if (!response.ok) throw new Error('Failed to fetch suppliers');
+                
+                const suppliers = await response.json();
+                console.log('Received suppliers:', suppliers); // Debug log
+                
+                routeNameDisplay.textContent = `Route: ${routeName}`;
+                
+                // Update supplier table with the correct fields
+                supplierTableBody.innerHTML = suppliers.map((supplier, index) => `
+                    <tr>
+                        <td>${index + 1}</td>
+                        <td>${supplier.supplier_id}</td>
+                        <td>${supplier.supplier_name}</td>
+                        <td>${supplier.latitude}, ${supplier.longitude}</td>
+                    </tr>
+                `).join('');
+                
+            } catch (error) {
+                console.error('Error:', error);
+                routeNameDisplay.textContent = 'Error loading suppliers';
+                supplierTableBody.innerHTML = '';
+            }
+        });
+    });
 });
 
 // Global initMap function for Google Maps callback

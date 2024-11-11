@@ -9,6 +9,7 @@ require_once '../app/models/M_Staff.php';
 require_once '../app/models/M_Driver.php';
 require_once '../app/models/M_Partner.php';
 require_once '../app/helpers/auth_middleware.php';
+require_once '../app/helpers/UserHelper.php';
 
 class VehicleManager extends Controller {
     private $vehicleManagerModel;
@@ -20,6 +21,7 @@ class VehicleManager extends Controller {
     private $driverModel; // Declare a variable for Driver model
     private $partnerModel; // Add this line
     private $staffModel;
+    private $userHelper;
     
 
     public function __construct() {
@@ -44,6 +46,7 @@ class VehicleManager extends Controller {
         $this->driverModel = new M_Driver(); // Instantiate Driver model
         $this->partnerModel = new M_Partner(); // Add this line
         $this->staffModel = $this->model('M_Staff');
+        $this->userHelper = new UserHelper();
     }
 
     public function index() {
@@ -132,6 +135,69 @@ class VehicleManager extends Controller {
         ];
         
         $this->view('vehicle_manager/v_team', $data);
+    }
+
+    public function updateTeam() {
+        if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+            // Sanitize POST data
+            $_POST = filter_input_array(INPUT_POST, FILTER_SANITIZE_STRING);
+    
+            $data = [
+                'team_id' => trim($_POST['team_id']),
+                'team_name' => trim($_POST['team_name']),
+                'driver_id' => trim($_POST['driver_id']),
+                'partner_id' => trim($_POST['partner_id']),
+                'status' => trim($_POST['status'])
+            ];
+    
+            // Validate team name
+            if (empty($data['team_name'])) {
+                die('Please enter team name');
+            }
+    
+            if ($this->teamModel->updateTeam($data)) {
+                // Success - Redirect
+                header('Location: ' . URLROOT . '/vehiclemanager/team');
+            } else {
+                die('Something went wrong');
+            }
+        }
+    }
+
+    public function createTeam() {
+        if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+            $_POST = filter_input_array(INPUT_POST, FILTER_SANITIZE_STRING);
+
+            // Get manager_id using helper
+            $manager_id = $this->userHelper->getManagerId($_SESSION['user_id']);
+            if (!$manager_id) {
+                die('Invalid manager access');
+            }
+
+            $data = [
+                'team_name' => trim($_POST['team_name']),
+                'driver_id' => !empty($_POST['driver_id']) ? trim($_POST['driver_id']) : null,
+                'partner_id' => !empty($_POST['partner_id']) ? trim($_POST['partner_id']) : null,
+                'status' => trim($_POST['status']),
+                'manager_id' => $this->userHelper->getManagerId($_SESSION['user_id'])
+            ];
+
+            // Validate team name
+            if (empty($data['team_name'])) {
+                die('Please enter team name');
+            }
+
+            // Debug line - remove in production
+            error_log('Creating team with data: ' . print_r($data, true));
+
+            if ($this->teamModel->createTeam($data)) {
+                header('Location: ' . URLROOT . '/vehiclemanager/team');
+            } else {
+                // Debug line - remove in production
+                error_log('Database error: ');
+                die('Something went wrong');
+            }
+        }
     }
 
     public function route() {
@@ -495,24 +561,20 @@ class VehicleManager extends Controller {
     }
 
     public function getRouteSuppliers($routeId) {
-        error_log('getRouteSuppliers called with ID: ' . $routeId); // Debug log
-        
-        if (!$routeId) {
-            error_log('No route ID provided');
-            header('Content-Type: application/json');
-            echo json_encode(['error' => 'Route ID is required']);
-            return;
-        }
-
         try {
+            // Debug
+            error_log("Fetching suppliers for route ID: " . $routeId);
+            
             $suppliers = $this->routeModel->getRouteSuppliers($routeId);
-            error_log('Suppliers found: ' . print_r($suppliers, true)); // Debug log
+            
+            // Debug
+            error_log("Suppliers found: " . print_r($suppliers, true));
             
             header('Content-Type: application/json');
             echo json_encode($suppliers);
         } catch (Exception $e) {
-            error_log('Error in getRouteSuppliers: ' . $e->getMessage()); // Debug log
-            header('Content-Type: application/json');
+            error_log("Error in getRouteSuppliers: " . $e->getMessage());
+            http_response_code(500);
             echo json_encode(['error' => $e->getMessage()]);
         }
     }

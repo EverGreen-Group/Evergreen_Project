@@ -158,17 +158,24 @@ class M_Route {
         $this->db->query("
             SELECT 
                 s.supplier_id,
-                s.coordinates,
+                s.user_id,
+                s.latitude,
+                s.longitude,
                 CONCAT(u.first_name, ' ', u.last_name) as supplier_name
             FROM route_suppliers rs
             JOIN suppliers s ON rs.supplier_id = s.supplier_id
-            JOIN users u ON s.user_id = u.id
+            JOIN users u ON s.user_id = u.user_id
             WHERE rs.route_id = :route_id
             AND rs.is_deleted = 0
+            ORDER BY rs.supplier_order ASC
         ");
         
         $this->db->bind(':route_id', $routeId);
-        return $this->db->resultSet();
+        
+        // Debug
+        $results = $this->db->resultSet();
+        error_log("Route Suppliers Query Results: " . print_r($results, true));
+        return $results;
     }
 }
 ?>

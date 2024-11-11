@@ -109,147 +109,211 @@
   </div>
 
 
-  <div class="team-cards-section">
-    <h2>Unassigned Drivers</h2>
-    <div class="team-cards-container" id="unassignedDriversContainer">
-        <?php foreach ($data['unassigned_drivers'] as $unassignedDriver): ?>
-            <div class="team-card" style="display: flex; margin-bottom: 20px; border: 1px solid #ddd; padding: 10px; border-radius: 8px;">
-                <div class="team-icons">
-                    <img src="<?php echo $unassignedDriver->driver_image_url ?: 'https://randomuser.me/api/portraits/men/1.jpg'; ?>" alt="Driver Icon" title="Driver">
-                </div>
-                <div class="team-card-info">
-                    <h3><?php echo htmlspecialchars($unassignedDriver->driver_name); ?></h3>
-                    <p>ID: <span><?php echo htmlspecialchars($unassignedDriver->driver_id); ?></span></p>
-                </div>
-            </div>
-        <?php endforeach; ?>
-    </div>
+  <!-- Unassigned Drivers and Partners in same row -->
+  <div class="table-data table-container">
+      <!-- Left table: Unassigned Drivers -->
+      <div class="order">
+          <div class="head">
+              <h3>Unassigned Drivers</h3>
+          </div>
+          <table>
+              <thead>
+                  <tr>
+                      <th>Driver ID</th>
+                      <th>Name</th>
+                      <th>Contact</th>
+                      <th>Status</th>
+                  </tr>
+              </thead>
+              <tbody>
+                  <?php foreach ($data['unassigned_drivers'] as $driver): ?>
+                      <tr>
+                          <td><?php echo htmlspecialchars($driver->driver_id); ?></td>
+                          <td><?php echo htmlspecialchars($driver->driver_name); ?></td>
+                          <td><?php echo htmlspecialchars($driver->contact_number ?? 'N/A'); ?></td>
+                          <td>
+                              <span class="status completed">Available</span>
+                          </td>
+                      </tr>
+                  <?php endforeach; ?>
+              </tbody>
+          </table>
+      </div>
+
+      <!-- Right table: Unassigned Partners -->
+      <div class="order">
+          <div class="head">
+              <h3>Unassigned Driving Partners</h3>
+          </div>
+          <table>
+              <thead>
+                  <tr>
+                      <th>Partner ID</th>
+                      <th>Name</th>
+                      <th>Contact</th>
+                      <th>Status</th>
+                  </tr>
+              </thead>
+              <tbody>
+                  <?php foreach ($data['unassigned_partners'] as $partner): ?>
+                      <tr>
+                          <td><?php echo htmlspecialchars($partner->partner_id); ?></td>
+                          <td><?php echo htmlspecialchars($partner->partner_name); ?></td>
+                          <td><?php echo htmlspecialchars($partner->contact_number ?? 'N/A'); ?></td>
+                          <td>
+                              <span class="status completed">Available</span>
+                          </td>
+                      </tr>
+                  <?php endforeach; ?>
+              </tbody>
+          </table>
+      </div>
   </div>
 
-  <div class="team-cards-section">
-    <h2>Unassigned Driving Partners</h2>
-    <div class="team-cards-container" id="unassignedPartnersContainer">
-        <?php foreach ($data['unassigned_partners'] as $unassignedPartner): ?>
-            <div class="team-card" style="display: flex; margin-bottom: 20px; border: 1px solid #ddd; padding: 10px; border-radius: 8px;">
-                <div class="team-icons">
-                    <img src="<?php echo $unassignedDriver->partner_image_url ?: 'https://randomuser.me/api/portraits/men/1.jpg'; ?>" alt="Partner Icon" title="Driver">
-                </div>
-                <div class="team-card-info">
-                    <h3><?php echo htmlspecialchars($unassignedPartner->partner_name); ?></h3>
-                    <p>ID: <span><?php echo htmlspecialchars($unassignedPartner->partner_id); ?></span></p>
-                </div>
-            </div>
-        <?php endforeach; ?>
-    </div>
-  </div>
-
-
+  <!-- Team Forms Section -->
   <div class="table-data">
-        <div class="order" style="display: flex; gap: 20px;">
-            <!-- Create Team Form -->
-            <div style="flex: 1;">
-                <div class="head">
-                    <h3>Create New Team</h3>
-                </div>
-                <form id="createTeamForm" method="POST" action="<?php echo URLROOT; ?>/teams/create">
-                    <div style="display: flex; gap: 20px;">
-                        <div class="form-group" style="flex: 1;">
-                            <label for="team_name">Team Name:</label>
-                            <input type="text" id="team_name" name="team_name" required>
-                        </div>
-                        <div class="form-group" style="flex: 1;">
-                            <label for="team_leader">Team Leader:</label>
-                            <select id="team_leader" name="team_leader_id" required>
-                                <?php foreach ($data['team_leaders'] as $leader): ?>
-                                    <option value="<?= $leader->leader_id; ?>"><?= htmlspecialchars($leader->leader_name); ?></option>
-                                <?php endforeach; ?>
-                            </select>
-                        </div>
-                    </div>
+      <div class="order" style="display: flex; gap: 20px;">
+          <!-- Create Team Form -->
+          <div style="flex: 1;">
+              <div class="head">
+                  <h3>Create New Team</h3>
+              </div>
+              <form id="createTeamForm" method="POST" action="<?php echo URLROOT; ?>/vehiclemanager/createTeam">
+                  <div style="display: flex; gap: 20px;">
+                      <div class="form-group" style="flex: 1;">
+                          <label for="team_name">Team Name:</label>
+                          <input type="text" id="team_name" name="team_name" required>
+                      </div>
+                      <div class="form-group" style="flex: 1;">
+                          <label for="status">Status:</label>
+                          <select id="status" name="status" required>
+                              <option value="Active">Active</option>
+                              <option value="Inactive">Inactive</option>
+                          </select>
+                      </div>
+                  </div>
 
-                    <div style="display: flex; gap: 20px;">
-                        <div class="form-group" style="flex: 1;">
-                            <label for="team_members">Team Members:</label>
-                            <select id="team_members" name="team_members[]" multiple required>
-                                <?php foreach ($data['members'] as $member): ?>
-                                    <option value="<?= $member->member_id; ?>"><?= htmlspecialchars($member->member_name); ?></option>
-                                <?php endforeach; ?>
-                            </select>
-                        </div>
-                        <div class="form-group" style="flex: 1;">
-                            <label for="team_status">Status:</label>
-                            <select id="team_status" name="status" required>
-                                <option value="Active">Active</option>
-                                <option value="Inactive">Inactive</option>
-                            </select>
-                        </div>
-                    </div>
+                  <div style="display: flex; gap: 20px;">
+                      <div class="form-group" style="flex: 1;">
+                          <label for="driver_id">Driver:</label>
+                          <select id="driver_id" name="driver_id">
+                              <option value="">None</option>
+                              <?php foreach ($data['unassigned_drivers'] as $driver): ?>
+                                  <option value="<?php echo $driver->driver_id; ?>">
+                                      <?php echo htmlspecialchars($driver->driver_name); ?>
+                                  </option>
+                              <?php endforeach; ?>
+                          </select>
+                      </div>
+                      <div class="form-group" style="flex: 1;">
+                          <label for="partner_id">Driving Partner:</label>
+                          <select id="partner_id" name="partner_id">
+                              <option value="">None</option>
+                              <?php foreach ($data['unassigned_partners'] as $partner): ?>
+                                  <option value="<?php echo $partner->partner_id; ?>">
+                                      <?php echo htmlspecialchars($partner->partner_name); ?>
+                                  </option>
+                              <?php endforeach; ?>
+                          </select>
+                      </div>
+                  </div>
 
-                    <button type="submit" class="btn-submit">Create Team</button>
-                </form>
-            </div>
+                  <button type="submit" class="btn-submit">Create Team</button>
+              </form>
+          </div>
 
-            <!-- Vertical Separator -->
-            <div class="vertical-separator"></div>
+          <!-- Vertical Separator -->
+          <div class="vertical-separator"></div>
 
-            <!-- Edit Team Form -->
-            <div style="flex: 1;">
-                <div class="head">
-                    <h3>Edit Team</h3>
-                </div>
-                <form id="editTeamForm" method="POST" action="<?php echo URLROOT; ?>/teams/update">
-                    <div class="form-group">
-                        <label for="edit_team_select">Select Team:</label>
-                        <select id="edit_team_select" name="team_id" required onchange="loadTeamData(this.value)">
-                            <option value="">Select a team</option>
-                            <?php foreach ($data['teams'] as $team): ?>
-                                <option value="<?= $team->team_id; ?>"><?= htmlspecialchars($team->team_name); ?></option>
-                            <?php endforeach; ?>
-                        </select>
-                    </div>
+          <!-- Update Team Form -->
+          <div style="flex: 1;">
+              <div class="head">
+                  <h3>Update Team</h3>
+              </div>
+              <form id="updateTeamForm" method="POST" action="<?php echo URLROOT; ?>/vehiclemanager/updateTeam">
+                  <div style="display: flex; gap: 20px;">
+                      <div class="form-group" style="flex: 1;">
+                          <label for="edit_team_select">Select Team:</label>
+                          <select id="edit_team_select" name="team_id" required onchange="loadTeamData(this.value)">
+                              <option value="">Select a team</option>
+                              <?php foreach ($data['teams'] as $team): ?>
+                                  <option value="<?= $team->team_id ?>"><?= $team->team_name ?></option>
+                              <?php endforeach; ?>
+                          </select>
+                      </div>
+                      <div class="form-group" style="flex: 1;">
+                          <label for="edit_team_name">Team Name:</label>
+                          <input type="text" id="edit_team_name" name="team_name" required>
+                      </div>
+                  </div>
 
-                    <div style="display: flex; gap: 20px;">
-                        <div class="form-group" style="flex: 1;">
-                            <label for="edit_team_name">Team Name:</label>
-                            <input type="text" id="edit_team_name" name="team_name" required>
-                        </div>
-                        <div class="form-group" style="flex: 1;">
-                            <label for="edit_team_leader">Team Leader:</label>
-                            <select id="edit_team_leader" name="team_leader_id" required>
-                                <?php foreach ($data['team_leaders'] as $leader): ?>
-                                    <option value="<?= $leader->leader_id; ?>"><?= htmlspecialchars($leader->leader_name); ?></option>
-                                <?php endforeach; ?>
-                            </select>
-                        </div>
-                    </div>
+                  <div style="display: flex; gap: 20px;">
+                      <div class="form-group" style="flex: 1;">
+                          <label for="edit_driver_id">Driver:</label>
+                          <select id="edit_driver_id" name="driver_id">
+                              <option value="">None</option>
+                              <?php 
+                              // First, show the current driver of the selected team if exists
+                              foreach ($data['teams'] as $team): 
+                                  if (!empty($team->driver_id)): ?>
+                                      <option value="<?php echo $team->driver_id; ?>" 
+                                              data-team-id="<?php echo $team->team_id; ?>">
+                                          <?php echo htmlspecialchars($team->driver_full_name); ?>
+                                      </option>
+                                  <?php endif;
+                              endforeach; 
+                              
+                              // Then show unassigned drivers
+                              foreach ($data['unassigned_drivers'] as $driver): ?>
+                                  <option value="<?php echo $driver->driver_id; ?>">
+                                      <?php echo htmlspecialchars($driver->driver_name); ?>
+                                  </option>
+                              <?php endforeach; ?>
+                          </select>
+                      </div>
+                      <div class="form-group" style="flex: 1;">
+                          <label for="edit_partner_id">Driving Partner:</label>
+                          <select id="edit_partner_id" name="partner_id">
+                              <option value="">None</option>
+                              <?php 
+                              // First, show the current partner of the selected team if exists
+                              foreach ($data['teams'] as $team): 
+                                  if (!empty($team->partner_id)): ?>
+                                      <option value="<?php echo $team->partner_id; ?>"
+                                              data-team-id="<?php echo $team->team_id; ?>">
+                                          <?php echo htmlspecialchars($team->partner_full_name); ?>
+                                      </option>
+                                  <?php endif;
+                              endforeach; 
+                              
+                              // Then show unassigned partners
+                              foreach ($data['unassigned_partners'] as $partner): ?>
+                                  <option value="<?php echo $partner->partner_id; ?>">
+                                      <?php echo htmlspecialchars($partner->partner_name); ?>
+                                  </option>
+                              <?php endforeach; ?>
+                          </select>
+                      </div>
+                  </div>
 
-                    <div style="display: flex; gap: 20px;">
-                        <div class="form-group" style="flex: 1;">
-                            <label for="edit_team_members">Team Members:</label>
-                            <select id="edit_team_members" name="team_members[]" multiple>
-                                <?php foreach ($data['members'] as $member): ?>
-                                    <option value="<?= $member->member_id; ?>"><?= htmlspecialchars($member->member_name); ?></option>
-                                <?php endforeach; ?>
-                            </select>
-                        </div>
-                        <div class="form-group" style="flex: 1;">
-                            <label for="edit_team_status">Status:</label>
-                            <select id="edit_team_status" name="status" required>
-                                <option value="Active">Active</option>
-                                <option value="Inactive">Inactive</option>
-                            </select>
-                        </div>
-                    </div>
+                  <div style="display: flex; gap: 20px;">
+                      <div class="form-group" style="flex: 1;">
+                          <label for="edit_status">Status:</label>
+                          <select id="edit_status" name="status" required>
+                              <option value="Active">Active</option>
+                              <option value="Inactive">Inactive</option>
+                          </select>
+                      </div>
+                      <div class="form-group" style="flex: 1;">
+                          <!-- Empty div for alignment -->
+                      </div>
+                  </div>
 
-                    <button type="submit" class="btn-submit">Update Team</button>
-                </form>
-            </div>
-        </div>
+                  <button type="submit" class="btn-submit">Update Team</button>
+              </form>
+          </div>
+      </div>
   </div>
-
-
-
-
 
   <style>
     /* Button Styles */
@@ -727,6 +791,81 @@ function showTeamDetails(team) {
 function closeTeamDetails() {
     document.getElementById('teamDetailsSection').style.display = 'none';
 }
+
+function loadTeamData(teamId) {
+    const driverSelect = document.getElementById('edit_driver_id');
+    const partnerSelect = document.getElementById('edit_partner_id');
+    const teamNameInput = document.getElementById('edit_team_name');
+    const statusSelect = document.getElementById('edit_status');
+
+    // Reset all fields if no team is selected
+    if (!teamId) {
+        teamNameInput.value = '';
+        statusSelect.value = 'Active';
+        driverSelect.value = ''; // Reset to "None"
+        partnerSelect.value = ''; // Reset to "None"
+        return;
+    }
+    
+    const team = <?php echo json_encode($data['teams']); ?>.find(t => t.team_id == teamId);
+    if (team) {
+        // Set basic team info
+        teamNameInput.value = team.team_name;
+        statusSelect.value = team.status;
+
+        // Reset both dropdowns to "None" first
+        driverSelect.value = '';
+        partnerSelect.value = '';
+
+        // Set driver if exists
+        if (team.driver_id) {
+            const driverOption = Array.from(driverSelect.options).find(
+                option => option.value === team.driver_id.toString() && 
+                option.getAttribute('data-team-id') === team.team_id.toString()
+            );
+            if (driverOption) {
+                driverOption.selected = true;
+            }
+        }
+
+        // Set partner if exists
+        if (team.partner_id) {
+            const partnerOption = Array.from(partnerSelect.options).find(
+                option => option.value === team.partner_id.toString() && 
+                option.getAttribute('data-team-id') === team.team_id.toString()
+            );
+            if (partnerOption) {
+                partnerOption.selected = true;
+            }
+        }
+    }
+}
+
+// Call loadTeamData with no arguments when the page loads to set initial state
+document.addEventListener('DOMContentLoaded', () => loadTeamData());
+
+function removeTeamMember(type) {
+    const teamId = document.getElementById('edit_team_select').value;
+    if (!teamId) {
+        alert('Please select a team first');
+        return;
+    }
+
+    if (confirm(`Are you sure you want to remove the ${type} from this team?`)) {
+        const selectElement = document.getElementById(`edit_${type}_id`);
+        selectElement.value = ''; // Reset the selection
+        
+        // You can add an AJAX call here to update the database immediately
+        // fetch(`<?php echo URLROOT; ?>/vehiclemanager/removeTeamMember/${teamId}/${type}`, {
+        //     method: 'POST'
+        // }).then(response => response.json())
+        //   .then(data => {
+        //     if (data.success) {
+        //         alert(`${type} has been removed from the team`);
+        //     }
+        // });
+    }
+}
 </script>
 
 <style>
@@ -833,9 +972,239 @@ function closeTeamDetails() {
 
 
 <style>
+    /* Existing styles... */
 
+    /* New styles for vehicle cards section */
+    .vehicle-cards-section {
+      margin-top: 40px;
+      background-color: #f5f5f5;
+      padding: 20px;
+      border-radius: 10px;
+    }
 
+    .vehicle-cards-container {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 20px;
+      margin-top: 20px;
+    }
 
+    .vehicle-card {
+      background: var(--light);
+      border-radius: 10px;
+      padding: 15px;
+      width: calc(33.33% - 83.33px);
+      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+      cursor: pointer;
+      transition: transform 0.3s ease;
+      display: flex;
+      align-items: center;
+    }
+
+    .vehicle-card:hover {
+      transform: translateY(-5px);
+    }
+
+    .vehicle-card img {
+      width: 120px;
+      height: 120px;
+      object-fit: cover;
+      border-radius: 5px;
+      margin-right: 15px;
+    }
+
+    .vehicle-card-info {
+      flex-grow: 1;
+    }
+
+    .vehicle-card h3 {
+      margin-top: 0;
+      color: var(--dark);
+    }
+
+    .vehicle-card p {
+      margin: 5px 0;
+      color: var(--dark-grey);
+    }
+
+    /* Modal styles */
+    .modal {
+      display: none;
+      position: fixed;
+      z-index: 1000;
+      left: 0;
+      top: 0;
+      width: 100%;
+      height: 100%;
+      background-color: rgba(0, 0, 0, 0.5);
+      overflow-y: auto;
+    }
+
+    .modal-content {
+      background-color: var(--light);
+      margin: 5% auto;
+      padding: 20px;
+      border-radius: 10px;
+      width: 80%;
+      max-width: 600px;
+    }
+
+    .close {
+      color: var(--dark-grey);
+      float: right;
+      font-size: 28px;
+      font-weight: bold;
+      cursor: pointer;
+    }
+
+    .close:hover {
+      color: var(--dark);
+    }
+
+    /* Form styles */
+    #vehicleForm {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 15px;
+    }
+
+    .form-group {
+      width: calc(50% - 7.5px);
+    }
+
+    .form-group label {
+      display: block;
+      margin-bottom: 5px;
+      color: var(--dark);
+    }
+
+    .form-group input {
+      width: 100%;
+      padding: 8px;
+      border: 1px solid var(--dark-grey);
+      border-radius: 5px;
+      font-size: 14px;
+    }
+
+    /* Button styles */
+    .btn {
+      padding: 10px 20px;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      font-size: 14px;
+      transition: background-color 0.3s ease;
+    }
+
+    .btn-primary {
+      background-color: var(--main);
+      color: var(--light);
+    }
+
+    .btn-primary:hover {
+      background-color: var(--main-dark);
+    }
+
+    .btn-danger {
+      background-color: #dc3545;
+      color: var(--light);
+    }
+
+    .btn-danger:hover {
+      background-color: #c82333;
+    }
+
+    .modal-actions {
+      display: flex;
+      justify-content: flex-end;
+      gap: 10px;
+      margin-top: 20px;
+    }
+
+    .add-vehicle-btn {
+      margin-top: 20px;
+    }
+
+    /* Responsive design */
+    @media screen and (max-width: 1024px) {
+      .vehicle-card {
+        width: calc(50% - 10px);
+      }
+    }
+
+    @media screen and (max-width: 768px) {
+      .vehicle-card {
+        width: 100%;
+      }
+
+      .modal-content {
+        width: 90%;
+      }
+
+      .form-group {
+        width: 100%;
+      }
+    }
+  </style>
+
+<style>
+.form-group {
+    margin-bottom: 15px;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 5px;
+    font-weight: 500;
+    color: #333;
+}
+
+.form-group input,
+.form-group select {
+    width: 100%;
+    padding: 8px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 14px;
+}
+
+.btn-submit {
+    background-color: #4154f1;
+    color: white;
+    padding: 10px 20px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 500;
+    margin-top: 10px;
+}
+
+.btn-submit:hover {
+    background-color: #364fd4;
+}
+
+.head {
+    margin-bottom: 20px;
+}
+
+.head h3 {
+    color: #2c3345;
+    font-size: 18px;
+    font-weight: 600;
+}
+
+.vertical-separator {
+    width: 1px;
+    background: #e0e0e0;
+    margin: 0 20px;
+    box-shadow: 1px 0 2px rgba(0,0,0,0.05);
+}
+
+#createVehicleForm, #editVehicleForm {
+    padding-right: 20px;
+    padding-left: 20px;
+}
 </style>
 
 

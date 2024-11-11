@@ -313,287 +313,287 @@
 
   <!-- Create and Edit Vehicle Section -->
   <div class="table-data">
-    <div class="order" style="display: flex; gap: 20px;">
-        <!-- Create Form -->
-        <div style="flex: 1;">
-            <div class="head">
-                <h3>Create New Vehicle</h3>
-            </div>
-            <form id="createVehicleForm" method="POST" action="<?php echo URLROOT; ?>/vehiclemanager/createVehicle">
-                <div style="display: flex; gap: 20px;">
-                    <div class="form-group" style="flex: 1;">
-                        <label for="license_plate">License Plate:</label>
-                        <input type="text" id="license_plate" name="license_plate" required>
-                    </div>
-                    <div class="form-group" style="flex: 1;">
-                        <label for="status">Status:</label>
-                        <select id="status" name="status" required>
-                            <option value="Available">Available</option>
-                            <option value="In-Use">In-Use</option>
-                            <option value="Maintenance">Maintenance</option>
-                        </select>
-                    </div>
-                </div>
+      <div class="order" style="display: flex; gap: 20px;">
+          <!-- Create Form -->
+          <div style="flex: 1;">
+              <div class="head">
+                  <h3>Create New Vehicle</h3>
+              </div>
+              <form id="createVehicleForm" method="POST" action="<?php echo URLROOT; ?>/vehiclemanager/createVehicle">
+                  <div style="display: flex; gap: 20px;">
+                      <div class="form-group" style="flex: 1;">
+                          <label for="license_plate">License Plate:</label>
+                          <input type="text" id="license_plate" name="license_plate" required>
+                      </div>
+                      <div class="form-group" style="flex: 1;">
+                          <label for="status">Status:</label>
+                          <select id="status" name="status" required>
+                              <option value="Available">Available</option>
+                              <option value="In-Use">In-Use</option>
+                              <option value="Maintenance">Maintenance</option>
+                          </select>
+                      </div>
+                  </div>
 
-                <div style="display: flex; gap: 20px;">
-                    <div class="form-group" style="flex: 1;">
-                        <label for="owner_name">Owner Name:</label>
-                        <input type="text" id="owner_name" name="owner_name">
-                    </div>
-                    <div class="form-group" style="flex: 1;">
-                        <label for="owner_contact">Owner Contact:</label>
-                        <input type="text" id="owner_contact" name="owner_contact">
-                    </div>
-                </div>
+                  <div style="display: flex; gap: 20px;">
+                      <div class="form-group" style="flex: 1;">
+                          <label for="owner_name">Owner Name:</label>
+                          <input type="text" id="owner_name" name="owner_name">
+                      </div>
+                      <div class="form-group" style="flex: 1;">
+                          <label for="owner_contact">Owner Contact:</label>
+                          <input type="text" id="owner_contact" name="owner_contact">
+                      </div>
+                  </div>
 
-                <div style="display: flex; gap: 20px;">
-                    <div class="form-group" style="flex: 1;">
-                        <label for="vehicle_type">Vehicle Type:</label>
-                        <select id="vehicle_type" name="vehicle_type" required>
-                            <option value="Truck">Truck</option>
-                            <option value="Van">Van</option>
-                            <option value="Car">Car</option>
-                            <option value="Bus">Bus</option>
-                            <option value="Three-Wheeler">Three-Wheeler</option>
-                            <option value="Other">Other</option>
-                        </select>
-                    </div>
-                    <div class="form-group" style="flex: 1;">
-                        <label for="capacity">Capacity (Tons):</label>
-                        <input type="number" id="capacity" name="capacity" step="0.01" required>
-                    </div>
-                </div>
+                  <div style="display: flex; gap: 20px;">
+                      <div class="form-group" style="flex: 1;">
+                          <label for="vehicle_type">Vehicle Type:</label>
+                          <select id="vehicle_type" name="vehicle_type" required>
+                              <option value="Truck">Truck</option>
+                              <option value="Van">Van</option>
+                              <option value="Car">Car</option>
+                              <option value="Bus">Bus</option>
+                              <option value="Three-Wheeler">Three-Wheeler</option>
+                              <option value="Other">Other</option>
+                          </select>
+                      </div>
+                      <div class="form-group" style="flex: 1;">
+                          <label for="capacity">Capacity (Tons):</label>
+                          <input type="number" id="capacity" name="capacity" step="0.01" required>
+                      </div>
+                  </div>
 
-                <div style="display: flex; gap: 20px;">
-                    <div class="form-group" style="flex: 1;">
-                        <label for="insurance_expiry_date">Insurance Expiry Date:</label>
-                        <input type="date" id="insurance_expiry_date" name="insurance_expiry_date">
-                    </div>
-                    <div class="form-group" style="flex: 1;">
-                        <label for="road_tax_expiry_date">Road Tax Expiry Date:</label>
-                        <input type="date" id="road_tax_expiry_date" name="road_tax_expiry_date">
-                    </div>
-                </div>
+                  <div style="display: flex; gap: 20px;">
+                      <div class="form-group" style="flex: 1;">
+                          <label for="insurance_expiry_date">Insurance Expiry Date:</label>
+                          <input type="date" id="insurance_expiry_date" name="insurance_expiry_date">
+                      </div>
+                      <div class="form-group" style="flex: 1;">
+                          <label for="road_tax_expiry_date">Road Tax Expiry Date:</label>
+                          <input type="date" id="road_tax_expiry_date" name="road_tax_expiry_date">
+                      </div>
+                  </div>
 
-                <div style="display: flex; gap: 20px;">
-                    <div class="form-group" style="flex: 1;">
-                        <label for="color">Color:</label>
-                        <input type="text" id="color" name="color">
-                    </div>
-                    <div class="form-group" style="flex: 1;">
-                        <label for="engine_number">Engine Number:</label>
-                        <input type="text" id="engine_number" name="engine_number">
-                    </div>
-                </div>
+                  <div style="display: flex; gap: 20px;">
+                      <div class="form-group" style="flex: 1;">
+                          <label for="color">Color:</label>
+                          <input type="text" id="color" name="color">
+                      </div>
+                      <div class="form-group" style="flex: 1;">
+                          <label for="engine_number">Engine Number:</label>
+                          <input type="text" id="engine_number" name="engine_number">
+                      </div>
+                  </div>
 
-                <div style="display: flex; gap: 20px;">
-                    <div class="form-group" style="flex: 1;">
-                        <label for="chassis_number">Chassis Number:</label>
-                        <input type="text" id="chassis_number" name="chassis_number">
-                    </div>
-                    <div class="form-group" style="flex: 1;">
-                        <label for="seating_capacity">Seating Capacity:</label>
-                        <input type="number" id="seating_capacity" name="seating_capacity">
-                    </div>
-                </div>
+                  <div style="display: flex; gap: 20px;">
+                      <div class="form-group" style="flex: 1;">
+                          <label for="chassis_number">Chassis Number:</label>
+                          <input type="text" id="chassis_number" name="chassis_number">
+                      </div>
+                      <div class="form-group" style="flex: 1;">
+                          <label for="seating_capacity">Seating Capacity:</label>
+                          <input type="number" id="seating_capacity" name="seating_capacity">
+                      </div>
+                  </div>
 
-                <div style="display: flex; gap: 20px;">
-                    <div class="form-group" style="flex: 1;">
-                        <label for="condition">Condition:</label>
-                        <select id="condition" name="condition">
-                            <option value="New">New</option>
-                            <option value="Good">Good</option>
-                            <option value="Fair">Fair</option>
-                            <option value="Poor">Poor</option>
-                        </select>
-                    </div>
-                    <div class="form-group" style="flex: 1;">
-                        <label for="last_serviced_date">Last Serviced Date:</label>
-                        <input type="date" id="last_serviced_date" name="last_serviced_date">
-                    </div>
-                </div>
+                  <div style="display: flex; gap: 20px;">
+                      <div class="form-group" style="flex: 1;">
+                          <label for="condition">Condition:</label>
+                          <select id="condition" name="condition">
+                              <option value="New">New</option>
+                              <option value="Good">Good</option>
+                              <option value="Fair">Fair</option>
+                              <option value="Poor">Poor</option>
+                          </select>
+                      </div>
+                      <div class="form-group" style="flex: 1;">
+                          <label for="last_serviced_date">Last Serviced Date:</label>
+                          <input type="date" id="last_serviced_date" name="last_serviced_date">
+                      </div>
+                  </div>
 
-                <div style="display: flex; gap: 20px;">
-                    <div class="form-group" style="flex: 1;">
-                        <label for="last_maintenance">Last Maintenance:</label>
-                        <input type="date" id="last_maintenance" name="last_maintenance">
-                    </div>
-                    <div class="form-group" style="flex: 1;">
-                        <label for="next_maintenance">Next Maintenance:</label>
-                        <input type="date" id="next_maintenance" name="next_maintenance">
-                    </div>
-                </div>
+                  <div style="display: flex; gap: 20px;">
+                      <div class="form-group" style="flex: 1;">
+                          <label for="last_maintenance">Last Maintenance:</label>
+                          <input type="date" id="last_maintenance" name="last_maintenance">
+                      </div>
+                      <div class="form-group" style="flex: 1;">
+                          <label for="next_maintenance">Next Maintenance:</label>
+                          <input type="date" id="next_maintenance" name="next_maintenance">
+                      </div>
+                  </div>
 
-                <div style="display: flex; gap: 20px;">
-                    <div class="form-group" style="flex: 1;">
-                        <label for="mileage">Mileage:</label>
-                        <input type="number" id="mileage" name="mileage">
-                    </div>
-                    <div class="form-group" style="flex: 1;">
-                        <label for="fuel_type">Fuel Type:</label>
-                        <select id="fuel_type" name="fuel_type">
-                            <option value="Petrol">Petrol</option>
-                            <option value="Diesel">Diesel</option>
-                            <option value="Electric">Electric</option>
-                            <option value="Hybrid">Hybrid</option>
-                        </select>
-                    </div>
-                </div>
+                  <div style="display: flex; gap: 20px;">
+                      <div class="form-group" style="flex: 1;">
+                          <label for="mileage">Mileage:</label>
+                          <input type="number" id="mileage" name="mileage">
+                      </div>
+                      <div class="form-group" style="flex: 1;">
+                          <label for="fuel_type">Fuel Type:</label>
+                          <select id="fuel_type" name="fuel_type">
+                              <option value="Petrol">Petrol</option>
+                              <option value="Diesel">Diesel</option>
+                              <option value="Electric">Electric</option>
+                              <option value="Hybrid">Hybrid</option>
+                          </select>
+                      </div>
+                  </div>
 
-                <div style="display: flex; gap: 20px;">
-                    <div class="form-group" style="flex: 1;">
-                        <label for="registration_date">Registration Date:</label>
-                        <input type="date" id="registration_date" name="registration_date">
-                    </div>
-                    <div class="form-group" style="flex: 1;">
-                        <label for="file_path">Vehicle Image URL:</label>
-                        <input type="text" id="file_path" name="file_path" placeholder="Enter image URL">
-                    </div>
-                </div>
+                  <div style="display: flex; gap: 20px;">
+                      <div class="form-group" style="flex: 1;">
+                          <label for="registration_date">Registration Date:</label>
+                          <input type="date" id="registration_date" name="registration_date">
+                      </div>
+                      <div class="form-group" style="flex: 1;">
+                          <label for="file_path">Vehicle Image URL:</label>
+                          <input type="text" id="file_path" name="file_path" placeholder="Enter image URL">
+                      </div>
+                  </div>
 
-                <button type="submit" class="btn-submit">Create Vehicle</button>
-            </form>
-        </div>
+                  <button type="submit" class="btn-submit">Create Vehicle</button>
+              </form>
+          </div>
 
-        <!-- Vertical Separator -->
-        <div class="vertical-separator"></div>
+          <!-- Vertical Separator -->
+          <div class="vertical-separator"></div>
 
-        <!-- Edit Form -->
-        <div style="flex: 1;">
-            <div class="head">
-                <h3>Edit Vehicle</h3>
-            </div>
-            <form id="editVehicleForm" method="POST" action="<?php echo URLROOT; ?>/vehiclemanager/updateVehicle">
-                <div class="form-group">
-                    <label for="edit_vehicle_select">Select Vehicle:</label>
-                    <select id="edit_vehicle_select" name="vehicle_id" required onchange="loadVehicleData(this.value)">
-                        <option value="">Select a vehicle</option>
-                        <?php foreach ($data['vehicles'] as $vehicle): ?>
-                            <option value="<?= $vehicle->vehicle_id ?>"><?= $vehicle->license_plate ?></option>
-                        <?php endforeach; ?>
-                    </select>
-                </div>
+          <!-- Edit Form -->
+          <div style="flex: 1;">
+              <div class="head">
+                  <h3>Edit Vehicle</h3>
+              </div>
+              <form id="editVehicleForm" method="POST" action="<?php echo URLROOT; ?>/vehiclemanager/updateVehicle">
+                  <div class="form-group">
+                      <label for="edit_vehicle_select">Select Vehicle:</label>
+                      <select id="edit_vehicle_select" name="vehicle_id" required onchange="loadVehicleData(this.value)">
+                          <option value="">Select a vehicle</option>
+                          <?php foreach ($data['vehicles'] as $vehicle): ?>
+                              <option value="<?= $vehicle->vehicle_id ?>"><?= $vehicle->license_plate ?></option>
+                          <?php endforeach; ?>
+                      </select>
+                  </div>
 
-                <div style="display: flex; gap: 20px;">
-                    <div class="form-group" style="flex: 1;">
-                        <label for="edit_license_plate">License Plate:</label>
-                        <input type="text" id="edit_license_plate" name="license_plate" required>
-                    </div>
-                    <div class="form-group" style="flex: 1;">
-                        <label for="edit_status">Status:</label>
-                        <select id="edit_status" name="status" required>
-                            <option value="Available">Available</option>
-                            <option value="In-Use">In-Use</option>
-                            <option value="Maintenance">Maintenance</option>
-                        </select>
-                    </div>
-                </div>
+                  <div style="display: flex; gap: 20px;">
+                      <div class="form-group" style="flex: 1;">
+                          <label for="edit_license_plate">License Plate:</label>
+                          <input type="text" id="edit_license_plate" name="license_plate" required>
+                      </div>
+                      <div class="form-group" style="flex: 1;">
+                          <label for="edit_status">Status:</label>
+                          <select id="edit_status" name="status" required>
+                              <option value="Available">Available</option>
+                              <option value="In-Use">In-Use</option>
+                              <option value="Maintenance">Maintenance</option>
+                          </select>
+                      </div>
+                  </div>
 
-                <div style="display: flex; gap: 20px;">
-                    <div class="form-group" style="flex: 1;">
-                        <label for="edit_owner_name">Owner Name:</label>
-                        <input type="text" id="edit_owner_name" name="owner_name">
-                    </div>
-                    <div class="form-group" style="flex: 1;">
-                        <label for="edit_owner_contact">Owner Contact:</label>
-                        <input type="text" id="edit_owner_contact" name="owner_contact">
-                    </div>
-                </div>
+                  <div style="display: flex; gap: 20px;">
+                      <div class="form-group" style="flex: 1;">
+                          <label for="edit_owner_name">Owner Name:</label>
+                          <input type="text" id="edit_owner_name" name="owner_name">
+                      </div>
+                      <div class="form-group" style="flex: 1;">
+                          <label for="edit_owner_contact">Owner Contact:</label>
+                          <input type="text" id="edit_owner_contact" name="owner_contact">
+                      </div>
+                  </div>
 
-                <div style="display: flex; gap: 20px;">
-                    <div class="form-group" style="flex: 1;">
-                        <label for="edit_capacity">Capacity (Tons):</label>
-                        <input type="number" id="edit_capacity" name="capacity" step="0.01">
-                    </div>
-                    <div class="form-group" style="flex: 1;">
-                        <label for="edit_seating_capacity">Seating Capacity:</label>
-                        <input type="number" id="edit_seating_capacity" name="seating_capacity">
-                    </div>
-                </div>
+                  <div style="display: flex; gap: 20px;">
+                      <div class="form-group" style="flex: 1;">
+                          <label for="edit_capacity">Capacity (Tons):</label>
+                          <input type="number" id="edit_capacity" name="capacity" step="0.01">
+                      </div>
+                      <div class="form-group" style="flex: 1;">
+                          <label for="edit_seating_capacity">Seating Capacity:</label>
+                          <input type="number" id="edit_seating_capacity" name="seating_capacity">
+                      </div>
+                  </div>
 
-                <div style="display: flex; gap: 20px;">
-                    <div class="form-group" style="flex: 1;">
-                        <label for="edit_insurance_expiry_date">Insurance Expiry Date:</label>
-                        <input type="date" id="edit_insurance_expiry_date" name="insurance_expiry_date">
-                    </div>
-                    <div class="form-group" style="flex: 1;">
-                        <label for="edit_road_tax_expiry_date">Road Tax Expiry Date:</label>
-                        <input type="date" id="edit_road_tax_expiry_date" name="road_tax_expiry_date">
-                    </div>
-                </div>
+                  <div style="display: flex; gap: 20px;">
+                      <div class="form-group" style="flex: 1;">
+                          <label for="edit_insurance_expiry_date">Insurance Expiry Date:</label>
+                          <input type="date" id="edit_insurance_expiry_date" name="insurance_expiry_date">
+                      </div>
+                      <div class="form-group" style="flex: 1;">
+                          <label for="edit_road_tax_expiry_date">Road Tax Expiry Date:</label>
+                          <input type="date" id="edit_road_tax_expiry_date" name="road_tax_expiry_date">
+                      </div>
+                  </div>
 
-                <div style="display: flex; gap: 20px;">
-                    <div class="form-group" style="flex: 1;">
-                        <label for="edit_color">Color:</label>
-                        <input type="text" id="edit_color" name="color">
-                    </div>
-                    <div class="form-group" style="flex: 1;">
-                        <label for="edit_engine_number">Engine Number:</label>
-                        <input type="text" id="edit_engine_number" name="engine_number">
-                    </div>
-                </div>
+                  <div style="display: flex; gap: 20px;">
+                      <div class="form-group" style="flex: 1;">
+                          <label for="edit_color">Color:</label>
+                          <input type="text" id="edit_color" name="color">
+                      </div>
+                      <div class="form-group" style="flex: 1;">
+                          <label for="edit_engine_number">Engine Number:</label>
+                          <input type="text" id="edit_engine_number" name="engine_number">
+                      </div>
+                  </div>
 
-                <div style="display: flex; gap: 20px;">
-                    <div class="form-group" style="flex: 1;">
-                        <label for="edit_chassis_number">Chassis Number:</label>
-                        <input type="text" id="edit_chassis_number" name="chassis_number">
-                    </div>
-                    <div class="form-group" style="flex: 1;">
-                        <label for="edit_condition">Condition:</label>
-                        <select id="edit_condition" name="condition">
-                            <option value="">Select condition</option>
-                            <option value="New">New</option>
-                            <option value="Good">Good</option>
-                            <option value="Fair">Fair</option>
-                            <option value="Poor">Poor</option>
-                        </select>
-                    </div>
-                </div>
+                  <div style="display: flex; gap: 20px;">
+                      <div class="form-group" style="flex: 1;">
+                          <label for="edit_chassis_number">Chassis Number:</label>
+                          <input type="text" id="edit_chassis_number" name="chassis_number">
+                      </div>
+                      <div class="form-group" style="flex: 1;">
+                          <label for="edit_condition">Condition:</label>
+                          <select id="edit_condition" name="condition">
+                              <option value="">Select condition</option>
+                              <option value="New">New</option>
+                              <option value="Good">Good</option>
+                              <option value="Fair">Fair</option>
+                              <option value="Poor">Poor</option>
+                          </select>
+                      </div>
+                  </div>
 
-                <div style="display: flex; gap: 20px;">
-                    <div class="form-group" style="flex: 1;">
-                        <label for="edit_last_serviced_date">Last Serviced Date:</label>
-                        <input type="date" id="edit_last_serviced_date" name="last_serviced_date">
-                    </div>
-                    <div class="form-group" style="flex: 1;">
-                        <label for="edit_last_maintenance">Last Maintenance:</label>
-                        <input type="date" id="edit_last_maintenance" name="last_maintenance">
-                    </div>
-                </div>
+                  <div style="display: flex; gap: 20px;">
+                      <div class="form-group" style="flex: 1;">
+                          <label for="edit_last_serviced_date">Last Serviced Date:</label>
+                          <input type="date" id="edit_last_serviced_date" name="last_serviced_date">
+                      </div>
+                      <div class="form-group" style="flex: 1;">
+                          <label for="edit_last_maintenance">Last Maintenance:</label>
+                          <input type="date" id="edit_last_maintenance" name="last_maintenance">
+                      </div>
+                  </div>
 
-                <div style="display: flex; gap: 20px;">
-                    <div class="form-group" style="flex: 1;">
-                        <label for="edit_next_maintenance">Next Maintenance:</label>
-                        <input type="date" id="edit_next_maintenance" name="next_maintenance">
-                    </div>
-                    <div class="form-group" style="flex: 1;">
-                        <label for="edit_mileage">Mileage:</label>
-                        <input type="number" id="edit_mileage" name="mileage">
-                    </div>
-                </div>
+                  <div style="display: flex; gap: 20px;">
+                      <div class="form-group" style="flex: 1;">
+                          <label for="edit_next_maintenance">Next Maintenance:</label>
+                          <input type="date" id="edit_next_maintenance" name="next_maintenance">
+                      </div>
+                      <div class="form-group" style="flex: 1;">
+                          <label for="edit_mileage">Mileage:</label>
+                          <input type="number" id="edit_mileage" name="mileage">
+                      </div>
+                  </div>
 
-                <div style="display: flex; gap: 20px;">
-                    <div class="form-group" style="flex: 1;">
-                        <label for="edit_fuel_type">Fuel Type:</label>
-                        <select id="edit_fuel_type" name="fuel_type">
-                            <option value="">Select fuel type</option>
-                            <option value="Petrol">Petrol</option>
-                            <option value="Diesel">Diesel</option>
-                            <option value="Electric">Electric</option>
-                            <option value="Hybrid">Hybrid</option>
-                        </select>
-                    </div>
-                    <div class="form-group" style="flex: 1;">
-                        <label for="edit_registration_date">Registration Date:</label>
-                        <input type="date" id="edit_registration_date" name="registration_date">
-                    </div>
-                </div>
+                  <div style="display: flex; gap: 20px;">
+                      <div class="form-group" style="flex: 1;">
+                          <label for="edit_fuel_type">Fuel Type:</label>
+                          <select id="edit_fuel_type" name="fuel_type">
+                              <option value="">Select fuel type</option>
+                              <option value="Petrol">Petrol</option>
+                              <option value="Diesel">Diesel</option>
+                              <option value="Electric">Electric</option>
+                              <option value="Hybrid">Hybrid</option>
+                          </select>
+                      </div>
+                      <div class="form-group" style="flex: 1;">
+                          <label for="edit_registration_date">Registration Date:</label>
+                          <input type="date" id="edit_registration_date" name="registration_date">
+                      </div>
+                  </div>
 
-                <button type="submit" class="btn-submit">Update Vehicle</button>
-            </form>
-        </div>
-    </div>
-</div>
+                  <button type="submit" class="btn-submit">Update Vehicle</button>
+              </form>
+          </div>
+      </div>
+  </div>
 
 <script>
 document.getElementById('editVehicleForm').addEventListener('submit', function(e) {
