@@ -157,25 +157,76 @@ class M_Route {
     public function getRouteSuppliers($routeId) {
         $this->db->query("
             SELECT 
-                s.supplier_id,
-                s.user_id,
-                s.latitude,
-                s.longitude,
-                CONCAT(u.first_name, ' ', u.last_name) as supplier_name
+                s.*,
+                CONCAT(u.first_name, ' ', u.last_name) as supplier_name,
+                CONCAT(s.latitude, ', ', s.longitude) as location,
+                csr.status as collection_status
             FROM route_suppliers rs
             JOIN suppliers s ON rs.supplier_id = s.supplier_id
             JOIN users u ON s.user_id = u.user_id
+            LEFT JOIN collection_supplier_records csr ON s.supplier_id = csr.supplier_id
             WHERE rs.route_id = :route_id
+            AND rs.is_active = 1
             AND rs.is_deleted = 0
-            ORDER BY rs.supplier_order ASC
+            ORDER BY rs.supplier_order
         ");
         
         $this->db->bind(':route_id', $routeId);
+        return $this->db->resultSet();
+    }
+
+    public function getRouteWithSuppliers($routeId) {
+        $this->db->query('SELECT r.*, 
+            r.start_location_lat,
+            r.start_location_long,
+            r.end_location_lat,
+            r.end_location_long,
+            GROUP_CONCAT(
+                JSON_OBJECT(
+                    "supplier_id", s.supplier_id,
+                    "name", CONCAT(u.first_name, " ", u.last_name),
+                    "latitude", s.latitude,
+                    "longitude", s.longitude,
+                    "status", csr.status
+                )
+            ) as suppliers
+            FROM routes r
+            LEFT JOIN collection_supplier_records csr ON r.route_id = csr.collection_id
+            LEFT JOIN suppliers s ON csr.supplier_id = s.supplier_id
+            LEFT JOIN users u ON s.user_id = u.user_id
+            WHERE r.route_id = :route_id
+            GROUP BY r.route_id');
         
-        // Debug
-        $results = $this->db->resultSet();
-        error_log("Route Suppliers Query Results: " . print_r($results, true));
-        return $results;
+        $this->db->bind(':route_id', $routeId);
+        $result = $this->db->single();
+        
+        if ($result) {
+            $result->suppliers = json_decode('[' . $result->suppliers . ']');
+        }
+        
+        return $result;
+    }
+
+    public function getRouteById($routeId) {
+        $this->db->query("
+            SELECT 
+                route_id,
+                route_name,
+                start_location_lat,
+                start_location_long,
+                end_location_lat,
+                end_location_long,
+                date,
+                number_of_suppliers,
+                status
+            FROM routes
+            WHERE route_id = :route_id
+            AND is_deleted = 0
+            LIMIT 1
+        ");
+
+        $this->db->bind(':route_id', $routeId);
+        return $this->db->single();
     }
 }
 ?>

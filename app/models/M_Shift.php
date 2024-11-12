@@ -124,5 +124,6 @@ class M_Shift {
         $this->db->query('SELECT COUNT(*) as total_shifts FROM collection_shifts');
         return $this->db->single()->total_shifts;
     }
+
 }
 ?>

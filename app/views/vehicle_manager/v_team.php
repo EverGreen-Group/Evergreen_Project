@@ -46,7 +46,13 @@
     <h2>All Teams</h2>
     <div class="team-cards-container" id="teamCardsContainer">
         <?php foreach ($data['teams'] as $team): ?>
-            <a href="javascript:void(0);" onclick="showTeamDetails(<?php echo htmlspecialchars(json_encode($team)); ?>)" class="team-card" style="display: flex; margin-bottom: 20px; border: 1px solid #ddd; padding: 10px; border-radius: 8px; text-decoration: none; color: inherit;">
+            <a href="javascript:void(0);" onclick="showTeamDetails(<?php echo htmlspecialchars(json_encode($team)); ?>)" class="team-card" style="display: flex; margin-bottom: 20px; border: 1px solid #ddd; padding: 10px; border-radius: 8px; text-decoration: none; color: inherit; position: relative;">
+                <div class="delete-overlay">
+                    <button onclick="event.stopPropagation(); deleteTeam(<?php echo $team->team_id; ?>)" class="delete-btn">
+                        <i class='bx bx-trash'></i>
+                    </button>
+                </div>
+                
                 <div class="team-icons">
                     <img src="<?php echo $team->driver_image_url ?: 'https://randomuser.me/api/portraits/men/1.jpg'; ?>" alt="Driver Icon" title="Driver">
                     <img src="<?php echo $team->partner_image_url ?: 'https://randomuser.me/api/portraits/women/2.jpg'; ?>" alt="Partner Icon" title="Partner">
@@ -237,7 +243,9 @@
                           <select id="edit_team_select" name="team_id" required onchange="loadTeamData(this.value)">
                               <option value="">Select a team</option>
                               <?php foreach ($data['teams'] as $team): ?>
-                                  <option value="<?= $team->team_id ?>"><?= $team->team_name ?></option>
+                                  <option value="<?php echo $team->team_id; ?>">
+                                      <?php echo htmlspecialchars($team->team_name); ?>
+                                  </option>
                               <?php endforeach; ?>
                           </select>
                       </div>
@@ -866,6 +874,35 @@ function removeTeamMember(type) {
         // });
     }
 }
+
+function deleteTeam(teamId) {
+    if (confirm('Are you sure you want to delete this team?')) {
+        fetch(`<?php echo URLROOT; ?>/vehiclemanager/deleteTeam/${teamId}`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                // Fixed selector to find the team card
+                const teamCard = document.querySelector(`.team-card[onclick*="team_id\\\":${teamId}"]`);
+                if (teamCard) {
+                    teamCard.remove();
+                    // Optionally refresh the page to update stats
+                    window.location.reload();
+                }
+            } else {
+                alert('Failed to delete team');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('An error occurred while deleting the team');
+        });
+    }
+}
 </script>
 
 <style>
@@ -1204,6 +1241,46 @@ function removeTeamMember(type) {
 #createVehicleForm, #editVehicleForm {
     padding-right: 20px;
     padding-left: 20px;
+}
+</style>
+
+<style>
+.team-card {
+    overflow: hidden; /* Ensure overlay doesn't extend beyond card */
+}
+
+.delete-overlay {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.team-card:hover .delete-overlay {
+    opacity: 1;
+}
+
+.delete-btn {
+    background-color: #ff4444;
+    color: white;
+    border: none;
+    border-radius: 50%;
+    width: 32px;
+    height: 32px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background-color 0.3s ease;
+}
+
+.delete-btn:hover {
+    background-color: #cc0000;
+}
+
+.delete-btn i {
+    font-size: 18px;
 }
 </style>
 

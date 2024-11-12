@@ -4,12 +4,14 @@ require_once '../app/models/M_Route.php';      // Add Route model
 require_once '../app/models/M_Team.php';       // Add Team model
 require_once '../app/models/M_Vehicle.php';    // Add Vehicle model
 require_once '../app/models/M_Shift.php';      // Add Shift model
-require_once '../app/models/M_CollectionSkeleton.php';  // Add CollectionSkeleton model
+require_once '../app/models/M_CollectionSchedule.php';  // Add CollectionSchedule model
 require_once '../app/models/M_Staff.php';
 require_once '../app/models/M_Driver.php';
 require_once '../app/models/M_Partner.php';
 require_once '../app/helpers/auth_middleware.php';
 require_once '../app/helpers/UserHelper.php';
+require_once '../app/models/M_Collection.php';    // Add Collection model
+require_once '../app/models/M_CollectionSupplierRecord.php';
 
 class VehicleManager extends Controller {
     private $vehicleManagerModel;
@@ -17,11 +19,13 @@ class VehicleManager extends Controller {
     private $teamModel;        // Declare a variable for Team model
     private $vehicleModel;     // Declare a variable for Vehicle model
     private $shiftModel;       // Declare a variable for Shift model
-    private $skeletonModel;     // Declare a variable for CollectionSkeleton model
+    private $scheduleModel;     // Declare a variable for CollectionSchedule model
     private $driverModel; // Declare a variable for Driver model
     private $partnerModel; // Add this line
     private $staffModel;
     private $userHelper;
+    private $collectionModel;
+    private $collectionSupplierRecordModel;
     
 
     public function __construct() {
@@ -42,11 +46,13 @@ class VehicleManager extends Controller {
         $this->teamModel = new M_Team();          // Instantiate Team model
         $this->vehicleModel = new M_Vehicle();    // Instantiate Vehicle model
         $this->shiftModel = new M_Shift();        // Instantiate Shift model
-        $this->skeletonModel = new M_CollectionSkeleton();  // Instantiate CollectionSkeleton model
+        $this->scheduleModel = new M_CollectionSchedule();  // Instantiate CollectionSchedule model
         $this->driverModel = new M_Driver(); // Instantiate Driver model
         $this->partnerModel = new M_Partner(); // Add this line
         $this->staffModel = $this->model('M_Staff');
         $this->userHelper = new UserHelper();
+        $this->collectionModel = $this->model('M_Collection');
+        $this->collectionSupplierRecordModel = $this->model('M_CollectionSupplierRecord');
     }
 
     public function index() {
@@ -58,7 +64,8 @@ class VehicleManager extends Controller {
         $teams = $this->teamModel->getAllTeams();
         $vehicles = $this->vehicleModel->getAllVehicles();
         $shifts = $this->shiftModel->getAllShifts();
-        $skeletons = $this->skeletonModel->getAllSkeletons();
+        $schedules = $this->scheduleModel->getAllSchedules();
+        $ongoingCollections = $this->collectionModel->getOngoingCollections();
 
         // Pass the stats and data for the dropdowns to the view
         $this->view('vehicle_manager/v_collection', [
@@ -67,43 +74,50 @@ class VehicleManager extends Controller {
             'teams' => $teams,
             'vehicles' => $vehicles,
             'shifts' => $shifts,
-            'skeletons' => $skeletons
+            'schedules' => $schedules,
+            'ongoing_collections' => $ongoingCollections
         ]);
     }
 
+    public function getSupplierRecords($collectionId) {
+        $records = $this->collectionSupplierRecordModel->getSupplierRecords($collectionId);
+        echo json_encode($records);
+    }
+    
+    public function updateSupplierRecord() {
+        $data = json_decode(file_get_contents('php://input'));
+        $success = $this->collectionSupplierRecordModel->updateSupplierRecord($data);
+        echo json_encode(['success' => $success]);
+    }
+    
+    public function addSupplierRecord() {
+        $data = json_decode(file_get_contents('php://input'));
+        $success = $this->collectionSupplierRecordModel->addSupplierRecord($data);
+        echo json_encode(['success' => $success]);
+    }
+
     // Add method to handle the assignment of collections
-    public function createSkeleton() {
+    public function createSchedule() {
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-            $route_id = $_POST['route_id'];
-            $team_id = $_POST['team_id'];
-            $vehicle_id = $_POST['vehicle_id'];
-            $shift_id = $_POST['shift_id'];
-    
-            // Call the model to create a new skeleton
-            $result = $this->collectionsModel->createSkeleton($route_id, $team_id, $vehicle_id, $shift_id);
-    
+            $data = [
+                'route_id' => $_POST['route_id'],
+                'team_id' => $_POST['team_id'],
+                'vehicle_id' => $_POST['vehicle_id'],
+                'shift_id' => $_POST['shift_id'],
+                'week_number' => $_POST['week_number'],
+                'days_of_week' => isset($_POST['days_of_week']) ? implode(',', $_POST['days_of_week']) : ''
+            ];
+
+            // Call the model to create a new schedule
+            $result = $this->scheduleModel->create($data);
+
             if ($result) {
-                // Redirect or display success message
-                header('Location: /vehicle_manager/createSkeleton'); // Redirect back to the form
-                exit;
+                flash('schedule_success', 'Schedule created successfully');
+                redirect('vehiclemanager/index');
             } else {
-                // Handle the error
-                echo "Error creating skeleton collection";
+                flash('schedule_error', 'Error creating schedule');
+                redirect('vehiclemanager/index');
             }
-        } else {
-            // Show the form or handle appropriately
-            $routes = $this->vehicleManagerModel->getRoutes();
-            $teams = $this->vehicleManagerModel->getTeams();
-            $vehicles = $this->vehicleManagerModel->getVehicles();
-            $shifts = $this->vehicleManagerModel->getShifts();
-            
-            // Render the view
-            $this->view('vehicle_manager/v_create_collection_skeleton', [
-                'routes' => $routes,
-                'teams' => $teams,
-                'vehicles' => $vehicles,
-                'shifts' => $shifts
-            ]);
         }
     }
     
@@ -233,52 +247,47 @@ class VehicleManager extends Controller {
     }
 
     public function shift() {
+        // Handle POST request for creating new shift
         if ($_SERVER['REQUEST_METHOD'] == 'POST') {
-            // Create a specific array for shift data only
-            $shiftData = [
-                'shift_name' => trim($_POST['shift_name']),
-                'start_time' => trim($_POST['start_time']),
-                'end_time' => trim($_POST['end_time'])
-            ];
+            try {
+                // Validate and sanitize input
+                $data = [
+                    'shift_name' => trim($_POST['shift_name']),
+                    'start_time' => trim($_POST['start_time']),
+                    'end_time' => trim($_POST['end_time'])
+                ];
 
-            // Validate
-            if (empty($shiftData['shift_name']) || empty($shiftData['start_time']) || empty($shiftData['end_time'])) {
-                flash('shift_error', 'Please fill in all fields', 'alert alert-danger');
-            } else {
-                try {
-                    // Pass only the shift-specific data to the model
-                    if ($this->shiftModel->addShift($shiftData)) {
-                        flash('shift_success', 'Shift added successfully');
-                        redirect('vehiclemanager/shift');
-                    } else {
-                        $error = $this->shiftModel->getError();
-                        flash('shift_error', 'Database Error: ' . $error, 'alert alert-danger');
-                    }
-                } catch (Exception $e) {
-                    flash('shift_error', 'Exception: ' . $e->getMessage(), 'alert alert-danger');
+                // Use addShift instead of createShift
+                if ($this->shiftModel->addShift($data)) {
+                    flash('shift_success', 'New shift created successfully');
+                } else {
+                    // Get specific error message from model
+                    flash('shift_error', $this->shiftModel->getError() ?? 'Failed to create shift');
                 }
+                redirect('vehiclemanager/shift');
+                return;
+            } catch (Exception $e) {
+                flash('shift_error', 'Error: ' . $e->getMessage());
+                redirect('vehiclemanager/shift');
+                return;
             }
         }
 
-        // Get all shifts for display
-        $data['shifts'] = $this->shiftModel->getAllShifts();
-        $data['totalShifts'] = $this->shiftModel->getTotalShifts();
-        $data['totalTeamsInCollection'] = $this->teamModel->getTotalTeamsInCollection();
+        // GET request - display shifts page
+        $shifts = $this->shiftModel->getAllShifts();
+        $totalShifts = $this->shiftModel->getTotalShifts();
+        $totalTeamsInCollection = $this->teamModel->getTotalTeamsInCollection();
         
-        // Get schedules for next 7 days
-        $data['schedules'] = [];
-        for ($i = 0; $i < 7; $i++) {
-            $date = date('Y-m-d', strtotime("+$i days"));
-            $schedules = $this->skeletonModel->getSchedulesByDate($date);
-            foreach ($schedules as $schedule) {
-                $data['schedules'][$schedule->shift_id][$date][] = $schedule;
-            }
-        }
-
-        // Get leave type statistics
-        $leaveTypeStats = $this->staffModel->getLeaveTypeDistribution();
+        $startDate = date('Y-m-d');
+        $endDate = date('Y-m-d', strtotime('+6 days'));
+        $schedules = $this->scheduleModel->getSchedulesByDate($startDate, $endDate);
         
-        $data['leaveTypeStats'] = $leaveTypeStats;
+        $data = [
+            'shifts' => $shifts,
+            'totalShifts' => $totalShifts,
+            'totalTeamsInCollection' => $totalTeamsInCollection,
+            'schedules' => $schedules
+        ];
         
         $this->view('vehicle_manager/v_shift', $data);
     }
@@ -665,5 +674,95 @@ class VehicleManager extends Controller {
             ]);
         }
     }
+
+    public function deleteTeam($teamId) {
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            die('Invalid request method');
+        }
+
+        $result = $this->teamModel->setTeamVisibility($teamId, 0);
+        
+        header('Content-Type: application/json');
+        echo json_encode(['success' => $result]);
+    }
+
+    public function getCollectionRoute($collectionId) {
+        // Get collection details
+        $collection = $this->collectionModel->getCollectionById($collectionId);
+        
+        // Get route and supplier details
+        $routeData = $this->routeModel->getRouteWithSuppliers($collection->route_id);
+        
+        // Get current progress from supplier records
+        $supplierRecords = $this->collectionSupplierRecordModel->getSupplierRecords($collectionId);
+        
+        $data = [
+            'team_name' => $collection->team_name,
+            'route_name' => $collection->route_name,
+            'start_location' => [
+                'latitude' => $routeData->start_location_lat,
+                'longitude' => $routeData->start_location_long
+            ],
+            'end_location' => [
+                'latitude' => $routeData->end_location_lat,
+                'longitude' => $routeData->end_location_long
+            ],
+            'suppliers' => $routeData->suppliers,
+            'current_stop' => $this->getCurrentStop($supplierRecords)
+        ];
+
+        echo json_encode($data);
+    }
+
+    private function getCurrentStop($supplierRecords) {
+        // Find the last collected supplier
+        foreach ($supplierRecords as $index => $record) {
+            if ($record->status === 'Collected') {
+                return $index;
+            }
+        }
+        return 0; // Return 0 if no collections yet
+    }
+
+    public function getCollectionDetails($collectionId) {
+        // Get collection basic info
+        $collection = $this->collectionModel->getCollectionById($collectionId);
+        
+        // Get supplier records for this collection
+        $suppliers = $this->collectionSupplierRecordModel->getSupplierRecords($collectionId);
+        
+        $data = [
+            'team_name' => $collection->team_name,
+            'route_name' => $collection->route_name,
+            'suppliers' => $suppliers
+        ];
+
+        header('Content-Type: application/json');
+        echo json_encode($data);
+    }
+
+    public function updateSupplierStatus($recordId) {
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            $data = json_decode(file_get_contents('php://input'));
+            
+            if ($this->collectionSupplierRecordModel->updateSupplierStatus($recordId, $data->status)) {
+                echo json_encode(['success' => true]);
+            } else {
+                echo json_encode(['success' => false]);
+            }
+        }
+    }
+
+    public function removeCollectionSupplier($recordId) {
+        if($_SERVER['REQUEST_METHOD'] === 'POST'){
+            $data = json_decode(file_get_contents('php://input'));
+            if($this->collectionSupplierRecordModel->removeCollectionSupplier($recordId)){
+                echo json_encode(['success' => true]);
+            } else {
+                echo json_encode(['success' => false]);
+            }
+        }
+    }
+
 }
 ?>

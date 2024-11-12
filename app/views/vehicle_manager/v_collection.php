@@ -5,6 +5,11 @@
 <!-- Top nav bar -->
 <?php require APPROOT . '/views/inc/components/topnavbar.php'; ?>
 
+<script>
+    const URLROOT = '<?php echo URLROOT; ?>';
+</script>
+
+
 <!-- MAIN -->
 <main>
     <div class="head-title">
@@ -46,70 +51,128 @@
 
 
     <!-- Ongoing Collection Tracking Section -->
-    <div class="table-data">
-        <div class="order">
-            <div class="head">
-                <h3>Track Ongoing Collection</h3>
-                <select id="ongoing-collection-select">
-                    <option value="">Select a collection</option>
-                    <option value="collection1">Collection 1 - Team A</option>
-                    <option value="collection2">Collection 2 - Team B</option>
-                    <!-- Add more ongoing collections as needed -->
-                </select>
-            </div>
-            <div id="map-container" style="height: 400px; width: 100%;"></div>
-            <div id="collection-details">
-                <h4>Collection Details</h4>
-                <p><b>Team: </b><span id="team-name"></span></p>
-                <p><b>Route: </b><span id="route-name"></span></p>
-                <p><b>Progress: </b><span id="collection-progress"></span></p>
-                <p><b>Estimated Time Remaining: </b><span id="estimated-time"></span></p>
+    <?php if (!empty($data['ongoing_collections'])): ?>
+        <!-- Collections Table (Full Width) -->
+        <div class="table-data">
+            <div class="order">
+                <div class="head">
+                    <h3>Collections</h3>
+                </div>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Collection ID</th>
+                            <th>Route</th>
+                            <th>Team</th>
+                            <th>Vehicle</th>
+                            <th>Shift</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <?php foreach ($data['ongoing_collections'] as $collection): ?>
+                            <tr>
+                                <td><?= $collection->collection_id ?></td>
+                                <td><?= $collection->route_name ?></td>
+                                <td><?= $collection->team_name ?></td>
+                                <td><?= $collection->license_plate ?></td>
+                                <td><?= $collection->shift_name ?></td>
+                                <td><?= $collection->status ?></td>
+                            </tr>
+                        <?php endforeach; ?>
+                    </tbody>
+                </table>
             </div>
         </div>
-    </div>
 
+        <!-- Tracking Interface (Full Width) -->
+        <div class="table-data">
+            <div class="order">
+                <div class="head">
+                    <h3>Track Ongoing Collection</h3>
+                    <select id="ongoing-collection-select">
+                        <option value="">Select a collection</option>
+                        <?php foreach ($data['ongoing_collections'] as $collection): ?>
+                            <option value="<?= $collection->collection_id ?>">
+                                Collection <?= $collection->collection_id ?> - <?= $collection->team_name ?>
+                            </option>
+                        <?php endforeach; ?>
+                    </select>
+                </div>
+                <div id="map-container" style="height: 200px; width: 100%;"></div>
+                <div id="collection-details">
+                    <h4>Collection Details</h4>
+                    <p><b>Team: </b><span id="team-name">-</span></p>
+                    <p><b>Route: </b><span id="route-name">-</span></p>
+                    
+                    <!-- Supplier Collection Status Table -->
+                    <div class="supplier-status">
+                        <h4>Supplier Collection Status</h4>
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Supplier</th>
+                                    <th>Status</th>
+                                    <th>Quantity (kg)</th>
+                                    <th>Time</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="supplier-status-body">
+                                <!-- Dynamically populated via JavaScript -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    <?php endif; ?>
 
-    <!-- Collection Skeletons Section -->
+    <!-- Collection Schedules Section -->
     <div class="table-data">
         <div class="order">
             <div class="head">
-                <h3>Created Collections</h3>
+                <h3>Collection Schedules</h3>
             </div>
             <table>
                 <thead>
                     <tr>
-                        <th>Skeleton ID</th>
-                        <th>Route ID</th>
-                        <th>Team ID</th>
-                        <th>Vehicle ID</th>
-                        <th>Shift ID</th>
+                        <th>Schedule ID</th>
+                        <th>Route</th>
+                        <th>Team</th>
+                        <th>Vehicle</th>
+                        <th>Shift</th>
+                        <th>Week</th>
+                        <th>Days</th>
                         <th>Created At</th>
                         <th>Status</th>
                         <th>Actions</th>
                     </tr>
                 </thead>
                 <tbody>
-                    <?php if(isset($data['skeletons']) && !empty($data['skeletons'])): ?>
-                        <?php foreach($data['skeletons'] as $skeleton): ?>
+                    <?php if(isset($data['schedules']) && !empty($data['schedules'])): ?>
+                        <?php foreach($data['schedules'] as $schedule): ?>
                             <tr>
-                                <td>CS<?php echo str_pad($skeleton->skeleton_id, 3, '0', STR_PAD_LEFT); ?></td>
-                                <td><?php echo $skeleton->route_id; ?></td>
-                                <td><?php echo $skeleton->team_id; ?></td>
-                                <td><?php echo $skeleton->vehicle_id; ?></td>
-                                <td><?php echo $skeleton->shift_id; ?></td>
-                                <td><?php echo date('Y-m-d H:i', strtotime($skeleton->created_at)); ?></td>
+                                <td>CS<?php echo str_pad($schedule->schedule_id, 3, '0', STR_PAD_LEFT); ?></td>
+                                <td><?php echo $schedule->route_name; ?></td>
+                                <td><?php echo $schedule->team_name; ?></td>
+                                <td><?php echo $schedule->license_plate; ?></td>
+                                <td><?php echo $schedule->shift_name; ?></td>
+                                <td>Week <?php echo $schedule->week_number; ?></td>
+                                <td><?php echo ucwords(str_replace(',', ', ', $schedule->days_of_week)); ?></td>
+                                <td><?php echo date('Y-m-d H:i', strtotime($schedule->created_at)); ?></td>
                                 <td>
-                                    <form action="<?php echo URLROOT; ?>/collectionskeletons/toggleActive" method="POST" style="display: inline;">
-                                        <input type="hidden" name="skeleton_id" value="<?php echo $skeleton->skeleton_id; ?>">
-                                        <button type="submit" class="status-btn <?php echo $skeleton->is_active ? 'active' : 'inactive'; ?>">
-                                            <?php echo $skeleton->is_active ? 'Active' : 'Inactive'; ?>
+                                    <form action="<?php echo URLROOT; ?>/collectionschedules/toggleActive" method="POST" style="display: inline;">
+                                        <input type="hidden" name="schedule_id" value="<?php echo $schedule->schedule_id; ?>">
+                                        <button type="submit" class="status-btn <?php echo $schedule->is_active ? 'active' : 'inactive'; ?>">
+                                            <?php echo $schedule->is_active ? 'Active' : 'Inactive'; ?>
                                         </button>
                                     </form>
                                 </td>
                                 <td>
-                                    <form action="<?php echo URLROOT; ?>/collectionskeletons/delete" method="POST" style="display: inline;" 
-                                          onsubmit="return confirm('Are you sure you want to delete this skeleton?');">
-                                        <input type="hidden" name="skeleton_id" value="<?php echo $skeleton->skeleton_id; ?>">
+                                    <form action="<?php echo URLROOT; ?>/collectionschedules/delete" method="POST" style="display: inline;" 
+                                          onsubmit="return confirm('Are you sure you want to delete this schedule?');">
+                                        <input type="hidden" name="schedule_id" value="<?php echo $schedule->schedule_id; ?>">
                                         <button type="submit" class="delete-btn">
                                             <i class='bx bx-trash'></i>
                                         </button>
@@ -119,7 +182,7 @@
                         <?php endforeach; ?>
                     <?php else: ?>
                         <tr>
-                            <td colspan="8" class="text-center">No collections found</td>
+                            <td colspan="10" class="text-center">No schedules found</td>
                         </tr>
                     <?php endif; ?>
                 </tbody>
@@ -127,20 +190,21 @@
         </div>
     </div>
 
-    <!-- Create and Edit Collection Skeleton Section -->
+    <!-- Create New Schedule Section -->
     <div class="table-data">
-        <div class="order" style="display: flex; gap: 20px;">
-            <!-- Create Form -->
-            <div style="flex: 1;">
-                <div class="head">
-                    <h3>Create New Collection</h3>
-                </div>
-                <form id="createSkeletonForm" method="POST" action="<?php echo URLROOT; ?>/collectionskeletons/create">
+        <div class="order">
+            <div class="head">
+                <h3>Create New Schedule</h3>
+            </div>
+            <form id="createScheduleForm" method="POST" action="<?php echo URLROOT; ?>/collectionschedules/create">
+                <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px;">
                     <div class="form-group">
                         <label for="route">Route:</label>
                         <select id="route" name="route_id" required>
                             <?php foreach ($data['routes'] as $route): ?>
-                                <option value="<?= $route->route_id; ?>">Route ID: <?= $route->route_id . ", Number of Suppliers: " . $route->number_of_suppliers; ?></option>
+                                <option value="<?= $route->route_id; ?>">
+                                    <?= htmlspecialchars($route->route_name); ?>
+                                </option>
                             <?php endforeach; ?>
                         </select>
                     </div>
@@ -172,47 +236,69 @@
                         </select>
                     </div>
 
-                    <button type="submit" class="btn-submit">Create Collection</button>
-                </form>
-            </div>
-
-            <!-- Edit Form -->
-            <div style="flex: 1;">
-                <div class="head">
-                    <h3>Edit Collection</h3>
-                </div>
-                <form id="editSkeletonForm" method="POST" action="<?php echo URLROOT; ?>/collectionskeletons/update">
                     <div class="form-group">
-                        <label for="skeleton_id">Select Skeleton:</label>
-                        <select id="skeleton_id" name="skeleton_id" required onchange="loadSkeletonData(this.value)">
-                            <option value="">Select a collection</option>
-                            <?php foreach ($data['skeletons'] as $skeleton): ?>
-                                <option value="<?= $skeleton->skeleton_id; ?>">
-                                    CS<?= str_pad($skeleton->skeleton_id, 3, '0', STR_PAD_LEFT); ?>
-                                </option>
+                        <label for="week_number">Week:</label>
+                        <select id="week_number" name="week_number" required>
+                            <option value="1">Week 1</option>
+                            <option value="2">Week 2</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>Collection Days:</label>
+                    <div style="display: grid; grid-template-columns: repeat(7, 1fr); gap: 10px;">
+                        <label><input type="checkbox" name="days_of_week[]" value="mon"> Mon</label>
+                        <label><input type="checkbox" name="days_of_week[]" value="tue"> Tue</label>
+                        <label><input type="checkbox" name="days_of_week[]" value="wed"> Wed</label>
+                        <label><input type="checkbox" name="days_of_week[]" value="thu"> Thu</label>
+                        <label><input type="checkbox" name="days_of_week[]" value="fri"> Fri</label>
+                        <label><input type="checkbox" name="days_of_week[]" value="sat"> Sat</label>
+                        <label><input type="checkbox" name="days_of_week[]" value="sun"> Sun</label>
+                    </div>
+                </div>
+
+                <button type="submit" class="btn-submit">Create Schedule</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Edit Schedule Section -->
+    <div class="table-data">
+        <div class="order">
+            <div class="head">
+                <h3>Edit Schedule</h3>
+            </div>
+            <form id="editScheduleForm" method="POST" action="<?php echo URLROOT; ?>/collectionschedules/update">
+                <div class="form-group">
+                    <label for="schedule_id">Select Schedule:</label>
+                    <select id="schedule_id" name="schedule_id" required onchange="loadScheduleData(this.value)">
+                        <option value="">Select a schedule</option>
+                        <?php foreach ($data['schedules'] as $schedule): ?>
+                            <option value="<?= $schedule->schedule_id; ?>">
+                                Schedule <?= str_pad($schedule->schedule_id, 3, '0', STR_PAD_LEFT); ?>
+                            </option>
+                        <?php endforeach; ?>
+                    </select>
+                </div>
+
+                <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px;">
+                    <div class="form-group">
+                        <label for="edit_route">Route:</label>
+                        <select id="edit_route" name="route_id" required>
+                            <?php foreach ($data['routes'] as $route): ?>
+                                <option value="<?= $route->route_id; ?>"><?= htmlspecialchars($route->route_name); ?></option>
                             <?php endforeach; ?>
                         </select>
                     </div>
 
-                    <!-- Route and Team in same row -->
-                    <div style="display: flex; gap: 20px;">
-                        <div class="form-group" style="flex: 1;">
-                            <label for="edit_route">Route:</label>
-                            <select id="edit_route" name="route_id" required>
-                                <?php foreach ($data['routes'] as $route): ?>
-                                    <option value="<?= $route->route_id; ?>">Route ID: <?= $route->route_id . ", Number of Suppliers: " . $route->number_of_suppliers; ?></option>
-                                <?php endforeach; ?>
-                            </select>
-                        </div>
-
-                        <div class="form-group" style="flex: 1;">
-                            <label for="edit_team">Team:</label>
-                            <select id="edit_team" name="team_id" required>
-                                <?php foreach ($data['teams'] as $team): ?>
-                                    <option value="<?= $team->team_id; ?>"><?= $team->team_name; ?></option>
-                                <?php endforeach; ?>
-                            </select>
-                        </div>
+                    <div class="form-group">
+                        <label for="edit_team">Team:</label>
+                        <select id="edit_team" name="team_id" required>
+                            <?php foreach ($data['teams'] as $team): ?>
+                                <option value="<?= $team->team_id; ?>"><?= $team->team_name; ?></option>
+                            <?php endforeach; ?>
+                        </select>
                     </div>
 
                     <div class="form-group">
@@ -233,229 +319,58 @@
                         </select>
                     </div>
 
-                    <button type="submit" class="btn-submit">Update Collection</button>
-                </form>
-            </div>
+                    <div class="form-group">
+                        <label for="edit_week_number">Week:</label>
+                        <select id="edit_week_number" name="week_number" required>
+                            <option value="1">Week 1</option>
+                            <option value="2">Week 2</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>Collection Days:</label>
+                    <div style="display: grid; grid-template-columns: repeat(7, 1fr); gap: 10px;">
+                        <label><input type="checkbox" name="edit_days_of_week[]" value="mon"> Mon</label>
+                        <label><input type="checkbox" name="edit_days_of_week[]" value="tue"> Tue</label>
+                        <label><input type="checkbox" name="edit_days_of_week[]" value="wed"> Wed</label>
+                        <label><input type="checkbox" name="edit_days_of_week[]" value="thu"> Thu</label>
+                        <label><input type="checkbox" name="edit_days_of_week[]" value="fri"> Fri</label>
+                        <label><input type="checkbox" name="edit_days_of_week[]" value="sat"> Sat</label>
+                        <label><input type="checkbox" name="edit_days_of_week[]" value="sun"> Sun</label>
+                    </div>
+                </div>
+
+                <button type="submit" class="btn-submit">Update Schedule</button>
+            </form>
         </div>
     </div>
 
     <script>
-    function loadSkeletonData(skeletonId) {
-        // Find the skeleton data from the existing skeletons
-        <?php echo 'const skeletons = ' . json_encode($data['skeletons']) . ';'; ?>
+    function loadScheduleData(scheduleId) {
+        // Find the schedule data from the existing schedules
+        <?php echo 'const schedules = ' . json_encode($data['schedules']) . ';'; ?>
         
-        const skeleton = skeletons.find(s => s.skeleton_id === skeletonId);
-        if (skeleton) {
+        const schedule = schedules.find(s => s.schedule_id === scheduleId);
+        if (schedule) {
             // Populate the edit form fields
-            document.getElementById('edit_route').value = skeleton.route_id;
-            document.getElementById('edit_team').value = skeleton.team_id;
-            document.getElementById('edit_vehicle').value = skeleton.vehicle_id;
-            document.getElementById('edit_shift').value = skeleton.shift_id;
+            document.getElementById('edit_route').value = schedule.route_id;
+            document.getElementById('edit_team').value = schedule.team_id;
+            document.getElementById('edit_vehicle').value = schedule.vehicle_id;
+            document.getElementById('edit_shift').value = schedule.shift_id;
+            document.getElementById('edit_week_number').value = schedule.week_number;
+            
+            // Handle checkboxes for days
+            const days = schedule.days_of_week.split(',');
+            document.querySelectorAll('input[name="edit_days_of_week[]"]').forEach(checkbox => {
+                checkbox.checked = days.includes(checkbox.value);
+            });
         }
     }
     </script>
 
-    <!-- Weekly Collection Section -->
-    <div class="table-data">
-        <div class="order">
-            <div class="head">
-                <h3>Weekly Collection</h3>
-                <form>
-                    <div class="form-group">
-                        <label for="day-select">Select Day:</label>
-                        <select id="day-select">
-                            <option value="monday">Monday</option>
-                            <option value="tuesday">Tuesday</option>
-                            <option value="wednesday">Wednesday</option>
-                            <!-- Add options for all the days -->
-                        </select>
-                    </div>
-                </form>
-            </div>
-            <table>
-                <thead>
-                    <tr>
-                        <th>Collection ID</th>
-                        <th>Team</th>
-                        <th>Suppliers</th>
-                        <th>Estimated Collection (kg)</th>
-                        <th>Shift</th>
-                        <th>Time</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <tr>
-                        <td>W001</td>
-                        <td>Team 1</td>
-                        <td>10</td>
-                        <td>1500 kg</td>
-                        <td>Morning</td>
-                        <td>8:00 AM</td>
-                    </tr>
-                    <tr>
-                        <td>W002</td>
-                        <td>Team 2</td>
-                        <td>15</td>
-                        <td>2000 kg</td>
-                        <td>Afternoon</td>
-                        <td>1:00 PM</td>
-                    </tr>
-                    <!-- Add more weekly collections as needed -->
-                </tbody>
-            </table>
-        </div>
-    </div>
 
-    <!-- Inactive Suppliers Section -->
-    <div class="table-data">
-        <div class="order">
-            <div class="head">
-                <h3>Inactive Suppliers</h3>
-            </div>
-            <table>
-                <thead>
-                    <tr>
-                        <th>Supplier ID</th>
-                        <th>Name</th>
-                        <th>Average Collection (kg)</th>
-                        <th>Collection Status</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <tr>
-                        <td>S1</td>
-                        <td>Supplier One</td>
-                        <td>1200 kg</td>
-                        <td><span class="status error">Not available</span></td>
-                    </tr>
-                    <tr>
-                        <td>S2</td>
-                        <td>Supplier Two</td>
-                        <td>800 kg</td>
-                        <td><span class="status completed">Available</span></td>
-                    </tr>
-                    <!-- Add more inactive suppliers as needed -->
-                </tbody>
-            </table>
-        </div>
-    </div>
 
-    <!-- Missed Collections Section -->
-    <div class="table-data">
-        <div class="order">
-            <div class="head">
-                <h3>Suppliers Who Missed Collection</h3>
-            </div>
-            <table>
-                <thead>
-                    <tr>
-                        <th>Supplier ID</th>
-                        <th>Name</th>
-                        <th>Average Collection (kg)</th>
-                        <th>Ready for Collection Status</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <tr>
-                        <td>S3</td>
-                        <td>Supplier Three</td>
-                        <td>900 kg</td>
-                        <td><span class="status completed">Ready for Collection</span></td>
-                    </tr>
-                    <tr>
-                        <td>S4</td>
-                        <td>Supplier Four</td>
-                        <td>650 kg</td>
-                        <td><span class="status error">Not Ready</span></td>
-                    </tr>
-                    <!-- Add more missed suppliers as needed -->
-                </tbody>
-            </table>
-        </div>
-    </div>
-
-    <!-- Ongoing Collections Section -->
-    <div class="table-data">
-        <div class="order">
-            <div class="head">
-                <h3>Ongoing Collections</h3>
-            </div>
-            <table>
-                <thead>
-                    <tr>
-                        <th>Team</th>
-                        <th>Suppliers Collected</th>
-                        <th>Suppliers Left</th>
-                        <th>Vehicle Capacity</th>
-                        <th>Elapsed Time</th>
-                        <th>Add Late Supplier</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <tr>
-                        <td>Team 1</td>
-                        <td>5/10</td>
-                        <td>5</td>
-                        <td>50%</td>
-                        <td>1:15:30</td>
-                        <td><button class="btn-submit assign-btn">Add Supplier</button></td>
-                    </tr>
-                    <tr>
-                        <td>Team 2</td>
-                        <td>3/15</td>
-                        <td>12</td>
-                        <td>30%</td>
-                        <td>0:45:20</td>
-                        <td><button class="btn-submit assign-btn">Add Supplier</button></td>
-                    </tr>
-                    <!-- Add more ongoing collections as needed -->
-                </tbody>
-            </table>
-        </div>
-    </div>
-
-    <!-- Finished Collections Section -->
-    <div class="table-data">
-        <div class="order">
-            <div class="head">
-                <h3>Finished Collections</h3>
-            </div>
-            <table>
-                <thead>
-                    <tr>
-                        <th>Collection ID</th>
-                        <th>Team</th>
-                        <th>Route</th>
-                        <th>Shift</th>
-                        <th>Suppliers Collected</th>
-                        <th>Status</th>
-                        <th>Completed Time</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <tr>
-                        <td>C001</td>
-                        <td>Team 1</td>
-                        <td>Route 1</td>
-                        <td>Morning</td>
-                        <td>10/10</td>
-                        <td><span class="status completed">Completed</span></td>
-                        <td>11:00 AM</td>
-                    </tr>
-                    <tr>
-                        <td>C002</td>
-                        <td>Team 2</td>
-                        <td>Route 2</td>
-                        <td>Afternoon</td>
-                        <td>15/15</td>
-                        <td><span class="status completed">Completed</span></td>
-                        <td>4:00 PM</td>
-                    </tr>
-                    <!-- Add more finished collections as needed -->
-                </tbody>
-            </table>
-        </div>
-    </div>
 
 </main>
 
@@ -465,111 +380,106 @@
 let map;
 let directionsService;
 let directionsRenderer;
-const collections = {
-    collection1: {
-        team: "Team A",
-        route: "Evergreen Route",
-        progress: "1/3 suppliers",
-        estimatedTime: "2 hours",
-        stops: [
-            { name: "Evergreen Tea Factory", location: { lat: 6.2173037, lng: 80.2564385 } },
-            { name: "Supplier 1", location: { lat: 6.243808243551064, lng: 80.25967072303547 } },
-            { name: "Supplier 2", location: { lat: 6.282762791987652, lng: 80.26495604611944 } }
-        ],
-        currentStop: 0
-    },
-    collection2: {
-        team: "Team B",
-        route: "Southern Route",
-        progress: "2/4 suppliers",
-        estimatedTime: "1.5 hours",
-        stops: [
-            { name: "Start Point", location: { lat: 6.0535, lng: 80.2210 } },
-            { name: "Supplier A", location: { lat: 6.0825, lng: 80.2510 } },
-            { name: "Supplier B", location: { lat: 6.1125, lng: 80.2810 } },
-            { name: "End Point", location: { lat: 6.1425, lng: 80.3110 } }
-        ],
-        currentStop: 2
-    }
-};
 
 function initMap() {
     map = new google.maps.Map(document.getElementById("map-container"), {
-        center: { lat: 6.2173037, lng: 80.2564385 }, // Centered on Evergreen Tea Factory
+        center: { lat: 6.2173037, lng: 80.2564385 }, // Default center
         zoom: 11
     });
 
     directionsService = new google.maps.DirectionsService();
     directionsRenderer = new google.maps.DirectionsRenderer({
         map: map,
-        suppressMarkers: true // We'll add custom markers
+        suppressMarkers: true
     });
 }
 
 function updateMap(collectionId) {
-    const collection = collections[collectionId];
-    if (!collection) return;
+    if (!collectionId) return;
 
-    // Clear previous route
-    directionsRenderer.setDirections({routes: []});
+    // Fetch collection route data from controller
+    fetch(`${URLROOT}/vehiclemanager/getCollectionRoute/${collectionId}`)
+        .then(response => response.json())
+        .then(data => {
+            // Clear previous route
+            directionsRenderer.setDirections({routes: []});
+            if (window.markers) {
+                window.markers.forEach(marker => marker.setMap(null));
+            }
+            window.markers = [];
 
-    // Remove previous markers
-    if (window.markers) {
-        window.markers.forEach(marker => marker.setMap(null));
-    }
-    window.markers = [];
+            // Create waypoints from supplier locations
+            const waypoints = data.suppliers.slice(1, -1).map(stop => ({
+                location: { lat: parseFloat(stop.latitude), lng: parseFloat(stop.longitude) },
+                stopover: true
+            }));
 
-    // Create route
-    const waypoints = collection.stops.slice(1, -1).map(stop => ({
-        location: stop.location,
-        stopover: true
-    }));
+            // Create route
+            const request = {
+                origin: { lat: parseFloat(data.start_location.latitude), lng: parseFloat(data.start_location.longitude) },
+                destination: { lat: parseFloat(data.end_location.latitude), lng: parseFloat(data.end_location.longitude) },
+                waypoints: waypoints,
+                travelMode: 'DRIVING'
+            };
 
-    const request = {
-        origin: collection.stops[0].location,
-        destination: collection.stops[collection.stops.length - 1].location,
-        waypoints: waypoints,
-        travelMode: 'DRIVING'
-    };
+            directionsService.route(request, function(result, status) {
+                if (status === 'OK') {
+                    directionsRenderer.setDirections(result);
+                    
+                    // Add markers for each stop
+                    data.suppliers.forEach((stop, index) => {
+                        const marker = new google.maps.Marker({
+                            position: { 
+                                lat: parseFloat(stop.latitude), 
+                                lng: parseFloat(stop.longitude) 
+                            },
+                            map: map,
+                            title: stop.name,
+                            label: (index + 1).toString()
+                        });
+                        window.markers.push(marker);
 
-    directionsService.route(request, function(result, status) {
-        if (status === 'OK') {
-            directionsRenderer.setDirections(result);
-            
-            // Add markers for each stop
-            collection.stops.forEach((stop, index) => {
-                const marker = new google.maps.Marker({
-                    position: stop.location,
-                    map: map,
-                    title: stop.name,
-                    label: (index + 1).toString()
-                });
-                window.markers.push(marker);
-
-                // Highlight current stop
-                if (index === collection.currentStop) {
-                    marker.setIcon('http://maps.google.com/mapfiles/ms/icons/green-dot.png');
+                        // Highlight current stop if exists
+                        if (index === data.current_stop) {
+                            marker.setIcon('http://maps.google.com/mapfiles/ms/icons/green-dot.png');
+                        }
+                    });
                 }
             });
-        }
-    });
-
-    // Update collection details
-    document.getElementById("team-name").textContent = collection.team;
-    document.getElementById("route-name").textContent = collection.route;
-    document.getElementById("collection-progress").textContent = collection.progress;
-    document.getElementById("estimated-time").textContent = collection.estimatedTime;
+            // Update collection details
+            document.getElementById("team-name").textContent = data.team_name;
+            document.getElementById("route-name").textContent = data.route_name;
+        })
+        .catch(error => console.error('Error updating map:', error));
 }
 
+// Initialize the map when the page loads
+document.addEventListener('DOMContentLoaded', function() {
+    // Initialize map
+    if (typeof google !== 'undefined') {
+        initMap();
+    }
+
+    // Remove reference to non-existent form
+    // const assignCollectionForm = document.getElementById('assignCollectionForm');
+    // if (assignCollectionForm) {
+    //     assignCollectionForm.addEventListener('submit', function(e) {
+    //         // ... form handling code ...
+    //     });
+    // }
+
+    // Select first collection by default if exists
+    const selectElement = document.getElementById('ongoing-collection-select');
+    if (selectElement && selectElement.options.length > 1) {
+        selectElement.selectedIndex = 1;
+        updateCollectionDetails(selectElement.value);
+    }
+});
+
+// Update when collection is selected? 
 document.getElementById("ongoing-collection-select").addEventListener("change", function() {
     updateMap(this.value);
 });
-
-// Initialize the map with the first collection when the page loads
-window.onload = function() {
-    initMap();
-    updateMap('collection1');
-};
 </script>
 
 <script>
@@ -688,6 +598,299 @@ window.onload = function() {
 }
 </style>
 
+<style>
+.status-badge {
+    padding: 5px 10px;
+    border-radius: 15px;
+    font-size: 0.9em;
+    font-weight: 500;
+}
 
+.status-badge.ongoing {
+    background-color: #ffd700;
+    color: #000;
+}
+
+.status-badge.completed {
+    background-color: #4CAF50;
+    color: white;
+}
+
+.status-badge.delayed {
+    background-color: #ff6b6b;
+    color: white;
+}
+
+.progress-bar {
+    width: 100%;
+    height: 10px;
+    background-color: #f0f0f0;
+    border-radius: 5px;
+    position: relative;
+    overflow: hidden;
+}
+
+.progress-bar .progress {
+    height: 100%;
+    background-color: #4CAF50;
+    border-radius: 5px;
+    transition: width 0.3s ease;
+}
+
+.progress-bar span {
+    position: absolute;
+    right: 5px;
+    top: -15px;
+    font-size: 0.8em;
+    color: #666;
+}
+
+/* Adjust the grid layout for smaller screens */
+@media screen and (max-width: 1200px) {
+    .table-data {
+        grid-template-columns: 1fr;
+    }
+}
+</style>
+
+<style>
+.table-data {
+    transition: all 0.3s ease-in-out;
+    opacity: 1;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(-20px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+/* Apply animation when the section appears */
+.table-data {
+    animation: fadeIn 0.3s ease-in-out;
+}
+</style>
+
+<style>
+.status-badge {
+    padding: 5px 10px;
+    border-radius: 15px;
+    font-size: 0.9em;
+    font-weight: 500;
+}
+
+.status-badge.pending {
+    background-color: #ffa500;
+    color: white;
+}
+
+.status-badge.in-progress {
+    background-color: #007bff;
+    color: white;
+}
+
+.start-btn {
+    padding: 5px 10px;
+    border: none;
+    border-radius: 4px;
+    background-color: #4CAF50;
+    color: white;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 0.9em;
+}
+
+.start-btn:hover {
+    background-color: #45a049;
+}
+
+.start-btn i {
+    font-size: 1.2em;
+}
+</style>
+
+<style>
+/* Add this to your existing styles */
+.status {
+    padding: 5px 10px;
+    border-radius: 15px;
+    font-size: 0.9em;
+    font-weight: 500;
+}
+
+.status.pending {
+    background-color: #ffd700;
+    color: #000;
+}
+
+.status.in-progress {
+    background-color: #007bff;
+    color: white;
+}
+
+.status.completed {
+    background-color: #4CAF50;
+    color: white;
+}
+
+.status.cancelled {
+    background-color: #f44336;
+    color: white;
+}
+</style>
+
+<script>
+function markNoShow(recordId) {
+    if (confirm('Are you sure you want to mark this supplier as No Show?')) {
+        fetch(`${URLROOT}/vehiclemanager/updateSupplierStatus/${recordId}`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ status: 'No Show' })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                // Refresh the collection details
+                updateCollectionDetails(document.getElementById('ongoing-collection-select').value);
+            } else {
+                alert('Failed to update status');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('An error occurred while updating the status');
+        });
+    }
+}
+
+function removeSupplier(recordId) {
+    if (confirm('Are you sure you want to remove this supplier from the collection?')) {
+        fetch(`${URLROOT}/vehiclemanager/removeCollectionSupplier/${recordId}`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ status: 'Removed' })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                // Refresh the collection details
+                updateCollectionDetails(document.getElementById('ongoing-collection-select').value);
+            } else {
+                alert('Can only remove suppliers that were added to the collection prior to collection');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('An error occurred while removing the supplier');
+        });
+    }
+}
+
+// Update the collection details function
+function updateCollectionDetails(collectionId) {
+    if (!collectionId) return;
+    console.log('Updating collection details for:', collectionId);
+
+    // Update map
+    updateMap(collectionId);
+
+    // Fetch collection details and supplier records
+    fetch(`${URLROOT}/vehiclemanager/getCollectionDetails/${collectionId}`)
+        .then(response => response.json())
+        .then(data => {
+            // Update basic details
+            console.log('Received data:', data);
+            document.getElementById("team-name").textContent = data.team_name;
+            document.getElementById("route-name").textContent = data.route_name;
+
+            // Update supplier status table
+            const tbody = document.getElementById('supplier-status-body');
+            tbody.innerHTML = '';
+
+            data.suppliers.forEach(supplier => {
+                const row = `
+                    <tr>
+                        <td>${supplier.supplier_name}</td>
+                        <td>${supplier.status}</td>
+                        <td>${supplier.quantity || '0'}</td>
+                        <td>${supplier.collection_time || '-'}</td>
+                        <td>
+                            <div class="action-buttons">
+                                ${supplier.status !== 'No Show' ? 
+                                    `<button onclick="markNoShow(${supplier.record_id})" class="btn-small btn-warning">
+                                        <i class='bx bx-x'></i> No Show
+                                    </button>` : ''
+                                }
+                                ${supplier.status !== 'Removed' ? 
+                                    `<button onclick="removeSupplier(${supplier.record_id})" class="btn-small btn-danger">
+                                        <i class='bx bx-trash'></i> Remove
+                                    </button>` : ''
+                                }
+                            </div>
+                        </td>
+                    </tr>
+                `;
+                tbody.innerHTML += row;
+            });
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('An error occurred while fetching collection details');
+        });
+}
+
+// Add event listener for dropdown change
+document.addEventListener('DOMContentLoaded', function() {
+    const selectElement = document.getElementById('ongoing-collection-select');
+    if (selectElement) {
+        selectElement.addEventListener('change', function() {
+            updateCollectionDetails(this.value);
+        });
+
+        // Select first collection by default if exists
+        if (selectElement.options.length > 1) {
+            selectElement.selectedIndex = 1;
+            updateCollectionDetails(selectElement.value);
+        }
+    }
+});
+</script>
+
+<style>
+.action-buttons {
+    display: flex;
+    gap: 5px;
+}
+
+.btn-small {
+    padding: 3px 8px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 3px;
+    font-size: 0.8em;
+}
+
+.btn-warning {
+    background-color: #ffa500;
+    color: white;
+}
+
+.btn-danger {
+    background-color: #f44336;
+    color: white;
+}
+
+.btn-small:hover {
+    opacity: 0.8;
+}
+</style>
 
 <?php require APPROOT . '/views/inc/components/footer.php'; ?>

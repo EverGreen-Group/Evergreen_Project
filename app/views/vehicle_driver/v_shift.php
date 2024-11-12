@@ -10,43 +10,78 @@
     <div class="shift-content">
         <section class="upcoming-shifts">
             <h2>Upcoming Shifts</h2>
-            <table class="shift-table">
-                <thead>
-                    <tr>
-                        <th>Date</th>
-                        <th>Time</th>
-                        <th>Team</th>
-                        <th>Status</th>
-                        <th>Actions</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <?php
-                    // Dummy data for demonstration
-                    $upcomingShifts = [
-                        ['date' => '2024-09-20', 'time' => '08:00 - 16:00', 'team' => 'Team A', 'status' => 'Pending'],
-                        ['date' => '2024-09-21', 'time' => '09:00 - 17:00', 'team' => 'Team A', 'status' => 'Accepted'],
-                        ['date' => '2024-09-22', 'time' => '10:00 - 18:00', 'team' => 'Team A', 'status' => 'Pending'],
-                    ];
+            <?php if (isset($data['error'])): ?>
+                <div class="alert alert-warning"><?php echo $data['error']; ?></div>
+            <?php else: ?>
+                <table class="shift-table">
+                    <thead>
+                        <tr>
+                            <th>Day</th>
+                            <th>Time</th>
+                            <th>Team</th>
+                            <th>Countdown</th>
+                            <th>Status</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <?php 
+                        if (!empty($data['upcomingShifts'])):
+                            // Prepare sorted shifts array
+                            $sortedShifts = [];
+                            foreach ($data['upcomingShifts'] as $shift) {
+                                $days = explode(',', $shift->days_of_week);
+                                foreach ($days as $day) {
+                                    $nextDate = date('Y-m-d', strtotime("next $day"));
+                                    $startDateTime = $nextDate . ' ' . $shift->start_time;
+                                    $timestamp = strtotime($startDateTime);
+                                    
+                                    // Only include future shifts
+                                    if ($timestamp > time()) {
+                                        $sortedShifts[] = [
+                                            'day' => ucfirst($day),
+                                            'startDateTime' => $startDateTime,
+                                            'timestamp' => $timestamp,
+                                            'shift' => $shift
+                                        ];
+                                    }
+                                }
+                            }
 
-                    foreach ($upcomingShifts as $shift):
-                    ?>
-                    <tr>
-                        <td><?php echo $shift['date']; ?></td>
-                        <td><?php echo $shift['time']; ?></td>
-                        <td><?php echo $shift['team']; ?></td>
-                        <td><span class="status-<?php echo strtolower($shift['status']); ?>"><?php echo $shift['status']; ?></span></td>
-                        <td>
-                            <?php if ($shift['status'] === 'Pending'): ?>
-                                <button class="btn btn-primary btn-sm" onclick="acceptShift('<?php echo $shift['date']; ?>')">Accept</button>
-                            <?php elseif ($shift['status'] === 'Accepted'): ?>
-                                <button class="btn btn-secondary btn-sm" onclick="requestChange('<?php echo $shift['date']; ?>')">Request Change</button>
-                            <?php endif; ?>
-                        </td>
-                    </tr>
-                    <?php endforeach; ?>
-                </tbody>
-            </table>
+                            // Sort shifts by timestamp
+                            usort($sortedShifts, function($a, $b) {
+                                return $a['timestamp'] - $b['timestamp'];
+                            });
+
+                            foreach ($sortedShifts as $sortedShift):
+                                $shift = $sortedShift['shift'];
+                        ?>
+                            <tr>
+                                <td><?php echo $sortedShift['day']; ?></td>
+                                <td><?php echo $shift->start_time . ' - ' . $shift->end_time; ?></td>
+                                <td><?php echo $shift->team_name; ?></td>
+                                <td>
+                                    <span class="countdown" data-start="<?php echo $sortedShift['startDateTime']; ?>">
+                                        Calculating...
+                                    </span>
+                                </td>
+                                <td><span class="status-active">Active</span></td>
+                                <td>
+                                    <a href="<?php echo URLROOT; ?>/vehicledriver/scheduleDetails/<?php echo $shift->schedule_id; ?>" 
+                                       class="btn btn-primary btn-sm">View Details</a>
+                                </td>
+                            </tr>
+                        <?php 
+                            endforeach;
+                        else: 
+                        ?>
+                            <tr>
+                                <td colspan="6" class="text-center">No shifts available</td>
+                            </tr>
+                        <?php endif; ?>
+                    </tbody>
+                </table>
+            <?php endif; ?>
         </section>
 
         <section class="shift-actions">
@@ -112,6 +147,34 @@ function requestTeamChange() {
     // Implement team change request logic
     alert('Opening team change request form');
 }
+</script>
+
+<script>
+function updateCountdowns() {
+    document.querySelectorAll('.countdown').forEach(function(element) {
+        const startTime = new Date(element.dataset.start).getTime();
+        const now = new Date().getTime();
+        const distance = startTime - now;
+
+        if (distance < 0) {
+            element.innerHTML = "Started";
+            return;
+        }
+
+        // Time calculations
+        const days = Math.floor(distance / (1000 * 60 * 60 * 24));
+        const hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+        const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
+        const seconds = Math.floor((distance % (1000 * 60)) / 1000);
+
+        element.innerHTML = `${days}d ${hours}h ${minutes}m ${seconds}s`;
+    });
+}
+
+// Update countdowns every second
+setInterval(updateCountdowns, 1000);
+// Initial update
+updateCountdowns();
 </script>
 
 <style>
@@ -231,6 +294,12 @@ function requestTeamChange() {
 
 #shift-calendar {
     height: 600px;
+}
+
+.countdown {
+    font-family: monospace;
+    font-weight: bold;
+    color: #2c3e50;
 }
 </style>
 

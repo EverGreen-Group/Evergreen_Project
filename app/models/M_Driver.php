@@ -9,7 +9,7 @@ class M_Driver{
 
     public function getDriverDetails($user_id) {
         $this->db->query("SELECT 
-            d.license_no,
+            d.*,
             e.hire_date as registration_date,
             s.shift_name as current_shift,
             t.team_name as current_team,
@@ -33,11 +33,13 @@ class M_Driver{
         LEFT JOIN driving_partners dp ON dp.partner_id = t.partner_id
         LEFT JOIN employees ep ON ep.employee_id = dp.employee_id
         LEFT JOIN users up ON up.user_id = ep.user_id
-        LEFT JOIN collection_skeletons cs ON cs.team_id = t.team_id
+        LEFT JOIN collection_schedules cs ON cs.team_id = t.team_id
         LEFT JOIN vehicles v ON cs.vehicle_id = v.vehicle_id
         LEFT JOIN user_photos pp ON pp.user_id = up.user_id
         LEFT JOIN vehicle_documents vd ON vd.vehicle_id = v.vehicle_id
         WHERE u.user_id = :user_id
+        AND cs.is_active = 1 
+        AND cs.is_deleted = 0
         LIMIT 1;
         ");
         

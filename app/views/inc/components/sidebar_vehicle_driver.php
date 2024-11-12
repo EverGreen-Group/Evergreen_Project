@@ -11,7 +11,7 @@
       </a>
     </li>
     <li class="<?php echo (basename($_SERVER['REQUEST_URI']) == 'profile') ? 'active' : ''; ?>">
-      <a href="<?php echo URLROOT; ?>/vehicledriver/profile">
+      <a href="<?php echo URLROOT; ?>/profile">
         <i class='bx bxs-user-circle'></i>
         <span class="text">Profile</span>
       </a>

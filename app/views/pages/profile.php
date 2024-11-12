@@ -22,18 +22,6 @@
     $userModel = new M_User();
     $userInfo = $userModel->getUserById($_SESSION['user_id']);
 
-    $driver = [
-        'name' => 'Chaminda Perera',
-        'license_number' => 'DL123456',
-        'registration_date' => '2023-01-15',
-        'current_shift_id' => 'SHIFT001',
-        'current_team_id' => 'TEAM005',
-        'hours_worked' => 8,
-        'collections_driven' => 12,
-        'email' => 'chaminda.perera@example.com',
-        'phone' => '+94 77 123 4567',
-        'address' => '123 Rampart Street, Fort, Galle, Sri Lanka'
-    ];
 
     // Hardcoded team data for demonstration
     $team = [
