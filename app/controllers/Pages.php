@@ -37,4 +37,6 @@ class Pages extends Controller {
 
         $this->view('pages/v_supplier_application_status', $data);
     }
+    
+   
 }
