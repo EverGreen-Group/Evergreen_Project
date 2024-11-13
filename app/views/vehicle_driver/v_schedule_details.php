@@ -82,7 +82,15 @@
         <?php if ($data['userRole'] == 'driver' || $data['userRole'] == 'driving_partner'): ?>
             <section class="ready-status">
                 <h2>Ready Status</h2>
-                <?php if ($data['isReady']): ?>
+                <?php if ($data['collection'] && $data['collection']->start_time): ?>
+                    <div class="collection-started">
+                        <p>Collection in progress</p>
+                        <a href="<?php echo URLROOT; ?>/vehicledriver/collection/<?php echo $data['collection']->collection_id; ?>" 
+                           class="btn btn-primary">
+                            <i class="fas fa-route"></i> View Collection Route
+                        </a>
+                    </div>
+                <?php elseif ($data['isReady']): ?>
                     <p>You are marked as ready for this collection.</p>
                 <?php else: ?>
                     <form action="<?php echo URLROOT; ?>/vehicledriver/setReady/<?php echo $data['schedule']->schedule_id; ?>" method="POST">
@@ -328,6 +336,22 @@
     .header-actions {
         display: flex;
         gap: 1rem;
+    }
+
+    .collection-started {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 1rem;
+        background-color: #d1fae5;
+        border-radius: 8px;
+        margin-top: 1rem;
+    }
+
+    .collection-started p {
+        color: #065f46;
+        font-weight: 500;
+        margin: 0;
     }
 </style>
 

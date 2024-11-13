@@ -157,20 +157,16 @@ class M_Route {
     public function getRouteSuppliers($routeId) {
         $this->db->query("
             SELECT 
-                s.*,
-                CONCAT(u.first_name, ' ', u.last_name) as supplier_name,
-                CONCAT(s.latitude, ', ', s.longitude) as location,
-                csr.status as collection_status
+                rs.supplier_id,
+                s.latitude,
+                s.longitude
             FROM route_suppliers rs
             JOIN suppliers s ON rs.supplier_id = s.supplier_id
-            JOIN users u ON s.user_id = u.user_id
-            LEFT JOIN collection_supplier_records csr ON s.supplier_id = csr.supplier_id
             WHERE rs.route_id = :route_id
             AND rs.is_active = 1
             AND rs.is_deleted = 0
-            ORDER BY rs.supplier_order
         ");
-        
+
         $this->db->bind(':route_id', $routeId);
         return $this->db->resultSet();
     }
@@ -227,6 +223,21 @@ class M_Route {
 
         $this->db->bind(':route_id', $routeId);
         return $this->db->single();
+    }
+
+    public function updateSupplierOrder($routeId, $supplierId, $order) {
+        $this->db->query("
+            UPDATE route_suppliers 
+            SET stop_order = :order 
+            WHERE route_id = :route_id 
+            AND supplier_id = :supplier_id
+        ");
+        
+        $this->db->bind(':order', $order);
+        $this->db->bind(':route_id', $routeId);
+        $this->db->bind(':supplier_id', $supplierId);
+        
+        return $this->db->execute();
     }
 }
 ?>

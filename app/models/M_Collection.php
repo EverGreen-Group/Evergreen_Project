@@ -56,4 +56,17 @@ class M_Collection {
         $this->db->bind(':collection_id', $collectionId);
         return $this->db->single();
     }
+
+    public function updateArrivalTime($data) {
+        $this->db->query('UPDATE collection_supplier_records 
+                          SET arrival_time = :arrival_time 
+                          WHERE collection_id = :collection_id 
+                          AND supplier_id = :supplier_id');
+        
+        $this->db->bind(':arrival_time', $data['arrival_time']);
+        $this->db->bind(':collection_id', $data['collection_id']);
+        $this->db->bind(':supplier_id', $data['supplier_id']);
+        
+        return $this->db->execute();
+    }
 } 

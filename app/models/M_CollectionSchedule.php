@@ -233,7 +233,6 @@ class M_CollectionSchedule {
 
     public function setUserReady($scheduleId, $userId) {
         $this->db->beginTransaction();
-        
         try {
             // Determine if user is driver or partner
             $this->db->query("
@@ -270,46 +269,46 @@ class M_CollectionSchedule {
 
             // Check if both are ready
             $this->db->query("
-                SELECT driver_approved, partner_approved, start_time
-                FROM collections
-                WHERE schedule_id = :schedule_id
+                SELECT c.*, cs.route_id 
+                FROM collections c
+                JOIN collection_schedules cs ON c.schedule_id = cs.schedule_id
+                WHERE c.schedule_id = :schedule_id
             ");
             $this->db->bind(':schedule_id', $scheduleId);
             $collection = $this->db->single();
 
-            // If both are ready and start_time is not set, update it
+            // If both are ready and start_time is not set
             if ($collection->driver_approved && $collection->partner_approved && !$collection->start_time) {
+                // Set collection start time
                 $this->db->query("
                     UPDATE collections 
                     SET start_time = CURRENT_TIMESTAMP,
                         status = 'In Progress'
-                    WHERE schedule_id = :schedule_id
+                    WHERE collection_id = :collection_id
                 ");
-                $this->db->bind(':schedule_id', $scheduleId);
+                $this->db->bind(':collection_id', $collection->collection_id);
                 $this->db->execute();
 
-                // Create supplier records
+                // Create supplier records for all suppliers in the route
                 $this->db->query("
-                    INSERT INTO collection_supplier_records (
-                        collection_id,
-                        supplier_id,
-                        status,
-                        is_scheduled
-                    )
+                    INSERT INTO collection_supplier_records 
+                    (collection_id, supplier_id, status, is_scheduled)
                     SELECT 
-                        c.collection_id,
+                        :collection_id,
                         rs.supplier_id,
-                        'Pending',
+                        'Added',
                         1
-                    FROM collections c
-                    JOIN collection_schedules cs ON c.schedule_id = cs.schedule_id
-                    JOIN route_suppliers rs ON cs.route_id = rs.route_id
-                    WHERE c.schedule_id = :schedule_id
+                    FROM route_suppliers rs
+                    WHERE rs.route_id = :route_id
                     AND rs.is_active = 1
                     AND rs.is_deleted = 0
                 ");
-                $this->db->bind(':schedule_id', $scheduleId);
+                $this->db->bind(':collection_id', $collection->collection_id);
+                $this->db->bind(':route_id', $collection->route_id);
                 $this->db->execute();
+
+                // Optimize route based on driver's current location
+                $this->optimizeRoute($collection->collection_id, 6.223440958667509, 80.2850332126462);
             }
 
             $this->db->commit();
@@ -394,7 +393,7 @@ class M_CollectionSchedule {
                     ) VALUES (
                         :collection_id,
                         :supplier_id,
-                        'Pending',
+                        'Added',
                         1
                     )
                 ");
@@ -471,7 +470,7 @@ class M_CollectionSchedule {
                 SELECT 
                     :collection_id,
                     rs.supplier_id,
-                    'Pending',
+                    'Added',
                     1
                 FROM collections c
                 JOIN collection_schedules cs ON c.schedule_id = cs.schedule_id
@@ -489,5 +488,89 @@ class M_CollectionSchedule {
             $this->db->rollBack();
             return false;
         }
+    }
+
+    public function getCollectionById($collectionId) {
+        $this->db->query("
+            SELECT * FROM collections 
+            WHERE collection_id = :collection_id
+        ");
+        $this->db->bind(':collection_id', $collectionId);
+        return $this->db->single();
+    }
+
+    public function getCollectionSuppliers($collectionId) {
+        $this->db->query("
+            SELECT 
+                csr.*,
+                s.latitude,
+                s.longitude,
+                CONCAT(u.first_name, ' ', u.last_name) as supplier_name
+            FROM collection_supplier_records csr
+            JOIN suppliers s ON csr.supplier_id = s.supplier_id
+            JOIN users u ON s.user_id = u.user_id
+            WHERE csr.collection_id = :collection_id
+            ORDER BY csr.record_id
+        ");
+        $this->db->bind(':collection_id', $collectionId);
+        return $this->db->resultSet();
+    }
+
+    public function getCollectionSupplierRecords($collectionId) {
+        $this->db->query("
+            SELECT 
+                csr.*,
+                s.latitude,
+                s.longitude,
+                s.contact_number,
+                CONCAT(u.first_name, ' ', u.last_name) as supplier_name,
+                COALESCE(sp.profile_image, 'default.jpg') as profile_image,
+                csr.arrival_time,
+                rs.stop_order
+            FROM collection_supplier_records csr
+            JOIN collections c ON csr.collection_id = c.collection_id
+            JOIN collection_schedules cs ON c.schedule_id = cs.schedule_id
+            JOIN route_suppliers rs ON cs.route_id = rs.route_id AND csr.supplier_id = rs.supplier_id
+            JOIN suppliers s ON csr.supplier_id = s.supplier_id
+            JOIN users u ON s.user_id = u.user_id
+            LEFT JOIN supplier_photos sp ON s.supplier_id = sp.supplier_id
+            WHERE csr.collection_id = :collection_id
+            ORDER BY rs.stop_order ASC
+        ");
+        
+        $this->db->bind(':collection_id', $collectionId);
+        return $this->db->resultSet();
+    }
+
+    public function markSupplierArrival($collectionId, $supplierId) {
+        $this->db->query("
+            UPDATE collection_supplier_records 
+            SET arrival_time = CURRENT_TIMESTAMP
+            WHERE collection_id = :collection_id 
+            AND supplier_id = :supplier_id
+        ");
+        
+        $this->db->bind(':collection_id', $collectionId);
+        $this->db->bind(':supplier_id', $supplierId);
+        
+        return $this->db->execute();
+    }
+
+    public function optimizeRoute($collectionId, $driverLat, $driverLng) {
+        // Get route_id for this collection
+        $this->db->query("
+            SELECT cs.route_id
+            FROM collections c
+            JOIN collection_schedules cs ON c.schedule_id = cs.schedule_id
+            WHERE c.collection_id = :collection_id
+        ");
+        $this->db->bind(':collection_id', $collectionId);
+        $result = $this->db->single();
+        
+        if ($result) {
+            $routeModel = new M_Route();
+            return $routeModel->updateRouteOrder($result->route_id, $driverLat, $driverLng);
+        }
+        return false;
     }
 } 
