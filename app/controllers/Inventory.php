@@ -1,9 +1,9 @@
 <?php
 
-//require_once '../app/models/M_Products.php';
+require_once '../app/models/M_Products.php';
 class Inventory extends controller
 {
-    //private $productModel;
+    private $productModel;
 
     public function __construct()
     {
@@ -73,7 +73,7 @@ class Inventory extends controller
                empty($data['profit_err']) && empty($data['margin_err']) && 
                empty($data['quantity_err'])){
 
-                require_once APPROOT . '/models/M_Products.php';
+                
                 $productModel = new M_Products();
                 if($productModel->createProduct($data)){
                     redirect('inventory/product');
@@ -99,7 +99,7 @@ class Inventory extends controller
         }
         
 
-        $this->view('inventory/v_createproduct', $data);
+        $this->view('inventory/v_create_product', $data);
     }
 
     public function fertilizerdashboard()
@@ -130,7 +130,7 @@ class Inventory extends controller
     }
 
 
-    public function create()
+    public function createa()
     {
         $data = [];
 
