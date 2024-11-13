@@ -1,13 +1,15 @@
 <?php
+require_once APPROOT . '/models/M_Products.php';
 
 //require_once '../app/models/M_Products.php';
 class Inventory extends controller
 {
-    //private $productModel;
+    private $productModel;
 
     public function __construct()
     {
-        // Initialization code if needed
+        
+        $this->productModel = new M_Products();
     }
 
     public function index()
@@ -31,10 +33,12 @@ class Inventory extends controller
                 'product-name' => htmlspecialchars(trim($_POST['product-name'])),
                 "location" => htmlspecialchars(trim($_POST['location'])),
                 "details" => htmlspecialchars(trim($_POST['details'])),
+                "code" => htmlspecialchars(trim($_POST['code'])),
                 "price" => htmlspecialchars(trim($_POST['price'])),
                 "profit" => htmlspecialchars(trim($_POST['profit'])),
                 "margin" => htmlspecialchars(trim($_POST['margin'])),
                 "quantity" => htmlspecialchars(trim($_POST['quantity'])),
+                "unit" => htmlspecialchars(trim($_POST['unit'])),
                 'product-name_err'=>'',
                 "location_err" => '',
                 "details_err" =>'',
@@ -73,9 +77,7 @@ class Inventory extends controller
                empty($data['profit_err']) && empty($data['margin_err']) && 
                empty($data['quantity_err'])){
 
-                require_once APPROOT . '/models/M_Products.php';
-                $productModel = new M_Products();
-                if($productModel->createProduct($data)){
+                if($this->productModel->createProduct($data)){
                     redirect('inventory/product');
                 }else{
                     die('Something went wrong');
