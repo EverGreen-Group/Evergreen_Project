@@ -10,7 +10,7 @@ class M_Products{
     
 
     public function createProduct($data){
-        $sql = "INSERT INTO Product(product_name, location, details, code, price, profit, margin, quantity, unit) 
+        $sql = "INSERT INTO product(product_name, location, details, code, price, profit, margin, quantity, unit) 
                 VALUES(:product_name, :location, :details, :code, :price, :profit, :margin, :quantity, :unit)";
 
         $this->db->query($sql);
