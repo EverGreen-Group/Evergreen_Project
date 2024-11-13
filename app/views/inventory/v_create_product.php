@@ -20,10 +20,9 @@
         <?php require APPROOT . '/views/inc/components/sidebar_inventory.php' ?>
         <div class="screen">
             <div class="form-container">
-                <form class="create-product-form">
+                <form class="create-product-form" action="<?php echo URLROOT; ?>/Inventory/createproduct" method="POST">
                     <div class="form-header">
                         <h2>Create New Product</h2>
-                        <button type="button" class="close-button">×</button>
                     </div>
 
                     <div class="form-section">
@@ -31,42 +30,33 @@
                         <div class="form-row">
                             <div class="form-group">
                                 <label for="product-name">Product name</label>
-                                <input type="text" id="product-name" name="product-name" value="Green Tea">
+                                <input type="text" id="product-name" name="product-name"
+                                    value="<?php echo isset($data['product-name']) ? $data['product-name'] : ''; ?>">
                             </div>
                             <div class="form-group">
                                 <label for="location">Location</label>
                                 <select id="location" name="location">
-                                    <option value="warehouse-a">Warehouse A</option>
+                                    <option value="warehouse-a" <?php echo (isset($data['location']) && $data['location'] == 'warehouse-a') ? 'selected' : ''; ?>>Warehouse A</option>
+                                    <option value="warehouse-b" <?php echo (isset($data['location']) && $data['location'] == 'warehouse-b') ? 'selected' : ''; ?>>Warehouse B</option>
+                                    <option value="warehouse-c" <?php echo (isset($data['location']) && $data['location'] == 'warehouse-c') ? 'selected' : ''; ?>>Warehouse C</option>
                                 </select>
                             </div>
                         </div>
                         <div class="form-row">
                             <div class="form-group">
                                 <label for="details">Details</label>
-                                <input type="text" id="details" name="details">
+                                <input type="text" id="details" name="details"
+                                    value="<?php echo isset($data['details']) ? $data['details'] : ''; ?>">
                             </div>
                             <div class="form-group">
                                 <label for="code">Code</label>
                                 <input type="text" id="code" name="code" placeholder="Enter Code">
                             </div>
                         </div>
-                        <div class="form-row">
-                            <div class="form-group">
-                                <label for="sku">SKU</label>
-                                <input type="text" id="sku" name="sku" placeholder="Enter SKU">
-                            </div>
-                            <div class="form-group">
-                                <label for="barcode">Barcode</label>
-                                <div class="input-with-icon">
-                                    <input type="text" id="barcode" name="barcode" placeholder="Enter or Scan Barcode">
-                                    <span class="barcode-icon">⋮</span>
-                                </div>
-                            </div>
-                        </div>
                     </div>
 
                     <div class="form-section">
-                        <h3>Media (Images, video or 3D models)</h3>
+                        <h3>Media (Images)</h3>
                         <div class="media-upload-area">
                             <div class="upload-placeholder">
                                 <span>+</span>
@@ -81,16 +71,19 @@
                                 <label for="price">Price</label>
                                 <div class="input-with-prefix">
                                     <span class="prefix">$</span>
-                                    <input type="number" id="price" name="price">
+                                    <input type="number" id="price" name="price"
+                                        value="<?php echo isset($data['price']) ? $data['price'] : ''; ?>">
                                 </div>
                             </div>
                             <div class="form-group">
                                 <label for="profit">Profit</label>
-                                <input type="number" id="profit" name="profit">
+                                <input type="number" id="profit" name="profit"
+                                    value="<?php echo isset($data['profit']) ? $data['profit'] : ''; ?>">
                             </div>
                             <div class="form-group">
                                 <label for="margin">Margin</label>
-                                <input type="number" id="margin" name="margin">
+                                <input type="number" id="margin" name="margin"
+                                    value="<?php echo isset($data['margin']) ? $data['margin'] : ''; ?>">
                             </div>
                         </div>
                     </div>
@@ -100,19 +93,22 @@
                         <div class="form-row">
                             <div class="form-group">
                                 <label for="quantity">Quantity</label>
-                                <input type="number" id="quantity" name="quantity">
+                                <input type="number" id="quantity" name="quantity"
+                                    value="<?php echo isset($data['quantity']) ? $data['quantity'] : ''; ?>">
                             </div>
                             <div class="form-group">
                                 <label for="unit">Unit</label>
                                 <select id="unit" name="unit">
-                                    <option value="item">Item</option>
+                                    <option value="item" <?php echo (isset($data['unit']) && $data['unit'] == 'item') ? 'selected' : ''; ?>>Item</option>
+                                    <option value="kg" <?php echo (isset($data['unit']) && $data['unit'] == 'kg') ? 'selected' : ''; ?>>Kg</option>
+                                    <option value="box" <?php echo (isset($data['unit']) && $data['unit'] == 'box') ? 'selected' : ''; ?>>Box</option>
                                 </select>
                             </div>
                         </div>
                     </div>
 
                     <div class="form-actions">
-                        <button type="button" class="button-secondary">Advanced settings</button>
+
                         <button type="submit" class="button-primary">Save</button>
                     </div>
                 </form>
