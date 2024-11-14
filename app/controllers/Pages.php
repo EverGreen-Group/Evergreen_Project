@@ -37,4 +37,9 @@ class Pages extends Controller {
 
         $this->view('pages/v_supplier_application_status', $data);
     }
+
+    public function error404() {
+        require_once '../app/views/pages/404.php';
+        exit();
+    }
 }

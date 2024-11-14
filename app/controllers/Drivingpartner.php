@@ -2,7 +2,7 @@
 // Update the include to use APPROOT instead of URLROOT
 include_once APPROOT . '/services/GoogleMapsService.php';
 
-class VehicleDriver extends controller {
+class Drivingpartner extends controller {
     private $collectionScheduleModel;
     private $driverModel;
     private $teamModel;
@@ -30,7 +30,7 @@ class VehicleDriver extends controller {
 
     public function index() {
         $data = [];  // Pass any necessary data here
-        $this->view('vehicle_driver/v_dashboard', $data);
+        $this->view('driving_partner/v_dashboard', $data);
     }
 
     public function profile() {
@@ -40,12 +40,12 @@ class VehicleDriver extends controller {
 
     public function team() {
         $data = [];
-        $this->view('vehicle_driver/v_team', $data);
+        $this->view('driving_partner/v_team', $data);
     }
 
     public function route() {
         $data = [];
-        $this->view('vehicle_driver/v_route', $data);
+        $this->view('driving_partner/v_route', $data);
     }
 
     public function shift() {
@@ -70,7 +70,7 @@ class VehicleDriver extends controller {
             ];
         }
     
-        $this->view('vehicle_driver/v_shift', $data);
+        $this->view('driving_partner/v_shift', $data);
     }
     
     public function scheduleDetails($scheduleId) {
@@ -102,71 +102,44 @@ class VehicleDriver extends controller {
 
         $data['collection'] = $this->collectionScheduleModel->getCollectionByScheduleId($scheduleId);
 
-        $this->view('vehicle_driver/v_schedule_details', $data);
-    }
-
-    private function checkShiftTime($scheduleTime, $windowMinutes = 10) {
-        try {
-            $scheduleDateTime = new DateTime($scheduleTime);
-            $now = new DateTime();
-            $diff = ($scheduleDateTime->getTimestamp() - $now->getTimestamp()) / 60;
-            return $diff <= $windowMinutes && $diff >= -360;
-        } catch (Exception $e) {
-            // Log the error
-            error_log("Date parsing error: " . $e->getMessage());
-            return false;
-        }
+        $this->view('driving_partner/v_schedule_details', $data);
     }
 
     public function setReady($scheduleId) {
-        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-            redirect('vehicledriver/shift');
-        }
-
-        $schedule = $this->scheduleModel->getScheduleById($scheduleId);
-        if (!$schedule) {
-            flash('schedule_message', 'Schedule not found', 'alert alert-danger');
-            redirect('vehicledriver/shift');
-        }
-
-        // Check if within time window
-        $shiftDateTime = date('Y-m-d ') . $schedule->start_time;
-        if (!$this->checkShiftTime($shiftDateTime)) {
-            flash('schedule_message', 'You can only mark yourself ready 10 minutes before the scheduled time', 'alert alert-danger');
+        if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+            $currentUserId = $_SESSION['user_id'];
+            
+            // First check if collection exists, if not create it
+            $collection = $this->collectionScheduleModel->getCollectionByScheduleId($scheduleId);
+            if (!$collection) {
+                $this->collectionScheduleModel->createInitialCollection($scheduleId);
+            }
+            
+            // Then set the user as ready
+            if ($this->collectionScheduleModel->setUserReady($scheduleId, $currentUserId)) {
+                flash('schedule_message', 'You are marked as ready for this collection.');
+            } else {
+                flash('schedule_message', 'Something went wrong', 'alert alert-danger');
+            }
+            
             redirect('vehicledriver/scheduleDetails/' . $scheduleId);
         }
-
-        $currentUserId = $_SESSION['user_id'];
-        
-        // First check if collection exists, if not create it
-        $collection = $this->collectionScheduleModel->getCollectionByScheduleId($scheduleId);
-        if (!$collection) {
-            $this->collectionScheduleModel->createInitialCollection($scheduleId);
-        }
-        
-        // Then set the user as ready
-        if ($this->collectionScheduleModel->setUserReady($scheduleId, $currentUserId)) {
-            flash('schedule_message', 'You are marked as ready for this collection.');
-        } else {
-            flash('schedule_message', 'Something went wrong', 'alert alert-danger');
-        }
-        
-        redirect('vehicledriver/scheduleDetails/' . $scheduleId);
+        redirect('vehicledriver/shift');
     }
 
     public function staff() {
         $data = [];
-        $this->view('vehicle_driver/v_staff', $data);
+        $this->view('driving_partner/v_staff', $data);
     }
 
     public function settings() {
         $data = [];
-        $this->view('vehicle_driver/v_settings', $data);
+        $this->view('driving_partner/v_settings', $data);
     }
 
     public function personal_details() {
         $data = [];
-        $this->view('vehicle_driver/v_personal_details', $data);
+        $this->view('driving_partner/v_personal_details', $data);
     }
 
     public function logout() {
@@ -174,26 +147,10 @@ class VehicleDriver extends controller {
     }
 
     public function collection($collectionId) {
-        $collection = $this->collectionModel->getCollectionById($collectionId);
+        // Get collection details
+        $collection = $this->collectionScheduleModel->getCollectionById($collectionId);
         if (!$collection) {
             redirect('vehicledriver/shift');
-        }
-
-        // Debug the date
-        // var_dump($collection->start_time); // Check what format we're getting
-
-        // Fix the date formatting
-        $schedule = $this->collectionScheduleModel->getScheduleById($collection->schedule_id);
-        if (!$schedule) {
-            redirect('vehicledriver/shift');
-        }
-
-        // Use schedule's start time instead
-        $shiftDateTime = date('Y-m-d') . ' ' . $schedule->start_time;
-        
-        if (!$this->checkShiftTime($shiftDateTime)) {
-            flash('collection_message', 'Collection route is only accessible 10 minutes before the scheduled time', 'alert alert-danger');
-            redirect('vehicledriver/scheduleDetails/' . $collection->schedule_id);
         }
 
         // Get schedule, team, and vehicle details
@@ -239,7 +196,7 @@ class VehicleDriver extends controller {
             'collection' => $collection
         ];
 
-        $this->view('vehicle_driver/v_collection_route', $data);
+        $this->view('driving_partner/v_collection_route', $data);
     }
 
     public function markArrival() {
@@ -361,7 +318,7 @@ class VehicleDriver extends controller {
             'swapRequests' => $leaveModel->getSwapRequests($userId)
         ];
         
-        $this->view('vehicle_driver/v_leave', $data);
+        $this->view('driving_partner/v_leave', $data);
     }
 
     public function handle_swap_request() {

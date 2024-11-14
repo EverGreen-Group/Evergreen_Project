@@ -158,10 +158,12 @@ class M_Route {
         $this->db->query("
             SELECT 
                 rs.supplier_id,
-                s.latitude,
-                s.longitude
+                CONCAT(u.first_name, ' ', u.last_name) as supplier_name,
+                CONCAT(s.latitude, ', ', s.longitude) as location,
+                s.contact_number
             FROM route_suppliers rs
             JOIN suppliers s ON rs.supplier_id = s.supplier_id
+            JOIN users u ON s.user_id = u.user_id
             WHERE rs.route_id = :route_id
             AND rs.is_active = 1
             AND rs.is_deleted = 0

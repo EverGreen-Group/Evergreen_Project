@@ -24,7 +24,7 @@
     </li>
     <li class="<?php echo (basename($_SERVER['REQUEST_URI']) == 'shift') ? 'active' : ''; ?>">
       <a href="<?php echo URLROOT; ?>/vehicledriver/leave">
-        <i class="bx bxs-time-five"></i>
+        <i class='bx bxs-calendar'></i>
         <span class="text">Leave</span>
       </a>
     </li>

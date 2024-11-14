@@ -8,7 +8,7 @@ require APPROOT . '/views/inc/components/topnavbar.php';
 <main>
     <div class="head-title">
         <div class="left">
-            <h1>Driver Dashboard</h1>
+            <h1>Driver Partner Dashboard</h1>
             <ul class="breadcrumb">
                 <li><a href="#">Dashboard</a></li>
                 <li>Overview</li>
