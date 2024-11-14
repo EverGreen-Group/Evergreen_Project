@@ -2,6 +2,8 @@
 	<div class="content-wrapper">
         <?php include '../components/navbar.php'; ?>
         <?php include '../components/sidebar.php'; ?>
+        
+
         <main>
 			<div class="head-title">
 				<div class="left">

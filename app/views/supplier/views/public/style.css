@@ -760,22 +760,19 @@ body {
     max-width: 600px;
     margin: 0 auto;
     padding: 2rem;
-    background: var(--light);
+    background: var(--light-black);
     border-radius: 8px;
     box-shadow: 0 0 5px var(--light-grey);
 }
-
 .complaint-form .form-group {
     margin-bottom: 1rem;
 }
-
 .complaint-form label {
     display: block;
     font-size: 16px;
     margin-bottom: 0.5rem;
     color: var(--dark);
 }
-
 .complaint-form select,
 .complaint-form textarea,
 .complaint-form input {
@@ -784,9 +781,11 @@ body {
     border: 1px solid var(--grey);
     border-radius: 4px;
     font-size: 16px;
-    color: var(--dark);
+    color: black;
 }
-
+#complaint-type {
+	color: black;
+}
 .complaint-form textarea {
     resize: vertical;
 }

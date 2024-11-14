@@ -4,7 +4,6 @@
 	<div class="content-wrapper">
         <?php include '../components/navbar.php'; ?>
         <?php include '../components/sidebar.php'; ?>
-
         <main>
 			<div class="head-title">
 				<div class="left">
@@ -35,18 +34,18 @@
                             </tr>
                         </thead>
                         <tbody>
-                        <?php /*if (!empty($result)):*/ ?>    
+                        <?php if (!empty($result)): ?>    
                                 <?php foreach ($result as $row): ?>
                                     <tr>
-                                        <td><?php echo $result['request_id']; ?></td>
-                                        <td><?php echo $result['supplier_id']; ?></td>
-                                        <td><?php echo $result['total_amount']; ?></td>
-                                        <td>Request submitted on <?php echo $result['date_and_time']; ?></td>
+                                        <td><?php echo $row['request_id']; ?></td>
+                                        <td><?php echo $row['supplier_id']; ?></td>
+                                        <td><?php echo $row['total_amount']; ?></td>
+                                        <td>Request submitted on <?php echo $row['date_and_time']; ?></td>
                                     </tr>
                                 <?php endforeach; ?>
-                            <?php /*else:*/ ?>
-                               <!-- <tr><td colspan="4">No data available in FertilizerPage.</td></tr>-->
-                            <?php /*endif;*/ ?>
+                            <?php else: ?>
+                               <tr><td colspan="4">No data available in FertilizerPage.</td></tr>
+                            <?php endif; ?>
                         </tbody>
                     </table>
 

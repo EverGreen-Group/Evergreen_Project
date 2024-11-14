@@ -25,7 +25,8 @@
                         <div class="head">
                             <h3>Payment Form</h3>
                             <a href="Payments.php">
-                            <button class="button">Back</button>
+                                <button class="button">Back</button>
+                            </a>
                         </div>
                         <form action="submit_complaint.php" method="post" class="complaint-form">
                             <div class="form-group">
