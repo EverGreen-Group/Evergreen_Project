@@ -8,49 +8,49 @@
 </head>
 <body>
 <section id="sidebar">
-        <a href="SupplyDashboard.php" class="brand">
-            <img src="../public/img/logo.svg" alt="Logo">
+        <a href="<?php echo URLROOT; ?>" class="brand">
+            <img src="<?php echo URLROOT; ?>/public/img/logo.svg" alt="Logo">
             <span class="text">EVERGREEN</span>
         </a>
         <ul class="side-menu top">
 			<li>
-				<a href="SupplyDashboard.php">
+				<a href="<?php echo URLROOT; ?>/supplier/">
 					<i class='bx bxs-dashboard'></i>
 					<span class="text">Dashboard</span>
 				</a>
 			</li>
 			<li>
-				<a href="FertilizerPage.php">
+				<a href="<?php echo URLROOT; ?>/supplier/requestfertilizer">
 					<i class='bx bxs-shopping-bag-alt'></i>
 					<span class="text">Fertilizer Requests</span>
 				</a>
 			</li>			
 			<li>
-				<a href="OrderPage.php">
+					<a href="<?php echo URLROOT; ?>/supplier/v_tea_orders">
 					<i class='bx bxs-doughnut-chart'></i>
 					<span class="text">Tea Orders</span>
 				</a>
 			</li>
 			<li>
-				<a href="Notifications.php">
+				<a href="<?php echo URLROOT; ?>/supplier/v_notifications">
 					<i class='bx bxs-message-dots'></i>
 					<span class="text">Notifications</span>
 				</a>
 			</li>
 			<li>
-				<a href="Payments.php">
+					<a href="<?php echo URLROOT; ?>/supplier/v_payments">
 					<i class='bx bxs-group'></i>
 					<span class="text">Payments</span>
 				</a>
 			</li>
 			<li>
-				<a href="Profile.php">
+				<a href="<?php echo URLROOT; ?>/supplier/v_profile">
 					<i class='bx bxs-group'></i>
 					<span class="text">Profile</span>
 				</a>
 			</li>
 			<li>
-				<a href="Complaint.php">
+				<a href="<?php echo URLROOT; ?>/supplier/v_complaints">
 					<i class='bx bxs-group'></i>
 					<span class="text">Submit Complaint</span>
 				</a>
@@ -58,7 +58,7 @@
 		</ul>
         <ul class="side-menu">
             <li>
-                <a href="Settings.php">
+                <a href="<?php echo URLROOT; ?>/supplier/v_settings">
                     <i class='bx bxs-cog'></i>
                     <span class="text">Settings</span>
                 </a>
