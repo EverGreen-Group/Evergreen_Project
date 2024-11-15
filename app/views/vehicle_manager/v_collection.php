@@ -21,6 +21,11 @@
         </div>
     </div>
 
+
+
+
+
+
     <!-- Box Info -->
     <ul class="box-info">
         <li>
@@ -48,6 +53,7 @@
             </span>
         </li>
     </ul>
+
 
 
     <!-- Ongoing Collection Tracking Section -->
@@ -128,6 +134,10 @@
         </div>
     <?php endif; ?>
 
+
+    <?php flash('schedule_error'); ?>
+    <?php flash('schedule_success'); ?>
+
     <!-- Collection Schedules Section -->
     <div class="table-data">
         <div class="order">
@@ -157,7 +167,7 @@
                                 <td><?php echo $schedule->route_name; ?></td>
                                 <td><?php echo $schedule->team_name; ?></td>
                                 <td><?php echo $schedule->license_plate; ?></td>
-                                <td><?php echo $schedule->shift_name; ?></td>
+                                <td><?php echo $schedule->shift_name; ?> (<?php echo $schedule->start_time; ?> - <?php echo $schedule->end_time; ?>)</td>
                                 <td>Week <?php echo $schedule->week_number; ?></td>
                                 <td><?php echo ucwords(str_replace(',', ', ', $schedule->days_of_week)); ?></td>
                                 <td><?php echo date('Y-m-d H:i', strtotime($schedule->created_at)); ?></td>
@@ -189,6 +199,9 @@
             </table>
         </div>
     </div>
+
+    <?php flash('schedule_create_error'); ?>
+    <?php flash('schedule_create_success'); ?>
 
     <!-- Create New Schedule Section -->
     <div class="table-data">
@@ -331,13 +344,13 @@
                 <div class="form-group">
                     <label>Collection Days:</label>
                     <div style="display: grid; grid-template-columns: repeat(7, 1fr); gap: 10px;">
-                        <label><input type="checkbox" name="edit_days_of_week[]" value="mon"> Mon</label>
-                        <label><input type="checkbox" name="edit_days_of_week[]" value="tue"> Tue</label>
-                        <label><input type="checkbox" name="edit_days_of_week[]" value="wed"> Wed</label>
-                        <label><input type="checkbox" name="edit_days_of_week[]" value="thu"> Thu</label>
-                        <label><input type="checkbox" name="edit_days_of_week[]" value="fri"> Fri</label>
-                        <label><input type="checkbox" name="edit_days_of_week[]" value="sat"> Sat</label>
-                        <label><input type="checkbox" name="edit_days_of_week[]" value="sun"> Sun</label>
+                        <label><input type="checkbox" name="days_of_week[]" value="mon"> Mon</label>
+                        <label><input type="checkbox" name="days_of_week[]" value="tue"> Tue</label>
+                        <label><input type="checkbox" name="days_of_week[]" value="wed"> Wed</label>
+                        <label><input type="checkbox" name="days_of_week[]" value="thu"> Thu</label>
+                        <label><input type="checkbox" name="days_of_week[]" value="fri"> Fri</label>
+                        <label><input type="checkbox" name="days_of_week[]" value="sat"> Sat</label>
+                        <label><input type="checkbox" name="days_of_week[]" value="sun"> Sun</label>
                     </div>
                 </div>
 
@@ -362,7 +375,7 @@
             
             // Handle checkboxes for days
             const days = schedule.days_of_week.split(',');
-            document.querySelectorAll('input[name="edit_days_of_week[]"]').forEach(checkbox => {
+            document.querySelectorAll('input[name="days_of_week[]"]').forEach(checkbox => {
                 checkbox.checked = days.includes(checkbox.value);
             });
         }

@@ -125,5 +125,12 @@ class M_Shift {
         return $this->db->single()->total_shifts;
     }
 
+
+    public function isShiftNameDuplicate($shiftName) {
+        $this->db->query("SELECT * FROM shifts WHERE shift_name = :shift_name");
+        $this->db->bind(':shift_name', $shiftName);
+        return $this->db->rowCount() > 0; // Returns true if a duplicate exists
+    }
+
 }
 ?>

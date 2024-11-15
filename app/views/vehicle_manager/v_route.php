@@ -8,6 +8,16 @@
 <!-- MAIN -->
 <main>
 
+<div style="background: #f0f0f0; padding: 10px; margin-bottom: 20px;">
+    Debug Info:
+    <pre>
+    <?php 
+    echo "Unallocated Suppliers:\n";
+    print_r($data); 
+    ?>
+    </pre>
+</div>
+
   <!-- Route Management Section -->
   <div class="head-title">
       <div class="left">
@@ -134,7 +144,6 @@
                 <tr>
                     <th>Supplier ID</th>
                     <th>Name</th>
-                    <th>Address</th>
                     <th>Location</th>
                 </tr>
             </thead>
@@ -142,12 +151,11 @@
                 <?php foreach ($data['unassignedSuppliersList'] as $supplier): ?>
                     <tr>
                         <td><?php echo htmlspecialchars($supplier->supplier_id); ?></td>
-                        <td><?php echo htmlspecialchars($supplier->full_name); ?></td>
-                        <td><?php echo htmlspecialchars($supplier->street . ', ' . $supplier->city); ?></td>
+                        <td><?php echo htmlspecialchars($supplier->first_name); ?></td>
                         <td>
                             <a href="#" class="location-link" 
                                data-coordinates="<?php echo htmlspecialchars($supplier->coordinates); ?>"
-                               data-name="<?php echo htmlspecialchars($supplier->full_name); ?>">
+                               data-name="<?php echo htmlspecialchars($supplier->supplier_name); ?>">
                                 <?php echo htmlspecialchars($supplier->coordinates); ?>
                             </a>
                         </td>
@@ -194,20 +202,21 @@
   <div class="table-data">
     <div class="order">
         <div class="head">
-            <h3>Route Suppliers</h3>
-            <p class="route-name">Select a route to view suppliers</p>
+            <h3 class="route-name">Route: Select a route</h3>
         </div>
         <table id="routeSupplierTable">
             <thead>
                 <tr>
-                    <th>Order</th>
+                    <th>Stop Order</th>
                     <th>Supplier ID</th>
-                    <th>Supplier Name</th>
-                    <th>Location (Lat, Long)</th>
+                    <th>Name</th>
+                    <th>Location</th>
                 </tr>
             </thead>
             <tbody>
-                <!-- Will be populated via JavaScript -->
+                <tr>
+                    <td colspan="4" class="text-center">Select a route to view suppliers</td>
+                </tr>
             </tbody>
         </table>
     </div>
@@ -1051,62 +1060,51 @@ document.addEventListener('DOMContentLoaded', () => {
     routeForm.addEventListener('submit', async (e) => {
         e.preventDefault();
         
-        // Get form data
-        const routeName = document.getElementById('routeName').value;
-        const routeStatus = document.getElementById('status').value;
-        
-        // Validate
-        if (!routeName) {
-            alert('Please enter a route name');
-            return;
-        }
-
-        if (currentRoute.stops.length === 0) {
-            alert('Please add at least one supplier to the route');
-            return;
-        }
-
-        // Prepare data for API
-        const routeData = {
-            name: routeName,
-            status: routeStatus,
-            stops: currentRoute.stops.map(stop => ({
-                id: parseInt(stop.id.replace('S', '')) // Convert 'S1' to 1
-            }))
-        };
-
-        console.log('Sending data:', routeData); // Debug log
-
         try {
+            const routeData = {
+                name: document.getElementById('routeName').value,
+                status: document.getElementById('status').value,
+                stops: currentRoute.stops.map(stop => ({
+                    id: parseInt(stop.id)
+                }))
+            };
+
+            console.log('Sending data:', routeData); // Debug log
+
             const response = await fetch('<?php echo URLROOT; ?>/vehiclemanager/createRoute', {
                 method: 'POST',
                 headers: {
-                    'Content-Type': 'application/json'
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json'
                 },
                 body: JSON.stringify(routeData)
             });
 
-            console.log('Response status:', response.status); // Debug log
+            // Log the raw response for debugging
+            const rawResponse = await response.text();
+            console.log('Raw response:', rawResponse);
 
-            const result = await response.json();
-            console.log('Response data:', result); // Debug log
+            // Try to parse the response
+            let result;
+            try {
+                result = JSON.parse(rawResponse);
+                console.log('Parsed response:', result);
+            } catch (parseError) {
+                console.error('Failed to parse response:', parseError);
+                throw new Error('Invalid server response');
+            }
 
             if (result.success) {
-                alert('Route created successfully!');
-                // Reset form
-                routeForm.reset();
-                currentRoute.stops = [];
-                updateStopList();
-                // Close modal
+                alert(result.message);
                 modal.style.display = 'none';
-                // Reload page to show new route
                 window.location.reload();
             } else {
-                alert('Error: ' + (result.message || 'Unknown error occurred'));
+                throw new Error(result.message || 'Failed to create route');
             }
+
         } catch (error) {
-            console.error('Error details:', error); // Detailed error log
-            alert('An error occurred while creating the route: ' + error.message);
+            console.error('Error:', error);
+            alert('Error creating route: ' + error.message);
         }
     });
 
@@ -1170,7 +1168,11 @@ document.addEventListener('DOMContentLoaded', () => {
             console.log('Received suppliers:', routeSuppliers); // Debug log
             
             // Update the stops array with the received suppliers
-            editingRoute.stops = routeSuppliers;
+            if (routeSuppliers.success) {
+                editingRoute.stops = routeSuppliers.data.suppliers; // Access the suppliers correctly
+            } else {
+                throw new Error(routeSuppliers.message || 'Failed to load suppliers');
+            }
             
             // Update the UI
             updateEditStopList();
@@ -1195,31 +1197,24 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function updateEditStopList() {
-        editStopList.innerHTML = '';
-        editingRoute.stops.forEach((stop, index) => {
-            const li = document.createElement('li');
-            li.innerHTML = `${index + 1}. ${stop.name} <span class="remove-stop" data-id="${stop.id}">Remove</span>`;
-            editStopList.appendChild(li);
-        });
+        const stopList = document.getElementById('editStopList');
+        stopList.innerHTML = ''; // Clear existing stops
 
-        document.querySelectorAll('#editStopList .remove-stop').forEach(removeButton => {
-            removeButton.addEventListener('click', function() {
-                const stopId = this.getAttribute('data-id');
-                const removedStop = editingRoute.stops.find(stop => stop.id === stopId);
-                
-                editingRoute.stops = editingRoute.stops.filter(stop => stop.id !== stopId);
-                
-                if (removedStop) {
-                    const option = document.createElement('option');
-                    option.value = removedStop.id;
-                    option.textContent = removedStop.name;
-                    editSupplierSelect.appendChild(option);
-                }
-                
-                updateEditStopList();
-                updateEditMap();
+        if (Array.isArray(editingRoute.stops) && editingRoute.stops.length > 0) {
+            editingRoute.stops.forEach((stop, index) => {
+                const li = document.createElement('li');
+                li.innerHTML = `
+                    <span class="stop-number">${index + 1}</span>
+                    <span class="supplier-name">${stop.name}</span>
+                    <button type="button" class="remove-stop" onclick="removeStop(this)">×</button>
+                `;
+                stopList.appendChild(li);
             });
-        });
+        } else {
+            const li = document.createElement('li');
+            li.textContent = 'No stops available';
+            stopList.appendChild(li);
+        }
     }
 
     // Add event listeners
@@ -1283,48 +1278,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    // Add to your existing JavaScript
-    document.querySelectorAll('.expand-btn').forEach(button => {
-        button.addEventListener('click', async function() {
-            const row = this.closest('.route-row');
-            const expandedRow = row.nextElementSibling;
-            const routeId = row.dataset.routeId;
-            
-            console.log('Route ID:', routeId); // Debug
-            
-            this.classList.toggle('active');
-            
-            if (expandedRow.style.display === 'none') {
-                expandedRow.style.display = 'table-row';
-                
-                try {
-                    const url = `<?php echo URLROOT; ?>/vehiclemanager/getRouteSuppliers/${routeId}`;
-                    console.log('Fetching from URL:', url); // Debug
-                    
-                    const response = await fetch(url);
-                    console.log('Response status:', response.status); // Debug
-                    
-                    if (!response.ok) {
-                        const errorText = await response.text();
-                        console.log('Error response:', errorText); // Debug
-                        throw new Error(`HTTP error! status: ${response.status}, message: ${errorText}`);
-                    }
-                    
-                    const suppliers = await response.json();
-                    console.log('Received suppliers:', suppliers); // Debug
-                    
-                    // Update the supplier list
-                    updateSupplierList(expandedRow, suppliers);
-                    
-                } catch (error) {
-                    console.error('Detailed error:', error); // More detailed error logging
-                    alert('Error loading route details: ' + error.message);
-                }
-            } else {
-                expandedRow.style.display = 'none';
-            }
-        });
-    });
 
     // Helper function to add markers
     function addRouteMarkers(map, routePoints) {
@@ -1387,29 +1340,159 @@ document.addEventListener('DOMContentLoaded', () => {
 
             try {
                 const response = await fetch(`<?php echo URLROOT; ?>/vehiclemanager/getRouteSuppliers/${routeId}`);
-                if (!response.ok) throw new Error('Failed to fetch suppliers');
+                if (!response.ok) {
+                    throw new Error('Failed to fetch suppliers');
+                }
                 
-                const suppliers = await response.json();
-                console.log('Received suppliers:', suppliers); // Debug log
+                const result = await response.json();
+                console.log('Received data:', result); // Debug log
                 
-                routeNameDisplay.textContent = `Route: ${routeName}`;
+                if (!result.success) {
+                    throw new Error(result.error || 'Failed to load suppliers');
+                }
+
+                // Update route name display
+                routeNameDisplay.textContent = `Route: ${result.data.route.name}`;
                 
-                // Update supplier table with the correct fields
-                supplierTableBody.innerHTML = suppliers.map((supplier, index) => `
-                    <tr>
-                        <td>${index + 1}</td>
-                        <td>${supplier.supplier_id}</td>
-                        <td>${supplier.supplier_name}</td>
-                        <td>${supplier.latitude}, ${supplier.longitude}</td>
-                    </tr>
-                `).join('');
+                // Clear existing table content
+                supplierTableBody.innerHTML = '';
+                
+                // Check if suppliers exist
+                if (!result.data.suppliers || result.data.suppliers.length === 0) {
+                    const emptyRow = document.createElement('tr');
+                    emptyRow.innerHTML = '<td colspan="4" style="text-align: center;">No suppliers assigned to this route</td>';
+                    supplierTableBody.appendChild(emptyRow);
+                    return;
+                }
+                
+                // Add each supplier to the table
+                result.data.suppliers.forEach((supplier, index) => {
+                    const row = document.createElement('tr');
+                    row.innerHTML = `
+                        <td>${supplier.stop_order || index + 1}</td>
+                        <td>${supplier.id || 'N/A'}</td>
+                        <td>${supplier.name || 'N/A'}</td>
+                        <td>${supplier.location.lat}, ${supplier.location.lng}</td>
+                    `;
+                    supplierTableBody.appendChild(row);
+                });
                 
             } catch (error) {
                 console.error('Error:', error);
                 routeNameDisplay.textContent = 'Error loading suppliers';
-                supplierTableBody.innerHTML = '';
+                supplierTableBody.innerHTML = '<tr><td colspan="4" style="text-align: center;">Error loading suppliers</td></tr>';
             }
         });
+    });
+
+    // Update the click handler for route cards
+    document.addEventListener('click', async function(e) {
+        if (e.target.closest('.route-card')) {
+            const card = e.target.closest('.route-card');
+            const routeId = card.dataset.routeId;
+            
+            try {
+                console.log('Fetching route data for ID:', routeId); // Debug log
+                
+                const response = await fetch(`<?php echo URLROOT; ?>/vehiclemanager/getRouteDetails/${routeId}`, {
+                    headers: {
+                        'Accept': 'application/json'
+                    }
+                });
+
+                // Log the raw response for debugging
+                const rawResponse = await response.text();
+                console.log('Raw response:', rawResponse);
+
+                // Try to parse the response
+                let routeData;
+                try {
+                    routeData = JSON.parse(rawResponse);
+                    console.log('Parsed route data:', routeData);
+                } catch (parseError) {
+                    console.error('Failed to parse response:', parseError);
+                    throw new Error('Invalid server response');
+                }
+
+                if (!routeData) {
+                    throw new Error('No route data received');
+                }
+
+                // Open the edit modal with the route data
+                openRouteModal(routeData);
+
+            } catch (error) {
+                console.error('Error fetching route details:', error);
+                alert('Error loading route details: ' + error.message);
+            }
+        }
+    });
+
+    // Add this function to handle route selection and update the table
+    async function updateRouteSupplierTable(routeId) {
+        try {
+            const response = await fetch(`<?php echo URLROOT; ?>/vehiclemanager/getRouteSuppliers/${routeId}`);
+            const data = await response.json();
+            
+            console.log('Route supplier data:', data); // Debug log
+
+            // Get the table elements
+            const routeNameDisplay = document.querySelector('.route-name');
+            const supplierTableBody = document.querySelector('#routeSupplierTable tbody');
+
+            if (!data.success) {
+                throw new Error(data.error || 'Failed to load route suppliers');
+            }
+
+            // Update route name display
+            routeNameDisplay.textContent = `Route: ${data.data.route.name}`;
+
+            // Clear existing table rows
+            supplierTableBody.innerHTML = '';
+
+            // Check if there are suppliers
+            if (!data.data.suppliers || data.data.suppliers.length === 0) {
+                supplierTableBody.innerHTML = `
+                    <tr>
+                        <td colspan="4" class="text-center">No suppliers assigned to this route</td>
+                    </tr>`;
+                return;
+            }
+
+            // Add suppliers to table
+            data.data.suppliers.forEach((supplier) => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${supplier.stop_order || '-'}</td>
+                    <td>${supplier.id}</td>
+                    <td>${supplier.name}</td>
+                    <td>${supplier.location.lat}, ${supplier.location.lng}</td>
+                `;
+                supplierTableBody.appendChild(row);
+            });
+
+        } catch (error) {
+            console.error('Error updating supplier table:', error);
+            alert('Error loading route suppliers: ' + error.message);
+        }
+    }
+
+    // Update your route click handler
+    document.addEventListener('click', function(e) {
+        const routeCard = e.target.closest('.route-card');
+        if (routeCard) {
+            const routeId = routeCard.dataset.routeId;
+            if (routeId) {
+                // Update the supplier table
+                updateRouteSupplierTable(routeId);
+                
+                // Highlight the selected route card
+                document.querySelectorAll('.route-card').forEach(card => {
+                    card.classList.remove('selected');
+                });
+                routeCard.classList.add('selected');
+            }
+        }
     });
 });
 

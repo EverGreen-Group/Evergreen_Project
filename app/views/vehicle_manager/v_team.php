@@ -17,6 +17,61 @@
       </div>
   </div>
 
+
+  <div class="alerts-container">
+      <?php flash('team_message'); ?>
+  </div>
+
+  <!-- Add the alerts styling -->
+  <style>
+      .alerts-container {
+          margin: 20px 0;
+          animation: fadeIn 0.5s ease-in-out;
+      }
+
+      .alert {
+          padding: 15px;
+          margin-bottom: 15px;
+          border-radius: 8px;
+          display: flex;
+          align-items: center;
+          gap: 10px;
+      }
+
+      .alert i {
+          font-size: 20px;
+      }
+
+      .alert-success {
+          color: #155724;
+          background-color: #d4edda;
+          border: 1px solid #c3e6cb;
+      }
+
+      .alert-danger {
+          color: #721c24;
+          background-color: #f8d7da;
+          border: 1px solid #f5c6cb;
+      }
+
+      .alert-warning {
+          color: #856404;
+          background-color: #fff3cd;
+          border: 1px solid #ffeeba;
+      }
+
+      .alert-info {
+          color: #0c5460;
+          background-color: #d1ecf1;
+          border: 1px solid #bee5eb;
+      }
+
+      @keyframes fadeIn {
+          from { opacity: 0; transform: translateY(-10px); }
+          to { opacity: 1; transform: translateY(0); }
+      }
+  </style>
+
   <ul class="team-box-info">
     <li>
         <i class='bx bxs-group'></i>
@@ -607,12 +662,12 @@
     }
 
     .btn-primary {
-      background-color: var(--main);
+      background-color: #007664;
       color: var(--light);
     }
 
     .btn-primary:hover {
-      background-color: var(--main-dark);
+      background-color: #005a4d;
     }
 
     .btn-danger {
@@ -883,23 +938,25 @@ function deleteTeam(teamId) {
                 'Content-Type': 'application/json',
             }
         })
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                // Fixed selector to find the team card
-                const teamCard = document.querySelector(`.team-card[onclick*="team_id\\\":${teamId}"]`);
-                if (teamCard) {
-                    teamCard.remove();
-                    // Optionally refresh the page to update stats
-                    window.location.reload();
-                }
-            } else {
-                alert('Failed to delete team');
+        .then(response => {
+            if (response.ok) {
+                return response.text().then(text => {
+                    try {
+                        return JSON.parse(text);
+                    } catch (e) {
+                        return { success: true };
+                    }
+                });
             }
+            throw new Error('Network response was not ok');
+        })
+        .then(data => {
+            // Instead of immediate reload, let the controller handle the redirect
+            window.location.href = '<?php echo URLROOT; ?>/vehiclemanager/team';
         })
         .catch(error => {
             console.error('Error:', error);
-            alert('An error occurred while deleting the team');
+            window.location.href = '<?php echo URLROOT; ?>/vehiclemanager/team';
         });
     }
 }
@@ -1206,7 +1263,7 @@ function deleteTeam(teamId) {
 }
 
 .btn-submit {
-    background-color: #4154f1;
+    background-color: #007664;
     color: white;
     padding: 10px 20px;
     border: none;

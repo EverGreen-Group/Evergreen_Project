@@ -153,9 +153,8 @@ class VehicleManager extends Controller {
 
     public function updateTeam() {
         if ($_SERVER['REQUEST_METHOD'] == 'POST') {
-            // Sanitize POST data
             $_POST = filter_input_array(INPUT_POST, FILTER_SANITIZE_STRING);
-    
+
             $data = [
                 'team_id' => trim($_POST['team_id']),
                 'team_name' => trim($_POST['team_name']),
@@ -163,18 +162,28 @@ class VehicleManager extends Controller {
                 'partner_id' => trim($_POST['partner_id']),
                 'status' => trim($_POST['status'])
             ];
-    
-            // Validate team name
+
             if (empty($data['team_name'])) {
-                die('Please enter team name');
+                $_SESSION['flash_messages']['team_message'] = [
+                    'message' => 'Please enter team name',
+                    'class' => 'alert alert-danger'
+                ];
+                redirect('vehiclemanager/team');
+                return;
             }
-    
+
             if ($this->teamModel->updateTeam($data)) {
-                // Success - Redirect
-                header('Location: ' . URLROOT . '/vehiclemanager/team');
+                $_SESSION['flash_messages']['team_message'] = [
+                    'message' => 'Team updated successfully',
+                    'class' => 'alert alert-success'
+                ];
             } else {
-                die('Something went wrong');
+                $_SESSION['flash_messages']['team_message'] = [
+                    'message' => 'Failed to update team',
+                    'class' => 'alert alert-danger'
+                ];
             }
+            redirect('vehiclemanager/team');
         }
     }
 
@@ -205,12 +214,21 @@ class VehicleManager extends Controller {
             error_log('Creating team with data: ' . print_r($data, true));
 
             if ($this->teamModel->createTeam($data)) {
-                header('Location: ' . URLROOT . '/vehiclemanager/team');
+                $_SESSION['flash_messages'] = [
+                    'team_message' => [
+                        'message' => 'Team created successfully',
+                        'class' => 'alert alert-success'
+                    ]
+                ];
             } else {
-                // Debug line - remove in production
-                error_log('Database error: ');
-                die('Something went wrong');
+                $_SESSION['flash_messages'] = [
+                    'team_message' => [
+                        'message' => 'Failed to create team',
+                        'class' => 'alert alert-danger'
+                    ]
+                ];
             }
+            redirect('vehiclemanager/team');
         }
     }
 
@@ -220,29 +238,28 @@ class VehicleManager extends Controller {
         $totalActive = $this->routeModel->getTotalActiveRoutes();
         $totalInactive = $this->routeModel->getTotalInactiveRoutes();
         $unallocatedSuppliers = $this->routeModel->getUnallocatedSuppliers();
-        $unassignedSuppliersList = $this->routeModel->getUnallocatedSupplierDetails();
         
-        // Convert suppliers data to format expected by the map
+        // Format suppliers for the map/dropdown
         $suppliersForMap = array_map(function($supplier) {
             return [
-                'id' => 'S' . $supplier->supplier_id, // Add 'S' prefix for consistency
-                'name' => $supplier->supplier_name,
+                'id' => $supplier->supplier_id,
+                'name' => $supplier->full_name, // Changed from supplier_name to full_name
                 'location' => [
                     'lat' => (float)$supplier->latitude,
                     'lng' => (float)$supplier->longitude
                 ]
             ];
         }, $unallocatedSuppliers);
-        
+
         $data = [
             'allRoutes' => $allRoutes,
             'totalRoutes' => $totalRoutes,
             'totalActive' => $totalActive,
             'totalInactive' => $totalInactive,
             'unallocatedSuppliers' => $suppliersForMap,
-            'unassignedSuppliersList' => $unassignedSuppliersList
+            'unassignedSuppliersList' => $unallocatedSuppliers
         ];
-        
+
         $this->view('vehicle_manager/v_route', $data);
     }
 
@@ -256,6 +273,13 @@ class VehicleManager extends Controller {
                     'start_time' => trim($_POST['start_time']),
                     'end_time' => trim($_POST['end_time'])
                 ];
+
+                // Check for duplicate shift name
+                if ($this->shiftModel->isShiftNameDuplicate($data['shift_name'])) {
+                    flash('shift_error', 'Shift name already exists', 'alert alert-danger');
+                    redirect('vehiclemanager/shift');
+                    return;
+                }
 
                 // Use addShift instead of createShift
                 if ($this->shiftModel->addShift($data)) {
@@ -278,17 +302,37 @@ class VehicleManager extends Controller {
         $totalShifts = $this->shiftModel->getTotalShifts();
         $totalTeamsInCollection = $this->teamModel->getTotalTeamsInCollection();
         
+        // Initialize the schedules array
+        $schedules = [];
+
+        // Define the date range for the next 7 days
         $startDate = date('Y-m-d');
         $endDate = date('Y-m-d', strtotime('+6 days'));
-        $schedules = $this->scheduleModel->getSchedulesByDate($startDate, $endDate);
-        
+
+        // Fetch schedules for each shift within the date range
+        foreach ($shifts as $shift) {
+            // Fetch schedules for the specific shift
+            $shiftSchedules = $this->scheduleModel->getSchedulesByShiftIdAndDate($shift->shift_id, $startDate, $endDate);
+            
+            // Organize schedules by date
+            foreach ($shiftSchedules as $schedule) {
+                $date = date('Y-m-d', strtotime($schedule->created_at)); // Assuming schedule has a created_at field
+                if (!isset($schedules[$shift->shift_id][$date])) {
+                    $schedules[$shift->shift_id][$date] = [];
+                }
+                $schedules[$shift->shift_id][$date][] = $schedule; // Add the schedule to the appropriate date
+            }
+        }
+
+        // Prepare data to pass to the view
         $data = [
             'shifts' => $shifts,
             'totalShifts' => $totalShifts,
             'totalTeamsInCollection' => $totalTeamsInCollection,
-            'schedules' => $schedules
+            'schedules' => $schedules // Pass the organized schedules to the view
         ];
         
+        // Load the view with the data
         $this->view('vehicle_manager/v_shift', $data);
     }
 
@@ -309,6 +353,7 @@ class VehicleManager extends Controller {
     }
 
     public function getShift($id) {
+        header('Content-Type: application/json'); // Set the content type to JSON
         try {
             $shift = $this->shiftModel->getShiftById($id);
             if ($shift) {
@@ -319,7 +364,7 @@ class VehicleManager extends Controller {
         } catch (Exception $e) {
             echo json_encode(['error' => $e->getMessage()]);
         }
-        exit;
+        exit; // Ensure no additional output is sent
     }
 
     public function updateShift($id) {
@@ -503,90 +548,146 @@ class VehicleManager extends Controller {
         }
     }
 
-    public function deleteVehicle() {
-        if ($_SERVER['REQUEST_METHOD'] == 'POST') {
-            $vehicleId = $_POST['vehicle_id'];
-            
-            if ($this->vehicleModel->deleteVehicle($vehicleId)) {
-                flash('vehicle_message', 'Vehicle Deleted Successfully', 'alert alert-success');
-            } else {
-                flash('vehicle_message', 'Failed to delete vehicle', 'alert alert-danger');
+    public function deleteVehicle($id) {
+        header('Content-Type: application/json');
+        
+        try {
+            // Log the request method and ID
+            error_log("Delete request received for vehicle ID: " . $id);
+            error_log("Request method: " . $_SERVER['REQUEST_METHOD']);
+
+            if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+                throw new Exception('Invalid request method');
             }
-            
-            // Return JSON response
-            header('Content-Type: application/json');
-            echo json_encode(['success' => true]);
-            exit;
+
+            // Try to delete the vehicle
+            if ($this->vehicleModel->deleteVehicle($id)) {
+                error_log("Vehicle " . $id . " deleted successfully");
+                echo json_encode([
+                    'success' => true,
+                    'message' => 'Vehicle deleted successfully'
+                ]);
+            } else {
+                throw new Exception('Failed to delete vehicle from database');
+            }
+
+        } catch (Exception $e) {
+            error_log("Error in deleteVehicle: " . $e->getMessage());
+            echo json_encode([
+                'success' => false,
+                'message' => $e->getMessage()
+            ]);
         }
+        exit;
     }
 
     public function createRoute() {
-        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-            try {
-                // Log incoming data
-                error_log('Received route creation request: ' . file_get_contents('php://input'));
-                
-                $json = file_get_contents('php://input');
-                $routeData = json_decode($json);
-
-                if (!$routeData) {
-                    throw new Exception('Invalid JSON data received');
-                }
-
-                // Validate required fields
-                if (empty($routeData->name)) {
-                    throw new Exception('Route name is required');
-                }
-
-                if (empty($routeData->stops) || !is_array($routeData->stops)) {
-                    throw new Exception('At least one supplier stop is required');
-                }
-
-                $result = $this->routeModel->createRoute($routeData);
-                
-                header('Content-Type: application/json');
-                if ($result) {
-                    echo json_encode([
-                        'success' => true,
-                        'message' => 'Route created successfully'
-                    ]);
-                } else {
-                    echo json_encode([
-                        'success' => false,
-                        'message' => 'Failed to create route in database'
-                    ]);
-                }
-
-            } catch (Exception $e) {
-                error_log('Route Creation Error: ' . $e->getMessage());
-                header('Content-Type: application/json');
-                echo json_encode([
-                    'success' => false,
-                    'message' => $e->getMessage()
-                ]);
+        // Clear any previous output
+        ob_clean();
+        
+        // Set JSON headers
+        header('Content-Type: application/json');
+        
+        try {
+            // Get and validate JSON input
+            $json = file_get_contents('php://input');
+            error_log("Received data: " . $json); // Debug log
+            
+            $data = json_decode($json);
+            
+            if (!$data) {
+                throw new Exception('Invalid JSON data received');
             }
-            exit;
+
+            // Create the route
+            $result = $this->routeModel->createRoute($data);
+            
+            $response = [
+                'success' => true,
+                'message' => 'Route created successfully',
+                'routeId' => $result // Assuming createRoute returns the new route ID
+            ];
+            
+            error_log("Sending response: " . json_encode($response)); // Debug log
+            echo json_encode($response);
+            
+        } catch (Exception $e) {
+            error_log("Error in createRoute: " . $e->getMessage());
+            echo json_encode([
+                'success' => false,
+                'message' => $e->getMessage()
+            ]);
         }
+        exit;
     }
 
     public function getRouteSuppliers($routeId) {
+        // Clear any previous output and set JSON header
+        ob_clean();
+        header('Content-Type: application/json');
+        
+        if (!$routeId) {
+            echo json_encode(['error' => 'Route ID is required']);
+            return;
+        }
+
         try {
-            // Debug
-            error_log("Fetching suppliers for route ID: " . $routeId);
-            
+            // Get route details
+            $route = $this->routeModel->getRouteById($routeId);
+            if (!$route) {
+                throw new Exception('Route not found');
+            }
+
+            // Get suppliers for this route
             $suppliers = $this->routeModel->getRouteSuppliers($routeId);
             
-            // Debug
-            error_log("Suppliers found: " . print_r($suppliers, true));
+            // Combine the data
+            $response = [
+                'success' => true,
+                'data' => [
+                    'route' => [
+                        'id' => $route->route_id,
+                        'name' => $route->route_name,
+                        'status' => $route->status,
+                        'start_location' => [
+                            'lat' => $route->start_location_lat,
+                            'lng' => $route->start_location_long
+                        ],
+                        'end_location' => [
+                            'lat' => $route->end_location_lat,
+                            'lng' => $route->end_location_long
+                        ],
+                        'date' => $route->date,
+                        'number_of_suppliers' => $route->number_of_suppliers
+                    ],
+                    'suppliers' => array_map(function($supplier) {
+                        return [
+                            'id' => $supplier->supplier_id,
+                            'name' => $supplier->full_name,
+                            'location' => [
+                                'lat' => $supplier->latitude,
+                                'lng' => $supplier->longitude
+                            ],
+                            'stop_order' => $supplier->stop_order,
+                            'supplier_order' => $supplier->supplier_order
+                        ];
+                    }, $suppliers)
+                ]
+            ];
+
+            error_log('Sending response: ' . json_encode($response));
+            echo json_encode($response);
             
-            header('Content-Type: application/json');
-            echo json_encode($suppliers);
         } catch (Exception $e) {
-            error_log("Error in getRouteSuppliers: " . $e->getMessage());
-            http_response_code(500);
-            echo json_encode(['error' => $e->getMessage()]);
+            error_log('Error in getRouteSuppliers: ' . $e->getMessage());
+            echo json_encode([
+                'success' => false,
+                'error' => $e->getMessage()
+            ]);
         }
+        exit;
     }
+
 
     public function remove_staff() {
         if ($_SERVER['REQUEST_METHOD'] == 'POST') {
@@ -680,10 +781,18 @@ class VehicleManager extends Controller {
             die('Invalid request method');
         }
 
-        $result = $this->teamModel->setTeamVisibility($teamId, 0);
-        
-        header('Content-Type: application/json');
-        echo json_encode(['success' => $result]);
+        if ($this->teamModel->setTeamVisibility($teamId, 0)) {
+            $_SESSION['flash_messages']['team_message'] = [
+                'message' => 'Team deleted successfully',
+                'class' => 'alert alert-success'
+            ];
+        } else {
+            $_SESSION['flash_messages']['team_message'] = [
+                'message' => 'Failed to delete team',
+                'class' => 'alert alert-danger'
+            ];
+        }
+        redirect('vehiclemanager/team');
     }
 
     public function getCollectionRoute($collectionId) {
@@ -762,6 +871,190 @@ class VehicleManager extends Controller {
                 echo json_encode(['success' => false]);
             }
         }
+    }
+
+    public function addVehicle() {
+        if ($_SERVER['REQUEST_METHOD'] == 'GET') {
+            $data = [
+                'title' => 'Add New Vehicle'
+            ];
+            $this->view('vehicle_manager/v_add_vehicle', $data);
+        } else {
+            // Handle POST request
+            $this->handleVehicleSubmission();
+        }
+    }
+
+    private function handleVehicleSubmission() {
+        try {
+            // Basic vehicle data
+            $vehicleData = [
+                'license_plate' => $_POST['license_plate'],
+                'vehicle_type' => $_POST['vehicle_type'],
+                'engine_number' => $_POST['engine_number'],
+                'chassis_number' => $_POST['chassis_number'],
+                'status' => $_POST['status'],
+                'condition' => $_POST['condition'],
+                'make' => $_POST['make'],
+                'model' => $_POST['model'],
+                'manufacturing_year' => $_POST['manufacturing_year'],
+                'color' => $_POST['color'],
+                'fuel_type' => $_POST['fuel_type'],
+                'mileage' => $_POST['mileage'],
+                'capacity' => $_POST['capacity'],
+                'seating_capacity' => $_POST['seating_capacity'],
+                'owner_name' => $_POST['owner_name'],
+                'owner_contact' => $_POST['owner_contact'],
+                'registration_date' => $_POST['registration_date'],
+                'last_serviced_date' => $_POST['last_serviced_date'],
+                'last_maintenance' => $_POST['last_maintenance'],
+                'next_maintenance' => $_POST['next_maintenance']
+            ];
+
+            // Handle vehicle image
+            if (isset($_FILES['vehicle_image']) && $_FILES['vehicle_image']['error'] === UPLOAD_ERR_OK) {
+                $this->handleVehicleImage($_FILES['vehicle_image'], $_POST['license_plate']);
+            }
+
+            // Create vehicle (temporarily without documents)
+            $result = $this->vehicleModel->createVehicle($vehicleData);
+
+            if ($result) {
+                flash('vehicle_message', 'Vehicle added successfully', 'alert-success');
+                redirect('vehiclemanager/vehicle'); // Changed from vehiclemanager to vehiclemanager/vehicles
+            } else {
+                flash('vehicle_message', 'Failed to add vehicle', 'alert-danger');
+                redirect('vehiclemanager/addVehicle');
+            }
+
+        } catch (Exception $e) {
+            flash('vehicle_message', 'Error: ' . $e->getMessage(), 'alert-danger');
+            redirect('vehiclemanager/addVehicle');
+        }
+    }
+
+    private function handleFileUpload($file, $uploadDir) {
+        $uploadDir = '../public/uploads/' . $uploadDir . '/';
+        $fileName = uniqid() . '_' . basename($file['name']);
+        $targetPath = $uploadDir . $fileName;
+
+        if (move_uploaded_file($file['tmp_name'], $targetPath)) {
+            return $fileName;
+        }
+        return false;
+    }
+
+    private function handleVehicleImage($file, $licensePlate) {
+        try {
+            if ($file['error'] === UPLOAD_ERR_OK) {
+                // Define the upload directory path
+                $uploadDir = UPLOADROOT . '/vehicle_photos/';
+                
+                // Log the upload directory path
+                error_log("Upload directory: " . $uploadDir);
+                
+                // Create directory if it doesn't exist
+                if (!file_exists($uploadDir)) {
+                    if (!mkdir($uploadDir, 0777, true)) {
+                        error_log("Failed to create directory: " . $uploadDir);
+                        return false;
+                    }
+                }
+
+                $fileName = $licensePlate . '.jpg';
+                $targetPath = $uploadDir . $fileName;
+                
+                // Log the target path
+                error_log("Target path: " . $targetPath);
+
+                // Check if file is actually uploaded
+                if (is_uploaded_file($file['tmp_name'])) {
+                    // Move the uploaded file
+                    if (move_uploaded_file($file['tmp_name'], $targetPath)) {
+                        error_log("File successfully uploaded to: " . $targetPath);
+                        return true;
+                    } else {
+                        error_log("Failed to move uploaded file. Error: " . error_get_last()['message']);
+                        return false;
+                    }
+                } else {
+                    error_log("File was not uploaded via HTTP POST");
+                    return false;
+                }
+            } else {
+                error_log("File upload error code: " . $file['error']);
+                return false;
+            }
+        } catch (Exception $e) {
+            error_log("Error uploading vehicle image: " . $e->getMessage());
+            return false;
+        }
+    }
+
+    public function checkVehicleUsage($id) {
+        $schedules = $this->scheduleModel->getSchedulesByVehicleId($id);
+        $collections = $this->collectionModel->getCollectionsByVehicleId($id);
+
+        echo json_encode([
+            'inUse' => !empty($schedules) || !empty($collections),
+            'schedules' => !empty($schedules),
+            'collections' => !empty($collections)
+        ]);
+    }
+
+    public function getRouteDetails($routeId) {
+        // Clear any previous output
+        ob_clean();
+        
+        // Set JSON headers
+        header('Content-Type: application/json');
+        
+        try {
+            if (!$routeId) {
+                throw new Exception('Route ID is required');
+            }
+
+            // Get route details from model
+            $routeDetails = $this->routeModel->getRouteById($routeId);
+            
+            if (!$routeDetails) {
+                throw new Exception('Route not found');
+            }
+
+            // Get route suppliers
+            $routeSuppliers = $this->routeModel->getRouteSuppliers($routeId);
+
+            // Combine route details with suppliers
+            $response = [
+                'success' => true,
+                'route' => [
+                    'id' => $routeId,
+                    'name' => $routeDetails->route_name,
+                    'status' => $routeDetails->status,
+                    'suppliers' => array_map(function($supplier) {
+                        return [
+                            'id' => $supplier->supplier_id,
+                            'name' => $supplier->full_name,
+                            'coordinates' => [
+                                'lat' => (float)$supplier->latitude,
+                                'lng' => (float)$supplier->longitude
+                            ]
+                        ];
+                    }, $routeSuppliers)
+                ]
+            ];
+
+            error_log("Sending route details: " . json_encode($response)); // Debug log
+            echo json_encode($response);
+
+        } catch (Exception $e) {
+            error_log("Error in getRouteDetails: " . $e->getMessage());
+            echo json_encode([
+                'success' => false,
+                'message' => $e->getMessage()
+            ]);
+        }
+        exit;
     }
 
 }

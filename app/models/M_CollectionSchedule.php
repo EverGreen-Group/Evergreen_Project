@@ -14,12 +14,15 @@ class M_CollectionSchedule {
                     r.route_name,
                     t.team_name,
                     v.license_plate,
-                    s.shift_name
+                    s.shift_name,
+                    s.start_time,
+                    s.end_time
+                    
                 FROM collection_schedules cs
                 LEFT JOIN routes r ON cs.route_id = r.route_id
                 LEFT JOIN teams t ON cs.team_id = t.team_id
                 LEFT JOIN vehicles v ON cs.vehicle_id = v.vehicle_id
-                LEFT JOIN shifts s ON cs.shift_id = s.shift_id
+                LEFT JOIN collection_shifts s ON cs.shift_id = s.shift_id
                 WHERE cs.is_deleted = 0
                 ORDER BY cs.created_at DESC";
 
@@ -572,5 +575,236 @@ class M_CollectionSchedule {
             return $routeModel->updateRouteOrder($result->route_id, $driverLat, $driverLng);
         }
         return false;
+    }
+
+    public function checkConflict($data) {
+        // Base query to check conflicts
+        $sql = 'SELECT * FROM collection_schedules 
+                WHERE (team_id = :team_id OR vehicle_id = :vehicle_id)
+                AND week_number = :week_number 
+                AND FIND_IN_SET(:day, days_of_week) > 0
+                AND is_active = 1';
+        
+        // If this is an update (schedule_id exists), exclude the current schedule
+        if (isset($data['schedule_id'])) {
+            $sql .= ' AND schedule_id != :schedule_id';
+        }
+        
+        $this->db->query($sql);
+        
+        // Bind parameters
+        $this->db->bind(':team_id', $data['team_id']);
+        $this->db->bind(':vehicle_id', $data['vehicle_id']);
+        $this->db->bind(':week_number', $data['week_number']);
+        $this->db->bind(':day', $data['day']);
+        
+        // Only bind schedule_id if it exists (for updates)
+        if (isset($data['schedule_id'])) {
+            $this->db->bind(':schedule_id', $data['schedule_id']);
+        }
+
+        $results = $this->db->resultSet();
+        return !empty($results);
+    }
+
+    public function create($data) {
+        // Convert days array to comma-separated string if it's an array
+        $days_of_week = is_array($data['days_of_week']) ? implode(',', $data['days_of_week']) : $data['days_of_week'];
+
+        $this->db->query('INSERT INTO collection_schedules (
+            team_id, 
+            route_id, 
+            vehicle_id, 
+            shift_id, 
+            week_number, 
+            days_of_week, 
+            is_active,
+            created_at
+        ) VALUES (
+            :team_id, 
+            :route_id, 
+            :vehicle_id, 
+            :shift_id, 
+            :week_number, 
+            :days_of_week,
+            1,
+            CURRENT_TIMESTAMP
+        )');
+
+        // Bind values
+        $this->db->bind(':team_id', $data['team_id']);
+        $this->db->bind(':route_id', $data['route_id']);
+        $this->db->bind(':vehicle_id', $data['vehicle_id']);
+        $this->db->bind(':shift_id', $data['shift_id']);
+        $this->db->bind(':week_number', $data['week_number']);
+        $this->db->bind(':days_of_week', $days_of_week);
+
+        // Execute
+        if ($this->db->execute()) {
+            return true;
+        } else {
+            return false;
+        }
+    }
+
+    public function delete($schedule_id) {
+        // First check if the schedule exists and is not currently in use
+        $this->db->query('SELECT * FROM collection_schedules 
+                          WHERE schedule_id = :schedule_id 
+                          AND schedule_id NOT IN (
+                              SELECT schedule_id 
+                              FROM collections 
+                              WHERE status = "ongoing"
+                          )');
+        $this->db->bind(':schedule_id', $schedule_id);
+        
+        $schedule = $this->db->single();
+        
+        if (!$schedule) {
+            return false; // Schedule doesn't exist or is in use
+        }
+
+        // If schedule exists and is not in use, proceed with deletion
+        $this->db->query('DELETE FROM collection_schedules WHERE schedule_id = :schedule_id');
+        $this->db->bind(':schedule_id', $schedule_id);
+
+        // Execute
+        if ($this->db->execute()) {
+            return true;
+        } else {
+            return false;
+        }
+    }
+
+    public function getTeamAssignmentCount($team_id) {
+        $this->db->query('SELECT COUNT(DISTINCT days_of_week) as day_count 
+                          FROM collection_schedules 
+                          WHERE team_id = :team_id 
+                          AND is_active = 1');
+        $this->db->bind(':team_id', $team_id);
+        $result = $this->db->single();
+        return $result->day_count ?? 0;
+    }
+
+    public function getVehicleAssignmentCount($vehicle_id) {
+        $this->db->query('SELECT COUNT(DISTINCT days_of_week) as day_count 
+                          FROM collection_schedules 
+                          WHERE vehicle_id = :vehicle_id 
+                          AND is_active = 1');
+        $this->db->bind(':vehicle_id', $vehicle_id);
+        $result = $this->db->single();
+        return $result->day_count ?? 0;
+    }
+
+    public function getTeamAssignedDays($team_id) {
+        $this->db->query('SELECT days_of_week 
+                          FROM collection_schedules 
+                          WHERE team_id = :team_id 
+                          AND is_active = 1');
+        $this->db->bind(':team_id', $team_id);
+        $results = $this->db->resultSet();
+        
+        $days = [];
+        foreach ($results as $result) {
+            $days = array_merge($days, explode(',', $result->days_of_week));
+        }
+        return array_unique($days);
+    }
+
+    public function getVehicleAssignedDays($vehicle_id) {
+        $this->db->query('SELECT days_of_week 
+                          FROM collection_schedules 
+                          WHERE vehicle_id = :vehicle_id 
+                          AND is_active = 1');
+        $this->db->bind(':vehicle_id', $vehicle_id);
+        $results = $this->db->resultSet();
+        
+        $days = [];
+        foreach ($results as $result) {
+            $days = array_merge($days, explode(',', $result->days_of_week));
+        }
+        return array_unique($days);
+    }
+
+    public function toggleActive($schedule_id) {
+        // First get the current status
+        $this->db->query('SELECT is_active FROM collection_schedules WHERE schedule_id = :schedule_id');
+        $this->db->bind(':schedule_id', $schedule_id);
+        $current = $this->db->single();
+        
+        if (!$current) {
+            return false;
+        }
+
+        // Toggle the status (if it was 1, make it 0, and vice versa)
+        $newStatus = $current->is_active ? 0 : 1;
+        
+        // Update the status
+        $this->db->query('UPDATE collection_schedules 
+                          SET is_active = :is_active 
+                          WHERE schedule_id = :schedule_id');
+        
+        $this->db->bind(':is_active', $newStatus);
+        $this->db->bind(':schedule_id', $schedule_id);
+        
+        // Execute and return result
+        if ($this->db->execute()) {
+            return true;
+        } else {
+            return false;
+        }
+    }
+
+    public function update($data) {
+        // Convert days array to comma-separated string if it's an array
+        $days_of_week = is_array($data['days_of_week']) ? implode(',', $data['days_of_week']) : $data['days_of_week'];
+
+        $this->db->query('UPDATE collection_schedules 
+                          SET route_id = :route_id,
+                              team_id = :team_id,
+                              vehicle_id = :vehicle_id,
+                              shift_id = :shift_id,
+                              week_number = :week_number,
+                              days_of_week = :days_of_week
+                          WHERE schedule_id = :schedule_id');
+
+        // Bind values
+        $this->db->bind(':route_id', $data['route_id']);
+        $this->db->bind(':team_id', $data['team_id']);
+        $this->db->bind(':vehicle_id', $data['vehicle_id']);
+        $this->db->bind(':shift_id', $data['shift_id']);
+        $this->db->bind(':week_number', $data['week_number']);
+        $this->db->bind(':days_of_week', $days_of_week);
+        $this->db->bind(':schedule_id', $data['schedule_id']);
+
+        // Execute
+        if ($this->db->execute()) {
+            return true;
+        } else {
+            return false;
+        }
+    }
+
+    public function getSchedulesByVehicleId($vehicleId) {
+        $this->db->query('SELECT * FROM collection_schedules WHERE vehicle_id = :vehicle_id');
+        $this->db->bind(':vehicle_id', $vehicleId);
+        
+        return $this->db->resultSet();
+    }
+
+    public function getSchedulesByShiftIdAndDate($shiftId, $startDate, $endDate) {
+        $this->db->query("
+            SELECT cs.*, r.route_name, v.license_plate, t.team_name
+            FROM collection_schedules cs
+            LEFT JOIN routes r ON cs.route_id = r.route_id
+            LEFT JOIN vehicles v ON cs.vehicle_id = v.vehicle_id
+            LEFT JOIN teams t ON cs.team_id = t.team_id
+            WHERE cs.shift_id = :shift_id 
+            AND cs.created_at BETWEEN :start_date AND :end_date
+        ");
+        $this->db->bind(':shift_id', $shiftId);
+        $this->db->bind(':start_date', $startDate);
+        $this->db->bind(':end_date', $endDate);
+        return $this->db->resultSet(); // This will now include route_name and vehicle_number
     }
 } 

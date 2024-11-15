@@ -69,4 +69,11 @@ class M_Collection {
         
         return $this->db->execute();
     }
+
+    public function getCollectionsByVehicleId($vehicleId) {
+        $this->db->query('SELECT * FROM collections WHERE vehicle_id = :vehicle_id AND status != "Completed"');
+        $this->db->bind(':vehicle_id', $vehicleId);
+        
+        return $this->db->resultSet();
+    }
 } 

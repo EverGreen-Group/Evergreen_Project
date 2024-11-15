@@ -7,7 +7,17 @@
 
 <!-- MAIN -->
 <main>
-  <!-- Add this right after the opening <main> tag -->
+
+
+  <div style="background: #f0f0f0; padding: 10px; margin-bottom: 20px;">
+      Debug Info:
+      <pre>
+      <?php 
+      echo "Unallocated Suppliers:\n";
+      print_r($data); 
+      ?>
+      </pre>
+  </div>
 
 
 
@@ -147,33 +157,42 @@
                             // For each day, show the collections scheduled for this shift
                             for ($i = 0; $i < 7; $i++) {
                                 $date = date('Y-m-d', strtotime("+$i days"));
+                                $dayOfWeek = strtolower(date('D', strtotime($date))); // Get the day of the week (e.g., "mon", "tue")
                                 echo "<td class='schedule-cell'>";
                                 
-                                // Get collections for this shift and date
-                                if (isset($data['schedules'][$shift->shift_id][$date])) {
-                                    foreach ($data['schedules'][$shift->shift_id][$date] as $schedule) {
-                                        echo "<div class='collection-item'>";
-                                        if (isset($schedule->team_name) && !empty($schedule->team_name)) {
-                                            echo "<div class='team-info'>";
-                                            echo "<strong>Team:</strong> " . htmlspecialchars($schedule->team_name) . "<br>";
-                                            if (isset($schedule->driver_name) || isset($schedule->partner_name)) {
-                                                echo "<div class='team-members'>";
-                                                if (isset($schedule->driver_name)) {
-                                                    echo "<div class='member'>Driver: " . htmlspecialchars($schedule->driver_name) . "</div>";
+                                // Check if there are collection schedules for this shift
+                                if (isset($data['schedules'][$shift->shift_id])) {
+                                    foreach ($data['schedules'][$shift->shift_id] as $scheduleDate => $schedules) {
+                                        foreach ($schedules as $schedule) {
+                                            // Check if the current day is in the days_of_week for this schedule
+                                            $daysOfWeek = explode(',', strtolower($schedule->days_of_week)); // Split the days_of_week string into an array
+                                            if (in_array($dayOfWeek, $daysOfWeek)) {
+                                                echo "<div class='collection-item'>";
+                                                if (isset($schedule->team_name) && !empty($schedule->team_name)) {
+                                                    echo "<div class='team-info'>";
+                                                    echo "<strong>Team:</strong> " . htmlspecialchars($schedule->team_name) . "<br>";
+                                                    if (isset($schedule->driver_name) || isset($schedule->partner_name)) {
+                                                        echo "<div class='team-members'>";
+                                                        if (isset($schedule->driver_name)) {
+                                                            echo "<div class='member'>Driver: " . htmlspecialchars($schedule->driver_name) . "</div>";
+                                                        }
+                                                        if (isset($schedule->partner_name)) {
+                                                            echo "<div class='member'>Partner: " . htmlspecialchars($schedule->partner_name) . "</div>";
+                                                        }
+                                                        echo "</div>";
+                                                    }
+                                                    echo "</div>";
+                                                } else {
+                                                    echo "<div class='no-team'>No team assigned</div>";
                                                 }
-                                                if (isset($schedule->partner_name)) {
-                                                    echo "<div class='member'>Partner: " . htmlspecialchars($schedule->partner_name) . "</div>";
-                                                }
+                                                echo "<strong>Route:</strong> " . htmlspecialchars($schedule->route_name) . "<br>";
+                                                echo "<strong>Vehicle:</strong> " . htmlspecialchars($schedule->license_plate);
                                                 echo "</div>";
                                             }
-                                            echo "</div>";
-                                        } else {
-                                            echo "<div class='no-team'>No team assigned</div>";
                                         }
-                                        echo "<strong>Route:</strong> " . htmlspecialchars($schedule->route_name) . "<br>";
-                                        echo "<strong>Vehicle:</strong> " . htmlspecialchars($schedule->vehicle_number);
-                                        echo "</div>";
                                     }
+                                } else {
+                                    echo "<div class='no-schedule'>No collections scheduled</div>";
                                 }
                                 
                                 echo "</td>";
@@ -731,8 +750,19 @@ h2 {
 
 <script>
 function editShift(shiftId) {
-    fetch(`<?php echo URLROOT; ?>/vehiclemanager/getShift/${shiftId}`)
-        .then(response => response.json())
+    const url = `<?php echo URLROOT; ?>/vehiclemanager/getShift/${shiftId}`;
+    console.log('Fetching shift details from:', url); // Log the URL
+    fetch(url)
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Network response was not ok: ' + response.statusText);
+            }
+            return response.text(); // Get the response as text first
+        })
+        .then(text => {
+            console.log('Response text:', text); // Log the raw response text
+            return JSON.parse(text); // Manually parse the JSON
+        })
         .then(shift => {
             if (shift.error) {
                 alert(shift.error);
@@ -759,7 +789,7 @@ function editShift(shiftId) {
         })
         .catch(error => {
             console.error('Error:', error);
-            alert('Failed to fetch shift details');
+            alert('Failed to fetch shift details: ' + error.message);
         });
 }
 
