@@ -1,8 +1,12 @@
-<section id="content">
-    <div class="content-wrapper">
-        <?php include '../components/navbar.php'; ?>
-        <?php include '../components/sidebar.php'; ?>
 
+<?php require APPROOT . '/views/inc/components/header.php'; ?>
+
+<!-- Side bar -->
+<?php require APPROOT . '/views/inc/components/sidebar_supplier.php'; ?>
+<!-- Top nav bar -->
+<?php require APPROOT . '/views/inc/components/topnavbar.php'; ?>
+
+<!-- MAIN -->
         <main>
             <div class="head-title">
                 <div class="left">

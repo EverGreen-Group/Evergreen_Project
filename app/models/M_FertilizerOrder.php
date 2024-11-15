@@ -1,5 +1,5 @@
 <?php
-class M_Fertilizer_Order {
+class M_FertilizerOrder {
     private $db;
 
     public function __construct() {
@@ -7,22 +7,14 @@ class M_Fertilizer_Order {
         $this->db = new Database();
     }
 
-    // Get all fertilizer orders
-    public function getOrders() {
-        $this->db->query('SELECT * FROM fertilizer_orders');
-        return $this->db->resultSet();
-    }
-
     // Add a new fertilizer order
     public function createOrder($data) {
-        $this->db->query('INSERT INTO fertilizer_orders (supplier_id, amount, address, email, phone) VALUES (:supplier_id, :amount, :address, :email, :phone)');
+        $this->db->query('INSERT INTO fertilizer_orders (supplier_id, total_amount, notes) VALUES (:supplier_id, :total_amount, :notes)');
         
         // Bind the values to the query
         $this->db->bind(':supplier_id', $data['supplier_id']);
-        $this->db->bind(':amount', $data['amount']);
-        $this->db->bind(':address', $data['address']);
-        $this->db->bind(':email', $data['email']);
-        $this->db->bind(':phone', $data['phone']);
+        $this->db->bind(':total_amount', $data['total_amount']);
+        $this->db->bind(':notes', $data['notes']);
 
         // Execute the query and return true if successful
         if ($this->db->execute()) {

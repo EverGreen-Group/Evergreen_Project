@@ -29,7 +29,6 @@ class M_Fertilizer_Order {
         
         $this->db->bind(':supplier_id', $data['supplier_id']);
         $this->db->bind(':total_amount', $data['total_amount']);
-        $this->db->bind(':notes', $data['notes']);
 
         return $this->db->execute();
     }

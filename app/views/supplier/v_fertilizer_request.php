@@ -30,7 +30,7 @@
                             </a>
                         </div>
 
-                        <form action="../../config/Requests.php" method="post" class="complaint-form">
+                        <form action="<?php echo URLROOT; ?>/supplier/requestFertilizer" method="POST" class="complaint-form">
                             <div class="form-group">
                             <div class="form-group">
                                 <label for="supplier_id">Supplier ID:</label>
@@ -58,6 +58,7 @@
                                 <label for="phone">Phone Number:</label>
                                 <input type="text" id="phone" name="phone_number" >
                             </div>
+
                             <button type="submit" class="button" onclick="submitmessage()">Submit Request</button>
                             <button type="submit" class="button" onclick="refreshPage()">Cancel</button>
                         </form>
