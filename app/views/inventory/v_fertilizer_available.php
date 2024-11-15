@@ -42,8 +42,8 @@
                             <th>Location</th>
                             <th>Inventory Date</th>
                             <th>Status</th>
-                            <th>Button</th>
-                            <th>Button</th>
+                            <th>Approved</th>
+                            <th>Discard</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -55,7 +55,7 @@
                             <td>galle</td>
                             <td>Nov 23, 2023</td>
                             <td><span class="status accept">Accept</span></td>
-                            <td><button class="action-btn accept-btn">Button</button></td>
+                            <td><button class="action-btn accept-btn">Approve</button></td>
                             <td><button class="action-btn reject-btn">Reject</button></td>
                         </tr>
                         <tr>
@@ -66,7 +66,7 @@
                             <td>galle</td>
                             <td>Nov 23, 2023</td>
                             <td><span class="status accept">Accept</span></td>
-                            <td><button class="action-btn accept-btn">Button</button></td>
+                            <td><button class="action-btn accept-btn">Approve</button></td>
                             <td><button class="action-btn reject-btn">Reject</button></td>
                         </tr>
                         <!-- Additional rows go here -->

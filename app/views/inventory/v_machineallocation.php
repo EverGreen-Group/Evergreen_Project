@@ -43,7 +43,7 @@
                                 <span>Machine A</span>
                             </div>
                         </td>
-                        <td><span class="status-ready">Ready</span></td>
+                        <td><span class="status-ready">Allocated</span></td>
                         <td><button class="btn allocate">Allocate</button></td>
                         <td><button class="btn deallocate">Deallocate</button></td>
                         <td><button class="btn detail">details</button></td>
@@ -177,3 +177,135 @@
     </script>
 
     <?php require APPROOT . '/views/inc/components/footer.php' ?>
+
+    <!-- Add this modal/popup HTML before the closing </main> tag -->
+    <div id="machineModal" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <div class="modal-header">
+                <img src="<?php echo URLROOT; ?>/img/machine-report.png" alt="Machine Report">
+                <h2 id="machineName">Machine A</h2>
+            </div>
+            <h3>Machine A Report</h3>
+            <div class="report-container">
+                <div class="report-row">
+                    <span>Brand</span>
+                    <span>usha</span>
+                </div>
+                <div class="report-row">
+                    <span>Started Date</span>
+                    <span>Nov 23, 2023</span>
+                </div>
+                <div class="report-row">
+                    <span>Last maintance Day</span>
+                    <span>10 days</span>
+                </div>
+                <div class="report-row">
+                    <span>Next Maintance Day</span>
+                    <span>All (50 products)</span>
+                </div>
+                <div class="report-row">
+                    <span>Total Working Hours</span>
+                    <span>200 items</span>
+                </div>
+                <div class="report-row">
+                    <span>3 discrepancies found</span>
+                    <span>+5 unit of Product A C</span>
+                </div>
+            </div>
+            <button class="btn remove-machine">Remove machine</button>
+        </div>
+    </div>
+
+    <!-- Add this CSS in your machineallo.css file -->
+    <style>
+    .modal {
+        display: none;
+        position: fixed;
+        z-index: 1000;
+        left: 0;
+        top: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0,0,0,0.5);
+    }
+
+    .modal-content {
+        background-color: #fefefe;
+        margin: 15% auto;
+        padding: 20px;
+        border-radius: 10px;
+        width: 80%;
+        max-width: 500px;
+    }
+
+    .close {
+        color: #aaa;
+        float: right;
+        font-size: 28px;
+        font-weight: bold;
+        cursor: pointer;
+    }
+
+    .modal-header {
+        text-align: center;
+        margin-bottom: 20px;
+    }
+
+    .modal-header img {
+        width: 100px;
+        margin-bottom: 10px;
+    }
+
+    .report-container {
+        background-color: #f8f9fa;
+        padding: 20px;
+        border-radius: 8px;
+        margin: 20px 0;
+    }
+
+    .report-row {
+        display: flex;
+        justify-content: space-between;
+        padding: 10px 0;
+        border-bottom: 1px solid #eee;
+    }
+
+    .remove-machine {
+        background-color: #00b300;
+        color: white;
+        width: 100%;
+        padding: 10px;
+        border: none;
+        border-radius: 5px;
+        cursor: pointer;
+    }
+    </style>
+
+    <!-- Add this JavaScript before the closing </body> tag -->
+    <script>
+    const modal = document.getElementById("machineModal");
+    const detailButtons = document.querySelectorAll(".btn.detail");
+    const closeBtn = document.querySelector(".close");
+
+    detailButtons.forEach(button => {
+        button.addEventListener("click", function() {
+            const machineName = this.closest("tr").querySelector(".machine-info span:last-child").textContent;
+            document.getElementById("machineName").textContent = machineName;
+            modal.style.display = "block";
+        });
+    });
+
+    closeBtn.addEventListener("click", function() {
+        modal.style.display = "none";
+    });
+
+    window.addEventListener("click", function(event) {
+        if (event.target == modal) {
+            modal.style.display = "none";
+        }
+    });
+    </script>
+</body>
+
+</html>
