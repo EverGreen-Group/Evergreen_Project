@@ -260,5 +260,35 @@ class Inventory extends controller
         $this->view('inventory/v_item', $data);
     }
 
+    public function updateproduct($id) {
+        if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+            // Handle the update logic
+            // Similar to create product but with update query
+        } else {
+            // Get existing product
+            $product = $this->productModel->getProductById($id);
+            
+            if ($product) {
+                $data = [
+                    'id' => $id,
+                    'product' => $product
+                ];
+                $this->view('inventory/v_update_product', $data);
+            } else {
+                redirect('inventory/products');
+            }
+        }
+    }
+
+    public function deleteproduct($id) {
+        if ($_SERVER['REQUEST_METHOD'] == 'GET') {
+            if ($this->productModel->deleteProduct($id)) {
+                flash('product_message', 'Product Removed');
+            } else {
+                flash('product_message', 'Something went wrong', 'alert alert-danger');
+            }
+        }
+        redirect('inventory/products');
+    }
 
 }
