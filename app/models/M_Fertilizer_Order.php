@@ -24,8 +24,8 @@ class M_Fertilizer_Order {
     }
 
     public function createOrder($data) {
-        $this->db->query("INSERT INTO fertilizer_orders (supplier_id, total_amount, notes) 
-                         VALUES (:supplier_id, :total_amount, :notes)");
+        $this->db->query("INSERT INTO fertilizer_orders (supplier_id, total_amount) 
+                         VALUES (:supplier_id, :total_amount)");
         
         $this->db->bind(':supplier_id', $data['supplier_id']);
         $this->db->bind(':total_amount', $data['total_amount']);
@@ -46,5 +46,21 @@ class M_Fertilizer_Order {
         $this->db->bind(':order_id', $order_id);
         return $this->db->execute();
     }
+
+    public function updateOrder($id, $data) {
+        $this->db->query("UPDATE fertilizer_orders SET total_amount = :total_amount WHERE order_id = :id");
+        $this->db->bind(':id', $id);
+        $this->db->bind(':total_amount', $data['total_amount']);
+        
+        return $this->db->execute();
+    }
+    
+    public function deleteOrder($id) {
+        $this->db->query("DELETE FROM fertilizer_orders WHERE order_id = :order_id");
+        $this->db->bind(':order_id', $id);
+    
+        return $this->db->execute();
+    }
+    
 }
 ?> 

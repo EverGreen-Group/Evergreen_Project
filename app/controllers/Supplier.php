@@ -49,6 +49,13 @@ class Supplier extends Controller {
         $this->view('supplier/v_confirmation_history', $data);
     }
 
+    public function fertilizerhistory()
+    {
+        $data = [];
+
+        $this->view('supplier/v_fertilizer_history', $data);
+    }
+
     public function v_tea_orders()
     {
         $data = [];
@@ -92,39 +99,66 @@ class Supplier extends Controller {
             $data = [
                 'supplier_id' => $_POST['supplier_id'],
                 'total_amount' => $_POST['total_amount'],
-                'address' => $_POST['address'],
-                'email' => $_POST['email'],
-                'phone_number' => $_POST['phone_number'],
             ];
-    
-            // Validate form data (optional but recommended)
+            //load model
+            $this->model('M_Fertilizer_Order');
+            // Validate form data
             if ($this->validateRequest($data)) {
                 // Call model method to insert the data into the database
                 if ($this->fertilizerOrderModel->createOrder($data)) {
-                    // Flash success message
                     flash('message', 'Order successfully submitted!', 'alert alert-success');
-                    // Redirect to the dashboard or another page
                     redirect('supplier/requestFertilizer');
                 } else {
-                    // Flash error message
                     flash('message', 'Something went wrong. Please try again.', 'alert alert-danger');
                 }
             } else {
-                // Flash validation error message
                 flash('message', 'Please fill in all required fields.', 'alert alert-danger');
             }
         }
-    
-        // Fetch existing orders to display in the form (if needed)
+        // Fetch existing orders to display in the form
         $data = ['orders' => $this->fertilizerOrderModel->getAllOrders()];
-    
-        // Load the view
         $this->view('supplier/v_fertilizer_request', $data);
     }
     
-    // Simple form validation function (you can extend it as needed)
+
+    // form validation function 
     private function validateRequest($data) {
-        return !empty($data['supplier_id']) && !empty($data['total_amount']) && !empty($data['address']) && !empty($data['email']);
+        return !empty($data['supplier_id']) && !empty($data['total_amount']) ;
     }
+
+
+    public function editFertilizerRequest($id) {
+        if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+            $data = [
+                'order_id' => $id,
+                'total_amount' => $_POST['total_amount'],
+            ];
+            if ($this->fertilizerOrderModel->updateOrder($id, $data)) {
+                flash('message', 'Order updated successfully!', 'alert alert-success');
+                redirect('supplier/requestFertilizer');
+            } else {
+                flash('message', 'Failed to update order.', 'alert alert-danger');
+            }
+        } else {
+            // Fetch existing order details
+            $order = $this->fertilizerOrderModel->getOrderById($id);
+            $data = ['order' => $order];
+            $this->view('supplier/v_request_edit', $data);
+        }
+    }
+
+    public function deleteFertilizerRequest($id) {
+        if ($_SERVER['REQUEST_METHOD'] == 'GET') {
+            // Call the model method to delete the order
+            if ($this->fertilizerOrderModel->deleteOrder($id)) {
+                flash('message', 'Order cancelled successfully!', 'alert alert-success');
+            } else {
+                flash('message', 'Failed to cancel order. Please try again.', 'alert alert-danger');
+            }
+            redirect('supplier/requestFertilizer');
+        }
+    }
+    
+    
 }
 ?>

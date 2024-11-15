@@ -1,6 +1,6 @@
 <?php
 
-    class Fertilizer {
+    class M_Fertilizer {
 
         public function getAllrequests() {
             global $con;
@@ -8,12 +8,12 @@
             
             // Check if query failed
             if (!$query) {
-                return "Database query error: " . mysqli_error($con); // Return error message if query fails
+                return "Database query error: " . mysqli_error($con); 
             }
 
             $result = mysqli_fetch_all($query, MYSQLI_ASSOC);
             
-            // Debugging step: check if data is returned
+            // Debugging 
             if (empty($result)) {
                 return "No data found in fertilizer!";
             }

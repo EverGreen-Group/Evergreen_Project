@@ -16,74 +16,125 @@
                             </li>
                             <li><i class='bx bx-chevron-right'></i></li>
                             <li>
-                                <a class="active" href="#"> New Request</a>
+                                <a class="active" href="#"> Fertilizer Requests</a>
                             </li>
                         </ul>
                     </div>
     
-                    <div class="todo">
-                        <div class="head">
-                            <h3>Fertilizer Request History</h3>
-                            <i class='bx bx-plus'></i>
-                            <i class='bx bx-filter'></i>
+                    <div class="table-data">
+                        <div class="todo">
+                            <div class="head">
+                                <h3>Fertilizer Request History</h3>
+                                <i class='bx bx-plus'></i>
+                                <i class='bx bx-filter'></i>
+                            </div>
+                            <canvas id="fertilizerRequestChart" ></canvas>
                         </div>
-                        <canvas id="fertilizerRequestChart" width="400"></canvas>
+                        <div class="tea-order-history">
+                            <div class="head">
+                                <i class='bx bx-plus'></i>
+                                <i class='bx bx-filter'></i>
+                            </div>
+                            <canvas id="fertilizerChart" width="500" height="400"></canvas>
+                        </div>
                     </div>
-                    <div class="tea-order-history">
-                    <div class="head">
-                        <i class='bx bx-plus'></i>
-                        <i class='bx bx-filter'></i>
-                    </div>
-                    <canvas id="fertilizerChart" width="300" height="200"></canvas>
-                </div>
 
-
+                
                 <div class="table-data">
                     <div class="order">
                         <div class="head">
-                            <h3>Request Form</h3>
-                            <a href="FertilizerPage.php">
-                            <button class="button">Back</button>
-                            </a>
+                            <h3>Fertilizer Requests History</h3>
                         </div>
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <th id="table-head">Request id</th>
+                                    <th id="table-head">Supplier id</th>
+                                    <th id="table-head">Order Date and Time</th>
+                                    <th id="table-head">Amount in kg</th>
+                                    <th id="table-head">Payment Status</th>
+                                    <th id="table-head">Update</th>
+                                    <th id="table-head">Cancel order</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <?php foreach ($data['orders'] as $order): ?>
+                                    <tr>
+                                        <td><?php echo $order->order_id; ?></td> 
+                                        <td><?php echo $order->supplier_id; ?></td>
+                                        <td><?php echo $order->order_date; ?></td>
+                                        <td><?php echo $order->total_amount; ?></td>
+                                        <td><?php echo $order->payment_status; ?></td>
+                                        <td>
+                                            <a href="<?php echo URLROOT; ?>/Supplier/editFertilizerRequest/<?php echo $order->order_id; ?>" class="btn-edit btn-primary">
+                                                Edit
+                                            </a>
+                                        </td>
+                                        <td>
+                                            <a href="<?php echo URLROOT; ?>/Supplier/deleteFertilizerRequest/<?php echo $order->order_id; ?>" class="btn-delete btn-primary">
+                                                Delete
+                                            </a>
+                                        </td>
 
-                        <form action="<?php echo URLROOT; ?>/supplier/requestFertilizer" method="POST" class="complaint-form">
-                            <div class="form-group">
-                            <div class="form-group">
-                                <label for="supplier_id">Supplier ID:</label>
-                                <input type="text" id="supplier_id" name="supplier_id" >
-                            </div>
-                            <div>
-                                <label for="complaint-type">Total Amount:</label>
-                                    <select id="complaint-type" name="total_amount" required>
-                                        <?php 
-                                            for ($i = 1; $i <= 50; $i++) {
-                                                echo "<option value='$i'>{$i}kg</option>";
-                                            }
-                                        ?>
-                                    </select>
-                            </div>
-                            <div class="form-group">
-                                <label for="address">Address:</label>
-                                <input type="address" id="address" name="address" required>
-                            </div>
-                            <div class="form-group">
-                                <label for="email">Email:</label>
-                                <input type="email" id="email" name="email" required>
-                            </div>
-                            <div class="form-group">
-                                <label for="phone">Phone Number:</label>
-                                <input type="text" id="phone" name="phone_number" >
+
+
+                                    </tr>
+                                <?php endforeach; ?>
+                            </tbody>
+
+                        </table>
+
+                    </div>
+
+
+                    <div class="table-data">
+                        <div class="order">
+                            <div class="head">
+                                <h3>Request Form</h3>
+                                <a href="FertilizerPage.php">
+                                <button class="button">Dashboard</button>
+                                </a>
                             </div>
 
-                            <button type="submit" class="button" onclick="submitmessage()">Submit Request</button>
-                            <button type="submit" class="button" onclick="refreshPage()">Cancel</button>
-                        </form>
-                        
+                            <form action="<?php echo URLROOT; ?>/supplier/requestFertilizer" method="POST" class="complaint-form">
+                                <div class="form-group">
+                                    <div class="form-group">
+                                        <label for="supplier_id">Supplier ID:</label>
+                                        <input type="text" id="supplier_id" name="supplier_id" >
+                                    </div>
+                                    <div>
+                                        <label for="complaint-type">Total Amount:</label>
+                                            <select id="complaint-type" name="total_amount" required>
+                                                <?php 
+                                                    for ($i = 1; $i <= 50; $i++) {
+                                                        echo "<option value='$i'>{$i}kg</option>";
+                                                    }
+                                                ?>
+                                            </select>
+                                    </div>
+                                    <!--
+                                    <div class="form-group">
+                                        <label for="address">Address:</label>
+                                        <input type="address" id="address" name="address" required>
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="email">Email:</label>
+                                        <input type="email" id="email" name="email" required>
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="phone">Phone Number:</label>
+                                        <input type="text" id="phone" name="phone_number" >
+                                    </div>-->
+
+                                    <button type="submit" class="button" onclick="submitmessage()">Submit Request</button>
+                                    <button type="submit" class="button" onclick="refreshPage()">Cancel</button>
+                                </div>
+                            </form>
+                            
+                        </div>
                     </div>
                 </div>
             </main>
-            </div>
         </section>
         <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
