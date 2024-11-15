@@ -1,28 +1,38 @@
 <?php
 require_once APPROOT . '/models/M_Products.php';
+require_once APPROOT . '/models/M_Fertilizer.php';
 
 require_once '../app/models/M_Products.php';
 class Inventory extends controller
 {
     private $productModel;
+    private $fertilizerModel;
 
     public function __construct()
     {
 
         $this->productModel = new M_Products();
+        $this->fertilizerModel = new M_Fertilizer();
     }
 
     public function index()
     {
-        $data = [];
+        $products = $this->productModel->getProduct();
+        
+        $data = [
+            'products' => $products
+        ];
 
         $this->view('inventory/v_dashboard', $data);
     }
 
     public function product()
     {
-        $data = [];
-
+        $products = $this->productModel->getAllProducts();
+        $data = [
+            'products' => $products
+        ];
+        
         $this->view('inventory/v_product', $data);
     }
 
@@ -40,6 +50,7 @@ class Inventory extends controller
                 "margin" => trim($_POST['margin']),
                 "quantity" => trim($_POST['quantity']),
                 "unit" => trim($_POST['unit']),
+                'image_path' => '',
                 'product-name_err' => '',
                 "location_err" => '',
                 "details_err" => '',
@@ -51,6 +62,29 @@ class Inventory extends controller
 
             ];
 
+                   // Handle image upload
+        if (isset($_FILES['product_image']) && $_FILES['product_image']['error'] === UPLOAD_ERR_OK) {
+            $uploadDir = 'uploads/products/';
+            
+            // Create upload directory if it doesn't exist
+            if (!file_exists($uploadDir)) {
+                mkdir($uploadDir, 0777, true);
+            }
+
+            // Generate unique filename
+            $fileExtension = pathinfo($_FILES['product_image']['name'], PATHINFO_EXTENSION);
+            $uniqueFilename = uniqid() . '.' . $fileExtension;
+            $uploadPath = $uploadDir . $uniqueFilename;
+
+            // Move uploaded file
+            if (move_uploaded_file($_FILES['product_image']['tmp_name'], $uploadPath)) {
+                $data['image_path'] = $uniqueFilename;
+            }
+        }
+
+
+        //validate 
+        
             if (empty($data['product-name'])) {
                 $data['product-name_err'] = 'Please enter product name';
             }
@@ -95,18 +129,21 @@ class Inventory extends controller
                 'product-name' => '',
                 "location" => '',
                 "details" => '',
+                "code" => '',
                 "price" => '',
                 "profit" => '',
                 "margin" => '',
                 "quantity" => '',
-
-
+                "unit" => '',
+                'image_path' => '',
             ];
         }
 
 
         $this->view('inventory/v_create_product', $data);
     }
+
+    
 
     public function fertilizerdashboard()
     {
@@ -124,18 +161,18 @@ class Inventory extends controller
     public function createfertilizer()
     {
         if ($_SERVER['REQUEST_METHOD'] == 'POST') {
-            $_POST = filter_input_array(INPUT_POST, FILTER_SANITIZE_STRING);
+            $_POST = filter_input_array(INPUT_POST);
 
             $data = [
-                'fertilizer-name' => trim($_POST['fertilizer-name']),
-                'company-name' => trim($_POST['company-name']),
+                'fertilizer_name' => trim($_POST['fertilizer_name']),
+                'company_name' => trim($_POST['company_name']),
                 'details' => trim($_POST['details']),
                 'code' => trim($_POST['code']),
                 'price' => trim($_POST['price']),
-                'quantity' => trim($_POST['quaantity']),
+                'quantity' => trim($_POST['quantity']),
                 'unit' => trim($_POST['unit']),
-                'ferilizer-name_err' => '',
-                'company-name_err' => '',
+                'fertilizer_name_err' => '',
+                'company_name_err' => '',
                 'details_err' => '',
                 'code_err' => '',
                 'price_err' => '',
@@ -144,12 +181,12 @@ class Inventory extends controller
 
             ];
             //validation
-            if (empty($data['fertilizer-name'])) {
-                $data['fertilizer-name_err'] = "Please Enter Fertilizer name";
+            if (empty($data['fertilizer_name'])) {
+                $data['fertilizer_name_err'] = "Please Enter Fertilizer name";
 
             }
-            if (empty($data['company-name'])) {
-                $data['company-name_err'] = "Please Enter Company name";
+            if (empty($data['company_name'])) {
+                $data['company_name_err'] = "Please Enter Company name";
             }
             if (empty($data['details'])) {
                 $data['details_err'] = "Please Enter Details";
@@ -167,16 +204,27 @@ class Inventory extends controller
                 $data['unit_err'] = "Please Enter Unit";
             }
 
-            if(empty($data['fertilizer-name']) && empty($data['company-name']) && empty($data['details']) 
-            && empty($data['code']) && empty($data['price']) && empty($data['quantity']) && empty($data['unit']) ){
-        
+            if (
+                empty($data['fertilizer_name']) && empty($data['company_name']) && empty($data['details'])
+                && empty($data['code']) && empty($data['price']) && empty($data['quantity']) && empty($data['unit'])
+            ) {
+
+                if ($this->fertilizerModel->createFertilizer($data)) {
+                    //flash('fertilizer_message', 'Fertilizer Added');
+                    redirect('inventory/fertilizer');
+
+                } else {
+                    die('Something went wrong');
+                }
+
+
             }
 
 
         } else {
             $data = [
-                'ferilizer-name' => '',
-                'company-name' => '',
+                'fertilizer_name' => '',
+                'company_name' => '',
                 'details' => '',
                 'code' => '',
                 'price' => '',
