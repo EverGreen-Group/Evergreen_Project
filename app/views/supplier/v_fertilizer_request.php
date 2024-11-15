@@ -1,10 +1,11 @@
+<?php require APPROOT . '/views/inc/components/header.php'; ?>
 
-<section id="content">
-        
-        <div class="content-wrapper">
-        <?php include '../components/navbar.php'; ?>
-        <?php include '../components/sidebar.php'; ?>
-    
+<!-- Side bar -->
+<?php require APPROOT . '/views/inc/components/sidebar_supplier.php'; ?>
+<!-- Top nav bar -->
+<?php require APPROOT . '/views/inc/components/topnavbar.php'; ?>
+
+<!-- MAIN -->
             <main>
                 <div class="head-title">
                     <div class="left">
@@ -36,14 +37,14 @@
                                 <input type="text" id="supplier_id" name="supplier_id" >
                             </div>
                             <div>
-                                <label for="complaint-type">Total Amount: </label>
-                                <select id="complaint-type" name="total_amount" required>
-                                    <option value="1">1kg</option>
-                                    <option value="2">2kg</option>
-                                    <option value="5">5kg</option>
-                                    <option value="10">10kg</option>
-                                    <option value="other">other</option>
-                                </select>
+                                <label for="complaint-type">Total Amount:</label>
+                                    <select id="complaint-type" name="total_amount" required>
+                                        <?php 
+                                            for ($i = 1; $i <= 50; $i++) {
+                                                echo "<option value='$i'>{$i}kg</option>";
+                                            }
+                                        ?>
+                                    </select>
                             </div>
                             <div class="form-group">
                                 <label for="address">Address:</label>

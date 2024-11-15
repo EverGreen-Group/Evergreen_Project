@@ -1,4 +1,11 @@
+<?php require APPROOT . '/views/inc/components/header.php'; ?>
 
+<!-- Side bar -->
+<?php require APPROOT . '/views/inc/components/sidebar_supplier.php'; ?>
+<!-- Top nav bar -->
+<?php require APPROOT . '/views/inc/components/topnavbar.php'; ?>
+
+<!-- MAIN -->
     <section id="content">
 		
 	<div class="content-wrapper">
@@ -90,18 +97,3 @@
     <td>Fertilizer allowed</td>
     <td>N/A</td>-->
 
-
-<tr>
-
-<?php /*
-                                    while($row = mysqli_fetch_assoc($requests))
-                                    {
-                                ?>
-                                <td><?php echo $row['request_id'] ?></td>
-                                <td><?php echo $row['supplier_id'] ?></td>
-                                <td><?php echo $row['total_amount'] ?></td>
-                                <td>Request submitted on <?php echo $row['date_and_time'] ?></td>
-                            </tr>
-                                <?php
-                                    }
-                                ?>*/
