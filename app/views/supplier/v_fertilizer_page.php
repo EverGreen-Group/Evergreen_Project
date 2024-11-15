@@ -6,11 +6,7 @@
 <?php require APPROOT . '/views/inc/components/topnavbar.php'; ?>
 
 <!-- MAIN -->
-    <section id="content">
-		
-	<div class="content-wrapper">
-        <?php include '../components/navbar.php'; ?>
-        <?php include '../components/sidebar.php'; ?>
+
         <main>
 			<div class="head-title">
 				<div class="left">
@@ -68,7 +64,7 @@
 		</div>
     </section>
 
-    <script src="../public/script.js"></script>
+	<link rel="stylesheet" href="<?php echo URLROOT; ?>/css/components/script.css" />
 </body>
 </html>
 

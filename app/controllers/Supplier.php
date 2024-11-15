@@ -32,7 +32,7 @@ class Supplier extends Controller {
     {
         $data = [];
 
-        $this->view('supplier/v_notifications', $data);
+        $this->view('supplier/v_all_notifications', $data);
     }
     
     public function changepassword()

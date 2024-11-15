@@ -49,12 +49,22 @@
     </ul>
 
     <div class="table-data">
-        <!-- Pending Confirmation Requests -->
+        
         <div class="order">
             <div class="head">
-                <h3>Pending Confirmation Requests</h3>
+                <h3>Collection over past months</h3>
                 <i class='bx bx-search'></i>
                 <i class='bx bx-filter'></i>
+
+                <div class="tea-order-history">
+                    <div class="head">
+                        <h5>Tea Leaves</h5>
+                        <i class='bx bx-plus'></i>
+                        <i class='bx bx-filter'></i>
+                    </div>
+                    <canvas id="teaLeavesCollectionChart" width="300" height="200"></canvas>
+                </div>
+
             </div>
             <?php if(isset($data['pending_requests']) && !empty($data['pending_requests'])): ?>
                 <table>
@@ -100,7 +110,57 @@
     </div>
 
 </main>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
-<script src="../public/script.js"></script>
+        <!-- TEA ORDER CHART -->
+        <script>
+            document.addEventListener('DOMContentLoaded', function() {
+                var ctx = document.getElementById('teaLeavesCollectionChart').getContext('2d');
+                var teaLeavesCollectionChart = new Chart(ctx, {
+                    type: 'line',
+                    data: {
+                        labels: ['January', 'February', 'March', 'April', 'May', 'June'], 
+                        datasets: [{
+                            label: 'Tea Leaves Collections',
+                            data: [280, 250, 180, 120, 100, 210], // Example data 
+                            fill: false,
+                            backgroundColor: 'rgba(75, 192, 192, 0.2)',
+                            borderColor: 'rgba(75, 192, 192, 1)',
+                            borderWidth: 2
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        plugins: {
+                            legend: {
+                                position: 'bottom',
+                            },
+                            title: {
+                                display: true,
+                                text: 'Tea Leaves Collections (Monthly)'
+                            }
+                        },
+                        scales: {
+                            x: {
+                                title: {
+                                    display: true,
+                                    text: 'Month'
+                                }
+                            },
+                            y: {
+                                title: {
+                                    display: true,
+                                    text: 'Amount'
+                                },
+                                beginAtZero: true
+                            }
+                        }
+                    }
+                });
+            });
+        </script>
+        <script src="../public/script.js"></script>
+
 </body>
 </html>
+    
