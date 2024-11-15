@@ -744,8 +744,18 @@ body {
 .btn-edit {
 	background: var(--main);
 }
+.btn-edit:hover {
+	background-color: #008000;
+}
 .btn-delete {
 	background: red;
+}
+.btn-delete:hover {
+	background-color: rgb(205, 0, 0);
+}
+.btn-done {
+	background: rgb(85, 172, 19);
+	border-radius: 10px;
 }
 
 
@@ -783,13 +793,52 @@ body {
 .complaint-form textarea {
     resize: vertical;
 }
+.stars i {
+	font-size: 24px;
+	margin-right: 2px;
+}
+.feedback {
+	margin-top: 20px;
+	padding: 10px;
+	background: #f9f9f9;
+	border: 1px solid #ddd;
+	border-radius: 20px;
+}
+.rating, .reviews {
+	margin-bottom: 15px;
+	display: flex;
+	width: 50%;
+}
+.reviews li {
+	background-color: rgba(203, 224, 16, 0.626);
+	color: var(--dark);
+	padding: 15px;
+	border-radius: 10px;
+	border: 2px solid white;
+	width: 150%;
+	align-content: center;
+}
+.rating {
+	border-radius: 20px;
+	box-shadow: var(--light-grey);
+	max-width: 800px;
+	padding: 20px;
+	margin-right: 30px;
+	background-color: var(--light);
+}
+.rating-container{
+	background-color: rgba(98, 242, 127, 0.626);
+	padding: 20px;
+	border-radius: 20px;
+	border: 2px solid whitesmoke;
+}
 
 
 
 
 /* PROFILE */
 .profile-info {
-    width: 100%;
+    width:80%;
     margin: 10px auto;
     border-collapse: collapse;
 	box-shadow: 0 0 5px var(--light-grey) ;
@@ -888,5 +937,6 @@ a {
 /* TEA ORDER CHART */
 
 #teaOrderHistoryChart {
-	background-color: var(--light-black);
+	border-radius: 20px;
+	box-shadow: var(--light-grey);
 }

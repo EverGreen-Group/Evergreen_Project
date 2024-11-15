@@ -21,22 +21,83 @@
                             </li>
                         </ul>
                     </div>
-
-                <div class="tea-order-history">
-                    <div class="head">
-                        <h3>Tea Order History</h3>
-                        <i class='bx bx-plus'></i>
-                        <i class='bx bx-filter'></i>
+                <div>
+                    <div class="table-data">
+                            <h3>Tea Order History</h3>
+                            <i class='bx bx-plus'></i>
+                            <i class='bx bx-filter'></i>
+                            <div class="head">
+                            <canvas id="teaOrderHistoryChart" width="450" height="250"></canvas>
+                        </div>
                     </div>
-                    <canvas id="teaOrderHistoryChart" width="600" height="400"></canvas>
                 </div>
 
             
+                <div class="table-data">
+                <div class="order">
+                    <div class="head">
+                        <h3>Tea Packet Orders</h3>
+                    </div>
+                <div class="table-container">
+                <table class="table-body">
+                    <thead>
+                        <tr>
+                            <th>Supplier ID</th>
+                            <th>Quantity</th>
+                            <th>Order Date</th>
+                            <th>Accepted/Rejected</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>001<br>
+                            <td>2Kg</td>
+                            <td>2024/11/10</td>
+                            <td>
+                                <button class="accept-btn">Accept</button>
+                                <button class="reject-btn">Reject</button>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>002<br>
+                            <td>1Kg</td>
+                            <td>2024/11/1</td>
+                            <td>
+                                <button class="accept-btn">Accept</button>
+                                <button class="reject-btn">Reject</button>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>003<br>
+                            <td>3Kg</td>
+                            <td>2024/11/1</td>
+                            <td>
+                                <button class="accept-btn">Accept</button>
+                                <button class="reject-btn">Reject</button>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>001<br>
+                            <td>5Kg</td>
+                            <td>2024/10/12</td>
+                            <td>
+                                <button class="accept-btn">Accept</button>
+                                <button class="reject-btn">Reject</button>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+                <button class="button">Done</button>
+                </div>
+                </div>
+            </div>
+
+
     
                 <div class="table-data">
                     <div class="order">
                         <div class="head">
-                            <h3>Order Form</h3>
+                            <h3>New Order Form</h3>
                             <a href="OrderPage.php">
                                 <button class="button">Back</button>
                             </a>
@@ -129,7 +190,7 @@
                 });
             });
         </script>
-        <script src="../public/script.js"></script>
+        <link rel="stylesheet" href="<?php echo URLROOT; ?>/css/components/script.js" />
 
     </body>
     </html>

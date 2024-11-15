@@ -22,46 +22,39 @@
     
                 <div class="table-data">
                     <div class="order">
-                        <div class="head">
-                            <h3>Notifications</h3>
-                        </div>
-                        <div class="list">
-                            <div class="item">
-                                <p>Driver sent you a collection late message</p>
-                                <span class="time">5 minutes ago</span>
-                            </div>
-                            <div class="item">
-                                <p>Reminder of leaf collection today at 10:00pm</p>
-                                <span class="time">1 hour ago</span>
-                            </div>
-                            <div class="item">
-                                <p>Reminder for leaf collection 2 days from now</p>
-                                <span class="time">Yesterday</span>
-                            </div>
-                            <div class="item">
-                                <p>Leaf collection confirmed</p>
-                                <span class="time">2 days ago</span>
-                            </div>
-                            <div class="item">
-                                <p>Leaf collection confirm request</p>
-                                <span class="time">3 days ago</span>
-                            </div>
-                            <div class="item">
-                                <p>Reminder of leaf collection today at 08:00am</p>
-                                <span class="time">6 days ago</span>
-                            </div>
-                            <div class="item">
-                                <p>Reminder for leaf collection 2 days from now</p>
-                                <span class="time">a week ago</span>
-                            </div>
-                            <div class="item">
-                                <p>Leaf collection confirmed</p>
-                                <span class="time">a week ago</span>
-                            </div>
-                            <div class="item">
-                                <p>Leaf collection confirm request</p>
-                                <span class="time">a week ago</span>
-                            </div>
+                        <div>
+                            <table class="complaint-type">
+                                <tr>
+                                    <th>Notification</th>
+                                    <th>Date and Time</th>
+                                    <th>Done</th>
+                                </tr>
+                                <tr>
+                                    <td>collection today at 10:00pm</td>
+                                    <td>2024/11/10</td>
+                                    <td class="btn-done">Done</td>
+                                </tr>
+                                <tr>
+                                    <td>collection confirmed</td>
+                                    <td>2024/11/04</td>
+                                    <td class="btn-done">Done</td>
+                                </tr>
+                                <tr>
+                                    <td>leaf collection today at 08:00am</td>
+                                    <td>2024/10/27</td>
+                                    <td class="btn-done">Done</td>
+                                </tr>
+                                <tr>
+                                    <td>collection late message</td>
+                                    <td>2024/10/20</td>
+                                    <td class="btn-done">Done</td>
+                                </tr>
+                                <tr>
+                                    <td>collection confirm request</td>
+                                    <td>2024/10/11</td>
+                                    <td class="btn-done">Done</td>
+                                </tr>
+                            </table>
                         </div>
                         <a href="Notifications.php">
                             <button class="button">View less</button>

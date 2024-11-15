@@ -104,7 +104,7 @@ class Supplier extends Controller {
             $this->model('M_Fertilizer_Order');
             // Validate form data
             if ($this->validateRequest($data)) {
-                // Call model method to insert the data into the database
+                // Call model method to insert the data
                 if ($this->fertilizerOrderModel->createOrder($data)) {
                     flash('message', 'Order successfully submitted!', 'alert alert-success');
                     redirect('supplier/requestFertilizer');
@@ -127,25 +127,25 @@ class Supplier extends Controller {
     }
 
 
-    public function editFertilizerRequest($id) {
+    public function editFertilizerRequest($order_id) {
         if ($_SERVER['REQUEST_METHOD'] == 'POST') {
-            $data = [
-                'order_id' => $id,
-                'total_amount' => $_POST['total_amount'],
-            ];
-            if ($this->fertilizerOrderModel->updateOrder($id, $data)) {
-                flash('message', 'Order updated successfully!', 'alert alert-success');
-                redirect('supplier/requestFertilizer');
+            $total_amount = $_POST['total_amount'];
+    
+            if ($this->fertilizerOrderModel->updateOrder($order_id, $total_amount)) {
+                flash('message', 'Fertilizer request updated successfully', 'alert alert-success');
+                redirect('Supplier/fertilizerRequestHistory');
             } else {
-                flash('message', 'Failed to update order.', 'alert alert-danger');
+                flash('message', 'Something went wrong. Please try again.', 'alert alert-danger');
+                redirect('Supplier/fertilizerRequestHistory');
             }
-        } else {
-            // Fetch existing order details
-            $order = $this->fertilizerOrderModel->getOrderById($id);
-            $data = ['order' => $order];
-            $this->view('supplier/v_request_edit', $data);
         }
+    
+        $order = $this->fertilizerOrderModel->getOrderById($order_id);
+        $data = ['order' => $order];
+    
+        $this->view('supplier/v_request_edit', $data);
     }
+    
 
     public function deleteFertilizerRequest($id) {
         if ($_SERVER['REQUEST_METHOD'] == 'GET') {
@@ -155,7 +155,8 @@ class Supplier extends Controller {
             } else {
                 flash('message', 'Failed to cancel order. Please try again.', 'alert alert-danger');
             }
-            redirect('supplier/requestFertilizer');
+            header('Location: ' . URLROOT . '/Supplier/requestfertilizer');
+            exit();
         }
     }
     

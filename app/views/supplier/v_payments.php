@@ -21,26 +21,65 @@
 					</ul>
 				</div>
 
-            <div class="table-data">
-                <div class="order">
-                    <div class="head">
-                        <h3>Payments</h3>
+                <div class="table-data">
+                    <div class="order">
+                        <div>
+                            <table class="complaint-type">
+                                <tr>
+                                    <th>Payment</th>
+                                    <th>Date and Time</th>
+                                    <th>Order type</th>
+                                    <th>Status</th>
+                                </tr>
+                                <tr>
+                                    <td>Rs. 21 000.00</td>
+                                    <td>2024/11/10 12:32pm</td>
+                                    <td><select id="" name="">
+                                        <option value="Fertilizer" default>Fertilizer</option>
+                                        <option value="Tea packets">Tea Packets</option>
+                                    </select></td>
+                                    <td><select id="" name="">
+                                        <option value="Fertilizer">Pending</option>
+                                        <option value="Tea packets">Paid</option>
+                                        <option value="Tea packets">Cancelled</option>
+                                        <option value="Tea packets">Rejected</option>
+                                    </select></td>
+                                </tr>
+                                <tr>
+                                    <td>Rs. 4 000.00</td>
+                                    <td>2024/11/10 12:32pm</td>
+                                    <td><select id="" name="">
+                                        <option value="Fertilizer">Fertilizer</option>
+                                        <option value="Tea packets">Tea Packets</option>
+                                    </select></td>
+                                    <td><select id="" name="">
+                                        <option value="Fertilizer">Pending</option>
+                                        <option value="Tea packets">Paid</option>
+                                        <option value="Tea packets">Cancelled</option>
+                                        <option value="Tea packets">Rejected</option>
+                                    </select></td>
+                                </tr>
+                                <tr>
+                                    <td>Rs. 21 000.00</td>
+                                    <td>2024/11/10 12:32pm</td>
+                                    <td><select id="" name="">
+                                        <option value="Fertilizer">Fertilizer</option>
+                                        <option value="Tea packets">Tea Packets</option>
+                                    </select></td>
+                                    <td><select id="" name="">
+                                        <option value="Fertilizer">Pending</option>
+                                        <option value="Tea packets">Paid</option>
+                                        <option value="Tea packets">Cancelled</option>
+                                        <option value="Tea packets">Rejected</option>
+                                    </select></td>
+                                </tr>
+                            </table>
+                        </div>
+                        <a href="v_all_notifications.php">
+                            <button class="button">Home</button>
+                        </a>
                     </div>
-                    <ul class="list">
-                        <li class="item">Payment of $100 for Tea Pockets submitted at 5:10pm</li>
-                        <li class="item">Payment of $200 for Fertilizer submitted at 6:30pm</li>
-                        <li class="item">Payment of $150 for Tea Pockets submitted at 5:15pm</li>
-                        <li class="item">Payment of $250 for Fertilizer submitted at 6:30pm</li>
-                    </ul>
-                    <a href="PaymentHistory.php">
-                        <button class="button">View Payment History</button>
-                    </a>
-
-                    <a href="NewPayment.php">
-                        <button class="button">New Payment</button>
-                    </a>
                 </div>
-            </div>
         </main>
 		</div>
     </section>

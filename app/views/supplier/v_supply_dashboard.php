@@ -56,7 +56,7 @@
                 <i class='bx bx-search'></i>
                 <i class='bx bx-filter'></i>
 
-                <div class="tea-order-history">
+                <div class="table-data">
                     <div class="head">
                         <h5>Tea Leaves</h5>
                         <i class='bx bx-plus'></i>
@@ -98,14 +98,48 @@
             <div class="head">
                 <h3>Scheduled Collection Dates</h3>
             </div>
-            <ul class="scheduled-dates">
-                <li>Tomorrow <span class="time"> 05:00pm</span></li>
-                <li>13/08/2024 <span class="time"> 03:00pm</span></li>
-                <li>01/08/2024 <span class="time"> 06:00pm</span></li>
-            </ul>
-            <a href="CancelPickup.php">
+            <div class="table-data">
+                <div class="order">
+                    <div class="head">
+                        <h4>Tea Leaves Collections</h4>
+                    </div>
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th id="table-head">Date</th>
+                                <th id="table-head">Time</th>
+                                <th id="table-head">Order ID</th>
+                                <th id="table-head">Amount in kg</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>Tomorrow</td>
+                                <td>08:00am</td>
+                                <td>11</td>
+                                <td>20</td>
+                            </tr>
+                            <tr>
+                                <td>2024/11/05</td>
+                                <td>09:00am</td>
+                                <td>10</td>
+                                <td>15</td>
+                            </tr>
+                            <tr>
+                                <td>2024/10/12</td>
+                                <td>08:00am</td>
+                                <td>9</td>
+                                <td>30</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            
+            <a href="v_cancel_pickup.php">
                 <button class="button">Cancel Pickup</button>
             </a>
+
         </div>
     </div>
 
@@ -159,7 +193,7 @@
                 });
             });
         </script>
-        <script src="../public/script.js"></script>
+        <link rel="stylesheet" href="<?php echo URLROOT; ?>/css/components/script.js" />
 
 </body>
 </html>

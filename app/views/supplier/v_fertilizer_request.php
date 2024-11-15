@@ -48,13 +48,13 @@
                         <table class="table">
                             <thead>
                                 <tr>
-                                    <th id="table-head">Request id</th>
-                                    <th id="table-head">Supplier id</th>
-                                    <th id="table-head">Order Date and Time</th>
-                                    <th id="table-head">Amount in kg</th>
-                                    <th id="table-head">Payment Status</th>
-                                    <th id="table-head">Update</th>
-                                    <th id="table-head">Cancel order</th>
+                                    <th>Order id</th>
+                                    <th>Supplier id</th>
+                                    <th>Order Date and Time</th>
+                                    <th>Amount in kg</th>
+                                    <th>Payment Status</th>
+                                    <th>Update order</th>
+                                    <th>Cancel order</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -100,17 +100,17 @@
                                 <div class="form-group">
                                     <div class="form-group">
                                         <label for="supplier_id">Supplier ID:</label>
-                                        <input type="text" id="supplier_id" name="supplier_id" >
+                                        <input type="text" id="supplier_id" name="supplier_id" required>
                                     </div>
                                     <div>
                                         <label for="complaint-type">Total Amount:</label>
-                                            <select id="complaint-type" name="total_amount" required>
-                                                <?php 
-                                                    for ($i = 1; $i <= 50; $i++) {
-                                                        echo "<option value='$i'>{$i}kg</option>";
-                                                    }
-                                                ?>
-                                            </select>
+                                        <select id="complaint-type" name="total_amount" required>
+                                            <?php 
+                                                for ($i = 1; $i <= 50; $i++) {
+                                                    echo "<option value='$i'>{$i}kg</option>";
+                                                }
+                                            ?>
+                                        </select>
                                     </div>
                                     <!--
                                     <div class="form-group">
@@ -234,7 +234,7 @@
     </script>
 
 
-	<link rel="stylesheet" href="<?php echo URLROOT; ?>/css/components/script.css" />
+	<link rel="stylesheet" href="<?php echo URLROOT; ?>/css/components/script.js" />
     </body>
     </html>
     
