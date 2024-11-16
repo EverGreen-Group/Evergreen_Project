@@ -2,7 +2,9 @@
 require_once APPROOT . '/models/M_FertilizerOrder.php';
 require_once APPROOT . '/models/M_Fertilizer_Order.php';
 require_once '../app/helpers/auth_middleware.php';
-
+if (session_status() == PHP_SESSION_NONE) {
+    session_start();
+}
 class Supplier extends Controller {
 
     private $fertilizerOrderModel;
@@ -131,7 +133,8 @@ class Supplier extends Controller {
         if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             $total_amount = $_POST['total_amount'];
     
-            if ($this->fertilizerOrderModel->updateOrder($order_id, $total_amount)) {
+            $data = ['total_amount' => $total_amount];
+            if ($this->fertilizerOrderModel->updateOrder($order_id, $data)) {
                 flash('message', 'Fertilizer request updated successfully', 'alert alert-success');
                 redirect('Supplier/fertilizerRequestHistory');
             } else {

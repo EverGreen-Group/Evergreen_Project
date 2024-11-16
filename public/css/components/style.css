@@ -1,3 +1,6 @@
+/* SUPPLIER STYLE.CSS */
+
+
 @import url('https://fonts.googleapis.com/css2?family=Lato:wght@400;700&family=Poppins:wght@400;500;600;700&display=swap');
 
 * {
@@ -756,6 +759,8 @@ body {
 .btn-done {
 	background: rgb(85, 172, 19);
 	border-radius: 10px;
+	width: 80px;
+	height: 30px;
 }
 
 
@@ -939,4 +944,20 @@ a {
 #teaOrderHistoryChart {
 	border-radius: 20px;
 	box-shadow: var(--light-grey);
+}
+.accept-btn, .reject-btn, .pending-btn {
+	width: 80px;
+	height: 30px;
+	border-radius: 5px;
+	border: none;
+	color: white;
+}
+.accept-btn {
+	background-color: #008000;
+}
+.reject-btn {
+	background-color: red;
+}
+.pending-btn {
+	background-color: chocolate;
 }

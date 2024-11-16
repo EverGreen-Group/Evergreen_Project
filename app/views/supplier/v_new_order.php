@@ -22,75 +22,71 @@
                         </ul>
                     </div>
                 <div>
-                    <div class="table-data">
-                            <h3>Tea Order History</h3>
-                            <i class='bx bx-plus'></i>
-                            <i class='bx bx-filter'></i>
-                            <div class="head">
-                            <canvas id="teaOrderHistoryChart" width="450" height="250"></canvas>
-                        </div>
+                <div class="table-data">
+                    <h3>Tea Order History</h3>
+                    <i class='bx bx-plus'></i>
+                    <i class='bx bx-filter'></i>
+                    <div class="head">
+                        <canvas id="teaOrderHistoryChart" width="450" height="250"></canvas>
                     </div>
+                </div>
                 </div>
 
             
                 <div class="table-data">
-                <div class="order">
-                    <div class="head">
-                        <h3>Tea Packet Orders</h3>
+                    <div class="order">
+                        <div class="head">
+                            <h3>Tea Packet Orders</h3>
+                        </div>
+                        <div class="table-container">
+                            <table class="table-body">
+                            <thead>
+                                <tr>
+                                    <th>Supplier ID</th>
+                                    <th>Quantity</th>
+                                    <th>Order Date</th>
+                                    <th>Accepted/Rejected</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>001<br>
+                                    <td>2Kg</td>
+                                    <td>2024/11/10</td>
+                                    <td>
+                                        <button class="pending-btn">pending</button>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>002<br>
+                                    <td>1Kg</td>
+                                    <td>2024/11/1</td>
+                                    <td>
+                                    <button class="accept-btn">Accepted</button>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>003<br>
+                                    <td>3Kg</td>
+                                    <td>2024/11/1</td>
+                                    <td>
+                                    <button class="reject-btn">Rejected</button>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>001<br>
+                                    <td>5Kg</td>
+                                    <td>2024/10/12</td>
+                                    <td>
+                                    <button class="accept-btn">Accepted</button>
+                                    </td>
+                                </tr>
+                            </tbody>
+                            </table>
+                        <button class="button">Home</button>
                     </div>
-                <div class="table-container">
-                <table class="table-body">
-                    <thead>
-                        <tr>
-                            <th>Supplier ID</th>
-                            <th>Quantity</th>
-                            <th>Order Date</th>
-                            <th>Accepted/Rejected</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr>
-                            <td>001<br>
-                            <td>2Kg</td>
-                            <td>2024/11/10</td>
-                            <td>
-                                <button class="accept-btn">Accept</button>
-                                <button class="reject-btn">Reject</button>
-                            </td>
-                        </tr>
-                        <tr>
-                            <td>002<br>
-                            <td>1Kg</td>
-                            <td>2024/11/1</td>
-                            <td>
-                                <button class="accept-btn">Accept</button>
-                                <button class="reject-btn">Reject</button>
-                            </td>
-                        </tr>
-                        <tr>
-                            <td>003<br>
-                            <td>3Kg</td>
-                            <td>2024/11/1</td>
-                            <td>
-                                <button class="accept-btn">Accept</button>
-                                <button class="reject-btn">Reject</button>
-                            </td>
-                        </tr>
-                        <tr>
-                            <td>001<br>
-                            <td>5Kg</td>
-                            <td>2024/10/12</td>
-                            <td>
-                                <button class="accept-btn">Accept</button>
-                                <button class="reject-btn">Reject</button>
-                            </td>
-                        </tr>
-                    </tbody>
-                </table>
-                <button class="button">Done</button>
                 </div>
                 </div>
-            </div>
 
 
     
@@ -155,8 +151,8 @@
                             label: 'Tea Orders',
                             data: [120, 150, 180, 220, 250, 210], // Example data (tea orders per month)
                             fill: false,
-                            backgroundColor: 'rgba(75, 192, 192, 0.2)',
-                            borderColor: 'rgba(75, 192, 192, 1)',
+                            backgroundColor: 'rgba(187, 23, 23, 0.4)',
+                            borderColor: 'rgba(147, 0, 0, 0.5)',
                             borderWidth: 2
                         }]
                     },
@@ -190,8 +186,7 @@
                 });
             });
         </script>
-        <link rel="stylesheet" href="<?php echo URLROOT; ?>/css/components/script.js" />
-
+        <script src="<?php echo URLROOT; ?>/css/components/script.js"></script>
     </body>
-    </html>
+</html>
     

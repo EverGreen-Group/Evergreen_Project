@@ -25,20 +25,15 @@
                 <div class="table-data">
                     <div class="head">
                         <h2>Edit Fertilizer Request</h2>
-                        <form method="POST" class="complaint-form" action="<?php echo URLROOT . '/supplier/editFertilizerRequest/' . $request['order_id']; ?>">
+                        <form method="POST" class="complaint-form" action="<?php echo URLROOT . '/supplier/editFertilizerRequest/' . $data['order']->order_id; ?>">
                             <div class="form-group">
                                 <label><b> Update total amount of fertilizer: </b></label>
-                                <label for="total_amount">Total Amount:</label>
-                                <select id="complaint-type" name="total_amount">
-                                    <?php
-                                    for ($i = 1; $i <= 50; $i++) {
-                                        $selected = $data['order']->total_amount == $i ? 'selected' : '';
-                                        echo "<option value='$i' $selected>{$i}kg</option>";
-                                    }
-                                    ?>
-                                </select>
+                                <div class="form-group">
+                                    <label for="total_amount">Total Amount (kg):</label>
+                                    <input type="number" id="total_amount" name="total_amount" max="50" value="<?php echo $data['order']->total_amount; ?>" required>
+                                </div>
+                                <button type="submit" class="button">Update Request</button>
                             </div>
-                            <button type="submit" class="button" >Update Request</button>
                         </form>
                     </div>
                 </div>
@@ -46,7 +41,6 @@
         </main>
     </div>
 </section>
-
-<link rel="stylesheet" href="<?php echo URLROOT; ?>/css/components/script.js" />
+<script src="<?php echo URLROOT; ?>/css/components/script.js"></script>
 </body>
 </html>

@@ -123,7 +123,6 @@ $totalRatings = array_sum($ratings);
     });
 });
 </script>
-<script src="../public/script.js"></script>
-
+<script src="<?php echo URLROOT; ?>/css/components/script.js"></script>
 </body>
 </html>

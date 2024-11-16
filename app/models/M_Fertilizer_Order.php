@@ -47,9 +47,9 @@ class M_Fertilizer_Order {
         return $this->db->execute();
     }
 
-    public function updateOrder($id, $data) {
-        $this->db->query("UPDATE fertilizer_orders SET total_amount = :total_amount WHERE order_id = :id");
-        $this->db->bind(':id', $id);
+    public function updateOrder($order_id, $data) {
+        $this->db->query("UPDATE fertilizer_orders SET total_amount = :total_amount WHERE order_id = :order_id");
+        $this->db->bind(':order_id', $order_id);
         $this->db->bind(':total_amount', $data['total_amount']);
         
         return $this->db->execute();

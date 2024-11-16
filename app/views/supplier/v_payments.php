@@ -34,44 +34,21 @@
                                 <tr>
                                     <td>Rs. 21 000.00</td>
                                     <td>2024/11/10 12:32pm</td>
-                                    <td><select id="" name="">
-                                        <option value="Fertilizer" default>Fertilizer</option>
-                                        <option value="Tea packets">Tea Packets</option>
-                                    </select></td>
-                                    <td><select id="" name="">
-                                        <option value="Fertilizer">Pending</option>
-                                        <option value="Tea packets">Paid</option>
-                                        <option value="Tea packets">Cancelled</option>
-                                        <option value="Tea packets">Rejected</option>
-                                    </select></td>
+                                    <td>Fertilizer</td>
+                                    <td><button class="pending-btn">Pending</button></td>
                                 </tr>
                                 <tr>
                                     <td>Rs. 4 000.00</td>
                                     <td>2024/11/10 12:32pm</td>
-                                    <td><select id="" name="">
-                                        <option value="Fertilizer">Fertilizer</option>
-                                        <option value="Tea packets">Tea Packets</option>
-                                    </select></td>
-                                    <td><select id="" name="">
-                                        <option value="Fertilizer">Pending</option>
-                                        <option value="Tea packets">Paid</option>
-                                        <option value="Tea packets">Cancelled</option>
-                                        <option value="Tea packets">Rejected</option>
-                                    </select></td>
+                                    <td>Tea Packets</td>
+                                    <td><button class="accept-btn">Paid</button></td>
+
                                 </tr>
                                 <tr>
                                     <td>Rs. 21 000.00</td>
                                     <td>2024/11/10 12:32pm</td>
-                                    <td><select id="" name="">
-                                        <option value="Fertilizer">Fertilizer</option>
-                                        <option value="Tea packets">Tea Packets</option>
-                                    </select></td>
-                                    <td><select id="" name="">
-                                        <option value="Fertilizer">Pending</option>
-                                        <option value="Tea packets">Paid</option>
-                                        <option value="Tea packets">Cancelled</option>
-                                        <option value="Tea packets">Rejected</option>
-                                    </select></td>
+                                    <td>Tea Packets</td>
+                                    <td><button class="accept-btn">Paid</button></td>
                                 </tr>
                             </table>
                         </div>
@@ -83,7 +60,6 @@
         </main>
 		</div>
     </section>
-
-    <script src="../public/script.js"></script>
+    <script src="<?php echo URLROOT; ?>/css/components/script.js"></script>
 </body>
 </html>

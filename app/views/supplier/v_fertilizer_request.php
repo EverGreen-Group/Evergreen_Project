@@ -102,15 +102,9 @@
                                         <label for="supplier_id">Supplier ID:</label>
                                         <input type="text" id="supplier_id" name="supplier_id" required>
                                     </div>
-                                    <div>
-                                        <label for="complaint-type">Total Amount:</label>
-                                        <select id="complaint-type" name="total_amount" required>
-                                            <?php 
-                                                for ($i = 1; $i <= 50; $i++) {
-                                                    echo "<option value='$i'>{$i}kg</option>";
-                                                }
-                                            ?>
-                                        </select>
+                                    <div class="form-group">
+                                        <label for="total_amount">Total Amount (kg):</label>
+                                        <input type="number" id="total_amount" name="total_amount" value="<?php echo $order->total_amount; ?>" max="50" required>
                                     </div>
                                     <!--
                                     <div class="form-group">
@@ -232,9 +226,7 @@
             });
         });
     </script>
-
-
-	<link rel="stylesheet" href="<?php echo URLROOT; ?>/css/components/script.js" />
-    </body>
-    </html>
+    <script src="<?php echo URLROOT; ?>/css/components/script.js"></script>
+</html>
+</body>
     

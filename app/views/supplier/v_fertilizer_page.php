@@ -63,8 +63,7 @@
         </main>
 		</div>
     </section>
-
-	<link rel="stylesheet" href="<?php echo URLROOT; ?>/css/components/script.css" />
+    <script src="<?php echo URLROOT; ?>/css/components/script.js"></script>
 </body>
 </html>
 

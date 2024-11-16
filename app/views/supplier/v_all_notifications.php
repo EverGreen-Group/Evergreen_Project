@@ -64,8 +64,7 @@
             </main>
             </div>
         </section>
-    
-        <script src="../public/script.js"></script>
+        <link rel="stylesheet" href="<?php echo URLROOT; ?>/css/components/script.js" />
     </body>
     </html>
     
