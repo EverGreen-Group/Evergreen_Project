@@ -57,14 +57,11 @@
                 <i class='bx bx-filter'></i>
 
                 <div class="table-data">
-                    <div class="head">
-                        <h5>Tea Leaves</h5>
-                        <i class='bx bx-plus'></i>
-                        <i class='bx bx-filter'></i>
-                    </div>
-                    <canvas id="teaLeavesCollectionChart" width="300" height="200"></canvas>
+                <div class="chart-container">
+                    <h4>Tea Leaves Collections Chart(Monthly)</h4>
+                    <canvas id="teaLeavesChart"></canvas>
                 </div>
-
+                </div>
             </div>
             <?php if(isset($data['pending_requests']) && !empty($data['pending_requests'])): ?>
                 <table>
@@ -90,9 +87,17 @@
             <?php else: ?>
                 <div>No pending requests</div>
             <?php endif; ?>
-            <a href="ConfirmationHistory.php">
-                <button class="button">View History</button>
+            <a href="<?php echo URLROOT; ?>/Supplier/v_notifications/" >
+                <button class="button">Collection Notifications</button>
             </a>
+        </div>
+        <div class="order">
+            <div class="head">
+                <h5>Tea Leaves</h5>
+                <i class='bx bx-plus'></i>
+                <i class='bx bx-filter'></i>
+            </div>
+            <canvas id="teaLeavesCollectionChart" width="300" height="200"></canvas>
         </div>
         <div class="todo">
             <div class="head">
@@ -136,7 +141,7 @@
                 </div>
             </div>
             
-            <a href="v_cancel_pickup.php">
+            <a href="<?php echo URLROOT; ?>/Supplier/cancel_pickup/" >
                 <button class="button">Cancel Pickup</button>
             </a>
 
@@ -147,6 +152,52 @@
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
         <!-- TEA ORDER CHART -->
+        <script>
+        const ctx = document.getElementById('teaLeavesChart').getContext('2d');
+        
+        new Chart(ctx, {
+            type: 'pie',
+            data: {
+                labels: ['January', 'February', 'March', 'April', 'May', 'June'],
+                datasets: [{
+                    data: [280, 250, 180, 120, 100, 210],
+                    backgroundColor: [
+                        '#FF6384',
+                        '#36A2EB',
+                        '#FFCE56',
+                        '#4BC0C0',
+                        '#9966FF',
+                        '#FF9F40'
+                    ],
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    legend: {
+                        position: 'right',
+                        labels: {
+                            font: {
+                                size: 14
+                            }
+                        }
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                const label = context.label || '';
+                                const value = context.raw || 0;
+                                const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                                const percentage = ((value / total) * 100).toFixed(1);
+                                return `${label}: ${value} (${percentage}%)`;
+                            }
+                        }
+                    }
+                }
+            }
+        });
+        </script>
         <script>
             document.addEventListener('DOMContentLoaded', function() {
                 var ctx = document.getElementById('teaLeavesCollectionChart').getContext('2d');
@@ -194,6 +245,6 @@
             });
         </script>
         <script src="<?php echo URLROOT; ?>/css/components/script.js"></script>
-</body>
+    </body>
 </html>
     

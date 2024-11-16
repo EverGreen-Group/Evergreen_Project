@@ -30,30 +30,38 @@
                     <div class="head">
                         <h3>Profile</h3>
                     </div>
-                    <div class="profile-info">
-                        <label for="fullname">Full Name:</label>
-                        <input type="text" id="fullname" name="fullname" class="input" readonly><br/>
+                    <div class=""></div>
+                        <!-- Profile Picture Section -->
+                        <div class="profile-picture-section">
+                            <div class="profile-image-container">
+                                <img src="../img/people.png" alt="Profile Picture" id="profileImage">
+                                <button class="change-photo-btn">Change Photo</button>
+                            </div>
+                        </div>
+                        <div class="profile-info">
+                            <label for="fullname">Full Name:</label>
+                            <input type="text" id="fullname" name="fullname" class="input" readonly><br/>
 
-                        <label for="name">Address:</label>
-                        <input type="text" id="address" name="address" class="input" readonly><br/>
+                            <label for="name">Address:</label>
+                            <input type="text" id="address" name="address" class="input" readonly><br/>
 
-                        <label for="name">Email:</label>
-                        <input type="text" id="email" name="email" class="input" readonly><br/>
+                            <label for="name">Email:</label>
+                            <input type="text" id="email" name="email" class="input" readonly><br/>
 
-                        <label for="name">Contact:</label>
-                        <input type="text" id="contact" name="contact" class="input" readonly><br/>
+                            <label for="name">Contact:</label>
+                            <input type="text" id="contact" name="contact" class="input" readonly><br/>
 
-                        <label for="name">Supplier ID:</label>
-                        <input type="text" id="supplierid" name="supplierid" class="input" readonly><br/>
+                            <label for="name">Supplier ID:</label>
+                            <input type="text" id="supplierid" name="supplierid" class="input" readonly><br/>
 
-                        <label for="name">Route No:</label>
-                        <input type="text" id="route" name="route" class="input" readonly><br/>
+                            <label for="name">Route No:</label>
+                            <input type="text" id="route" name="route" class="input" readonly><br/>
 
-                        <label for="name">Registered Date:</label>
-                        <input type="date" id="date" name="date" class="input" readonly>
-                    </div>
-                    <button class="button" onclick="enableEditing()">Edit Profile</button>
-                    <button class="button" onclick="enableEditing()">Save</button>
+                            <label for="name">Registered Date:</label>
+                            <input type="date" id="date" name="date" class="input" readonly>
+                        </div>
+                        <button class="button" onclick="enableEditing()">Edit Profile</button>
+                        <button class="button" onclick="enableEditing()">Save</button>
                 </div>
             </div>
         </main>

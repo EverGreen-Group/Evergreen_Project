@@ -50,6 +50,7 @@ $totalRatings = array_sum($ratings);
                 <p>4.5 out of 5 stars</p>
             </div>
         </div>
+        <div id="review-container">
             <!-- Feedback Section -->
             <div class="reviews">
                 <ul>
@@ -61,7 +62,7 @@ $totalRatings = array_sum($ratings);
             </div>
             <div>
                 <div class="rating-container">
-                    <h3>Customer Ratings</h3>
+                    <h3> Ratings</h3>
                     <div class="rating-bar-graph">
                         <?php foreach ($ratings as $stars => $count): 
                             $percentage = ($totalRatings > 0) ? ($count / $totalRatings) * 100 : 0; ?>
@@ -76,7 +77,7 @@ $totalRatings = array_sum($ratings);
                     </div>
                 </div>
             </div>
-
+        </div>
 
         <div class="table-data">
             <div class="order">

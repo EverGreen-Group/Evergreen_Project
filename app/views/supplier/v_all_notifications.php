@@ -56,15 +56,15 @@
                                 </tr>
                             </table>
                         </div>
-                        <a href="Notifications.php">
-                            <button class="button">View less</button>
+                        <a href="<?php echo URLROOT; ?>/Supplier/" >
+                            <button class="button">Home</button>
                         </a>
                     </div>
                 </div>
             </main>
             </div>
         </section>
-        <link rel="stylesheet" href="<?php echo URLROOT; ?>/css/components/script.js" />
+        <script src="<?php echo URLROOT; ?>/css/components/script.js"></script>
     </body>
     </html>
     

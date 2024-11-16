@@ -23,11 +23,11 @@
                     </div>
                 <div>
                 <div class="table-data">
-                    <h3>Tea Order History</h3>
+                    <h3>Tea Order History Chart</h3>
                     <i class='bx bx-plus'></i>
                     <i class='bx bx-filter'></i>
                     <div class="head">
-                        <canvas id="teaOrderHistoryChart" width="450" height="250"></canvas>
+                        <canvas id="teaOrderHistoryChart" width="400" height="200"></canvas>
                     </div>
                 </div>
                 </div>
@@ -82,8 +82,7 @@
                                     </td>
                                 </tr>
                             </tbody>
-                            </table>
-                        <button class="button">Home</button>
+                        </table>
                     </div>
                 </div>
                 </div>
@@ -94,8 +93,8 @@
                     <div class="order">
                         <div class="head">
                             <h3>New Order Form</h3>
-                            <a href="OrderPage.php">
-                                <button class="button">Back</button>
+                            <a href="<?php echo URLROOT; ?>/Supplier/" >
+                                <button class="button">Home</button>
                             </a>
                         </div>
                         <form action="submit_complaint.php" method="post" class="complaint-form">
@@ -151,7 +150,7 @@
                             label: 'Tea Orders',
                             data: [120, 150, 180, 220, 250, 210], // Example data (tea orders per month)
                             fill: false,
-                            backgroundColor: 'rgba(187, 23, 23, 0.4)',
+                            backgroundColor: 'rgba(210, 0, 0)',
                             borderColor: 'rgba(147, 0, 0, 0.5)',
                             borderWidth: 2
                         }]

@@ -37,21 +37,21 @@ class Supplier extends Controller {
         $this->view('supplier/v_all_notifications', $data);
     }
     
-    public function changepassword()
+    public function change_password()
     {
         $data = [];
 
         $this->view('supplier/v_change_password', $data);
     }
 
-    public function confirmationhistory()
+    public function confirmation_history()
     {
         $data = [];
 
         $this->view('supplier/v_confirmation_history', $data);
     }
 
-    public function fertilizerhistory()
+    public function fertilizer_history()
     {
         $data = [];
 
@@ -77,6 +77,13 @@ class Supplier extends Controller {
         $data = [];
 
         $this->view('supplier/v_profile', $data);
+    }
+
+    public function cancel_pickup()
+    {
+        $data = [];
+
+        $this->view('supplier/v_cancel_pickup', $data);
     }
 
     public function v_complaints()

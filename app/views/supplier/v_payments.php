@@ -52,7 +52,7 @@
                                 </tr>
                             </table>
                         </div>
-                        <a href="v_all_notifications.php">
+                        <a href="<?php echo URLROOT; ?>/Supplier/" >
                             <button class="button">Home</button>
                         </a>
                     </div>
