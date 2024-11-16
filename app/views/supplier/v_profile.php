@@ -6,22 +6,22 @@
 <?php require APPROOT . '/views/inc/components/topnavbar.php'; ?>
 
 <!-- MAIN -->
-        <main>
-			<div class="head-title">
-				<div class="left">
-					<h1>Tea Leaves Supplier</h1>
-					<ul class="breadcrumb">
-						<li>
-							<a href="SupplyDashboard.php">Home ></a>
-						</li>
-						<li><i class='bx bx-chevron-right'></i></li>
-						<li>
-							<a class="active" href="#"> Profile</a>
-						</li>
-					</ul>
-				</div>
+    <main>
+        <div class="head-title">
+            <div class="left">
+                <h1>Tea Leaves Supplier</h1>
+                <ul class="breadcrumb">
+                    <li>
+                        <a href="SupplyDashboard.php">Home ></a>
+                    </li>
+                    <li><i class='bx bx-chevron-right'></i></li>
+                    <li>
+                        <a class="active" href="#"> Profile</a>
+                    </li>
+                </ul>
+            </div>
                 
-            <a href="ChangePassword.php">
+            <a href="<?php echo URLROOT; ?>/Supplier/change_password/" >
                 <button class="button">Change Password</button>
             </a>
 
@@ -30,7 +30,7 @@
                     <div class="head">
                         <h3>Profile</h3>
                     </div>
-                    <div class=""></div>
+                    <div class="profile-section"></div>
                         <!-- Profile Picture Section -->
                         <div class="profile-picture-section">
                             <div class="profile-image-container">
@@ -62,12 +62,13 @@
                         </div>
                         <button class="button" onclick="enableEditing()">Edit Profile</button>
                         <button class="button" onclick="enableEditing()">Save</button>
+                    </div>
                 </div>
             </div>
-        </main>
         </div>
-    </section>
-    <script src="<?php echo URLROOT; ?>/css/components/script.js"></script>
+    </main>
+</section>
+<script src="<?php echo URLROOT; ?>/css/components/script.js"></script>
 </body>
 </html>
 

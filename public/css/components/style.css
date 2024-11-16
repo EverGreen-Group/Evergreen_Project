@@ -45,7 +45,7 @@ body.dark {
 	--grey: #4a4a60;
 	--dark: #FBFBFB;
 	--light-grey: #7d7d7d;
-	--light-black: #1b1c2c;
+	--light-black: #2e315a;
 }
 
 body {
@@ -877,8 +877,8 @@ body {
     gap: 10px;
 }
 .profile-image-container img {
-    width: 150px;
-    height: 150px;
+    width: 200px;
+    height: 200px;
     border-radius: 50%;
     object-fit: cover;
     border: 3px solid #4a90e2;
@@ -900,9 +900,16 @@ body {
 .profile-info {
     margin-top: 20px;
     padding: 20px;
-    background-color: #fff;
     border-radius: 8px;
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    width:80%;
+    margin: 10px auto;
+    border-collapse: collapse;
+	box-shadow: 0 0 5px var(--light-grey) ;
+	border-radius: 10px;
+    background-color: var(--light-black);
+	padding: 30px;
+}
 }
 .profile-info label {
     display: inline-block;
@@ -920,15 +927,6 @@ body {
 .button {
     margin-top: 15px;
     margin-right: 10px;
-}
-.profile-info {
-    width:80%;
-    margin: 10px auto;
-    border-collapse: collapse;
-	box-shadow: 0 0 5px var(--light-grey) ;
-	border-radius: 10px;
-    background-color: var(--light-black);
-	padding: 30px;
 }
 .profile-info tr td {
     padding: 10px 20px;
