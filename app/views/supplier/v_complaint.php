@@ -60,23 +60,6 @@ $totalRatings = array_sum($ratings);
                     <li><strong>Emily White:</strong> "Had a minor issue, but the customer service resolved it promptly. Great experience!"</li>
                 </ul>
             </div>
-            <div>
-                <div class="rating-container">
-                    <h3> Ratings</h3>
-                    <div class="rating-bar-graph">
-                        <?php foreach ($ratings as $stars => $count): 
-                            $percentage = ($totalRatings > 0) ? ($count / $totalRatings) * 100 : 0; ?>
-                            <div class="rating-bar">
-                                <span class="stars"><?php echo $stars; ?> Stars</span>
-                                <div class="bar" data-percentage="<?php echo $percentage; ?>">
-                                    <span class="fill"></span>
-                                </div>
-                                <span class="count"><?php echo $count; ?></span>
-                            </div>
-                        <?php endforeach; ?>
-                    </div>
-                </div>
-            </div>
         </div>
 
         <div class="table-data">

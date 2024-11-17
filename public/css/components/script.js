@@ -146,3 +146,140 @@ function refreshPage() {
 
 
 
+/* SUPPLEMENT MANAGER */
+/* DASHBOARD */
+    const data = {
+        labels: ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'],
+        datasets: [{
+            label: 'Tea Leaves Collected (kg)',
+            data: [500, 540, 120, 750, 900, 500, 290, 600, 670, 750, 900, 0], // Match the labels
+            backgroundColor: 'rgba(0, 198, 172, 0.712)',
+            borderColor: 'rgba(0, 162, 141, 0.712)',
+            borderWidth: 1,
+        }]
+    };
+
+    const config = {
+        type: 'bar',
+        data: data,
+        options: {
+            responsive: true,
+            plugins: {
+                legend: { position: 'bottom' },
+                tooltip: { enabled: true },
+            },
+            scales: {
+                x: { title: { display: true, text: 'Months' } },
+                y: { title: { display: true, text: 'Amount (kg)' }, beginAtZero: true },
+            }
+        }
+    };
+
+    document.addEventListener('DOMContentLoaded', function () {
+        const ctx = document.getElementById('teaLeavesGraph').getContext('2d');
+        new Chart(ctx, config); 
+    });
+    
+/*  LEAF SUPPLY */
+const leafdata = {
+    labels: ['sent', 'pending', 'confirmed', 'reported'],
+    datasets: [{
+        label: 'Tea Leaves Confirmations',
+        data: [70, 48, 12, 1], 
+        backgroundColor: ['#007664bc','#ecb500bc','#8d9f2dbc','#ff0800bc'],
+        borderColor: 'rgba(0, 0, 0, 0.3)',
+        borderWidth: 1,
+    }]
+};
+
+const leafconfig = {
+    type: 'bar',
+    data: leafdata,
+    options: {
+        responsive: true,
+        plugins: {
+            legend: { position: 'bottom' },
+            tooltip: { enabled: true },
+        },
+        scales: {
+            x: { title: { display: true, text: 'Confirmation Status' } },
+            y: { title: { display: true, text: 'No of Suppliers' }, beginAtZero: true },
+        }
+    }
+};
+
+document.addEventListener('DOMContentLoaded', function () {
+    const ctx = document.getElementById('teaLeavesConfirmationGraph').getContext('2d');
+    new Chart(ctx, leafconfig); 
+});
+
+const pie_leafconfig = {
+    type: 'pie',
+    data: leafdata,
+    options: {
+        responsive: true,
+        plugins: {
+            legend: { position: 'top' },
+            tooltip: { enabled: true },
+        },
+        scales: {
+            x: { title: { display: true, text: 'Confirmation Status' } },
+            y: { title: { display: true, text: 'No of Suppliers' }, beginAtZero: true },
+        }
+    }
+};
+
+document.addEventListener('DOMContentLoaded', function () {
+    const ctx = document.getElementById('teaLeavesConfirmationChart').getContext('2d');
+    new Chart(ctx, pie_leafconfig); 
+});
+
+document.addEventListener('DOMContentLoaded', function() {
+    var ctx = document.getElementById('fertilizerOrdersChart').getContext('2d');
+    var teaLeavesCollectionChart = new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'], 
+            datasets: [{
+                label: 'Tea Leaves Collections',
+                data: [32, 210, 583, 156, 284, 515, 502, 389, 412, 479, 500, 0], // Example data 
+                fill: false,
+                backgroundColor: 'rgba(75, 192, 192, 0.2)',
+                borderColor: 'rgba(75, 192, 192, 1)',
+                borderWidth: 2
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                legend: {
+                    position: 'bottom',
+                },
+                title: {
+                    display: true,
+                    text: 'Tea Leaves Collections (Monthly)'
+                }
+            },
+            scales: {
+                x: {
+                    title: {
+                        display: true,
+                        text: 'Month'
+                    }
+                },
+                y: {
+                    title: {
+                        display: true,
+                        text: 'Amount'
+                    },
+                    beginAtZero: true
+                }
+            }
+        }
+    });
+});
+
+document.addEventListener('DOMContentLoaded', function () {
+    const ctx = document.getElementById('fertilizerOrdersChart').getContext('2d');
+    new Chart(ctx, pie_leafconfig); 
+});

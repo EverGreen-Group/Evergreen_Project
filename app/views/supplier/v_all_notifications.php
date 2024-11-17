@@ -22,7 +22,12 @@
     
                 <div class="table-data">
                     <div class="order">
-                        <div>
+                        <div class="head">
+                            <h3>Notifications</h3>
+                        </div>
+                        <div class="table-data">
+                            <div class="order">
+                                <div>
                             <table class="complaint-type">
                                 <tr>
                                     <th>Notification</th>
