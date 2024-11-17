@@ -72,17 +72,17 @@
 						<td>2024-03-20 09:30 AM</td>
 						<td class="actions">
 							<button style="padding: 8px 12px;
-    background-color: #28a745;
-    color: white;
-    border: none;
-    border-radius: 4px;
-    cursor: pointer;">Approve</button>
+	background-color: #28a745;
+	color: white;
+	border: none;
+	border-radius: 4px;
+	cursor: pointer;">Approve</button>
 							<button style="padding: 8px 12px;
-    background-color: #2345;
-    color: white;
-    border: none;
-    border-radius: 4px;
-    cursor: pointer;">Reject</button>
+	background-color: #2345;
+	color: white;
+	border: none;
+	border-radius: 4px;
+	cursor: pointer;">Reject</button>
 						</td>
 					</tr>
 					<tr>
@@ -91,17 +91,17 @@
 						<td>2024-03-20 10:15 AM</td>
 						<td class="actions">
 							<button style="padding: 8px 12px;
-    background-color: #28a745;
-    color: white;
-    border: none;
-    border-radius: 4px;
-    cursor: pointer;">Approve</button>
+	background-color: #28a745;
+	color: white;
+	border: none;
+	border-radius: 4px;
+	cursor: pointer;">Approve</button>
 							<button style="padding: 8px 12px;
-    background-color: #2345;
-    color: white;
-    border: none;
-    border-radius: 4px;
-    cursor: pointer;">Reject</button>
+	background-color: #2345;
+	color: white;
+	border: none;
+	border-radius: 4px;
+	cursor: pointer;">Reject</button>
 						</td>
 					</tr>
 					<!-- Add more rows as needed -->
@@ -165,7 +165,7 @@
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
-	document.addEventListener('DOMContentLoaded', function() {
+	document.addEventListener('DOMContentLoaded', function () {
 		var ctx = document.getElementById('machineAllocationChart').getContext('2d');
 		var machineAllocationChart = new Chart(ctx, {
 			type: 'bar',
