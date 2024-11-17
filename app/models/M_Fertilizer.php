@@ -1,4 +1,4 @@
-<?php
+
 class M_Fertilizer{
     private $db;
 
@@ -37,3 +37,4 @@ class M_Fertilizer{
         
     }
 }
+
