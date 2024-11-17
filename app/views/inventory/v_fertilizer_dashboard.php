@@ -8,6 +8,7 @@
     <link rel="stylesheet" href="<?php echo URLROOT; ?>/css/pages/f_dashboard.css" />
     <link rel="stylesheet" href="<?php echo URLROOT; ?>/css/components/topnavbar_style.css" />
     <link href="https://unpkg.com/boxicons@2.0.9/css/boxicons.min.css" rel="stylesheet" />
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
 </head>
 
@@ -23,7 +24,7 @@
             <header>
                 <h1>Fertilizer</h1>
                 <a href="<?php echo URLROOT; ?>/inventory/createfertilizer">
-                <button class="filter-btn">+ New fertilizer</button>
+                    <button class="filter-btn">+ New fertilizer</button>
                 </a>
             </header>
 
@@ -53,11 +54,10 @@
                 </div>
             </section>
 
-            <section class="chart-section">
-                <div class="chart">
-                    <span>Label 1</span>
-                    <!-- Replace with actual chart if needed -->
-                    <img src="chart-placeholder.png" alt="Chart Placeholder">
+            <section style="display: flex; justify-content: center; align-items: center; padding: 20px; margin: 20px;">
+                <div style="width: 80%; text-align: center;">
+                    <h2>Monthly Fertilizer Usage</h2>
+                    <canvas id="fertilizerChart"></canvas>
                 </div>
             </section>
 
@@ -67,39 +67,46 @@
                 <a href="#" class="details-link">View detail ></a>
 
                 <table>
+                    <thead>
+                        <td>code</td>
+                        <td>Quantity</td>
+                        <td>update</td>
+                        <td>delete</td>
+                    </thead>
                     <tbody>
+
                         <tr>
-                            <td><input type="checkbox" checked></td>
+
                             <td>B 710</td>
                             <td>1000kg</td>
                             <td><button class="update-btn">Update</button></td>
                             <td><button class="delete-btn">Delete</button></td>
                         </tr>
                         <tr>
-                            <td><input type="checkbox" checked></td>
+
                             <td>B 589</td>
                             <td>50kg</td>
                             <td><button class="update-btn">Update</button></td>
                             <td><button class="delete-btn">Delete</button></td>
                         </tr>
                         <tr>
-                            <td><input type="checkbox" checked></td>
+
                             <td>C 450</td>
                             <td>50kg</td>
                             <td><button class="update-btn">Update</button></td>
                             <td><button class="delete-btn">Delete</button></td>
                         </tr>
                         <tr>
-                            <td><input type="checkbox" checked></td>
+
                             <td>C 345</td>
                             <td>Content</td>
                             <td><button class="update-btn">Update</button></td>
                             <td><button class="delete-btn">Delete</button></td>
                         </tr>
                         <tr>
-                            <td><input type="checkbox" checked></td>
-                            <td>Content</td>
-                            <td>Content</td>
+
+                            <td>B 110</td>
+                            <td>123Kg</td>
                             <td><button class="update-btn">Update</button></td>
                             <td><button class="delete-btn">Delete</button></td>
                         </tr>
@@ -110,4 +117,50 @@
         </div>
     </main>
 
+
+
     <?php require APPROOT . '/views/inc/components/footer.php' ?>
+
+    <script>
+        // Get the chart canvas
+        const ctx = document.getElementById('fertilizerChart').getContext('2d');
+
+        // Sample data - replace with actual data from your database
+        const fertilizerData = {
+            labels: ['January', 'February', 'March', 'April', 'May', 'June'],
+            datasets: [{
+                label: 'Fertilizer Usage (kg)',
+                data: [1200, 1900, 800, 1600, 2000, 1500],
+                backgroundColor: 'rgba(54, 162, 235, 0.5)',
+                borderColor: 'rgba(54, 162, 235, 1)',
+                borderWidth: 1
+            }]
+        };
+
+        // Create the bar chart
+        new Chart(ctx, {
+            type: 'bar',
+            data: fertilizerData,
+            options: {
+                responsive: true,
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        title: {
+                            display: true,
+                            text: 'Quantity (kg)'
+                        }
+                    }
+                },
+                plugins: {
+                    title: {
+                        display: true,
+                        text: 'Monthly Fertilizer Usage'
+                    }
+                }
+            }
+        });
+    </script>
+</body>
+
+</html>
