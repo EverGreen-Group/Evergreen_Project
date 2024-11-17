@@ -20,8 +20,7 @@
         <?php require APPROOT . '/views/inc/components/sidebar_inventory.php' ?>
         <div class="screen">
             <div class="form-container">
-                <form class="create-product-form" action="<?php echo URLROOT; ?>/Inventory/updateproduct/<?php echo $data['product']->id; ?>" method="POST"
-                    enctype="multipart/form-data">
+                <form class="create-product-form" action="<?php echo URLROOT; ?>/inventory/updateproduct/<?php echo $data['id']; ?>" method="POST" enctype="multipart/form-data">
                     <div class="form-header">
                         <h2>Update Product</h2>
                     </div>
@@ -51,7 +50,7 @@
                             </div>
                             <div class="form-group">
                                 <label for="code">Code</label>
-                                <input type="text" id="code" name="code" placeholder="Enter Code">
+                                <input type="text" id="code" name="code" placeholder="Enter Code" value="<?php echo $data['product']->code ?? ''; ?>">
                             </div>
                         </div>
                     </div>
