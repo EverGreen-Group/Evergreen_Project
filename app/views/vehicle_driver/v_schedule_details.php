@@ -3,19 +3,22 @@
 <?php require APPROOT . '/views/inc/components/topnavbar.php'; ?>
 
 <?php
-function isWithinTimeWindow($scheduleTime, $windowMinutes = 10) {
-    $scheduleDateTime = new DateTime($scheduleTime);
+function isWithinShiftTime($startTime, $endTime) {
     $now = new DateTime();
-    
-    // Get time difference in minutes
-    $diff = ($scheduleDateTime->getTimestamp() - $now->getTimestamp()) / 60;
-    
-    // Return true if we're within the window minutes before the schedule
-    return $diff <= $windowMinutes && $diff >= -360; // -360 means 6 hours after start time
+    $startDateTime = new DateTime($startTime);
+    $endDateTime = new DateTime($endTime);
+
+    // Debug output
+    echo "Current time: " . $now->format('Y-m-d H:i:s') . "<br>";
+    echo "Start time: " . $startDateTime->format('Y-m-d H:i:s') . "<br>";
+    echo "End time: " . $endDateTime->format('Y-m-d H:i:s') . "<br>";
+
+    return $now >= $startDateTime && $now <= $endDateTime;
 }
 ?>
 
 <main class="schedule-details-main">
+
     <div class="content-header">
         <div class="header-text">
             <h1>Collection Details</h1>
@@ -71,8 +74,8 @@ function isWithinTimeWindow($scheduleTime, $windowMinutes = 10) {
                     <tbody>
                         <?php foreach ($data['routeSuppliers'] as $supplier): ?>
                         <tr>
-                            <td><?php echo htmlspecialchars($supplier->supplier_name); ?></td>
-                            <td><?php echo htmlspecialchars($supplier->location); ?></td>
+                            <td><?php echo htmlspecialchars($supplier->first_name . ' ' . $supplier->last_name); ?></td>
+                            <td><?php echo htmlspecialchars($supplier->coordinates); ?></td>
                             <td><?php echo htmlspecialchars($supplier->contact_number); ?></td>
                             <td>
                                 <?php if (isset($supplier->collection_status)): ?>
@@ -96,8 +99,11 @@ function isWithinTimeWindow($scheduleTime, $windowMinutes = 10) {
             <section class="ready-status">
                 <h2>Ready Status</h2>
                 <?php 
-                $shiftDateTime = date('Y-m-d ') . $data['schedule']->start_time;
-                $isTimeValid = isWithinTimeWindow($shiftDateTime);
+                $shiftStartTime = date('Y-m-d ') . $data['schedule']->start_time;
+                $shiftEndTime = date('Y-m-d ') . $data['schedule']->end_time;
+                $isTimeValid = isWithinShiftTime($shiftStartTime, $shiftEndTime);
+
+                echo "Is time valid? " . ($isTimeValid ? 'Yes' : 'No') . "<br>";
                 ?>
 
                 <?php if ($data['collection'] && $data['collection']->start_time): ?>
@@ -110,9 +116,6 @@ function isWithinTimeWindow($scheduleTime, $windowMinutes = 10) {
                     </div>
                 <?php elseif ($data['isReady']): ?>
                     <p>You are marked as ready for this collection.</p>
-                    <?php if (!$isTimeValid): ?>
-                        <p class="time-notice">Collection will be available 10 minutes before the scheduled time.</p>
-                    <?php endif; ?>
                 <?php else: ?>
                     <?php if ($isTimeValid): ?>
                         <form action="<?php echo URLROOT; ?>/vehicledriver/setReady/<?php echo $data['schedule']->schedule_id; ?>" method="POST">
@@ -120,10 +123,7 @@ function isWithinTimeWindow($scheduleTime, $windowMinutes = 10) {
                         </form>
                     <?php else: ?>
                         <div class="time-notice">
-                            <p>You can mark yourself as ready 10 minutes before the scheduled time.</p>
-                            <p class="countdown" data-start-time="<?php echo $shiftDateTime; ?>">
-                                Time until shift: Calculating...
-                            </p>
+                            <p>You can mark yourself as ready only during the shift time.</p>
                         </div>
                     <?php endif; ?>
                 <?php endif; ?>
@@ -392,45 +392,6 @@ function isWithinTimeWindow($scheduleTime, $windowMinutes = 10) {
         margin-top: 1rem;
         text-align: center;
     }
-
-    .countdown {
-        font-family: monospace;
-        font-weight: bold;
-        margin-top: 0.5rem;
-        color: #2c3e50;
-    }
 </style>
-
-<script>
-function updateCountdown() {
-    const countdownElement = document.querySelector('.countdown');
-    if (!countdownElement) return;
-
-    const startTime = new Date(countdownElement.dataset.startTime).getTime();
-    const windowTime = startTime - (10 * 60 * 1000); // 10 minutes before
-    
-    function update() {
-        const now = new Date().getTime();
-        const distance = windowTime - now;
-        
-        if (distance < 0) {
-            countdownElement.innerHTML = "You can now mark yourself as ready!";
-            location.reload(); // Refresh to show the ready button
-            return;
-        }
-        
-        const hours = Math.floor(distance / (1000 * 60 * 60));
-        const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
-        const seconds = Math.floor((distance % (1000 * 60)) / 1000);
-        
-        countdownElement.innerHTML = `Time until ready: ${hours}h ${minutes}m ${seconds}s`;
-    }
-    
-    update();
-    setInterval(update, 1000);
-}
-
-document.addEventListener('DOMContentLoaded', updateCountdown);
-</script>
 
 <?php require APPROOT . '/views/inc/components/footer.php'; ?> 

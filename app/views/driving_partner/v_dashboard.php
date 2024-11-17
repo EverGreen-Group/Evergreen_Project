@@ -1,7 +1,7 @@
 <?php
 
 require APPROOT . '/views/inc/components/header.php';
-require APPROOT . '/views/inc/components/sidebar_vehicle_driver.php';
+require APPROOT . '/views/inc/components/sidebar_driving_partner.php';
 require APPROOT . '/views/inc/components/topnavbar.php';
 ?>
 

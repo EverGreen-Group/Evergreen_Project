@@ -157,9 +157,7 @@ class M_Route {
     public function getRouteSuppliers($routeId) {
         $this->db->query("
             SELECT 
-                s.supplier_id,
-                s.latitude,
-                s.longitude,
+                s.*,
                 u.first_name,
                 u.last_name,
                 CONCAT(u.first_name, ' ', u.last_name) as full_name,
@@ -193,6 +191,19 @@ class M_Route {
         
         $this->db->bind(':route_id', $routeId);
         return $this->db->single();
+    }
+
+    public function updateRouteOrder($routeId, $supplierId, $order) {
+        $this->db->query("UPDATE route_suppliers 
+                          SET supplier_order = :order 
+                          WHERE route_id = :route_id 
+                          AND supplier_id = :supplier_id");
+        
+        $this->db->bind(':order', $order);
+        $this->db->bind(':route_id', $routeId);
+        $this->db->bind(':supplier_id', $supplierId);
+        
+        return $this->db->execute();
     }
 }
 ?>

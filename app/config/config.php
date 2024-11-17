@@ -24,4 +24,7 @@ define('UPLOADURL', URLROOT . '/uploads');  // For web URLs
 // Server filesystem paths
 define('PUBLICPATH', dirname(APPROOT) . '/public');
 define('UPLOADPATH', PUBLICPATH . '/uploads');  // For file operations
+
+// Add this with your other configurations
+date_default_timezone_set('Asia/Colombo');
 ?>

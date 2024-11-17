@@ -235,90 +235,82 @@ class M_CollectionSchedule {
     }
 
     public function setUserReady($scheduleId, $userId) {
-        $this->db->beginTransaction();
         try {
-            // Determine if user is driver or partner
-            $this->db->query("
-                SELECT 
-                    CASE 
-                        WHEN :user_id IN (
-                            SELECT u.user_id 
-                            FROM drivers d 
-                            JOIN employees e ON d.employee_id = e.employee_id 
-                            JOIN users u ON e.user_id = u.user_id
-                            JOIN teams t ON d.driver_id = t.driver_id
-                            JOIN collection_schedules cs ON t.team_id = cs.team_id
-                            WHERE cs.schedule_id = :schedule_id
-                        ) THEN 'driver'
-                        ELSE 'partner'
-                    END as role
-                FROM collection_schedules cs
-                WHERE cs.schedule_id = :schedule_id
-            ");
+            $this->db->beginTransaction();
+
+            // First check if this user is a driver or partner
+            $userRole = RoleHelper::hasRole(RoleHelper::DRIVER) ? 'driver' : 
+                       (RoleHelper::hasRole(RoleHelper::DRIVING_PARTNER) ? 'driving_partner' : null);
+
+            // Get the collection record
+            $collection = $this->getCollectionByScheduleId($scheduleId);
             
-            $this->db->bind(':schedule_id', $scheduleId);
-            $this->db->bind(':user_id', $userId);
-            $role = $this->db->single()->role;
+            if (!$collection) {
+                // Create initial collection if it doesn't exist
+                $this->createInitialCollection($scheduleId);
+                $collection = $this->getCollectionByScheduleId($scheduleId);
+            }
 
-            // Update the appropriate approval field
-            $this->db->query("
-                UPDATE collections 
-                SET " . ($role === 'driver' ? 'driver_approved' : 'partner_approved') . " = 1
-                WHERE schedule_id = :schedule_id
-            ");
+            // Update the appropriate approval field based on role
+            if ($userRole == 'driver') {
+                $sql = "UPDATE collections 
+                       SET driver_approved = 1,
+                           start_time = CASE 
+                               WHEN partner_approved = 1 THEN NOW() 
+                               ELSE start_time 
+                           END
+                       WHERE schedule_id = :schedule_id";
+            } elseif ($userRole == 'driving_partner') {
+                $sql = "UPDATE collections 
+                       SET partner_approved = 1,
+                           start_time = CASE 
+                               WHEN driver_approved = 1 THEN NOW() 
+                               ELSE start_time 
+                           END
+                       WHERE schedule_id = :schedule_id";
+            } else {
+                throw new Exception("Invalid user role");
+            }
+
+            $this->db->query($sql);
+            $this->db->bind(':schedule_id', $scheduleId);
             
-            $this->db->bind(':schedule_id', $scheduleId);
-            $this->db->execute();
+            if (!$this->db->execute()) {
+                throw new Exception("Failed to update ready status");
+            }
 
-            // Check if both are ready
-            $this->db->query("
-                SELECT c.*, cs.route_id 
-                FROM collections c
-                JOIN collection_schedules cs ON c.schedule_id = cs.schedule_id
-                WHERE c.schedule_id = :schedule_id
-            ");
-            $this->db->bind(':schedule_id', $scheduleId);
-            $collection = $this->db->single();
+            // Get updated collection to check if both are ready
+            $updatedCollection = $this->getCollectionByScheduleId($scheduleId);
+            if ($updatedCollection->driver_approved && $updatedCollection->partner_approved) {
+                // Both are ready, initialize collection records for each supplier
+                $schedule = $this->getScheduleById($scheduleId);
+                
+                // Create model instances directly
+                $routeModel = new M_Route();
+                $routeSuppliers = $routeModel->getRouteSuppliers($schedule->route_id);
+                
+                // Create supplier records
+                foreach ($routeSuppliers as $supplier) {
+                    $this->db->query("INSERT INTO collection_supplier_records 
+                                    (collection_id, supplier_id, status, created_at) 
+                                    VALUES (:collection_id, :supplier_id, 'pending', NOW())");
+                    $this->db->bind(':collection_id', $updatedCollection->collection_id);
+                    $this->db->bind(':supplier_id', $supplier->supplier_id);
+                    $this->db->execute();
+                }
 
-            // If both are ready and start_time is not set
-            if ($collection->driver_approved && $collection->partner_approved && !$collection->start_time) {
-                // Set collection start time
-                $this->db->query("
-                    UPDATE collections 
-                    SET start_time = CURRENT_TIMESTAMP,
-                        status = 'In Progress'
-                    WHERE collection_id = :collection_id
-                ");
-                $this->db->bind(':collection_id', $collection->collection_id);
-                $this->db->execute();
-
-                // Create supplier records for all suppliers in the route
-                $this->db->query("
-                    INSERT INTO collection_supplier_records 
-                    (collection_id, supplier_id, status, is_scheduled)
-                    SELECT 
-                        :collection_id,
-                        rs.supplier_id,
-                        'Added',
-                        1
-                    FROM route_suppliers rs
-                    WHERE rs.route_id = :route_id
-                    AND rs.is_active = 1
-                    AND rs.is_deleted = 0
-                ");
-                $this->db->bind(':collection_id', $collection->collection_id);
-                $this->db->bind(':route_id', $collection->route_id);
-                $this->db->execute();
-
-                // Optimize route based on driver's current location
-                $this->optimizeRoute($collection->collection_id, 6.223440958667509, 80.2850332126462);
+                // Optimize the route
+                $route = $routeModel->getRouteById($schedule->route_id);
+                $currentLocation = $this->getCurrentLocation();
+                $this->optimizeRoute($route->route_id, $currentLocation['lat'], $currentLocation['lng']);
             }
 
             $this->db->commit();
             return true;
+
         } catch (Exception $e) {
             $this->db->rollBack();
-            return false;
+            throw $e;
         }
     }
 
@@ -806,5 +798,13 @@ class M_CollectionSchedule {
         $this->db->bind(':start_date', $startDate);
         $this->db->bind(':end_date', $endDate);
         return $this->db->resultSet(); // This will now include route_name and vehicle_number
+    }
+
+    private function getCurrentLocation() {
+        // For now, returning a default location (you should implement proper location tracking)
+        return [
+            'lat' => 6.927079, // Default latitude for Colombo
+            'lng' => 79.861244  // Default longitude for Colombo
+        ];
     }
 } 

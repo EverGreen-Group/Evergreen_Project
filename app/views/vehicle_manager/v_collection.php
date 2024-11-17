@@ -906,4 +906,46 @@ document.addEventListener('DOMContentLoaded', function() {
 }
 </style>
 
+<script>
+function updateCountdown() {
+    const countdownElement = document.querySelector('.countdown');
+    if (!countdownElement) return;
+
+    const startTime = new Date(countdownElement.dataset.startTime).getTime();
+    const endTime = new Date(countdownElement.dataset.endTime).getTime();
+    const windowTime = startTime - (10 * 60 * 1000); // 10 minutes before
+    let hasReloaded = false; // Flag to prevent multiple reloads
+
+    function update() {
+        const now = new Date().getTime();
+        const distanceToStart = windowTime - now;
+        const distanceToEnd = endTime - now;
+
+        if (distanceToStart < 0 && distanceToEnd > 0 && !hasReloaded) {
+            countdownElement.innerHTML = "You can now mark yourself as ready!";
+            // Optionally, you can enable the "Mark as Ready" button here
+            // document.querySelector('.btn-primary').disabled = false;
+            hasReloaded = true; // Set the flag to true to prevent further reloads
+            // location.reload(); // Uncomment if you still want to reload once
+            return;
+        }
+
+        if (distanceToStart > 0) {
+            const hours = Math.floor(distanceToStart / (1000 * 60 * 60));
+            const minutes = Math.floor((distanceToStart % (1000 * 60 * 60)) / (1000 * 60));
+            const seconds = Math.floor((distanceToStart % (1000 * 60)) / 1000);
+
+            countdownElement.innerHTML = `Time until ready: ${hours}h ${minutes}m ${seconds}s`;
+        } else {
+            countdownElement.innerHTML = "Shift has started, you can still mark yourself as ready!";
+        }
+    }
+
+    update();
+    setInterval(update, 1000);
+}
+
+document.addEventListener('DOMContentLoaded', updateCountdown);
+</script>
+
 <?php require APPROOT . '/views/inc/components/footer.php'; ?>

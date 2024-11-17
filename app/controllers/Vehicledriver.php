@@ -10,6 +10,7 @@ class VehicleDriver extends controller {
     private $routeModel;
     private $collectionModel;
     private $googleMapsService;
+    private $scheduleModel;
 
     public function __construct() {
         if (!RoleHelper::hasAnyRole([RoleHelper::ADMIN, RoleHelper::DRIVER])) {
@@ -26,6 +27,7 @@ class VehicleDriver extends controller {
         $this->vehicleModel = $this->model('M_Vehicle');
         $this->routeModel = $this->model('M_Route');
         $this->googleMapsService = new GoogleMapsService();
+        $this->scheduleModel = $this->model('M_CollectionSchedule');
     }
 
     public function index() {
@@ -70,11 +72,11 @@ class VehicleDriver extends controller {
             ];
         }
     
-        $this->view('vehicle_driver/v_shift', $data);
+        $this->view('shared/management/shift', $data);
     }
     
-    public function scheduleDetails($scheduleId) {
-        $schedule = $this->model('M_CollectionSchedule')->getScheduleById($scheduleId);
+    public function scheduleDetails($id) {
+        $schedule = $this->model('M_CollectionSchedule')->getScheduleById($id);
         if (!$schedule) {
             redirect('vehicledriver/shift');
         }
@@ -93,16 +95,17 @@ class VehicleDriver extends controller {
             'team' => $team,
             'vehicle' => $vehicle,
             'userRole' => $userRole,
-            'isReady' => $this->model('M_CollectionSchedule')->isUserReady($scheduleId, $currentUserId)
+            'isReady' => $this->model('M_CollectionSchedule')->isUserReady($id, $currentUserId)
         ];
 
         // Add this to get route suppliers
         $routeSuppliers = $this->routeModel->getRouteSuppliers($data['route']->route_id);
         $data['routeSuppliers'] = $routeSuppliers;
 
-        $data['collection'] = $this->collectionScheduleModel->getCollectionByScheduleId($scheduleId);
+        $data['collection'] = $this->collectionScheduleModel->getCollectionByScheduleId($id);
 
-        $this->view('vehicle_driver/v_schedule_details', $data);
+        $data['viewPath'] = 'shared/collection/schedule_details';
+        $this->view($data['viewPath'], $data);
     }
 
     private function checkShiftTime($scheduleTime, $windowMinutes = 10) {

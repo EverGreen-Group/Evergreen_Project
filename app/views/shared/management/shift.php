@@ -1,9 +1,19 @@
 <?php require APPROOT . '/views/inc/components/header.php'; ?>
-<?php require APPROOT . '/views/inc/components/sidebar_driving_partner.php'; ?>
+<?php require APPROOT . '/views/inc/components/sidebar_vehicle_driver.php'; ?>
 <?php require APPROOT . '/views/inc/components/topnavbar.php'; ?>
 
+<?php
+require_once APPROOT . '/helpers/RoleHelper.php';
+?>
 
 <main class="shift-management-main">
+
+    <?php
+    echo '<pre>';
+    print_r($data);
+    print_r($_SESSION);
+    echo '</pre>';
+    ?>
     <div class="shift-header">
         <h1>Shift Management</h1>
     </div>
@@ -68,7 +78,10 @@
                                 </td>
                                 <td><span class="status-active">Active</span></td>
                                 <td>
-                                    <a href="<?php echo URLROOT; ?>/vehicledriver/scheduleDetails/<?php echo $shift->schedule_id; ?>" 
+                                    <?php
+                                    $baseUrl = RoleHelper::getControllerNameByRole($_SESSION['role_id']);
+                                    ?>
+                                    <a href="<?php echo URLROOT; ?>/<?php echo $baseUrl; ?>/scheduleDetails/<?php echo $shift->schedule_id; ?>" 
                                        class="btn btn-primary btn-sm">View Details</a>
                                 </td>
                             </tr>

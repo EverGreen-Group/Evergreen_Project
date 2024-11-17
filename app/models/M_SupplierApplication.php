@@ -7,10 +7,9 @@ class M_SupplierApplication {
     }
 
     public function createApplication($data, $documents) {
+        $this->db->beginTransaction();
+        
         try {
-            error_log("Starting createApplication method");
-            $this->db->beginTransaction();
-
             // 1. Insert main application
             $this->db->query('INSERT INTO supplier_applications (user_id, primary_phone, secondary_phone, whatsapp_number) 
                              VALUES (:user_id, :primary_phone, :secondary_phone, :whatsapp_number)');
@@ -214,6 +213,20 @@ class M_SupplierApplication {
                 }
             }
 
+            // Store documents
+            foreach ($documents as $docType => $docData) {
+                $sql = "INSERT INTO supplier_documents 
+                        (supplier_id, document_type, encrypted_data, original_name) 
+                        VALUES (:supplier_id, :doc_type, :encrypted_data, :original_name)";
+                
+                $this->db->query($sql);
+                $this->db->bind(':supplier_id', $applicationId);
+                $this->db->bind(':doc_type', $docType);
+                $this->db->bind(':encrypted_data', $docData['encrypted_data']);
+                $this->db->bind(':original_name', $docData['original_name']);
+                $this->db->execute();
+            }
+
             $this->db->commit();
             error_log("Transaction committed successfully");
             return true;
@@ -336,7 +349,7 @@ class M_SupplierApplication {
     // Optional: Add a method to get application documents
     public function getApplicationDocuments($applicationId) {
         $this->db->query('
-            SELECT document_type, file_path, uploaded_at
+            SELECT *
             FROM application_documents
             WHERE application_id = :application_id
         ');
@@ -373,4 +386,122 @@ class M_SupplierApplication {
         
         return $hasApplied;
     }
+
+    // Add this method to your existing class
+    public function getAllApplications() {
+        $this->db->query('SELECT 
+            sa.application_id,
+            sa.user_id,
+            sa.status,
+            sa.created_at,
+            CONCAT(u.first_name, " ", u.last_name) as user_name
+            FROM supplier_applications sa
+            LEFT JOIN users u ON sa.user_id = u.user_id
+            ORDER BY sa.created_at DESC');
+        
+        return $this->db->resultSet();
+    }
+
+    public function getApprovedPendingRoleApplications() {
+        $this->db->query('SELECT 
+            sa.application_id,
+            CONCAT(u.first_name, " ", u.last_name) as user_name
+            FROM supplier_applications sa
+            JOIN users u ON sa.user_id = u.user_id
+            WHERE sa.status = "approved" 
+            AND u.role_id = 7
+            ORDER BY sa.created_at DESC');
+        
+        return $this->db->resultSet();
+    }
+
+
+    public function getWaterSources($applicationId) {
+        $this->db->query('SELECT * FROM application_water_sources WHERE application_id = :application_id');
+        $this->db->bind(':application_id', $applicationId);
+        return $this->db->resultSet();
+    }
+
+    public function getTeaVarieties($applicationId) {
+        $this->db->query('SELECT * FROM application_tea_varieties WHERE application_id = :application_id');
+        $this->db->bind(':application_id', $applicationId);
+        return $this->db->resultSet();
+    }
+
+    public function getTeaDetails($applicationId) {
+        $this->db->query('SELECT * FROM application_tea_details WHERE application_id = :application_id');
+        $this->db->bind(':application_id', $applicationId);
+        return $this->db->single();
+    }
+
+    public function getInfrastructure($applicationId) {
+        $this->db->query('SELECT * FROM application_infrastructure 
+                          WHERE application_id = :application_id');
+        $this->db->bind(':application_id', $applicationId);
+        return $this->db->single();
+    }
+
+    public function getStructures($applicationId) {
+        $this->db->query('SELECT * FROM application_structures 
+                          WHERE application_id = :application_id');
+        $this->db->bind(':application_id', $applicationId);
+        return $this->db->resultSet();
+    }
+
+    public function getPropertyDetails($applicationId) {
+        $this->db->query('SELECT * FROM application_property_details 
+                          WHERE application_id = :application_id');
+        $this->db->bind(':application_id', $applicationId);
+        return $this->db->single();
+    }
+
+    public function getAddress($applicationId) {
+        $this->db->query('SELECT * FROM application_addresses 
+                          WHERE application_id = :application_id');
+        $this->db->bind(':application_id', $applicationId);
+        return $this->db->single();
+    }
+
+    public function getApplicationById($applicationId) {
+        $this->db->query('SELECT * FROM supplier_applications WHERE application_id = :application_id');
+        $this->db->bind(':application_id', $applicationId);
+        return $this->db->single();
+    }
+
+    public function updateApplicationStatus($applicationId, $status) {
+        $this->db->query('UPDATE supplier_applications 
+                          SET status = :status 
+                          WHERE application_id = :application_id');
+                          
+        $this->db->bind(':status', $status);
+        $this->db->bind(':application_id', $applicationId);
+        
+        try {
+            return $this->db->execute();
+        } catch (Exception $e) {
+            error_log("Error updating application status: " . $e->getMessage());
+            return false;
+        }
+    }
+
+    public function approveApplication($applicationId) {
+        $supplierModel = new M_SupplierApplication();
+        if ($supplierModel->updateApplicationStatus($applicationId, 'approved')) {
+            flash('application_message', 'Application has been approved successfully');
+        } else {
+            flash('application_message', 'Something went wrong while approving the application', 'alert alert-danger');
+        }
+        redirect('suppliermanager/applications');
+    }
+    
+    public function rejectApplication($applicationId) {
+        $supplierModel = new M_SupplierApplication();
+        if ($supplierModel->updateApplicationStatus($applicationId, 'rejected')) {
+            flash('application_message', 'Application has been rejected successfully');
+        } else {
+            flash('application_message', 'Something went wrong while rejecting the application', 'alert alert-danger');
+        }
+        redirect('suppliermanager/applications');
+    }
+
 }
