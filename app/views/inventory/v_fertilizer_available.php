@@ -20,18 +20,18 @@
 
     <main>
 
-        <div class="container">
-            <header>
-                <h1>Fertilizer</h1>
-                <div class="search-filter">
-                    <input type="text" placeholder="Search">
-                    <button class="filter-btn">Filter</button>
-                </div>
-                <a href="<?php echo URLROOT; ?>/inventory/fertilizerdashboard">
-                    <button class="create-btn">Fertilizer Dashboard</button>
-                </a>
-            </header>
+        <header style="margin: 20px;">
+            <h1>Fertilizer</h1>
+            <div class="search-filter">
+                <input type="text" placeholder="Search">
+                <button class="filter-btn">Filter</button>
+            </div>
+            <a href="<?php echo URLROOT; ?>/inventory/fertilizerdashboard">
+                <button class="create-btn">Fertilizer Dashboard</button>
+            </a>
+        </header>
 
+        <div class="container">
             <section class="orders">
                 <h2>Available Orders <span class="inventory-count">10 Inventory Plans</span></h2>
                 <table>
