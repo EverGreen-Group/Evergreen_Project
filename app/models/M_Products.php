@@ -80,7 +80,7 @@ class M_Products{
                     profit = :profit,
                     margin = :margin,
                     quantity = :quantity,
-                    unit";
+                    unit= :unit";
         
         // Only update image if a new one is provided
         if (!empty($data['image_path'])) {
