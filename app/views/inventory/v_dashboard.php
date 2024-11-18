@@ -168,7 +168,7 @@
 	document.addEventListener('DOMContentLoaded', function () {
 		var ctx = document.getElementById('machineAllocationChart').getContext('2d');
 		var machineAllocationChart = new Chart(ctx, {
-			type: 'bar',
+			type: 'pie',
 			data: {
 				labels: ['Machine A', 'Machine B', 'Machine C', 'Machine D'],
 				datasets: [{

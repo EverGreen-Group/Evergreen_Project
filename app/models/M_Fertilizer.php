@@ -1,4 +1,4 @@
-
+<?php
 class M_Fertilizer{
     private $db;
 

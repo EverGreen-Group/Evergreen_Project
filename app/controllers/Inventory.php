@@ -54,6 +54,7 @@ class Inventory extends controller
                 'product-name_err' => '',
                 "location_err" => '',
                 "details_err" => '',
+                "code_err" => '',
                 "price_err" => '',
                 "profit_err" => '',
                 "margin_err" => '',
@@ -93,6 +94,9 @@ class Inventory extends controller
             }
             if (empty($data['details'])) {
                 $data['details_err'] = 'Please enter product details';
+            }
+            if (empty($data['code'])) {
+                $data['code_err'] = 'Please enter code';
             }
             if (empty($data['price'])) {
                 $data['price_err'] = 'Please enter price';
@@ -263,7 +267,7 @@ class Inventory extends controller
     public function updateproduct($id) {
         if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             // Sanitize POST data
-            $_POST = filter_input_array(INPUT_POST, FILTER_SANITIZE_STRING);
+            $_POST = filter_input_array(INPUT_POST,FILTER_SANITIZE_STRING);
 
             // Initialize data array with POST data
             $data = [
@@ -271,7 +275,7 @@ class Inventory extends controller
                 'product-name' => trim($_POST['product-name']),
                 'location' => trim($_POST['location']),
                 'details' => trim($_POST['details']),
-                'code' => trim($_POST['code']),
+                "code" => trim($_POST['code']),
                 'price' => trim($_POST['price']),
                 'profit' => trim($_POST['profit']),
                 'margin' => trim($_POST['margin']),
@@ -318,6 +322,9 @@ class Inventory extends controller
             if (empty($data['details'])) {
                 $data['details_err'] = 'Please enter product details';
             }
+            if (empty($data['code'])) {
+                $data['code_err'] = 'Please enter code';
+            }
             if (empty($data['price'])) {
                 $data['price_err'] = 'Please enter price';
             }
@@ -333,7 +340,7 @@ class Inventory extends controller
 
             // Make sure no errors
             if (empty($data['product-name_err']) && empty($data['location_err']) &&
-                empty($data['details_err']) && empty($data['price_err']) &&
+                empty($data['details_err']) && empty($data['price_err']) &&empty($data['code_err']) &&
                 empty($data['profit_err']) && empty($data['margin_err']) &&
                 empty($data['quantity_err'])) {
 
