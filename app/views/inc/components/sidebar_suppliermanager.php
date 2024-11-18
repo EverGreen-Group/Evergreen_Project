@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" href="<?php echo URLROOT; ?>/css/components/style.css" />
+
     <title>Tea Leaves Supplier Manager</title>
 </head>
 <body>
@@ -14,47 +14,48 @@
         </a>
         <ul class="side-menu top">
 			<li>
-				<a href="<?php echo URLROOT; ?>/Suppliermanager/">
-					<i class='bx bxs-dashboard'></i>
-					<span class="text">Dashboard</span>
+				<a href="<?php echo URLROOT; ?>/Suppliermanager/suppliers">
+					<i class='bx bx-leaf'></i>
+					<span class="text">Suppliers</span>
+				</a>
+			</li>
+			<li>
+				<a href="<?php echo URLROOT; ?>/Suppliermanager/collections">
+					<i class='bx bxs-collection' ></i>
+					<span class="text">Collections</span>
 				</a>
 			</li>
 			<li>
 				<a href="<?php echo URLROOT; ?>/Suppliermanager/leafsupply">
 					<i class='bx bxs-shopping-bag-alt'></i>
-					<span class="text">Leaves Supply</span>
+					<span class="text">Tea Leaves Supply</span>
 				</a>
 			</li>			
 			<li>
 					<a href="<?php echo URLROOT; ?>/Suppliermanager/fertilizerorders">
-					<i class='bx bxs-doughnut-chart'></i>
+					<i class='bx bxs-basket' ></i>
 					<span class="text">Fertilizer Orders</span>
 				</a>
 			</li>
 			<li>
-				<a href="<?php echo URLROOT; ?>/Suppliermanager/allnotifications">
-					<i class='bx bxs-message-dots'></i>
-					<span class="text">Notifications</span>
-				</a>
-			</li>
-			<li>
 					<a href="<?php echo URLROOT; ?>/Suppliermanager/payments">
-					<i class='bx bxs-group'></i>
+					<i class='bx bx-wallet' ></i>
 					<span class="text">Payments</span>
 				</a>
 			</li>
 			<li>
-				<a href="<?php echo URLROOT; ?>/Suppliermanager/complaints">
-					<i class='bx bxs-group'></i>
-					<span class="text">Complaints</span>
+				<a href="<?php echo URLROOT; ?>/Suppliermanager/chat">
+					<i class='bx bxs-message-dots' ></i>
+					<span class="text">Chat</span>
 				</a>
 			</li>
 			<li>
-				<a href="<?php echo URLROOT; ?>/Suppliermanager/profile">
-					<i class='bx bxs-group'></i>
-					<span class="text">Profile</span>
+				<a href="<?php echo URLROOT; ?>/Suppliermanager/complaints">
+					<i class='bx bxs-alarm-exclamation' ></i>
+					<span class="text">Complaints</span>
 				</a>
 			</li>
+
 		</ul>
         <ul class="side-menu">
             <li>

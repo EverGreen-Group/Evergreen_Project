@@ -55,7 +55,7 @@
                         </span>
                     </li>
                 </ul>
-                 </div>
+                </div>
                 <div class="table-data">
                     <div class="order">
                         <div class="head">

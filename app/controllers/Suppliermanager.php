@@ -21,6 +21,11 @@ class Suppliermanager extends Controller {
         $data = [ ];
         $this->view('supplier_manager/v_supplement_dashboard', $data);
     }
+
+    public function collections() {
+        $data = [];
+        $this->view('supplier_manager/v_collection', $data);
+    }
     
     public function allnotifications()
     {
@@ -64,12 +69,6 @@ class Suppliermanager extends Controller {
         $this->view('supplier_manager/v_leaf_supply', $data);
     }
 
-    public function notifications()
-    {
-        $data = [];
-
-        $this->view('supplier_manager/v_notifications', $data);
-    }
 
     public function payments()
     {
@@ -97,6 +96,13 @@ class Suppliermanager extends Controller {
         $data = [];
 
         $this->view('supplier_manager/v_route_schedule', $data);
+    }
+
+    public function chat()
+    {
+        $data = [];
+
+        $this->view('supplier_manager/v_chat', $data);
     }
 
     public function settings()
