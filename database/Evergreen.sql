@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: localhost
--- Generation Time: Nov 13, 2024 at 11:17 AM
+-- Generation Time: Nov 18, 2024 at 07:28 PM
 -- Server version: 10.4.32-MariaDB
 -- PHP Version: 8.2.12
 
@@ -18,7 +18,7 @@ SET time_zone = "+00:00";
 /*!40101 SET NAMES utf8mb4 */;
 
 --
--- Database: `Evergreen`
+-- Database: `tfms`
 --
 
 -- --------------------------------------------------------
@@ -490,6 +490,24 @@ INSERT INTO `employees` (`employee_id`, `user_id`, `salary`, `hire_date`, `dob`,
 -- --------------------------------------------------------
 
 --
+-- Table structure for table `Fertilizer`
+--
+
+CREATE TABLE `Fertilizer` (
+  `id` int(11) NOT NULL,
+  `fertilizer_name` varchar(255) NOT NULL,
+  `company_name` varchar(255) NOT NULL,
+  `details` text DEFAULT NULL,
+  `code` varchar(50) NOT NULL,
+  `price` decimal(10,2) NOT NULL,
+  `quantity` int(11) NOT NULL,
+  `unit` varchar(50) NOT NULL,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=latin1 COLLATE=latin1_swedish_ci;
+
+-- --------------------------------------------------------
+
+--
 -- Table structure for table `fertilizer_inventory`
 --
 
@@ -760,21 +778,32 @@ CREATE TABLE `password_resets` (
 -- --------------------------------------------------------
 
 --
--- Table structure for table `products`
+-- Table structure for table `product`
 --
 
-CREATE TABLE `products` (
+CREATE TABLE `product` (
   `id` int(11) NOT NULL,
   `product_name` varchar(255) NOT NULL,
   `location` varchar(255) NOT NULL,
   `details` text DEFAULT NULL,
+  `code` varchar(50) NOT NULL,
   `price` decimal(10,2) NOT NULL,
-  `profit` decimal(10,2) NOT NULL,
-  `margin` decimal(5,2) NOT NULL,
-  `quantity` int(11) NOT NULL,
-  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
-  `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
+  `profit` decimal(10,2) DEFAULT NULL,
+  `margin` decimal(5,2) DEFAULT NULL,
+  `quantity` int(11) DEFAULT NULL,
+  `unit` varchar(50) DEFAULT NULL,
+  `image_path` varchar(255) DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1 COLLATE=latin1_swedish_ci;
+
+--
+-- Dumping data for table `product`
+--
+
+INSERT INTO `product` (`id`, `product_name`, `location`, `details`, `code`, `price`, `profit`, `margin`, `quantity`, `unit`, `image_path`) VALUES
+(5, 'red tea', 'warehouse-a', 'red', 'red', 12345.00, 23.00, 32.00, 12, 'item', '673a305a21a7b.png'),
+(8, 'Tea', 'warehouse-b', 'super liyana', 'qwe', 2500.00, 500.00, 500.00, 20000, 'item', '673978432e964.svg'),
+(9, 'asdfgh', 'warehouse-a', 'asdfgh', 'saas', 100.00, 300.00, 500.00, 20000, 'kg', '673a2f8ad49f9.png'),
+(10, 'Lakshitha', 'warehouse-a', 'dfsdfs', 'sdfsdfs', 123456.00, 12.00, 12.00, 1999, 'item', '6739ab5919be0.png');
 
 -- --------------------------------------------------------
 
@@ -1017,10 +1046,11 @@ CREATE TABLE `tea_leaves_inventory` (
 
 --
 -- Table structure for table `tea_products`
---Database
+--
 
 CREATE TABLE `tea_products` (
   `product_id` int(11) NOT NULL,
+  `name` varchar(100) NOT NULL,
   `description` text DEFAULT NULL,
   `category` enum('Black','Green','White','Oolong','Blend') NOT NULL,
   `unit_price` decimal(10,2) NOT NULL,
@@ -1423,6 +1453,13 @@ ALTER TABLE `employees`
   ADD KEY `shift_id` (`shift_id`);
 
 --
+-- Indexes for table `Fertilizer`
+--
+ALTER TABLE `Fertilizer`
+  ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `code` (`code`);
+
+--
 -- Indexes for table `fertilizer_inventory`
 --
 ALTER TABLE `fertilizer_inventory`
@@ -1538,10 +1575,11 @@ ALTER TABLE `password_resets`
   ADD KEY `user_id` (`user_id`);
 
 --
--- Indexes for table `products`
+-- Indexes for table `product`
 --
-ALTER TABLE `products`
-  ADD PRIMARY KEY (`id`);
+ALTER TABLE `product`
+  ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `code` (`code`);
 
 --
 -- Indexes for table `product_inventory`
@@ -1845,6 +1883,12 @@ ALTER TABLE `employees`
   MODIFY `employee_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=14;
 
 --
+-- AUTO_INCREMENT for table `Fertilizer`
+--
+ALTER TABLE `Fertilizer`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+
+--
 -- AUTO_INCREMENT for table `fertilizer_inventory`
 --
 ALTER TABLE `fertilizer_inventory`
@@ -1941,10 +1985,10 @@ ALTER TABLE `password_resets`
   MODIFY `reset_id` int(11) NOT NULL AUTO_INCREMENT;
 
 --
--- AUTO_INCREMENT for table `products`
+-- AUTO_INCREMENT for table `product`
 --
-ALTER TABLE `products`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+ALTER TABLE `product`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=13;
 
 --
 -- AUTO_INCREMENT for table `product_inventory`
