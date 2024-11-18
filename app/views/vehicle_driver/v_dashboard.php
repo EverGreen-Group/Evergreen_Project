@@ -1,816 +1,283 @@
 <?php
-// Assume these are set elsewhere in your application
-$pageTitle = "Driver Dashboard";
-$driverName = "John Doe";
-$teamName = "Alpha Team";
-$vehicleInfo = "Toyota Hilux (ABC-1234)";
 
-// This would be dynamically fetched in a real application
-$driverLocation = ['lat' => 6.223440958667509, 'lng' => 80.2850332126462];
-
-
-
-
-$collections = [
-    [
-        'id' => 1,
-        'supplierName' => "Simaak Niyaz",
-        'remarks' => "Meet at the main gate, call upon arrival",
-        'location' => ['lat' => 6.2173037, 'lng' => 80.2564385],
-        'address' => "123 Tea Lane, Galle",
-        'image' => "https://randomuser.me/api/portraits/men/5.jpg",
-        'estimatedCollection' => 500
-    ],
-    [
-        'id' => 2,
-        'supplierName' => "Mountain Top Tea",
-        'remarks' => "Entrance is on the north side of the building",
-        'location' => ['lat' => 6.243808243551064, 'lng' => 80.25967072303547],
-        'address' => "456 Hill Road, Galle",
-        'image' => "https://randomuser.me/api/portraits/men/7.jpg",
-        'estimatedCollection' => 350
-    ],
-    [
-        'id' => 3,
-        'supplierName' => "Valley View Estates",
-        'remarks' => "Please use service entrance",
-        'location' => ['lat' => 6.282762791987652, 'lng' => 80.26495604611944],
-        'address' => "789 Valley Street, Galle",
-        'image' => "https://randomuser.me/api/portraits/men/8.jpg",
-        'estimatedCollection' => 600
-    ],
-    [
-        'id' => 4,
-        'supplierName' => "Valley View Estates",
-        'remarks' => "Please use service entrance",
-        'location' => ['lat' => 6.221843659731916, 'lng' => 80.2425869548138],
-        'address' => "789 Valley Street, Galle",
-        'image' => "https://randomuser.me/api/portraits/men/8.jpg",
-        'estimatedCollection' => 340
-    ],
-    [
-        'id' => 5,
-        'supplierName' => "Valley View Estates",
-        'remarks' => "Please use service entrance",
-        'location' => ['lat' => 6.217412876212934, 'lng' => 80.28222702962783],
-        'address' => "789 Valley Street, Galle",
-        'image' => "https://randomuser.me/api/portraits/men/8.jpg",
-        'estimatedCollection' => 349
-    ]
-    
-];
+require APPROOT . '/views/inc/components/header.php';
+require APPROOT . '/views/inc/components/sidebar_vehicle_driver.php';
+require APPROOT . '/views/inc/components/topnavbar.php';
 ?>
 
-<style>
-    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
-
-    :root {
-        --primary-color: #4CAF50;
-        --warning-color: #FF5722;
-        --background-color: #F5F7FA;
-        --text-color: #333333;
-        --card-background: #FFFFFF;
-        --card-outline: #E0E0E0;
-        --heading-color: #1C2F40;
-    }
-
-    body, html {
-        font-family: 'Inter', sans-serif;
-        color: var(--text-color);
-        background-color: var(--background-color);
-        margin: 0;
-        padding: 0;
-        height: 100vh;
-        overflow: hidden;
-        line-height: 1.6;
-    }
-
-    h1, h2, h3, h4, h5, h6 {
-        font-family: 'Inter', sans-serif;
-        color: var(--heading-color);
-        line-height: 1.2;
-    }
-
-    .dashboard-container {
-        display: grid;
-        grid-template-columns: 1fr 300px;
-        grid-template-rows: auto 1fr auto;
-        height: calc(100vh - 60px);
-        gap: 20px;
-        padding: 20px;
-        box-sizing: border-box;
-    }
-
-    #map-container {
-        grid-column: 1 / 2;
-        grid-row: 1 / 3;
-        height: 100%;
-        border-radius: 8px;
-        overflow: hidden;
-        /* outline: 3px solid var(--card-outline); */
-    }
-
-    .card {
-        background: var(--card-background);
-        border-radius: 8px;
-        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-        padding: 20px;
-        /* outline: 3px solid var(--card-outline); */
-    }
-
-    .current-supplier {
-        grid-column: 2 / 3;
-        grid-row: 1 / 2;
-    }
-
-    .supplier-card {
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-    }
-
-    .supplier-image {
-        width: 100px;
-        height: 100px;
-        border-radius: 50%;
-        margin-bottom: 15px;
-    }
-
-    .supplier-info h4 {
-        margin: 0 0 10px 0;
-        font-size: 1.25rem;
-        text-align: center;
-        font-weight: 600;
-    }
-
-    .supplier-info p {
-        margin: 5px 0;
-        font-size: 0.9rem;
-        color: #555555;
-        text-align: center;
-    }
-
-    .supplier-info p#supplier-collection {
-        font-size: 0.85rem;
-        color: #777777;
-    }
-
-    .supplier-actions {
-        display: flex;
-        justify-content: center;
-        gap: 8px;
-        margin-top: 12px;
-    }
-
-    .upcoming-collections {
-        grid-column: 2 / 3;
-        grid-row: 2 / 3;
-        overflow-y: auto;
-    }
-
-    .collection-item {
-        display: flex;
-        align-items: center;
-        margin-top: 15px;
-        padding: 10px;
-        background-color: #F0F1F5;
-        border-radius: 8px;
-    }
-
-    .collection-item img {
-        width: 40px;
-        height: 40px;
-        border-radius: 50%;
-        margin-right: 15px;
-    }
-
-    .collection-item-details {
-        font-family: 'Inter', sans-serif;
-    }
-
-    .collection-item-details strong {
-        font-weight: 600;
-    }
-
-    .shift-info {
-        grid-column: 1 / 3;
-        grid-row: 3 / 4;
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-    }
-
-    .shift-details {
-        display: flex;
-        gap: 20px;
-    }
-
-    .shift-detail {
-        text-align: center;
-    }
-
-    .shift-detail h4 {
-        margin: 0;
-        font-size: 0.8rem;
-        color: #888888;
-        text-transform: uppercase;
-        letter-spacing: 0.5px;
-    }
-
-    .shift-detail p {
-        margin: 5px 0 0;
-        font-size: 1rem;
-        font-weight: 600;
-    }
-
-    .button-row {
-        display: flex;
-        gap: 10px;
-    }
-
-    .action-btn {
-        padding: 8px 12px;
-        border: none;
-        border-radius: 6px;
-        background-color: #2196F3;
-        color: white;
-        font-size: 0.8rem;
-        font-weight: 600;
-        cursor: pointer;
-        transition: background-color 0.3s, transform 0.1s;
-        text-transform: uppercase;
-        letter-spacing: 0.5px;
-    }
-
-    .action-btn:hover {
-        background-color: #1976D2;
-    }
-
-    .action-btn:active {
-        transform: scale(0.98);
-    }
-
-    .action-btn.warning {
-        background-color: var(--warning-color);
-    }
-
-    .action-btn.warning:hover {
-        background-color: #E64A19;
-    }
-
-    h3 {
-        margin-top: 0;
-        color: var(--heading-color);
-        font-size: 1.1rem;
-        font-weight: 600;
-        text-transform: uppercase;
-        letter-spacing: 0.5px;
-    }
-
-    .map-label {
-        text-shadow: 1px 1px 4px rgba(0, 0, 0, 0.9);
-        padding: 2px;
-        font-family: 'Inter', sans-serif;
-        font-weight: 600;
-    }
-
-</style>
-
-<?php require APPROOT . '/views/inc/components/header.php'; ?>
-
-<!-- Side bar -->
-<?php require APPROOT . '/views/inc/components/sidebar_vehicle_driver.php'; ?>
-
-<!-- Top nav bar -->
-<?php require APPROOT . '/views/inc/components/topnavbar.php'; ?>
-
-<!-- MAIN -->
 <main>
-    <div class="dashboard-container">
-        <div id="map-container"></div>
-        
-        <div class="current-supplier card" style="outline: 3px solid #2196F3;">
-            <div class="supplier-card">
-                <img src="<?php echo htmlspecialchars($collections[0]['image']); ?>" alt="Supplier" class="supplier-image">
-                <div class="supplier-info">
-                    <h4 id="supplier-name"><?php echo htmlspecialchars($collections[0]['supplierName']); ?></h4>
-                    <p id="supplier-address"><?php echo htmlspecialchars($collections[0]['address']); ?></p>
-                    <p id="supplier-collection">Est. Collection: <?php echo htmlspecialchars($collections[0]['estimatedCollection']); ?> kg</p>
-                </div>
-            </div>
-            <p id="supplier-remarks"><?php echo htmlspecialchars($collections[0]['remarks']); ?></p>
-            <div class="supplier-actions">
-                <button class="action-btn" onclick="callSupplier()">Call</button>
-                <button class="action-btn" onclick="navigateToSupplier()">Navigate</button>
-                <button class="action-btn warning" onclick="alertSupplier()">Alert</button>         
-            </div>
+    <div class="head-title">
+        <div class="left">
+            <h1>Driver Dashboard</h1>
+            <ul class="breadcrumb">
+                <li><a href="#">Dashboard</a></li>
+                <li>Overview</li>
+            </ul>
         </div>
+    </div>
 
-        <div class="upcoming-collections card">
-            <h3>Upcoming Collections</h3>
-            <?php foreach (array_slice($collections, 1) as $collection): ?>
-                <div class="collection-item">
-                    <img src="<?php echo htmlspecialchars($collection['image']); ?>" alt="<?php echo htmlspecialchars($collection['supplierName']); ?>">
-                    <div class="collection-item-details">
-                        <strong><?php echo htmlspecialchars($collection['supplierName']); ?></strong><br>
-                        <?php echo htmlspecialchars($collection['address']); ?>
+    <!-- Quick Stats -->
+    <ul class="route-box-info">
+        <li>
+            <i class='bx bxs-timer'></i>
+            <span class="text">
+                <p>Next Collection</p>
+                <h3>2:30 PM</h3>
+                <span>Hatton Central</span>
+            </span>
+        </li>
+        <li>
+            <i class='bx bxs-calendar'></i>
+            <span class="text">
+                <p>Today's Progress</p>
+                <h3>4/6</h3>
+                <span>Collections</span>
+            </span>
+        </li>
+        <li>
+            <i class='bx bxs-map'></i>
+            <span class="text">
+                <p>Distance Today</p>
+                <h3>45 km</h3>
+                <span>of 75 km planned</span>
+            </span>
+        </li>
+    </ul>
+
+    <!-- Earnings Overview -->
+    <div class="table-data">
+        <div class="order">
+            <div class="head">
+                <h3>Monthly Earnings - July 2024</h3>
+                <div class="total-earnings">Rs. 45,750</div>
+            </div>
+            <div class="earnings-breakdown">
+                <div class="earnings-chart">
+                    <canvas id="earningsChart"></canvas>
+                </div>
+                <div class="earnings-details">
+                    <div class="breakdown-item">
+                        <span class="label">Base Salary</span>
+                        <span class="amount">Rs. 30,000</span>
+                    </div>
+                    <div class="breakdown-item">
+                        <span class="label">Distance Bonus</span>
+                        <span class="amount">Rs. 8,250</span>
+                    </div>
+                    <div class="breakdown-item">
+                        <span class="label">On-time Bonus</span>
+                        <span class="amount">Rs. 4,500</span>
+                    </div>
+                    <div class="breakdown-item">
+                        <span class="label">Overtime</span>
+                        <span class="amount">Rs. 3,000</span>
                     </div>
                 </div>
-            <?php endforeach; ?>
+            </div>
         </div>
+    </div>
 
-        <div class="shift-info card">
-            <div class="shift-details">
-                <div class="shift-detail">
-                    <h4>Shift Time</h4>
-                    <p id="shift-time">08:00 - 17:00</p>
-                </div>
-                <div class="shift-detail">
-                    <h4>Elapsed Time</h4>
-                    <p id="elapsed-time">00:00</p>
-                </div>
-                <div class="shift-detail">
-                    <h4>Team Name</h4>
-                    <p id="team-name"><?php echo htmlspecialchars($teamName); ?></p>
-                </div>
-                <div class="shift-detail">
-                    <h4>Vehicle</h4>
-                    <p id="vehicle-info"><?php echo htmlspecialchars($vehicleInfo); ?></p>
-                </div>
+    <!-- Collection History -->
+    <div class="table-data">
+        <div class="order">
+            <div class="head">
+                <h3>Recent Collections</h3>
             </div>
-            <div class="button-row">
-                <button id="arrived-btn" class="action-btn">Arrived</button>
-                <button id="delay-btn" class="action-btn warning">Report Delay</button>
-                <button id="cancel-btn" class="action-btn warning">Cancel Collection</button>
-            </div>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Date</th>
+                        <th>Location</th>
+                        <th>Time</th>
+                        <th>Status</th>
+                        <th>Distance</th>
+                        <th>Earnings</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>Jul 15, 2024</td>
+                        <td>Hatton Central</td>
+                        <td>2:30 PM</td>
+                        <td><span class="status completed">Completed</span></td>
+                        <td>15 km</td>
+                        <td>Rs. 1,500</td>
+                    </tr>
+                    <tr>
+                        <td>Jul 15, 2024</td>
+                        <td>Nuwara Eliya Hub</td>
+                        <td>11:45 AM</td>
+                        <td><span class="status completed">Completed</span></td>
+                        <td>12 km</td>
+                        <td>Rs. 1,200</td>
+                    </tr>
+                    <tr>
+                        <td>Jul 14, 2024</td>
+                        <td>Talawakelle Point</td>
+                        <td>3:15 PM</td>
+                        <td><span class="status pending">Pending</span></td>
+                        <td>18 km</td>
+                        <td>Rs. 1,800</td>
+                    </tr>
+                </tbody>
+            </table>
         </div>
     </div>
 </main>
 
-<script async defer src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCdt_khahhXrKdrA8cLgKeQB2CZtde-_Vc&callback=initMap"></script>
+<style>
+.route-box-info {
+    display: flex;
+    justify-content: space-between;
+    gap: 24px;
+    margin-top: 36px;
+    list-style: none;
+    padding: 0;
+}
+
+.route-box-info li {
+    flex: 1;
+    background: var(--light);
+    border-radius: 20px;
+    padding: 24px;
+    display: flex;
+    align-items: center;
+    gap: 24px;
+}
+
+.route-box-info li i {
+    font-size: 36px;
+    color: var(--main);
+    background: var(--light-main);
+    border-radius: 10%;
+    padding: 16px;
+}
+
+.route-box-info li .text h3 {
+    font-size: 24px;
+    font-weight: 600;
+    color: var(--dark);
+    margin: 0;
+}
+
+.route-box-info li .text p {
+    font-size: 14px;
+    color: var(--dark-grey);
+    margin: 0;
+}
+
+/* Earnings Section */
+.earnings-breakdown {
+    display: grid;
+    grid-template-columns: 2fr 1fr;
+    gap: 24px;
+    margin-top: 20px;
+}
+
+.earnings-chart {
+    background: var(--light);
+    padding: 20px;
+    border-radius: 10px;
+    height: 300px;
+}
+
+.earnings-details {
+    background: var(--light);
+    padding: 20px;
+    border-radius: 10px;
+}
+
+.breakdown-item {
+    display: flex;
+    justify-content: space-between;
+    padding: 12px 0;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.breakdown-item:last-child {
+    border-bottom: none;
+}
+
+.breakdown-item .label {
+    color: var(--dark-grey);
+}
+
+.breakdown-item .amount {
+    font-weight: 600;
+    color: var(--dark);
+}
+
+.total-earnings {
+    font-size: 24px;
+    font-weight: 600;
+    color: var(--main);
+}
+
+/* Table Styles */
+table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+th, td {
+    padding: 12px;
+    text-align: left;
+    border-bottom: 1px solid var(--border-color);
+}
+
+th {
+    font-weight: 600;
+    color: var(--dark-grey);
+}
+
+.status {
+    padding: 6px 12px;
+    border-radius: 20px;
+    font-size: 14px;
+}
+
+.status.completed {
+    background: var(--light-success);
+    color: var(--success);
+}
+
+.status.pending {
+    background: var(--light-warning);
+    color: var(--warning);
+}
+</style>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
-    let map;
-    let directionsService;
-    let directionsRenderer;
-    let driverMarker;
-
-    const collections = <?php echo json_encode($collections); ?>;
-    const driverLocation = <?php echo json_encode($driverLocation); ?>;
-
-    function initMap() {
-        directionsService = new google.maps.DirectionsService();
-        firstRouteRenderer = new google.maps.DirectionsRenderer({
-            suppressMarkers: true,
-            polylineOptions: {
-                strokeColor: "#FF0000", // Red for the first route
-                strokeWeight: 5
-            }
-        });
-
-
-        // Renderer for the remaining routes (in green)
-        remainingRouteRenderer = new google.maps.DirectionsRenderer({
-            suppressMarkers: true,
-            polylineOptions: {
-                strokeColor: "#4CAF50", // Green for remaining routes
-                strokeWeight: 5
-            }
-        });
-
-        map = new google.maps.Map(document.getElementById("map-container"), {
-            center: driverLocation,
-            zoom: 14, // Increased zoom level
-            styles: [
-                {
-                    featureType: "poi",
-                    elementType: "labels",
-                    stylers: [{ visibility: "off" }]
-                },
-                {
-                    featureType: "transit",
-                    elementType: "labels",
-                    stylers: [{ visibility: "off" }]
-                },
-                { elementType: "geometry", stylers: [{ color: "#242f3e" }] },
-                { elementType: "labels.text.stroke", stylers: [{ color: "#242f3e" }] },
-                { elementType: "labels.text.fill", stylers: [{ color: "#746855" }] },
-                {
-                    featureType: "administrative.locality",
-                    elementType: "labels.text.fill",
-                    stylers: [{ color: "#d59563" }],
-                },
-                {
-                    featureType: "road",
-                    elementType: "geometry",
-                    stylers: [{ color: "#38414e" }],
-                },
-                {
-                    featureType: "road",
-                    elementType: "geometry.stroke",
-                    stylers: [{ color: "#212a37" }],
-                },
-                {
-                    featureType: "road",
-                    elementType: "labels.text.fill",
-                    stylers: [{ color: "#9ca5b3" }],
-                },
-                {
-                    featureType: "water",
-                    elementType: "geometry",
-                    stylers: [{ color: "#17263c" }],
-                },
-                {
-                    featureType: "water",
-                    elementType: "labels.text.fill",
-                    stylers: [{ color: "#515c6d" }],
-                },
-                {
-                    featureType: "water",
-                    elementType: "labels.text.stroke",
-                    stylers: [{ color: "#17263c" }],
-                },
-            ],
-            disableDefaultUI: true
-        });
-
-        remainingRouteRenderer.setMap(map);
-        
-        addCustomMarkers();
-        firstRouteRenderer.setMap(map);
-        
-        updateRoute();
-    }
-
-    // function navigateToSupplier() { 
-    //     const driverLat = driverLocation.lat;
-    //     const driverLng = driverLocation.lng;
-        
-    //     const supplier = collections[0]; // Get the first supplier
-    //     const supplierLat = supplier.location.lat;
-    //     const supplierLng = supplier.location.lng;
-
-    //     const url = `https://www.google.com/maps/dir/?api=1&origin=${driverLat},${driverLng}&destination=${supplierLat},${supplierLng}&travelmode=driving`;
-        
-    //     window.open(url, '_blank');
-    // }
-    // old method, it just takes from the collection array
-
-
-
-    function navigateToSupplier() {
-        // Find the closest supplier
-        const closestSupplier = getClosestSupplier(driverLocation, collections);
-
-        if (!closestSupplier) {
-            console.error("No closest supplier found.");
-            return;
-        }
-
-        // Open Google Maps with the navigation to the closest supplier
-        const url = `https://www.google.com/maps/dir/?api=1&origin=${driverLocation.lat},${driverLocation.lng}&destination=${closestSupplier.location.lat},${closestSupplier.location.lng}&travelmode=driving`;
-        window.open(url, '_blank');
-    }
-
-    // Helper function to get the closest supplier
-    function getClosestSupplier(driverLocation, collections) {
-        let closestSupplier = null;
-        let shortestDistance = Infinity;
-
-        collections.forEach(collection => {
-            const distance = getDistanceFromLatLng(driverLocation, collection.location);
-            if (distance < shortestDistance) {
-                shortestDistance = distance;
-                closestSupplier = collection;
-            }
-        });
-
-        return closestSupplier;
-    }
-
-    // Helper function to calculate distance between two locations (Haversine formula)
-    function getDistanceFromLatLng(point1, point2) {
-        const lat1 = point1.lat;
-        const lon1 = point1.lng;
-        const lat2 = point2.lat;
-        const lon2 = point2.lng;
-        const R = 6371; // Radius of the earth in km
-        const dLat = deg2rad(lat2 - lat1);
-        const dLon = deg2rad(lon2 - lon1);
-        const a =
-            Math.sin(dLat / 2) * Math.sin(dLat / 2) +
-            Math.cos(deg2rad(lat1)) * Math.cos(deg2rad(lat2)) *
-            Math.sin(dLon / 2) * Math.sin(dLon / 2);
-        const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-        const d = R * c; // Distance in km
-        return d;
-    }
-
-    function deg2rad(deg) {
-        return deg * (Math.PI / 180);
-    }
-
-
-
-
-
-
-    function updateRoute() {
-        const driverLoc = {
-            lat: <?php echo $driverLocation['lat']; ?>,
-            lng: <?php echo $driverLocation['lng']; ?>
-        };
-
-        // Sort collections based on distance from the driver's location
-        const sortedCollections = [...collections];
-        sortedCollections.sort((a, b) => {
-            const distanceA = getDistanceFromLatLng(driverLoc, a.location);
-            const distanceB = getDistanceFromLatLng(driverLoc, b.location);
-            return distanceA - distanceB;
-        });
-
-        const firstDestination = sortedCollections[0].location;
-        const remainingWaypoints = sortedCollections.slice(1).map(collection => ({
-            location: collection.location,
-            stopover: true
-        }));
-
-        // First route (driver -> closest supplier)
-        const firstRouteRequest = {
-            origin: driverLoc,
-            destination: firstDestination,
-            travelMode: "DRIVING"
-        };
-
-        // Remaining route (closest supplier -> rest of the collections)
-        const remainingRouteRequest = {
-            origin: firstDestination,
-            destination: sortedCollections[sortedCollections.length - 1].location,
-            waypoints: remainingWaypoints,
-            travelMode: "DRIVING",
-            optimizeWaypoints: true
-        };
-
-        // Display the first route
-        directionsService.route(firstRouteRequest, (result, status) => {
-            if (status === "OK") {
-                firstRouteRenderer.setDirections(result);
-            }
-        });
-
-        // Display the remaining route
-        directionsService.route(remainingRouteRequest, (result, status) => {
-            if (status === "OK") {
-                remainingRouteRenderer.setDirections(result);
-                addMarkers(sortedCollections);
-            }
-        });
-    }
-
-
-
-    function addMarkers(sortedCollections) {
-        // Marker for the first supplier
-        const firstSupplier = sortedCollections[0];
-        new google.maps.Marker({
-            position: firstSupplier.location,
-            map: map,
-            icon: {
-                path: google.maps.SymbolPath.CIRCLE,
-                scale: 10,
-                fillColor: "#FF0000", // Red for first supplier
-                fillOpacity: 1,
-                strokeWeight: 2,
-                strokeColor: "#FFFFFF"
-            },
-            title: `${firstSupplier.supplierName} - ${firstSupplier.estimatedCollection}kg`
-        });
-
-        // Markers for the remaining suppliers
-        const remainingSuppliers = sortedCollections.slice(1);
-        remainingSuppliers.forEach(collection => {
-            new google.maps.Marker({
-                position: collection.location,
-                map: map,
-                icon: {
-                    path: google.maps.SymbolPath.CIRCLE,
-                    scale: 10,
-                    fillColor: "#4CAF50", // Green for remaining suppliers
-                    fillOpacity: 1,
-                    strokeWeight: 2,
-                    strokeColor: "#FFFFFF"
-                },
-                title: `${collection.supplierName} - ${collection.estimatedCollection}kg`
-            });
-        });
-
-        // Add the driver's marker
-        addDriverMarker(driverLocation);
-    }
-
-    function addDriverMarker(position) {
-        if (driverMarker) {
-            driverMarker.setMap(null);
-        }
-
-        driverMarker = new google.maps.Marker({
-            position: position,
-            map: map,
-            icon: {
-                path: google.maps.SymbolPath.FORWARD_CLOSED_ARROW,
-                scale: 6,
-                fillColor: "#FF5722",
-                fillOpacity: 1,
-                strokeWeight: 2
-            }
-        });
-
-        map.setCenter(position);
-    }
-
-
-    function addCurrentSupplierMarker() {
-        const currentSupplier = collections[0];
-        const marker = new google.maps.Marker({
-            position: currentSupplier.location,
-            map: map,
-            icon: {
-                path: google.maps.SymbolPath.CIRCLE,
-                scale: 10,
-                fillColor: "#4CAF50", // Green color
-                fillOpacity: 1,
-                strokeWeight: 2,
-                strokeColor: "#FFFFFF"
-            },
-            title: `${currentSupplier.supplierName} - ${currentSupplier.estimatedCollection}kg`
-        });
-    }
-
-
-
-    function addUpcomingCollectionsMarkers() {
-        const upcomingCollections = collections.slice(1);
-        upcomingCollections.forEach((collection) => {
-            const marker = new google.maps.Marker({
-                position: collection.location,
-                map: map,
-                icon: {
-                    path: google.maps.SymbolPath.CIRCLE,
-                    scale: 10,
-                    fillColor: "#FF5722", // Red color
-                    fillOpacity: 1,
-                    strokeWeight: 2,
-                    strokeColor: "#FFFFFF"
-                },
-                title: `${collection.supplierName} - ${collection.estimatedCollection}kg`
-            });
-        });
-    }
-
-
-
-
-    function addCustomMarkers() {
-        collections.forEach((collection, index) => {
-            const marker = new google.maps.Marker({
-                position: collection.location,
-                map: map,
-                icon: {
-                    path: google.maps.SymbolPath.CIRCLE,
-                    scale: 10,
-                    fillColor: "#2196F3",  // Blue marker color
-                    fillOpacity: 1,
-                    strokeWeight: 2,
-                    strokeColor: "#FFFFFF"
-                },
-                label: {
-                    text: `${collection.supplierName}`,  // Display only supplier name above marker
-                    color: "#FFFFFF",
-                    fontSize: "14px",
-                    fontWeight: "bold",
-                    className: 'map-label',
-                },
-                title: `${collection.supplierName} - ${collection.estimatedCollection}kg`  // Tooltip on hover
-            });
-
-            // Create a custom overlay for the offset label
-            const labelOverlay = new google.maps.OverlayView();
-            labelOverlay.onAdd = function() {
-                const div = document.createElement('div');
-                div.style.position = 'absolute';
-                div.style.color = '#FFFFFF';
-                div.style.fontSize = '14px';
-                div.style.fontWeight = 'bold';
-                div.style.textShadow = '1px 1px 2px rgba(0,0,0,0.8)';
-                div.innerHTML = `${collection.estimatedCollection}kg`;
-                this.div_ = div;
-                const panes = this.getPanes();
-                panes.overlayLayer.appendChild(div);
-            };
-
-            labelOverlay.draw = function() {
-                const overlayProjection = this.getProjection();
-                const position = overlayProjection.fromLatLngToDivPixel(marker.getPosition());
-                const div = this.div_;
-                div.style.left = (position.x - 30) + 'px';
-                div.style.top = (position.y + 20) + 'px';  // Offset to the bottom
-            };
-
-            labelOverlay.onRemove = function() {
-                this.div_.parentNode.removeChild(this.div_);
-                this.div_ = null;
-            };
-
-            labelOverlay.setMap(map);
-        });
-    }
-
-
-
-
-
-    function findClosestSupplierOnRoute(route) {
-        let closestSupplier = null;
-        let minDistance = Infinity;
-
-        for (const collection of collections) {
-            const supplierLocation = new google.maps.LatLng(collection.location.lat, collection.location.lng);
-            const distance = google.maps.geometry.poly.closestPointOnPolyline(route.overview_path, supplierLocation).distance;
-
-            if (distance < minDistance) {
-                minDistance = distance;
-                closestSupplier = collection;
+// Earnings Chart
+const ctx = document.getElementById('earningsChart').getContext('2d');
+new Chart(ctx, {
+    type: 'bar',
+    data: {
+        labels: ['Week 1', 'Week 2', 'Week 3', 'Week 4'],
+        datasets: [{
+            label: 'Weekly Earnings',
+            data: [12500, 11800, 10900, 10550],
+            backgroundColor: 'rgba(54, 162, 235, 0.2)',
+            borderColor: 'rgba(54, 162, 235, 1)',
+            borderWidth: 1
+        }]
+    },
+    options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        scales: {
+            y: {
+                beginAtZero: true,
+                ticks: {
+                    callback: function(value) {
+                        return 'Rs. ' + value;
+                    }
+                }
             }
         }
-
-        return closestSupplier;
     }
-
-
-    function addDriverMarker(position) {
-        if (driverMarker) {
-            driverMarker.setMap(null);
-        }
-
-        driverMarker = new google.maps.Marker({
-            position: position,
-            map: map,
-            icon: {
-                path: google.maps.SymbolPath.FORWARD_CLOSED_ARROW,
-                scale: 6,
-                fillColor: "#FF5722",
-                fillOpacity: 1,
-                strokeWeight: 2,
-                rotation: 0
-            }
-        });
-
-        // Center the map on the driver's location
-        map.setCenter(position);
-    }
-
-
-    function updateShiftInfo() {
-        const now = new Date();
-        const shiftStart = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 8, 0, 0); // Assuming shift starts at 8:00 AM
-        const shiftEnd = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 17, 0, 0); // Assuming shift ends at 5:00 PM
-
-        document.getElementById("shift-time").textContent = "08:00 - 17:00";
-        
-        const elapsedTime = now - shiftStart;
-        const hours = Math.floor(elapsedTime / 3600000);
-        const minutes = Math.floor((elapsedTime % 3600000) / 60000);
-        document.getElementById("elapsed-time").textContent = `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}`;
-    }
-
-    function callSupplier() {
-        alert("Calling supplier...");
-        // Implement actual calling functionality here
-    }
-
-    function alertSupplier() {
-        alert("Alert sent to supplier");
-        // Implement actual alerting functionality here
-    }
-
-    document.getElementById("arrived-btn").addEventListener("click", function() {
-        alert("Arrival recorded. Please proceed with the collection.");
-    });
-
-    document.getElementById("delay-btn").addEventListener("click", function() {
-        alert("Delay reported. Our team will follow up with the supplier.");
-    });
-
-    document.getElementById("cancel-btn").addEventListener("click", function() {
-        alert("Collection cancelled. Please provide a reason in the next screen.");
-    });
-
-    // Initialize the map and update shift info when the window loads
-    window.onload = function() {
-        initMap();
-        updateShiftInfo();
-        setInterval(updateShiftInfo, 60000);
-        updateRoute();
-    };
+});
 </script>
 
 <?php require APPROOT . '/views/inc/components/footer.php'; ?>

@@ -13,9 +13,15 @@
             <span class="text">EVERGREEN</span>
         </a>
         <ul class="side-menu top">
-			<li>
-				<a href="<?php echo URLROOT; ?>/Suppliermanager/suppliers">
-					<i class='bx bx-leaf'></i>
+			<li class="<?php echo (basename($_SERVER['REQUEST_URI']) == 'index') ? 'active' : ''; ?>">
+				<a href="<?php echo URLROOT; ?>/suppliermanager/applications">
+					<i class='bx bxs-envelope'></i>
+					<span class="text">Applications</span>
+				</a>
+			</li>
+			<li class="<?php echo (basename($_SERVER['REQUEST_URI']) == 'suppliers') ? 'active' : ''; ?>">
+				<a href="<?php echo URLROOT; ?>/suppliermanager/suppliers">
+					<i class='bx bxs-network-chart'></i>
 					<span class="text">Suppliers</span>
 				</a>
 			</li>

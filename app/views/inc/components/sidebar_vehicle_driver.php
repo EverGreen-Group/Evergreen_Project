@@ -11,7 +11,7 @@
       </a>
     </li>
     <li class="<?php echo (basename($_SERVER['REQUEST_URI']) == 'profile') ? 'active' : ''; ?>">
-      <a href="<?php echo URLROOT; ?>/vehicledriver/profile">
+      <a href="<?php echo URLROOT; ?>/profile">
         <i class='bx bxs-user-circle'></i>
         <span class="text">Profile</span>
       </a>
@@ -20,6 +20,12 @@
       <a href="<?php echo URLROOT; ?>/vehicledriver/shift">
         <i class="bx bxs-time-five"></i>
         <span class="text">Shift</span>
+      </a>
+    </li>
+    <li class="<?php echo (basename($_SERVER['REQUEST_URI']) == 'shift') ? 'active' : ''; ?>">
+      <a href="<?php echo URLROOT; ?>/vehicledriver/leave">
+        <i class='bx bxs-calendar'></i>
+        <span class="text">Leave</span>
       </a>
     </li>
   <ul class="side-menu">

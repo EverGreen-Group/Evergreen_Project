@@ -114,36 +114,37 @@ class M_Route {
     public function getUnallocatedSuppliers() {
         $this->db->query("
             SELECT 
-                s.supplier_id as supplier_id,
-                CONCAT(u.first_name, ' ', u.last_name) as supplier_name,
-                SUBSTRING_INDEX(s.coordinates, ',', 1) as latitude,
-                SUBSTRING_INDEX(s.coordinates, ',', -1) as longitude
+                s.supplier_id,
+                s.contact_number,
+                s.latitude,
+                s.longitude,
+                u.first_name,
+                u.last_name,
+                CONCAT(u.first_name, ' ', u.last_name) as full_name,
+                CONCAT(s.latitude, ', ', s.longitude) as coordinates
             FROM suppliers s
             JOIN users u ON s.user_id = u.user_id
-            WHERE s.supplier_id NOT IN (
-                SELECT DISTINCT supplier_id 
-                FROM route_suppliers 
-                WHERE route_id IN (
-                    SELECT route_id 
-                    FROM routes 
-                    WHERE is_deleted = 0
-                )
-            )
-            AND s.status = 'Active'
+            LEFT JOIN route_suppliers rs ON s.supplier_id = rs.supplier_id
+            WHERE rs.supplier_id IS NULL 
             AND u.approval_status = 'Approved'
+            AND s.is_active = 1
+            AND s.is_deleted = 0
         ");
-        return $this->db->resultSet();
+        
+        $result = $this->db->resultSet();
+        error_log('Unallocated suppliers query result: ' . print_r($result, true));
+        return $result;
     }
 
     // for the table, must recorrect the naming issue here
     public function getUnallocatedSupplierDetails() {
         $this->db->query("
-            SELECT s.supplier_id, 
+            SELECT s.*,
                    CONCAT(u.first_name, ' ', u.last_name) as full_name,
-                   s.street, s.city, s.coordinates
+                   CONCAT(s.latitude, ', ', s.longitude) as coordinates
             FROM suppliers s
             JOIN users u ON s.user_id = u.user_id
-            WHERE s.status = 'Active'
+            WHERE s.is_active = 1
             AND s.supplier_id NOT IN (
                 SELECT DISTINCT supplier_id 
                 FROM route_suppliers
@@ -156,18 +157,53 @@ class M_Route {
     public function getRouteSuppliers($routeId) {
         $this->db->query("
             SELECT 
-                s.supplier_id,
-                s.coordinates,
-                CONCAT(u.first_name, ' ', u.last_name) as supplier_name
+                s.*,
+                u.first_name,
+                u.last_name,
+                CONCAT(u.first_name, ' ', u.last_name) as full_name,
+                CONCAT(s.latitude, ', ', s.longitude) as coordinates,
+                rs.stop_order,
+                rs.supplier_order
             FROM route_suppliers rs
             JOIN suppliers s ON rs.supplier_id = s.supplier_id
-            JOIN users u ON s.user_id = u.id
+            JOIN users u ON s.user_id = u.user_id
             WHERE rs.route_id = :route_id
             AND rs.is_deleted = 0
+            AND s.is_deleted = 0
+            ORDER BY rs.stop_order ASC, rs.supplier_order ASC
         ");
         
         $this->db->bind(':route_id', $routeId);
         return $this->db->resultSet();
+    }
+
+    public function getRouteById($routeId) {
+        $this->db->query("
+            SELECT 
+                r.*,
+                COUNT(rs.supplier_id) as supplier_count
+            FROM routes r
+            LEFT JOIN route_suppliers rs ON r.route_id = rs.route_id
+            WHERE r.route_id = :route_id
+            AND r.is_deleted = 0
+            GROUP BY r.route_id
+        ");
+        
+        $this->db->bind(':route_id', $routeId);
+        return $this->db->single();
+    }
+
+    public function updateRouteOrder($routeId, $supplierId, $order) {
+        $this->db->query("UPDATE route_suppliers 
+                          SET supplier_order = :order 
+                          WHERE route_id = :route_id 
+                          AND supplier_id = :supplier_id");
+        
+        $this->db->bind(':order', $order);
+        $this->db->bind(':route_id', $routeId);
+        $this->db->bind(':supplier_id', $supplierId);
+        
+        return $this->db->execute();
     }
 }
 ?>
