@@ -1,0 +1,109 @@
+@import url("https://fonts.googleapis.com/css2?family=Lato:wght@400;700&family=Poppins:wght@400;500;600;700&display=swap");
+
+.container {
+    max-width: 1200px;
+    width: 95%;
+    background-color: white;
+    padding: 20px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    overflow-y: auto;
+    max-height: calc(95vh - 100px); /* Adjust 100px based on your header height */
+}
+
+body {
+    font-family: 'Poppins', sans-serif, Arial;
+    background-color: #f4f4f4;
+    margin: 0;
+    padding: 0;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+}
+
+h1 {
+    color: #333;
+    margin-bottom: 20px;
+    font-size: 28px;
+    text-transform: uppercase;
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 20px;
+}
+
+thead {
+    background-color: #f8f8f8;
+}
+
+th,
+td {
+    padding: 15px;
+    text-align: left;
+    border-bottom: 1px solid #ddd;
+}
+
+th {
+    color: #666;
+    text-transform: capitalize;
+}
+
+tbody tr:hover {
+    background-color: #f1f1f1;
+}
+
+.machine-info {
+    display: flex;
+    align-items: center;
+}
+
+.machine-icon {
+    background-color: #28a745;
+    color: white;
+    width: 25px;
+    height: 25px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    margin-right: 10px;
+    font-size: 14px;
+}
+
+.status-ready {
+    color: #28a745;
+    font-weight: bold;
+}
+
+.btn {
+    padding: 8px 15px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 14px;
+}
+
+.allocate {
+    background-color: #28a745;
+    color: white;
+}
+
+.allocate:hover {
+    background-color: #218838;
+}
+
+.deallocate {
+    background-color: #ffc107;
+    color: white;
+}
+
+.deallocate:hover {
+    background-color: #e0a800;
+}
+
+@media screen and (min-width: 1400px) {
+    .container {
+        max-width: 1400px;
+    }
+}
