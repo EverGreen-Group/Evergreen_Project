@@ -29,7 +29,7 @@
 </script>
 
 <!-- Side bar -->
-<?php require APPROOT . '/views/inc/components/sidebar_supplier_manager.php'; ?>
+<?php require APPROOT . '/views/inc/components/sidebar_suppliermanager.php'; ?>
 <!-- Top nav bar -->
 <?php require APPROOT . '/views/inc/components/topnavbar.php'; ?>
 

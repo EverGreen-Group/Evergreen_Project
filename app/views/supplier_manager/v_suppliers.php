@@ -1,7 +1,7 @@
 <?php require APPROOT . '/views/inc/components/header.php'; ?>
 
 <!-- Side bar -->
-<?php require APPROOT . '/views/inc/components/sidebar_supplier_manager.php'; ?>
+<?php require APPROOT . '/views/inc/components/sidebar_suppliermanager.php'; ?>
 <!-- Top nav bar -->
 <?php require APPROOT . '/views/inc/components/topnavbar.php'; ?>
 
@@ -12,7 +12,6 @@
 <!-- MAIN -->
 <main>
 
-    <?php print_r($data); ?>
 
     
     <div class="head-title">
@@ -51,52 +50,25 @@
     </ul>
 
 
-    <!-- Add this modal/dialog for supplier registration -->
-    <div id="supplierRegistrationModal" class="modal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h3>Register New Supplier</h3>
-                <span class="close-modal">&times;</span>
+
+    <div class="table-data">
+        <div class="order">
+            <div class="head">
+                <h3>Supplier Locations</h3>
             </div>
-            
-            <form id="supplierRegForm" action="<?php echo URLROOT; ?>/suppliermanager/registerSupplier" method="POST">
-                <div class="form-step active">
-                    <!-- Contact Details -->
-                    <div class="form-group">
-                        <label for="primaryPhone">Primary Phone Number</label>
-                        <input type="tel" id="primaryPhone" name="primaryPhone" required 
-                               pattern="^(?:7|0)[0-9]{9}$"
-                               placeholder="0771234567">
-                        <small>Sri Lankan mobile number</small>
+            <div class="map-container">
+                <div id="map"></div>
+                <div class="map-legend">
+                    <div class="legend-item">
+                        <i class='bx bxs-factory'></i>
+                        <span>Factory Location</span>
                     </div>
-
-                    <div class="form-group">
-                        <label for="email">Email Address</label>
-                        <input type="email" id="email" name="email" required>
-                    </div>
-
-                    <div class="form-row">
-                        <div class="form-group">
-                            <label for="firstName">First Name</label>
-                            <input type="text" id="firstName" name="firstName" required>
-                        </div>
-                        <div class="form-group">
-                            <label for="lastName">Last Name</label>
-                            <input type="text" id="lastName" name="lastName" required>
-                        </div>
-                    </div>
-
-                    <div class="form-group">
-                        <label for="nic">NIC Number</label>
-                        <input type="text" id="nic" name="nic" required>
-                    </div>
-
-                    <div class="form-actions">
-                        <button type="submit" class="btn-submit">Register Supplier</button>
-                        <button type="button" class="btn-cancel" onclick="closeSupplierRegistration()">Cancel</button>
+                    <div class="legend-item">
+                        <i class='bx bxs-map'></i>
+                        <span>Supplier Location</span>
                     </div>
                 </div>
-            </form>
+            </div>
         </div>
     </div>
 
@@ -126,8 +98,7 @@
                     </div>
                 <?php endforeach; ?>
             </div>
-        </div>
-
+    </div>
 
 
 </main>
@@ -513,6 +484,37 @@
         cursor: pointer;
     }
 
+    .map-container {
+        width: 100%;
+        margin-top: 20px;
+    }
+
+    #map {
+        width: 100%;
+        height: 300px;
+        border-radius: 8px;
+    }
+
+    .map-legend {
+        margin-top: 1rem;
+        display: flex;
+        gap: 2rem;
+        padding: 1rem;
+        background: white;
+        border-radius: 10px;
+    }
+
+    .legend-item {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .legend-item i {
+        font-size: 1.2rem;
+        color: var(--main);
+    }
+
 </style>
 
 <script>
@@ -539,4 +541,64 @@ document.getElementById('supplierRegForm').addEventListener('submit', function(e
     // If validation passes, submit the form
     this.submit();
 });
+</script>
+
+<!-- Add Google Maps JavaScript API -->
+<script async defer src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCdt_khahhXrKdrA8cLgKeQB2CZtde-_Vc&callback=initMap"></script>
+<script>
+function initMap() {
+    // Factory location
+    const factoryLocation = { lat: 6.2173037, lng: 80.2564385 };
+
+    // Hardcoded supplier locations around the factory
+    const suppliers = [
+        { lat: 6.2273037, lng: 80.2664385, name: "John Doe", id: "1" },
+        { lat: 6.2073037, lng: 80.2464385, name: "Jane Smith", id: "2" },
+        { lat: 6.2373037, lng: 80.2564385, name: "Bob Wilson", id: "3" },
+        { lat: 6.2173037, lng: 80.2764385, name: "Alice Brown", id: "4" },
+        { lat: 6.1973037, lng: 80.2564385, name: "Charlie Davis", id: "5" },
+        { lat: 6.2273037, lng: 80.2364385, name: "Eva Green", id: "6" },
+        { lat: 6.2073037, lng: 80.2664385, name: "Frank White", id: "7" },
+        { lat: 6.2373037, lng: 80.2464385, name: "Grace Lee", id: "8" },
+        { lat: 6.2173037, lng: 80.2364385, name: "Henry Ford", id: "9" },
+        { lat: 6.2273037, lng: 80.2764385, name: "Iris Chen", id: "10" }
+    ];
+
+    // Create map centered on factory
+    const map = new google.maps.Map(document.getElementById("map"), {
+        zoom: 13.5,
+        center: factoryLocation,
+        mapTypeId: google.maps.MapTypeId.ROADMAP,
+        mapTypeControl: false,
+        streetViewControl: false,
+        fullscreenControl: false
+    });
+
+    // Add factory marker
+    new google.maps.Marker({
+        position: factoryLocation,
+        map: map,
+        title: "Factory Location",
+        icon: {
+            url: 'data:image/svg+xml;charset=UTF-8,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><path fill="#007664" d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5S10.62 6.5 12 6.5s2.5 1.12 2.5 2.5S13.38 11.5 12 11.5z"/></svg>'),
+            scaledSize: new google.maps.Size(32, 32)
+        }
+    });
+
+    // Add supplier markers
+    suppliers.forEach(supplier => {
+        new google.maps.Marker({
+            position: { lat: supplier.lat, lng: supplier.lng },
+            map: map,
+            title: supplier.name,
+            icon: {
+                url: 'data:image/svg+xml;charset=UTF-8,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><path fill="#FF0000" d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5S10.62 6.5 12 6.5s2.5 1.12 2.5 2.5S13.38 11.5 12 11.5z"/></svg>'),
+                scaledSize: new google.maps.Size(32, 32)
+            }
+        });
+    });
+}
+
+// Initialize map when page loads
+window.onload = initMap;
 </script>

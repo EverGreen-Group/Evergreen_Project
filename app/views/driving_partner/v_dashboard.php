@@ -1,10 +1,8 @@
 <?php
-
 require APPROOT . '/views/inc/components/header.php';
-require APPROOT . '/views/inc/components/sidebar_driving_partner.php';
+require APPROOT . '/views/inc/components/sidebar_vehicle_driver.php';
 require APPROOT . '/views/inc/components/topnavbar.php';
 ?>
-
 <main>
     <div class="head-title">
         <div class="left">
@@ -15,7 +13,6 @@ require APPROOT . '/views/inc/components/topnavbar.php';
             </ul>
         </div>
     </div>
-
     <!-- Quick Stats -->
     <ul class="route-box-info">
         <li>
@@ -43,7 +40,6 @@ require APPROOT . '/views/inc/components/topnavbar.php';
             </span>
         </li>
     </ul>
-
     <!-- Earnings Overview -->
     <div class="table-data">
         <div class="order">
@@ -76,7 +72,6 @@ require APPROOT . '/views/inc/components/topnavbar.php';
             </div>
         </div>
     </div>
-
     <!-- Collection History -->
     <div class="table-data">
         <div class="order">
@@ -124,7 +119,6 @@ require APPROOT . '/views/inc/components/topnavbar.php';
         </div>
     </div>
 </main>
-
 <style>
 .route-box-info {
     display: flex;
@@ -134,7 +128,6 @@ require APPROOT . '/views/inc/components/topnavbar.php';
     list-style: none;
     padding: 0;
 }
-
 .route-box-info li {
     flex: 1;
     background: var(--light);
@@ -144,7 +137,6 @@ require APPROOT . '/views/inc/components/topnavbar.php';
     align-items: center;
     gap: 24px;
 }
-
 .route-box-info li i {
     font-size: 36px;
     color: var(--main);
@@ -152,20 +144,17 @@ require APPROOT . '/views/inc/components/topnavbar.php';
     border-radius: 10%;
     padding: 16px;
 }
-
 .route-box-info li .text h3 {
     font-size: 24px;
     font-weight: 600;
     color: var(--dark);
     margin: 0;
 }
-
 .route-box-info li .text p {
     font-size: 14px;
     color: var(--dark-grey);
     margin: 0;
 }
-
 /* Earnings Section */
 .earnings-breakdown {
     display: grid;
@@ -173,80 +162,66 @@ require APPROOT . '/views/inc/components/topnavbar.php';
     gap: 24px;
     margin-top: 20px;
 }
-
 .earnings-chart {
     background: var(--light);
     padding: 20px;
     border-radius: 10px;
     height: 300px;
 }
-
 .earnings-details {
     background: var(--light);
     padding: 20px;
     border-radius: 10px;
 }
-
 .breakdown-item {
     display: flex;
     justify-content: space-between;
     padding: 12px 0;
     border-bottom: 1px solid var(--border-color);
 }
-
 .breakdown-item:last-child {
     border-bottom: none;
 }
-
 .breakdown-item .label {
     color: var(--dark-grey);
 }
-
 .breakdown-item .amount {
     font-weight: 600;
     color: var(--dark);
 }
-
 .total-earnings {
     font-size: 24px;
     font-weight: 600;
     color: var(--main);
 }
-
 /* Table Styles */
 table {
     width: 100%;
     border-collapse: collapse;
 }
-
 th, td {
     padding: 12px;
     text-align: left;
     border-bottom: 1px solid var(--border-color);
 }
-
 th {
     font-weight: 600;
     color: var(--dark-grey);
 }
-
 .status {
     padding: 6px 12px;
     border-radius: 20px;
     font-size: 14px;
 }
-
 .status.completed {
     background: var(--light-success);
     color: var(--success);
 }
-
 .status.pending {
     background: var(--light-warning);
     color: var(--warning);
 }
 </style>
-
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
 // Earnings Chart
@@ -279,5 +254,4 @@ new Chart(ctx, {
     }
 });
 </script>
-
 <?php require APPROOT . '/views/inc/components/footer.php'; ?>

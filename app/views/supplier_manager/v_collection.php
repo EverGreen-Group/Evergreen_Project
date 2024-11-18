@@ -94,7 +94,7 @@
             <div class="progress-chart-container">
                 <canvas id="collectionProgress"></canvas>
                 <div class="progress-center">
-                    <span class="progress-percentage">65%</span>
+                    <span class="progress-percentage" id="progress-percentage">65%</span>
                     <span class="progress-label">Collected</span>
                 </div>
             </div>
@@ -716,7 +716,7 @@ select, input[type="number"] {
     display: block;
     font-size: 1.8rem;
     font-weight: 600;
-    color: var(--main);
+    color: #007664;
 }
 
 .progress-label {
@@ -988,6 +988,37 @@ function downloadMonthlyStats() {
     link.click();
     document.body.removeChild(link);
 }
+</script>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const ctx = document.getElementById('collectionProgress').getContext('2d');
+    const progressPercentage = 65; // Example percentage
+
+    new Chart(ctx, {
+        type: 'doughnut',
+        data: {
+            datasets: [{
+                data: [progressPercentage, 100 - progressPercentage],
+                backgroundColor: ['#007664', '#e0e0e0'], // Main color and grey for remaining
+                borderWidth: 0
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            cutout: '80%', // Adjust the thickness of the ring
+            plugins: {
+                tooltip: {
+                    enabled: false // Disable tooltips
+                }
+            }
+        }
+    });
+
+    // Update the percentage text
+    document.getElementById('progress-percentage').textContent = `${progressPercentage}%`;
+});
 </script>
 
 <?php require APPROOT . '/views/inc/components/footer.php'; ?>

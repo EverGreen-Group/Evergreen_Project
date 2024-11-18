@@ -10,11 +10,6 @@
     <div class="head-title">
         <div class="left">
             <h1>Supplier Communications</h1>
-            <ul class="breadcrumb">
-                <li><a href="#">Dashboard</a></li>
-                <li><i class='bx bx-chevron-right'></i></li>
-                <li><a class="active" href="#">Chat</a></li>
-            </ul>
         </div>
     </div>
 
@@ -28,7 +23,7 @@
             
             <div class="suppliers">
                 <div class="supplier active">
-                    <img src="<?php echo URLROOT; ?>/public/images/profile-default.png" alt="Supplier">
+                    <img src="<?php echo URLROOT; ?>/public/uploads/supplier_photos/default-supplier.png" alt="Supplier">
                     <div class="supplier-info">
                         <h4>John Doe</h4>
                         <p>SUP001 - Deniyaya Route</p>
@@ -39,7 +34,7 @@
                 
                 <!-- More suppliers... -->
                 <div class="supplier">
-                    <img src="<?php echo URLROOT; ?>/public/images/profile-default.png" alt="Supplier">
+                    <img src="<?php echo URLROOT; ?>/public/uploads/supplier_photos/default-supplier.png" alt="Supplier">
                     <div class="supplier-info">
                         <h4>Jane Smith</h4>
                         <p>SUP002 - Morawaka Route</p>
