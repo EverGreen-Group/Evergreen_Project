@@ -32,6 +32,10 @@
                 <option value="3">Mike Johnson (ID: S1003)</option>
             </select>
         </div>
+
+        <a href="#" class="btn-download" id="monthlyStatementBtn" onclick="viewMonthlyStatement()">
+            <i class='bx bxs-navigation'></i> View Monthly Statement
+        </a>
     </div>
 
     <!-- Box Info -->
@@ -70,6 +74,11 @@
             <div class="head">
                 <h3>Weekly Collection Overview</h3>
                 <div class="head-actions">
+                    <a href="<?php echo URLROOT; ?>/supplier_manager/supplierStatement/<?php echo isset($_GET['id']) ? $_GET['id'] : ''; ?>" 
+                       class="btn-download" 
+                       id="statementBtn">
+                        <i class='bx bx-file'></i> Monthly Statement
+                    </a>
                     <button class="btn-download" onclick="downloadMonthlyStats()">
                         <i class='bx bx-download'></i> Download Stats
                     </button>
@@ -1700,5 +1709,35 @@ function updateDashboard(supplierId) {
         .catch(error => console.error('Error:', error));
 }
 </script>
+
+<script>
+function viewMonthlyStatement() {
+    const supplierId = document.getElementById('currentSupplier').value;
+    if (!supplierId) {
+        alert('Please select a supplier first');
+        return;
+    }
+    
+    window.location.href = `<?php echo URLROOT; ?>/suppliermanager/supplierStatement/${supplierId}`;
+}
+
+// Update button state when supplier changes
+document.getElementById('currentSupplier').addEventListener('change', function() {
+    const monthlyStatementBtn = document.getElementById('monthlyStatementBtn');
+    if (this.value) {
+        monthlyStatementBtn.classList.remove('disabled');
+    } else {
+        monthlyStatementBtn.classList.add('disabled');
+    }
+});
+</script>
+
+<style>
+.btn-download.disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    pointer-events: none;
+}
+</style>
 
 <?php require APPROOT . '/views/inc/components/footer.php'; ?>

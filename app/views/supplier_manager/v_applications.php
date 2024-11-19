@@ -116,6 +116,74 @@
             </table>
         </div>
     </div>
+
+    <!-- Land Inspection Requests -->
+    <div class="table-data">
+        <div class="order">
+            <div class="head">
+                <h3>Land Inspection Requests</h3>
+                <div class="head-actions">
+                    <select class="filter-select">
+                        <option value="all">All Requests</option>
+                        <option value="pending">Pending</option>
+                        <option value="scheduled">Scheduled</option>
+                        <option value="completed">Completed</option>
+                    </select>
+                </div>
+            </div>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Request ID</th>
+                        <th>Supplier ID</th>
+                        <th>Land Area (Acres)</th>
+                        <th>Location</th>
+                        <th>Preferred Date</th>
+                        <th>Status</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>INS001</td>
+                        <td>SUP001</td>
+                        <td>2.5</td>
+                        <td>Galle, Sri Lanka</td>
+                        <td>2024-03-15</td>
+                        <td><span class="status-badge pending">Pending</span></td>
+                        <td>
+                            <div class="action-buttons">
+                                <button class="btn-approve" onclick="scheduleInspection('INS001')">
+                                    <i class='bx bx-calendar'></i> Schedule
+                                </button>
+                                <button class="btn-view" onclick="viewDetails('INS001')">
+                                    <i class='bx bx-detail'></i> Details
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>INS002</td>
+                        <td>SUP003</td>
+                        <td>1.8</td>
+                        <td>Matara, Sri Lanka</td>
+                        <td>2024-03-18</td>
+                        <td><span class="status-badge scheduled">Scheduled</span></td>
+                        <td>
+                            <div class="action-buttons">
+                                <button class="btn-approve" onclick="scheduleInspection('INS002')">
+                                    <i class='bx bx-calendar'></i> Schedule
+                                </button>
+                                <button class="btn-view" onclick="viewDetails('INS002')">
+                                    <i class='bx bx-detail'></i> Details
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
 </main>
 
 <?php require APPROOT . '/views/inc/components/footer.php'; ?>
@@ -129,8 +197,8 @@
     }
 
     .status-badge.pending {
-        background-color: #ffd700;
-        color: #000;
+        background-color: #ff9800;
+        color: white;
     }
 
     .status-badge.approved {
@@ -236,4 +304,87 @@
     .btn-confirm i {
         font-size: 1.1rem;
     }
+
+    .head-actions {
+        display: flex;
+        gap: 1rem;
+        align-items: center;
+    }
+
+    .filter-select {
+        padding: 0.5rem;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        font-size: 0.9rem;
+        color: var(--dark);
+    }
+
+    .action-buttons {
+        display: flex;
+        gap: 0.5rem;
+    }
+
+    .action-buttons button {
+        padding: 5px 10px;
+        border-radius: 4px;
+        border: none;
+        cursor: pointer;
+        font-size: 0.9em;
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+        transition: all 0.3s ease;
+    }
+
+    .action-buttons .btn-view {
+        background-color: #007bff;
+        color: white;
+    }
+
+    .action-buttons .btn-approve {
+        background-color: #4CAF50;
+        color: white;
+    }
+
+    .action-buttons .btn-reject {
+        background-color: #f44336;
+        color: white;
+    }
+
+    .action-buttons button:hover {
+        opacity: 0.8;
+    }
+
+    .status-badge.scheduled {
+        background-color: #4CAF50;
+        color: white;
+    }
+
+    .status-badge.completed {
+        background-color: #4CAF50;
+        color: white;
+    }
 </style>
+
+<script>
+function scheduleInspection(requestId) {
+    // Add your scheduling logic here
+    console.log('Scheduling inspection for:', requestId);
+}
+
+function markComplete(requestId) {
+    // Add your completion logic here
+    console.log('Marking inspection as complete:', requestId);
+}
+
+function viewDetails(requestId) {
+    // Add your view details logic here
+    console.log('Viewing details for:', requestId);
+}
+
+document.querySelector('.filter-select').addEventListener('change', function() {
+    // Add your filtering logic here
+    const status = this.value;
+    console.log('Filtering by status:', status);
+});
+</script>

@@ -28,7 +28,7 @@
 			<li>
 					<a href="<?php echo URLROOT; ?>/Suppliermanager/requests">
 					<i class='bx bxs-basket' ></i>
-					<span class="text">Supplier Requests</span>
+					<span class="text">Availability</span>
 				</a>
 			</li>
 			<li>

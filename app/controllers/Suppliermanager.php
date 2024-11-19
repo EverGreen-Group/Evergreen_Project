@@ -176,6 +176,12 @@ class SupplierManager extends Controller {
         $this->view('supplier_manager/v_suppliers', $data);
     }
 
+
+    public function supplierStatement() {
+        $data = [];
+        $this->view('shared/supplier/v_view_monthly_statement', $data);
+    }
+
     public function allcomplaints()
     {
         $data = [];
