@@ -1,4 +1,8 @@
 <?php require APPROOT . '/views/inc/components/header.php'; ?>
+
+<!-- Add the QR Scanner library in the head section -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html5-qrcode/2.3.8/html5-qrcode.min.js" integrity="sha512-r6rDA7W6ZeQhvl8S7yRVQUKVHdexq+GAlNkNNqVC7YyIV+NwqCTJe2hDWCiffTyRNOeGEzRRJ9ifvRm/HCzGYg==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+
 <?php require APPROOT . '/views/inc/components/sidebar_driving_partner.php'; ?>
 <?php require APPROOT . '/views/inc/components/topnavbar.php'; ?>
 
@@ -119,6 +123,18 @@
                 <i class='bx bx-notepad'></i>
             </div>
             <form id="weightForm" class="collection-form" onsubmit="submitWeight(event)">
+                <!-- QR Scanner section -->
+                <div class="form-group">
+                    <label>Scan Supplier QR Code</label>
+                    <div id="qr-reader" style="width: 100%; max-width: 500px; margin: 0 auto;"></div>
+                    <div id="qr-reader-results" style="text-align: center; margin-top: 10px;"></div>
+                    <div style="text-align: center; margin-top: 10px;">
+                        <button type="button" id="start-scanner" class="btn-submit">
+                            <i class='bx bx-camera'></i> Start Scanner
+                        </button>
+                    </div>
+                </div>
+
                 <!-- Weight Details -->
                 <div class="form-row">
                     <div class="form-group">
@@ -556,6 +572,22 @@ input[name="supplier_nic"]:valid {
     margin-top: 20px;
     padding: 0 20px 20px 20px;
 }
+
+#qr-reader {
+    border: 1px solid var(--grey);
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+#qr-reader video {
+    width: 100%;
+    height: auto;
+}
+
+#qr-reader-results {
+    font-weight: bold;
+    color: var(--main);
+}
 </style>
 
 <script>
@@ -604,6 +636,71 @@ document.addEventListener('DOMContentLoaded', function() {
 
     grossInput.addEventListener('input', calculateNet);
 });
+
+// Wait for the page to fully load
+window.onload = function() {
+    console.log('Window loaded');
+    // Check if Html5Qrcode is available
+    if (typeof Html5Qrcode === 'undefined') {
+        console.error('Html5Qrcode library not loaded, attempting to reload');
+        // Attempt to load the library again
+        const script = document.createElement('script');
+        script.src = "https://cdnjs.cloudflare.com/ajax/libs/html5-qrcode/2.3.8/html5-qrcode.min.js";
+        script.onload = function() {
+            console.log('Html5Qrcode library loaded successfully');
+            initializeScanner();
+        };
+        script.onerror = function() {
+            console.error('Failed to load Html5Qrcode library');
+        };
+        document.head.appendChild(script);
+    } else {
+        console.log('Html5Qrcode library already loaded');
+        initializeScanner();
+    }
+};
+
+function initializeScanner() {
+    try {
+        const qrReader = new Html5Qrcode("qr-reader");
+        console.log('QR Reader initialized');
+
+        document.getElementById('start-scanner').addEventListener('click', function() {
+            console.log('Start Scanner clicked');
+            
+            navigator.mediaDevices.getUserMedia({ video: true })
+                .then(function(stream) {
+                    console.log('Camera permission granted');
+                    stream.getTracks().forEach(track => track.stop());
+
+                    qrReader.start(
+                        { facingMode: "user" },
+                        {
+                            fps: 10,
+                            qrbox: { width: 250, height: 250 }
+                        },
+                        qrCodeMessage => {
+                            console.log('QR Code scanned:', qrCodeMessage);
+                            document.getElementById('qr-reader-results').innerText = `Scanned Code: ${qrCodeMessage}`;
+                            document.querySelector('[name="supplier_nic"]').value = qrCodeMessage;
+                            qrReader.stop();
+                        },
+                        errorMessage => {
+                            console.warn('QR Code scan error:', errorMessage);
+                        }
+                    ).catch(err => {
+                        console.error('Unable to start scanning:', err);
+                    });
+                })
+                .catch(function(err) {
+                    console.error('Camera access denied:', err);
+                    alert("Please allow camera access to use the scanner.");
+                });
+        });
+    } catch (error) {
+        console.error('Error initializing QR scanner:', error);
+    }
+}
 </script>
 
 <?php require APPROOT . '/views/inc/components/footer.php'; ?> 

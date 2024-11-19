@@ -177,63 +177,67 @@
             </div>
         </section>
         <script src="<?php echo URLROOT; ?>/css/components/script.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
         <script>
         // Initialize the complaints type chart
-        const ctx = document.getElementById('complaintTypesChart').getContext('2d');
-        new Chart(ctx, {
-            type: 'pie',
-            data: {
-                labels: [
-                    'Quality Issues',
-                    'Late Delivery',
-                    'Quantity Discrepancy',
-                    'Communication Issues',
-                    'Payment Disputes'
-                ],
-                datasets: [{
-                    data: [30, 25, 20, 15, 10],
-                    backgroundColor: [
-                        'var(--main)',      // Primary color for most critical
-                        '#FF6B6B',          // Red for second most critical
-                        '#4ECDC4',          // Teal
-                        '#45B7D1',          // Blue
-                        '#96A5C8'           // Grey
+        document.addEventListener('DOMContentLoaded', function() {
+            const ctx = document.getElementById('complaintTypesChart').getContext('2d');
+            new Chart(ctx, {
+                type: 'pie',
+                data: {
+                    labels: [
+                        'Quality Issues',
+                        'Late Delivery',
+                        'Quantity Discrepancy',
+                        'Communication Issues',
+                        'Payment Disputes'
                     ],
-                    borderWidth: 0
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                    legend: {
-                        position: 'right',
-                        labels: {
-                            boxWidth: 12,
-                            padding: 20,
-                            font: {
-                                size: 12
+                    datasets: [{
+                        data: [30, 25, 20, 15, 10],
+                        backgroundColor: [
+                            '#86E211',      // Primary color (your green)
+                            '#FF6B6B',      // Red
+                            '#4ECDC4',      // Teal
+                            '#45B7D1',      // Blue
+                            '#96A5C8'       // Grey
+                        ],
+                        borderWidth: 0
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'right',
+                            labels: {
+                                boxWidth: 12,
+                                padding: 20,
+                                font: {
+                                    size: 12
+                                }
                             }
-                        }
-                    },
-                    tooltip: {
-                        callbacks: {
-                            label: function(context) {
-                                const value = context.raw;
-                                const total = context.dataset.data.reduce((a, b) => a + b, 0);
-                                const percentage = ((value / total) * 100).toFixed(1);
-                                return `${percentage}% (${value} complaints)`;
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    const value = context.raw;
+                                    const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                                    const percentage = ((value / total) * 100).toFixed(1);
+                                    return `${percentage}% (${value} complaints)`;
+                                }
                             }
                         }
                     }
                 }
-            }
+            });
         });
         </script>
         <style>
         .chart-container {
             height: 300px;
             padding: 1rem;
+            position: relative;
         }
 
         .performance-list {

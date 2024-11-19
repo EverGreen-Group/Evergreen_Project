@@ -24,23 +24,11 @@
 					<i class='bx bxs-network-chart'></i>
 					<span class="text">Suppliers</span>
 				</a>
-			</li>
+			</li>		
 			<li>
-				<a href="<?php echo URLROOT; ?>/Suppliermanager/collections">
-					<i class='bx bxs-collection' ></i>
-					<span class="text">Collections</span>
-				</a>
-			</li>
-			<li>
-				<a href="<?php echo URLROOT; ?>/Suppliermanager/leafsupply">
-					<i class='bx bxs-shopping-bag-alt'></i>
-					<span class="text">Tea Leaves Supply</span>
-				</a>
-			</li>			
-			<li>
-					<a href="<?php echo URLROOT; ?>/Suppliermanager/fertilizerorders">
+					<a href="<?php echo URLROOT; ?>/Suppliermanager/requests">
 					<i class='bx bxs-basket' ></i>
-					<span class="text">Fertilizer Orders</span>
+					<span class="text">Supplier Requests</span>
 				</a>
 			</li>
 			<li>
