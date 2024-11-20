@@ -1,10 +1,11 @@
 <?php
-require_once APPROOT . '/models/M_FertilizerOrder.php';
 require_once APPROOT . '/models/M_Fertilizer_Order.php';
 require_once '../app/helpers/auth_middleware.php';
+
 if (session_status() == PHP_SESSION_NONE) {
     session_start();
 }
+
 class Supplier extends Controller {
 
     private $fertilizerOrderModel;
@@ -26,74 +27,82 @@ class Supplier extends Controller {
 
     
     public function index() {
-        $data = [ /* Add any dashboard data here if needed*/ ];
+        $data = [];
         $this->view('supplier/v_supply_dashboard', $data);
     }
 
-    public function v_notifications()
+    public function notifications()
     {
         $data = [];
 
         $this->view('supplier/v_all_notifications', $data);
     }
     
-    public function change_password()
+    public function changepassword()
     {
         $data = [];
 
         $this->view('supplier/v_change_password', $data);
     }
 
-    public function confirmation_history()
+    public function confirmationhistory()
     {
         $data = [];
 
         $this->view('supplier/v_confirmation_history', $data);
     }
 
-    public function fertilizer_history()
+    public function fertilizerhistory()
     {
         $data = [];
 
         $this->view('supplier/v_fertilizer_history', $data);
     }
 
-    public function v_tea_orders()
+    public function teaorders()
     {
         $data = [];
 
         $this->view('supplier/v_new_order', $data);
     }
 
-    public function v_payments()
+    public function payments()
     {
         $data = [];
 
         $this->view('supplier/v_payments', $data);
     }
 
-    public function v_profile()
+    public function profile()
     {
         $data = [];
 
         $this->view('supplier/v_profile', $data);
     }
 
-    public function cancel_pickup()
+    public function cancelpickup()
     {
         $data = [];
 
         $this->view('supplier/v_cancel_pickup', $data);
     }
 
-    public function v_complaints()
+    public function requestFertilizer()
+    {
+        $fertilizerModel = new M_Fertilizer_Order();
+        $data['fertilizer_types'] = $fertilizerModel->getAllFertilizerTypes();
+
+        $this->view('supplier/v_fertilizer_request', $data);
+    }
+
+    public function complaints()
     {
         $data = [];
 
         $this->view('supplier/v_complaint', $data);
     }
 
-    public function v_settings()
+    public function settings()
     {
         $data = [];
 
@@ -101,16 +110,24 @@ class Supplier extends Controller {
     }
 
 
-    
-    public function requestFertilizer() {
+    public function fertilizerOrders() {
         if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             // Collect form data
             $data = [
+                'fertilizer_order_id' => $_POST['order_id'],
                 'supplier_id' => $_POST['supplier_id'],
-                'total_amount' => $_POST['total_amount'],
+                'fertilizer_name' => $_POST['fertilizer_name'],
+                'totalamount' => $_POST['total_amount'],
+                'unit' => $_POST['unit'],
+                'price_per_unit' => $_POST['price_per_unit'],
+                'total_price' => $_POST['total_price'],
+                'order_date' => $_POST['order_date'],
+                'order_time' => $_POST['order_time'],
             ];
-            //load model
+   
+            // Load model
             $this->model('M_Fertilizer_Order');
+   
             // Validate form data
             if ($this->validateRequest($data)) {
                 // Call model method to insert the data
@@ -124,9 +141,77 @@ class Supplier extends Controller {
                 flash('message', 'Please fill in all required fields.', 'alert alert-danger');
             }
         }
-        // Fetch existing orders to display in the form
-        $data = ['orders' => $this->fertilizerOrderModel->getAllOrders()];
+   
+        // Fetch all orders
+        $orders = $this->fertilizerOrderModel->getAllOrders();
+   
+        // Pass data to the view
+        $data['orders'] = $orders;
+   
+        // Load the view and pass the data
         $this->view('supplier/v_fertilizer_request', $data);
+    }
+   
+    public function createFertilizerOrder() {
+        // Check if the supplier is logged in
+        if (!isset($_SESSION['supplier_logged_in']) || !$_SESSION['supplier_logged_in']) {
+            echo "Error: You must be logged in to place an order.";
+            return;
+        }
+
+        if (!isset($_POST['type_id']) || !isset($_POST['unit']) || !isset($_POST['total_amount'])) {
+            flash('message', 'Please fill all required fields', 'alert alert-danger');
+            redirect('supplier/requestFertilizer');
+            return;
+        }
+
+        // Get the logged-in supplier's ID
+        $supplier_id = $_SESSION['supplier_id'];
+
+    
+        // Fetch fertilizer types for dropdown
+        $data['fertilizer_types'] = $this->fertilizerOrderModel->getAllFertilizerTypes();
+
+
+        // Get input data
+        $type_id = trim($_POST['type_id']);
+        $unit = $_POST['unit'];
+        $total_amount = $_POST['total_amount'];
+
+        // Validate fertilizer type
+        $fertilizer = $this->fertilizerOrderModel->getFertilizerByTypeId($type_id);
+        if (!$fertilizer) {
+            echo "Error: The fertilizer type ID '{$type_id}' does not exist.";
+            return;
+        }
+
+        // Automatically fill fertilizer name and price per unit based on unit type
+        $fertilizer_name = $fertilizer['name'];
+        $price_per_unit = $fertilizer['price_' . $unit];
+        if (!$price_per_unit) {
+            echo "Error: Invalid unit type selected.";
+            return;
+        }
+
+        // Calculate total price
+        $total_price = $total_amount * $price_per_unit;
+
+        // Insert the order
+        $isInserted = $this->fertilizerOrderModel->createOrder([
+            'supplier_id' => $supplier_id,
+            'type_id' => $fertilizer['type_id'],
+            'fertilizer_name' => $fertilizer_name,
+            'total_amount' => $total_amount,
+            'unit' => $unit,
+            'price_per_unit' => $price_per_unit,
+            'total_price' => $total_price,
+        ]);
+
+        if ($isInserted) {
+            echo "Order placed successfully!";
+        } else {
+            echo "Failed to place the order.";
+        }
     }
     
 

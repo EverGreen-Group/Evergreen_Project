@@ -12,8 +12,6 @@ allSideMenu.forEach(item=> {
 });
 
 
-
-
 // TOGGLE SIDEBAR
 const menuBar = document.querySelector('#content nav .bx.bx-menu');
 const sidebar = document.getElementById('sidebar');
@@ -40,9 +38,6 @@ searchButton.addEventListener('click', function (e) {
 })
 
 
-
-
-
 if(window.innerWidth < 768) {
 	sidebar.classList.add('hide');
 } else if(window.innerWidth > 576) {
@@ -59,7 +54,6 @@ window.addEventListener('resize', function () {
 })
 
 
-
 const switchMode = document.getElementById('switch-mode');
 
 // Function to set theme
@@ -73,6 +67,7 @@ function setTheme(isDark) {
     switchMode.checked = isDark;
 }
 
+
 // Load saved theme preference
 const savedDarkMode = localStorage.getItem('darkMode') === 'true';
 setTheme(savedDarkMode);
@@ -80,7 +75,6 @@ setTheme(savedDarkMode);
 switchMode.addEventListener('change', function () {
     setTheme(this.checked);
 });
-
 
 
 // Get the current page from the window location
@@ -98,6 +92,7 @@ allSideMenu.forEach(item => {
 		console.log("Active Link Found: ", href); // Log which link becomes active
 	}
 });
+
 
 function enableEditing() {
     const inputs = document.querySelectorAll('.input');
@@ -139,9 +134,116 @@ function submitmessage(event) {
     }
 }
 
+
 function refreshPage() {
     document.querySelector('.complaint-form').reset();
 }
+
+
+function updatePricePerUnit() {
+    const typeSelect = document.getElementById('type_id');
+    const pricePerUnitInput = document.getElementById('price_per_unit');
+    const totalPriceInput = document.getElementById('total_price');
+    const totalAmountInput = document.getElementById('total_amount');
+
+    const selectedType = typeSelect.value;
+    // Use the global variable
+    const type = window.FERTILIZER_TYPES.find(t => t.type_id == selectedType);
+
+    if (type) {
+        const defaultUnit = 'kg';
+        pricePerUnitInput.value = type[`price_${defaultUnit}`];
+
+        // Calculate total price if total amount is filled
+        const totalAmount = totalAmountInput.value;
+        if (totalAmount) {
+            totalPriceInput.value = (totalAmount * pricePerUnitInput.value).toFixed(2);
+        }
+    }
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+    const typeSelect = document.getElementById('type_id');
+    const unitSelect = document.getElementById('unit');
+    const totalAmountInput = document.getElementById('total_amount');
+    const pricePerUnitInput = document.getElementById('price_per_unit');
+    const totalPriceInput = document.getElementById('total_price');
+
+    // Function to update prices based on selected fertilizer and unit
+    function updatePrices() {
+        const selectedOption = typeSelect.options[typeSelect.selectedIndex];
+        const selectedUnit = unitSelect.value;
+        
+        if (selectedOption && selectedUnit) {
+            let pricePerUnit = 0;
+            
+            // Get price based on selected unit
+            switch(selectedUnit) {
+                case 'kg':
+                    pricePerUnit = parseFloat(selectedOption.dataset.unitPriceKg);
+                    break;
+                case 'packs':
+                    pricePerUnit = parseFloat(selectedOption.dataset.packPrice);
+                    break;
+                case 'box':
+                    pricePerUnit = parseFloat(selectedOption.dataset.boxPrice);
+                    break;
+            }
+
+            // Update price per unit field
+            pricePerUnitInput.value = pricePerUnit.toFixed(2);
+
+            // Calculate and update total price if amount is entered
+            const amount = parseFloat(totalAmountInput.value) || 0;
+            totalPriceInput.value = (pricePerUnit * amount).toFixed(2);
+        } else {
+            pricePerUnitInput.value = '';
+            totalPriceInput.value = '';
+        }
+    }
+
+    // Add event listeners
+    typeSelect.addEventListener('change', updatePrices);
+    unitSelect.addEventListener('change', updatePrices);
+    totalAmountInput.addEventListener('input', updatePrices);
+
+    // Form validation
+    document.getElementById('fertilizerForm').addEventListener('submit', function(event) {
+        event.preventDefault();
+        
+        if (!typeSelect.value) {
+            alert('Please select a fertilizer type');
+            return;
+        }
+        if (!unitSelect.value) {
+            alert('Please select a unit');
+            return;
+        }
+        if (!totalAmountInput.value || totalAmountInput.value <= 0) {
+            alert('Please enter a valid amount');
+            return;
+        }
+
+        this.submit();
+    });
+});
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -213,6 +315,7 @@ document.addEventListener('DOMContentLoaded', function () {
     new Chart(ctx, leafconfig); 
 });
 
+
 const pie_leafconfig = {
     type: 'pie',
     data: leafdata,
@@ -233,6 +336,7 @@ document.addEventListener('DOMContentLoaded', function () {
     const ctx = document.getElementById('teaLeavesConfirmationChart').getContext('2d');
     new Chart(ctx, pie_leafconfig); 
 });
+
 
 document.addEventListener('DOMContentLoaded', function() {
     var ctx = document.getElementById('fertilizerOrdersChart').getContext('2d');
@@ -282,4 +386,92 @@ document.addEventListener('DOMContentLoaded', function() {
 document.addEventListener('DOMContentLoaded', function () {
     const ctx = document.getElementById('fertilizerOrdersChart').getContext('2d');
     new Chart(ctx, pie_leafconfig); 
+});
+
+/* TEA ORDER CHART */
+document.addEventListener('DOMContentLoaded', function() {
+    var ctx = document.getElementById('fertilizerChart').getContext('2d');
+    var fertilizerChart = new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: ['January', 'February', 'March', 'April', 'May', 'June'],
+            datasets: [{
+                label: 'Requests',
+                data: [120, 10, 200, 180, 220, 80], // Example data 
+                fill: false,
+                backgroundColor: 'rgba(75, 192, 192, 0.2)',
+                borderColor: 'rgba(75, 192, 192, 1)',
+                borderWidth: 2
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                legend: {
+                    position: 'bottom',
+                },
+                title: {
+                    display: true,
+                    text: 'Requests (Monthly)'
+                }
+            },
+            scales: {
+                x: {
+                    title: {
+                        display: true,
+                        text: 'Month'
+                    }
+                },
+                y: {
+                    title: {
+                        display: true,
+                        text: 'Number of Requests'
+                    },
+                    beginAtZero: true
+                }
+            }
+        }
+    });
+});
+
+document.addEventListener('DOMContentLoaded', function() {
+    var ctx = document.getElementById('fertilizerRequestChart').getContext('2d');
+    var fertilizerRequestChart = new Chart(ctx, {
+        type: 'pie',
+        data: {
+            labels: ['June', 'July', 'August', 'September', 'October', 'November'],
+            datasets: [{
+                data: [120, 10, 200, 180, 220, 80 ], // Example data for tea orders
+                backgroundColor: [
+                    'rgba(255, 99, 132, 0.8)',
+                    'rgba(54, 162, 235, 0.8)',
+                    'rgba(255, 206, 86, 0.8)',
+                    'rgba(75, 192, 192, 0.8)',
+                    'rgba(153, 102, 255, 0.8)',
+                    'rgba(255, 159, 64, 0.8)'
+                ],
+                borderColor: [
+                    'rgba(255, 99, 132, 1)',
+                    'rgba(54, 162, 235, 1)',
+                    'rgba(255, 206, 86, 1)',
+                    'rgba(75, 192, 192, 1)',
+                    'rgba(153, 102, 255, 1)',
+                    'rgba(255, 159, 64, 1)'
+                ],
+                borderWidth: 1
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                legend: {
+                    position: 'bottom',
+                },
+                title: {
+                    display: true,
+                    text: 'Fertilizer Request History (Monthly Distribution)'
+                }
+            }
+        }
+    });
 });
