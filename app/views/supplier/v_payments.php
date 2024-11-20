@@ -21,43 +21,12 @@
 					</ul>
 				</div>
 
+                
                 <div class="table-data">
                     <div class="order">
-                        <div class="head">
-                            <h3>Payments</h3>
-                        </div>
-                        <div>
-                            <table class="complaint-type">
-                                <tr>
-                                    <th>Payment</th>
-                                    <th>Date and Time</th>
-                                    <th>Order type</th>
-                                    <th>Status</th>
-                                </tr>
-                                <tr>
-                                    <td>Rs. 21 000.00</td>
-                                    <td>2024/11/10 12:32pm</td>
-                                    <td>Fertilizer</td>
-                                    <td><button class="pending-btn">Pending</button></td>
-                                </tr>
-                                <tr>
-                                    <td>Rs. 4 000.00</td>
-                                    <td>2024/11/10 12:32pm</td>
-                                    <td>Tea Packets</td>
-                                    <td><button class="accept-btn">Paid</button></td>
-
-                                </tr>
-                                <tr>
-                                    <td>Rs. 21 000.00</td>
-                                    <td>2024/11/10 12:32pm</td>
-                                    <td>Tea Packets</td>
-                                    <td><button class="accept-btn">Paid</button></td>
-                                </tr>
-                            </table>
-                        </div>
-                        <a href="<?php echo URLROOT; ?>/Supplier/" >
-                            <button class="button">Home</button>
-                        </a>
+                    <div class="chart-container">
+                        <canvas id="incomeCostChart"></canvas>
+                    </div>
                     </div>
                 </div>
                 <div class="table-data">
@@ -118,9 +87,49 @@
                         </a>
                     </div>
                 </div>
+                <div class="table-data">
+                    <div class="order">
+                        <div class="head">
+                            <h3>Payments</h3>
+                        </div>
+                        <div>
+                            <table class="complaint-type">
+                                <tr>
+                                    <th>Payment</th>
+                                    <th>Date and Time</th>
+                                    <th>Order type</th>
+                                    <th>Status</th>
+                                </tr>
+                                <tr>
+                                    <td>Rs. 21 000.00</td>
+                                    <td>2024/11/10 12:32pm</td>
+                                    <td>Fertilizer</td>
+                                    <td><button class="pending-btn">Pending</button></td>
+                                </tr>
+                                <tr>
+                                    <td>Rs. 4 000.00</td>
+                                    <td>2024/11/10 12:32pm</td>
+                                    <td>Tea Packets</td>
+                                    <td><button class="accept-btn">Paid</button></td>
+
+                                </tr>
+                                <tr>
+                                    <td>Rs. 21 000.00</td>
+                                    <td>2024/11/10 12:32pm</td>
+                                    <td>Tea Packets</td>
+                                    <td><button class="accept-btn">Paid</button></td>
+                                </tr>
+                            </table>
+                        </div>
+                        <a href="<?php echo URLROOT; ?>/Supplier/" >
+                            <button class="button">Home</button>
+                        </a>
+                    </div>
+                </div>
         </main>
 		</div>
     </section>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="<?php echo URLROOT; ?>/css/components/script.js"></script>
 </body>
 </html>

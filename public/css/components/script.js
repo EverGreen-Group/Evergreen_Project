@@ -228,6 +228,61 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 });
 
+//PAYMENTS
+// Hardcoded data
+const months = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+const income = [5000, 7000, 8000, 10000, 12000, 14000, 13000, 11000, 15000, 16000, 18000, 20000];
+const cost = [3000, 4000, 5000, 6000, 700, 8000, 7500, 6000, 9000, 200, 12000, 13000];
+
+// Chart setup
+const ctx = document.getElementById("incomeCostChart").getContext("2d");
+
+const payconfig = {
+  type: "bar",
+  data: {
+    labels: months,
+    datasets: [
+      {
+        label: "Income",
+        data: income,
+        backgroundColor: "rgba(75, 192, 192, 0.6)",
+        borderColor: "rgba(75, 192, 192, 1)",
+        borderWidth: 1,
+      },
+      {
+        label: "Cost",
+        data: cost,
+        backgroundColor: "rgba(255, 99, 132, 0.6)",
+        borderColor: "rgba(255, 99, 132, 1)",
+        borderWidth: 1,
+      },
+    ],
+  },
+  options: {
+    responsive: true,
+    plugins: {
+      legend: {
+        position: "top",
+      },
+      title: {
+        display: true,
+        text: "Income vs Cost for Orders (Yearly)",
+      },
+    },
+    scales: {
+      x: {
+        beginAtZero: true,
+      },
+      y: {
+        beginAtZero: true,
+      },
+    },
+  },
+};
+
+document.addEventListener('DOMContentLoaded', function () {
+    new Chart(ctx, payconfig); 
+});
 
 
 
@@ -250,38 +305,38 @@ document.addEventListener('DOMContentLoaded', function() {
 
 /* SUPPLEMENT MANAGER */
 /* DASHBOARD */
-    const data = {
-        labels: ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'],
-        datasets: [{
-            label: 'Tea Leaves Collected (kg)',
-            data: [500, 540, 120, 750, 900, 500, 290, 600, 670, 750, 900, 0], // Match the labels
-            backgroundColor: 'rgba(0, 198, 172, 0.712)',
-            borderColor: 'rgba(0, 162, 141, 0.712)',
-            borderWidth: 1,
-        }]
-    };
+const data = {
+    labels: ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'],
+    datasets: [{
+        label: 'Tea Leaves Collected (kg)',
+        data: [500, 540, 120, 750, 900, 500, 290, 600, 670, 750, 900, 0], // Match the labels
+        backgroundColor: 'rgba(0, 198, 172, 0.712)',
+        borderColor: 'rgba(0, 162, 141, 0.712)',
+        borderWidth: 1,
+    }]
+};
 
-    const config = {
-        type: 'bar',
-        data: data,
-        options: {
-            responsive: true,
-            plugins: {
-                legend: { position: 'bottom' },
-                tooltip: { enabled: true },
-            },
-            scales: {
-                x: { title: { display: true, text: 'Months' } },
-                y: { title: { display: true, text: 'Amount (kg)' }, beginAtZero: true },
-            }
+const config = {
+    type: 'bar',
+    data: data,
+    options: {
+        responsive: true,
+        plugins: {
+            legend: { position: 'bottom' },
+            tooltip: { enabled: true },
+        },
+        scales: {
+            x: { title: { display: true, text: 'Months' } },
+            y: { title: { display: true, text: 'Amount (kg)' }, beginAtZero: true },
         }
-    };
+    }
+};
 
-    document.addEventListener('DOMContentLoaded', function () {
-        const ctx = document.getElementById('teaLeavesGraph').getContext('2d');
-        new Chart(ctx, config); 
-    });
-    
+document.addEventListener('DOMContentLoaded', function () {
+    const ctx = document.getElementById('teaLeavesGraph').getContext('2d');
+    new Chart(ctx, config); 
+});
+
 /*  LEAF SUPPLY */
 const leafdata = {
     labels: ['sent', 'pending', 'confirmed', 'reported'],
