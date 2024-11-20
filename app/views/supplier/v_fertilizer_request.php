@@ -128,7 +128,7 @@
 
                                     <div class="form-group">
                                         <label for="total_amount">Total Amount:</label>
-                                        <input type="number" id="total_amount" name="total_amount" min="1" required>
+                                        <input type="number" id="total_amount" name="total_amount" min="1" max="50" required>
                                     </div>
 
                                     <div class="form-group">

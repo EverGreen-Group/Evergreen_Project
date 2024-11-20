@@ -99,33 +99,31 @@
                         </div>
                         <form action="submit_complaint.php" method="post" class="complaint-form">
                             <div class="form-group">
+
                             <div class="form-group">
                                 <label for="description">Full Name:</label>
                                 <input type="fullname" id="fullname" name="fullname" required>
+
+                            <div class="form-group">
+                                <label for="total_amount">Packet Amount:</label>
+                                <input type="number" id="total_amount" name="total_amount" min="1" max="50" required>
                             </div>
-                                <label for="complaint-type">Packet Quantity: </label>
-                                <select id="complaint-type" name="complaint_type" required>
-                                    <option value="quality">1</option>
-                                    <option value="service">2</option>
-                                    <option value="delivery">5</option>
-                                    <option value="other">10</option>
-                                    <option value="delivery">20</option>
-                                    <option value="other">30</option>
-                                    <option value="other">other</option>
-                                </select>
-                            </div>
+
                             <div class="form-group">
                                 <label for="description">Address:</label>
                                 <input type="address" id="address" name="address" required>
                             </div>
+                            
                             <div class="form-group">
                                 <label for="email">Email:</label>
                                 <input type="email" id="email" name="email" required>
                             </div>
+
                             <div class="form-group">
                                 <label for="phone">Phone Number:</label>
                                 <input type="text" id="phone" name="phone">
                             </div>
+
                             <button type="submit" class="button" onclick="submitmessage()">Submit Request</button>
                             <button type="submit" class="button" onclick="refreshPage()">Cancel</button>
                         </form>
