@@ -26,12 +26,12 @@ class M_Fertilizer_Order {
     public function createOrder($data) {
         $stmt = $this->db->prepare(
             "INSERT INTO fertilizer_orders 
-            (supplier_id, type_id, fertilizer_name, total_amount, unit, price_per_unit, total_price, order_date, order_time) 
+            (type_id, fertilizer_name, total_amount, unit, price_per_unit, total_price, order_date, order_time) 
             VALUES 
-            (:supplier_id, :type_id, :fertilizer_name, :total_amount, :unit, :price_per_unit, :total_price, CURRENT_DATE, CURRENT_TIME)"
+            (:type_id, :fertilizer_name, :total_amount, :unit, :price_per_unit, :total_price, CURRENT_DATE, CURRENT_TIME)"
         );
     
-        $stmt->bindValue(':supplier_id', $data['supplier_id'], PDO::PARAM_INT);
+        //$stmt->bindValue(':supplier_id', $data['supplier_id'], PDO::PARAM_INT);
         $stmt->bindValue(':type_id', $data['type_id'], PDO::PARAM_INT);
         $stmt->bindValue(':fertilizer_name', $data['fertilizer_name'], PDO::PARAM_STR);
         $stmt->bindValue(':total_amount', $data['total_amount'], PDO::PARAM_STR);
@@ -72,10 +72,15 @@ class M_Fertilizer_Order {
     }
     
     public function getFertilizerByTypeId($type_id) {
-        $stmt = $this->db->prepare("SELECT * FROM fertilizer_types WHERE type_id = :id");
+        $stmt = $this->db->prepare("SELECT type_id, name, 
+            unit_price_kg as price_kg, 
+            unit_price_packs as price_packs, 
+            unit_price_box as price_box 
+            FROM fertilizer_types 
+            WHERE type_id = :id");
         $stmt->bindValue(':id', $type_id, PDO::PARAM_INT);
         $stmt->execute();
-
+    
         return $stmt->fetch(PDO::FETCH_ASSOC);
     }
 

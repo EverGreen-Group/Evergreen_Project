@@ -60,16 +60,16 @@
                                 </tr>
                             </thead>
                             <tbody>
-                                <?php if (isset($data['orders']) && !empty($data['orders'])): ?>
+                                
                                     <?php foreach ($data['orders'] as $order): ?>
                                         <tr>
                                             <td><?php echo $order->order_id; ?></td> 
-                                            <td><?php echo $order->fertilizer_type; ?></td>
+                                            <td><?php echo $order->fertilizer_name; ?></td>
                                             <td><?php echo $order->order_date; ?></td>
                                             <td><?php echo $order->order_time; ?></td>
-                                            <td><?php echo $order->total_amount; ?></td>
+                                            <td><?php echo $order->total_amount . ' ' . $order->unit; ?></td>
                                             <td><?php echo $order->total_price; ?></td>
-                                            <td><?php echo $order->payment_status; ?></td>
+                                            <td><?php echo isset($order->payment_status) ? $order->payment_status : 'Pending'; ?></td>
                                             <td>
                                                 <a href="<?php echo URLROOT; ?>/Supplier/editFertilizerRequest/<?php echo $order->order_id; ?>" class="btn-edit btn-primary">
                                                     Edit
@@ -82,11 +82,7 @@
                                             </td>
                                         </tr>
                                     <?php endforeach; ?>
-                                <?php else: ?>
-                                    <tr>
-                                        <td colspan="7">No orders found.</td>
-                                    </tr>
-                                <?php endif; ?>
+                                
                             </tbody>
                         </table>
                     </div>

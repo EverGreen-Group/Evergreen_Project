@@ -52,13 +52,6 @@ class Supplier extends Controller {
         $this->view('supplier/v_confirmation_history', $data);
     }
 
-    public function fertilizerhistory()
-    {
-        $data = [];
-
-        $this->view('supplier/v_fertilizer_history', $data);
-    }
-
     public function teaorders()
     {
         $data = [];
@@ -91,6 +84,7 @@ class Supplier extends Controller {
     {
         $fertilizerModel = new M_Fertilizer_Order();
         $data['fertilizer_types'] = $fertilizerModel->getAllFertilizerTypes();
+        $data['orders'] = $fertilizerModel->getAllOrders();     //switch to getOrderBySupplier() after logging in
 
         $this->view('supplier/v_fertilizer_request', $data);
     }
@@ -109,6 +103,24 @@ class Supplier extends Controller {
         $this->view('supplier/v_settings', $data);
     }
 
+    public function fertilizerhistory() {
+        // Ensure supplier is logged in
+        if (!isset($_SESSION['supplier_id'])) {
+            flash('message', 'Please log in to view your order history', 'alert alert-danger');
+            redirect('login');
+            return;
+        }
+    
+        // Fetch orders for the current supplier
+        $orders = $this->fertilizerOrderModel->getOrdersBySupplier($_SESSION['supplier_id']);
+    
+        $data = [
+            'orders' => $orders,
+            'fertilizer_types' => $this->fertilizerOrderModel->getAllFertilizerTypes()
+        ];
+    
+        $this->view('supplier/v_fertilizer_history', $data);
+    }
 
     public function fertilizerOrders() {
         if ($_SERVER['REQUEST_METHOD'] == 'POST') {
@@ -154,6 +166,7 @@ class Supplier extends Controller {
    
     public function createFertilizerOrder() {
         // Check if the supplier is logged in
+        /*
         if (!isset($_SESSION['supplier_logged_in']) || !$_SESSION['supplier_logged_in']) {
             echo "Error: You must be logged in to place an order.";
             return;
@@ -163,10 +176,10 @@ class Supplier extends Controller {
             flash('message', 'Please fill all required fields', 'alert alert-danger');
             redirect('supplier/requestFertilizer');
             return;
-        }
+        }*/
 
         // Get the logged-in supplier's ID
-        $supplier_id = $_SESSION['supplier_id'];
+        //$supplier_id = $_SESSION['supplier_id'];
 
     
         // Fetch fertilizer types for dropdown
@@ -193,14 +206,24 @@ class Supplier extends Controller {
             return;
         }
 
+        // Dynamically get the price based on the selected unit
+        $price_column = 'price_' . $unit;
+        $price_per_unit = $fertilizer[$price_column];
+        
+        if (!$price_per_unit) {
+            flash('message', 'Invalid unit type selected', 'alert alert-danger');
+            redirect('supplier/requestFertilizer');
+            return;
+        }
+
         // Calculate total price
         $total_price = $total_amount * $price_per_unit;
 
         // Insert the order
         $isInserted = $this->fertilizerOrderModel->createOrder([
-            'supplier_id' => $supplier_id,
+            //'supplier_id' => $supplier_id,
             'type_id' => $fertilizer['type_id'],
-            'fertilizer_name' => $fertilizer_name,
+            'fertilizer_name' => $fertilizer['name'],
             'total_amount' => $total_amount,
             'unit' => $unit,
             'price_per_unit' => $price_per_unit,
