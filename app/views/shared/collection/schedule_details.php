@@ -8,20 +8,73 @@ function isWithinShiftTime($startTime, $endTime) {
     $startDateTime = new DateTime($startTime);
     $endDateTime = new DateTime($endTime);
 
-    // Debug output
+    // Uncomment for debugging
     // echo "Current time: " . $now->format('Y-m-d H:i:s') . "<br>";
     // echo "Start time: " . $startDateTime->format('Y-m-d H:i:s') . "<br>";
     // echo "End time: " . $endDateTime->format('Y-m-d H:i:s') . "<br>";
 
     return $now >= $startDateTime && $now <= $endDateTime;
 }
+
+// Get today's day and current time
+$today = strtolower(date('D'));
+$currentDateTime = new DateTime();
+
+// Initialize $isCompleted
+$isCompleted = false;
+
+// Check if collection exists and has a status
+if (isset($data['collection']) && $data['collection']) {
+    $isCompleted = (isset($data['collection']->status) && 
+                    strtolower($data['collection']->status) === 'completed');
+}
+
+// Parse the scheduled days into an array
+$scheduledDays = array_map('trim', explode(',', strtolower($data['schedule']->days_of_week)));
+
+// Debug output (optional)
+// echo "Today: " . $today . "<br>";
+// echo "Scheduled days: " . implode(', ', $scheduledDays) . "<br>";
+
+// Check if today is a scheduled day
+$isTodayScheduled = in_array($today, $scheduledDays);
+
+// Initialize variables for countdown
+$shiftStartTime = '';
+$shiftEndTime = '';
+?>
+
+<?php
+// Determine constraints failure reasons
+$accessDeniedReasons = [];
+
+if (!$isTodayScheduled) {
+    $accessDeniedReasons[] = "Today is <strong>" . htmlspecialchars(date('l')) . "</strong>, which is not a scheduled day.";
+    $accessDeniedReasons[] = "Allowed access days are: <strong>" . htmlspecialchars(implode(', ', array_map('ucfirst', $scheduledDays))) . "</strong>.";
+}
+
+// If there are reasons to deny access, display them and exit
+if (!empty($accessDeniedReasons)) {
+    echo '<div class="alert alert-warning">';
+    echo '<h4>Access Denied</h4>';
+    echo '<ul>';
+    foreach ($accessDeniedReasons as $reason) {
+        echo '<li>' . $reason . '</li>';
+    }
+    echo '</ul>';
+    echo '</div>';
+    require APPROOT . '/views/inc/components/footer.php';
+    exit();
+}
 ?>
 
 <main class="schedule-details-main">
 
-    <?php print_r($data['collection']); ?>
-    <?php print_r($data['collectionBags']); ?>
-
+    <?php
+    // Debugging outputs (optional, consider removing in production)
+    // print_r($data['collection']);
+    // print_r($data['collectionBags']);
+    ?>
 
     <div class="content-header">
         <div class="header-text">
@@ -34,50 +87,33 @@ function isWithinShiftTime($startTime, $endTime) {
         </div>
     </div>
 
-
     <div class="schedule-content">
         <section class="schedule-info">
             <h2>Schedule Information</h2>
-            <p>Week: <?php echo $data['schedule']->week_number; ?></p>
-            <p>Days: <?php echo $data['schedule']->days_of_week; ?></p>
-            <p>Shift: <?php echo $data['schedule']->start_time . ' - ' . $data['schedule']->end_time; ?></p>
+            <p>Week: <?php echo htmlspecialchars($data['schedule']->week_number); ?></p>
+            <p>Days: <?php echo htmlspecialchars($data['schedule']->days_of_week); ?></p>
+            <p>Shift: <?php echo htmlspecialchars($data['schedule']->start_time . ' - ' . $data['schedule']->end_time); ?></p>
         </section>
 
         <section class="vehicle-info">
             <h2>Vehicle Information</h2>
-            <p>Vehicle Type: <?php echo $data['vehicle']->vehicle_type; ?></p>
-            <p>License Plate: <?php echo $data['vehicle']->license_plate; ?></p>
-            <p>Capacity: <?php echo $data['vehicle']->capacity; ?></p>
+            <p>Vehicle Type: <?php echo htmlspecialchars($data['vehicle']->vehicle_type); ?></p>
+            <p>License Plate: <?php echo htmlspecialchars($data['vehicle']->license_plate); ?></p>
+            <p>Capacity: <?php echo htmlspecialchars($data['vehicle']->capacity); ?></p>
         </section>
 
         <section class="team-info">
             <h2>Team Information</h2>
-            <p>Team Name: <?php echo $data['team']->team_name; ?></p>
-            <p>Driver: <?php echo $data['team']->driver_name; ?></p>
-            <p>Partner: <?php echo $data['team']->partner_name; ?></p>
+            <p>Team Name: <?php echo htmlspecialchars($data['team']->team_name); ?></p>
+            <p>Driver: <?php echo htmlspecialchars($data['team']->driver_name); ?></p>
+            <p>Partner: <?php echo htmlspecialchars($data['team']->partner_name); ?></p>
         </section>
-
 
         <section class="route-info">
             <h2>Route Information</h2>
             <div class="route-header">
-                <p><strong>Route Name:</strong> <?php echo $data['route']->route_name; ?></p>
+                <p><strong>Route Name:</strong> <?php echo htmlspecialchars($data['route']->route_name); ?></p>
                 <p><strong>Number of Suppliers:</strong> <?php echo count($data['routeSuppliers']); ?></p>
-                
-                <!-- Add temporary buttons here -->
-                <div class="temp-buttons">
-                    <?php if ($data['userRole'] == 'driving_partner'): ?>
-                        <a href="<?php echo URLROOT; ?>/drivingpartner/supplier_collection" class="btn btn-primary">
-                            View Supplier Collection (Temp)
-                        </a>
-                    <?php endif; ?>
-                    
-                    <?php if ($data['userRole'] == 'driver'): ?>
-                        <a href="<?php echo URLROOT; ?>/vehicledriver/v_collection_route" class="btn btn-primary">
-                            View Collection Route (Temp)
-                        </a>
-                    <?php endif; ?>
-                </div>
             </div>
             <div class="suppliers-list">
                 <h3>Suppliers in Route</h3>
@@ -102,14 +138,10 @@ function isWithinShiftTime($startTime, $endTime) {
             </div>
         </section>
 
-
-
         <?php if ($data['userRole'] == 'driver' || $data['userRole'] == 'driving_partner'): ?>
             <section class="ready-status">
                 <h2>Collection Status</h2>
                 <?php 
-                $shiftStartTime = date('Y-m-d ') . $data['schedule']->start_time;
-                $shiftEndTime = date('Y-m-d ') . $data['schedule']->end_time;
                 $isTimeValid = isWithinShiftTime($shiftStartTime, $shiftEndTime);
                 ?>
 
@@ -119,16 +151,18 @@ function isWithinShiftTime($startTime, $endTime) {
                         <div class="collection-stage bag-assignment">
                             <h3>Assign Collection Bags</h3>
                             <div class="bag-assignment-container">
-                                <form action="<?php echo URLROOT; ?>/drivingpartner/assignBags/<?php echo $data['schedule']->schedule_id; ?>" 
+                                <form action="<?php echo URLROOT; ?>/drivingpartner/assignBags/<?php echo htmlspecialchars($data['schedule']->schedule_id); ?>" 
                                       method="POST" class="bag-assignment-form">
                                     <div class="form-group">
-                                        <label>Add Bags for Collection</label>
+                                        <label for="bag-token">Add Bags for Collection</label>
                                         <div class="bag-input-container">
                                             <input type="text" 
+                                                   id="bag-token"
+                                                   name="bag_token"
                                                    class="bag-token-input" 
                                                    placeholder="Enter bag token..."
                                                    pattern="[A-Za-z0-9]+"
-                                                   autocomplete="off">
+                                                   autocomplete="off" required>
                                             <button type="button" class="add-bag-btn">Add Bag</button>
                                         </div>
                                     </div>
@@ -153,65 +187,415 @@ function isWithinShiftTime($startTime, $endTime) {
                         </div>
                     <?php endif; ?>
                 <?php else: ?>
-                    <!-- Existing collection logic -->
-                    <?php if ($data['userRole'] == 'driving_partner' && !$data['collection']->bags): ?>
-                        <!-- Rest of your existing code for when collection exists -->
-                    <?php elseif (!$data['collection']->vehicle_manager_approved): ?>
-                        <!-- Awaiting Vehicle Manager Stage -->
-                        <div class="collection-stage waiting-approval">
-                            <h3>Awaiting Vehicle Manager</h3>
-                            <p>Initial weight and approval pending</p>
-                            <?php if ($data['collection']->initial_weight_bridge): ?>
-                                <p>Initial Weight: <?php echo $data['collection']->initial_weight_bridge; ?> kg</p>
-                            <?php endif; ?>
-                            <?php if ($data['collection']->bags): ?>
-                                <p>Bags Assigned: <?php echo $data['collection']->bags; ?></p>
-                            <?php endif; ?>
-                        </div>
-                    <?php elseif (!$data['collection']->start_time): ?>
-                        <!-- Ready to Start Collection -->
-                        <div class="collection-stage ready-to-start">
-                            <h3>Ready to Start Collection</h3>
-                            
-                            <?php if (!$data['collection']->driver_approved): ?>
-                                <?php if ($data['userRole'] == 'driver'): ?>
-                                    <form action="<?php echo URLROOT; ?>/vehicledriver/setDriverReady/<?php echo $data['collection']->collection_id; ?>/<?php echo $data['schedule']->schedule_id; ?>" 
-                                          method="POST">
-                                        <button type="submit" class="btn btn-primary">Mark Ready</button>
-                                    </form>
-                                <?php else: ?>
-                                    <p>Waiting for driver to mark ready...</p>
-                                <?php endif; ?>
-                            <?php else: ?>
-                                <p>All preparations complete</p>
-                                <?php if ($data['userRole'] == 'driver'): ?>
-                                    <form action="<?php echo URLROOT; ?>/vehicledriver/collectionRoute/<?php echo $data['collection']->collection_id; ?>" 
-                                          method="POST">
-                                        <button type="submit" class="btn btn-primary">Start Collection</button>
-                                    </form>
-                                <?php else: ?>
-                                    <p>Waiting for driver to start collection...</p>
-                                <?php endif; ?>
-                            <?php endif; ?>
-                        </div>
-                    <?php else: ?>
-                        <!-- Collection in Progress -->
-                        <div class="collection-in-progress">
-                            <h3>Collection in Progress</h3>
-                            <?php if ($data['userRole'] == 'driver'): ?>
-                                <a href="<?php echo URLROOT; ?>/vehicledriver/collectionRoute/<?php echo $data['collection']->collection_id; ?>" 
-                                   class="btn btn-primary">View Collection Route</a>
-                            <?php else: ?>
-                                <a href="<?php echo URLROOT; ?>/drivingpartner/collectionRoute/<?php echo $data['collection']->collection_id; ?>" 
-                                   class="btn btn-primary">View Collection Route</a>
-                            <?php endif; ?>
-                        </div>
-                    <?php endif; ?>
+                    <!-- Collection exists, display status -->
+                    <div class="collection-stage <?php echo strtolower($data['collection']->status) === 'in progress' ? 'collection-in-progress' : 'collection-completed'; ?>">
+                        <h3>Collection <?php echo htmlspecialchars(ucfirst($data['collection']->status)); ?></h3>
+                        <p>Collection started at: <?php echo htmlspecialchars((new DateTime($data['collection']->start_time))->format('H:i')); ?></p>
+                        <?php if (strtolower($data['collection']->status) !== 'completed'): ?>
+                            <p>Expected completion by: <?php echo htmlspecialchars((new DateTime($data['collection']->end_time))->format('H:i')); ?></p>
+                        <?php endif; ?>
+                    </div>
                 <?php endif; ?>
             </section>
         <?php endif; ?>
     </div>
 </main>
+
+<style>
+/* Existing styles */
+
+/* Alert Styling */
+.alert {
+    padding: 20px;
+    background-color: #ffdddd;
+    color: #a94442;
+    border: 1px solid #a94442;
+    border-radius: 5px;
+    margin: 20px;
+}
+
+.alert h4 {
+    margin-top: 0;
+}
+
+/* Box Info Cards */
+.box-info {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    margin-bottom: 24px;
+}
+
+.box-info li {
+    flex: 1 1 calc(50% - 10px) !important;
+    margin: 5px !important;
+    background: white;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    display: flex;
+    align-items: center;
+    transition: all 0.3s ease;
+}
+
+.box-info li i {
+    font-size: 2rem;
+    margin-right: 15px;
+    color: var(--primary);
+    flex-shrink: 0;
+}
+
+.box-info .text {
+    flex: 1;
+}
+
+.box-info .text p {
+    margin: 0;
+    font-size: 1rem;
+    color: var(--dark);
+}
+
+.box-info .text h3 {
+    margin: 5px 0;
+    font-size: 1.25rem;
+    color: var(--primary);
+}
+
+.box-info .text span {
+    font-size: 0.875rem;
+    color: var(--secondary);
+}
+
+/* Content Header */
+.content-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+}
+
+.header-text h1 {
+    margin: 0;
+}
+
+.header-actions .btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* Schedule Content */
+.schedule-content {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.schedule-info, .vehicle-info, .team-info, .route-info {
+    background: white;
+    padding: 20px;
+    border-radius: 8px;
+}
+
+.route-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-bottom: 15px;
+}
+
+.temp-buttons {
+    display: flex;
+    gap: 1rem;
+    margin-top: 1rem;
+}
+
+.btn {
+    padding: 10px 20px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    text-decoration: none;
+    color: white;
+    background-color: var(--primary);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 5px;
+    font-size: 0.9rem;
+}
+
+.btn-secondary {
+    background-color: #6c757d;
+}
+
+/* Suppliers List */
+.suppliers-list {
+    background: #f9f9f9;
+    padding: 15px;
+    border-radius: 8px;
+}
+
+.suppliers-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.suppliers-table th,
+.suppliers-table td {
+    padding: 12px;
+    text-align: left;
+    border-bottom: 1px solid #eee;
+}
+
+.suppliers-table tr.current {
+    background: #e3f2fd;
+}
+
+.suppliers-table tr.completed {
+    background: #f1f8e9;
+}
+
+.status {
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 0.85rem;
+}
+
+.status.added {
+    background: #e3f2fd;
+    color: #1976D2;
+}
+
+.status.completed {
+    background: #f1f8e9;
+    color: #43A047;
+}
+
+/* Collection Status */
+.ready-status {
+    margin-top: 20px;
+}
+
+.collection-stage {
+    background: white;
+    padding: 20px;
+    border-radius: 8px;
+    margin-top: 20px;
+}
+
+.collection-stage.waiting {
+    border-left: 4px solid #ffc107;
+}
+
+.collection-stage.collection-in-progress {
+    border-left: 4px solid #28a745;
+}
+
+.bag-assignment-form {
+    margin-top: 20px;
+}
+
+.bag-input-container {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 15px;
+}
+
+.bag-token-input {
+    flex: 1;
+    padding: 8px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+}
+
+.assigned-bags-list {
+    margin-top: 15px;
+    display: grid;
+    gap: 10px;
+}
+
+.assigned-bag {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px;
+    background: #f8f9fa;
+    border-radius: 4px;
+}
+
+.remove-bag {
+    background: none;
+    border: none;
+    color: #dc3545;
+    cursor: pointer;
+}
+
+.form-actions {
+    margin-top: 20px;
+}
+
+.form-actions .btn {
+    width: 100%;
+}
+
+/* Mobile responsiveness */
+@media (max-width: 768px) {
+    .temp-buttons {
+        flex-direction: column;
+    }
+
+    .box-info li {
+        flex: 1 1 100% !important;
+        margin: 5px !important;
+        padding: 15px;
+    }
+
+    .box-info li i {
+        font-size: 1.5rem;
+        margin-right: 10px;
+    }
+
+    .box-info .text p {
+        font-size: 0.9rem;
+    }
+
+    .box-info .text h3 {
+        font-size: 1.1rem;
+    }
+
+    .box-info .text span {
+        font-size: 0.8rem;
+    }
+
+    .route-header {
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+
+    .route-header p {
+        margin: 0;
+    }
+
+    /* Adjustments for scheduled details */
+    .schedule-details-main {
+        padding: 0.5rem;
+    }
+
+    .accordion-item {
+        padding: 0.8rem;
+    }
+
+    .accordion-header h2 {
+        font-size: 1rem;
+    }
+}
+
+/* Further mobile-specific adjustments for very small screens */
+@media (max-width: 360px) {
+    .box-info li {
+        padding: 10px !important;
+    }
+
+    .box-info li i {
+        font-size: 1.2rem !important;
+        margin-right: 8px !important;
+    }
+
+    .box-info .text p {
+        font-size: 0.85rem !important;
+    }
+
+    .box-info .text h3 {
+        font-size: 1rem !important;
+    }
+
+    .box-info .text span {
+        font-size: 0.75rem !important;
+    }
+
+    .form-actions .btn {
+        font-size: 0.9rem;
+    }
+}
+</style>
+<script src="<?php echo URLROOT; ?>/css/components/script.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const form = document.querySelector('.bag-assignment-form');
+    const input = document.querySelector('.bag-token-input');
+    const addButton = document.querySelector('.add-bag-btn');
+    const bagsList = document.querySelector('.assigned-bags-list');
+    const assignedBags = new Set();
+
+    // Add bag when button is clicked
+    addButton.addEventListener('click', function() {
+        addBag();
+    });
+
+    // Add bag when Enter is pressed
+    input.addEventListener('keypress', function(e) {
+        if (e.key === 'Enter') {
+            e.preventDefault();
+            addBag();
+        }
+    });
+
+    function addBag() {
+        const token = input.value.trim();
+        if (!token) return;
+
+        if (assignedBags.has(token)) {
+            alert('This bag is already assigned');
+            return;
+        }
+
+        // Add bag to the list
+        assignedBags.add(token);
+        
+        // Create bag element
+        const bagElement = document.createElement('div');
+        bagElement.className = 'assigned-bag';
+        bagElement.dataset.token = token;
+        bagElement.innerHTML = `
+            <span class="bag-token">${token}</span>
+            <button type="button" class="remove-bag-btn" onclick="removeBag('${token}')">
+                <i class='bx bx-trash'></i>
+            </button>
+            <input type="hidden" name="bags[]" value="${token}">
+        `;
+
+        // Remove "No bags" message if it exists
+        const noBagsMessage = bagsList.querySelector('.no-bags-message');
+        if (noBagsMessage) {
+            noBagsMessage.remove();
+        }
+
+        // Add bag to the list
+        bagsList.appendChild(bagElement);
+        
+        // Clear input
+        input.value = '';
+        input.focus();
+    }
+
+    // Make removeBag function global so onclick can access it
+    window.removeBag = function(token) {
+        const bagElement = document.querySelector(`.assigned-bag[data-token="${token}"]`);
+        if (bagElement) {
+            assignedBags.delete(token);
+            bagElement.remove();
+
+            // Add "No bags" message if list is empty
+            if (assignedBags.size === 0) {
+                bagsList.innerHTML = '<p class="no-bags-message">No bags assigned yet</p>';
+            }
+        }
+    };
+});
+</script>
 
 <style>
     .schedule-details-main {
@@ -634,82 +1018,5 @@ function isWithinShiftTime($startTime, $endTime) {
         }
     }
 </style>
-<script src="<?php echo URLROOT; ?>/css/components/script.js"></script>
-<script>
-document.addEventListener('DOMContentLoaded', function() {
-    const form = document.querySelector('.bag-assignment-form');
-    const input = document.querySelector('.bag-token-input');
-    const addButton = document.querySelector('.add-bag-btn');
-    const bagsList = document.querySelector('.assigned-bags-list');
-    const assignedBags = new Set();
-
-    // Add bag when button is clicked
-    addButton.addEventListener('click', function() {
-        addBag();
-    });
-
-    // Add bag when Enter is pressed
-    input.addEventListener('keypress', function(e) {
-        if (e.key === 'Enter') {
-            e.preventDefault();
-            addBag();
-        }
-    });
-
-    function addBag() {
-        const token = input.value.trim();
-        if (!token) return;
-
-        if (assignedBags.has(token)) {
-            alert('This bag is already assigned');
-            return;
-        }
-
-        // Add bag to the list
-        assignedBags.add(token);
-        
-        // Create bag element
-        const bagElement = document.createElement('div');
-        bagElement.className = 'assigned-bag';
-        bagElement.dataset.token = token;
-        bagElement.innerHTML = `
-            <span class="bag-token">${token}</span>
-            <button type="button" class="remove-bag-btn" onclick="removeBag('${token}')">
-                <i class='bx bx-trash'></i>
-            </button>
-            <input type="hidden" name="bags[]" value="${token}">
-        `;
-
-        // Remove "No bags" message if it exists
-        const noBagsMessage = bagsList.querySelector('.no-bags-message');
-        if (noBagsMessage) {
-            noBagsMessage.remove();
-        }
-
-        // Add bag to the list
-        bagsList.appendChild(bagElement);
-        
-        // Clear input
-        input.value = '';
-        input.focus();
-    }
-
-    // Make removeBag function global so onclick can access it
-    window.removeBag = function(token) {
-        const bagElement = document.querySelector(`.assigned-bag[data-token="${token}"]`);
-        if (bagElement) {
-            assignedBags.delete(token);
-            bagElement.remove();
-
-            // Add "No bags" message if list is empty
-            if (assignedBags.size === 0) {
-                bagsList.innerHTML = '<p class="no-bags-message">No bags assigned yet</p>';
-            }
-        }
-    };
-});
-</script>
-
-<?php require APPROOT . '/views/inc/components/footer.php'; ?> 
 
 <?php require APPROOT . '/views/inc/components/footer.php'; ?> 
