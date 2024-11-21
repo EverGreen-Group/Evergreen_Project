@@ -126,6 +126,9 @@ class Auth extends Controller {
                         case RoleHelper::ADMIN:
                             header('Location: ' . URLROOT . '/');
                             break;
+                        case RoleHelper::DRIVING_PARTNER:
+                            header('Location: ' . URLROOT . '/drivingpartner/');
+                            break;
                         default:
                             header('Location: ' . URLROOT . '/');
                     }

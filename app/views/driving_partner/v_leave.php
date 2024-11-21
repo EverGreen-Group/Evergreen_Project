@@ -49,35 +49,75 @@ require APPROOT . '/views/inc/components/topnavbar.php';
         <div class="order">
             <div class="head">
                 <h3>Leave History</h3>
+                <div class="filter-dropdown">
+                    <select id="leaveStatusFilter" onchange="filterLeaveHistory()">
+                        <option value="all">All Status</option>
+                        <option value="pending">Pending</option>
+                        <option value="approved">Approved</option>
+                        <option value="cancelled">Cancelled</option>
+                    </select>
+                </div>
             </div>
-            <table>
+
+            <!-- Table view for leave history (shows above 586px) -->
+            <table class="leave-table">
                 <thead>
                     <tr>
-                        <th>Type</th>
+                        <th>Leave Type</th>
                         <th>From</th>
                         <th>To</th>
                         <th>Days</th>
                         <th>Status</th>
-                        <th>Actions</th>
+                        <th>Action</th>
                     </tr>
                 </thead>
                 <tbody>
-                    <?php foreach ($data['leaveHistory'] as $leave): ?>
-                        <tr>
-                            <td><?php echo $leave->leave_type_name; ?></td>
-                            <td><?php echo date('d M Y', strtotime($leave->start_date)); ?></td>
-                            <td><?php echo date('d M Y', strtotime($leave->end_date)); ?></td>
-                            <td><?php echo floor((strtotime($leave->end_date) - strtotime($leave->start_date)) / (60 * 60 * 24)) + 1; ?></td>
-                            <td><span class="status <?php echo strtolower($leave->status); ?>"><?php echo $leave->status; ?></span></td>
-                            <td>
-                                <?php if ($leave->status == 'pending'): ?>
-                                    <button class="btn-cancel" onclick="cancelLeave(<?php echo $leave->id; ?>)">Cancel</button>
-                                <?php endif; ?>
-                            </td>
-                        </tr>
-                    <?php endforeach; ?>
+                    <tr data-status="pending">
+                        <td>Annual Leave</td>
+                        <td>15 Mar 2024</td>
+                        <td>20 Mar 2024</td>
+                        <td>6</td>
+                        <td><span class="status pending">Pending</span></td>
+                        <td><button class="btn-cancel" onclick="cancelLeave(1)">Cancel</button></td>
+                    </tr>
+                    <tr data-status="approved">
+                        <td>Sick Leave</td>
+                        <td>01 Mar 2024</td>
+                        <td>02 Mar 2024</td>
+                        <td>2</td>
+                        <td><span class="status approved">Approved</span></td>
+                        <td>-</td>
+                    </tr>
                 </tbody>
             </table>
+
+            <!-- Card view for leave history (shows below 586px) -->
+            <div class="leave-cards-container">
+                <div class="leave-card" data-status="pending">
+                    <div class="leave-card-header">
+                        <span class="leave-card-type">Annual Leave</span>
+                        <span class="status pending">Pending</span>
+                    </div>
+                    <div class="leave-card-dates">
+                        <div>From: 15 Mar 2024</div>
+                        <div>To: 20 Mar 2024</div>
+                        <div>Days: 6</div>
+                    </div>
+                    <button class="btn-cancel" onclick="cancelLeave(1)">Cancel Request</button>
+                </div>
+
+                <div class="leave-card" data-status="approved">
+                    <div class="leave-card-header">
+                        <span class="leave-card-type">Sick Leave</span>
+                        <span class="status approved">Approved</span>
+                    </div>
+                    <div class="leave-card-dates">
+                        <div>From: 01 Mar 2024</div>
+                        <div>To: 02 Mar 2024</div>
+                        <div>Days: 2</div>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 
@@ -131,34 +171,43 @@ require APPROOT . '/views/inc/components/topnavbar.php';
         <div class="order">
             <div class="head">
                 <h3>Swap Requests</h3>
+                <div class="filter-dropdown">
+                    <select id="swapStatusFilter" onchange="filterSwapRequests()">
+                        <option value="all">All Requests</option>
+                        <option value="pending">Pending</option>
+                        <option value="approved">Approved</option>
+                        <option value="rejected">Rejected</option>
+                    </select>
+                </div>
             </div>
-            <table>
-                <thead>
-                    <tr>
-                        <th>Requested By</th>
-                        <th>From</th>
-                        <th>To</th>
-                        <th>Status</th>
-                        <th>Actions</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <?php foreach ($data['swapRequests'] as $request): ?>
-                        <tr>
-                            <td><?php echo $request->requester_name; ?></td>
-                            <td><?php echo date('d M Y', strtotime($request->start_date)); ?></td>
-                            <td><?php echo date('d M Y', strtotime($request->end_date)); ?></td>
-                            <td><span class="status <?php echo strtolower($request->status); ?>"><?php echo $request->status; ?></span></td>
-                            <td>
-                                <?php if ($request->status == 'pending'): ?>
-                                    <button class="btn-approve" onclick="handleSwapRequest(<?php echo $request->id; ?>, 'approve')">Accept</button>
-                                    <button class="btn-reject" onclick="handleSwapRequest(<?php echo $request->id; ?>, 'reject')">Reject</button>
-                                <?php endif; ?>
-                            </td>
-                        </tr>
-                    <?php endforeach; ?>
-                </tbody>
-            </table>
+
+            <!-- Card view for swap requests -->
+            <div class="swap-cards-container">
+                <div class="swap-card" data-status="pending">
+                    <div class="swap-card-header">
+                        <span class="swap-card-requester">John Smith</span>
+                        <span class="status pending">Pending</span>
+                    </div>
+                    <div class="swap-details">
+                        <div class="shift-info">
+                            <i class='bx bxs-calendar'></i>
+                            <span>18 Mar 2024</span>
+                        </div>
+                        <div class="shift-info">
+                            <i class='bx bxs-time'></i>
+                            <span>Morning Shift (6:00 AM - 2:00 PM)</span>
+                        </div>
+                        <div class="shift-info">
+                            <i class='bx bxs-group'></i>
+                            <span>Team Alpha</span>
+                        </div>
+                    </div>
+                    <div class="swap-card-actions">
+                        <button class="btn-approve" onclick="handleSwapRequest(1, 'approve')">Accept</button>
+                        <button class="btn-reject" onclick="handleSwapRequest(1, 'reject')">Reject</button>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 
@@ -207,6 +256,7 @@ require APPROOT . '/views/inc/components/topnavbar.php';
 
     .form-group {
         margin-bottom: 20px;
+        max-width: 100%;
     }
 
     .form-group label {
@@ -238,6 +288,9 @@ require APPROOT . '/views/inc/components/topnavbar.php';
         border-radius: 4px;
         cursor: pointer;
         font-size: 14px;
+        width: auto;
+        max-width: 200px;
+        display: inline-block;
     }
 
     .btn-cancel {
@@ -248,6 +301,292 @@ require APPROOT . '/views/inc/components/topnavbar.php';
         border-radius: 4px;
         cursor: pointer;
         font-size: 12px;
+    }
+
+    /* Mobile responsive styles */
+    @media screen and (max-width: 768px) {
+        /* Stats cards adjustment */
+        .route-box-info {
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .route-box-info li {
+            padding: 16px;
+        }
+
+        /* Hide tables on mobile */
+        .table-data table {
+            display: none;
+        }
+
+        /* Leave History Cards */
+        .leave-cards-container {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            padding: 8px 0;
+        }
+
+        .leave-card {
+            background: var(--light);
+            border-radius: 8px;
+            padding: 16px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .leave-card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+
+        .leave-card-type {
+            font-weight: 600;
+            color: var(--dark);
+        }
+
+        .leave-card-dates {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            margin: 8px 0;
+            font-size: 0.9rem;
+        }
+
+        .leave-card-status {
+            display: inline-block;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 0.85rem;
+            margin: 8px 0;
+        }
+
+        /* Swap Request Cards */
+        .swap-cards-container {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            padding: 8px 0;
+        }
+
+        .swap-card {
+            background: var(--light);
+            border-radius: 8px;
+            padding: 16px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .swap-card-header {
+            margin-bottom: 8px;
+        }
+
+        .swap-card-dates {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            margin: 8px 0;
+            font-size: 0.9rem;
+        }
+
+        .swap-card-actions {
+            display: flex;
+            gap: 8px;
+            margin-top: 12px;
+        }
+
+        /* Form adjustments */
+        .form-group {
+            margin-bottom: 16px;
+        }
+
+        .form-group input[type="date"],
+        .form-group select {
+            width: 100%;
+            padding: 10px;
+        }
+
+        .btn-submit {
+            width: 100%;
+            padding: 12px;
+        }
+    }
+
+    /* Update status badge styles */
+    .status {
+        padding: 6px 12px;
+        border-radius: 20px;
+        font-size: 14px;
+        font-weight: 500;
+    }
+
+    .status.pending {
+        background-color: #FF9800; /* Orange */
+        color: white;
+    }
+
+    .status.approved {
+        background-color: #4CAF50; /* Keep green for approved */
+        color: white;
+    }
+
+    .status.cancelled {
+        background-color: #F44336; /* Red */
+        color: white;
+    }
+
+    /* Update card status badges to match */
+    .leave-card .status.pending {
+        background-color: #FF9800;
+        color: white;
+    }
+
+    .leave-card .status.approved {
+        background-color: #4CAF50;
+        color: white;
+    }
+
+    .leave-card .status.cancelled {
+        background-color: #F44336;
+        color: white;
+    }
+
+    /* Swap Request Card styles */
+    .swap-card {
+        background: #fff;
+        border-radius: 8px;
+        padding: 16px;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        margin-bottom: 12px;
+    }
+
+    .swap-card-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 16px;
+    }
+
+    .swap-card-requester {
+        font-weight: 600;
+        font-size: 1.1rem;
+        color: #333;
+    }
+
+    .swap-details {
+        background: #f8f9fa;
+        border-radius: 6px;
+        padding: 12px;
+        margin-bottom: 16px;
+    }
+
+    .shift-info {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        margin-bottom: 8px;
+        color: #555;
+    }
+
+    .shift-info:last-child {
+        margin-bottom: 0;
+    }
+
+    .shift-info i {
+        color: #007664;
+        font-size: 1.1rem;
+    }
+
+    .swap-card-actions {
+        display: flex;
+        gap: 8px;
+    }
+
+    /* Button styles */
+    .btn-submit {
+        background-color: #007664;
+        color: white;
+        padding: 12px 20px;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        font-weight: 500;
+        width: 100%;
+        transition: background-color 0.2s;
+    }
+
+    .btn-submit:hover {
+        background-color: #005a4d;
+    }
+
+    .btn-approve,
+    .btn-reject {
+        padding: 8px 16px;
+        border: none;
+        border-radius: 4px;
+        font-size: 0.9rem;
+        cursor: pointer;
+        transition: all 0.2s;
+        font-weight: 500;
+        flex: 1;
+        width: auto;
+        min-width: 100px;
+        max-width: 150px;
+    }
+
+    .btn-approve {
+        background-color: #007664;
+        color: white;
+    }
+
+    .btn-approve:hover {
+        background-color: #005a4d;
+    }
+
+    .btn-reject {
+        background-color: #dc3545;
+        color: white;
+    }
+
+    .btn-reject:hover {
+        background-color: #c82333;
+    }
+
+    .btn-cancel {
+        background-color: #dc3545;
+        color: white;
+        padding: 8px 16px;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        font-size: 0.9rem;
+        transition: background-color 0.2s;
+    }
+
+    .btn-cancel:hover {
+        background-color: #c82333;
+    }
+
+    /* Add these styles */
+    .leave-table {
+        width: 100%;
+        display: table;
+        margin-top: 1rem;
+    }
+
+    .leave-cards-container {
+        display: none;
+    }
+
+    @media screen and (max-width: 586px) {
+        .leave-table {
+            display: none;
+        }
+
+        .leave-cards-container {
+            display: block;
+        }
     }
 </style>
 
@@ -314,6 +653,45 @@ function handleSwapRequest(requestId, action) {
         });
     }
 }
+
+// Add the filter functions
+function filterLeaveHistory() {
+    const status = document.getElementById('leaveStatusFilter').value;
+    const cards = document.querySelectorAll('.leave-card');
+    const rows = document.querySelectorAll('.leave-table tbody tr');
+    
+    // Filter cards
+    cards.forEach(card => {
+        if (status === 'all' || card.dataset.status === status) {
+            card.style.display = 'block';
+        } else {
+            card.style.display = 'none';
+        }
+    });
+
+    // Filter table rows
+    rows.forEach(row => {
+        if (status === 'all' || row.dataset.status === status) {
+            row.style.display = 'table-row';
+        } else {
+            row.style.display = 'none';
+        }
+    });
+}
+
+function filterSwapRequests() {
+    const status = document.getElementById('swapStatusFilter').value;
+    const cards = document.querySelectorAll('.swap-card');
+    
+    cards.forEach(card => {
+        if (status === 'all' || card.dataset.status === status) {
+            card.style.display = 'block';
+        } else {
+            card.style.display = 'none';
+        }
+    });
+}
 </script>
+<script src="<?php echo URLROOT; ?>/css/components/script.js"></script>
 
 <?php require APPROOT . '/views/inc/components/footer.php'; ?>

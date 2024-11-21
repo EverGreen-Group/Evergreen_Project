@@ -10,18 +10,6 @@
         <span class="text">Dashboard</span>
       </a>
     </li>
-    <li class="<?php echo (basename($_SERVER['REQUEST_URI']) == 'profile') ? 'active' : ''; ?>">
-      <a href="<?php echo URLROOT; ?>/drivingpartner/profile">
-        <i class='bx bxs-user-circle'></i>
-        <span class="text">Profile</span>
-      </a>
-    </li>
-    <li class="<?php echo (basename($_SERVER['REQUEST_URI']) == 'shift') ? 'active' : ''; ?>">
-        <a href="<?php echo URLROOT; ?>/drivingpartner/shift">
-        <i class="bx bxs-time-five"></i>
-        <span class="text">Shift</span>
-      </a>
-    </li>
     <li class="<?php echo (basename($_SERVER['REQUEST_URI']) == 'leave') ? 'active' : ''; ?>">
       <a href="<?php echo URLROOT; ?>/drivingpartner/leave">
         <i class='bx bxs-calendar'></i>

@@ -97,6 +97,57 @@ body {
 .nav-button:hover {
     background-color: #d4ff7f !important;
 }
+
+/* Add these new styles and update existing ones */
+
+/* Add hamburger menu icon */
+.mobile-menu-btn {
+    display: none;
+    font-size: 24px;
+    cursor: pointer;
+    color: #333;
+}
+
+/* Add media query for mobile */
+@media screen and (max-width: 891px) {
+    .public-nav {
+        flex-wrap: wrap;
+        border-radius: 25px;
+        padding: 15px 20px;
+    }
+
+    .mobile-menu-btn {
+        display: block;
+    }
+
+    .nav-brand {
+        flex: 1;
+    }
+
+    .nav-links {
+        display: none; /* Hidden by default */
+        width: 100%;
+        flex-direction: column;
+        gap: 15px;
+        padding: 15px 0;
+        margin-top: 15px;
+        border-top: 1px solid #eee;
+        order: 3;
+    }
+
+    .nav-links.active {
+        display: flex;
+    }
+
+    .nav-auth {
+        order: 2;
+    }
+
+    .nav-button {
+        padding: 6px 15px;
+        font-size: 13px;
+    }
+}
 </style>
 <body>
     <header class="public-header">

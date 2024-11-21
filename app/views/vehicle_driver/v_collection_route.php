@@ -95,9 +95,10 @@ $collections = [
         display: grid;
         grid-template-columns: 60% 40%;
         grid-template-rows: auto 1fr auto;
-        height: calc(100vh - 60px);
-        gap: 20px;
-        padding: 20px;
+        height: 100vh;
+        gap: 0;
+        padding: 0;
+        margin: 0;
         box-sizing: border-box;
     }
 
@@ -105,9 +106,11 @@ $collections = [
         grid-column: 1 / 2;
         grid-row: 1 / 3;
         height: 100%;
-        border-radius: 8px;
+        width: 100%;
+        border-radius: 0;
         overflow: hidden;
-        /* outline: 3px solid var(--card-outline); */
+        background-color: #f5f5f5;
+        position: relative;
     }
 
     .card {
@@ -283,20 +286,168 @@ $collections = [
         font-weight: 600;
     }
 
+    /* Media query for screens less than 1200px */
+    @media screen and (max-width: 1199px) {
+        .dashboard-container {
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            padding: 0;
+            margin: 0;
+        }
+
+        #map-container {
+            flex: 1;
+            width: 100%;
+            height: calc(100vh - 56px);
+        }
+
+        /* Hide supplier profile and collection list */
+        .current-supplier,
+        .upcoming-collections {
+            display: none;
+        }
+
+        /* Style for bottom action buttons */
+        .supplier-actions {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: white;
+            padding: 8px;
+            box-shadow: 0 -2px 10px rgba(0,0,0,0.1);
+            z-index: 1000;
+            height: 56px;
+        }
+    }
+
+    /* Override the default main padding for this view specifically */
+    main {
+        padding: 0 !important; /* Use !important to override any existing styles */
+    }
+
+    @media screen and (max-width: 1199px) {
+        main {
+            padding: 0 !important;
+        }
+    }
+
+    /* Mobile styles for shift-info */
+    @media screen and (max-width: 1199px) {
+        .shift-info {
+            position: fixed;
+            bottom: 0;
+            left: 60px; /* Account for sidebar */
+            right: 0;
+            background: white;
+            padding: 8px;
+            box-shadow: 0 -2px 10px rgba(0,0,0,0.1);
+            z-index: 1000;
+            display: flex;
+            justify-content: space-between;
+            gap: 8px;
+        }
+
+        .mobile-actions {
+            display: flex;
+            width: 100%;
+            gap: 8px;
+        }
+
+        .mobile-btn {
+            flex: 1;
+            padding: 8px;
+            border: none;
+            border-radius: 6px;
+            font-weight: 600;
+            font-size: 0.85rem;
+            text-transform: uppercase;
+            color: white;
+            height: 40px;
+        }
+
+        .arrived-btn {
+            background-color: var(--primary-color);
+        }
+
+        .route-btn {
+            background-color: #2196F3;
+        }
+
+        /* Hide desktop elements */
+        .current-supplier,
+        .upcoming-collections,
+        .shift-details,
+        .button-row:not(.mobile-actions) {
+            display: none;
+        }
+    }
 </style>
 
 <?php require APPROOT . '/views/inc/components/header.php'; ?>
 
 <!-- Side bar -->
-<?php require APPROOT . '/views/inc/components/sidebar_vehicle_driver.php'; ?>
+<?php require APPROOT . '/views/inc/components/sidebar_driver_collections.php'; ?>
+
 
 <!-- Top nav bar -->
 <?php require APPROOT . '/views/inc/components/topnavbar.php'; ?>
 
 <!-- MAIN -->
 <main>
+    <?php
+    // Hardcoded values
+    $data = [
+        'schedule' => (object)[
+            'start_time' => '08:00:00',
+            'end_time' => '17:00:00'
+        ],
+        'collection' => (object)[
+            'collection_id' => 1,
+            'start_time' => '08:00:00'
+        ],
+        'teamName' => 'Alpha Team',
+        'vehicleInfo' => 'Toyota Hilux (ABC-1234)',
+        'collections' => [
+            [
+                'id' => 1,
+                'supplierName' => "Simaak Niyaz",
+                'remarks' => "Meet at the main gate, call upon arrival",
+                'location' => ['lat' => 6.2173037, 'lng' => 80.2564385],
+                'address' => "123 Tea Lane, Galle",
+                'image' => "https://randomuser.me/api/portraits/men/5.jpg",
+                'estimatedCollection' => 500,
+                'status' => 'Pending',
+                'arrival_time' => null
+            ],
+            [
+                'id' => 2,
+                'supplierName' => "Mountain Top Tea",
+                'remarks' => "Entrance is on the north side of the building",
+                'location' => ['lat' => 6.243808243551064, 'lng' => 80.25967072303547],
+                'address' => "456 Hill Road, Galle",
+                'image' => "https://randomuser.me/api/portraits/men/7.jpg",
+                'estimatedCollection' => 350,
+                'status' => 'Pending',
+                'arrival_time' => null
+            ],
+            // ... keep other suppliers as is ...
+        ]
+    ];
+    ?>
     <div class="dashboard-container">
-        <div id="map-container"></div>
+        <div id="map-container">
+            <?php if (!empty($collections)): ?>
+            <div class="mobile-supplier-card" id="mobile-supplier-card">
+                <div class="stop-number">1</div>
+                <img src="<?php echo $collections[0]['image']; ?>" alt="Supplier" class="supplier-img">
+                <div class="supplier-text">
+                    <div class="supplier-name"><?php echo $collections[0]['supplierName']; ?></div>
+                </div>
+            </div>
+            <?php endif; ?>
+        </div>
         
         <div class="current-supplier card">
             <div class="supplier-card">
@@ -360,29 +511,16 @@ $collections = [
             <?php endif; ?>
         </div>
 
-        <div class="shift-info card">
-            <div class="shift-details">
-                <div class="shift-detail">
-                    <h4>Shift Time</h4>
-                    <p id="shift-time"><?php echo date('H:i', strtotime($data['schedule']->start_time)) . ' - ' . date('H:i', strtotime($data['schedule']->end_time)); ?></p>
-                </div>
-                <div class="shift-detail">
-                    <h4>Elapsed Time</h4>
-                    <p id="elapsed-time">00:00:00</p>
-                </div>
-                <div class="shift-detail">
-                    <h4>Team Name</h4>
-                    <p id="team-name"><?php echo htmlspecialchars($data['teamName']); ?></p>
-                </div>
-                <div class="shift-detail">
-                    <h4>Vehicle</h4>
-                    <p id="vehicle-info"><?php echo htmlspecialchars($data['vehicleInfo']); ?></p>
-                </div>
-            </div>
-            <div class="button-row">
-                <button id="arrived-btn" class="action-btn">Arrived</button>
-                <button id="delay-btn" class="action-btn warning">Report Delay</button>
-                <button id="cancel-btn" class="action-btn warning">Cancel Collection</button>
+        <div class="shift-info">
+            <div class="mobile-actions">
+                <button id="arrived-btn" class="mobile-btn arrived-btn">
+                    <i class='bx bx-check'></i>
+                    Arrived
+                </button>
+                <button onclick="navigate()" class="mobile-btn route-btn">
+                    <i class='bx bx-navigation'></i>
+                    Navigate
+                </button>
             </div>
         </div>
     </div>
@@ -400,104 +538,110 @@ $collections = [
     const URLROOT = '<?php echo URLROOT; ?>';
 
     function initMap() {
-        directionsService = new google.maps.DirectionsService();
-        firstRouteRenderer = new google.maps.DirectionsRenderer({
-            suppressMarkers: true,
-            polylineOptions: {
-                strokeColor: "#FF0000", // Red for the first route
-                strokeWeight: 5
+        try {
+            directionsService = new google.maps.DirectionsService();
+            firstRouteRenderer = new google.maps.DirectionsRenderer({
+                suppressMarkers: true,
+                polylineOptions: {
+                    strokeColor: "#FF0000",
+                    strokeWeight: 5
+                }
+            });
+
+            remainingRouteRenderer = new google.maps.DirectionsRenderer({
+                suppressMarkers: true,
+                polylineOptions: {
+                    strokeColor: "#4CAF50",
+                    strokeWeight: 5
+                }
+            });
+
+            map = new google.maps.Map(document.getElementById("map-container"), {
+                center: driverLocation,
+                zoom: 10,
+                disableDefaultUI: true,
+                zoomControl: false,
+                mapTypeControl: false,
+                streetViewControl: false,
+                fullscreenControl: false,
+                styles: [
+                    {
+                        featureType: "poi",
+                        elementType: "labels",
+                        stylers: [{ visibility: "off" }]
+                    },
+                    {
+                        featureType: "transit",
+                        elementType: "labels",
+                        stylers: [{ visibility: "off" }]
+                    },
+                    { elementType: "geometry", stylers: [{ color: "#242f3e" }] },
+                    { elementType: "labels.text.stroke", stylers: [{ color: "#242f3e" }] },
+                    { elementType: "labels.text.fill", stylers: [{ color: "#746855" }] },
+                    {
+                        featureType: "administrative.locality",
+                        elementType: "labels.text.fill",
+                        stylers: [{ color: "#d59563" }],
+                    },
+                    {
+                        featureType: "road",
+                        elementType: "geometry",
+                        stylers: [{ color: "#38414e" }]
+                    },
+                    {
+                        featureType: "road",
+                        elementType: "geometry.stroke",
+                        stylers: [{ color: "#212a37" }]
+                    },
+                    {
+                        featureType: "road",
+                        elementType: "labels.text.fill",
+                        stylers: [{ color: "#9ca5b3" }]
+                    },
+                    {
+                        featureType: "water",
+                        elementType: "geometry",
+                        stylers: [{ color: "#17263c" }]
+                    },
+                    {
+                        featureType: "water",
+                        elementType: "labels.text.fill",
+                        stylers: [{ color: "#515c6d" }]
+                    },
+                    {
+                        featureType: "water",
+                        elementType: "labels.text.stroke",
+                        stylers: [{ color: "#17263c" }]
+                    }
+                ],
+                disableDefaultUI: false
+            });
+
+            // Re-append the mobile supplier card after map initialization
+            const mapContainer = document.getElementById("map-container");
+            const supplierCard = document.querySelector(".mobile-supplier-card");
+            if (supplierCard) {
+                mapContainer.appendChild(supplierCard);
             }
-        });
 
+            console.log('Map initialized successfully');
 
-        // Renderer for the remaining routes (in green)
-        remainingRouteRenderer = new google.maps.DirectionsRenderer({
-            suppressMarkers: true,
-            polylineOptions: {
-                strokeColor: "#4CAF50", // Green for remaining routes
-                strokeWeight: 5
-            }
-        });
-
-        map = new google.maps.Map(document.getElementById("map-container"), {
-            center: driverLocation,
-            zoom: 14, // Increased zoom level
-            styles: [
-                {
-                    featureType: "poi",
-                    elementType: "labels",
-                    stylers: [{ visibility: "off" }]
-                },
-                {
-                    featureType: "transit",
-                    elementType: "labels",
-                    stylers: [{ visibility: "off" }]
-                },
-                { elementType: "geometry", stylers: [{ color: "#242f3e" }] },
-                { elementType: "labels.text.stroke", stylers: [{ color: "#242f3e" }] },
-                { elementType: "labels.text.fill", stylers: [{ color: "#746855" }] },
-                {
-                    featureType: "administrative.locality",
-                    elementType: "labels.text.fill",
-                    stylers: [{ color: "#d59563" }],
-                },
-                {
-                    featureType: "road",
-                    elementType: "geometry",
-                    stylers: [{ color: "#38414e" }],
-                },
-                {
-                    featureType: "road",
-                    elementType: "geometry.stroke",
-                    stylers: [{ color: "#212a37" }],
-                },
-                {
-                    featureType: "road",
-                    elementType: "labels.text.fill",
-                    stylers: [{ color: "#9ca5b3" }],
-                },
-                {
-                    featureType: "water",
-                    elementType: "geometry",
-                    stylers: [{ color: "#17263c" }],
-                },
-                {
-                    featureType: "water",
-                    elementType: "labels.text.fill",
-                    stylers: [{ color: "#515c6d" }],
-                },
-                {
-                    featureType: "water",
-                    elementType: "labels.text.stroke",
-                    stylers: [{ color: "#17263c" }],
-                },
-            ],
-            disableDefaultUI: true
-        });
-
-        remainingRouteRenderer.setMap(map);
-        
-        addCustomMarkers();
-        firstRouteRenderer.setMap(map);
-        
-        updateRoute();
+            remainingRouteRenderer.setMap(map);
+            addCustomMarkers();
+            firstRouteRenderer.setMap(map);
+            updateRoute();
+        } catch (error) {
+            console.error('Error initializing map:', error);
+        }
     }
 
-    // function navigateToSupplier() { 
-    //     const driverLat = driverLocation.lat;
-    //     const driverLng = driverLocation.lng;
-        
-    //     const supplier = collections[0]; // Get the first supplier
-    //     const supplierLat = supplier.location.lat;
-    //     const supplierLng = supplier.location.lng;
-
-    //     const url = `https://www.google.com/maps/dir/?api=1&origin=${driverLat},${driverLng}&destination=${supplierLat},${supplierLng}&travelmode=driving`;
-        
-    //     window.open(url, '_blank');
-    // }
-    // old method, it just takes from the collection array
-
-
+    // Add this function to check if map loads
+    window.addEventListener('load', function() {
+        console.log('Window loaded');
+        if (typeof google === 'undefined') {
+            console.error('Google Maps not loaded');
+        }
+    });
 
     function navigateToSupplier(lat, lng) {
         const url = `https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}`;
@@ -716,44 +860,14 @@ $collections = [
                     strokeColor: "#FFFFFF"
                 },
                 label: {
-                    text: `${collection.supplierName}`,  // Display only supplier name above marker
+                    text: `${index + 1}`,  // Just show the order number
                     color: "#FFFFFF",
                     fontSize: "14px",
                     fontWeight: "bold",
                     className: 'map-label',
                 },
-                title: `${collection.supplierName} - ${collection.estimatedCollection}kg`  // Tooltip on hover
+                title: `Stop ${index + 1}: ${collection.supplierName}`  // Show name only on hover
             });
-
-            // Create a custom overlay for the offset label
-            const labelOverlay = new google.maps.OverlayView();
-            labelOverlay.onAdd = function() {
-                const div = document.createElement('div');
-                div.style.position = 'absolute';
-                div.style.color = '#FFFFFF';
-                div.style.fontSize = '14px';
-                div.style.fontWeight = 'bold';
-                div.style.textShadow = '1px 1px 2px rgba(0,0,0,0.8)';
-                div.innerHTML = `${collection.estimatedCollection}kg`;
-                this.div_ = div;
-                const panes = this.getPanes();
-                panes.overlayLayer.appendChild(div);
-            };
-
-            labelOverlay.draw = function() {
-                const overlayProjection = this.getProjection();
-                const position = overlayProjection.fromLatLngToDivPixel(marker.getPosition());
-                const div = this.div_;
-                div.style.left = (position.x - 30) + 'px';
-                div.style.top = (position.y + 20) + 'px';  // Offset to the bottom
-            };
-
-            labelOverlay.onRemove = function() {
-                this.div_.parentNode.removeChild(this.div_);
-                this.div_ = null;
-            };
-
-            labelOverlay.setMap(map);
         });
     }
 
@@ -889,6 +1003,21 @@ $collections = [
         setInterval(updateShiftInfo, 1000); // Update every second
         updateRoute();
     };
+
+    function navigate() {
+        // Get the current supplier's location
+        const currentSupplier = collections.find(supplier => !supplier.arrival_time);
+        if (!currentSupplier) {
+            alert('No destination found');
+            return;
+        }
+
+        // Open Google Maps with directions
+        const destination = `${currentSupplier.location.lat},${currentSupplier.location.lng}`;
+        const mapsUrl = `https://www.google.com/maps/dir/?api=1&destination=${destination}&travelmode=driving`;
+        window.open(mapsUrl, '_blank');
+    }
 </script>
+<script src="<?php echo URLROOT; ?>/css/components/script.js"></script>
 
 <?php require APPROOT . '/views/inc/components/footer.php'; ?>

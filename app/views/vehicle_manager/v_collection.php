@@ -58,76 +58,78 @@
 
     <!-- Ongoing Collection Tracking Section -->
     <?php if (!empty($data['ongoing_collections'])): ?>
-        <!-- Collections Table (Full Width) -->
-        <div class="table-data">
-            <div class="order">
-                <div class="head">
-                    <h3>Collections</h3>
-                </div>
-                <table>
-                    <thead>
-                        <tr>
-                            <th>Collection ID</th>
-                            <th>Route</th>
-                            <th>Team</th>
-                            <th>Vehicle</th>
-                            <th>Shift</th>
-                            <th>Status</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <?php foreach ($data['ongoing_collections'] as $collection): ?>
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+            <!-- Collections Table -->
+            <div class="table-data">
+                <div class="order">
+                    <div class="head">
+                        <h3>Collections</h3>
+                    </div>
+                    <table>
+                        <thead>
                             <tr>
-                                <td><?= $collection->collection_id ?></td>
-                                <td><?= $collection->route_name ?></td>
-                                <td><?= $collection->team_name ?></td>
-                                <td><?= $collection->license_plate ?></td>
-                                <td><?= $collection->shift_name ?></td>
-                                <td><?= $collection->status ?></td>
+                                <th>Collection ID</th>
+                                <th>Route</th>
+                                <th>Team</th>
+                                <th>Vehicle</th>
+                                <th>Shift</th>
+                                <th>Status</th>
                             </tr>
-                        <?php endforeach; ?>
-                    </tbody>
-                </table>
-            </div>
-        </div>
-
-        <!-- Tracking Interface (Full Width) -->
-        <div class="table-data">
-            <div class="order">
-                <div class="head">
-                    <h3>Track Ongoing Collection</h3>
-                    <select id="ongoing-collection-select">
-                        <option value="">Select a collection</option>
-                        <?php foreach ($data['ongoing_collections'] as $collection): ?>
-                            <option value="<?= $collection->collection_id ?>">
-                                Collection <?= $collection->collection_id ?> - <?= $collection->team_name ?>
-                            </option>
-                        <?php endforeach; ?>
-                    </select>
-                </div>
-                <div id="map-container" style="height: 200px; width: 100%;"></div>
-                <div id="collection-details">
-                    <h4>Collection Details</h4>
-                    <p><b>Team: </b><span id="team-name">-</span></p>
-                    <p><b>Route: </b><span id="route-name">-</span></p>
-                    
-                    <!-- Supplier Collection Status Table -->
-                    <div class="supplier-status">
-                        <h4>Supplier Collection Status</h4>
-                        <table>
-                            <thead>
+                        </thead>
+                        <tbody>
+                            <?php foreach ($data['ongoing_collections'] as $collection): ?>
                                 <tr>
-                                    <th>Supplier</th>
-                                    <th>Status</th>
-                                    <th>Quantity (kg)</th>
-                                    <th>Time</th>
-                                    <th>Actions</th>
+                                    <td><?= $collection->collection_id ?></td>
+                                    <td><?= $collection->route_name ?></td>
+                                    <td><?= $collection->team_name ?></td>
+                                    <td><?= $collection->license_plate ?></td>
+                                    <td><?= $collection->shift_name ?></td>
+                                    <td><?= $collection->status ?></td>
                                 </tr>
-                            </thead>
-                            <tbody id="supplier-status-body">
-                                <!-- Dynamically populated via JavaScript -->
-                            </tbody>
-                        </table>
+                            <?php endforeach; ?>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Tracking Interface -->
+            <div class="table-data">
+                <div class="order">
+                    <div class="head">
+                        <h3>Track Ongoing Collection</h3>
+                        <select id="ongoing-collection-select">
+                            <option value="">Select a collection</option>
+                            <?php foreach ($data['ongoing_collections'] as $collection): ?>
+                                <option value="<?= $collection->collection_id ?>">
+                                    Collection <?= $collection->collection_id ?> - <?= $collection->team_name ?>
+                                </option>
+                            <?php endforeach; ?>
+                        </select>
+                    </div>
+                    <div id="map-container" style="height: 200px; width: 100%;"></div>
+                    <div id="collection-details">
+                        <h4>Collection Details</h4>
+                        <p><b>Team: </b><span id="team-name">-</span></p>
+                        <p><b>Route: </b><span id="route-name">-</span></p>
+                        
+                        <!-- Supplier Collection Status Table -->
+                        <div class="supplier-status">
+                            <h4>Supplier Collection Status</h4>
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th>Supplier</th>
+                                        <th>Status</th>
+                                        <th>Quantity (kg)</th>
+                                        <th>Time</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="supplier-status-body">
+                                    <!-- Dynamically populated via JavaScript -->
+                                </tbody>
+                            </table>
+                        </div>
                     </div>
                 </div>
             </div>

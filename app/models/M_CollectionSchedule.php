@@ -441,48 +441,13 @@ class M_CollectionSchedule {
         }
     }
 
-    private function startCollection($collectionId) {
-        $this->db->beginTransaction();
-        try {
-            // Set collection start time
-            $this->db->query("
-                UPDATE collections 
-                SET start_time = CURRENT_TIMESTAMP,
-                    status = 'In Progress'
-                WHERE collection_id = :collection_id
-            ");
-            $this->db->bind(':collection_id', $collectionId);
-            $this->db->execute();
-
-            // Create supplier records
-            $this->db->query("
-                INSERT INTO collection_supplier_records (
-                    collection_id,
-                    supplier_id,
-                    status,
-                    is_scheduled
-                )
-                SELECT 
-                    :collection_id,
-                    rs.supplier_id,
-                    'Added',
-                    1
-                FROM collections c
-                JOIN collection_schedules cs ON c.schedule_id = cs.schedule_id
-                JOIN route_suppliers rs ON cs.route_id = rs.route_id
-                WHERE c.collection_id = :collection_id
-                AND rs.is_active = 1
-                AND rs.is_deleted = 0
-            ");
-            $this->db->bind(':collection_id', $collectionId);
-            $this->db->execute();
-
-            $this->db->commit();
-            return true;
-        } catch (Exception $e) {
-            $this->db->rollBack();
-            return false;
-        }
+    public function startCollection($collectionId) {
+        $this->db->query('UPDATE collections 
+                          SET start_time = NOW(),
+                              status = "In Progress"
+                          WHERE collection_id = :collection_id');
+        $this->db->bind(':collection_id', $collectionId);
+        return $this->db->execute();
     }
 
     public function getCollectionById($collectionId) {
@@ -806,5 +771,59 @@ class M_CollectionSchedule {
             'lat' => 6.927079, // Default latitude for Colombo
             'lng' => 79.861244  // Default longitude for Colombo
         ];
+    }
+
+    public function setPartnerReady($scheduleId, $partnerId) {
+        // Only set partner_approved, don't start collection yet
+        $this->db->query('UPDATE collections 
+                          SET partner_approved = 1 
+                          WHERE schedule_id = :schedule_id');
+        $this->db->bind(':schedule_id', $scheduleId);
+        return $this->db->execute();
+    }
+
+    public function assignBagsToCollection($collectionId, $bags) {
+        $this->db->beginTransaction();
+        
+        try {
+            // First, update the bags count in collections table
+            $this->db->query('UPDATE collections 
+                             SET bags = :bags_count 
+                             WHERE collection_id = :collection_id');
+            $this->db->bind(':bags_count', count($bags));
+            $this->db->bind(':collection_id', $collectionId);
+            $this->db->execute();
+            
+            // Then, insert bag assignments
+            foreach ($bags as $bagToken) {
+                $this->db->query('INSERT INTO collection_bags (collection_id, bag_id) 
+                                 SELECT :collection_id, bag_id 
+                                 FROM bags WHERE token = :token');
+                $this->db->bind(':collection_id', $collectionId);
+                $this->db->bind(':token', $bagToken);
+                $this->db->execute();
+            }
+            
+            $this->db->commit();
+            return true;
+        } catch (Exception $e) {
+            $this->db->rollBack();
+            throw $e;
+        }
+    }
+
+    // Add a method to check if collection can start
+    public function canStartCollection($collectionId) {
+        $this->db->query('SELECT partner_approved, vehicle_manager_approved, initial_weight_bridge, bags 
+                          FROM collections 
+                          WHERE collection_id = :collection_id');
+        $this->db->bind(':collection_id', $collectionId);
+        $collection = $this->db->single();
+        
+        return $collection &&
+               $collection->partner_approved == 1 &&
+               $collection->vehicle_manager_approved == 1 &&
+               $collection->initial_weight_bridge !== null &&
+               $collection->bags > 0;
     }
 } 

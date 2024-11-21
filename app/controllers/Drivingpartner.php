@@ -31,7 +31,27 @@ class Drivingpartner extends controller {
     }
 
     public function index() {
-        $data = [];  // Pass any necessary data here
+        $partnerModel = $this->model('M_Partner');
+        $scheduleModel = $this->model('M_CollectionSchedule');
+        
+        // Get driving partner's team ID
+        $partnerDetails = $partnerModel->getPartnerDetails($_SESSION['user_id']);
+        $teamId = $partnerDetails->team_id ?? null;
+
+        if (!$teamId) {
+            $data = [
+                'upcomingShifts' => [],
+                'message' => 'No team assigned'
+            ];
+        } else {
+            // Get upcoming schedules for the team
+            $upcomingShifts = $scheduleModel->getUpcomingSchedules($teamId);
+            $data = [
+                'upcomingShifts' => $upcomingShifts,
+                'currentTeam' => $partnerDetails->current_team
+            ];
+        }
+
         $this->view('driving_partner/v_dashboard', $data);
     }
 
@@ -89,13 +109,21 @@ class Drivingpartner extends controller {
         $userRole = RoleHelper::hasRole(RoleHelper::DRIVER) ? 'driver' : 
                    (RoleHelper::hasRole(RoleHelper::DRIVING_PARTNER) ? 'driving_partner' : null);
 
+        $collectionId = $this->collectionModel->getCollectionIdByScheduleId($id);
+
+        $collectionBags = $this->collectionModel->getCollectionBags($collectionId);
+        if (!$collectionBags) {
+            $collectionBags = [];
+        }
+
         $data = [
             'schedule' => $schedule,
             'route' => $route,
             'team' => $team,
             'vehicle' => $vehicle,
             'userRole' => $userRole,
-            'isReady' => $this->model('M_CollectionSchedule')->isUserReady($id, $currentUserId)
+            'isReady' => $this->model('M_CollectionSchedule')->isUserReady($id, $currentUserId),
+            'collectionBags' => $collectionBags
         ];
 
         // Add this to get route suppliers
@@ -104,8 +132,7 @@ class Drivingpartner extends controller {
 
         $data['collection'] = $this->collectionScheduleModel->getCollectionByScheduleId($id);
 
-        $data['viewPath'] = 'shared/collection/schedule_details';
-        $this->view($data['viewPath'], $data);
+        $this->view('shared/collection/schedule_details', $data);
     }
 
     public function setReady($scheduleId) {
@@ -116,12 +143,14 @@ class Drivingpartner extends controller {
                 // First check if collection exists, if not create it
                 $collection = $this->collectionScheduleModel->getCollectionByScheduleId($scheduleId);
                 if (!$collection) {
+                    // Create initial collection without start time
                     $this->collectionScheduleModel->createInitialCollection($scheduleId);
+                    $collection = $this->collectionScheduleModel->getCollectionByScheduleId($scheduleId);
                 }
                 
-                // Then set the user as ready
-                if ($this->collectionScheduleModel->setUserReady($scheduleId, $currentUserId)) {
-                    flash('schedule_message', 'You are marked as ready for this collection.');
+                // Set partner as ready (but don't start collection yet)
+                if ($this->collectionScheduleModel->setPartnerReady($scheduleId, $currentUserId)) {
+                    flash('schedule_message', 'You are marked as ready. Please assign bags for collection.');
                 } else {
                     flash('schedule_message', 'Something went wrong', 'alert alert-danger');
                 }
@@ -135,6 +164,59 @@ class Drivingpartner extends controller {
             }
         }
         redirect('drivingpartner/shift');
+    }
+
+    public function assignBags($scheduleId) {
+        if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+            $bags = isset($_POST['bags']) ? $_POST['bags'] : [];
+            
+            if (empty($bags)) {
+                redirect('drivingpartner/scheduleDetails/' . $scheduleId);
+                return;
+            }
+
+            // First create collection, then assign bags
+            $this->collectionModel->createCollectionWithBags($scheduleId, $bags);
+            redirect('drivingpartner/scheduleDetails/' . $scheduleId);
+        }
+    }
+
+    public function supplier_collection() {
+        $data = [];
+        $this->view('driving_partner/supplier_collection', $data);
+    }
+
+    public function startCollection($collectionId) {
+        if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+            try {
+                $collection = $this->collectionScheduleModel->getCollectionById($collectionId);
+                
+                // Verify all conditions are met
+                if (!$collection->partner_approved) {
+                    throw new Exception('Partner approval required');
+                }
+                if (!$collection->vehicle_manager_approved) {
+                    throw new Exception('Vehicle manager approval required');
+                }
+                if (!$collection->initial_weight_bridge) {
+                    throw new Exception('Initial weight bridge reading required');
+                }
+                
+                // Start the collection using the model
+                if ($this->collectionModel->startCollectionWithSuppliers($collectionId)) {
+                    flash('collection_message', 'Collection started successfully');
+                    redirect('drivingpartner/collectionRoute/' . $collectionId);
+                } else {
+                    flash('collection_message', 'Failed to start collection', 'alert alert-danger');
+                    redirect('drivingpartner/scheduleDetails/' . $collection->schedule_id);
+                }
+                
+            } catch (Exception $e) {
+                flash('collection_message', 'Error: ' . $e->getMessage(), 'alert alert-danger');
+                redirect('drivingpartner/scheduleDetails/' . $collection->schedule_id);
+            }
+        }
+        redirect('drivingpartner/index');
     }
 
     public function staff() {
@@ -483,6 +565,19 @@ class Drivingpartner extends controller {
         }
 
         redirect('drivingpartner/shift');
+    }
+
+    public function collectionRoute($collectionId) {
+        $collection = $this->collectionScheduleModel->getCollectionById($collectionId);
+        $routeSuppliers = $this->routeModel->getRouteSuppliers($collection->schedule_id);
+        
+        $data = [
+            'collection' => $collection,
+            'routeSuppliers' => $routeSuppliers,
+            // Add any other necessary data
+        ];
+        
+        $this->view('driving_partner/supplier_collection', $data);
     }
 }
 

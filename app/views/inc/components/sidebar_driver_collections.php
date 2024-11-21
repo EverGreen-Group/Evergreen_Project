@@ -13,15 +13,15 @@
     </a>
     <ul class="side-menu top">
         <li class="<?php echo (basename($_SERVER['REQUEST_URI']) == 'index') ? 'active' : ''; ?>">
-            <a href="<?php echo URLROOT; ?>/vehicledriver/index">
-                <i class="bx bxs-dashboard"></i>
-                <span class="text">Dashboard</span>
+            <a href="<?php echo URLROOT; ?>/vehicledriver/collectionRoute/<?php echo $data['collection']->collection_id; ?>">
+                <i class="bx bxs-map"></i>
+                <span class="text">Map</span>
             </a>
         </li>
-        <li class="<?php echo (basename($_SERVER['REQUEST_URI']) == 'leave') ? 'active' : ''; ?>">
-            <a href="<?php echo URLROOT; ?>/vehicledriver/leave">
-                <i class='bx bxs-calendar'></i>
-                <span class="text">Leave</span>
+        <li class="<?php echo (basename($_SERVER['REQUEST_URI']) == 'collectionInformation') ? 'active' : ''; ?>">
+            <a href="<?php echo URLROOT; ?>/vehicledriver/collectionStatus/<?php echo $data['collection']->collection_id; ?>">
+                <i class='bx bxs-collection'></i>
+                <span class="text">Collections</span>
             </a>
         </li>
     </ul>
