@@ -250,11 +250,11 @@ class Inventory extends controller
     }
 
 
-    public function createa()
+    public function export()
     {
         $data = [];
 
-        $this->view('inventory/v_create_product', $data);
+        $this->view('inventory/v_recod', $data);
     }
 
     public function item()
