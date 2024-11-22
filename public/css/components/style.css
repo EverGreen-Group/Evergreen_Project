@@ -816,11 +816,11 @@ body {
 	width: 40%;
 }
 .reviews li {
-	background-color: rgba(102, 209, 69, 0.222);
+	background-color: rgb(224, 224, 232);
 	color: var(--dark);
 	padding: 15px;
 	border-radius: 8px;
-	border: 1px solid rgb(102, 209, 69, 0.376);
+	border: 1px solid rgb(204, 205, 213);
 	width: 200%;
 	align-content: center;
 }
@@ -1033,5 +1033,3 @@ a {
 .pending-btn {
 	background-color: chocolate;
 }
-
-/* SUPPLIER PAYMENTS */

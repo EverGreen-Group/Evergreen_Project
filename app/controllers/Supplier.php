@@ -166,22 +166,24 @@ class Supplier extends Controller {
    
     public function createFertilizerOrder() {
         // Check if the supplier is logged in
-        /*
-        if (!isset($_SESSION['supplier_logged_in']) || !$_SESSION['supplier_logged_in']) {
+        /*if (!isset($_SESSION['supplier_logged_in']) || !$_SESSION['supplier_logged_in']) {
             echo "Error: You must be logged in to place an order.";
             return;
-        }
+        }*/
 
         if (!isset($_POST['type_id']) || !isset($_POST['unit']) || !isset($_POST['total_amount'])) {
             flash('message', 'Please fill all required fields', 'alert alert-danger');
             redirect('supplier/requestFertilizer');
             return;
-        }*/
+        }
 
         // Get the logged-in supplier's ID
         //$supplier_id = $_SESSION['supplier_id'];
 
-    
+        //TEMP SUPPLIER ID
+        //AFTER THE LOGIN IS COMPLETED REMOVE $supplier_id = 1; LINE, UNCOMMENT if (!isset($_SESSION['supplier_logged_in'])... THIS IF, AND $supplier_id = $_SESSION['supplier_id']; THIS LINE
+        $supplier_id = 1;
+
         // Fetch fertilizer types for dropdown
         $data['fertilizer_types'] = $this->fertilizerOrderModel->getAllFertilizerTypes();
 
@@ -194,15 +196,16 @@ class Supplier extends Controller {
         // Validate fertilizer type
         $fertilizer = $this->fertilizerOrderModel->getFertilizerByTypeId($type_id);
         if (!$fertilizer) {
-            echo "Error: The fertilizer type ID '{$type_id}' does not exist.";
+            flash('message', 'Invalid fertilizer type selected', 'alert alert-danger');
+            redirect('supplier/requestFertilizer');
             return;
         }
 
-        // Automatically fill fertilizer name and price per unit based on unit type
-        $fertilizer_name = $fertilizer['name'];
+        // Automatically fill price per unit based on unit type
         $price_per_unit = $fertilizer['price_' . $unit];
         if (!$price_per_unit) {
-            echo "Error: Invalid unit type selected.";
+            flash('message', 'Invalid unit type selected', 'alert alert-danger');
+            redirect('supplier/requestFertilizer');
             return;
         }
 
@@ -221,7 +224,7 @@ class Supplier extends Controller {
 
         // Insert the order
         $isInserted = $this->fertilizerOrderModel->createOrder([
-            //'supplier_id' => $supplier_id,
+            'supplier_id' => $supplier_id,
             'type_id' => $fertilizer['type_id'],
             'fertilizer_name' => $fertilizer['name'],
             'total_amount' => $total_amount,
@@ -231,10 +234,11 @@ class Supplier extends Controller {
         ]);
 
         if ($isInserted) {
-            echo "Order placed successfully!";
+            flash('message', 'Order placed successfully!', 'alert alert-success');
         } else {
-            echo "Failed to place the order.";
+            flash('message', 'Failed to place the order.', 'alert alert-danger');
         }
+        redirect('supplier/requestFertilizer');
     }
     
 

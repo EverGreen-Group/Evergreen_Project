@@ -23,23 +23,44 @@ class M_Fertilizer_Order {
         return $this->db->resultset();
     }
 
+
+    private $error = null;
+    public function getError() {
+        return $this->error;
+    }
     public function createOrder($data) {
-        $stmt = $this->db->prepare(
-            "INSERT INTO fertilizer_orders 
-            (type_id, fertilizer_name, total_amount, unit, price_per_unit, total_price, order_date, order_time) 
-            VALUES 
-            (:type_id, :fertilizer_name, :total_amount, :unit, :price_per_unit, :total_price, CURRENT_DATE, CURRENT_TIME)"
-        );
+        try {
+            $this->db->query(
+                "INSERT INTO fertilizer_orders 
+                (supplier_id, type_id, fertilizer_name, total_amount, unit, price_per_unit, total_price, order_date, order_time) 
+                VALUES 
+                (:supplier_id, :type_id, :fertilizer_name, :total_amount, :unit, :price_per_unit, :total_price, CURRENT_DATE, CURRENT_TIME)"
+            );
+            
+            // Add debug output
+            echo "Executing query with bindings:<br>";
+            
+            $this->db->bind(':supplier_id', $data['supplier_id']);
+            $this->db->bind(':type_id', $data['type_id']);
+            $this->db->bind(':fertilizer_name', $data['fertilizer_name']);
+            $this->db->bind(':total_amount', $data['total_amount']);
+            $this->db->bind(':unit', $data['unit']);
+            $this->db->bind(':price_per_unit', $data['price_per_unit']);
+            $this->db->bind(':total_price', $data['total_price']);
     
-        //$stmt->bindValue(':supplier_id', $data['supplier_id'], PDO::PARAM_INT);
-        $stmt->bindValue(':type_id', $data['type_id'], PDO::PARAM_INT);
-        $stmt->bindValue(':fertilizer_name', $data['fertilizer_name'], PDO::PARAM_STR);
-        $stmt->bindValue(':total_amount', $data['total_amount'], PDO::PARAM_STR);
-        $stmt->bindValue(':unit', $data['unit'], PDO::PARAM_STR);
-        $stmt->bindValue(':price_per_unit', $data['price_per_unit'], PDO::PARAM_STR);
-        $stmt->bindValue(':total_price', $data['total_price'], PDO::PARAM_STR);
-    
-        return $stmt->execute();
+            $result = $this->db->execute();
+            
+            if ($result) {
+                echo "Database query executed successfully<br>";
+                return true;
+            } else {
+                $this->error = "Query execution failed";
+                return false;
+            }
+        } catch (PDOException $e) {
+            $this->error = "Database error: " . $e->getMessage();
+            return false;
+        }
     }
 
     public function updateStatus($order_id, $status) {

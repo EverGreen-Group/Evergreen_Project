@@ -46,7 +46,6 @@
                                     <th>Quantity</th>
                                     <th>Order Date</th>
                                     <th>Accepted/Rejected</th>
-                                    <th>Notification</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -57,7 +56,6 @@
                                     <td>
                                         <button class="pending-btn">pending</button>
                                     </td>
-                                    <td>pending</td>
                                 </tr>
                                 <tr>
                                     <td>002<br>
@@ -66,7 +64,6 @@
                                     <td>
                                     <button class="accept-btn">Accepted</button>
                                     </td>
-                                    <td>Accepted</td>
                                 </tr>
                                 <tr>
                                     <td>003<br>
@@ -75,7 +72,6 @@
                                     <td>
                                     <button class="reject-btn">Rejected</button>
                                     </td>
-                                    <td>Insufficient stock</td>
                                 </tr>
                                 <tr>
                                     <td>001<br>
@@ -84,7 +80,6 @@
                                     <td>
                                     <button class="accept-btn">Accepted</button>
                                     </td>
-                                    <td>Accepted</td>
                                 </tr>
                             </tbody>
                         </table>
