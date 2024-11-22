@@ -27,21 +27,22 @@
 			<i class='bx bxs-group'></i>
 			<span class="text">
 				<h3>2834</h3>
-				<p>Sales Order</p>
-			</span>
-		</li>
-		<li>
-			<i class='bx bxs-dollar-circle'></i>
-			<span class="text">
-				<h3>2543</h3>
 				<p>Export Stock</p>
+				
 			</span>
 		</li>
 		<li>
 			<i class='bx bxs-dollar-circle'></i>
 			<span class="text">
 				<h3>2543</h3>
-				<p>To be Orders</p>
+				<p>Sales Orders</p>
+			</span>
+		</li>
+		<li>
+			<i class='bx bxs-dollar-circle'></i>
+			<span class="text">
+				<h3>2543</h3>
+				<p>Fertilizer Orders</p>
 			</span>
 		</li>
 	</ul>
@@ -66,6 +67,63 @@
 					</tr>
 				</thead>
 				<tbody>
+					<tr>
+						<td>John Doe</td>
+						<td>500 units</td>
+						<td>2024-03-20 09:30 AM</td>
+						<td class="actions">
+							<button style="padding: 8px 12px;
+	background-color: #28a745;
+	color: white;
+	border: none;
+	border-radius: 4px;
+	cursor: pointer;">Approve</button>
+							<button style="padding: 8px 12px;
+	background-color: #2345;
+	color: white;
+	border: none;
+	border-radius: 4px;
+	cursor: pointer;">Reject</button>
+						</td>
+					</tr>
+					<tr>
+						<td>John Doe</td>
+						<td>500 units</td>
+						<td>2024-03-20 09:30 AM</td>
+						<td class="actions">
+							<button style="padding: 8px 12px;
+	background-color: #28a745;
+	color: white;
+	border: none;
+	border-radius: 4px;
+	cursor: pointer;">Approve</button>
+							<button style="padding: 8px 12px;
+	background-color: #2345;
+	color: white;
+	border: none;
+	border-radius: 4px;
+	cursor: pointer;">Reject</button>
+						</td>
+					</tr>
+					<tr>
+						<td>John Doe</td>
+						<td>500 units</td>
+						<td>2024-03-20 09:30 AM</td>
+						<td class="actions">
+							<button style="padding: 8px 12px;
+	background-color: #28a745;
+	color: white;
+	border: none;
+	border-radius: 4px;
+	cursor: pointer;">Approve</button>
+							<button style="padding: 8px 12px;
+	background-color: #2345;
+	color: white;
+	border: none;
+	border-radius: 4px;
+	cursor: pointer;">Reject</button>
+						</td>
+					</tr>
 					<tr>
 						<td>John Doe</td>
 						<td>500 units</td>
@@ -151,10 +209,6 @@
 			<button class="page-number active">1</button>
 			<button class="page-number">2</button>
 			<button class="page-number">3</button>
-			<button class="page-number">4</button>
-			<span>...</span>
-			<button class="page-number">10</button>
-			<button class="page-number">11</button>
 			<button class="next">&gt;</button>
 		</div>
 	</div>
@@ -168,11 +222,12 @@
 	document.addEventListener('DOMContentLoaded', function () {
 		var ctx = document.getElementById('machineAllocationChart').getContext('2d');
 		var machineAllocationChart = new Chart(ctx, {
-			type: 'pie',
+			type: 'bar',
 			data: {
 				labels: ['Machine A', 'Machine B', 'Machine C', 'Machine D'],
 				datasets: [{
-					data: [20, 25, 20, 25],
+					label: 'Working Hours',
+					data: [8, 6, 7, 5],
 					backgroundColor: [
 						'rgba(255, 99, 132, 0.8)',
 						'rgba(54, 162, 235, 0.8)',
@@ -190,13 +245,32 @@
 			},
 			options: {
 				responsive: true,
+				scales: {
+					y: {
+						beginAtZero: true,
+						title: {
+							display: true,
+							text: 'Working Hours'
+						},
+						max: 12,
+						ticks: {
+							stepSize: 2
+						}
+					},
+					x: {
+						title: {
+							display: true,
+							text: 'Machines'
+						}
+					}
+				},
 				plugins: {
 					legend: {
-						position: 'bottom',
+						display: false
 					},
 					title: {
 						display: true,
-						text: 'Daily Machine Allocation Statics'
+						text: 'Daily Machine Working Hours'
 					}
 				}
 			}
