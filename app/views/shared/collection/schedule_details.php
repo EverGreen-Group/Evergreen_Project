@@ -144,8 +144,16 @@ if (isset($data['collection']) && $data['collection']) {
 
                 <?php else: ?>
                     <?php
-                    print_r($data['collection']);
-                    $managerApproved = isset($data['collection']->vehicle_manager_approved) && $data['collection']->partner_approved === '1';
+                    // Remove debug print
+                    // print_r($data['collection']);
+                    
+                    // Check manager approval status
+                    $managerApproved = isset($data['collection']->vehicle_manager_approved) && 
+                                      $data['collection']->vehicle_manager_approved === '1';
+                    
+                    // Check driver approval status
+                    $driverReady = isset($data['collection']->driver_approved) && 
+                                   $data['collection']->driver_approved === '1';
 
                     $status = strtolower($data['collection']->status);
 
@@ -156,7 +164,7 @@ if (isset($data['collection']) && $data['collection']) {
                                 <h3>Waiting for Vehicle Manager</h3>
                                 <p>Collection setup is being reviewed...</p>
                             </div>
-                        <?php elseif ($managerApproved && !$data['driverReady']): ?>
+                        <?php elseif ($managerApproved && !$driverReady): ?>
                             <!-- Step 3a: Manager approved, waiting for driver -->
                             <?php if ($data['userRole'] == 'driver'): ?>
                                 <div class="collection-stage ready">
@@ -171,7 +179,7 @@ if (isset($data['collection']) && $data['collection']) {
                                     <p>Waiting for driver to set ready...</p>
                                 </div>
                             <?php endif; ?>
-                        <?php elseif ($managerApproved && $data['driverReady']): ?>
+                        <?php elseif ($managerApproved && $driverReady): ?>
                             <!-- Step 3b: Everyone ready, show start button -->
                             <div class="collection-stage ready">
                                 <h3>Ready to Start Collection</h3>
@@ -191,7 +199,10 @@ if (isset($data['collection']) && $data['collection']) {
                             <p>Collection started at: <?php echo htmlspecialchars((new DateTime($data['collection']->start_time))->format('H:i')); ?></p>
                             <p>Expected completion by: <?php echo htmlspecialchars((new DateTime($data['schedule']->end_time))->format('H:i')); ?></p>
                             <div class="collection-actions">
-                                <a href="<?php echo URLROOT; ?>/vehicledriver/collection/<?php echo $data['collection']->collection_id; ?>" class="btn btn-primary">
+                                <?php 
+                                $controllerPath = ($data['userRole'] == 'driver') ? 'vehicledriver' : 'drivingpartner';
+                                ?>
+                                <a href="<?php echo URLROOT . '/' . $controllerPath . '/collection/' . $data['collection']->collection_id; ?>" class="btn btn-primary">
                                     <i class='bx bx-navigation'></i>
                                     Continue Collection
                                 </a>

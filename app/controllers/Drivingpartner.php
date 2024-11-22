@@ -288,7 +288,7 @@ class Drivingpartner extends controller {
             'collection' => $collection
         ];
 
-        $this->view('driving_partner/v_collection_route', $data);
+        $this->view('driving_partner/supplier_collection', $data);
     }
 
     public function markArrival() {

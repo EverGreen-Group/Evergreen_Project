@@ -23,24 +23,32 @@ require APPROOT . '/views/inc/components/topnavbar.php';
         <!-- Current Supplier -->
         <section class="current-supplier">
             <h2>Current Supplier</h2>
-            <?php if ($data['currentSupplier']): ?>
+            <?php if (!empty($data['collectionSupplierRecords'])): ?>
+                <?php $currentSupplier = $data['collectionSupplierRecords'][0]; ?>
                 <div class="supplier-card">
                     <div class="supplier-info">
                         <div class="supplier-profile">
                             <img src="<?php echo URLROOT; ?>/public/img/default-user.png" alt="Supplier">
-                            <h4><?php echo $data['currentSupplier']->supplier_name; ?></h4>
-                            <span class="supplier-id">#<?php echo $data['currentSupplier']->supplier_id; ?></span>
+                            <h4><?php echo $currentSupplier->supplier_name; ?></h4>
+                            <span class="supplier-id">#<?php echo $currentSupplier->supplier_id; ?></span>
                         </div>
                         <div class="supplier-actions">
-                            <button class="btn-location">
+                            <button class="btn-location" onclick="openLocation(<?php echo $currentSupplier->latitude; ?>, <?php echo $currentSupplier->longitude; ?>)">
                                 <i class='bx bx-map'></i>
                                 Location
                             </button>
-                            <button class="btn-call">
+                            <button class="btn-call" onclick="callSupplier('<?php echo $currentSupplier->contact_number; ?>')">
                                 <i class='bx bx-phone'></i>
                                 Contact
                             </button>
                         </div>
+                    </div>
+                    <div class="supplier-details">
+                        <p><strong>Status:</strong> <span class="status-badge <?php echo strtolower($currentSupplier->status); ?>"><?php echo $currentSupplier->status; ?></span></p>
+                        <?php if ($currentSupplier->arrival_time): ?>
+                            <p><strong>Arrived:</strong> <?php echo date('H:i', strtotime($currentSupplier->arrival_time)); ?></p>
+                        <?php endif; ?>
+                        <p><strong>Contact:</strong> <?php echo $currentSupplier->contact_number; ?></p>
                     </div>
                 </div>
             <?php else: ?>
@@ -53,7 +61,16 @@ require APPROOT . '/views/inc/components/topnavbar.php';
             <h2>Collection List</h2>
             <div class="suppliers-cards">
                 <?php foreach ($data['collectionSupplierRecords'] as $record): ?>
-                    <div class="supplier-card <?php echo $record->collection_time ? 'completed' : ''; ?>">
+                    <?php 
+                    // Determine card status
+                    $cardStatus = '';
+                    if ($record->collection_time) {
+                        $cardStatus = 'collected';
+                    } elseif ($record->arrival_time) {
+                        $cardStatus = 'arrived';
+                    }
+                    ?>
+                    <div class="supplier-card <?php echo $cardStatus; ?>">
                         <div class="supplier-detail">
                             <strong>ID:</strong> #<?php echo $record->supplier_id; ?>
                         </div>
@@ -62,10 +79,27 @@ require APPROOT . '/views/inc/components/topnavbar.php';
                         </div>
                         <div class="supplier-detail">
                             <strong>Status:</strong> 
-                            <span class="status <?php echo strtolower($record->status); ?>">
-                                <?php echo $record->status; ?>
+                            <span class="status <?php echo $cardStatus ?: strtolower($record->status); ?>">
+                                <?php 
+                                if ($record->collection_time) {
+                                    echo 'Collected';
+                                } elseif ($record->arrival_time) {
+                                    echo 'Arrived';
+                                } else {
+                                    echo $record->status;
+                                }
+                                ?>
                             </span>
                         </div>
+                        <?php if ($record->collection_time): ?>
+                            <div class="supplier-detail">
+                                <strong>Collected at:</strong> <?php echo date('H:i', strtotime($record->collection_time)); ?>
+                            </div>
+                        <?php elseif ($record->arrival_time): ?>
+                            <div class="supplier-detail">
+                                <strong>Arrived at:</strong> <?php echo date('H:i', strtotime($record->arrival_time)); ?>
+                            </div>
+                        <?php endif; ?>
                     </div>
                 <?php endforeach; ?>
             </div>
@@ -186,20 +220,24 @@ require APPROOT . '/views/inc/components/topnavbar.php';
 }
 
 .supplier-profile img {
-    width: 80px;
-    height: 80px;
+    width: 100px;
+    height: 100px;
     border-radius: 50%;
-    margin-bottom: 10px;
+    object-fit: cover;
+    border: 3px solid #fff;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    background-color: #f5f5f5;
+    padding: 2px;
 }
 
 .supplier-profile h4 {
-    margin: 0;
-    color: var(--dark);
+    margin: 10px 0 5px 0;
+    font-size: 1.2rem;
+    color: var(--heading-color);
 }
 
 .supplier-id {
-    color: var(--dark);
-    font-weight: 600;
+    color: #666;
     font-size: 0.9rem;
 }
 
@@ -254,6 +292,25 @@ require APPROOT . '/views/inc/components/topnavbar.php';
 .status.completed {
     background: #f1f8e9;
     color: #43A047;
+}
+
+.supplier-card.arrived {
+    background: #E8F5E9;
+    border-left: 4px solid #4CAF50;
+}
+
+.status.arrived {
+    background: #4CAF50;
+    color: white;
+}
+
+.supplier-detail {
+    margin-bottom: 8px;
+    font-size: 0.9rem;
+}
+
+.supplier-detail:last-child {
+    margin-bottom: 0;
 }
 
 /* Mobile responsiveness */
@@ -337,8 +394,72 @@ require APPROOT . '/views/inc/components/topnavbar.php';
         font-size: 0.75rem;
     }
 }
+
+/* Add these styles to your existing CSS */
+.supplier-card.arrived {
+    background: #E8F5E9;
+    border-left: 4px solid #4CAF50;
+}
+
+.supplier-card.collected {
+    background: #E3F2FD;
+    border-left: 4px solid #1976D2;
+}
+
+.status {
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 0.85rem;
+    display: inline-block;
+}
+
+.status.arrived {
+    background: #4CAF50;
+    color: white;
+}
+
+.status.collected {
+    background: #1976D2;
+    color: white;
+}
+
+.status.added {
+    background: #e3f2fd;
+    color: #1976D2;
+}
+
+.supplier-detail {
+    margin-bottom: 8px;
+    font-size: 0.9rem;
+}
+
+.supplier-detail:last-child {
+    margin-bottom: 0;
+}
+
+/* Update mobile styles */
+@media screen and (max-width: 768px) {
+    .supplier-card {
+        margin-bottom: 10px;
+    }
+    
+    .supplier-card.arrived,
+    .supplier-card.collected {
+        border-left-width: 6px;
+    }
+}
 </style>
 
 <script src="<?php echo URLROOT; ?>/css/components/script.js"></script>
+<script>
+function openLocation(lat, lng) {
+    const mapsUrl = `https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}&travelmode=driving`;
+    window.open(mapsUrl, '_blank');
+}
+
+function callSupplier(phoneNumber) {
+    window.location.href = `tel:${phoneNumber}`;
+}
+</script>
 
 <?php require APPROOT . '/views/inc/components/footer.php'; ?>

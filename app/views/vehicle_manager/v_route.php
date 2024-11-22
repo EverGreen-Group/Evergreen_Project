@@ -8,16 +8,6 @@
 <!-- MAIN -->
 <main>
 
-<div style="background: #f0f0f0; padding: 10px; margin-bottom: 20px;">
-    Debug Info:
-    <pre>
-    <?php 
-    echo "Unallocated Suppliers:\n";
-    print_r($data); 
-    ?>
-    </pre>
-</div>
-
   <!-- Route Management Section -->
   <div class="head-title">
       <div class="left">

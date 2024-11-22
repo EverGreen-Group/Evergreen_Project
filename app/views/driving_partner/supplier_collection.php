@@ -18,27 +18,11 @@
             </span>
         </li>
         <li>
-            <i class='bx bx-weight'></i>
-            <span class="text">
-                <p>Gross Weight</p>
-                <h3>4,250 kg</h3>
-                <span>Current Total</span>
-            </span>
-        </li>
-        <li>
             <i class='bx bx-leaf'></i>
             <span class="text">
                 <p>Net Weight</p>
                 <h3>750 kg</h3>
                 <span>Tea Leaves</span>
-            </span>
-        </li>
-        <li>
-            <i class='bx bx-trending-up'></i>
-            <span class="text">
-                <p>Remaining</p>
-                <h3>750 kg</h3>
-                <span>Available Capacity</span>
             </span>
         </li>
     </ul>
@@ -702,5 +686,5 @@ function initializeScanner() {
     }
 }
 </script>
-
+<script src="<?php echo URLROOT; ?>/css/components/script.js"></script>
 <?php require APPROOT . '/views/inc/components/footer.php'; ?> 
