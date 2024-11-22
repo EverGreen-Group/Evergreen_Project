@@ -36,6 +36,10 @@ class Inventory extends controller
         $this->view('inventory/v_product', $data);
     }
 
+    public function getfertilizer(){
+        
+    }
+
     public function createproduct()
     {
         if ($_SERVER['REQUEST_METHOD'] == 'POST') {
@@ -151,9 +155,19 @@ class Inventory extends controller
 
     public function fertilizerdashboard()
     {
-        $data = [];
+
+        $fertilizer = $this->fertilizerModel->getfertilizer();
+        $data = [
+            'fertilizer' => $fertilizer
+        ];
+
+        
 
         $this->view('inventory/v_fertilizer_dashboard', $data);
+
+        echo "<pre>";
+        print_r($data);
+        echo "</pre>";
     }
 
     public function fertilizer()
@@ -244,6 +258,37 @@ class Inventory extends controller
             $this->view('inventory/v_create_fertilizer', $data);
         }
 
+    }
+
+    public function updatefertilizer($id){
+        if($_SERVER('REQUEST_METHOD')=='POST'){
+            $data = [
+                 'id' => $id,
+                'fertilizer_name' => $_POST['fertilizer_name'],
+                'company_name' => $_POST['company_name'],
+                'details' => $_POST['details'],
+                'code' => $_POST['code'],
+                'price' => $_POST['price'],
+                'quantity' => $_POST['quantity'],
+                'unit' => $_POST['unit'],
+                'fertilizer_name_err' => '',
+                'company_name_err' => '',
+                'details_err' => '',
+                'code_err' => '',
+                'price_err' => '',
+                'quantity_err' => '',
+                'unit_err' => '',
+
+            ];
+
+            if (
+                !empty($data['fertilizer_name']) && !empty($data['company_name']) && !empty($data['details'])
+                && !empty($data['code']) && !empty($data['price']) && !empty($data['quantity']) && !empty($data['unit'])
+            ){
+
+            }
+
+        }
     }
 
     public function machine()

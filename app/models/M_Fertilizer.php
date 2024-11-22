@@ -28,13 +28,19 @@ class M_Fertilizer{
         else{
             return false;
         }
-
-
-
         
+    }
 
+    public function getfertilizer(){
+        $sql = "SELECT * FROM Fertilizer";
+        $this->db->query($sql);
 
-        
+        try {
+            return $this->db->resultSet();
+        } catch (PDOException $e) {
+            error_log("Database Error: " . $e->getMessage());
+            return false;
+        }
     }
 }
 
