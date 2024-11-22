@@ -7,98 +7,66 @@
 <?php require APPROOT . '/views/inc/components/topnavbar.php'; ?>
 
 <main>
+    <?php print_r($data); ?>
     <div class="head-title">
         <div class="left">
-            <h1>Supplier Collection</h1>
+            <h1>Record Collection</h1>
             <ul class="breadcrumb">
                 <li><a href="#">Dashboard</a></li>
             </ul>
         </div>
     </div>
-    <!-- Weight Tracking Section -->
-    <ul class="box-info">
-        <li>
-            <i class='bx bx-package'></i>
-            <span class="text">
-                <p>Tare Weight</p>
-                <h3><?php echo number_format($data['collection']->initial_weight_bridge, 2); ?> kg</h3>
-                <span>Empty Vehicle</span>
-            </span>
-        </li>
-        <li>
-            <i class='bx bx-leaf'></i>
-            <span class="text">
-                <p>Net Weight</p>
-                <h3><?php echo number_format($data['collection']->total_quantity, 2); ?> kg</h3>
-                <span>Tea Leaves</span>
-            </span>
-        </li>
-    </ul>
 
-    <!-- First Row: Container for Supplier Info and Collection Progress -->
-        <!-- Current Supplier Info -->
-        <div class="table-data">
-            <?php if (!empty($data['collections'])): ?>
-                <?php $currentSupplier = $data['collections'][0]; // Get the first supplier ?>
-                <div class="supplier-info">
-                    <div class="supplier-profile">
-                        <img src="<?php echo $currentSupplier['image']; ?>" alt="Supplier Image">
-                        <h4><?php echo $currentSupplier['supplierName']; ?></h4>
-                    </div>
-                    <div class="supplier-details">
-                        <p><i class='bx bx-phone'></i> <?php echo $currentSupplier['contact']; ?></p>
-                        <p><i class='bx bx-leaf'></i> Expected: <?php echo $currentSupplier['estimatedCollection']; ?> kg</p>
-                        <?php if ($currentSupplier['remarks']): ?>
-                            <p><i class='bx bx-note'></i> <?php echo $currentSupplier['remarks']; ?></p>
-                        <?php endif; ?>
-                    </div>
-                    <div class="supplier-actions">
-                        <button class="btn-call" onclick="makeCall('<?php echo $currentSupplier['contact']; ?>')">
-                            <i class='bx bx-phone-call'></i> Call
-                        </button>
-                    </div>
-                    <div class="supplier-actions">
-                        <button class="btn-record" onclick="window.location.href='<?php echo URLROOT; ?>/drivingpartner/record_collection/<?php echo $currentSupplier['id']; ?>/<?php echo $data['collection']->collection_id; ?>'">
-                            <i class='bx bx-edit'></i> Record Collection
-                        </button>
-                    </div>
-                </div>
-            <?php else: ?>
-                <div class="supplier-info">
-                    <p class="no-supplier">No suppliers remaining in collection route</p>
-                </div>
-            <?php endif; ?>
-            <div class="order collection-progress">
-                <div class="head">
-                    <h3>Collection Progress</h3>
-                </div>
-                <div class="progress-cards">
-                    <?php foreach ($data['collections'] as $supplier): 
-                        $statusClass = $supplier['collection_time'] ? 'completed' : 
-                            ($supplier['arrival_time'] ? 'current' : 'upcoming');
-                        $statusText = $supplier['collection_time'] ? 'Collected' : 
-                            ($supplier['arrival_time'] ? 'At Location' : 'Pending');
-                    ?>
-                        <div class="progress-card <?php echo $statusClass; ?>">
-                            <div class="supplier-header">
-                                <span class="supplier-id">#<?php echo $supplier['id']; ?></span>
-                                <span class="status <?php echo $statusClass; ?>"><?php echo $statusText; ?></span>
-                            </div>
-                            <div class="supplier-name"><?php echo $supplier['supplierName']; ?></div>
-                            <?php if ($supplier['collection_time'] && isset($supplier['quantity']) && $supplier['quantity'] > 0): ?>
-                                <div class="collected-amount">
-                                    <i class='bx bx-leaf'></i>
-                                    <?php echo number_format($supplier['quantity'], 2); ?> kg
-                                </div>
-                            <?php endif; ?>
-                        </div>
-                    <?php endforeach; ?>
-                </div>
+
+
+    <div class="table-data">
+        <div class="order">
+            <div class="head">
+                <h3>Select Collection Bag</h3>
+            </div>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Bag ID</th>
+                        <th>Capacity</th>
+                        <th>Actual Weight</th>
+                        <th>Bag Status</th>
+                        <th>Supplier</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <?php if (!empty($data['bags'])): ?>
+                        <?php foreach ($data['bags'] as $bag): ?>
+                            <tr class="<?php echo strtolower($bag->bag_status); ?>">
+                                <td>#<?php echo $bag->bag_id; ?></td>
+                                <td><?php echo number_format($bag->capacity_kg, 2); ?> kg</td>
+                                <td><?php echo !empty($bag->actual_weight_kg) ? number_format($bag->actual_weight_kg, 2) . ' kg' : '-'; ?></td>
+                                <td>
+                                    <span class="status-badge <?php echo strtolower($bag->bag_status); ?>">
+                                        <?php echo $bag->bag_status; ?>
+                                    </span>
+                                </td>
+                                <td><?php echo !empty($bag->supplier_name) ? $bag->supplier_name : 'Unassigned'; ?></td>
+                            </tr>
+                        <?php endforeach; ?>
+                    <?php else: ?>
+                        <tr>
+                            <td colspan="5" class="no-bags">No bags assigned to this collection</td>
+                        </tr>
+                    <?php endif; ?>
+                </tbody>
+            </table>
+        </div>
+        <div class="order">
+            <div class="head">
+                <h3>Assign Bag</h3>
             </div>
         </div>
 
 
     </div>
+
+
 
 </main>
 
@@ -340,6 +308,69 @@ tr.completed {
     .progress-cards {
         grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
     }
+}
+
+/* Add these styles */
+.status-badge {
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 0.75rem;
+    font-weight: 500;
+}
+
+.status-badge.available {
+    background-color: #E3F2FD;
+    color: #1976D2;
+}
+
+.status-badge.assigned {
+    background-color: #FFF3E0;
+    color: #F57C00;
+}
+
+.status-badge.collected {
+    background-color: #E8F5E9;
+    color: #388E3C;
+}
+
+tr.available {
+    background-color: rgba(227, 242, 253, 0.1);
+}
+
+tr.assigned {
+    background-color: rgba(255, 243, 224, 0.1);
+}
+
+tr.collected {
+    background-color: rgba(232, 245, 233, 0.1);
+}
+
+.no-bags {
+    text-align: center;
+    padding: 20px;
+    color: #666;
+    font-style: italic;
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+th, td {
+    padding: 12px;
+    text-align: left;
+    border-bottom: 1px solid #eee;
+}
+
+th {
+    font-weight: 600;
+    color: #333;
+    background-color: #f8f9fa;
+}
+
+td {
+    color: #444;
 }
 
 </style>

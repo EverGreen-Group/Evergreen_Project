@@ -242,7 +242,7 @@ class Drivingpartner extends controller {
         // Get collection details
         $collection = $this->collectionScheduleModel->getCollectionById($collectionId);
         if (!$collection) {
-            redirect('vehicledriver/shift');
+            redirect('vehicledriver/');
         }
 
         // Get schedule, team, and vehicle details
@@ -274,6 +274,8 @@ class Drivingpartner extends controller {
                 'status' => $supplier->status,
                 'contact' => $supplier->contact_number,
                 'arrival_time' => $supplier->arrival_time,
+                'collection_time' => $supplier->collection_time,
+                'quantity' => $supplier->quantity ?? 0
             ];
         }, $collectionSuppliers);
 
@@ -578,6 +580,35 @@ class Drivingpartner extends controller {
         ];
         
         $this->view('driving_partner/supplier_collection', $data);
+    }
+
+    public function record_collection($supplierId, $collectionId) {
+        // Verify that this supplier is part of the current collection
+        $supplierRecord = $this->collectionScheduleModel->getSupplierCollectionRecord($collectionId, $supplierId);
+
+        if (!$supplierRecord) {
+            flash('collection_error', 'Invalid supplier or collection record');
+            redirect('drivingpartner/a/' . $collectionId);
+        }
+
+        // Get collection details
+        $collection = $this->collectionScheduleModel->getCollectionById($collectionId);
+
+        $bags = $this->collectionScheduleModel->getCollectionBags($collectionId);
+        
+        if (!$collection) {
+            flash('collection_error', 'Collection not found');
+            redirect('drivingpartner');
+        }
+
+        $data = [
+            'pageTitle' => 'Record Collection',
+            'supplier' => $supplierRecord,
+            'collection' => $collection,
+            'bags' => $bags
+        ];
+
+        $this->view('driving_partner/record_collection', $data);
     }
 }
 

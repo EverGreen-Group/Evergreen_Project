@@ -822,4 +822,52 @@ class M_CollectionSchedule {
                $collection->initial_weight_bridge !== null &&
                $collection->bags > 0;
     }
+
+    public function getSupplierCollectionRecord($collectionId, $supplierId) {
+        $this->db->query('
+                        SELECT csr.*, 
+                             u.first_name, 
+                             u.last_name,
+                             s.contact_number,
+                             s.latitude,
+                             s.longitude
+                      FROM collection_supplier_records csr
+                      JOIN suppliers s ON csr.supplier_id = s.supplier_id
+                      JOIN users u ON u.user_id = s.user_id
+                      WHERE csr.collection_id = :collection_id
+                      AND csr.supplier_id = :supplier_id;');
+
+        $this->db->bind(':collection_id', $collectionId);
+        $this->db->bind(':supplier_id', $supplierId);
+
+        return $this->db->single();
+    }
+
+    public function getCollectionBags($collectionId) {
+        $this->db->query('
+            SELECT 
+                cb.*,
+                CONCAT(u.first_name, " ", u.last_name) as supplier_name,
+                CASE 
+                    WHEN cb.supplier_id IS NULL THEN "Unassigned"
+                    WHEN csr.collection_time IS NOT NULL THEN "Collected"
+                    WHEN cb.supplier_id IS NOT NULL THEN "Assigned"
+                    ELSE "Available"
+                END as bag_status
+            FROM collection_bags cb
+            LEFT JOIN collection_supplier_records csr 
+                ON cb.supplier_id = csr.supplier_id 
+                AND csr.collection_id = cb.collection_id
+            LEFT JOIN suppliers s 
+                ON cb.supplier_id = s.supplier_id
+            LEFT JOIN users u 
+                ON s.user_id = u.user_id
+            WHERE cb.collection_id = :collection_id
+            ORDER BY cb.collection_bag_id ASC
+        ');
+        
+        $this->db->bind(':collection_id', $collectionId);
+        
+        return $this->db->resultSet();
+    }
 } 
