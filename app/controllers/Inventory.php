@@ -18,7 +18,7 @@ class Inventory extends controller
     public function index()
     {
         $products = $this->productModel->getProduct();
-        
+
         $data = [
             'products' => $products
         ];
@@ -32,7 +32,7 @@ class Inventory extends controller
         $data = [
             'products' => $products
         ];
-        
+
         $this->view('inventory/v_product', $data);
     }
 
@@ -63,29 +63,29 @@ class Inventory extends controller
 
             ];
 
-                   // Handle image upload
-        if (isset($_FILES['product_image']) && $_FILES['product_image']['error'] === UPLOAD_ERR_OK) {
-            $uploadDir = 'uploads/products/';
-            
-            // Create upload directory if it doesn't exist
-            if (!file_exists($uploadDir)) {
-                mkdir($uploadDir, 0777, true);
+            // Handle image upload
+            if (isset($_FILES['product_image']) && $_FILES['product_image']['error'] === UPLOAD_ERR_OK) {
+                $uploadDir = 'uploads/products/';
+
+                // Create upload directory if it doesn't exist
+                if (!file_exists($uploadDir)) {
+                    mkdir($uploadDir, 0777, true);
+                }
+
+                // Generate unique filename
+                $fileExtension = pathinfo($_FILES['product_image']['name'], PATHINFO_EXTENSION);
+                $uniqueFilename = uniqid() . '.' . $fileExtension;
+                $uploadPath = $uploadDir . $uniqueFilename;
+
+                // Move uploaded file
+                if (move_uploaded_file($_FILES['product_image']['tmp_name'], $uploadPath)) {
+                    $data['image_path'] = $uniqueFilename;
+                }
             }
 
-            // Generate unique filename
-            $fileExtension = pathinfo($_FILES['product_image']['name'], PATHINFO_EXTENSION);
-            $uniqueFilename = uniqid() . '.' . $fileExtension;
-            $uploadPath = $uploadDir . $uniqueFilename;
 
-            // Move uploaded file
-            if (move_uploaded_file($_FILES['product_image']['tmp_name'], $uploadPath)) {
-                $data['image_path'] = $uniqueFilename;
-            }
-        }
+            //validate 
 
-
-        //validate 
-        
             if (empty($data['product-name'])) {
                 $data['product-name_err'] = 'Please enter product name';
             }
@@ -147,7 +147,7 @@ class Inventory extends controller
         $this->view('inventory/v_create_product', $data);
     }
 
-    
+
 
     public function fertilizerdashboard()
     {
@@ -165,16 +165,16 @@ class Inventory extends controller
     public function createfertilizer()
     {
         if ($_SERVER['REQUEST_METHOD'] == 'POST') {
-            $_POST = filter_input_array(INPUT_POST);
+            // $_POST = filter_input_array(INPUT_POST);
 
             $data = [
-                'fertilizer_name' => trim($_POST['fertilizer_name']),
-                'company_name' => trim($_POST['company_name']),
-                'details' => trim($_POST['details']),
-                'code' => trim($_POST['code']),
-                'price' => trim($_POST['price']),
-                'quantity' => trim($_POST['quantity']),
-                'unit' => trim($_POST['unit']),
+                'fertilizer_name' => $_POST['fertilizer_name'],
+                'company_name' => $_POST['company_name'],
+                'details' => $_POST['details'],
+                'code' => $_POST['code'],
+                'price' => $_POST['price'],
+                'quantity' => $_POST['quantity'],
+                'unit' => $_POST['unit'],
                 'fertilizer_name_err' => '',
                 'company_name_err' => '',
                 'details_err' => '',
@@ -184,6 +184,8 @@ class Inventory extends controller
                 'unit_err' => '',
 
             ];
+            
+
             //validation
             if (empty($data['fertilizer_name'])) {
                 $data['fertilizer_name_err'] = "Please Enter Fertilizer name";
@@ -209,13 +211,14 @@ class Inventory extends controller
             }
 
             if (
-                empty($data['fertilizer_name']) && empty($data['company_name']) && empty($data['details'])
-                && empty($data['code']) && empty($data['price']) && empty($data['quantity']) && empty($data['unit'])
+                !empty($data['fertilizer_name']) && !empty($data['company_name']) && !empty($data['details'])
+                && !empty($data['code']) && !empty($data['price']) && !empty($data['quantity']) && !empty($data['unit'])
             ) {
 
                 if ($this->fertilizerModel->createFertilizer($data)) {
-                    //flash('fertilizer_message', 'Fertilizer Added');
-                    redirect('inventory/fertilizer');
+                    flash('fertilizer_message', 'Fertilizer Added');
+                    
+                    redirect('inventory/fertilizerdashboard');
 
                 } else {
                     die('Something went wrong');
@@ -236,6 +239,7 @@ class Inventory extends controller
                 'unit' => '',
 
             ];
+            
 
             $this->view('inventory/v_create_fertilizer', $data);
         }
@@ -250,11 +254,11 @@ class Inventory extends controller
     }
 
 
-    public function createa()
+    public function export()
     {
         $data = [];
 
-        $this->view('inventory/v_create_product', $data);
+        $this->view('inventory/v_export', $data);
     }
 
     public function item()
@@ -264,10 +268,11 @@ class Inventory extends controller
         $this->view('inventory/v_item', $data);
     }
 
-    public function updateproduct($id) {
+    public function updateproduct($id)
+    {
         if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             // Sanitize POST data
-            $_POST = filter_input_array(INPUT_POST,FILTER_SANITIZE_STRING);
+            $_POST = filter_input_array(INPUT_POST, FILTER_SANITIZE_STRING);
 
             // Initialize data array with POST data
             $data = [
@@ -295,7 +300,7 @@ class Inventory extends controller
             // Handle image upload
             if (isset($_FILES['product_image']) && $_FILES['product_image']['error'] === UPLOAD_ERR_OK) {
                 $uploadDir = 'uploads/products/';
-                
+
                 // Create upload directory if it doesn't exist
                 if (!file_exists($uploadDir)) {
                     mkdir($uploadDir, 0777, true);
@@ -339,10 +344,12 @@ class Inventory extends controller
             }
 
             // Make sure no errors
-            if (empty($data['product-name_err']) && empty($data['location_err']) &&
-                empty($data['details_err']) && empty($data['price_err']) &&empty($data['code_err']) &&
+            if (
+                empty($data['product-name_err']) && empty($data['location_err']) &&
+                empty($data['details_err']) && empty($data['price_err']) && empty($data['code_err']) &&
                 empty($data['profit_err']) && empty($data['margin_err']) &&
-                empty($data['quantity_err'])) {
+                empty($data['quantity_err'])
+            ) {
 
                 // Validated
                 if ($this->productModel->updateProduct($data)) {
@@ -359,7 +366,7 @@ class Inventory extends controller
         } else {
             // GET request - show form to edit product
             $product = $this->productModel->getProductById($id);
-            
+
             if (!$product) {
                 redirect('inventory/product');
             }
@@ -371,10 +378,11 @@ class Inventory extends controller
 
             $this->view('inventory/v_update_product', $data);
         }
-        
+
     }
 
-    public function deleteproduct($id) {
+    public function deleteproduct($id)
+    {
         if ($_SERVER['REQUEST_METHOD'] == 'GET') {
             if ($this->productModel->deleteProduct($id)) {
                 flash('product_message', 'Product Removed');

@@ -33,14 +33,14 @@
 		<li>
 			<i class='bx bxs-dollar-circle'></i>
 			<span class="text">
-				<h3>$2543</h3>
+				<h3>2543</h3>
 				<p>Export Stock</p>
 			</span>
 		</li>
 		<li>
 			<i class='bx bxs-dollar-circle'></i>
 			<span class="text">
-				<h3>$2543</h3>
+				<h3>2543</h3>
 				<p>To be Orders</p>
 			</span>
 		</li>
