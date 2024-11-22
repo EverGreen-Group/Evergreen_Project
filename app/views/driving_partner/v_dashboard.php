@@ -71,35 +71,43 @@ require APPROOT . '/views/inc/components/topnavbar.php';
                             foreach ($data['upcomingShifts'] as $shift) {
                                 $days = explode(',', $shift->days_of_week);
                                 foreach ($days as $day) {
-                                    $currentDayName = strtolower(date('l')); // Get current day name
                                     $currentTime = time();
                                     
                                     // Get timestamp for this week's occurrence of the day
                                     $thisWeekDate = date('Y-m-d', strtotime($day . ' this week'));
                                     $thisWeekDateTime = $thisWeekDate . ' ' . $shift->start_time;
+                                    $thisWeekEndDateTime = $thisWeekDate . ' ' . $shift->end_time;
                                     $thisWeekTimestamp = strtotime($thisWeekDateTime);
+                                    $thisWeekEndTimestamp = strtotime($thisWeekEndDateTime);
                                     
                                     // Get timestamp for next week's occurrence
                                     $nextWeekDate = date('Y-m-d', strtotime($day . ' next week'));
                                     $nextWeekDateTime = $nextWeekDate . ' ' . $shift->start_time;
+                                    $nextWeekEndDateTime = $nextWeekDate . ' ' . $shift->end_time;
                                     $nextWeekTimestamp = strtotime($nextWeekDateTime);
+                                    $nextWeekEndTimestamp = strtotime($nextWeekEndDateTime);
                                     
-                                    // Use this week's date if it hasn't passed yet, otherwise use next week's
-                                    if ($thisWeekTimestamp > $currentTime) {
-                                        $timestamp = $thisWeekTimestamp;
-                                        $nextDate = $thisWeekDate;
-                                        $startDateTime = $thisWeekDateTime;
-                                    } else {
-                                        $timestamp = $nextWeekTimestamp;
-                                        $nextDate = $nextWeekDate;
-                                        $startDateTime = $nextWeekDateTime;
-                                    }
+                                    // Check if the shift is currently ongoing
+                                    $isOngoing = ($currentTime >= $thisWeekTimestamp && $currentTime <= $thisWeekEndTimestamp);
                                     
-                                    if ($timestamp > time()) {
+                                    // If this week's shift hasn't ended yet, use this week's times
+                                    if ($currentTime <= $thisWeekEndTimestamp) {
                                         $sortedShifts[] = [
                                             'day' => ucfirst($day),
-                                            'startDateTime' => $startDateTime,
-                                            'timestamp' => $timestamp,
+                                            'startDateTime' => $thisWeekDateTime,
+                                            'endDateTime' => $thisWeekEndDateTime,
+                                            'timestamp' => $thisWeekTimestamp,
+                                            'isOngoing' => $isOngoing,
+                                            'shift' => $shift
+                                        ];
+                                    } else {
+                                        // If this week's shift has ended, use next week's times
+                                        $sortedShifts[] = [
+                                            'day' => ucfirst($day),
+                                            'startDateTime' => $nextWeekDateTime,
+                                            'endDateTime' => $nextWeekEndDateTime,
+                                            'timestamp' => $nextWeekTimestamp,
+                                            'isOngoing' => false,
                                             'shift' => $shift
                                         ];
                                     }

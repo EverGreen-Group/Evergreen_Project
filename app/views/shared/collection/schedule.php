@@ -99,9 +99,12 @@ if (isset($data['collection']) && $data['collection']) {
         <?php if ($canAccessCollectionFeatures && ($data['userRole'] == 'driver' || $data['userRole'] == 'driving_partner')): ?>
             <section class="ready-status">
                 <h2>Collection Status</h2>
-                
+                <?php 
+                $isTimeValid = isWithinShiftTime($data['schedule']->start_time, $data['schedule']->end_time);
+                ?>
+
                 <?php if ($data['collection'] === false): ?>
-                    <!-- Step 1: Initial state - Partner assigns bags -->
+                    <!-- No collection exists yet, show initial bag assignment for partner -->
                     <?php if ($data['userRole'] == 'driving_partner'): ?>
                         <div class="collection-stage bag-assignment">
                             <h3>Assign Collection Bags</h3>
@@ -117,7 +120,7 @@ if (isset($data['collection']) && $data['collection']) {
                                                    class="bag-token-input" 
                                                    placeholder="Enter bag token..."
                                                    pattern="[A-Za-z0-9]+"
-                                                   autocomplete="off">
+                                                   autocomplete="off" required>
                                             <button type="button" class="add-bag-btn">Add Bag</button>
                                         </div>
                                     </div>
@@ -141,63 +144,15 @@ if (isset($data['collection']) && $data['collection']) {
                             <p>Waiting for driving partner to assign bags...</p>
                         </div>
                     <?php endif; ?>
-
                 <?php else: ?>
-                    <?php
-                    print_r($data['collection']);
-                    $managerApproved = isset($data['collection']->vehicle_manager_approved) && $data['collection']->partner_approved === '1';
-
-                    $status = strtolower($data['collection']->status);
-
-                    if ($status === 'pending'): ?>
-                        <?php if (!$managerApproved): ?>
-                            <!-- Step 2: Waiting for manager approval -->
-                            <div class="collection-stage waiting">
-                                <h3>Waiting for Vehicle Manager</h3>
-                                <p>Collection setup is being reviewed...</p>
-                            </div>
-                        <?php elseif ($managerApproved && !$data['driverReady']): ?>
-                            <!-- Step 3a: Manager approved, waiting for driver -->
-                            <?php if ($data['userRole'] == 'driver'): ?>
-                                <div class="collection-stage ready">
-                                    <h3>Ready to Begin</h3>
-                                    <form action="<?php echo URLROOT; ?>/vehicledriver/setReady/<?php echo $data['collection']->schedule_id; ?>" method="POST">
-                                        <button type="submit" class="btn btn-primary">Set Ready</button>
-                                    </form>
-                                </div>
-                            <?php else: ?>
-                                <div class="collection-stage waiting">
-                                    <h3>Waiting for Driver</h3>
-                                    <p>Waiting for driver to set ready...</p>
-                                </div>
-                            <?php endif; ?>
-                        <?php elseif ($managerApproved && $data['driverReady']): ?>
-                            <!-- Step 3b: Everyone ready, show start button -->
-                            <div class="collection-stage ready">
-                                <h3>Ready to Start Collection</h3>
-                                <?php if ($data['userRole'] == 'driver'): ?>
-                                    <form action="<?php echo URLROOT; ?>/vehicledriver/startCollection/<?php echo $data['collection']->collection_id; ?>" method="POST">
-                                        <button type="submit" class="btn btn-primary">Start Collection</button>
-                                    </form>
-                                <?php else: ?>
-                                    <p>Driver can now start the collection.</p>
-                                <?php endif; ?>
-                            </div>
-                        <?php endif; ?>
-
-                    <?php elseif ($status === 'in progress'): ?>
-                        <div class="collection-stage collection-in-progress">
-                            <h3>Collection In Progress</h3>
-                            <p>Collection started at: <?php echo htmlspecialchars((new DateTime($data['collection']->start_time))->format('H:i')); ?></p>
+                    <!-- Collection exists, display status -->
+                    <div class="collection-stage <?php echo strtolower($data['collection']->status) === 'in progress' ? 'collection-in-progress' : 'collection-completed'; ?>">
+                        <h3>Collection <?php echo htmlspecialchars(ucfirst($data['collection']->status)); ?></h3>
+                        <p>Collection started at: <?php echo htmlspecialchars((new DateTime($data['collection']->start_time))->format('H:i')); ?></p>
+                        <?php if (strtolower($data['collection']->status) !== 'completed'): ?>
                             <p>Expected completion by: <?php echo htmlspecialchars((new DateTime($data['schedule']->end_time))->format('H:i')); ?></p>
-                            <div class="collection-actions">
-                                <a href="<?php echo URLROOT; ?>/vehicledriver/collection/<?php echo $data['collection']->collection_id; ?>" class="btn btn-primary">
-                                    <i class='bx bx-navigation'></i>
-                                    Continue Collection
-                                </a>
-                            </div>
-                        </div>
-                    <?php endif; ?>
+                        <?php endif; ?>
+                    </div>
                 <?php endif; ?>
             </section>
         <?php endif; ?>

@@ -8,7 +8,7 @@ require APPROOT . '/views/inc/components/topnavbar.php';
 <main>
     <div class="head-title">
         <div class="left">
-            <h1>Driver Dashboard</h1>
+            <h1>Vehicle Driver Dashboard</h1>
             <ul class="breadcrumb">
                 <li><a href="#">Dashboard</a></li>
                 <li>Overview</li>
@@ -18,6 +18,14 @@ require APPROOT . '/views/inc/components/topnavbar.php';
 
     <!-- Quick Stats -->
     <ul class="route-box-info">
+        <li>
+            <i class='bx bxs-time'></i>
+            <span class="text">
+                <p>Current Time</p>
+                <h3 id="current-time">--:--</h3>
+                <span>Local Time</span>
+            </span>
+        </li>
         <li>
             <i class='bx bxs-timer'></i>
             <span class="text">
@@ -63,15 +71,43 @@ require APPROOT . '/views/inc/components/topnavbar.php';
                             foreach ($data['upcomingShifts'] as $shift) {
                                 $days = explode(',', $shift->days_of_week);
                                 foreach ($days as $day) {
-                                    $nextDate = date('Y-m-d', strtotime("next $day"));
-                                    $startDateTime = $nextDate . ' ' . $shift->start_time;
-                                    $timestamp = strtotime($startDateTime);
+                                    $currentTime = time();
                                     
-                                    if ($timestamp > time()) {
+                                    // Get timestamp for this week's occurrence of the day
+                                    $thisWeekDate = date('Y-m-d', strtotime($day . ' this week'));
+                                    $thisWeekDateTime = $thisWeekDate . ' ' . $shift->start_time;
+                                    $thisWeekEndDateTime = $thisWeekDate . ' ' . $shift->end_time;
+                                    $thisWeekTimestamp = strtotime($thisWeekDateTime);
+                                    $thisWeekEndTimestamp = strtotime($thisWeekEndDateTime);
+                                    
+                                    // Get timestamp for next week's occurrence
+                                    $nextWeekDate = date('Y-m-d', strtotime($day . ' next week'));
+                                    $nextWeekDateTime = $nextWeekDate . ' ' . $shift->start_time;
+                                    $nextWeekEndDateTime = $nextWeekDate . ' ' . $shift->end_time;
+                                    $nextWeekTimestamp = strtotime($nextWeekDateTime);
+                                    $nextWeekEndTimestamp = strtotime($nextWeekEndDateTime);
+                                    
+                                    // Check if the shift is currently ongoing
+                                    $isOngoing = ($currentTime >= $thisWeekTimestamp && $currentTime <= $thisWeekEndTimestamp);
+                                    
+                                    // If this week's shift hasn't ended yet, use this week's times
+                                    if ($currentTime <= $thisWeekEndTimestamp) {
                                         $sortedShifts[] = [
                                             'day' => ucfirst($day),
-                                            'startDateTime' => $startDateTime,
-                                            'timestamp' => $timestamp,
+                                            'startDateTime' => $thisWeekDateTime,
+                                            'endDateTime' => $thisWeekEndDateTime,
+                                            'timestamp' => $thisWeekTimestamp,
+                                            'isOngoing' => $isOngoing,
+                                            'shift' => $shift
+                                        ];
+                                    } else {
+                                        // If this week's shift has ended, use next week's times
+                                        $sortedShifts[] = [
+                                            'day' => ucfirst($day),
+                                            'startDateTime' => $nextWeekDateTime,
+                                            'endDateTime' => $nextWeekEndDateTime,
+                                            'timestamp' => $nextWeekTimestamp,
+                                            'isOngoing' => false,
                                             'shift' => $shift
                                         ];
                                     }
@@ -191,15 +227,15 @@ require APPROOT . '/views/inc/components/topnavbar.php';
 </main>
 
 <script>
-function requestLeave() {
-    alert('Opening leave request form');
+// Update current time
+function updateCurrentTime() {
+    const now = new Date();
+    const hours = String(now.getHours()).padStart(2, '0');
+    const minutes = String(now.getMinutes()).padStart(2, '0');
+    document.getElementById('current-time').textContent = `${hours}:${minutes}`;
 }
 
-function requestShiftSwap() {
-    alert('Opening shift swap request form');
-}
-
-
+// Improved countdown function
 function updateCountdowns() {
     document.querySelectorAll('.countdown').forEach(function(element) {
         const startTime = new Date(element.dataset.start).getTime();
@@ -211,16 +247,32 @@ function updateCountdowns() {
             return;
         }
 
+        // Calculate time units
         const days = Math.floor(distance / (1000 * 60 * 60 * 24));
         const hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
         const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
         const seconds = Math.floor((distance % (1000 * 60)) / 1000);
 
-        element.innerHTML = `${days}d ${hours}h ${minutes}m ${seconds}s`;
+        // Format the display based on the remaining time
+        let displayText = '';
+        if (days > 0) {
+            displayText = `${days}d ${hours}h`;
+        } else if (hours > 0) {
+            displayText = `${hours}h ${minutes}m`;
+        } else if (minutes > 0) {
+            displayText = `${minutes}m ${seconds}s`;
+        } else {
+            displayText = `${seconds}s`;
+        }
+
+        element.innerHTML = displayText;
     });
 }
 
+// Initialize and set intervals
+setInterval(updateCurrentTime, 1000);
 setInterval(updateCountdowns, 1000);
+updateCurrentTime();
 updateCountdowns();
 </script>
 

@@ -2,393 +2,283 @@
 <?php require_once APPROOT . '/helpers/RoleHelper.php'; ?>
 
 <main class="landing-main">
-    <section class="hero-section">
-        <div class="content-wrapper">
-            <div class="hero-content">
-                <h1 class="hero-title">Streamline Your Supply Chain with Our Tools</h1>
-                <p class="hero-subtitle">Join our tea factory network and leverage our innovative system to manage your workflow efficiently. Simplify your processes and enhance productivity as a valued supplier.</p>
-                <div class="hero-buttons">
-                    <a href="auth/supplier_register/" class="btn-primary">Become a Supplier</a>
-                    <a href="#" class="btn-secondary">Discover Our Tools →</a>
+    <div class="hero-section">
+        <div class="hero-content">
+            <div class="hero-text">
+                <h1>Connecting Tea Suppliers with Excellence</h1>
+                <p>A modern platform designed for tea leaf suppliers to manage collections, track deliveries, and grow their business.</p>
+                <div class="hero-cta">
+                    <a href="<?php echo URLROOT; ?>/auth/supplier_register/" class="cta-button">Get Started</a>
+                    <a href="<?php echo URLROOT; ?>/users/login" class="login-link">
+                        Already registered? Sign in <i class='bx bx-right-arrow-alt'></i>
+                    </a>
                 </div>
             </div>
-            <div class="hero-image-container">
-                <img src="<?php echo URLROOT; ?>/public/img/heroImage.png" alt="Hero Image" class="hero-image">
+            <div class="hero-image">
+                <img src="https://media.assettype.com/sentinelassam-english%2F2024-05%2Fba6fe76e-9f2f-4535-a183-f9d1817453d0%2Ftea_la.jpg" alt="Tea Image">
+            </div>
+        </div>
+        <div class="hero-stats">
+            <div class="stat-card">
+                <span class="stat-number">500+</span>
+                <span class="stat-label">Active Suppliers</span>
+            </div>
+            <div class="stat-card">
+                <span class="stat-number">98%</span>
+                <span class="stat-label">Collection Rate</span>
+            </div>
+        </div>
+    </div>
+
+    <section class="features-section">
+        <h2>Why Choose Our Platform?</h2>
+        <div class="features-grid">
+            <div class="feature-card">
+                <div class="feature-icon">
+                    <i class='bx bxs-calendar-check'></i>
+                </div>
+                <h3>Easy Scheduling</h3>
+                <p>Schedule your tea leaf collections with just a few clicks</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">
+                    <i class='bx bxs-truck'></i>
+                </div>
+                <h3>Real-time Tracking</h3>
+                <p>Track your collection vehicle's location in real-time</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">
+                    <i class='bx bxs-report'></i>
+                </div>
+                <h3>Detailed Reports</h3>
+                <p>Access comprehensive reports of your supplies and earnings</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">
+                    <i class='bx bxs-wallet'></i>
+                </div>
+                <h3>Quick Payments</h3>
+                <p>Receive payments quickly and track all transactions</p>
             </div>
         </div>
     </section>
-
 </main>
-
-<section class="offers-section">
-    <div class="offers-header">
-        <p class="offers-subtitle">Our services</p>
-        <h2 class="offers-title">Why choose <span class="highlight">us</span></h2>
-    </div>
-    
-    <div class="offers-grid">
-        <div class="offer-card">
-            <div class="offer-icon">
-                <i class='bx bxs-dollar-circle'></i>
-            </div>
-            <h3>Track Supply & Earnings</h3>
-            <p>Suppliers can easily track their supply and earnings, ensuring transparency in all transactions.</p>
-        </div>
-        
-        <div class="offer-card">
-            <div class="offer-icon">
-                <i class='bx bxs-briefcase'></i>
-            </div>
-            <h3>Transparency in Operations</h3>
-            <p>Gain insights into what's going into the factory, ensuring a transparent supply chain.</p>
-        </div>
-        
-        <div class="offer-card">
-            <div class="offer-icon">
-                <i class='bx bxs-calendar-check'></i>
-            </div>
-            <h3>Schedule Collections</h3>
-            <p>Effortlessly schedule your collections to optimize your supply chain operations.</p>
-        </div>
-        
-        <div class="offer-card">
-            <div class="offer-icon">
-                <i class='bx bxs-bell-ring'></i>
-            </div>
-            <h3>Real-time Notifications</h3>
-            <p>Receive real-time notifications and track your vehicle for enhanced operational efficiency.</p>
-        </div>
-    </div>
-</section>
 
 <style>
     .landing-main {
-        width: 100%;
-        min-height: calc(100vh - 20vh);
-        background: #66ACFF;
-        position: relative;
-        overflow: hidden;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-    }
-
-    .landing-main::before {
-        content: '';
-        position: absolute;
-        width: 100%;
-        height: 100%;
-        background-image: 
-            linear-gradient(rgba(235, 240, 255, 0.2) 1px, transparent 1px),
-            linear-gradient(90deg, rgba(235, 240, 255, 0.2) 1px, transparent 1px);
-        background-size: 80px 80px;
-        z-index: 1;
+        background: linear-gradient(135deg, #1b5e20 0%, #388e3c 100%);
+        min-height: 100vh;
+        padding: 0 5%;
+        color: #fff;
     }
 
     .hero-section {
-        position: relative;
-        z-index: 2;
-        padding: 2rem 5%;
-        width: 100%;
-        margin-top: 60px;
-        overflow: visible;
-    }
 
-    .content-wrapper {
-        width: 100%;
-        margin: 0;
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        gap: 4rem;
-        padding: 4rem 0;
-        overflow: visible;
-    }
-
-    .hero-content {
-        flex: 2;
-        max-width: 650px;
-        margin-left: 100px;
-    }
-
-    .hero-title {
-        font-family: 'Funnel Display', sans-serif;
-        font-size: 4rem;
-        font-weight: 550;
-        color: var(--light);
-        line-height: 1.2;
-        margin-bottom: 1.5rem;
-    }
-
-    .hero-subtitle {
-        font-size: 1.1rem;
-        color: #000;
-        margin-bottom: 2.5rem;
-        line-height: 1.6;
-    }
-
-    .hero-buttons {
-        display: flex;
-        gap: 1.5rem;
-        align-items: center;
-    }
-
-    .btn-primary {
-        background: #000;
-        color: white;
-        padding: 1rem 2rem;
-        border-radius: 50px;
-        text-decoration: none;
-        font-weight: 500;
-        transition: all 0.3s ease;
-    }
-
-    .btn-primary:hover {
-        background: #222;
-        transform: translateY(-2px);
-    }
-
-    .btn-secondary {
-        color: #000;
-        text-decoration: none;
-        font-weight: 500;
-        display: flex;
-        align-items: center;
-        gap: 0.5rem;
-        padding: 1rem 0;
-    }
-
-    .btn-secondary:hover {
-        color: #444;
-    }
-
-    .hero-image-container {
-        flex: 1;
-        display: flex;
-        justify-content: flex-end;
-        overflow: visible;
-        position: relative;
-        height: 600px;
-        width: 800px;
-    }
-
-    .hero-image {
-        width: 150%;
-        height: 100%;
-        object-fit: cover;
-        border-radius: 20px;
-        box-shadow: 0 20px 40px rgba(0,0,0,0.1);
-        position: relative;
-        transform: translateX(35%);
-    }
-
-    @media (min-width: 1440px) {
-        .hero-content {
-            margin-left: 200px;
-        }
-
-        .hero-image {
-            width: 180%;
-            transform: translateX(40%);
-        }
-    }
-
-    @media (max-width: 1200px) {
-        .hero-content {
-            margin-left: 50px;
-        }
-
-        .hero-image {
-            width: 140%;
-            transform: translateX(30%);
-        }
-    }
-
-    @media (max-width: 891px) {
-        .content-wrapper {
-            flex-direction: column;
-            text-align: center;
-            padding: 2rem;
-        }
-
-        .hero-content {
-            margin-left: 0;
-            max-width: 100%;
-            padding: 0 20px;
-        }
-
-        .hero-image-container {
-            display: none !important;
-        }
-    }
-
-    @media (max-width: 768px) {
-        .hero-section {
-            margin-top: 40px;
-            padding: 1rem;
-        }
-
-        .hero-title {
-            font-size: 3rem;
-        }
-
-        .hero-subtitle {
-            font-size: 1rem;
-            padding: 0 10px;
-        }
-
-        .hero-buttons {
-            flex-direction: column;
-            gap: 1rem;
-        }
-
-        .btn-secondary {
-            justify-content: center;
-        }
-    }
-
-    @media (max-width: 480px) {
-        .hero-section {
-            margin-top: 20px;
-        }
-
-        .content-wrapper {
-            padding: 1rem 0;
-        }
-
-        .hero-title {
-            font-size: 2.2rem;
-        }
-
-        .hero-subtitle {
-            font-size: 0.9rem;
-            margin-bottom: 2rem;
-        }
-
-        .btn-primary {
-            padding: 0.8rem 1.5rem;
-            font-size: 0.9rem;
-        }
-
-        .btn-secondary {
-            font-size: 0.9rem;
-        }
-
-        .landing-main::before {
-            background-size: 40px 40px; /* Smaller grid for mobile */
-        }
-    }
-
-    @media (max-width: 320px) {
-        .hero-title {
-            font-size: 1.8rem;
-        }
-
-        .hero-subtitle {
-            font-size: 0.8rem;
-        }
-    }
-
-    .offers-section {
-        background: #fff;
-        padding: 5rem 8%;
-        text-align: center;
-    }
-
-    .offers-header {
-        margin-bottom: 4rem;
-    }
-
-    .offers-subtitle {
-        color: #666;
-        font-size: 1.1rem;
-        margin-bottom: 1rem;
-    }
-
-    .offers-title {
-        font-size: 2.5rem;
-        color: #333;
-        font-weight: 500;
-    }
-
-    .highlight {
-        color: #007bff;
-    }
-
-    .offers-grid {
-        display: grid;
-        grid-template-columns: repeat(4, 1fr);
-        gap: 1.5rem;
+        padding: 120px 0 80px;
         max-width: 1200px;
         margin: 0 auto;
     }
 
-    .offer-card {
-        background: #fff;
-        padding: 2rem;
-        border-radius: 20px;
-        transition: transform 0.3s ease;
-        border: 1px solid #007bff;
+    .hero-content {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 20px;
     }
 
-    .offer-card:hover {
+    .hero-text {
+        flex: 1;
+        max-width: 50%;
+    }
+
+    .hero-image {
+        flex: 1;
+        text-align: center;
+    }
+
+    .hero-image img {
+        max-width: 100%;
+        height: auto;
+        border-radius: 8px;
+    }
+
+    .hero-text h1 {
+        font-size: 3rem;
+        margin-bottom: 1rem;
+    }
+
+    .hero-cta {
+        display: flex;
+        gap: 1rem;
+        margin-top: 1.5rem;
+    }
+
+    .cta-button, .login-link {
+        text-align: center;
+    }
+
+    .hero-stats {
+        display: flex;
+        gap: 2rem;
+        margin-top: 2rem;
+        justify-content: center;
+    }
+
+    .hero-text h1 {
+        font-size: 3.5rem;
+        font-weight: 700;
+        line-height: 1.2;
+        margin-bottom: 1.5rem;
+    }
+
+    .hero-text p {
+        font-size: 1.2rem;
+        line-height: 1.6;
+        color: rgba(255, 255, 255, 0.9);
+        margin-bottom: 2rem;
+    }
+
+    .hero-cta {
+        display: flex;
+        gap: 2rem;
+        align-items: center;
+    }
+
+    .cta-button {
+        background: #fff;
+        color: #1b5e20;
+        padding: 1rem 2rem;
+        border-radius: 8px;
+        font-weight: 600;
+        text-decoration: none;
+        transition: all 0.3s ease;
+    }
+
+    .cta-button:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+    }
+
+    .login-link {
+        color: #fff;
+        text-decoration: none;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .hero-stats {
+        display: flex;
+        gap: 2rem;
+        margin-top: 2rem;
+    }
+
+    .stat-card {
+        background: rgba(255, 255, 255, 0.1);
+        padding: 1.5rem;
+        border-radius: 12px;
+        backdrop-filter: blur(10px);
+        flex: 1;
+    }
+
+    .stat-number {
+        display: block;
+        font-size: 2.5rem;
+        font-weight: 700;
+        margin-bottom: 0.5rem;
+    }
+
+    .stat-label {
+        color: rgba(255, 255, 255, 0.9);
+        font-size: 1rem;
+    }
+
+    .features-section {
+        background: #fff;
+        padding: 80px 0;
+        border-radius: 30px 30px 0 0;
+        margin-top: -30px;
+    }
+
+    .features-section h2 {
+        color: #333;
+        text-align: center;
+        font-size: 2.5rem;
+        margin-bottom: 3rem;
+    }
+
+    .features-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: 2rem;
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 0 2rem;
+    }
+
+    .feature-card {
+        background: #fff;
+        padding: 2rem;
+        border-radius: 16px;
+        text-align: center;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+        transition: all 0.3s ease;
+    }
+
+    .feature-card:hover {
         transform: translateY(-5px);
     }
 
-    .offer-icon {
-        width: 60px;
-        height: 60px;
-        background: #f0f7ff;
-        border-radius: 15px;
+    .feature-icon {
+        width: 70px;
+        height: 70px;
+        background: #e8f5e9;
+        border-radius: 50%;
         display: flex;
         align-items: center;
         justify-content: center;
         margin: 0 auto 1.5rem;
     }
 
-    .offer-icon i {
-        font-size: 4.5rem;
-        color: #007bff;
+    .feature-icon i {
+        font-size: 2rem;
+        color: #1b5e20;
     }
 
-    .offer-card h3 {
+    .feature-card h3 {
         color: #333;
-        font-size: 1.2rem;
-        margin-bottom: 0.8rem;
-        font-weight: 600;
+        font-size: 1.3rem;
+        margin-bottom: 1rem;
     }
 
-    .offer-card p {
+    .feature-card p {
         color: #666;
-        line-height: 1.5;
-        font-size: 0.95rem;
-    }
-
-    @media (max-width: 1024px) {
-        .offers-grid {
-            grid-template-columns: repeat(2, 1fr);
-            padding: 0 20px;
-        }
+        line-height: 1.6;
     }
 
     @media (max-width: 768px) {
-        .offers-section {
-            padding: 3rem 5%;
+        .hero-text h1 {
+            font-size: 2.5rem;
         }
 
-        .offers-title {
-            font-size: 2rem;
-        }
-    }
-
-    @media (max-width: 640px) {
-        .offers-grid {
-            grid-template-columns: 1fr;
+        .hero-cta {
+            flex-direction: column;
+            align-items: stretch;
             gap: 1rem;
         }
 
-        .offer-card {
-            padding: 1.5rem;
+        .hero-stats {
+            flex-direction: column;
+        }
+
+        .features-grid {
+            grid-template-columns: 1fr;
+            padding: 0 1rem;
+        }
+
+        .cta-button, .login-link {
+            text-align: center;
         }
     }
 </style>

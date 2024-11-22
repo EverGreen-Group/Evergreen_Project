@@ -5,60 +5,38 @@ $driverName = "John Doe";
 $teamName = "Alpha Team";
 $vehicleInfo = "Toyota Hilux (ABC-1234)";
 
-// This would be dynamically fetched in a real application
-$driverLocation = ['lat' => 6.223440958667509, 'lng' => 80.2850332126462];
+// Initialize driver location to a default value
+$driverLocation = ['lat' => null, 'lng' => null];
 
+// Initialize collections array
+$collections = [];
 
+// Populate collections from collectionSupplierRecords
+if (!empty($data['collectionSupplierRecords'])) {
+    foreach ($data['collectionSupplierRecords'] as $record) {
+        $collections[] = [
+            'id' => $record->supplier_id,
+            'supplierName' => $record->supplier_name,
+            'remarks' => $record->notes ?? "No special instructions",
+            'location' => [
+                'lat' => floatval($record->latitude),
+                'lng' => floatval($record->longitude)
+            ],
+            'address' => $record->address ?? "Address not provided",
+            'image' => "https://randomuser.me/api/portraits/men/" . ($record->supplier_id % 10) . ".jpg", // Temporary image solution
+            'estimatedCollection' => floatval($record->quantity) ?? 0,
+            'arrival_time' => $record->arrival_time ?? null
+        ];
+    }
 
-
-$collections = [
-    [
-        'id' => 1,
-        'supplierName' => "Simaak Niyaz",
-        'remarks' => "Meet at the main gate, call upon arrival",
-        'location' => ['lat' => 6.2173037, 'lng' => 80.2564385],
-        'address' => "123 Tea Lane, Galle",
-        'image' => "https://randomuser.me/api/portraits/men/5.jpg",
-        'estimatedCollection' => 500
-    ],
-    [
-        'id' => 2,
-        'supplierName' => "Mountain Top Tea",
-        'remarks' => "Entrance is on the north side of the building",
-        'location' => ['lat' => 6.243808243551064, 'lng' => 80.25967072303547],
-        'address' => "456 Hill Road, Galle",
-        'image' => "https://randomuser.me/api/portraits/men/7.jpg",
-        'estimatedCollection' => 350
-    ],
-    [
-        'id' => 3,
-        'supplierName' => "Valley View Estates",
-        'remarks' => "Please use service entrance",
-        'location' => ['lat' => 6.282762791987652, 'lng' => 80.26495604611944],
-        'address' => "789 Valley Street, Galle",
-        'image' => "https://randomuser.me/api/portraits/men/8.jpg",
-        'estimatedCollection' => 600
-    ],
-    [
-        'id' => 4,
-        'supplierName' => "Valley View Estates",
-        'remarks' => "Please use service entrance",
-        'location' => ['lat' => 6.221843659731916, 'lng' => 80.2425869548138],
-        'address' => "789 Valley Street, Galle",
-        'image' => "https://randomuser.me/api/portraits/men/8.jpg",
-        'estimatedCollection' => 340
-    ],
-    [
-        'id' => 5,
-        'supplierName' => "Valley View Estates",
-        'remarks' => "Please use service entrance",
-        'location' => ['lat' => 6.217412876212934, 'lng' => 80.28222702962783],
-        'address' => "789 Valley Street, Galle",
-        'image' => "https://randomuser.me/api/portraits/men/8.jpg",
-        'estimatedCollection' => 349
-    ]
-    
-];
+    // Update driver location to the first unvisited supplier
+    foreach ($collections as $collection) {
+        if (empty($collection['arrival_time'])) {
+            $driverLocation = $collection['location'];
+            break;
+        }
+    }
+}
 ?>
 
 <style>
@@ -532,32 +510,17 @@ $collections = [
     let directionsService;
     let directionsRenderer;
     let driverMarker;
+    let watchId;
 
     const collections = <?php echo json_encode($collections); ?>;
-    const driverLocation = <?php echo json_encode($driverLocation); ?>;
+    let driverLocation = <?php echo json_encode($driverLocation); ?>;
     const URLROOT = '<?php echo URLROOT; ?>';
 
     function initMap() {
         try {
-            directionsService = new google.maps.DirectionsService();
-            firstRouteRenderer = new google.maps.DirectionsRenderer({
-                suppressMarkers: true,
-                polylineOptions: {
-                    strokeColor: "#FF0000",
-                    strokeWeight: 5
-                }
-            });
-
-            remainingRouteRenderer = new google.maps.DirectionsRenderer({
-                suppressMarkers: true,
-                polylineOptions: {
-                    strokeColor: "#4CAF50",
-                    strokeWeight: 5
-                }
-            });
-
+            // Initialize map with a default center (will be updated when we get location)
             map = new google.maps.Map(document.getElementById("map-container"), {
-                center: driverLocation,
+                center: { lat: 6.927079, lng: 79.861244 }, // Default to Sri Lanka
                 zoom: 10,
                 disableDefaultUI: true,
                 zoomControl: false,
@@ -617,12 +580,52 @@ $collections = [
                 disableDefaultUI: false
             });
 
-            // Re-append the mobile supplier card after map initialization
-            const mapContainer = document.getElementById("map-container");
-            const supplierCard = document.querySelector(".mobile-supplier-card");
-            if (supplierCard) {
-                mapContainer.appendChild(supplierCard);
+            // Start watching driver's location
+            if (navigator.geolocation) {
+                watchId = navigator.geolocation.watchPosition(
+                    (position) => {
+                        driverLocation = {
+                            lat: position.coords.latitude,
+                            lng: position.coords.longitude
+                        };
+                        
+                        // Update driver marker and recenter map
+                        addDriverMarker(driverLocation);
+                        
+                        // Update routes with new driver location
+                        updateRoute();
+                    },
+                    (error) => {
+                        console.error('Geolocation error:', error);
+                        alert('Unable to get your location. Please enable location services.');
+                    },
+                    {
+                        enableHighAccuracy: true,
+                        timeout: 5000,
+                        maximumAge: 0
+                    }
+                );
+            } else {
+                alert('Geolocation is not supported by this browser.');
             }
+
+            // Initialize other map components
+            directionsService = new google.maps.DirectionsService();
+            firstRouteRenderer = new google.maps.DirectionsRenderer({
+                suppressMarkers: true,
+                polylineOptions: {
+                    strokeColor: "#FF0000",
+                    strokeWeight: 5
+                }
+            });
+
+            remainingRouteRenderer = new google.maps.DirectionsRenderer({
+                suppressMarkers: true,
+                polylineOptions: {
+                    strokeColor: "#4CAF50",
+                    strokeWeight: 5
+                }
+            });
 
             console.log('Map initialized successfully');
 
@@ -1017,6 +1020,16 @@ $collections = [
         const mapsUrl = `https://www.google.com/maps/dir/?api=1&destination=${destination}&travelmode=driving`;
         window.open(mapsUrl, '_blank');
     }
+
+    // Add cleanup function to remove geolocation watcher
+    function cleanup() {
+        if (watchId) {
+            navigator.geolocation.clearWatch(watchId);
+        }
+    }
+
+    // Add event listener for page unload
+    window.addEventListener('unload', cleanup);
 </script>
 <script src="<?php echo URLROOT; ?>/css/components/script.js"></script>
 

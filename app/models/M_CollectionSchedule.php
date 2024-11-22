@@ -463,8 +463,7 @@ class M_CollectionSchedule {
         $this->db->query("
             SELECT 
                 csr.*,
-                s.latitude,
-                s.longitude,
+                s.*,
                 CONCAT(u.first_name, ' ', u.last_name) as supplier_name
             FROM collection_supplier_records csr
             JOIN suppliers s ON csr.supplier_id = s.supplier_id
@@ -565,16 +564,13 @@ class M_CollectionSchedule {
     }
 
     public function create($data) {
-        // Convert days array to comma-separated string if it's an array
-        $days_of_week = is_array($data['days_of_week']) ? implode(',', $data['days_of_week']) : $data['days_of_week'];
-
         $this->db->query('INSERT INTO collection_schedules (
             team_id, 
             route_id, 
             vehicle_id, 
             shift_id, 
             week_number, 
-            days_of_week, 
+            days_of_week,
             is_active,
             created_at
         ) VALUES (
@@ -594,7 +590,7 @@ class M_CollectionSchedule {
         $this->db->bind(':vehicle_id', $data['vehicle_id']);
         $this->db->bind(':shift_id', $data['shift_id']);
         $this->db->bind(':week_number', $data['week_number']);
-        $this->db->bind(':days_of_week', $days_of_week);
+        $this->db->bind(':days_of_week', $data['days_of_week']);
 
         // Execute
         if ($this->db->execute()) {

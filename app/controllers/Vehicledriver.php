@@ -162,12 +162,12 @@ class VehicleDriver extends controller {
 
     public function setReady($scheduleId) {
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-            redirect('vehicledriver/shift');
+            redirect('vehicledriver/a');
         }
 
         $schedule = $this->scheduleModel->getScheduleById($scheduleId);
         if (!$schedule) {
-            redirect('vehicledriver/shift');
+            redirect('vehicledriver/b');
         }
 
         // Check if within time window
@@ -388,7 +388,7 @@ class VehicleDriver extends controller {
                 $collection = $this->collectionModel->getCollectionById($collectionId);
                 if (!$collection) {
                     error_log("Collection not found: " . $collectionId);
-                    redirect('vehicledriver/shift');
+                    redirect('vehicledriver/a');
                     return;
                 }
 
@@ -406,7 +406,7 @@ class VehicleDriver extends controller {
                 $schedule = $this->collectionScheduleModel->getScheduleById($collection->schedule_id);
                 if (!$schedule) {
                     error_log("Schedule not found for collection: " . $collectionId);
-                    redirect('vehicledriver/shift');
+                    redirect('vehicledriver/');
                     return;
                 }
 
