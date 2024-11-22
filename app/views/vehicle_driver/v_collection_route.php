@@ -1,43 +1,5 @@
-<?php
-// Assume these are set elsewhere in your application
-$pageTitle = "Driver Dashboard";
-$driverName = "John Doe";
-$teamName = "Alpha Team";
-$vehicleInfo = "Toyota Hilux (ABC-1234)";
 
-// Initialize driver location to a default value
-$driverLocation = ['lat' => null, 'lng' => null];
 
-// Initialize collections array
-$collections = [];
-
-// Populate collections from collectionSupplierRecords
-if (!empty($data['collectionSupplierRecords'])) {
-    foreach ($data['collectionSupplierRecords'] as $record) {
-        $collections[] = [
-            'id' => $record->supplier_id,
-            'supplierName' => $record->supplier_name,
-            'remarks' => $record->notes ?? "No special instructions",
-            'location' => [
-                'lat' => floatval($record->latitude),
-                'lng' => floatval($record->longitude)
-            ],
-            'address' => $record->address ?? "Address not provided",
-            'image' => "https://randomuser.me/api/portraits/men/" . ($record->supplier_id % 10) . ".jpg", // Temporary image solution
-            'estimatedCollection' => floatval($record->quantity) ?? 0,
-            'arrival_time' => $record->arrival_time ?? null
-        ];
-    }
-
-    // Update driver location to the first unvisited supplier
-    foreach ($collections as $collection) {
-        if (empty($collection['arrival_time'])) {
-            $driverLocation = $collection['location'];
-            break;
-        }
-    }
-}
-?>
 
 <style>
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
@@ -89,6 +51,7 @@ if (!empty($data['collectionSupplierRecords'])) {
         overflow: hidden;
         background-color: #f5f5f5;
         position: relative;
+        z-index: 1;
     }
 
     .card {
@@ -96,7 +59,8 @@ if (!empty($data['collectionSupplierRecords'])) {
         border-radius: 8px;
         box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
         padding: 20px;
-        /* outline: 3px solid var(--card-outline); */
+        position: relative;
+        z-index: 999;
     }
 
     .current-supplier {
@@ -150,6 +114,8 @@ if (!empty($data['collectionSupplierRecords'])) {
         justify-content: center;
         gap: 8px;
         margin-top: 12px;
+        position: relative;
+        z-index: 1000;
     }
 
     .upcoming-collections {
@@ -230,6 +196,8 @@ if (!empty($data['collectionSupplierRecords'])) {
         transition: background-color 0.3s, transform 0.1s;
         text-transform: uppercase;
         letter-spacing: 0.5px;
+        position: relative;
+        z-index: 1001;
     }
 
     .action-btn:hover {
@@ -361,6 +329,12 @@ if (!empty($data['collectionSupplierRecords'])) {
             display: none;
         }
     }
+
+    #arrived-btn {
+        background-color: #ff0000 !important; /* Temporary bright red to make it visible */
+        border: 2px solid black !important;   /* Temporary border to make it stand out */
+        pointer-events: auto !important;      /* Force pointer events */
+    }
 </style>
 
 <?php require APPROOT . '/views/inc/components/header.php'; ?>
@@ -374,46 +348,37 @@ if (!empty($data['collectionSupplierRecords'])) {
 
 <!-- MAIN -->
 <main>
-    <?php
-    // Hardcoded values
-    $data = [
-        'schedule' => (object)[
-            'start_time' => '08:00:00',
-            'end_time' => '17:00:00'
-        ],
-        'collection' => (object)[
-            'collection_id' => 1,
-            'start_time' => '08:00:00'
-        ],
-        'teamName' => 'Alpha Team',
-        'vehicleInfo' => 'Toyota Hilux (ABC-1234)',
-        'collections' => [
-            [
-                'id' => 1,
-                'supplierName' => "Simaak Niyaz",
-                'remarks' => "Meet at the main gate, call upon arrival",
-                'location' => ['lat' => 6.2173037, 'lng' => 80.2564385],
-                'address' => "123 Tea Lane, Galle",
-                'image' => "https://randomuser.me/api/portraits/men/5.jpg",
-                'estimatedCollection' => 500,
-                'status' => 'Pending',
-                'arrival_time' => null
-            ],
-            [
-                'id' => 2,
-                'supplierName' => "Mountain Top Tea",
-                'remarks' => "Entrance is on the north side of the building",
-                'location' => ['lat' => 6.243808243551064, 'lng' => 80.25967072303547],
-                'address' => "456 Hill Road, Galle",
-                'image' => "https://randomuser.me/api/portraits/men/7.jpg",
-                'estimatedCollection' => 350,
-                'status' => 'Pending',
-                'arrival_time' => null
-            ],
-            // ... keep other suppliers as is ...
-        ]
-    ];
-    ?>
+
+    <script>
+    function markArrival(collectionId, supplierId) {
+        const URLROOT = '<?php echo URLROOT; ?>';
+        console.log('Marking arrival for:', { collectionId, supplierId });
+        
+        fetch(`${URLROOT}/vehicledriver/markArrival`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                collection_id: collectionId,
+                supplier_id: supplierId
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.status === 'success') {
+                location.reload();
+            } else {
+                alert('Failed to mark arrival: ' + data.message);
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Failed to mark arrival');
+        });
+    }
+    </script>
+
     <div class="dashboard-container">
         <div id="map-container">
             <?php if (!empty($collections)): ?>
@@ -429,22 +394,20 @@ if (!empty($data['collectionSupplierRecords'])) {
         
         <div class="current-supplier card">
             <div class="supplier-card">
-                <?php if (!empty($data['collections'])): ?>
-                    <?php $currentSupplier = $data['collections'][0]; ?>
+                <?php if (!empty($data['collectionSupplierRecords'])): ?>
+                    <?php $currentSupplier = $data['collectionSupplierRecords'][0]; ?>
                     <div class="supplier-image-container">
-                        <img src="<?php echo $currentSupplier['image']; ?>" 
-                             alt="<?php echo htmlspecialchars($currentSupplier['supplierName']); ?>"
-                             class="supplier-profile-image"
-                             onerror="this.src='<?php echo URLROOT; ?>/public/img/default-user.png'">
+                        <img src="<?php echo URLROOT; ?>/public/img/default-user.png" 
+                             alt="<?php echo htmlspecialchars($currentSupplier->supplier_name); ?>"
+                             class="supplier-profile-image">
                     </div>
                     <div class="supplier-info">
-                        <h4><?php echo $currentSupplier['supplierName']; ?></h4>
-                        <p><?php echo $currentSupplier['remarks']; ?></p>
-                        <p id="supplier-collection">Est. Collection: <?php echo $currentSupplier['estimatedCollection']; ?>kg</p>
-                        <div class="supplier-actions">
-                            <button class="action-btn" onclick="callSupplier()">Call</button>
+                        <h4><?php echo htmlspecialchars($currentSupplier->supplier_name); ?></h4>
+                        <p><?php echo htmlspecialchars($currentSupplier->notes ?? 'No special instructions'); ?></p>
+                        <p id="supplier-collection">Est. Collection: <?php echo htmlspecialchars($currentSupplier->quantity ?? '0'); ?>kg</p>
+                        <div class="supplier-actions" style="pointer-events: auto;">
                             <button class="action-btn" onclick="alertSupplier()">Alert</button>
-                            <button class="action-btn" onclick="navigateToSupplier(<?php echo $currentSupplier['location']['lat']; ?>, <?php echo $currentSupplier['location']['lng']; ?>)">
+                            <button class="action-btn" onclick="navigateToSupplier(<?php echo $currentSupplier->latitude; ?>, <?php echo $currentSupplier->longitude; ?>)">
                                 <i class="fas fa-directions"></i> Navigate
                             </button>
                         </div>
@@ -460,27 +423,21 @@ if (!empty($data['collectionSupplierRecords'])) {
 
         <div class="upcoming-collections card">
             <h3>Collection Suppliers</h3>
-            <?php if (!empty($data['collections'])): ?>
-                <?php foreach ($data['collections'] as $supplier): ?>
+            <?php if (!empty($data['collectionSupplierRecords'])): ?>
+                <?php foreach ($data['collectionSupplierRecords'] as $supplier): ?>
                     <div class="collection-item">
                         <div class="supplier-list-image">
-                            <img src="<?php echo $supplier['image']; ?>" 
-                                 alt="<?php echo htmlspecialchars($supplier['supplierName']); ?>"
-                                 onerror="this.src='<?php echo URLROOT; ?>/public/img/default-user.png'">
+                            <img src="<?php echo URLROOT; ?>/public/img/default-user.png" 
+                                 alt="<?php echo htmlspecialchars($supplier->supplier_name); ?>">
                         </div>
                         <div class="collection-item-details">
-                            <strong><?php echo htmlspecialchars($supplier['supplierName']); ?></strong><br>
-                            Status: <span class="status-badge <?php echo strtolower($supplier['status']); ?>">
-                                <?php echo $supplier['status']; ?>
+                            <strong><?php echo htmlspecialchars($supplier->supplier_name); ?></strong><br>
+                            Status: <span class="status-badge <?php echo strtolower($supplier->status); ?>">
+                                <?php echo $supplier->status; ?>
                             </span>
-                            <?php if ($supplier['arrival_time']): ?>
-                                <br><small>Arrived: <?php echo date('H:i', strtotime($supplier['arrival_time'])); ?></small>
+                            <?php if ($supplier->arrival_time): ?>
+                                <br><small>Arrived: <?php echo date('H:i', strtotime($supplier->arrival_time)); ?></small>
                             <?php endif; ?>
-                        </div>
-                        <div class="supplier-actions">
-                            <button class="action-btn" onclick="navigateToSupplier(<?php echo $supplier['location']['lat']; ?>, <?php echo $supplier['location']['lng']; ?>)">
-                                <i class="fas fa-directions"></i>
-                            </button>
                         </div>
                     </div>
                 <?php endforeach; ?>
@@ -491,7 +448,7 @@ if (!empty($data['collectionSupplierRecords'])) {
 
         <div class="shift-info">
             <div class="mobile-actions">
-                <button id="arrived-btn" class="mobile-btn arrived-btn">
+                <button onclick="markArrival(<?php echo $data['collectionSupplierRecords'][0]->collection_id; ?>, <?php echo $data['collectionSupplierRecords'][0]->supplier_id; ?>)" class="mobile-btn arrived-btn">
                     <i class='bx bx-check'></i>
                     Arrived
                 </button>
@@ -512,7 +469,16 @@ if (!empty($data['collectionSupplierRecords'])) {
     let driverMarker;
     let watchId;
 
-    const collections = <?php echo json_encode($collections); ?>;
+    const collections = <?php echo json_encode(array_map(function($supplier) {
+        return [
+            'id' => $supplier->supplier_id,
+            'arrival_time' => $supplier->arrival_time,
+            'location' => [
+                'lat' => floatval($supplier->latitude),
+                'lng' => floatval($supplier->longitude)
+            ]
+        ];
+    }, $data['collectionSupplierRecords'])); ?>;
     let driverLocation = <?php echo json_encode($driverLocation); ?>;
     const URLROOT = '<?php echo URLROOT; ?>';
 
@@ -948,56 +914,7 @@ if (!empty($data['collectionSupplierRecords'])) {
         // Implement actual alerting functionality here
     }
 
-    document.getElementById("arrived-btn").addEventListener("click", function() {
-        // Get the current collection ID from the URL
-        const urlParts = window.location.pathname.split('/');
-        const collectionId = urlParts[urlParts.length - 1];  // Gets the last part of the URL which is the collection ID
-        
-        // Get the first unvisited supplier
-        const currentSupplier = collections.find(supplier => !supplier.arrival_time);
-        const supplierId = currentSupplier ? currentSupplier.id : null;
 
-        if (supplierId) {
-            markArrival(collectionId, supplierId);
-        } else {
-            alert('No suppliers left to mark as arrived');
-        }
-    });
-
-    document.getElementById("delay-btn").addEventListener("click", function() {
-        alert("Delay reported. Our team will follow up with the supplier.");
-    });
-
-    document.getElementById("cancel-btn").addEventListener("click", function() {
-        alert("Collection cancelled. Please provide a reason in the next screen.");
-    });
-
-    function markArrival(collectionId, supplierId) {
-        console.log(collectionId, supplierId);
-        fetch(`${URLROOT}/vehicledriver/markArrival`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-                collection_id: collectionId,
-                supplier_id: supplierId
-            })
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.status === 'success') {
-                // Refresh the page or update the UI
-                location.reload();
-            } else {
-                alert('Failed to mark arrival: ' + data.message);
-            }
-        })
-        .catch(error => {
-            console.error('Error:', error);
-            alert('Failed to mark arrival');
-        });
-    }
 
     // Initialize the map and update shift info when the window loads
     window.onload = function() {
@@ -1030,6 +947,23 @@ if (!empty($data['collectionSupplierRecords'])) {
 
     // Add event listener for page unload
     window.addEventListener('unload', cleanup);
+
+    // And let's simplify the click handler
+    document.addEventListener('DOMContentLoaded', function() {
+        const arrivedBtn = document.getElementById("arrived-btn");
+        if (arrivedBtn) {
+            arrivedBtn.onclick = function() {
+                const collectionId = <?php echo $data['collection']->collection_id; ?>;
+                const supplierId = <?php echo $data['collectionSupplierRecords'][0]->supplier_id ?? 'null'; ?>;
+                
+                if (supplierId) {
+                    markArrival(collectionId, supplierId);
+                } else {
+                    alert('No suppliers left to mark as arrived');
+                }
+            };
+        }
+    });
 </script>
 <script src="<?php echo URLROOT; ?>/css/components/script.js"></script>
 
