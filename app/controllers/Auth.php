@@ -2,14 +2,17 @@
 
 require_once APPROOT . '/helpers/auth_middleware.php';
 
-class Auth extends Controller {
+class Auth extends Controller
+{
     private $userModel;
 
-    public function __construct() {
+    public function __construct()
+    {
         $this->userModel = $this->model('M_User');
     }
 
-    public function register() {
+    public function register()
+    {
         // Redirect if already logged in
         $this->preventLoginAccess();
 
@@ -41,10 +44,12 @@ class Auth extends Controller {
             ];
 
             // Validate data
-            if (empty($data['email']) || 
-                empty($data['first_name']) || empty($data['last_name']) || 
-                empty($data['nic']) || empty($data['gender']) || 
-                empty($data['date_of_birth']) || empty($data['password'])) {
+            if (
+                empty($data['email']) ||
+                empty($data['first_name']) || empty($data['last_name']) ||
+                empty($data['nic']) || empty($data['gender']) ||
+                empty($data['date_of_birth']) || empty($data['password'])
+            ) {
                 $data['error'] = 'Please fill in all fields';
             } elseif (!filter_var($data['email'], FILTER_VALIDATE_EMAIL)) {
                 $data['error'] = 'Please enter a valid email';
@@ -78,7 +83,8 @@ class Auth extends Controller {
         $this->view('auth/v_register', $data);
     }
 
-    public function login() {
+    public function login()
+    {
         // Redirect if already logged in
         $this->preventLoginAccess();
 
@@ -99,19 +105,19 @@ class Auth extends Controller {
                 $data['error'] = 'Please fill in all fields';
             } else {
                 $user = $this->userModel->findUserByEmail($data['username']);
-                
+
                 // Add these debug lines
                 var_dump($user); // Check if user is found
                 var_dump($data['password']); // Check the submitted password
                 var_dump($user->password); // Check the stored hashed password
-                
+
                 if ($user && password_verify($data['password'], $user->password)) {
                     $_SESSION['user_id'] = $user->user_id;
                     $_SESSION['first_name'] = $user->first_name;
                     $_SESSION['last_name'] = $user->last_name;
                     $_SESSION['email'] = $user->email;
                     $_SESSION['role_id'] = $user->role_id;
-                    
+
                     // After successful login, redirect based on role
                     switch (RoleHelper::getRole()) {
                         case RoleHelper::DRIVER:
@@ -139,20 +145,22 @@ class Auth extends Controller {
         $this->view('auth/v_login', $data);
     }
 
-    public function logout() {
+    public function logout()
+    {
         unset($_SESSION['user_id']);
         unset($_SESSION['first_name']);
         unset($_SESSION['last_name']);
         unset($_SESSION['email']);
         unset($_SESSION['role_id']);
         session_destroy();
-        
+
         header('Location: ' . URLROOT);
         exit();
     }
 
 
-    public function supplier_register() {
+    public function supplier_register()
+    {
         // First, check login status
         if (!isLoggedIn()) {
             redirect('auth/login');
@@ -161,10 +169,10 @@ class Auth extends Controller {
 
         // Move this up before any other processing
         $supplierApplicationModel = $this->model('M_SupplierApplication');
-        
+
         // Add debug logging
         error_log("Checking application status for user: " . $_SESSION['user_id']);
-        
+
         // Check if user has already applied and redirect if true
         if ($supplierApplicationModel->hasApplied($_SESSION['user_id'])) {
             error_log("User has already applied, redirecting to status page");
@@ -179,13 +187,13 @@ class Auth extends Controller {
             try {
                 // Clear any existing output
                 ob_clean();
-                
+
                 // Temporarily disable error display
                 ini_set('display_errors', 0);
                 error_reporting(E_ALL);
-                
-                
-                
+
+
+
                 // Validate postal code length 
                 if (strlen($_POST['postalCode']) > 6) {
                     throw new Exception('Postal code must be between 5 and 10 characters');
@@ -197,7 +205,7 @@ class Auth extends Controller {
                     'primary_phone' => $_POST['primaryPhone'],
                     'secondary_phone' => !empty($_POST['secondaryPhone']) ? $_POST['secondaryPhone'] : null,
                     'whatsapp_number' => !empty($_POST['whatsappNumber']) ? $_POST['whatsappNumber'] : null,
-                    
+
                     'address' => [
                         'line1' => $_POST['line1'],
                         'line2' => !empty($_POST['line2']) ? $_POST['line2'] : null,
@@ -207,33 +215,33 @@ class Auth extends Controller {
                         'latitude' => $_POST['latitude'],
                         'longitude' => $_POST['longitude']
                     ],
-                    
+
                     'teaVarieties' => isset($_POST['tea_varieties']) ? $_POST['tea_varieties'] : [],
-                    
+
                     'ownership' => [
                         'ownership_type' => $_POST['ownership_type'],
                         'ownership_duration' => $_POST['ownership_duration']
                     ],
-                    
+
                     'tea_details' => [
                         'plant_age' => $_POST['plant_age'],
                         'monthly_production' => $_POST['monthly_production']
                     ],
-                    
+
                     'property' => [
                         'total_land_area' => $_POST['totalLandArea'],
                         'tea_cultivation_area' => $_POST['teaCultivationArea'],
                         'elevation' => $_POST['elevation'],
                         'slope' => $_POST['slope']
                     ],
-                    
+
                     'infrastructure' => [
                         'water_source' => isset($_POST['water_source']) ? $_POST['water_source'] : [],
                         'access_road' => $_POST['access_road'],
                         'vehicle_access' => $_POST['vehicle_access'],
                         'structures' => isset($_POST['structures']) ? $_POST['structures'] : []
                     ],
-                    
+
                     'bank_info' => [
                         'account_holder_name' => $_POST['accountHolderName'],
                         'bank_name' => $_POST['bankName'],
@@ -249,7 +257,7 @@ class Auth extends Controller {
                 // Validate file uploads
                 $documents = [];
                 $requiredDocs = ['nic', 'ownership_proof', 'tax_receipts', 'bank_passbook', 'grama_cert'];
-                
+
                 foreach ($requiredDocs as $doc) {
                     // Check if file exists and there are no upload errors
                     if (!isset($_FILES[$doc]) || !is_array($_FILES[$doc])) {
@@ -292,14 +300,14 @@ class Auth extends Controller {
 
                 // Try to save the application
                 $result = $supplierApplicationModel->createApplication($applicationData, $documents);
-                
+
                 if (!$result) {
                     throw new Exception('Failed to save application');
                 }
 
                 // Clear any output before sending JSON
                 ob_clean();
-                
+
                 // Send JSON response
                 header('Content-Type: application/json');
                 echo json_encode([
@@ -307,7 +315,7 @@ class Auth extends Controller {
                     'message' => 'Application submitted successfully',
                     'redirect' => URLROOT . '/pages/supplier_application_status?submitted=true'
                 ]);
-                
+
                 // End output buffering and exit
                 ob_end_flush();
                 exit();
@@ -315,10 +323,10 @@ class Auth extends Controller {
             } catch (Exception $e) {
                 // Log the error
                 error_log("Application submission error: " . $e->getMessage());
-                
+
                 // Clear any output before sending JSON
                 ob_clean();
-                
+
                 // Send JSON error response
                 header('Content-Type: application/json');
                 http_response_code(400);
@@ -338,11 +346,12 @@ class Auth extends Controller {
         $data = [
             'title' => 'Supplier Registration'
         ];
-        
+
         $this->view('auth/v_supplier_register', $data);
     }
 
-    private function getFileUploadError($errorCode) {
+    private function getFileUploadError($errorCode)
+    {
         switch ($errorCode) {
             case UPLOAD_ERR_INI_SIZE:
                 return 'The uploaded file exceeds the upload_max_filesize directive in php.ini';
