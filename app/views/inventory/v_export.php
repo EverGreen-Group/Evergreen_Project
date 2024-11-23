@@ -7,7 +7,6 @@
   <title><?php echo SITENAME; ?></title>
   <link rel="stylesheet" href="<?php echo URLROOT; ?>/css/components/topnavbar_style.css" />
   <link href="https://unpkg.com/boxicons@2.0.9/css/boxicons.min.css" rel="stylesheet" />
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 
 <body>
@@ -16,6 +15,7 @@
   <?php require APPROOT . '/views/inc/components/topnavbar.php' ?>
   <!-- Side bar -->
   <?php require APPROOT . '/views/inc/components/sidebar_inventory.php' ?>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <style>
     /* Reset some default styles */
     /* * {
@@ -202,6 +202,17 @@
       font-size: 14px;
     }
 
+    .chart-container {
+      background-color: #fff;
+      border-radius: 5px;
+      padding: 20px;
+      margin: 20px;
+      width: 95%;
+      height: 400px;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    }
+
+
     /* Add more styles as needed */
   </style>
   </head>
@@ -233,85 +244,131 @@
       <div class="Last-export">
         <h2>Last Exports</h2>
         <ul class="event-list">
-  <!-- Headers -->
-  <li class="event-header">
-    <span class="event-type">Month</span>
-    <span class="event-location">Quantity</span>
-    <span class="event-method">Price</span>
-  </li>
-  <!-- Data Rows -->
-  <li>
-    <span class="event-type">September</span>
-    <span class="event-location">2000</span>
-    <span class="event-method">200</span>
-  </li>
-  <li>
-    <span class="event-type">October</span>
-    <span class="event-location">2500</span>
-    <span class="event-method">190</span>
-  </li>
-  <li>
-    <span class="event-type">November</span>
-    <span class="event-location">2100</span>
-    <span class="event-method">197</span>
-  </li>
-  <li>
-    <span class="event-type">August</span>
-    <span class="event-location">2150</span>
-    <span class="event-method">218</span>
-  </li>
-</ul>
-  
+          <!-- Headers -->
+          <li class="event-header">
+            <span class="event-type">Month</span>
+            <span class="event-location">Quantity</span>
+            <span class="event-method">Price</span>
+          </li>
+          <!-- Data Rows -->
+          <li>
+            <span class="event-type">September</span>
+            <span class="event-location">2000</span>
+            <span class="event-method">200</span>
+          </li>
+          <li>
+            <span class="event-type">October</span>
+            <span class="event-location">2500</span>
+            <span class="event-method">190</span>
+          </li>
+          <li>
+            <span class="event-type">November</span>
+            <span class="event-location">2100</span>
+            <span class="event-method">197</span>
+          </li>
+          <li>
+            <span class="event-type">August</span>
+            <span class="event-location">2150</span>
+            <span class="event-method">218</span>
+          </li>
+        </ul>
+
       </div>
 
-      <section class="pending-works">
-        <h2>Pending Works</h2>
-        <div class="work-item">
-          <div class="work-status progress">
-            <div class="progress-bar"></div>
-            <span>In Process</span>
-          </div>
-          <h3>Green Tea</h3>
-          <p>Nov 16, 2024</p>
-        </div>
-        <div class="work-item">
-          <div class="work-status success">
-            <div class="progress-bar"></div>
-            <span>Packing completed</span>
-          </div>
-          <h3>natural Tea</h3>
-          <p>Jul 17, 2024</p>
-        </div>
-        <div class="work-item">
-          <div class="work-status failed">
-            <div class="progress-bar"></div>
-            <span>In Process</span>
-          </div>
-          <h3>Green Tea</h3>
-          <p>Nov 18, 2024</p>
-        </div>
-        <div class="work-item">
-          <div class="work-status progress">
-            <div class="progress-bar"></div>
-            <span>In Process</span>
-          </div>
-          <h3>Black Tea</h3>
-          <p>Nov 19, 2024</p>
-        </div>
-        <div class="work-item">
-          <div class="work-status success">
-            <div class="progress-bar"></div>
-            <span>Packing Completed</span>
-          </div>
-          <h3>Black Tea</h3>
-          <p>Nov 20, 2024</p>
-        </div>
+      <section class="Last-export">
+        <h2>Pending Exports</h2>
+        <ul class="event-list">
+          <!-- Headers -->
+          <li class="event-header">
+            <span class="event-type">Date</span>
+            <span class="event-method">Quantity</span>
+            
+          </li>
+          <!-- Data Rows -->
+          <li>
+            <span class="event-type">22-11-2024</span>
+            <span class="event-method">2000</span>
+            
+          </li>
+          <li>
+            <span class="event-type">23-11-2024</span>
+            <span class="event-method">2500</span>
+           
+          </li>
+          <li>
+              <span class="event-type">24-11-2024</span>
+            <span class="event-method">2100</span>
+            
+          </li>
+          <li>
+            <span class="event-type">25-11-2024</span>
+            <span class="event-method">2150</span>
+           
+          </li>
+        </ul>
       </section>
     </div>
+      <div class="container2">
+        <div class="chart-container">
+          <canvas id="monthlyExportChart"></canvas>
+        </div>
+      </div>
+      <!-- Add this after your existing container2 div -->
+      <div class="container2">
+        <div class="chart-container">
+          
+        </div>
+      </div>
+    
 
-    <div>
 
-    </div>
+    <!-- chart javascript of that -->
+
+    <script>
+      document.addEventListener('DOMContentLoaded', function () {
+        var monthlyCtx = document.getElementById('monthlyExportChart').getContext('2d');
+        var monthlyExportChart = new Chart(monthlyCtx, {
+          type: 'bar',
+          data: {
+            labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
+            datasets: [{
+              label: 'Export Quantity (kg)',
+              data: [2000, 2200, 1800, 2400, 2100, 1900, 2300, 2150, 2000, 2500, 2100, 1950], // Replace with your actual data
+              backgroundColor: '#00a99d',
+              borderColor: '#008f84',
+              borderWidth: 1
+            }]
+          },
+          options: {
+            responsive: true,
+            scales: {
+              y: {
+                beginAtZero: true,
+                title: {
+                  display: true,
+                  text: 'Export Quantity (kg)'
+                }
+              },
+              x: {
+                title: {
+                  display: true,
+                  text: 'Months'
+                }
+              }
+            },
+            plugins: {
+              title: {
+                display: true,
+                text: 'Monthly Export Overview',
+                font: {
+                  size: 16
+                }
+              }
+            }
+          }
+        });
+      });
+    </script>
   </body>
 
 </html>
