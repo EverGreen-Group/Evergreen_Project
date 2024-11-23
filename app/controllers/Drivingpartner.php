@@ -570,15 +570,57 @@ class Drivingpartner extends controller {
     }
 
     public function collectionRoute($collectionId) {
+        // Get collection details
         $collection = $this->collectionScheduleModel->getCollectionById($collectionId);
-        $routeSuppliers = $this->routeModel->getRouteSuppliers($collection->schedule_id);
-        
+        if (!$collection) {
+            redirect('vehicledriver/');
+        }
+
+        // Get schedule, team, and vehicle details
+        $schedule = $this->collectionScheduleModel->getScheduleById($collection->schedule_id);
+        $team = $this->teamModel->getTeamById($schedule->team_id);
+        $vehicle = $this->vehicleModel->getVehicleById($schedule->vehicle_id);
+
+        // Replace hardcoded location with actual driver location
+        $driverLocation = $this->getCurrentDriverLocation();
+
+        // Get all suppliers for this collection
+        $collectionSuppliers = $this->collectionScheduleModel->getCollectionSupplierRecords($collectionId);
+
+        // Format suppliers for the view
+        $formattedSuppliers = array_map(function($supplier) {
+            return [
+                'id' => $supplier->supplier_id,
+                'supplierName' => $supplier->supplier_name,
+                'remarks' => 'Call upon arrival',
+                'location' => [
+                    'lat' => (float)$supplier->latitude,
+                    'lng' => (float)$supplier->longitude
+                ],
+                'address' => $supplier->address ?? 'No address provided',
+                'image' => $supplier->profile_image ? 
+                    URLROOT . '/public/uploads/supplier_photos/' . $supplier->profile_image : 
+                    URLROOT . '/public/img/default-user.png',
+                'estimatedCollection' => 500,
+                'status' => $supplier->status,
+                'contact' => $supplier->contact_number,
+                'arrival_time' => $supplier->arrival_time,
+                'collection_time' => $supplier->collection_time,
+                'quantity' => $supplier->quantity ?? 0
+            ];
+        }, $collectionSuppliers);
+
         $data = [
-            'collection' => $collection,
-            'routeSuppliers' => $routeSuppliers,
-            // Add any other necessary data
+            'pageTitle' => 'Collection Route',
+            'driverName' => $team->driver_name,
+            'teamName' => $team->team_name,
+            'vehicleInfo' => $vehicle->vehicle_type . ' (' . $vehicle->license_plate . ')',
+            'driverLocation' => $driverLocation,
+            'collections' => $formattedSuppliers,
+            'schedule' => $schedule,
+            'collection' => $collection
         ];
-        
+
         $this->view('driving_partner/supplier_collection', $data);
     }
 
@@ -609,6 +651,94 @@ class Drivingpartner extends controller {
         ];
 
         $this->view('driving_partner/record_collection', $data);
+    }
+
+    public function assign_bag() {
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            http_response_code(405);
+            die(json_encode(['success' => false, 'message' => 'Method not allowed']));
+        }
+
+        // Get POST data
+        $data = json_decode(file_get_contents('php://input'));
+
+        // Calculate actual weight server-side
+        $actualWeight = $data->totalWeight - $data->bagWeight;
+
+        // Prepare bag data
+        $bagData = [
+            'bag_weight_kg' => $data->bagWeight,
+            'total_weight_kg' => $data->totalWeight,
+            'actual_weight_kg' => $actualWeight,
+            'moisture_level' => $data->moistureLevel,
+            'leaf_type' => $data->leafType,
+            'leaf_age' => $data->leafAge
+        ];
+
+        try {
+            // Assign bag using model
+            $result = $this->collectionScheduleModel->assignBagWithStatus(
+                $data->bagId,
+                $data->supplierId,
+                $data->collectionId,
+                $bagData
+            );
+
+            if ($result) {
+                echo json_encode(['success' => true]);
+            } else {
+                throw new Exception('Database update failed');
+            }
+        } catch (Exception $e) {
+            error_log("Error in assign_bag: " . $e->getMessage());
+            echo json_encode([
+                'success' => false, 
+                'message' => 'Failed to assign bag: ' . $e->getMessage()
+            ]);
+        }
+    }
+
+    public function confirm_collection() {
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            http_response_code(405);
+            die(json_encode(['success' => false, 'message' => 'Method not allowed']));
+        }
+
+        try {
+            $data = json_decode(file_get_contents('php://input'));
+            
+            // Verify supplier PIN here
+            if (!$this->verifySupplierPin($data->supplierId, $data->pin)) {
+                throw new Exception('Invalid PIN');
+            }
+
+            $result = $this->collectionScheduleModel->confirmCollection(
+                $data->collectionId,
+                $data->supplierId
+            );
+
+            if ($result['success']) {
+                echo json_encode([
+                    'success' => true,
+                    'isCompleted' => $result['isCompleted'],
+                    'redirectUrl' => $result['isCompleted'] ? URLROOT . '/drivingpartner' : null
+                ]);
+            } else {
+                throw new Exception('Failed to confirm collection');
+            }
+
+        } catch (Exception $e) {
+            echo json_encode([
+                'success' => false, 
+                'message' => $e->getMessage()
+            ]);
+        }
+    }
+
+    private function verifySupplierPin($supplierId, $pin) {
+        // Implement PIN verification logic here
+        // Return true if PIN is valid, false otherwise
+        return true; // Temporary
     }
 }
 

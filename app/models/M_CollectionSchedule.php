@@ -847,14 +847,18 @@ class M_CollectionSchedule {
         $this->db->query('
             SELECT 
                 cb.*,
+                b.token,
+                b.status as bag_status,
                 CONCAT(u.first_name, " ", u.last_name) as supplier_name,
                 CASE 
                     WHEN cb.supplier_id IS NULL THEN "Unassigned"
                     WHEN csr.collection_time IS NOT NULL THEN "Collected"
                     WHEN cb.supplier_id IS NOT NULL THEN "Assigned"
                     ELSE "Available"
-                END as bag_status
+                END as collection_status
             FROM collection_bags cb
+            JOIN bags b 
+                ON cb.bag_id = b.bag_id
             LEFT JOIN collection_supplier_records csr 
                 ON cb.supplier_id = csr.supplier_id 
                 AND csr.collection_id = cb.collection_id
@@ -869,5 +873,159 @@ class M_CollectionSchedule {
         $this->db->bind(':collection_id', $collectionId);
         
         return $this->db->resultSet();
+    }
+
+    public function assignBagWithStatus($collectionBagId, $supplierId, $collectionId, $bagData) {
+        try {
+            $this->db->beginTransaction();
+
+            // First verify the bag exists
+            $this->db->query('
+                SELECT cb.bag_id 
+                FROM collection_bags cb
+                WHERE cb.collection_bag_id = :collection_bag_id 
+                AND cb.collection_id = :collection_id
+                AND cb.supplier_id IS NULL
+            ');
+            
+            $this->db->bind(':collection_bag_id', $collectionBagId);
+            $this->db->bind(':collection_id', $collectionId);
+            
+            $bagResult = $this->db->single();
+            
+            if (!$bagResult) {
+                throw new Exception('Bag not found or already assigned');
+            }
+
+            // Update collection_bags record without setting supplier_id
+            $this->db->query('
+                UPDATE collection_bags 
+                SET 
+                    gross_weight_kg = :total_weight,
+                    actual_weight_kg = :actual_weight,
+                    leaf_type = :leaf_type,
+                    leaf_age = :leaf_age,
+                    moisture_level = :moisture_level
+                WHERE collection_bag_id = :collection_bag_id 
+                AND collection_id = :collection_id
+                AND supplier_id IS NULL
+            ');
+
+            // Bind parameters
+            $this->db->bind(':total_weight', $bagData['total_weight_kg']);
+            $this->db->bind(':actual_weight', $bagData['actual_weight_kg']);
+            $this->db->bind(':leaf_type', $bagData['leaf_type']);
+            $this->db->bind(':leaf_age', $bagData['leaf_age']);
+            $this->db->bind(':moisture_level', $bagData['moisture_level']);
+            $this->db->bind(':collection_bag_id', $collectionBagId);
+            $this->db->bind(':collection_id', $collectionId);
+
+            $result1 = $this->db->execute();
+
+            if (!$result1) {
+                throw new Exception('Failed to update collection_bags record');
+            }
+
+            // Update bag status using the bag_id we got earlier
+            $this->db->query('
+                UPDATE bags 
+                SET status = "In Use"
+                WHERE bag_id = :bag_id
+                AND status = "Available"
+            ');
+
+            $this->db->bind(':bag_id', $bagResult->bag_id);
+
+            $result2 = $this->db->execute();
+
+            if (!$result2) {
+                throw new Exception('Failed to update bag status');
+            }
+
+            $this->db->commit();
+            return true;
+
+        } catch (Exception $e) {
+            $this->db->rollBack();
+            error_log("Error in assignBagWithStatus: " . $e->getMessage());
+            throw $e;
+        }
+    }
+
+    // Add new method for confirming collection
+    public function confirmCollection($collectionId, $supplierId) {
+        try {
+            $this->db->beginTransaction();
+
+            // Update collection_bags with supplier_id
+            $this->db->query('
+                UPDATE collection_bags 
+                SET supplier_id = :supplier_id
+                WHERE collection_id = :collection_id
+                AND supplier_id IS NULL
+            ');
+
+            $this->db->bind(':supplier_id', $supplierId);
+            $this->db->bind(':collection_id', $collectionId);
+            
+            $result1 = $this->db->execute();
+
+            // Update collection_supplier_records
+            $this->db->query('
+                UPDATE collection_supplier_records 
+                SET 
+                    collection_time = CURRENT_TIMESTAMP,
+                    status = "Collected"
+                WHERE collection_id = :collection_id 
+                AND supplier_id = :supplier_id
+            ');
+
+            $this->db->bind(':collection_id', $collectionId);
+            $this->db->bind(':supplier_id', $supplierId);
+            
+            $result2 = $this->db->execute();
+
+            // Check if all suppliers are collected
+            $this->db->query('
+                SELECT COUNT(*) as remaining
+                FROM collection_supplier_records
+                WHERE collection_id = :collection_id
+                AND (status != "Collected" OR status IS NULL)
+            ');
+            
+            $this->db->bind(':collection_id', $collectionId);
+            $remaining = $this->db->single();
+
+            // If no remaining uncollected suppliers, update collection status
+            if ($remaining->remaining == 0) {
+                $this->db->query('
+                    UPDATE collections 
+                    SET status = "Completed"
+                    WHERE collection_id = :collection_id
+                ');
+                
+                $this->db->bind(':collection_id', $collectionId);
+                $result3 = $this->db->execute();
+                
+                if (!$result3) {
+                    throw new Exception('Failed to update collection status');
+                }
+            }
+
+            if ($result1 && $result2) {
+                $this->db->commit();
+                return [
+                    'success' => true,
+                    'isCompleted' => ($remaining->remaining == 0)
+                ];
+            }
+
+            throw new Exception('Failed to confirm collection');
+
+        } catch (Exception $e) {
+            $this->db->rollBack();
+            error_log("Error in confirmCollection: " . $e->getMessage());
+            throw $e;
+        }
     }
 } 

@@ -202,7 +202,7 @@ if (isset($data['collection']) && $data['collection']) {
                                 <?php 
                                 $controllerPath = ($data['userRole'] == 'driver') ? 'vehicledriver' : 'drivingpartner';
                                 ?>
-                                <a href="<?php echo URLROOT . '/' . $controllerPath . '/collection/' . $data['collection']->collection_id; ?>" class="btn btn-primary">
+                                <a href="<?php echo URLROOT . '/' . $controllerPath . '/collectionRoute/' . $data['collection']->collection_id; ?>" class="btn btn-primary">
                                     <i class='bx bx-navigation'></i>
                                     Continue Collection
                                 </a>

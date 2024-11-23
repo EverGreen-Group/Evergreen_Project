@@ -39,7 +39,11 @@
         <!-- Current Supplier Info -->
         <div class="table-data">
             <?php if (!empty($data['collections'])): ?>
-                <?php $currentSupplier = $data['collections'][0]; // Get the first supplier ?>
+                <?php 
+                $currentSupplier = $data['collections'][0]; // Get the first supplier 
+                $hasArrived = !empty($currentSupplier['arrival_time']);
+                $buttonClass = $hasArrived ? '' : 'disabled';
+                ?>
                 <div class="supplier-info">
                     <div class="supplier-profile">
                         <img src="<?php echo $currentSupplier['image']; ?>" alt="Supplier Image">
@@ -51,14 +55,21 @@
                         <?php if ($currentSupplier['remarks']): ?>
                             <p><i class='bx bx-note'></i> <?php echo $currentSupplier['remarks']; ?></p>
                         <?php endif; ?>
+                        <?php if (!$hasArrived): ?>
+                            <p class="waiting-message"><i class='bx bx-time'></i> Waiting to arrive at location</p>
+                        <?php endif; ?>
                     </div>
                     <div class="supplier-actions">
-                        <button class="btn-call" onclick="makeCall('<?php echo $currentSupplier['contact']; ?>')">
+                        <button class="btn-call <?php echo $buttonClass; ?>" 
+                                onclick="<?php echo $hasArrived ? "makeCall('{$currentSupplier['contact']}')" : ''; ?>"
+                                <?php echo $hasArrived ? '' : 'disabled'; ?>>
                             <i class='bx bx-phone-call'></i> Call
                         </button>
                     </div>
                     <div class="supplier-actions">
-                        <button class="btn-record" onclick="window.location.href='<?php echo URLROOT; ?>/drivingpartner/record_collection/<?php echo $currentSupplier['id']; ?>/<?php echo $data['collection']->collection_id; ?>'">
+                        <button class="btn-record <?php echo $buttonClass; ?>"
+                                onclick="<?php echo $hasArrived ? "window.location.href='" . URLROOT . "/drivingpartner/record_collection/{$currentSupplier['id']}/{$data['collection']->collection_id}'" : ''; ?>"
+                                <?php echo $hasArrived ? '' : 'disabled'; ?>>
                             <i class='bx bx-edit'></i> Record Collection
                         </button>
                     </div>
@@ -340,6 +351,32 @@ tr.completed {
     .progress-cards {
         grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
     }
+}
+
+/* Add these styles */
+.btn-call.disabled,
+.btn-record.disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    background-color: #999 !important;
+    transform: none !important;
+}
+
+.waiting-message {
+    color: #f39c12;
+    margin-top: 10px;
+    font-style: italic;
+}
+
+.waiting-message i {
+    color: #f39c12;
+}
+
+/* Update existing hover styles */
+.btn-record:not(.disabled):hover,
+.btn-call:not(.disabled):hover {
+    opacity: 0.8;
+    transform: translateY(-2px);
 }
 
 </style>
