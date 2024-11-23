@@ -54,7 +54,7 @@
                             <td>ishan</td>
                             <td>galle</td>
                             <td>Nov 23, 2023</td>
-                            <td><span class="status accept">Accept</span></td>
+                            <td><span class="status">Accept</span></td>
                             <td><button class="action-btn accept-btn">Approve</button></td>
                             <td><button class="action-btn reject-btn">Reject</button></td>
                         </tr>
@@ -65,7 +65,7 @@
                             <td>Simaak</td>
                             <td>galle</td>
                             <td>Nov 23, 2023</td>
-                            <td><span class="status accept">Accept</span></td>
+                            <td><span class="status">Accept</span></td>
                             <td><button class="action-btn accept-btn">Approve</button></td>
                             <td><button class="action-btn reject-btn">Reject</button></td>
                         </tr>

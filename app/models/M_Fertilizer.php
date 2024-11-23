@@ -42,5 +42,12 @@ class M_Fertilizer{
             return false;
         }
     }
+
+    public function deleteFertilizer($id){
+        $sql = "DELETE FROM Fertilizer WHERE id = :id";
+        $this->db->query($sql);
+        $this->db->bind('id', $id);
+        return $this->db->execute();
+    }
 }
 
