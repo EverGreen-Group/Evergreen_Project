@@ -438,4 +438,21 @@ class Inventory extends controller
         redirect('inventory/product');
     }
 
+    public function recodes(){
+        $data = [];
+
+        $this->view('inventory/v_recodes', $data);
+    }
+
+    public function deletefertilizer($id){
+        if($_SERVER['REQUEST_METHOD']=='GET'){
+            if($this->fertilizerModel->deleteFertilizer($id)){
+                flash('fertilizer_message', 'Fertilizer Removed');
+            }else{
+                flash('fertilizer_message', 'Something went wrong', 'alert alert-danger');
+            }
+        }
+        redirect('inventory/fertilizerdashboard');
+    }
+
 }
