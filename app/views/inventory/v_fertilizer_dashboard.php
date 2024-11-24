@@ -68,21 +68,23 @@
 
                 <table>
                     <thead>
+                    <td>Fertilizer name</td>
                         <td>code</td>
                         <td>Quantity</td>
                         <td>update</td>
                         <td>delete</td>
                     </thead>
                     <tbody>
-
+                        <?php foreach ($data['fertilizer'] as $fertilizer) : ?>
                         <tr>
-
-                            <td>B 710</td>
-                            <td>1000kg</td>
+                            <td><?php echo $fertilizer->fertilizer_name; ?></td>
+                            <td><?php echo $fertilizer->code; ?></td>
+                            <td><?php echo $fertilizer->quantity; ?></td>
                             <td><button class="update-btn">Update</button></td>
-                            <td><button class="delete-btn">Delete</button></td>
+                            <td><a href="<?php echo URLROOT; ?>/inventory/deletefertilizer/<?php echo $fertilizer->id; ?>"><button class="delete-btn">Delete</button></a></td>
                         </tr>
-                        <tr>
+                        <?php endforeach; ?>
+                        <!-- <tr>
 
                             <td>B 589</td>
                             <td>50kg</td>
@@ -109,7 +111,7 @@
                             <td>123Kg</td>
                             <td><button class="update-btn">Update</button></td>
                             <td><button class="delete-btn">Delete</button></td>
-                        </tr>
+                        </tr> -->
                     </tbody>
                 </table>
             </section>

@@ -30,7 +30,7 @@
     }
 
 
-    .card {
+    .card1 {
       background-color: #00a99d;
       color: #fff;
       padding: 20px;
@@ -207,11 +207,157 @@
       border-radius: 5px;
       padding: 20px;
       margin: 20px;
-      width: 95%;
+      width: 100%;
       height: 400px;
       box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
     }
 
+
+    /* item card css */
+
+    .card4 {
+      width: 100%;
+      margin: 20px;
+      margin-right: 20px;
+      background-color: white;
+      border-radius: 8px;
+      box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
+      border: 1px solid #e5e7eb;
+      font-family: Arial, sans-serif;
+    }
+
+    .card-header {
+      padding: 24px 24px 8px 24px;
+    }
+
+    .header-content {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .title-group {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .id-number {
+      color: #6B7280;
+    }
+
+    .title {
+      font-size: 18px;
+      font-weight: 600;
+      margin: 0;
+    }
+
+    .badge {
+      background-color: #EFF6FF;
+      color: #1D4ED8;
+      padding: 4px 12px;
+      border-radius: 9999px;
+      font-size: 14px;
+      font-weight: 500;
+    }
+
+    .card-content {
+      padding: 16px 24px 24px 24px;
+    }
+
+    .metadata-container {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 24px;
+      font-size: 14px;
+      color: #4B5563;
+    }
+
+    .metadata-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .icon {
+      width: 16px;
+      height: 16px;
+      fill: currentColor;
+    }
+
+    .progress-container {
+      margin-top: 16px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 14px;
+      color: #2563EB;
+    }
+
+    .update-text {
+      color: #6B7280;
+    }
+
+    /* form styles */
+    .form-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 20px;
+    }
+
+    .form-group {
+      margin-bottom: 20px;
+    }
+
+    .form-group label {
+      display: block;
+      margin-bottom: 8px;
+      color: #333;
+    }
+
+    .form-control {
+      width: 100%;
+      padding: 12px;
+      border: 1px solid #ddd;
+      border-radius: 5px;
+      font-size: 14px;
+    }
+
+    .form-control:focus {
+      outline: none;
+      border-color: #4834d4;
+    }
+
+    select.form-control {
+      appearance: none;
+      background: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='none' stroke='%23333' viewBox='0 0 12 12'%3E%3Cpath d='M3 5l3 3 3-3'/%3E%3C/svg%3E") no-repeat right 12px center;
+    }
+
+    .error-text {
+      color: #ff4444;
+      font-size: 12px;
+      margin-top: 5px;
+    }
+
+    .btn {
+      background: #2ec720;
+      color: white;
+      padding: 12px 30px;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      font-size: 16px;
+      float: right;
+    }
+
+    .btn:hover {
+      background: #3a2bb7;
+    }
+
+    .cardrelese{
+      width: 100%;
+      background-color:;
+    }
 
     /* Add more styles as needed */
   </style>
@@ -221,19 +367,19 @@
     <!-- Add the rest of the content here -->
 
     <div class="container2">
-      <div class="card">
+      <div class="card1">
         <h3>Last month Export</h3>
         <p>2000kg</p>
       </div>
-      <div class="card">
+      <div class="card1">
         <h3>Processing Stock</h3>
         <p>4000kg</p>
       </div>
-      <div class="card">
+      <div class="card1">
         <h3>Total Exports</h3>
         <p>1900Ton</p>
       </div>
-      <div class="card">
+      <div class="card1">
         <h3>Ready Stock</h3>
         <p>400kg</p>
       </div>
@@ -276,50 +422,64 @@
       </div>
 
       <section class="Last-export">
-        <h2>Pending Exports</h2>
-        <ul class="event-list">
-          <!-- Headers -->
-          <li class="event-header">
-            <span class="event-type">Date</span>
-            <span class="event-method">Quantity</span>
-            
-          </li>
-          <!-- Data Rows -->
-          <li>
-            <span class="event-type">22-11-2024</span>
-            <span class="event-method">2000</span>
-            
-          </li>
-          <li>
-            <span class="event-type">23-11-2024</span>
-            <span class="event-method">2500</span>
-           
-          </li>
-          <li>
-              <span class="event-type">24-11-2024</span>
-            <span class="event-method">2100</span>
-            
-          </li>
-          <li>
-            <span class="event-type">25-11-2024</span>
-            <span class="event-method">2150</span>
-           
-          </li>
-        </ul>
+        <h2>Relese Exports</h2>
+        <form>
+          <div class="form-grid">
+            <div class="form-group">
+              <label>Land Owner First Name*</label>
+              <input type="text" class="form-control" placeholder="Enter First Name" required>
+              <span class="error-text">Please enter first name</span>
+            </div>
+            <div class="form-group">
+              <label>Land Owner Last Name</label>
+              <input type="text" class="form-control" placeholder="Enter your Last Name">
+              <span class="error-text">Please enter last name</span>
+            </div>
+
+
+            <div class="form-group">
+              <label>Land Squre*</label>
+              <input type="date" class="form-control" required>
+              <span class="error-text">Please enter squere of land</span>
+            </div>
+            <div class="form-group">
+              <label>
+
+              </label>
+              <input type="text" class="form-control" placeholder="Enter First Name" def required>
+              <span class="error-text">Please enter address</span>
+            </div>
+            <div class="form-group">
+              <label>Export Price(per kg)</label>
+              <input type="text" class="form-control" placeholder="Enter Last Name">
+              <span class="error-text">Please enter city</span>
+            </div>
+            <div class="form-group">
+              <label>Export Proof*</label>
+              <input type="image" class="form-control" placeholder="Enter your...." required>
+              <span class="error-text">Please enter ....</span>
+            </div>
+            <div class="form-group">
+              <label>Export Reg No</label>
+              <input type="text" class="form-control" placeholder="Enter your land reg no" required>
+            </div>
+
+          </div>
+          <button type="submit" class="btn">Next</button>
+        </form>
       </section>
     </div>
-      <div class="container2">
-        <div class="chart-container">
-          <canvas id="monthlyExportChart"></canvas>
-        </div>
+    <div class="container2">
+      <div class="chart-container">
+        <canvas id="monthlyExportChart"></canvas>
       </div>
-      <!-- Add this after your existing container2 div -->
-      <div class="container2">
-        <div class="chart-container">
-          
-        </div>
-      </div>
-    
+
+    </div>
+    <!-- Add this after your existing container2 div -->
+    <div class='cardrelese'>
+      <?php require APPROOT .'/views/inventory/components/export_card.php';?>
+    </div>
+
 
 
     <!-- chart javascript of that -->
