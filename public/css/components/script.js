@@ -94,24 +94,6 @@ allSideMenu.forEach(item => {
 });
 
 
-function enableEditing() {
-    const inputs = document.querySelectorAll('.input');
-    const isReadOnly = inputs[0].hasAttribute('readonly'); // Check if it's read-only
-
-    if (isReadOnly) {
-        //enable editing
-        inputs.forEach(input => {
-            input.removeAttribute('readonly');
-        });
-    } else {
-        //disable editing
-        inputs.forEach(input => {
-            input.setAttribute('readonly', true);
-        });
-    }
-}
-
-
 function submitmessage(event) {
     event.preventDefault(); 
 	
@@ -132,6 +114,9 @@ function submitmessage(event) {
     } else {
         alert("Unsuccessful: Please fill in all required fields.");
     }
+    setTimeout(() => {
+        window.location.reload();
+    }, 2000);
 }
 
 
@@ -162,80 +147,239 @@ function updatePricePerUnit() {
     }
 }
 
-document.addEventListener('DOMContentLoaded', function() {
+// Function to calculate price based on selected options
+function calculatePrices() {
     const typeSelect = document.getElementById('type_id');
     const unitSelect = document.getElementById('unit');
     const totalAmountInput = document.getElementById('total_amount');
     const pricePerUnitInput = document.getElementById('price_per_unit');
     const totalPriceInput = document.getElementById('total_price');
-
-    // Function to update prices based on selected fertilizer and unit
-    function updatePrices() {
+    
+    if (typeSelect.value && unitSelect.value && totalAmountInput.value) {
         const selectedOption = typeSelect.options[typeSelect.selectedIndex];
-        const selectedUnit = unitSelect.value;
+        let unitPrice = 0;
         
-        if (selectedOption && selectedUnit) {
-            let pricePerUnit = 0;
-            
-            // Get price based on selected unit
-            switch(selectedUnit) {
-                case 'kg':
-                    pricePerUnit = parseFloat(selectedOption.dataset.unitPriceKg);
-                    break;
-                case 'packs':
-                    pricePerUnit = parseFloat(selectedOption.dataset.packPrice);
-                    break;
-                case 'box':
-                    pricePerUnit = parseFloat(selectedOption.dataset.boxPrice);
-                    break;
-            }
-
-            // Update price per unit field
-            pricePerUnitInput.value = pricePerUnit.toFixed(2);
-
-            // Calculate and update total price if amount is entered
-            const amount = parseFloat(totalAmountInput.value) || 0;
-            totalPriceInput.value = (pricePerUnit * amount).toFixed(2);
-        } else {
-            pricePerUnitInput.value = '';
-            totalPriceInput.value = '';
+        switch(unitSelect.value) {
+            case 'kg':
+                unitPrice = parseFloat(selectedOption.dataset.unitPriceKg);
+                break;
+            case 'packs':
+                unitPrice = parseFloat(selectedOption.dataset.packPrice);
+                break;
+            case 'box':
+                unitPrice = parseFloat(selectedOption.dataset.boxPrice);
+                break;
         }
+        
+        pricePerUnitInput.value = unitPrice;
+        totalPriceInput.value = (unitPrice * parseFloat(totalAmountInput.value)).toFixed(2);
     }
+}
 
-    // Add event listeners
-    typeSelect.addEventListener('change', updatePrices);
-    unitSelect.addEventListener('change', updatePrices);
-    totalAmountInput.addEventListener('input', updatePrices);
-
-    // Form validation
-    document.getElementById('fertilizerForm').addEventListener('submit', function(event) {
-        event.preventDefault();
+document.addEventListener('DOMContentLoaded', function() {
+    const form = document.getElementById('fertilizerForm');
+    
+    if(form) {
+        // Add event listeners for price calculations
+        document.getElementById('type_id').addEventListener('change', calculatePrices);
+        document.getElementById('unit').addEventListener('change', calculatePrices);
+        document.getElementById('total_amount').addEventListener('input', calculatePrices);
         
-        if (!typeSelect.value) {
-            alert('Please select a fertilizer type');
-            return;
-        }
-        if (!unitSelect.value) {
-            alert('Please select a unit');
-            return;
-        }
-        if (!totalAmountInput.value || totalAmountInput.value <= 0) {
-            alert('Please enter a valid amount');
-            return;
-        }
+        // Initial price calculation
+        calculatePrices();
+        
+        form.addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            // Validate form
+            const typeId = document.getElementById('type_id').value;
+            const unit = document.getElementById('unit').value;
+            const totalAmount = document.getElementById('total_amount').value;
+            
+            if (!typeId || !unit || !totalAmount) {
+                alert('Please fill in all required fields');
+                return;
+            }
+            
+            // Calculate final prices before submission
+            calculatePrices();
+            
+            try {
+                // Get selected fertilizer name
+                const typeSelect = document.getElementById('type_id');
+                const selectedOption = typeSelect.options[typeSelect.selectedIndex];
+                const fertilizerName = selectedOption.text;
+                
+                // Create FormData object
+                const formData = new FormData(form);
+                formData.append('fertilizer_name', fertilizerName);
+                
+                // Convert FormData to URLSearchParams
+                const params = new URLSearchParams();
+                for (const [key, value] of formData.entries()) {
+                    params.append(key, value);
+                }
+                
+                // Submit form
+                const response = await fetch(form.action, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded',
+                    },
+                    body: params.toString()
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    alert('Request updated successfully!');
+                    window.location.href = URLROOT + '/supplier/requestFertilizer';
+                } else {
+                    alert(result.message || 'Failed to update request');
+                }
+                setTimeout(() => {
+                    window.location.reload();
+                }, 2000);
+            } catch (error) {
+                console.error('Error:', error);
+                alert('An error occurred while updating the request');
+                setTimeout(() => {
+                    window.location.reload();
+                }, 2000);
+            }
+        });
+    }
+});
 
-        this.submit();
+
+
+
+// Get all delete buttons when the page loads
+document.addEventListener('DOMContentLoaded', function() {
+    const deleteButtons = document.querySelectorAll('.btn-delete');
+    
+    // Add click event listener to each delete button
+    deleteButtons.forEach(button => {
+        button.addEventListener('click', function() {
+            const orderId = this.getAttribute('data-id');
+            confirmDelete(orderId);
+        });
     });
 });
 
-//PAYMENTS
+
+// Function to show confirmation dialog
+function confirmDelete(orderId) {
+    const modal = document.getElementById('deleteModal');
+    if (!modal) {
+        console.error('Delete modal not found');
+        return;
+    }
+    
+    // Show the modal
+    modal.style.display = 'flex';
+    
+    // Store the order ID
+    window.deleteOrderId = orderId;
+    
+    // Set up the confirm button event listener
+    const confirmButton = document.getElementById('confirmDeleteBtn');
+    if (confirmButton) {
+        // Remove existing listeners to prevent duplicates
+        const newConfirmButton = confirmButton.cloneNode(true);
+        confirmButton.parentNode.replaceChild(newConfirmButton, confirmButton);
+        
+        // Add new event listener
+        newConfirmButton.addEventListener('click', function() {
+            executeDelete(orderId);
+        });
+    }
+};
+
+
+// Function to close modal
+function closeModal() {
+    const modal = document.getElementById('deleteModal');
+    if (modal) {
+        modal.style.display = 'none';
+    }
+};
+
+
+// Function to execute delete
+function executeDelete(orderId) {
+    if (!orderId) {
+        console.error('No order ID provided');
+        return;
+    }
+    
+    // Create a POST request with CSRF token if needed
+    const formData = new FormData();
+    formData.append('_method', 'POST');
+
+    fetch(`${URLROOT}/Supplier/deleteFertilizerRequest/${orderId}`, {
+        method: 'POST',
+        headers: {
+            'X-Requested-With': 'XMLHttpRequest'
+        },
+        body: formData
+    })
+    .then(response => {
+        if (!response.ok) {
+            throw new Error('Network response was not ok');
+        }
+        return response.json();
+    })
+    .then(data => {
+        if (data.success) {
+            alert(data.message || 'Order deleted successfully!');
+            window.location.reload();
+        } else {
+            throw new Error(data.message || 'Delete failed');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('Failed to delete the order: ' + error.message);
+        setTimeout(() => {
+            window.location.reload();
+        }, 2000);
+    })
+    .finally(() => {
+        closeModal();
+    });
+};
+
+
+// Close modal when clicking outside
+window.onclick = function(event) {
+    const modal = document.getElementById('deleteModal');
+    if (event.target === modal) {
+        closeModal();
+    }
+};
+
+
+// Close modal with Escape key
+document.addEventListener('keydown', function(event) {
+    if (event.key === 'Escape') {
+        closeModal();
+    }
+});
+
+
+
+
+
+
+
+
+
+//PAYMENTS CHART
 // Hardcoded data
 const months = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
 const income = [5000, 7000, 8000, 10000, 12000, 14000, 13000, 11000, 15000, 16000, 18000, 20000];
 const cost = [3000, 4000, 5000, 6000, 700, 8000, 7500, 6000, 9000, 200, 12000, 13000];
-
-// Chart setup
-const ctx = document.getElementById("incomeCostChart").getContext("2d");
 
 const payconfig = {
   type: "bar",
@@ -281,8 +425,230 @@ const payconfig = {
 };
 
 document.addEventListener('DOMContentLoaded', function () {
+    const ctx = document.getElementById("incomeCostChart").getContext("2d");
     new Chart(ctx, payconfig); 
 });
+
+
+
+
+
+
+/* FERTILIZER ORDER LINE CHART */
+const teaLeavesCollectionChart = new Chart(ctx, {
+    type: 'line',
+    data: {
+        labels: ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'], 
+        datasets: [{
+            label: 'Tea Leaves Collections',
+            data: [32, 210, 583, 156, 284, 515, 502, 389, 412, 479, 500, 0], // Example data 
+            fill: false,
+            backgroundColor: 'rgba(75, 192, 192, 0.2)',
+            borderColor: 'rgba(75, 192, 192, 1)',
+            borderWidth: 2
+        }]
+    },
+    options: {
+        responsive: true,
+        plugins: {
+            legend: {
+                position: 'bottom',
+            },
+            title: {
+                display: true,
+                text: 'Tea Leaves Collections (Monthly)'
+            }
+        },
+        scales: {
+            x: {
+                title: {
+                    display: true,
+                    text: 'Month'
+                }
+            },
+            y: {
+                title: {
+                    display: true,
+                    text: 'Amount'
+                },
+                beginAtZero: true
+            }
+        }
+    }
+});
+
+document.addEventListener('DOMContentLoaded', function () {
+    const ctx = document.getElementById('fertilizerOrdersChart').getContext('2d');
+    new Chart(ctx, teaLeavesCollectionChart); 
+});
+
+/* FERTILIZER CHART */
+var ctx = document.getElementById('fertilizerChart').getContext('2d');
+var fertilizerChart = {
+    type: 'line',
+    data: {
+        labels: ['June', 'July', 'August', 'September', 'October', 'November'],
+        datasets: [{
+            label: 'Requests',
+            data: [120, 10, 200, 180, 220, 80], // Example data 
+            fill: false,
+            backgroundColor: 'rgba(75, 192, 192, 0.2)',
+            borderColor: 'rgba(75, 192, 192, 1)',
+            borderWidth: 2
+        }]
+    },
+    options: {
+        responsive: true,
+        plugins: {
+            legend: {
+                position: 'bottom',
+            },
+            title: {
+                display: true,
+                text: 'Requests (Monthly)'
+            }
+        },
+        scales: {
+            x: {
+                title: {
+                    display: true,
+                    text: 'Month'
+                }
+            },
+            y: {
+                title: {
+                    display: true,
+                    text: 'Number of Requests'
+                },
+                beginAtZero: true
+            }
+        }
+    }
+};
+document.addEventListener('DOMContentLoaded', function () {
+        const ctx = document.getElementById('fertilizerChart').getContext('2d');
+        new Chart(ctx, fertilizerChart); 
+});
+
+//FERTILIZER REQUEST PIE CHART
+document.addEventListener('DOMContentLoaded', function() {
+    var ctx = document.getElementById('fertilizerRequestChart').getContext('2d');
+    var fertilizerRequestChart = new Chart(ctx, {
+        type: 'pie',
+        data: {
+            labels: ['June', 'July', 'August', 'September', 'October', 'November'],
+            datasets: [{
+                data: [120, 10, 200, 180, 220, 80 ], // Example data for tea orders
+                backgroundColor: [
+                    'rgba(255, 99, 132, 0.8)',
+                    'rgba(54, 162, 235, 0.8)',
+                    'rgba(255, 206, 86, 0.8)',
+                    'rgba(75, 192, 192, 0.8)',
+                    'rgba(153, 102, 255, 0.8)',
+                    'rgba(255, 159, 64, 0.8)'
+                ],
+                borderColor: [
+                    'rgba(255, 99, 132, 1)',
+                    'rgba(54, 162, 235, 1)',
+                    'rgba(255, 206, 86, 1)',
+                    'rgba(75, 192, 192, 1)',
+                    'rgba(153, 102, 255, 1)',
+                    'rgba(255, 159, 64, 1)'
+                ],
+                borderWidth: 1
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                legend: {
+                    position: 'bottom',
+                },
+                title: {
+                    display: true,
+                    text: 'Fertilizer Request History (Monthly Distribution)'
+                }
+            }
+        }
+    });
+});
+
+
+
+
+
+
+
+// UPDATE PRICE CALCULATIONS WHEN UNIT OR TYPE CHANGES
+document.getElementById('type_id').addEventListener('change', updatePrice);
+document.getElementById('unit').addEventListener('change', updatePrice);
+document.getElementById('total_amount').addEventListener('input', updatePrice);
+
+function updatePrice() {
+    const typeSelect = document.getElementById('type_id');
+    const unitSelect = document.getElementById('unit');
+    const amountInput = document.getElementById('total_amount');
+    const pricePerUnitInput = document.getElementById('price_per_unit');
+    const totalPriceInput = document.getElementById('total_price');
+
+    if (!typeSelect.value || !unitSelect.value || !amountInput.value) {
+        return;
+    }
+
+    const selectedOption = typeSelect.options[typeSelect.selectedIndex];
+    let pricePerUnit = 0;
+
+    switch(unitSelect.value) {
+        case 'kg':
+            pricePerUnit = parseFloat(selectedOption.dataset.unitPriceKg);
+            break;
+        case 'packs':
+            pricePerUnit = parseFloat(selectedOption.dataset.packPrice);
+            break;
+        case 'box':
+            pricePerUnit = parseFloat(selectedOption.dataset.boxPrice);
+            break;
+    }
+
+    pricePerUnitInput.value = pricePerUnit;
+    totalPriceInput.value = (pricePerUnit * parseFloat(amountInput.value)).toFixed(2);
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -304,7 +670,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
 
 /* SUPPLEMENT MANAGER */
-/* DASHBOARD */
+/* DASHBOARD 
 const data = {
     labels: ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'],
     datasets: [{
@@ -335,9 +701,9 @@ const config = {
 document.addEventListener('DOMContentLoaded', function () {
     const ctx = document.getElementById('teaLeavesGraph').getContext('2d');
     new Chart(ctx, config); 
-});
+});*/
 
-/*  LEAF SUPPLY */
+/*  LEAF SUPPLY 
 const leafdata = {
     labels: ['sent', 'pending', 'confirmed', 'reported'],
     datasets: [{
@@ -368,9 +734,9 @@ const leafconfig = {
 document.addEventListener('DOMContentLoaded', function () {
     const ctx = document.getElementById('teaLeavesConfirmationGraph').getContext('2d');
     new Chart(ctx, leafconfig); 
-});
+});*/
 
-
+/*
 const pie_leafconfig = {
     type: 'pie',
     data: leafdata,
@@ -390,56 +756,4 @@ const pie_leafconfig = {
 document.addEventListener('DOMContentLoaded', function () {
     const ctx = document.getElementById('teaLeavesConfirmationChart').getContext('2d');
     new Chart(ctx, pie_leafconfig); 
-});
-
-
-document.addEventListener('DOMContentLoaded', function() {
-    var ctx = document.getElementById('fertilizerOrdersChart').getContext('2d');
-    var teaLeavesCollectionChart = new Chart(ctx, {
-        type: 'line',
-        data: {
-            labels: ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'], 
-            datasets: [{
-                label: 'Tea Leaves Collections',
-                data: [32, 210, 583, 156, 284, 515, 502, 389, 412, 479, 500, 0], // Example data 
-                fill: false,
-                backgroundColor: 'rgba(75, 192, 192, 0.2)',
-                borderColor: 'rgba(75, 192, 192, 1)',
-                borderWidth: 2
-            }]
-        },
-        options: {
-            responsive: true,
-            plugins: {
-                legend: {
-                    position: 'bottom',
-                },
-                title: {
-                    display: true,
-                    text: 'Tea Leaves Collections (Monthly)'
-                }
-            },
-            scales: {
-                x: {
-                    title: {
-                        display: true,
-                        text: 'Month'
-                    }
-                },
-                y: {
-                    title: {
-                        display: true,
-                        text: 'Amount'
-                    },
-                    beginAtZero: true
-                }
-            }
-        }
-    });
-});
-
-document.addEventListener('DOMContentLoaded', function () {
-    const ctx = document.getElementById('fertilizerOrdersChart').getContext('2d');
-    new Chart(ctx, pie_leafconfig); 
-});
-
+});*/
