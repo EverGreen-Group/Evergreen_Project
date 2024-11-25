@@ -150,6 +150,7 @@
 
 </main>
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="<?php echo URLROOT; ?>/css/script.js"></script>
 
         <!-- TEA ORDER CHART -->
         <script>
@@ -244,7 +245,6 @@
                 });
             });
         </script>
-        <script src="<?php echo URLROOT; ?>/css/script.js"></script>
     </body>
 </html>
     

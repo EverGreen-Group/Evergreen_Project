@@ -29,6 +29,8 @@ li {
   --light-yellow: #f0deb4;
   --green: #8d9f2d;
   --light-green: #edf5c2;
+	--light-grey: #999999;
+  --light-black: #f9f9f9;
 }
 
 html {
@@ -37,8 +39,10 @@ html {
 
 body.dark {
   --light: #0c0c1e;
-  --grey: #060714;
+  --grey: #282c58;
   --dark: #fbfbfb;
+	--light-black: #232651;
+	--light-grey: #7d7d7d;
 }
 
 body {
