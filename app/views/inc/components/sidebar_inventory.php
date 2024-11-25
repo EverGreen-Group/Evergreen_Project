@@ -40,12 +40,12 @@
         <span class="text">Export</span>
       </a>
     </li>
-    <li>
+    <!-- <li>
       <a href="../inventory/recodes">
         <i class="bx bxs-group"></i>
         <span class="text">Recodes</span>
       </a>
-    </li>
+    </li> -->
   </ul>
   <ul class="side-menu">
     <li>
