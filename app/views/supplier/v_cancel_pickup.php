@@ -69,7 +69,7 @@
                 </div>
                 <button type="submit" class="button">Cancel Pickup</button>
             </form>
-                <a href="SupplyDashboard.php">
+                <a href="<?php echo URLROOT; ?>/Supplier/" >
                     <button class="button">Back</button>
                 </a>
         </div>

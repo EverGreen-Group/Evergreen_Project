@@ -87,7 +87,7 @@
             <?php else: ?>
                 <div>No pending requests</div>
             <?php endif; ?>
-            <a href="<?php echo URLROOT; ?>/Supplier/v_notifications/" >
+            <a href="<?php echo URLROOT; ?>/Supplier/notifications/" >
                 <button class="button">Collection Notifications</button>
             </a>
         </div>
@@ -141,7 +141,7 @@
                 </div>
             </div>
             
-            <a href="<?php echo URLROOT; ?>/Supplier/cancel_pickup/" >
+            <a href="<?php echo URLROOT; ?>/Supplier/cancelpickup/" >
                 <button class="button">Cancel Pickup</button>
             </a>
 
