@@ -91,7 +91,7 @@ class M_Fertilizer_Order {
     }
 
     public function updateOrder($order_id, $data) {
-        try {
+        
             $this->db->query(
                 "UPDATE fertilizer_orders 
                 SET type_id = :type_id,
@@ -100,11 +100,11 @@ class M_Fertilizer_Order {
                     unit = :unit,
                     price_per_unit = :price_per_unit,
                     total_price = :total_price,
-                    last_modified = :last_modified
-                WHERE order_id = :order_id 
-                AND status != 'accepted' 
-                AND status != 'completed'
-                AND payment_status != 'paid'"
+                    order_time = :last_modified
+                WHERE order_id = :order_id "
+                //AND status != 'accepted' 
+                //AND status != 'completed'
+                //AND payment_status != 'paid'
             );
     
             $this->db->bind(':order_id', $order_id);
@@ -117,10 +117,7 @@ class M_Fertilizer_Order {
             $this->db->bind(':last_modified', $data['last_modified']);
     
             return $this->db->execute();
-        } catch (PDOException $e) {
-            error_log("Error updating fertilizer order: " . $e->getMessage());
-            return false;
-        }
+        
     }
 
     public function getFertilizerOrderById($orderId) {

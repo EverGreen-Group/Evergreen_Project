@@ -25,6 +25,7 @@
                         <div class="todo">
                             <div class="head">
                                 <h3>Fertilizer Request History</h3>
+                                <h5>Last 6 months</h5>
                                 <i class='bx bx-plus'></i>
                                 <i class='bx bx-filter'></i>
                             </div>
@@ -32,6 +33,7 @@
                         </div>
                         <div class="todo">
                             <div class="head">
+                                <h5>This year</h5>
                                 <i class='bx bx-plus'></i>
                                 <i class='bx bx-filter'></i>
                             </div>
@@ -140,6 +142,7 @@
                                     <th>Order Date</th>
                                     <th>Order Time</th>
                                     <th>Amount</th>
+                                    <th>Unit</th>
                                     <th>Price</th>
                                     <th>Payment Status</th>
                                     <th>Update order</th>
@@ -154,7 +157,23 @@
                                             <td><?php echo $order->fertilizer_name; ?></td>
                                             <td><?php echo $order->order_date; ?></td>
                                             <td><?php echo $order->order_time; ?></td>
-                                            <td><?php echo $order->total_amount . ' ' . $order->unit; ?></td>
+                                            <td><?php echo $order->total_amount; ?></td>
+                                            <td><?php 
+                                                    // Format the unit display
+                                                    switch($order->unit) {
+                                                        case 'kg':
+                                                            echo 'kg';
+                                                            break;
+                                                        case 'packs':
+                                                            echo 'packs';
+                                                            break;
+                                                        case 'box':
+                                                            echo 'box';
+                                                            break;
+                                                        default:
+                                                            echo $order->unit;
+                                                    }
+                                                ?></td>
                                             <td><?php echo $order->total_price; ?></td>
                                             <td><?php echo isset($order->payment_status) ? $order->payment_status : 'Pending'; ?></td>
                                             <td>

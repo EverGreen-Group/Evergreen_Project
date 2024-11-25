@@ -198,7 +198,8 @@ class Supplier extends Controller {
             //$supplier_id = $_SESSION['supplier_id'];
 
             //TEMP SUPPLIER ID
-            //AFTER THE LOGIN IS COMPLETED REMOVE $supplier_id = 1; LINE, UNCOMMENT if (!isset($_SESSION['supplier_logged_in'])... THIS IF, AND $supplier_id = $_SESSION['supplier_id']; THIS LINE
+            //AFTER THE LOGIN IS COMPLETED REMOVE $supplier_id = 1; LINE, UNCOMMENT if (!isset($_SESSION['supplier_logged_in'])... THIS IF, 
+            //AND $supplier_id = $_SESSION['supplier_id']; THIS LINE
             $supplier_id = 2;
 
             // Fetch fertilizer types for dropdown
@@ -253,7 +254,7 @@ class Supplier extends Controller {
         }
 
         echo json_encode($response);
-        header("Refresh:2; url=" . $_SERVER['HTTP_REFERER']);
+        header("Refresh:1; url=" . $_SERVER['HTTP_REFERER']);
         exit;
     }
 

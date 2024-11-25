@@ -154,49 +154,56 @@
 
         <!-- TEA ORDER CHART -->
         <script>
-        const ctx = document.getElementById('teaLeavesChart').getContext('2d');
-        
-        new Chart(ctx, {
-            type: 'pie',
-            data: {
-                labels: ['January', 'February', 'March', 'April', 'May', 'June'],
-                datasets: [{
-                    data: [280, 250, 180, 120, 100, 210],
-                    backgroundColor: [
-                        '#FF6384',
-                        '#36A2EB',
-                        '#FFCE56',
-                        '#4BC0C0',
-                        '#9966FF',
-                        '#FF9F40'
-                    ],
-                    borderWidth: 1
-                }]
-            },
-            options: {
-                responsive: true,
-                plugins: {
-                    legend: {
-                        position: 'right',
-                        labels: {
-                            font: {
-                                size: 14
+        document.addEventListener('DOMContentLoaded', function() {
+            const ctx = document.getElementById('teaLeavesChart').getContext('2d');
+            const tealeavesChart = new Chart(ctx, {
+                type: 'pie',
+                data: {
+                    labels: ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'],
+                    datasets: [{
+                        data: [280, 250, 180, 120, 100, 210, 180, 120, 90, 200, 320, 0],
+                        backgroundColor: [
+                            '#FF6384',
+                            '#36A2EB',
+                            '#36923B',
+                            '#FFCE56',
+                            '#4BC0C0',
+                            '#9966FF',
+                            '#FF9F40',
+                            '#4C5384',
+                            '#3FCE56',
+                            '#4B70C0',
+                            '#99666F',
+                            '#564F0B'
+                        ],
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: {
+                            position: 'right',
+                            labels: {
+                                font: {
+                                    size: 14
+                                }
                             }
-                        }
-                    },
-                    tooltip: {
-                        callbacks: {
-                            label: function(context) {
-                                const label = context.label || '';
-                                const value = context.raw || 0;
-                                const total = context.dataset.data.reduce((a, b) => a + b, 0);
-                                const percentage = ((value / total) * 100).toFixed(1);
-                                return `${label}: ${value} (${percentage}%)`;
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    const label = context.label || '';
+                                    const value = context.raw || 0;
+                                    const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                                    const percentage = ((value / total) * 100).toFixed(1);
+                                    return `${label}: ${value} (${percentage}%)`;
+                                }
                             }
                         }
                     }
                 }
-            }
+            })
         });
         </script>
         <script>
@@ -205,10 +212,10 @@
                 var teaLeavesCollectionChart = new Chart(ctx, {
                     type: 'line',
                     data: {
-                        labels: ['January', 'February', 'March', 'April', 'May', 'June'], 
+                        labels: ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'], 
                         datasets: [{
                             label: 'Tea Leaves Collections',
-                            data: [280, 250, 180, 120, 100, 210], // Example data 
+                            data: [280, 250, 180, 120, 100, 210, 180, 120, 90, 200, 320, 0], // Example data 
                             fill: false,
                             backgroundColor: 'rgba(75, 192, 192, 0.2)',
                             borderColor: 'rgba(75, 192, 192, 1)',

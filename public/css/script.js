@@ -576,10 +576,10 @@ var ctx = document.getElementById('fertilizerChart').getContext('2d');
 var fertilizerChart = {
     type: 'line',
     data: {
-        labels: ['June', 'July', 'August', 'September', 'October', 'November'],
+        labels: ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November'],
         datasets: [{
             label: 'Requests',
-            data: [120, 10, 200, 180, 220, 80], // Example data 
+            data: [120, 10, 200, 180, 220, 80, 100, 190, 180, 250, 230, 0], // Example data 
             fill: false,
             backgroundColor: 'rgba(75, 192, 192, 0.2)',
             borderColor: 'rgba(75, 192, 192, 1)',
