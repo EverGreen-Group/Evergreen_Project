@@ -45,6 +45,7 @@
                                     <th>Supplier ID</th>
                                     <th>Quantity</th>
                                     <th>Order Date</th>
+                                    <th>Order Time</th>
                                     <th>Accepted/Rejected</th>
                                 </tr>
                             </thead>
@@ -53,6 +54,7 @@
                                     <td>001<br>
                                     <td>2Kg</td>
                                     <td>2024/11/10</td>
+                                    <td>12:59pm<br>
                                     <td>
                                         <button class="pending-btn">pending</button>
                                     </td>
@@ -61,24 +63,27 @@
                                     <td>002<br>
                                     <td>1Kg</td>
                                     <td>2024/11/1</td>
+                                    <td>01:23pm<br>
                                     <td>
-                                    <button class="accept-btn">Accepted</button>
+                                        <button class="accept-btn">Accepted</button>
                                     </td>
                                 </tr>
                                 <tr>
                                     <td>003<br>
                                     <td>3Kg</td>
                                     <td>2024/11/1</td>
+                                    <td>10:15am<br>
                                     <td>
-                                    <button class="reject-btn">Rejected</button>
+                                        <button class="reject-btn">Rejected</button>
                                     </td>
                                 </tr>
                                 <tr>
                                     <td>001<br>
                                     <td>5Kg</td>
                                     <td>2024/10/12</td>
+                                    <td>04:40pm<br>
                                     <td>
-                                    <button class="accept-btn">Accepted</button>
+                                        <button class="accept-btn">Accepted</button>
                                     </td>
                                 </tr>
                             </tbody>

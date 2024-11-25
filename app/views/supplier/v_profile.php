@@ -21,7 +21,7 @@
                 </ul>
             </div>
                 
-            <a href="<?php echo URLROOT; ?>/Supplier/change_password/" >
+            <a href="<?php echo URLROOT; ?>/Supplier/changepassword/" >
                 <button class="button">Change Password</button>
             </a>
 

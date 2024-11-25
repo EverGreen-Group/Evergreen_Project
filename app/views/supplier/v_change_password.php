@@ -45,7 +45,7 @@
 
                 <button type="submit" class="button">Change Password</button>
             </form>
-            <a href="Profile.php">
+            <a href="<?php echo URLROOT; ?> /Supplier/profile/">
                 <button class="button">Back</button>
             </a>
         </div>

@@ -158,22 +158,7 @@
                                             <td><?php echo $order->order_date; ?></td>
                                             <td><?php echo $order->order_time; ?></td>
                                             <td><?php echo $order->total_amount; ?></td>
-                                            <td><?php 
-                                                    // Format the unit display
-                                                    switch($order->unit) {
-                                                        case 'kg':
-                                                            echo 'kg';
-                                                            break;
-                                                        case 'packs':
-                                                            echo 'packs';
-                                                            break;
-                                                        case 'box':
-                                                            echo 'box';
-                                                            break;
-                                                        default:
-                                                            echo $order->unit;
-                                                    }
-                                                ?></td>
+                                            <td><?php echo $order->unit; ?></td>
                                             <td><?php echo $order->total_price; ?></td>
                                             <td><?php echo isset($order->payment_status) ? $order->payment_status : 'Pending'; ?></td>
                                             <td>

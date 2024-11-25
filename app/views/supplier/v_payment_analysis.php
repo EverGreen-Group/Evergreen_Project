@@ -33,9 +33,6 @@
                             </div>
                             <canvas id="paymentAnalysisChart" width="500" height="500"></canvas>
                         </div>
-                        <a href="<?php echo URLROOT; ?>/Supplier/payments/" >
-                            <button class="button">Back</button>
-                        </a>
                     </div>
                     <div class="order">
                         <div class="head">
@@ -134,6 +131,9 @@
                                 </tr>
                             </table>
                         </div>
+                        <a href="<?php echo URLROOT; ?>/Supplier/payments/" >
+                            <button class="button">Back</button>
+                        </a>
                         <a href="<?php echo URLROOT; ?>/Supplier/" >
                             <button class="button">Home</button>
                         </a>

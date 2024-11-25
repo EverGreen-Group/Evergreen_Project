@@ -74,7 +74,7 @@ $totalRatings = array_sum($ratings);
                             <option value="quality">Quality</option>
                             <option value="service">Service</option>
                             <option value="delivery">Delivery</option>
-                            <option value="other">Other</option>
+                            <option value="other">Other(State in the description)</option>
                         </select>
                     </div>
                     <div class="form-group">

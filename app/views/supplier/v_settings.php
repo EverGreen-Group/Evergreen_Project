@@ -20,7 +20,7 @@
                 <h3>Profile Settings</h3>
                 <br/>
                     <p>Update profile</p>
-                    <a href="Profile.php">
+                    <a href="<?php echo URLROOT; ?> /Supplier/profile/" >
                         <button class="button">Profile</button>
                     </a>
                 </section>
