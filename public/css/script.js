@@ -430,6 +430,95 @@ document.addEventListener('DOMContentLoaded', function () {
 });
 
 
+document.addEventListener('DOMContentLoaded', function() {
+    var ctx = document.getElementById('paymentAnalysisChart').getContext('2d');
+    var paymentAnalysisChart = new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: ['fertilizer', 'teapackets', 'income'],
+            datasets: [{
+                data: [120, 10, 200 ], 
+                backgroundColor: [
+                    'rgba(255, 99, 35, 0.8)',
+                    'rgba(95, 162, 235, 0.8)',
+                    'rgba(255, 10, 86, 0.8)'
+                ],
+                borderColor: [
+                    'rgba(200, 200, 200, 1)'
+                ],
+                borderWidth: 1
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                legend: {
+                    position: 'bottom',
+                },
+                title: {
+                    display: true,
+                    text: 'Payments'
+                }
+            },
+            scales: {
+                x: {
+                  beginAtZero: true,
+                },
+                y: {
+                  beginAtZero: true,
+                },
+              },
+        }
+    });
+});
+
+document.addEventListener('DOMContentLoaded', function() {
+    var ctx = document.getElementById('comparePaymentsChart').getContext('2d');
+    var comparePaymentsChart = new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: ['payments', 'income', 'profit', 'loss'],
+            datasets: [{
+                data: [4050, 5020, 930, 0 ], 
+                backgroundColor: [
+                    'rgba(45, 99, 35, 0.8)',
+                    'rgba(95, 67, 87, 0.8)',
+                    'rgba(180, 20, 180, 1)',
+                    'rgba(93, 65, 89, 1)'
+                ],
+                borderColor: [
+                    'rgba(200, 200, 200, 1)'
+                ],
+                borderWidth: 1
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                legend: {
+                    position: 'bottom',
+                },
+                title: {
+                    display: true,
+                    text: 'Payment vs Income'
+                }
+            },
+            scales: {
+                x: {
+                  beginAtZero: true,
+                },
+                y: {
+                  beginAtZero: true,
+                },
+              },
+        }
+    });
+});
+
+
+
+
+
 
 
 

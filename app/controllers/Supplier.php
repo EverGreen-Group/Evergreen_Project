@@ -70,7 +70,7 @@ class Supplier extends Controller {
     {
         $data = [];
 
-        $this->view('supplier/v_payment_history', $data);
+        $this->view('supplier/v_payment_analysis', $data);
     }
 
 

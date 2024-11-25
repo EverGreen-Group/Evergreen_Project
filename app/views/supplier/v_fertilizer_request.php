@@ -12,7 +12,7 @@
                         <h1>Tea Leaves Supplier</h1>
                         <ul class="breadcrumb">
                             <li>
-                                <a href="SupplyDashboard.html">Home > </a>
+                                <a href="SupplyDashboard.html">Home  </a>
                             </li>
                             <li><i class='bx bx-chevron-right'></i></li>
                             <li>

@@ -207,7 +207,7 @@ body {
   color: var(--dark);
 }
 #content nav .nav-link {
-  font-size: 16px;
+  font-size: 10px;
   transition: 0.3s ease;
 }
 #content nav .nav-link:hover {
@@ -242,14 +242,14 @@ body {
   align-items: center;
   background: var(--main);
   color: var(--light);
-  font-size: 18px;
+  font-size: 12px;
   border: none;
   outline: none;
   border-radius: 0 36px 36px 0;
   cursor: pointer;
 }
 #content nav .notification {
-  font-size: 20px;
+  font-size: 16px;
   position: relative;
 }
 #content nav .notification .num {
@@ -315,7 +315,7 @@ body {
   flex-wrap: wrap;
 }
 #content main .head-title .left h1 {
-  font-size: 36px;
+  font-size: 34px;
   font-weight: 600;
   margin-bottom: 10px;
   color: var(--dark);
@@ -367,7 +367,7 @@ body {
   width: 80px;
   height: 80px;
   border-radius: 10px;
-  font-size: 36px;
+  font-size: 34px;
   display: flex;
   justify-content: center;
   align-items: center;
@@ -385,7 +385,7 @@ body {
   color: var(--green);
 }
 #content main .box-info li .text h3 {
-  font-size: 24px;
+  font-size: 20px;
   font-weight: 600;
   color: var(--dark);
 }
@@ -415,16 +415,19 @@ body {
 }
 #content main .table-data .head h3 {
   margin-right: auto;
-  font-size: 24px;
+  font-size: 20px;
   font-weight: 600;
 }
 #content main .table-data .head .bx {
   cursor: pointer;
 }
-
 #content main .table-data .order {
   flex-grow: 1;
   flex-basis: 500px;
+}
+#content main .table-data .order .payments-table th, 
+#content main .table-data .order .payments-table td{
+  width: 200px;
 }
 #content main .table-data .order table {
   width: 100%;
@@ -432,7 +435,7 @@ body {
 }
 #content main .table-data .order table th {
   padding-bottom: 12px;
-  font-size: 13px;
+  font-size: 12px;
   text-align: left;
   border-bottom: 1px solid var(--grey);
   
@@ -1100,7 +1103,7 @@ a {
 	text-align: left;
 }
 .settings-container h1 {
-    font-size: 2rem;
+    font-size: 1.5rem;
     margin-bottom: 20px;
 }
 .settings-section {
@@ -1108,7 +1111,7 @@ a {
 	margin-left: 50px;
 }
 .settings-section h2 {
-    font-size: 1.5rem;
+    font-size: 1rem;
     margin-bottom: 10px;
 }
 .select-textbox {
@@ -1374,7 +1377,7 @@ a {
     border-radius: 8px;
     background-color: var(--light);
     font-family: var(--poppins);
-    font-size: 16px;
+    font-size: 14px;
     color: var(--dark);
     transition: border 0.3s ease;
     box-shadow: 1px 1px #cccccf;
@@ -1399,7 +1402,7 @@ a {
 }
 .complaint-form label {
   display: block;
-  font-size: 16px;
+  font-size: 14px;
   margin-bottom: 0.5rem;
   color: var(--dark);
 }
@@ -1410,7 +1413,7 @@ a {
   padding: 0.75rem;
   border: 1px solid var(--grey);
   border-radius: 4px;
-  font-size: 16px;
+  font-size: 14px;
   color: black;
 }
 #complaint-type {
@@ -1420,7 +1423,7 @@ color: black;
   resize: vertical;
 }
 .stars i {
-font-size: 24px;
+font-size: 22px;
 margin-right: 2px;
 }
 .feedback {
