@@ -7,6 +7,7 @@
     <link rel="stylesheet" href="<?php echo URLROOT;?>/public/css/style.css">
     <link href="https://unpkg.com/boxicons@2.0.9/css/boxicons.min.css" rel="stylesheet" />
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="<?php echo URLROOT; ?>/css/auth/register.css">
 </head>
 <style>
 body {
@@ -179,4 +180,5 @@ body {
             </div>
         </nav>
     </header>
+    <script src="<?php echo URLROOT; ?>/js/auth/password_toggle.js" defer></script>
     

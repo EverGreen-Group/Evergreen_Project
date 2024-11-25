@@ -1,0 +1,24 @@
+/* Statistics Cards */
+.vehicle-box-info {
+  display: flex;
+  justify-content: space-between;
+  gap: 24px;
+  margin-top: 36px;
+  list-style: none;
+  padding: 0;
+}
+
+/* ... rest of your styles ... */
+
+/* Chart Styles */
+.chart-container {
+  margin-top: 40px;
+  padding: 20px;
+  background: var(--light);
+  border-radius: 20px;
+  text-align: center;
+  box-sizing: border-box;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+}
+
+/* ... rest of your styles ... */

@@ -12,7 +12,11 @@ class M_Route {
     }
 
     public function getAllRoutes() {
-        $this->db->query("SELECT * FROM routes");
+        $this->db->query("
+        SELECT routes.*, vehicles.license_plate
+        FROM routes
+        JOIN vehicles ON routes.vehicle_id = vehicles.vehicle_id
+        ");
         return $this->db->resultset();
     }
 
@@ -162,15 +166,14 @@ class M_Route {
                 u.last_name,
                 CONCAT(u.first_name, ' ', u.last_name) as full_name,
                 CONCAT(s.latitude, ', ', s.longitude) as coordinates,
-                rs.stop_order,
-                rs.supplier_order
+                rs.stop_order
             FROM route_suppliers rs
             JOIN suppliers s ON rs.supplier_id = s.supplier_id
             JOIN users u ON s.user_id = u.user_id
             WHERE rs.route_id = :route_id
             AND rs.is_deleted = 0
             AND s.is_deleted = 0
-            ORDER BY rs.stop_order ASC, rs.supplier_order ASC
+            ORDER BY rs.stop_order ASC
         ");
         
         $this->db->bind(':route_id', $routeId);
@@ -204,6 +207,122 @@ class M_Route {
         $this->db->bind(':supplier_id', $supplierId);
         
         return $this->db->execute();
+    }
+
+    public function createRouteWithSuppliers($data) {
+        try {
+            $this->db->beginTransaction();
+
+            // Create route with all required fields
+            $this->db->query("INSERT INTO routes (
+                route_name, 
+                vehicle_id, 
+                date,
+                number_of_suppliers,
+                status,
+                is_deleted
+            ) VALUES (
+                :route_name,
+                :vehicle_id,
+                CURRENT_DATE(),
+                :number_of_suppliers,
+                :status,
+                0
+            )");
+
+            $this->db->bind(':route_name', $data['route_name']);
+            $this->db->bind(':vehicle_id', $data['vehicle_id']);
+            $this->db->bind(':number_of_suppliers', count($data['suppliers']));
+            $this->db->bind(':status', $data['status']);
+            $this->db->execute();
+            
+            $routeId = $this->db->lastInsertId();
+
+            // Add suppliers to route
+            foreach ($data['suppliers'] as $supplier) {
+                $this->db->query('INSERT INTO route_suppliers (
+                    route_id, 
+                    supplier_id, 
+                    stop_order,
+                    is_active,
+                    is_deleted
+                ) VALUES (
+                    :route_id, 
+                    :supplier_id, 
+                    :stop_order,
+                    1,
+                    0
+                )');
+                
+                $this->db->bind(':route_id', $routeId);
+                $this->db->bind(':supplier_id', $supplier->supplier_id);
+                $this->db->bind(':stop_order', $supplier->stop_order);
+                $this->db->execute();
+            }
+
+            $this->db->commit();
+            return $routeId;
+
+        } catch (Exception $e) {
+            $this->db->rollBack();
+            throw $e;
+        }
+    }
+
+    public function updateRouteWithSuppliers($data) {
+        try {
+            $this->db->beginTransaction();
+
+            // Update route with all required fields
+            $this->db->query("UPDATE routes SET 
+                route_name = :route_name, 
+                vehicle_id = :vehicle_id,
+                number_of_suppliers = :number_of_suppliers,
+                status = :status
+                WHERE route_id = :route_id");
+
+            $this->db->bind(':route_name', $data['route_name']);
+            $this->db->bind(':vehicle_id', $data['vehicle_id']);
+            $this->db->bind(':number_of_suppliers', count($data['suppliers']));
+            $this->db->bind(':status', $data['status']);
+            $this->db->bind(':route_id', $data['route_id']);
+            $this->db->execute();
+
+            // Soft delete existing suppliers for this route
+            $this->db->query('UPDATE route_suppliers SET is_deleted = 1 
+                             WHERE route_id = :route_id');
+            $this->db->bind(':route_id', $data['route_id']);
+            $this->db->execute();
+
+            // Add updated suppliers to route
+            foreach ($data['suppliers'] as $supplier) {
+                $this->db->query('INSERT INTO route_suppliers (
+                    route_id, 
+                    supplier_id, 
+                    stop_order,
+                    is_active,
+                    is_deleted
+                ) VALUES (
+                    :route_id, 
+                    :supplier_id, 
+                    :stop_order,
+                    1,
+                    0
+                )');
+                
+                $this->db->bind(':route_id', $data['route_id']);
+                $this->db->bind(':supplier_id', $supplier->supplier_id);
+                $this->db->bind(':stop_order', $supplier->stop_order);
+                $this->db->execute();
+            }
+
+            $this->db->commit();
+            return true;
+
+        } catch (Exception $e) {
+            $this->db->rollBack();
+            throw $e;
+        }
     }
 }
 ?>

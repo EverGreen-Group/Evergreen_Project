@@ -56,26 +56,8 @@ class SupplierManager extends Controller {
 
     public function index() {
         // Get dashboard stats from the model
-        $stats = $this->vehicleManagerModel->getDashboardStats();
-
-        // Fetch all necessary data for the dropdowns
-        $routes = $this->routeModel->getAllRoutes();
-        $teams = $this->teamModel->getAllTeams();
-        $vehicles = $this->vehicleModel->getAllVehicles();
-        $shifts = $this->shiftModel->getAllShifts();
-        $schedules = $this->scheduleModel->getAllSchedules();
-        $ongoingCollections = $this->collectionModel->getOngoingCollections();
-
-        // Pass the stats and data for the dropdowns to the view
-        $this->view('vehicle_manager/v_collection', [
-            'stats' => $stats,
-            'routes' => $routes,
-            'teams' => $teams,
-            'vehicles' => $vehicles,
-            'shifts' => $shifts,
-            'schedules' => $schedules,
-            'ongoing_collections' => $ongoingCollections
-        ]);
+        $data =[];
+        $this->view('suppliermanager/applications', $data);
     }
 
     public function applications() {

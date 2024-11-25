@@ -29,99 +29,66 @@
       </a>
   </div>
 
-  <ul class="vehicle-box-info">
-    <li>
-        <i class='bx bxs-car'></i>
-        <span class="text">
-          <p>Total Vehicles</p>
-          <h3><?php echo isset($data['totalVehicles']) ? $data['totalVehicles'] : '0'; ?></h3>
-        </span>
-    </li>
-    <li>
-        <i class='bx bxs-user'></i>
-        <span class="text">
-          <p>Currently Available</p>
-          <h3><?php echo isset($data['availableVehicles']) ? $data['availableVehicles'] : '0'; ?></h3>
-        </span>
-    </li>
-    <li>
-        <i class='bx bxs-group'></i>
-        <span class="text">
-          <p>Under Maintainance</p>
-          <h3>-</h3>
-        </span>
-    </li>
-  </ul>
-
-  <!-- Vehicle Information Table -->
-  <div class="table-data">
-    <div class="order">
-      <div class="head">
-        <h3>Vehicle Availability</h3>
-        <i class='bx bx-search'></i>
+  <!-- Replace the separate table and chart sections with this combined layout -->
+  <div class="table-chart-container">
+      <!-- Vehicle Information Table -->
+      <div class="table-data">
+          <div class="order">
+              <div class="head">
+                  <h3>Vehicle Availability</h3>
+                  <i class='bx bx-search'></i>
+              </div>
+              <table>
+                  <thead>
+                      <tr>
+                          <th>Plate Number</th>
+                          <th>Type</th>
+                          <th>Capacity</th>
+                          <th>Available Days</th>
+                          <th>Status</th>
+                      </tr>
+                  </thead>
+                  <tbody>
+                    <?php if(isset($data['vehicles']) && !empty($data['vehicles'])): ?>
+                      <?php foreach($data['vehicles'] as $vehicle): ?>
+                          <tr>
+                              <td><?php echo $vehicle->license_plate; ?></td>
+                              <td><?php echo $vehicle->vehicle_type; ?></td>
+                              <td><?php echo $vehicle->capacity; ?> Tons</td>
+                              <td>
+                                  <div class="availability-days">
+                                      <span class="day <?php echo isset($vehicle->available_days) && str_contains($vehicle->available_days, 'mon') ? 'active' : ''; ?>">M</span>
+                                      <span class="day <?php echo isset($vehicle->available_days) && str_contains($vehicle->available_days, 'tue') ? 'active' : ''; ?>">T</span>
+                                      <span class="day <?php echo isset($vehicle->available_days) && str_contains($vehicle->available_days, 'wed') ? 'active' : ''; ?>">W</span>
+                                  </div>
+                              </td>
+                              <td>
+                                  <span class="status <?php 
+                                      echo $vehicle->status === 'Available' ? 'pending' : 
+                                          ($vehicle->status === 'In Use' ? 'process' : 'completed'); 
+                                  ?>">
+                                      <?php echo $vehicle->status; ?>
+                                  </span>
+                              </td>
+                          </tr>
+                      <?php endforeach; ?>
+                    <?php else: ?>
+                        <tr>
+                            <td colspan="5" class="text-center">No vehicles found</td>
+                        </tr>
+                    <?php endif; ?>
+                  </tbody>
+              </table>
+          </div>
       </div>
-      <table>
-        <thead>
-          <tr>
-            <th>ID</th>
-            <th>Plate Number</th>
-            <th>Type</th>
-            <th>Capacity</th>
-            
-            <th>Owner</th>
-            <th>Last Maintenance</th>
-            <th>Next Maintenance</th>
-            <th>Fuel Type</th>
-            <th>Status</th>
-          </tr>
-        </thead>
-        <tbody>
-          <?php if(isset($data['vehicles']) && !empty($data['vehicles'])): ?>
-            <?php foreach($data['vehicles'] as $vehicle): ?>
-                <tr>
-                    <td><?php echo $vehicle->vehicle_id; ?></td>
-                    <td><?php echo $vehicle->license_plate; ?></td>
-                    <td><?php echo $vehicle->vehicle_type; ?></td>
-                    <td><?php echo $vehicle->capacity; ?> Tons</td>
-                    
-                    <td><?php echo property_exists($vehicle, 'owner_name') ? $vehicle->owner_name : 'N/A'; ?></td>
-                    <td><?php echo property_exists($vehicle, 'last_maintenance') ? date('Y-m-d', strtotime($vehicle->last_maintenance)) : 'N/A'; ?></td>
-                    <td><?php echo property_exists($vehicle, 'next_maintenance') ? date('Y-m-d', strtotime($vehicle->next_maintenance)) : 'N/A'; ?></td>
-                    <td><?php echo property_exists($vehicle, 'fuel_type') ? $vehicle->fuel_type : 'N/A'; ?></td>
-                    <td>
-                        <span class="status <?php 
-                            echo $vehicle->status === 'Available' ? 'pending' : 
-                                ($vehicle->status === 'In Use' ? 'process' : 'completed'); 
-                        ?>">
-                            <?php echo $vehicle->status; ?>
-                        </span>
-                    </td>
-                </tr>
-            <?php endforeach; ?>
-          <?php else: ?>
-              <tr>
-                  <td colspan="9" class="text-center">No vehicles found</td>
-              </tr>
-          <?php endif; ?>
-        </tbody>
-      </table>
-    </div>
-  </div>
 
-  <div class="chart-row">
-    <div class="chart-container">
-      <h3>Vehicle Usage Overview</h3>
-      <div class="chart-wrapper">
-        <canvas id="vehicleUsageChart"></canvas>
+      <!-- Vehicle Types Chart -->
+      <div class="chart-container">
+          <h3>Available Vehicle Types</h3>
+          <div class="chart-wrapper">
+              <canvas id="vehicleTypesChart"></canvas>
+          </div>
       </div>
-    </div>
-
-    <div class="chart-container">
-      <h3>Available Vehicle Types</h3>
-      <div class="chart-wrapper">
-        <canvas id="vehicleTypesChart"></canvas>
-      </div>
-    </div>
   </div>
 
   <!-- Internal CSS -->
@@ -175,73 +142,34 @@
       color: var(--dark-grey);
     }
 
-    .chart-row {
-      display: flex;
-      justify-content: space-between;
-      gap: 20px;
-      margin-top: 40px;
-    }
-
     .chart-container {
-      flex: 1;
-      max-width: calc(50% - 10px);
-      padding: 20px;
-      background: var(--light);
-      border-radius: 20px;
-      text-align: center;
-      box-sizing: border-box;
+        margin-top: 40px;
+        padding: 20px;
+        background: var(--light);
+        border-radius: 20px;
+        text-align: center;
+        box-sizing: border-box;
+        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
     }
 
     .chart-wrapper {
-      height: 300px; /* Set a fixed height for the chart wrapper */
-      width: 100%;
+        height: 300px;
+        width: 100%;
+        max-width: 600px; /* Limit width for better presentation */
+        margin: 0 auto; /* Center the chart */
     }
 
     @media screen and (max-width: 768px) {
-      .vehicle-box-info {
-        flex-direction: column;
-        gap: 16px;
-      }
-
-      .chart-row {
-        flex-direction: column;
-      }
-
-      .chart-container {
-        max-width: 100%;
-      }
+        .chart-container {
+            padding: 15px;
+        }
     }
   </style>
 
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <script>
     document.addEventListener('DOMContentLoaded', function() {
-        // Vehicle Usage Chart (using dummy data for now)
-        const ctx = document.getElementById('vehicleUsageChart').getContext('2d');
-        new Chart(ctx, {
-            type: 'line',
-            data: {
-                labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
-                datasets: [{
-                    label: 'Vehicle Usage (Trips)',
-                    data: [50, 60, 70, 55, 80, 95, 90, 85, 100, 110, 115, 120],
-                    backgroundColor: 'rgba(54, 162, 235, 0.6)',
-                    borderColor: 'rgba(54, 162, 235, 1)',
-                    borderWidth: 1
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                scales: {
-                    y: {
-                        beginAtZero: true
-                    }
-                }
-            }
-        });
-
-        // Vehicle Types Chart (using real database data)
+        // Vehicle Types Chart
         const vehicleData = <?php echo json_encode($data['vehicleTypeStats']); ?>;
         const types = vehicleData.map(item => item.vehicle_type);
         const counts = vehicleData.map(item => parseInt(item.count));
@@ -254,11 +182,14 @@
                 datasets: [{
                     data: counts,
                     backgroundColor: [
-                        '#4CAF50',  // Green for Truck
-                        '#2196F3',  // Blue for Van
-                        '#FFC107'   // Yellow (if needed for Other)
+                        '#007664',       // Primary color - #007664
+                        '#cbeae5', // Light main color - #cbeae5
+                        '#ffce26',     // Yellow - #ffce26
+                        '#8d9f2d',      // Green - #8d9f2d
+                        '#edf5c2' // Light green - #edf5c2
                     ],
-                    borderWidth: 1
+                    borderWidth: 0,
+                    borderColor: 'var(--light)' // White border for contrast
                 }]
             },
             options: {
@@ -266,13 +197,26 @@
                 maintainAspectRatio: false,
                 plugins: {
                     legend: {
-                        position: 'bottom'
+                        position: 'bottom',
+                        labels: {
+                            color: 'var(--dark)',  // Dark text for readability
+                            padding: 20,
+                            font: {
+                                size: 12
+                            }
+                        }
                     },
                     title: {
                         display: true,
                         text: 'Available Vehicles by Type',
+                        color: 'var(--dark)',
                         font: {
-                            size: 16
+                            size: 16,
+                            weight: 'bold'
+                        },
+                        padding: {
+                            top: 10,
+                            bottom: 30
                         }
                     }
                 }
@@ -1248,32 +1192,9 @@ function editMaintenance(event) {
 </style>
 
 <style>
-.action-buttons {
-    margin: 20px 0;
-    display: flex;
-    gap: 15px;
-    justify-content: flex-end;
-}
 
-.btn-primary {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    background-color: var(--main);
-    color: var(--light);
-    padding: 10px 20px;
-    border-radius: 5px;
-    text-decoration: none;
-    transition: background-color 0.3s ease;
-}
 
-.btn-primary:hover {
-    background-color: var(--main-dark);
-}
 
-.btn-primary i {
-    font-size: 1.2em;
-}
 </style>
 
 <style>
@@ -1357,6 +1278,137 @@ async function confirmDelete(vehicleId) {
     }
 }
 </script>
+
+<style>
+    .table-chart-container {
+        display: grid;
+        grid-template-columns: 2fr 1fr; /* Adjust ratio as needed */
+        gap: 24px;
+        margin-top: 36px;
+    }
+
+    .table-data {
+        background: var(--light);
+        padding: 24px;
+        border-radius: 20px;
+        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    }
+
+    .chart-container {
+        background: var(--light);
+        padding: 24px;
+        border-radius: 20px;
+        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    }
+
+    .chart-wrapper {
+        height: 300px;
+        width: 100%;
+        margin: 0 auto;
+    }
+
+    @media screen and (max-width: 1200px) {
+        .table-chart-container {
+            grid-template-columns: 1fr;
+        }
+        
+        .chart-container {
+            margin-top: 0;
+        }
+    }
+</style>
+
+<style>
+    .availability-days {
+        display: flex;
+        gap: 4px;
+        justify-content: center;
+    }
+
+    .availability-days .day {
+        width: 24px;
+        height: 24px;
+        border-radius: 50%;
+        background: var(--grey);
+        color: var(--dark-grey);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 12px;
+        font-weight: 600;
+    }
+
+    .availability-days .day.active {
+        background: var(--main);
+        color: var(--light);
+    }
+</style>
+
+<style>
+    /* Update the table styles */
+    .table-data table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+
+    .table-data table th,
+    .table-data table td {
+        padding: 12px;
+        text-align: left;
+        vertical-align: middle; /* This ensures vertical centering */
+    }
+
+    /* Center specific columns */
+    .table-data table th:nth-child(3),
+    .table-data table td:nth-child(3),
+    .table-data table th:nth-child(4),
+    .table-data table td:nth-child(4),
+    .table-data table th:nth-child(5),
+    .table-data table td:nth-child(5) {
+        text-align: center;
+    }
+
+    /* Update availability days styles */
+    .availability-days {
+        display: inline-flex; /* Changed to inline-flex */
+        gap: 8px;
+        justify-content: center;
+        align-items: center;
+        padding: 4px 0;
+    }
+
+    .availability-days .day {
+        width: 28px;
+        height: 28px;
+        border-radius: 50%;
+        background: var(--grey);
+        color: var(--dark-grey);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 13px;
+        font-weight: 500;
+        transition: all 0.3s ease;
+    }
+
+    .availability-days .day.active {
+        background: var(--main);
+        color: var(--light);
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    }
+
+    /* Status badge alignment */
+    .status {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        padding: 6px 12px;
+        border-radius: 20px;
+        font-weight: 500;
+        text-align: center;
+        min-width: 90px;
+    }
+</style>
 
 </main>
 <!-- MAIN -->

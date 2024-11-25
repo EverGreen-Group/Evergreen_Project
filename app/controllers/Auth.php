@@ -15,13 +15,11 @@ class Auth extends Controller {
 
         $data = [
             'email' => '',
-            'title' => '',
             'first_name' => '',
             'last_name' => '',
-            'nic' => '',
-            'gender' => '',
             'date_of_birth' => '',
             'password' => '',
+            'confirm_password' => '',
             'error' => ''
         ];
 
@@ -33,37 +31,45 @@ class Auth extends Controller {
                 'email' => trim($_POST['email']),
                 'first_name' => trim($_POST['first_name']),
                 'last_name' => trim($_POST['last_name']),
-                'nic' => trim($_POST['nic']),
-                'gender' => trim($_POST['gender']),
                 'date_of_birth' => trim($_POST['date_of_birth']),
                 'password' => trim($_POST['password']),
+                'confirm_password' => trim($_POST['confirm_password']),
                 'error' => ''
             ];
 
             // Validate data
             if (empty($data['email']) || 
-                empty($data['first_name']) || empty($data['last_name']) || 
-                empty($data['nic']) || empty($data['gender']) || 
-                empty($data['date_of_birth']) || empty($data['password'])) {
+                empty($data['first_name']) || 
+                empty($data['last_name']) || 
+                empty($data['date_of_birth']) || 
+                empty($data['password']) ||
+                empty($data['confirm_password'])) {
                 $data['error'] = 'Please fill in all fields';
             } elseif (!filter_var($data['email'], FILTER_VALIDATE_EMAIL)) {
                 $data['error'] = 'Please enter a valid email';
             } elseif ($this->userModel->findUserByEmail($data['email'])) {
                 $data['error'] = 'Email is already registered';
-            } elseif ($this->userModel->findUserByNIC($data['nic'])) {
-                $data['error'] = 'NIC is already registered';
+            } elseif (strlen($data['password']) < 6) {
+                $data['error'] = 'Password must be at least 6 characters long';
+            } elseif ($data['password'] !== $data['confirm_password']) {
+                $data['error'] = 'Passwords do not match';
+            } elseif (!$this->validateDateOfBirth($data['date_of_birth'])) {
+                $data['error'] = 'You must be at least 18 years old to register';
             } else {
                 try {
                     // Hash password
                     $data['password'] = password_hash($data['password'], PASSWORD_DEFAULT);
 
                     // Set default role_id and approval_status
-                    $data['role_id'] = RoleHelper::getRoleByTitle('Website User'); // Website User role
-                    $data['approval_status'] = 'None'; // Default status
+                    $data['role_id'] = RoleHelper::getRoleByTitle('Website User');
+                    $data['approval_status'] = 'None';
+
+                    // Remove confirm_password before saving
+                    unset($data['confirm_password']);
 
                     // Register user
                     if ($this->userModel->register($data)) {
-                        // Redirect to login with success message
+                        $_SESSION['success_message'] = 'Registration successful! Please login.';
                         header('Location: ' . URLROOT . '/auth/login');
                         exit();
                     } else {
@@ -71,11 +77,26 @@ class Auth extends Controller {
                     }
                 } catch (PDOException $e) {
                     $data['error'] = 'Registration failed. Please check your information.';
+                    // Log the error for debugging
+                    error_log("Registration Error: " . $e->getMessage());
                 }
             }
         }
 
         $this->view('auth/v_register', $data);
+    }
+
+    /**
+     * Validate date of birth to ensure user is at least 18 years old
+     * @param string $dob Date of birth in Y-m-d format
+     * @return bool
+     */
+    private function validateDateOfBirth($dob) {
+        $dobDate = new DateTime($dob);
+        $today = new DateTime();
+        $age = $today->diff($dobDate)->y;
+        
+        return $age >= 18;
     }
 
     public function login() {

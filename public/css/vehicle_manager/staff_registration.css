@@ -1,0 +1,267 @@
+/* Form Container Styles */
+.registration-form-container {
+  background: var(--light);
+  padding: 2rem;
+  border-radius: 15px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  margin: 20px;
+}
+
+/* Form Section Styles */
+.form-section {
+  background: #fff;
+  padding: 1.5rem;
+  margin-bottom: 1.5rem;
+  border-radius: 10px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+.form-section h3 {
+  color: var(--main);
+  font-size: 1.2rem;
+  margin-bottom: 1.5rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 2px solid var(--light-main);
+}
+
+/* Form Layout */
+.form-row {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 1.5rem;
+  margin-bottom: 1rem;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  margin-bottom: 1rem;
+}
+
+/* Labels */
+.form-group label {
+  margin-bottom: 0.5rem;
+  color: var(--dark);
+  font-weight: 500;
+  font-size: 0.9rem;
+}
+
+/* Small helper text */
+.form-group small {
+  color: var(--black);
+  font-size: 0.8rem;
+  margin-top: 0.25rem;
+}
+
+/* Input Fields */
+.form-group input:not([type="file"]),
+.form-group select {
+  padding: 0.75rem;
+  border: 1px solid var(--grey);
+  border-radius: 5px;
+  font-size: 0.9rem;
+  transition: all 0.3s ease;
+}
+
+.form-group input:focus,
+.form-group select:focus {
+  outline: none;
+  border-color: var(--main);
+  box-shadow: 0 0 0 2px rgba(0, 118, 100, 0.1);
+}
+
+/* File Input Styling */
+.form-group input[type="file"] {
+  padding: 0.5rem;
+  border: 1px dashed var(--grey);
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+.form-group input[type="file"]:hover {
+  border-color: var(--main);
+}
+
+/* Select Styling */
+.form-group select {
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='%23666' viewBox='0 0 16 16'%3E%3Cpath d='M8 11L3 6h10l-5 5z'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 1rem center;
+  padding-right: 2.5rem;
+}
+
+/* Submit Button */
+.btn-submit {
+  background: var(--main);
+  color: var(--light);
+  padding: 1rem 2rem;
+  border: none;
+  border-radius: 5px;
+  font-size: 1rem;
+  font-weight: 500;
+  width: 100%;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  margin-top: 1rem;
+}
+
+.btn-submit:hover {
+  background: var(--dark-main);
+  transform: translateY(-1px);
+}
+
+/* Alert Messages */
+.alert {
+  padding: 1rem;
+  border-radius: 5px;
+  margin-bottom: 1.5rem;
+  font-size: 0.9rem;
+}
+
+.alert-danger {
+  background-color: #ffe6e6;
+  color: #dc3545;
+  border: 1px solid #ffcccc;
+}
+
+.alert-success {
+  background-color: #d4edda;
+  color: #155724;
+  border: 1px solid #c3e6cb;
+}
+
+/* Required Field Indicator */
+.form-group label::after {
+  content: "*";
+  color: #dc3545;
+  margin-left: 4px;
+}
+
+.form-group label:not([for*="optional"])::after {
+  content: "*";
+  color: #dc3545;
+  margin-left: 4px;
+}
+
+/* Disabled Fields */
+.form-group input:disabled,
+.form-group select:disabled {
+  background-color: var(--light);
+  cursor: not-allowed;
+  opacity: 0.7;
+}
+
+/* Role Specific Fields */
+.role-specific {
+  display: none;
+  transition: all 0.3s ease;
+}
+
+/* Responsive Design */
+@media screen and (max-width: 768px) {
+  .registration-form-container {
+    padding: 1rem;
+    margin: 10px;
+  }
+
+  .form-row {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+  }
+
+  .form-section {
+    padding: 1rem;
+  }
+
+  .btn-submit {
+    padding: 0.75rem 1.5rem;
+  }
+}
+
+/* Date Input Styling */
+input[type="date"] {
+  appearance: none;
+  -webkit-appearance: none;
+  padding: 0.75rem;
+  background: #fff;
+}
+
+input[type="date"]::-webkit-calendar-picker-indicator {
+  background-color: transparent;
+  padding: 0.5rem;
+  cursor: pointer;
+  border-radius: 3px;
+  transition: 0.2s ease-in-out;
+  opacity: 0.6;
+}
+
+input[type="date"]::-webkit-calendar-picker-indicator:hover {
+  opacity: 1;
+  background-color: var(--light-main);
+}
+
+/* Phone Number Input */
+input[type="tel"] {
+  letter-spacing: 1px;
+}
+
+/* Validation Styles */
+.form-group input:invalid,
+.form-group select:invalid {
+  border-color: #dc3545;
+}
+
+.form-group input:invalid:focus,
+.form-group select:invalid:focus {
+  box-shadow: 0 0 0 2px rgba(220, 53, 69, 0.1);
+}
+
+/* Breadcrumb Styling */
+.breadcrumb {
+  margin-bottom: 1.5rem;
+}
+
+.breadcrumb li {
+  display: inline;
+  font-size: 0.9rem;
+}
+
+.breadcrumb li:not(:last-child)::after {
+  content: ">";
+  margin: 0 0.5rem;
+  color: var(--grey);
+}
+
+.breadcrumb a {
+  color: var(--main);
+  text-decoration: none;
+}
+
+.breadcrumb a:hover {
+  color: var(--dark-main);
+}
+
+/* Password Input Group */
+.password-input-group {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.password-input-group input {
+  width: 100%;
+  padding-right: 40px; /* Space for the icon */
+}
+
+.toggle-password {
+  position: absolute;
+  right: 10px;
+  cursor: pointer;
+  color: var(--grey);
+  transition: color 0.3s ease;
+}
+
+.toggle-password:hover {
+  color: var(--dark);
+}

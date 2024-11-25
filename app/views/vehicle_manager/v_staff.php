@@ -17,6 +17,13 @@ require APPROOT . '/views/inc/components/topnavbar.php';
     </div>
   </div>
 
+  <div class="action-buttons">
+      <a href="<?php echo URLROOT; ?>/vehiclemanager/createStaff" class="btn btn-primary">
+          <i class='bx bx-plus'></i>
+          Register Staff
+      </a>
+  </div>
+
 
   <ul class="route-box-info">
     <li>

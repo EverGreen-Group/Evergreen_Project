@@ -1,0 +1,37 @@
+/* Date input styles */
+input[type="date"] {
+  appearance: none;
+  -webkit-appearance: none;
+  background-color: var(--light);
+  padding: 10px 12px;
+  border: 1px solid var(--grey);
+  border-radius: 5px;
+  font-family: var(--poppins);
+  color: var(--dark);
+  cursor: pointer;
+  width: 100%;
+}
+
+/* Calendar icon */
+input[type="date"]::-webkit-calendar-picker-indicator {
+  background-color: transparent;
+  padding: 5px;
+  cursor: pointer;
+  border-radius: 3px;
+  transition: 0.2s ease-in-out;
+  opacity: 0.6;
+}
+
+/* ... rest of your date input styles ... */
+
+/* Mobile optimization */
+@media screen and (max-width: 768px) {
+  input[type="date"] {
+    font-size: 16px;
+    padding: 12px;
+  }
+
+  input[type="date"]::-webkit-calendar-picker-indicator {
+    padding: 8px;
+  }
+}

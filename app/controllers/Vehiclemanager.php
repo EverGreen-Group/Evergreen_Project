@@ -26,8 +26,13 @@ class VehicleManager extends Controller {
     private $userHelper;
     private $collectionModel;
     private $collectionSupplierRecordModel;
+    private $supplierModel;
     
 
+    // Role constants
+    private const DRIVER_ROLE_ID = 3;
+    private const PARTNER_ROLE_ID = 4;
+    private const VEHICLE_MANAGER_ROLE_ID = 5;
     public function __construct() {
         // Check if user is logged in
         requireAuth();
@@ -53,9 +58,35 @@ class VehicleManager extends Controller {
         $this->userHelper = new UserHelper();
         $this->collectionModel = $this->model('M_Collection');
         $this->collectionSupplierRecordModel = $this->model('M_CollectionSupplierRecord');
+        $this->supplierModel = $this->model('M_Supplier');
     }
 
+
     public function index() {
+        // Get dashboard stats from the model
+        $stats = $this->vehicleManagerModel->getDashboardStats();
+
+        // Fetch all necessary data for the dropdowns
+        $routes = $this->routeModel->getAllRoutes();
+        $teams = $this->teamModel->getAllTeams();
+        $vehicles = $this->vehicleModel->getAllVehicles();
+        $shifts = $this->shiftModel->getAllShifts();
+        $schedules = $this->scheduleModel->getAllSchedules();
+        $ongoingCollections = $this->collectionModel->getOngoingCollections();
+
+        // Pass the stats and data for the dropdowns to the view
+        $this->view('vehicle_manager/v_collection', [
+            'stats' => $stats,
+            'routes' => $routes,
+            'teams' => $teams,
+            'vehicles' => $vehicles,
+            'shifts' => $shifts,
+            'schedules' => $schedules,
+            'ongoing_collections' => $ongoingCollections
+        ]);
+    }
+
+    public function applications() {
         // Get dashboard stats from the model
         $stats = $this->vehicleManagerModel->getDashboardStats();
 
@@ -581,49 +612,8 @@ class VehicleManager extends Controller {
         exit;
     }
 
-    public function createRoute() {
-        // Clear any previous output
-        ob_clean();
-        
-        // Set JSON headers
-        header('Content-Type: application/json');
-        
-        try {
-            // Get and validate JSON input
-            $json = file_get_contents('php://input');
-            error_log("Received data: " . $json); // Debug log
-            
-            $data = json_decode($json);
-            
-            if (!$data) {
-                throw new Exception('Invalid JSON data received');
-            }
-
-            // Create the route
-            $result = $this->routeModel->createRoute($data);
-            
-            $response = [
-                'success' => true,
-                'message' => 'Route created successfully',
-                'routeId' => $result // Assuming createRoute returns the new route ID
-            ];
-            
-            error_log("Sending response: " . json_encode($response)); // Debug log
-            echo json_encode($response);
-            
-        } catch (Exception $e) {
-            error_log("Error in createRoute: " . $e->getMessage());
-            echo json_encode([
-                'success' => false,
-                'message' => $e->getMessage()
-            ]);
-        }
-        exit;
-    }
 
     public function getRouteSuppliers($routeId) {
-        // Clear any previous output and set JSON header
-        ob_clean();
         header('Content-Type: application/json');
         
         if (!$routeId) {
@@ -649,33 +639,25 @@ class VehicleManager extends Controller {
                         'id' => $route->route_id,
                         'name' => $route->route_name,
                         'status' => $route->status,
-                        'start_location' => [
-                            'lat' => $route->start_location_lat,
-                            'lng' => $route->start_location_long
-                        ],
-                        'end_location' => [
-                            'lat' => $route->end_location_lat,
-                            'lng' => $route->end_location_long
-                        ],
                         'date' => $route->date,
+                        'vehicle_id' => $route->vehicle_id,
                         'number_of_suppliers' => $route->number_of_suppliers
                     ],
                     'suppliers' => array_map(function($supplier) {
                         return [
                             'id' => $supplier->supplier_id,
-                            'name' => $supplier->full_name,
                             'location' => [
                                 'lat' => $supplier->latitude,
                                 'lng' => $supplier->longitude
                             ],
                             'stop_order' => $supplier->stop_order,
-                            'supplier_order' => $supplier->supplier_order
+                            'number_of_collections' => $supplier->number_of_collections,
+                            'avg_collection' => $supplier->avg_collection
                         ];
                     }, $suppliers)
                 ]
             ];
 
-            error_log('Sending response: ' . json_encode($response));
             echo json_encode($response);
             
         } catch (Exception $e) {
@@ -1055,6 +1037,216 @@ class VehicleManager extends Controller {
             ]);
         }
         exit;
+    }
+
+
+    public function createRoute() {
+        if ($_SERVER['REQUEST_METHOD'] == 'GET') {
+            $vehicles = $this->vehicleModel->getUnassignedVehicles();
+            $suppliers = $this->supplierModel->getAllUnallocatedSuppliers();
+            $data = [
+                'title' => 'Create Route',
+                'vehicles' => $vehicles,
+                'suppliers' => $suppliers
+            ];
+            $this->view('routes/v_create_route', $data);
+        } 
+        elseif ($_SERVER['REQUEST_METHOD'] == 'POST') {
+            // Get POST data
+            $data = json_decode(file_get_contents('php://input'));
+            
+            // Validate data
+            if (!isset($data->route_name) || !isset($data->vehicle_id) || empty($data->suppliers)) {
+                echo json_encode(['success' => false, 'message' => 'Missing required fields']);
+                return;
+            }
+
+            try {
+                $routeId = $this->routeModel->createRouteWithSuppliers([
+                    'route_name' => $data->route_name,
+                    'vehicle_id' => $data->vehicle_id,
+                    'status' => $data->status,
+                    'suppliers' => $data->suppliers
+                ]);
+
+                echo json_encode(['success' => true, 'route_id' => $routeId]);
+            } catch (Exception $e) {
+                echo json_encode(['success' => false, 'message' => $e->getMessage()]);
+            }
+        }
+    }
+
+    public function updateRoute() {
+        if ($_SERVER['REQUEST_METHOD'] == 'GET') {
+            // Get all active routes
+            $routes = $this->routeModel->getAllRoutes();
+            // Get all vehicles
+            $vehicles = $this->vehicleModel->getAllVehicles();
+            // Get unassigned suppliers
+            $unassignedSuppliers = $this->supplierModel->getAllUnallocatedSuppliers();
+
+            $data = [
+                'title' => 'Update Route',
+                'routes' => $routes,
+                'vehicles' => $vehicles,
+                'suppliers' => $unassignedSuppliers  // These are the unassigned suppliers
+            ];
+
+            $this->view('routes/v_update_route', $data);
+        }
+    }
+
+    public function createStaff() {
+        if ($_SERVER['REQUEST_METHOD'] == 'GET') {
+            $data = [
+                'title' => 'Create Staff'
+            ];
+            $this->view('vehicle_manager/v_create_staff', $data);
+        }
+
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            // Sanitize POST data
+            $_POST = filter_input_array(INPUT_POST, FILTER_SANITIZE_STRING);
+
+            // Initialize data array with form values
+            $data = [
+                // Base user data
+                'role' => trim($_POST['role']),
+                'first_name' => trim($_POST['first_name']),
+                'last_name' => trim($_POST['last_name']),
+                'email' => trim($_POST['email']),
+                'date_of_birth' => trim($_POST['date_of_birth']),
+                'password' => trim($_POST['password']),
+                'confirm_password' => trim($_POST['confirm_password']),
+                
+                // Contact information
+                'primary_phone' => trim($_POST['primary_phone']),
+                'secondary_phone' => !empty($_POST['secondary_phone']) ? trim($_POST['secondary_phone']) : null,
+                
+                // Address information
+                'address_line1' => trim($_POST['address_line1']),
+                'address_line2' => !empty($_POST['address_line2']) ? trim($_POST['address_line2']) : null,
+                'city' => trim($_POST['city']),
+                'postal_code' => trim($_POST['postal_code']),
+                'province' => trim($_POST['province']),
+                'district' => trim($_POST['district']),
+                
+                // Employee information
+                'nic' => trim($_POST['nic']),
+                'gender' => trim($_POST['gender']),
+                'hire_date' => trim($_POST['hire_date']),
+                
+                // Role-specific information
+                'license_no' => isset($_POST['license_no']) ? trim($_POST['license_no']) : null,
+                'manager_type' => isset($_POST['manager_type']) ? trim($_POST['manager_type']) : null,
+                
+                'error' => ''
+            ];
+
+            // Validate input
+            if (!$this->validateStaffData($data)) {
+                $this->view('vehicle_manager/v_create_staff', $data);
+                return;
+            }
+
+            try {
+                // Start transaction
+                $this->vehicleManagerModel->beginTransaction();
+
+                // 1. Create base user account
+                $data['password'] = password_hash($data['password'], PASSWORD_DEFAULT);
+                $data['role_id'] = RoleHelper::getRoleByTitle($data['role']); // Using RoleHelper's getRole method
+                $data['approval_status'] = 'Approved'; // Auto-approve staff accounts
+                $userId = $this->vehicleManagerModel->createUser($data);
+
+                if (!$userId) {
+                    throw new Exception("Failed to create user account");
+                }
+
+                // 2. Create user address
+                if (!$this->vehicleManagerModel->createUserAddress($userId, $data)) {
+                    throw new Exception("Failed to create user address");
+                }
+
+                // 3. Create user contacts
+                if (!$this->vehicleManagerModel->createUserContacts($userId, $data)) {
+                    throw new Exception("Failed to create user contacts");
+                }
+
+                // 4. Create employee record
+                $employeeId = $this->vehicleManagerModel->createEmployee($userId, $data);
+                if (!$employeeId) {
+                    throw new Exception("Failed to create employee record");
+                }
+
+                // 5. Handle profile photo if uploaded
+                if (isset($_FILES['profile_photo']) && $_FILES['profile_photo']['error'] === 0) {
+                    $photoPath = $this->handleFileUpload($_FILES['profile_photo'], 'profile_photos');
+                    if (!$this->vehicleManagerModel->updateEmployeePhoto($employeeId, $photoPath)) {
+                        throw new Exception("Failed to update profile photo");
+                    }
+                }
+
+                // 6. Create role-specific records
+                if ($data['role'] === 'Driver') {
+                    if (!$this->vehicleManagerModel->createDriver($employeeId, $data)) {
+                        throw new Exception("Failed to create driver record");
+                    }
+                } elseif ($data['role'] === 'Driving Partner') {
+                    if (!$this->vehicleManagerModel->createPartner($employeeId, $data)) {
+                        throw new Exception("Failed to create partner record");
+                    }
+                } elseif ($data['role'] === 'Vehicle Manager') {
+                    if (!$this->vehicleManagerModel->createManager($employeeId, $data)) {
+                        throw new Exception("Failed to create manager record");
+                    }
+                }
+
+                // If everything is successful, commit the transaction
+                $this->vehicleManagerModel->commit();
+                flash('staff_message', 'Staff member registered successfully');
+                redirect('vehiclemanager/staff');
+
+            } catch (Exception $e) {
+                // If anything fails, rollback the transaction
+                $this->vehicleManagerModel->rollBack();
+                $data['error'] = 'Registration failed: ' . $e->getMessage();
+                $this->view('vehicle_manager/v_create_staff', $data);
+            }
+        } else {
+            // Initial page load
+            $data = [
+                'error' => '',
+                'role' => '',
+                'first_name' => '',
+                // ... initialize all other fields
+            ];
+            $this->view('vehicle_manager/v_create_staff', $data);
+        }
+    }
+
+    private function validateStaffData($data) {
+        // Basic validation rules
+        if (empty($data['first_name']) || empty($data['last_name']) || empty($data['email'])) {
+            return false;
+        }
+
+        // Password validation
+        if (strlen($data['password']) < 6 || $data['password'] !== $data['confirm_password']) {
+            return false;
+        }
+
+        // Email validation
+        if (!filter_var($data['email'], FILTER_VALIDATE_EMAIL)) {
+            return false;
+        }
+
+        // Role-specific validation
+        if ($data['role'] === 'driver' && empty($data['license_no'])) {
+            return false;
+        }
+
+        return true;
     }
 
 }

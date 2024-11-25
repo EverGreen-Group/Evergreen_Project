@@ -22,4 +22,9 @@ class M_Supplier {
         
         return $this->db->resultSet();
     }
+
+    public function getAllUnallocatedSuppliers() {
+        $this->db->query('SELECT * FROM suppliers WHERE is_active = 1 AND supplier_id NOT IN (SELECT supplier_id FROM routes)');
+        return $this->db->resultSet();
+    }
 } 
