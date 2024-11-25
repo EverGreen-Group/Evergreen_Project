@@ -207,7 +207,6 @@
     <script>
 
     /* FERTILIZER REQUESTS */
-    
     /* ORDER POPUP */
     document.getElementById('fertilizerForm').addEventListener('submit', function(e) {
         e.preventDefault();

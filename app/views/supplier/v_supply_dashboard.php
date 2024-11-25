@@ -58,7 +58,7 @@
 
                 <div class="table-data">
                 <div class="chart-container">
-                    <h4>Tea Leaves Collections Chart(Monthly)</h4>
+                    <h5>Tea Leaves Collections Chart(Last 6 Months)</h5>
                     <canvas id="teaLeavesChart"></canvas>
                 </div>
                 </div>
@@ -93,7 +93,7 @@
         </div>
         <div class="order">
             <div class="head">
-                <h5>Tea Leaves</h5>
+                <h5>Tea Leaves(This year)</h5>
                 <i class='bx bx-plus'></i>
                 <i class='bx bx-filter'></i>
             </div>
@@ -115,6 +115,7 @@
                                 <th id="table-head">Time</th>
                                 <th id="table-head">Order ID</th>
                                 <th id="table-head">Amount in kg</th>
+                                <th id="table-head">Status</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -123,18 +124,28 @@
                                 <td>08:00am</td>
                                 <td>11</td>
                                 <td>20</td>
+                                <td>Pending</td>
                             </tr>
                             <tr>
                                 <td>2024/11/05</td>
                                 <td>09:00am</td>
                                 <td>10</td>
-                                <td>15</td>
+                                <td>20</td>
+                                <td>Delivered</td>
                             </tr>
                             <tr>
                                 <td>2024/10/12</td>
                                 <td>08:00am</td>
                                 <td>9</td>
-                                <td>30</td>
+                                <td>20</td>
+                                <td>Delivered</td>
+                            </tr>
+                            <tr>
+                                <td>2024/10/07</td>
+                                <td>09:00am</td>
+                                <td>12</td>
+                                <td>26</td>
+                                <td>Delivered</td>
                             </tr>
                         </tbody>
                     </table>
@@ -159,9 +170,9 @@
             const tealeavesChart = new Chart(ctx, {
                 type: 'pie',
                 data: {
-                    labels: ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'],
+                    labels: ['June', 'July', 'August', 'September', 'October', 'November', 'December'],
                     datasets: [{
-                        data: [280, 250, 180, 120, 100, 210, 180, 120, 90, 200, 320, 0],
+                        data: [210, 180, 120, 90, 200, 320, 0],
                         backgroundColor: [
                             '#FF6384',
                             '#36A2EB',
@@ -169,12 +180,7 @@
                             '#FFCE56',
                             '#4BC0C0',
                             '#9966FF',
-                            '#FF9F40',
-                            '#4C5384',
-                            '#3FCE56',
-                            '#4B70C0',
-                            '#99666F',
-                            '#564F0B'
+                            '#9'
                         ],
                         borderWidth: 1
                     }]
