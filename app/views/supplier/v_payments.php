@@ -25,7 +25,7 @@
                 <div class="table-data">
                     <div class="order">
                     <div class="chart-container">
-                        <canvas id="incomeCostChart"></canvas>
+                        <canvas id="incomeCostChart" width="400" height="100"></canvas>
                     </div>
                     </div>
                 </div>
@@ -82,9 +82,6 @@
                                 </tr>
                             </table>
                         </div>
-                        <a href="<?php echo URLROOT; ?>/Supplier/" >
-                            <button class="button">Home</button>
-                        </a>
                     </div>
                 </div>
                 <div class="table-data">
@@ -124,12 +121,15 @@
                         <a href="<?php echo URLROOT; ?>/Supplier/" >
                             <button class="button">Home</button>
                         </a>
+                        <a href="<?php echo URLROOT; ?>/Supplier/paymentanalysis" >
+                            <button class="button">Analysis</button>
+                        </a>
                     </div>
                 </div>
         </main>
 		</div>
     </section>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <script src="<?php echo URLROOT; ?>/css/components/script.js"></script>
+    <script src="<?php echo URLROOT; ?>/css/script.js"></script>
 </body>
 </html>

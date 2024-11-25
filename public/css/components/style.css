@@ -621,7 +621,8 @@ body {
     color: #888;
 }
 .button {
-    margin-top: 1rem;
+    margin-top: 15px;
+    margin-right: 10px;
     padding: 0.75rem 2rem;
     background-color: #008000; 
     color: #fff;
@@ -735,8 +736,8 @@ body {
 }
 .btn-primary {
 	color: white;
-	width: 100px;
-	height: 40px;
+	width: 80px;
+	height: 35px;
 	display: flex;
 	justify-content: center;
 	align-items: center;
@@ -817,7 +818,7 @@ body {
 }
 .reviews li {
 	background-color: rgb(224, 224, 232);
-	color: var(--dark);
+	color: black;
 	padding: 15px;
 	border-radius: 8px;
 	border: 1px solid rgb(204, 205, 213);
@@ -904,7 +905,6 @@ body {
     background-color: var(--light-black);
 	padding: 30px;
 }
-}
 .profile-info label {
     display: inline-block;
     width: 120px;
@@ -917,10 +917,6 @@ body {
     margin-bottom: 15px;
     border: 1px solid #ddd;
     border-radius: 4px;
-}
-.button {
-    margin-top: 15px;
-    margin-right: 10px;
 }
 .profile-info tr td {
     padding: 10px 20px;
@@ -1115,7 +1111,6 @@ a {
 }
 
 /* ORDER POPUP */
-/* Add this to your CSS file */
 .popup {
     position: fixed;
     top: 20px;

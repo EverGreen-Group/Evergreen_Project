@@ -244,7 +244,7 @@
                 });
             });
         </script>
-        <script src="<?php echo URLROOT; ?>/css/components/script.js"></script>
+        <script src="<?php echo URLROOT; ?>/css/script.js"></script>
     </body>
 </html>
     

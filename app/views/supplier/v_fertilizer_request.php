@@ -176,7 +176,7 @@
         </section>
 
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <script src="<?php echo URLROOT; ?>/css/components/script.js"></script>
+    <script src="<?php echo URLROOT; ?>/css/script.js"></script>
     <script>
         window.FERTILIZER_TYPES = <?php echo json_encode($data['fertilizer_types']); ?>;
     </script>

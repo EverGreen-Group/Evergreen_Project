@@ -66,6 +66,14 @@ class Supplier extends Controller {
         $this->view('supplier/v_payments', $data);
     }
 
+    public function paymentanalysis()
+    {
+        $data = [];
+
+        $this->view('supplier/v_payment_history', $data);
+    }
+
+
     public function profile()
     {
         $data = [];

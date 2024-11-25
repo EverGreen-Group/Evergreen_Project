@@ -435,6 +435,7 @@ body {
   font-size: 13px;
   text-align: left;
   border-bottom: 1px solid var(--grey);
+  
 }
 #content main .table-data .order table td {
   padding: 16px 0;
@@ -1077,4 +1078,416 @@ body.dark .auth-form-group input {
   font-size: 0.9rem;
   line-height: 1.5;
   opacity: 0.9;
+}
+
+/* SETTINGS */
+
+h1 {
+	color: var(--dark);
+}
+a {
+	color: var(--dark-grey);
+}
+#content main .breadcrumb .active {
+	color: var(--main);
+}
+.settings-container {
+    padding: 20px;
+    background-color: var(--light);
+    color: var(--dark);
+	border-radius: 20px;
+	width: 100%;
+	text-align: left;
+}
+.settings-container h1 {
+    font-size: 2rem;
+    margin-bottom: 20px;
+}
+.settings-section {
+    margin-bottom: 30px;
+	margin-left: 50px;
+}
+.settings-section h2 {
+    font-size: 1.5rem;
+    margin-bottom: 10px;
+}
+.select-textbox {
+    width: 60%;
+    padding: 10px;
+    margin-bottom: 15px;
+    border: 1px solid var(--grey);
+    border-radius: 5px;
+}
+
+/* TEA ORDER CHART */
+
+#teaOrderHistoryChart {
+	border-radius: 20px;
+	box-shadow: var(--light-grey);
+}
+.accept-btn, .reject-btn, .pending-btn {
+	width: 80px;
+	height: 30px;
+	border-radius: 5px;
+	border: none;
+	color: white;
+}
+.accept-btn {
+	background-color: #008000;
+}
+.reject-btn {
+	background-color: red;
+}
+.pending-btn {
+	background-color: chocolate;
+}
+
+
+/*DELETE MODAL STYLES */
+.modal {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    z-index: 1000;
+    justify-content: center;
+    align-items: center;
+}
+
+.modal-content {
+    background-color: #fff;
+    padding: 20px;
+    border-radius: 5px;
+    width: 90%;
+    max-width: 500px;
+    position: relative;
+    animation: modalFadeIn 0.3s ease-out;
+}
+
+@keyframes modalFadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(-20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.modal h2 {
+    margin: 0 0 15px 0;
+    color: #333;
+}
+
+.modal p {
+    margin: 0 0 20px 0;
+    color: #666;
+}
+
+.modal-buttons {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+}
+
+.btn-delete {
+    background-color: #dc3545;
+    color: white;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+.btn-delete:hover {
+    background-color: #c82333;
+}
+
+.btn-cancel {
+    background-color: #6c757d;
+    color: white;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+.btn-cancel:hover {
+    background-color: #5a6268;
+}
+
+/* ORDER POPUP */
+.popup {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    padding: 15px 25px;
+    border-radius: 5px;
+    z-index: 1000;
+    animation: slideIn 0.5s ease-out;
+}
+
+.popup-success {
+    background-color: #4CAF50;
+    color: white;
+}
+
+.popup-error {
+    background-color: #f44336;
+    color: white;
+}
+
+@keyframes slideIn {
+    from {
+        transform: translateX(100%);
+        opacity: 0;
+    }
+    to {
+        transform: translateX(0);
+        opacity: 1;
+    }
+}
+.popup-content {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+
+/* PROFILE */
+.profile-section {
+	display: flex;
+	width: 100%;
+}
+.profile-picture-section {
+    display: flex;
+    justify-content: center;
+    margin: 20px 0;
+    padding: 20px;
+}
+.profile-image-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+}
+.profile-image-container img {
+    width: 200px;
+    height: 200px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 3px solid #4a90e2;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+.change-photo-btn {
+    background-color: #4a90e2;
+    color: white;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 14px;
+    transition: background-color 0.3s;
+}
+.change-photo-btn:hover {
+    background-color: #357abd;
+}
+.profile-info {
+    margin-top: 20px;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    width:80%;
+    margin: 10px auto;
+    border-collapse: collapse;
+	box-shadow: 0 0 5px var(--light-grey) ;
+	border-radius: 10px;
+    background-color: var(--light-black);
+	padding: 30px;
+}
+.profile-info label {
+    display: inline-block;
+    width: 120px;
+    margin-bottom: 10px;
+    font-weight: bold;
+}
+.profile-info input {
+    width: calc(100% - 130px);
+    padding: 8px;
+    margin-bottom: 15px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+}
+.button {
+  margin-top: 15px;
+  margin-right: 10px;
+  padding: 0.75rem 2rem;
+  background-color: #008000; 
+  color: #fff;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-family: var(--poppins);
+}
+.profile-info tr td {
+    padding: 10px 20px;
+    color: var(--dark);
+	border-bottom: var(--dark-grey);
+	border-top: var(--dark-grey);
+}
+.profile-info tr td label{
+	padding: 30%;
+}
+.profile-info td:first-child {
+    width: 400px;
+	height: 70px;
+    text-align: left;
+	padding: 20px;
+    vertical-align: middle;
+}
+.profile-info td:nth-child(2) {
+    width: 600px; 
+}
+.profile-info input[type="text"],
+.profile-info input[type="date"] {
+    width: 100%;
+    padding: 8px;
+    border-radius: 10px;
+    border: 1px solid var(--grey);
+    box-sizing: border-box;
+    outline: none;
+    font-family: var(--poppins);
+}
+#input {
+    width: 80%;
+    height: 70px;
+    padding: 12px 20px;
+    margin: 8px 0;
+    box-sizing: border-box;
+    border: 1px solid var(--grey);
+    border-radius: 8px;
+    background-color: var(--light);
+    font-family: var(--poppins);
+    font-size: 16px;
+    color: var(--dark);
+    transition: border 0.3s ease;
+    box-shadow: 1px 1px #cccccf;
+}
+#input:focus {
+    border: 1px solid var(--main);
+    box-shadow: 2px 2px #060714;
+}
+
+
+/* COMPLAINT FORM */
+.complaint-form {
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 2rem;
+  background: var(--light-black);
+  border-radius: 8px;
+  box-shadow: 0 0 5px var(--light-grey);
+}
+.complaint-form .form-group {
+  margin-bottom: 1rem;
+}
+.complaint-form label {
+  display: block;
+  font-size: 16px;
+  margin-bottom: 0.5rem;
+  color: var(--dark);
+}
+.complaint-form select,
+.complaint-form textarea,
+.complaint-form input {
+  width: 100%;
+  padding: 0.75rem;
+  border: 1px solid var(--grey);
+  border-radius: 4px;
+  font-size: 16px;
+  color: black;
+}
+#complaint-type {
+color: black;
+}
+.complaint-form textarea {
+  resize: vertical;
+}
+.stars i {
+font-size: 24px;
+margin-right: 2px;
+}
+.feedback {
+margin-top: 20px;
+padding: 10px;
+background: #f9f9f9;
+border: 1px solid #ddd;
+border-radius: 20px;
+}
+.rating, .reviews {
+margin-bottom: 15px;
+display: flex;
+width: 40%;
+}
+.reviews li {
+background-color: rgb(224, 224, 232);
+color: black;
+padding: 15px;
+border-radius: 8px;
+border: 1px solid rgb(204, 205, 213);
+width: 200%;
+align-content: center;
+}
+.reviews {
+flex: 1;
+padding: 10px;
+max-width: 550px;
+}
+.rating {
+color: var(--dark);
+border-radius: 20px;
+box-shadow: var(--light-grey);
+max-width: 800px;
+padding: 20px;
+margin-right: 30px;
+background-color: var(--light);
+}
+#review-container {
+background-color: var(--light-black);
+border-radius: 20px;
+display: flex;
+width: 100%;
+gap: 350px;
+padding: 30px;
+}
+.reviews h4 {
+color: var(--dark);
+}
+
+
+.btn-edit {
+	background: var(--main);
+}
+.btn-edit:hover {
+	background-color: #008000;
+}
+.btn-primary {
+	color: white;
+	width: 80px;
+	height: 35px;
+	display: flex;
+	justify-content: center;
+	align-items: center;
+	font-size: 14px;
+	border: none;
+	outline: none;
+	border-radius: 5px;
+	cursor: pointer;
+    vertical-align: middle;
 }
