@@ -24,7 +24,7 @@
                 <div class="table-data">
                     <div class="order">
                         <div class="head">
-                            <h3>Payment Analysis</h3>
+                            <h3>Yearly Payment Analysis</h3>
                         </div>
                         <div class="todo">
                             <div class="head">
@@ -53,7 +53,7 @@
             <div class="table-data">
                     <div class="order">
                         <div class="head">
-                            <h3>Payments</h3>
+                            <h3>Monthly Analysis</h3>
                         </div>
                         <div>
                             <table class="complaint-type payments-table">
@@ -73,6 +73,21 @@
                                     <th>December</th>
                                 </tr>
                                 <tr>
+                                    <td>Income</td>
+                                    <td>25,000.00</td>
+                                    <td>45,000.00</td>
+                                    <td>30,000.00</td>
+                                    <td>24,000.00</td>
+                                    <td>41,000.00</td>
+                                    <td>56,000.00</td>
+                                    <td>65,000.00</td>
+                                    <td>61,500.00</td>
+                                    <td>65,000.00</td>
+                                    <td>53,000.00</td>
+                                    <td>71,350.00</td>
+                                    <td>0.00</td>
+                                </tr>
+                                <tr>
                                     <td>Payments</td>
                                     <td>2,000.00</td>
                                     <td>47,000.00</td>
@@ -85,19 +100,37 @@
                                     <td>51,000.00</td>
                                     <td>8,000.00</td>
                                     <td>9,350.00</td>
+                                    <td>0.00</td>
+                                </tr>
+                                <tr>
+                                    <td>Profit</td>
+                                    <td>23,000.00</td>
+                                    <td>0.00</td>
+                                    <td>7,000.00</td>
+                                    <td>1,000.00</td>
                                     <td>21,000.00</td>
+                                    <td>9,000.00</td>
+                                    <td>62,000.00</td>
+                                    <td>54,500.00</td>
+                                    <td>65,000.00</td>
+                                    <td>2,000.00</td>
+                                    <td>62,350.00</td>
+                                    <td>0.00</td>
                                 </tr>
                                 <tr>
-                                    <td>Income</td>
-                                    <td></td>
-                                    <td></td>
-                                    <td></td>
-                                </tr>
-                                <tr>
-                                    <td></td>
-                                    <td></td>
-                                    <td></td>
-                                    <td></td>
+                                    <td>Loss</td>
+                                    <td>0.00</td>
+                                    <td>2,000.00</td>
+                                    <td>0.00</td>
+                                    <td>0.00</td>
+                                    <td>0.00</td>
+                                    <td>0.00</td>
+                                    <td>0.00</td>
+                                    <td>0.00</td>
+                                    <td>0.00</td>
+                                    <td>0.00</td>
+                                    <td>0.00</td>
+                                    <td>0.00</td>
                                 </tr>
                             </table>
                         </div>

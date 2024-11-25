@@ -479,7 +479,7 @@ document.addEventListener('DOMContentLoaded', function() {
         data: {
             labels: ['payments', 'income', 'profit', 'loss'],
             datasets: [{
-                data: [4050, 5020, 930, 0 ], 
+                data: [4050, 5020, 930, 50 ], 
                 backgroundColor: [
                     'rgba(45, 99, 35, 0.8)',
                     'rgba(95, 67, 87, 0.8)',

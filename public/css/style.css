@@ -431,7 +431,8 @@ body {
 }
 #content main .table-data .order .payments-table th, 
 #content main .table-data .order .payments-table td{
-  width: 200px;
+  width: 120px;
+  font-size: 12px;
 }
 #content main .table-data .order table {
   width: 100%;
