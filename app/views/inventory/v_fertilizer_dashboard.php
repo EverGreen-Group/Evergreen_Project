@@ -80,7 +80,7 @@
                             <td><?php echo $fertilizer->fertilizer_name; ?></td>
                             <td><?php echo $fertilizer->code; ?></td>
                             <td><?php echo $fertilizer->quantity; ?></td>
-                            <td><button class="update-btn">Update</button></td>
+                            <td><a href="<?php echo URLROOT; ?>/inventory/updatefertilizer/<?php echo $fertilizer->id; ?>"><button class="update-btn">Update</button></a></td>
                             <td><a href="<?php echo URLROOT; ?>/inventory/deletefertilizer/<?php echo $fertilizer->id; ?>"><button class="delete-btn">Delete</button></a></td>
                         </tr>
                         <?php endforeach; ?>

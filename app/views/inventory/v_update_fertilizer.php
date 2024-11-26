@@ -104,7 +104,7 @@
 
                     <!-- Save Button -->
                     <div class="form-footer">
-                        <button type="submit" class="save-btn">Save</button>
+                        <button type="submit" class="save-btn">Update Fertilizer</button>
                     </div>
                 </form>
             </div>
