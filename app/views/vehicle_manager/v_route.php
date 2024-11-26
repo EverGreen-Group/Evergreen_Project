@@ -8,6 +8,16 @@
 <!-- MAIN -->
 <main>
 
+<div style="background: #f0f0f0; padding: 10px; margin-bottom: 20px;">
+    Debug Info:
+    <pre>
+    <?php 
+    echo "Unallocated Suppliers:\n";
+    print_r($data); 
+    ?>
+    </pre>
+</div>
+
   <!-- Route Management Section -->
   <div class="head-title">
       <div class="left">
@@ -44,71 +54,7 @@
     </li>
 </ul>
 
-  <!-- Team Information Table -->
-  <div class="table-data">
-    <div class="order">
-      <div class="head">
-        <h3>Route details</h3>
-        <i class='bx bx-search'></i>
-      </div>
-      <table>
-        <thead>
-          <tr>
-            <th>Route ID</th>
-            <th>Name</th>
-            <th>Suppliers</th>
-            <th>Date</th>
-            <th>Status</th>
-            <th></th> <!-- Empty header for expand button -->
-          </tr>
-        </thead>
-        <tbody>
-          <?php foreach ($allRoutes as $route): ?>
-              <tr class="route-row" data-route-id="<?php echo htmlspecialchars($route->route_id); ?>">
-                  <td><?php echo htmlspecialchars($route->route_id); ?></td>
-                  <td><?php echo htmlspecialchars($route->route_name); ?></td>
-                  <td><?php echo htmlspecialchars($route->number_of_suppliers); ?></td>
-                  <td><?php echo htmlspecialchars($route->date); ?></td>
-                  <td>
-                      <span class="status <?php echo htmlspecialchars($route->status === 'Active' ? 'completed' : 'error'); ?>">
-                          <?php echo htmlspecialchars($route->status); ?>
-                      </span>
-                  </td>
-                  <td>
-                      <button class="expand-btn">
-                          <i class='bx bx-chevron-down'></i>
-                      </button>
-                  </td>
-              </tr>
-              <tr class="expanded-content" style="display: none;">
-                  <td colspan="6">
-                      <div class="expanded-details">
-                          <div class="route-map" style="height: 400px;"></div>
-                          <div class="supplier-management">
-                              <div class="current-suppliers">
-                                  <h4>Current Suppliers</h4>
-                                  <ul class="supplier-list"></ul>
-                              </div>
-                              <div class="add-supplier">
-                                  <h4>Add Supplier</h4>
-                                  <select class="supplier-select">
-                                      <option value="" disabled selected>Select a supplier</option>
-                                  </select>
-                                  <button class="add-supplier-btn">Add</button>
-                              </div>
-                          </div>
-                          <div class="action-buttons">
-                              <button class="save-changes-btn">Save Changes</button>
-                              <button class="cancel-changes-btn">Cancel</button>
-                          </div>
-                      </div>
-                  </td>
-              </tr>
-          <?php endforeach; ?>
-        </tbody>
-      </table>
-    </div>
-  </div>
+
 
   <div class="routes-section">
     <h2>All Routes</h2>
@@ -185,39 +131,94 @@
   </div>
 
 
-  <!-- Unallocated Suppliers Table -->
+  <!-- First row with two tables -->
+  <div class="table-data table-container">
+    <!-- Left table: Unallocated Suppliers -->
+    <div class="order">
+        <div class="head">
+            <h3>Unallocated Suppliers</h3>
+            <i class='bx bx-search'></i>
+        </div>
+        <table>
+            <thead>
+                <tr>
+                    <th>Supplier ID</th>
+                    <th>Name</th>
+                    <th>Location</th>
+                </tr>
+            </thead>
+            <tbody>
+                <?php foreach ($data['unassignedSuppliersList'] as $supplier): ?>
+                    <tr>
+                        <td><?php echo htmlspecialchars($supplier->supplier_id); ?></td>
+                        <td><?php echo htmlspecialchars($supplier->first_name); ?></td>
+                        <td>
+                            <a href="#" class="location-link" 
+                               data-coordinates="<?php echo htmlspecialchars($supplier->coordinates); ?>"
+                               data-name="<?php echo htmlspecialchars($supplier->supplier_name); ?>">
+                                <?php echo htmlspecialchars($supplier->coordinates); ?>
+                            </a>
+                        </td>
+                    </tr>
+                <?php endforeach; ?>
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Right table: Routes - NO SUPPLIER DETAILS HERE -->
+    <div class="order">
+        <div class="head">
+            <h3>Routes</h3>
+            <i class='bx bx-search'></i>
+        </div>
+        <table>
+            <thead>
+                <tr>
+                    <th>Route ID</th>
+                    <th>Name</th>
+                    <th>Suppliers</th>
+                    <th>Status</th>
+                </tr>
+            </thead>
+            <tbody>
+                <?php foreach ($allRoutes as $route): ?>
+                    <tr class="route-row" data-route-id="<?php echo htmlspecialchars($route->route_id); ?>">
+                        <td><?php echo htmlspecialchars($route->route_id); ?></td>
+                        <td><?php echo htmlspecialchars($route->route_name); ?></td>
+                        <td><?php echo htmlspecialchars($route->number_of_suppliers); ?></td>
+                        <td>
+                            <span class="status <?php echo htmlspecialchars($route->status === 'Active' ? 'completed' : 'error'); ?>">
+                                <?php echo htmlspecialchars($route->status); ?>
+                            </span>
+                        </td>
+                    </tr>
+                <?php endforeach; ?>
+            </tbody>
+        </table>
+    </div>
+  </div>
+
+  <!-- Separate row for Route Suppliers table -->
   <div class="table-data">
     <div class="order">
-      <div class="head">
-        <h3>Unallocated Suppliers</h3>
-        <i class='bx bx-search'></i>
-      </div>
-      <table>
-        <thead>
-          <tr>
-            <th>Supplier ID</th>
-            <th>Name</th>
-            <th>Address</th>
-            <th>Location</th>
-          </tr>
-        </thead>
-        <tbody>
-          <?php foreach ($data['unassignedSuppliersList'] as $supplier): ?>
-              <tr>
-                  <td><?php echo htmlspecialchars($supplier->supplier_id); ?></td>
-                  <td><?php echo htmlspecialchars($supplier->full_name); ?></td>
-                  <td><?php echo htmlspecialchars($supplier->street . ', ' . $supplier->city); ?></td>
-                  <td>
-                      <a href="#" class="location-link" 
-                         data-coordinates="<?php echo htmlspecialchars($supplier->coordinates); ?>"
-                         data-name="<?php echo htmlspecialchars($supplier->full_name); ?>">
-                          <?php echo htmlspecialchars($supplier->coordinates); ?>
-                      </a>
-                  </td>
-              </tr>
-          <?php endforeach; ?>
-        </tbody>
-      </table>
+        <div class="head">
+            <h3 class="route-name">Route: Select a route</h3>
+        </div>
+        <table id="routeSupplierTable">
+            <thead>
+                <tr>
+                    <th>Stop Order</th>
+                    <th>Supplier ID</th>
+                    <th>Name</th>
+                    <th>Location</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td colspan="4" class="text-center">Select a route to view suppliers</td>
+                </tr>
+            </tbody>
+        </table>
     </div>
   </div>
 
@@ -484,8 +485,42 @@
 
     .expanded-details {
         padding: 20px;
-        background: #f8f9fa;
-        border-radius: 5px;
+        background: var(--light);
+        border-radius: 8px;
+        margin: 10px;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    }
+
+    .supplier-list-container {
+        width: 100%;
+    }
+
+    .supplier-list-header {
+        display: grid;
+        grid-template-columns: 80px 2fr 1fr 2fr 1fr;
+        gap: 20px;
+        padding: 15px 20px;
+        background: var(--main);
+        color: var(--light);
+        font-weight: 600;
+    }
+
+    .supplier-list-content {
+        max-height: 300px;
+        overflow-y: auto;
+    }
+
+    .supplier-item {
+        display: grid;
+        grid-template-columns: 80px 2fr 1fr 2fr 1fr;
+        gap: 20px;
+        padding: 15px 20px;
+        border-bottom: 1px solid var(--grey);
+        align-items: center;
+    }
+
+    .supplier-item:hover {
+        background: var(--grey);
     }
 
     .supplier-management {
@@ -563,6 +598,180 @@
     #locationModal .modal-content {
         width: 80%;
         max-width: 800px;
+    }
+
+    .supplier-timeline {
+        padding: 20px;
+        background: #fff;
+        border-radius: 8px;
+        margin-top: 20px;
+    }
+
+    .timeline-header {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 10px;
+    }
+
+    .timeline-content {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+    }
+
+    .expanded-content {
+        display: none; /* Hidden by default */
+    }
+
+    .expanded-content td {
+        padding: 0; /* Remove padding from td */
+    }
+
+    .supplier-list {
+        width: 100%;
+        background: var(--light);
+    }
+
+    .supplier-list-header {
+        display: grid;
+        grid-template-columns: 80px 2fr 1fr 2fr 1fr;
+        gap: 20px;
+        padding: 15px 20px;
+        background: var(--main);
+        color: var(--light);
+        font-weight: 600;
+    }
+
+    .supplier-list-content {
+        max-height: 300px;
+        overflow-y: auto;
+    }
+
+    .supplier-item {
+        display: grid;
+        grid-template-columns: 80px 2fr 1fr 2fr 1fr;
+        gap: 20px;
+        padding: 15px 20px;
+        border-bottom: 1px solid var(--grey);
+        align-items: center;
+    }
+
+    .supplier-item:hover {
+        background: var(--grey);
+    }
+
+    .expanded-content {
+        display: none;
+        position: relative;
+    }
+
+    .expanded-content::after {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: var(--light);
+        z-index: 1;
+    }
+
+    .supplier-list {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        z-index: 2;
+        background: var(--light);
+    }
+
+    .supplier-list-header {
+        display: grid;
+        grid-template-columns: 80px 2fr 1fr 2fr 1fr;
+        gap: 20px;
+        padding: 15px 20px;
+        background: var(--main);
+        color: var(--light);
+        font-weight: 600;
+    }
+
+    .supplier-list-content {
+        max-height: 300px;
+        overflow-y: auto;
+    }
+
+    .supplier-item {
+        display: grid;
+        grid-template-columns: 80px 2fr 1fr 2fr 1fr;
+        gap: 20px;
+        padding: 15px 20px;
+        border-bottom: 1px solid var(--grey);
+        align-items: center;
+    }
+
+    .supplier-item:hover {
+        background: var(--grey);
+    }
+
+    .table-container {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 24px;
+    }
+
+    .route-row {
+        cursor: pointer;
+    }
+
+    .route-row:hover {
+        background-color: var(--grey);
+    }
+
+    .route-row.selected {
+        background-color: var(--grey);
+    }
+
+    .route-name {
+        color: var(--dark-grey);
+        font-size: 14px;
+        margin: 0;
+    }
+
+    .supplier-details {
+        padding: 15px;
+        background: var(--light);
+        border-radius: 4px;
+        margin: 10px;
+    }
+
+    .supplier-details h4 {
+        margin-bottom: 10px;
+        color: var(--dark);
+    }
+
+    .supplier-details-table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+
+    .supplier-details-table th,
+    .supplier-details-table td {
+        padding: 8px;
+        text-align: left;
+        border-bottom: 1px solid var(--grey);
+    }
+
+    .supplier-details-table th {
+        background-color: var(--grey);
+        font-weight: 600;
+    }
+
+    .route-row.active {
+        background-color: var(--grey);
+    }
+
+    #routeSupplierTable {
+        margin-top: 10px;
     }
 </style>
 
@@ -851,62 +1060,51 @@ document.addEventListener('DOMContentLoaded', () => {
     routeForm.addEventListener('submit', async (e) => {
         e.preventDefault();
         
-        // Get form data
-        const routeName = document.getElementById('routeName').value;
-        const routeStatus = document.getElementById('status').value;
-        
-        // Validate
-        if (!routeName) {
-            alert('Please enter a route name');
-            return;
-        }
-
-        if (currentRoute.stops.length === 0) {
-            alert('Please add at least one supplier to the route');
-            return;
-        }
-
-        // Prepare data for API
-        const routeData = {
-            name: routeName,
-            status: routeStatus,
-            stops: currentRoute.stops.map(stop => ({
-                id: parseInt(stop.id.replace('S', '')) // Convert 'S1' to 1
-            }))
-        };
-
-        console.log('Sending data:', routeData); // Debug log
-
         try {
+            const routeData = {
+                name: document.getElementById('routeName').value,
+                status: document.getElementById('status').value,
+                stops: currentRoute.stops.map(stop => ({
+                    id: parseInt(stop.id)
+                }))
+            };
+
+            console.log('Sending data:', routeData); // Debug log
+
             const response = await fetch('<?php echo URLROOT; ?>/vehiclemanager/createRoute', {
                 method: 'POST',
                 headers: {
-                    'Content-Type': 'application/json'
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json'
                 },
                 body: JSON.stringify(routeData)
             });
 
-            console.log('Response status:', response.status); // Debug log
+            // Log the raw response for debugging
+            const rawResponse = await response.text();
+            console.log('Raw response:', rawResponse);
 
-            const result = await response.json();
-            console.log('Response data:', result); // Debug log
+            // Try to parse the response
+            let result;
+            try {
+                result = JSON.parse(rawResponse);
+                console.log('Parsed response:', result);
+            } catch (parseError) {
+                console.error('Failed to parse response:', parseError);
+                throw new Error('Invalid server response');
+            }
 
             if (result.success) {
-                alert('Route created successfully!');
-                // Reset form
-                routeForm.reset();
-                currentRoute.stops = [];
-                updateStopList();
-                // Close modal
+                alert(result.message);
                 modal.style.display = 'none';
-                // Reload page to show new route
                 window.location.reload();
             } else {
-                alert('Error: ' + (result.message || 'Unknown error occurred'));
+                throw new Error(result.message || 'Failed to create route');
             }
+
         } catch (error) {
-            console.error('Error details:', error); // Detailed error log
-            alert('An error occurred while creating the route: ' + error.message);
+            console.error('Error:', error);
+            alert('Error creating route: ' + error.message);
         }
     });
 
@@ -946,51 +1144,43 @@ document.addEventListener('DOMContentLoaded', () => {
             id: route.route_id,
             name: route.route_name,
             status: route.status,
+            start_location: {
+                lat: parseFloat(route.start_location_lat),
+                lng: parseFloat(route.start_location_long)
+            },
+            end_location: {
+                lat: parseFloat(route.end_location_lat),
+                lng: parseFloat(route.end_location_long)
+            },
             stops: []
         };
 
-        // Fetch route suppliers
         try {
             const url = `<?php echo URLROOT; ?>/vehiclemanager/getRouteSuppliers/${route.route_id}`;
-            console.log('Fetching from URL:', url); // Debug log
+            console.log('Fetching suppliers for route:', route.route_id); // Debug log
             
             const response = await fetch(url);
-            console.log('Response:', response); // Debug log
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
             
             const routeSuppliers = await response.json();
-            console.log('Route suppliers:', routeSuppliers); // Debug log
+            console.log('Received suppliers:', routeSuppliers); // Debug log
             
-            editingRoute.stops = routeSuppliers.map(supplier => ({
-                id: 'S' + supplier.supplier_id,
-                name: supplier.supplier_name,
-                location: {
-                    lat: parseFloat(supplier.coordinates.split(',')[0]),
-                    lng: parseFloat(supplier.coordinates.split(',')[1])
-                }
-            }));
+            // Update the stops array with the received suppliers
+            if (routeSuppliers.success) {
+                editingRoute.stops = routeSuppliers.data.suppliers; // Access the suppliers correctly
+            } else {
+                throw new Error(routeSuppliers.message || 'Failed to load suppliers');
+            }
+            
+            // Update the UI
+            updateEditStopList();
+            
         } catch (error) {
-            console.error('Detailed error:', error); // More detailed error log
-            alert('Error loading route details');
-            return;
+            console.error('Error fetching route suppliers:', error);
+            alert('Error loading route details: ' + error.message);
         }
-
-        // Populate form
-        document.getElementById('editRouteId').value = editingRoute.id;
-        document.getElementById('editRouteName').value = editingRoute.name;
-        document.getElementById('editStatus').value = editingRoute.status;
-
-        // Populate supplier dropdown
-        populateEditSupplierDropdown();
-        updateEditStopList();
-
-        // Show modal
-        editModal.style.display = 'block';
-
-        // Initialize map
-        setTimeout(() => {
-            initEditMap();
-            updateEditMap();
-        }, 100);
     }
 
     function populateEditSupplierDropdown() {
@@ -1007,31 +1197,24 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function updateEditStopList() {
-        editStopList.innerHTML = '';
-        editingRoute.stops.forEach((stop, index) => {
-            const li = document.createElement('li');
-            li.innerHTML = `${index + 1}. ${stop.name} <span class="remove-stop" data-id="${stop.id}">Remove</span>`;
-            editStopList.appendChild(li);
-        });
+        const stopList = document.getElementById('editStopList');
+        stopList.innerHTML = ''; // Clear existing stops
 
-        document.querySelectorAll('#editStopList .remove-stop').forEach(removeButton => {
-            removeButton.addEventListener('click', function() {
-                const stopId = this.getAttribute('data-id');
-                const removedStop = editingRoute.stops.find(stop => stop.id === stopId);
-                
-                editingRoute.stops = editingRoute.stops.filter(stop => stop.id !== stopId);
-                
-                if (removedStop) {
-                    const option = document.createElement('option');
-                    option.value = removedStop.id;
-                    option.textContent = removedStop.name;
-                    editSupplierSelect.appendChild(option);
-                }
-                
-                updateEditStopList();
-                updateEditMap();
+        if (Array.isArray(editingRoute.stops) && editingRoute.stops.length > 0) {
+            editingRoute.stops.forEach((stop, index) => {
+                const li = document.createElement('li');
+                li.innerHTML = `
+                    <span class="stop-number">${index + 1}</span>
+                    <span class="supplier-name">${stop.name}</span>
+                    <button type="button" class="remove-stop" onclick="removeStop(this)">×</button>
+                `;
+                stopList.appendChild(li);
             });
-        });
+        } else {
+            const li = document.createElement('li');
+            li.textContent = 'No stops available';
+            stopList.appendChild(li);
+        }
     }
 
     // Add event listeners
@@ -1095,99 +1278,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    // Add to your existing JavaScript
-    document.querySelectorAll('.expand-btn').forEach(button => {
-        button.addEventListener('click', async function() {
-            const row = this.closest('.route-row');
-            const expandedRow = row.nextElementSibling;
-            const routeId = row.dataset.routeId;
-            const mapContainer = expandedRow.querySelector('.route-map');
-            
-            this.classList.toggle('active');
-            
-            if (expandedRow.style.display === 'none') {
-                expandedRow.style.display = 'table-row';
-                
-                try {
-                    const response = await fetch(`<?php echo URLROOT; ?>/vehiclemanager/getRouteSuppliers/${routeId}`);
-                    const suppliers = await response.json();
-                    
-                    // Use the existing map logic
-                    const expandedMap = new google.maps.Map(mapContainer, {
-                        zoom: 8,
-                        center: { lat: 7.8731, lng: 80.7718 }
-                    });
-
-                    const expandedDirectionsService = new google.maps.DirectionsService();
-                    const expandedDirectionsRenderer = new google.maps.DirectionsRenderer({
-                        suppressMarkers: true
-                    });
-                    expandedDirectionsRenderer.setMap(expandedMap);
-
-                    // Convert suppliers to the format expected by the existing logic
-                    const routeStops = suppliers.map(supplier => ({
-                        id: 'S' + supplier.supplier_id,
-                        name: supplier.supplier_name,
-                        location: {
-                            lat: parseFloat(supplier.coordinates.split(',')[0]),
-                            lng: parseFloat(supplier.coordinates.split(',')[1])
-                        }
-                    }));
-
-                    // Use the existing route optimization and display logic
-                    const factoryLocation = { 
-                        lat: <?php echo M_Route::FACTORY_LAT; ?>, 
-                        lng: <?php echo M_Route::FACTORY_LONG; ?> 
-                    };
-
-                    const orderedStops = orderStopsByNearestNeighbor(factoryLocation, routeStops);
-                    const routePoints = [
-                        {
-                            location: factoryLocation,
-                            name: 'Factory (Start)'
-                        },
-                        ...orderedStops
-                    ];
-
-                    // Add markers and calculate route using existing logic
-                    if (routePoints.length >= 2) {
-                        const origin = routePoints[0].location;
-                        const destination = routePoints[routePoints.length - 1].location;
-                        const waypoints = routePoints.slice(1, -1).map(stop => ({
-                            location: stop.location,
-                            stopover: true
-                        }));
-
-                        expandedDirectionsService.route(
-                            {
-                                origin: origin,
-                                destination: destination,
-                                waypoints: waypoints,
-                                optimizeWaypoints: false,
-                                travelMode: google.maps.TravelMode.DRIVING,
-                            },
-                            (response, status) => {
-                                if (status === "OK" && response) {
-                                    expandedDirectionsRenderer.setDirections(response);
-                                    
-                                    // Add markers using existing marker logic
-                                    addRouteMarkers(expandedMap, routePoints);
-                                }
-                            }
-                        );
-                    }
-
-                    updateSupplierList(expandedRow, suppliers);
-                    
-                } catch (error) {
-                    console.error('Error:', error);
-                    alert('Error loading route details');
-                }
-            } else {
-                expandedRow.style.display = 'none';
-            }
-        });
-    });
 
     // Helper function to add markers
     function addRouteMarkers(map, routePoints) {
@@ -1215,6 +1305,195 @@ document.addEventListener('DOMContentLoaded', () => {
             });
         });
     }
+
+    function updateSupplierList(expandedRow, suppliers) {
+        const listContent = expandedRow.querySelector('.supplier-list-content');
+        listContent.innerHTML = '';
+        
+        suppliers.forEach((supplier, index) => {
+            const supplierItem = document.createElement('div');
+            supplierItem.className = 'supplier-item';
+            supplierItem.innerHTML = `
+                <div>${index + 1}</div>
+                <div>${supplier.supplier_name}</div>
+                <div>${supplier.contact_number}</div>
+                <div>${supplier.address}</div>
+                <div>${supplier.daily_capacity} kg</div>
+            `;
+            listContent.appendChild(supplierItem);
+        });
+    }
+
+    const routeRows = document.querySelectorAll('.route-row');
+    const supplierTableBody = document.querySelector('#routeSupplierTable tbody');
+    const routeNameDisplay = document.querySelector('.route-name');
+
+    routeRows.forEach(row => {
+        row.addEventListener('click', async function() {
+            // Remove selected class from all rows
+            document.querySelectorAll('.route-row').forEach(r => r.classList.remove('selected'));
+            // Add selected class to clicked row
+            this.classList.add('selected');
+
+            const routeId = this.dataset.routeId;
+            const routeName = this.querySelector('td:nth-child(2)').textContent;
+
+            try {
+                const response = await fetch(`<?php echo URLROOT; ?>/vehiclemanager/getRouteSuppliers/${routeId}`);
+                if (!response.ok) {
+                    throw new Error('Failed to fetch suppliers');
+                }
+                
+                const result = await response.json();
+                console.log('Received data:', result); // Debug log
+                
+                if (!result.success) {
+                    throw new Error(result.error || 'Failed to load suppliers');
+                }
+
+                // Update route name display
+                routeNameDisplay.textContent = `Route: ${result.data.route.name}`;
+                
+                // Clear existing table content
+                supplierTableBody.innerHTML = '';
+                
+                // Check if suppliers exist
+                if (!result.data.suppliers || result.data.suppliers.length === 0) {
+                    const emptyRow = document.createElement('tr');
+                    emptyRow.innerHTML = '<td colspan="4" style="text-align: center;">No suppliers assigned to this route</td>';
+                    supplierTableBody.appendChild(emptyRow);
+                    return;
+                }
+                
+                // Add each supplier to the table
+                result.data.suppliers.forEach((supplier, index) => {
+                    const row = document.createElement('tr');
+                    row.innerHTML = `
+                        <td>${supplier.stop_order || index + 1}</td>
+                        <td>${supplier.id || 'N/A'}</td>
+                        <td>${supplier.name || 'N/A'}</td>
+                        <td>${supplier.location.lat}, ${supplier.location.lng}</td>
+                    `;
+                    supplierTableBody.appendChild(row);
+                });
+                
+            } catch (error) {
+                console.error('Error:', error);
+                routeNameDisplay.textContent = 'Error loading suppliers';
+                supplierTableBody.innerHTML = '<tr><td colspan="4" style="text-align: center;">Error loading suppliers</td></tr>';
+            }
+        });
+    });
+
+    // Update the click handler for route cards
+    document.addEventListener('click', async function(e) {
+        if (e.target.closest('.route-card')) {
+            const card = e.target.closest('.route-card');
+            const routeId = card.dataset.routeId;
+            
+            try {
+                console.log('Fetching route data for ID:', routeId); // Debug log
+                
+                const response = await fetch(`<?php echo URLROOT; ?>/vehiclemanager/getRouteDetails/${routeId}`, {
+                    headers: {
+                        'Accept': 'application/json'
+                    }
+                });
+
+                // Log the raw response for debugging
+                const rawResponse = await response.text();
+                console.log('Raw response:', rawResponse);
+
+                // Try to parse the response
+                let routeData;
+                try {
+                    routeData = JSON.parse(rawResponse);
+                    console.log('Parsed route data:', routeData);
+                } catch (parseError) {
+                    console.error('Failed to parse response:', parseError);
+                    throw new Error('Invalid server response');
+                }
+
+                if (!routeData) {
+                    throw new Error('No route data received');
+                }
+
+                // Open the edit modal with the route data
+                openRouteModal(routeData);
+
+            } catch (error) {
+                console.error('Error fetching route details:', error);
+                alert('Error loading route details: ' + error.message);
+            }
+        }
+    });
+
+    // Add this function to handle route selection and update the table
+    async function updateRouteSupplierTable(routeId) {
+        try {
+            const response = await fetch(`<?php echo URLROOT; ?>/vehiclemanager/getRouteSuppliers/${routeId}`);
+            const data = await response.json();
+            
+            console.log('Route supplier data:', data); // Debug log
+
+            // Get the table elements
+            const routeNameDisplay = document.querySelector('.route-name');
+            const supplierTableBody = document.querySelector('#routeSupplierTable tbody');
+
+            if (!data.success) {
+                throw new Error(data.error || 'Failed to load route suppliers');
+            }
+
+            // Update route name display
+            routeNameDisplay.textContent = `Route: ${data.data.route.name}`;
+
+            // Clear existing table rows
+            supplierTableBody.innerHTML = '';
+
+            // Check if there are suppliers
+            if (!data.data.suppliers || data.data.suppliers.length === 0) {
+                supplierTableBody.innerHTML = `
+                    <tr>
+                        <td colspan="4" class="text-center">No suppliers assigned to this route</td>
+                    </tr>`;
+                return;
+            }
+
+            // Add suppliers to table
+            data.data.suppliers.forEach((supplier) => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${supplier.stop_order || '-'}</td>
+                    <td>${supplier.id}</td>
+                    <td>${supplier.name}</td>
+                    <td>${supplier.location.lat}, ${supplier.location.lng}</td>
+                `;
+                supplierTableBody.appendChild(row);
+            });
+
+        } catch (error) {
+            console.error('Error updating supplier table:', error);
+            alert('Error loading route suppliers: ' + error.message);
+        }
+    }
+
+    // Update your route click handler
+    document.addEventListener('click', function(e) {
+        const routeCard = e.target.closest('.route-card');
+        if (routeCard) {
+            const routeId = routeCard.dataset.routeId;
+            if (routeId) {
+                // Update the supplier table
+                updateRouteSupplierTable(routeId);
+                
+                // Highlight the selected route card
+                document.querySelectorAll('.route-card').forEach(card => {
+                    card.classList.remove('selected');
+                });
+                routeCard.classList.add('selected');
+            }
+        }
+    });
 });
 
 // Global initMap function for Google Maps callback

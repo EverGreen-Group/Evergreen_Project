@@ -2,6 +2,7 @@
 <?php require APPROOT . '/views/inc/components/sidebar_vehicle_driver.php'; ?>
 <?php require APPROOT . '/views/inc/components/topnavbar.php'; ?>
 
+
 <main class="shift-management-main">
     <div class="shift-header">
         <h1>Shift Management</h1>
@@ -10,43 +11,78 @@
     <div class="shift-content">
         <section class="upcoming-shifts">
             <h2>Upcoming Shifts</h2>
-            <table class="shift-table">
-                <thead>
-                    <tr>
-                        <th>Date</th>
-                        <th>Time</th>
-                        <th>Team</th>
-                        <th>Status</th>
-                        <th>Actions</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <?php
-                    // Dummy data for demonstration
-                    $upcomingShifts = [
-                        ['date' => '2024-09-20', 'time' => '08:00 - 16:00', 'team' => 'Team A', 'status' => 'Pending'],
-                        ['date' => '2024-09-21', 'time' => '09:00 - 17:00', 'team' => 'Team A', 'status' => 'Accepted'],
-                        ['date' => '2024-09-22', 'time' => '10:00 - 18:00', 'team' => 'Team A', 'status' => 'Pending'],
-                    ];
+            <?php if (isset($data['error'])): ?>
+                <div class="alert alert-warning"><?php echo $data['error']; ?></div>
+            <?php else: ?>
+                <table class="shift-table">
+                    <thead>
+                        <tr>
+                            <th>Day</th>
+                            <th>Time</th>
+                            <th>Team</th>
+                            <th>Countdown</th>
+                            <th>Status</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <?php 
+                        if (!empty($data['upcomingShifts'])):
+                            // Prepare sorted shifts array
+                            $sortedShifts = [];
+                            foreach ($data['upcomingShifts'] as $shift) {
+                                $days = explode(',', $shift->days_of_week);
+                                foreach ($days as $day) {
+                                    $nextDate = date('Y-m-d', strtotime("next $day"));
+                                    $startDateTime = $nextDate . ' ' . $shift->start_time;
+                                    $timestamp = strtotime($startDateTime);
+                                    
+                                    // Only include future shifts
+                                    if ($timestamp > time()) {
+                                        $sortedShifts[] = [
+                                            'day' => ucfirst($day),
+                                            'startDateTime' => $startDateTime,
+                                            'timestamp' => $timestamp,
+                                            'shift' => $shift
+                                        ];
+                                    }
+                                }
+                            }
 
-                    foreach ($upcomingShifts as $shift):
-                    ?>
-                    <tr>
-                        <td><?php echo $shift['date']; ?></td>
-                        <td><?php echo $shift['time']; ?></td>
-                        <td><?php echo $shift['team']; ?></td>
-                        <td><span class="status-<?php echo strtolower($shift['status']); ?>"><?php echo $shift['status']; ?></span></td>
-                        <td>
-                            <?php if ($shift['status'] === 'Pending'): ?>
-                                <button class="btn btn-primary btn-sm" onclick="acceptShift('<?php echo $shift['date']; ?>')">Accept</button>
-                            <?php elseif ($shift['status'] === 'Accepted'): ?>
-                                <button class="btn btn-secondary btn-sm" onclick="requestChange('<?php echo $shift['date']; ?>')">Request Change</button>
-                            <?php endif; ?>
-                        </td>
-                    </tr>
-                    <?php endforeach; ?>
-                </tbody>
-            </table>
+                            // Sort shifts by timestamp
+                            usort($sortedShifts, function($a, $b) {
+                                return $a['timestamp'] - $b['timestamp'];
+                            });
+
+                            foreach ($sortedShifts as $sortedShift):
+                                $shift = $sortedShift['shift'];
+                        ?>
+                            <tr>
+                                <td><?php echo $sortedShift['day']; ?></td>
+                                <td><?php echo $shift->start_time . ' - ' . $shift->end_time; ?></td>
+                                <td><?php echo $shift->team_name; ?></td>
+                                <td>
+                                    <span class="countdown" data-start="<?php echo $sortedShift['startDateTime']; ?>">
+                                        Calculating...
+                                    </span>
+                                </td>
+                                <td><span class="status-active">Active</span></td>
+                                <td>
+                                    <a href="<?php echo URLROOT; ?>/vehicledriver/scheduleDetails/<?php echo $shift->schedule_id; ?>" 
+                                       class="btn btn-primary btn-sm">View Details</a>
+                                </td>
+                            </tr>
+                        <?php 
+                            endforeach;
+                        else: 
+                        ?>
+                            <tr>
+                                <td colspan="6" class="text-center">No shifts available</td>
+                            </tr>
+                        <?php endif; ?>
+                    </tbody>
+                </table>
+            <?php endif; ?>
         </section>
 
         <section class="shift-actions">
@@ -58,35 +94,43 @@
             </div>
         </section>
 
+        <?php
+        // Format shifts for the calendar
+        $calendarShifts = [];
+        if (!empty($data['upcomingShifts'])) {
+            foreach ($data['upcomingShifts'] as $shift) {
+                $days = explode(',', $shift->days_of_week);
+                foreach ($days as $day) {
+                    $nextDate = date('Y-m-d', strtotime("next $day"));
+                    if (!isset($calendarShifts[$nextDate])) {
+                        $calendarShifts[$nextDate] = [];
+                    }
+                    $calendarShifts[$nextDate][] = [
+                        'start_time' => $shift->start_time,
+                        'end_time' => $shift->end_time,
+                        'location' => $shift->team_name,
+                    ];
+                }
+            }
+        }
+        ?>
+
         <section class="shift-calendar">
             <h2>Shift Calendar</h2>
-            <div id="shift-calendar"></div>
+            <div id="shift-calendar">
+                <?php 
+                // Pass the formatted shifts to the calendar component
+                $data['shifts'] = $calendarShifts;
+                require APPROOT . '/views/inc/components/calendar.php'; 
+                ?>
+            </div>
         </section>
     </div>
 </main>
 
-<script src="https://cdn.jsdelivr.net/npm/fullcalendar@5.10.2/main.min.js"></script>
-<link href="https://cdn.jsdelivr.net/npm/fullcalendar@5.10.2/main.min.css" rel="stylesheet">
 
 <script>
-document.addEventListener('DOMContentLoaded', function() {
-    var calendarEl = document.getElementById('shift-calendar');
-    var calendar = new FullCalendar.Calendar(calendarEl, {
-        initialView: 'dayGridMonth',
-        headerToolbar: {
-            left: 'prev,next today',
-            center: 'title',
-            right: 'dayGridMonth,timeGridWeek,timeGridDay'
-        },
-        events: [
-            // Add your shift events here
-            { title: 'Shift', start: '2024-09-20T08:00:00', end: '2024-09-20T16:00:00' },
-            { title: 'Shift', start: '2024-09-21T09:00:00', end: '2024-09-21T17:00:00' },
-            { title: 'Shift', start: '2024-09-22T10:00:00', end: '2024-09-22T18:00:00' }
-        ]
-    });
-    calendar.render();
-});
+
 
 function acceptShift(date) {
     // Implement shift acceptance logic
@@ -112,6 +156,34 @@ function requestTeamChange() {
     // Implement team change request logic
     alert('Opening team change request form');
 }
+</script>
+
+<script>
+function updateCountdowns() {
+    document.querySelectorAll('.countdown').forEach(function(element) {
+        const startTime = new Date(element.dataset.start).getTime();
+        const now = new Date().getTime();
+        const distance = startTime - now;
+
+        if (distance < 0) {
+            element.innerHTML = "Started";
+            return;
+        }
+
+        // Time calculations
+        const days = Math.floor(distance / (1000 * 60 * 60 * 24));
+        const hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+        const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
+        const seconds = Math.floor((distance % (1000 * 60)) / 1000);
+
+        element.innerHTML = `${days}d ${hours}h ${minutes}m ${seconds}s`;
+    });
+}
+
+// Update countdowns every second
+setInterval(updateCountdowns, 1000);
+// Initial update
+updateCountdowns();
 </script>
 
 <style>
@@ -206,12 +278,12 @@ function requestTeamChange() {
 }
 
 .btn-primary {
-    background-color: #86E211;
+    background-color: #007664;
     color: #fff;
 }
 
 .btn-primary:hover {
-    background-color: #78cc0f;
+    background-color: #005a4d;
 }
 
 .btn-secondary {
@@ -231,6 +303,59 @@ function requestTeamChange() {
 
 #shift-calendar {
     height: 600px;
+}
+
+.countdown {
+    font-family: monospace;
+    font-weight: bold;
+    color: #2c3e50;
+}
+
+/* Additional Calendar Styles */
+.fc-event {
+    border: none !important;
+    padding: 3px !important;
+    margin: 2px !important;
+}
+
+.fc-content {
+    padding: 4px;
+}
+
+.fc-title {
+    font-weight: bold;
+    font-size: 0.9em;
+    margin-bottom: 2px;
+}
+
+.fc-location {
+    font-size: 0.8em;
+    color: #666;
+    margin-bottom: 2px;
+}
+
+.fc-time {
+    font-size: 0.8em;
+    color: #444;
+}
+
+.fc-day-today {
+    background: #f8f9fa !important;
+}
+
+.fc-button-primary {
+    background-color: #007664 !important;
+    border-color: #005a4d !important;
+}
+
+.fc-button-primary:hover {
+    background-color: #005a4d !important;
+    border-color: #004a3f !important;
+}
+
+.fc-button-primary:disabled {
+    background-color: #339989 !important;
+    border-color: #2d8579 !important;
 }
 </style>
 

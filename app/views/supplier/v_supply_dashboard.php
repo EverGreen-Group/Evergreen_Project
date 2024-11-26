@@ -58,7 +58,7 @@
 
                 <div class="table-data">
                 <div class="chart-container">
-                    <h4>Tea Leaves Collections Chart(Monthly)</h4>
+                    <h5>Tea Leaves Collections Chart(Last 6 Months)</h5>
                     <canvas id="teaLeavesChart"></canvas>
                 </div>
                 </div>
@@ -87,13 +87,13 @@
             <?php else: ?>
                 <div>No pending requests</div>
             <?php endif; ?>
-            <a href="<?php echo URLROOT; ?>/Supplier/v_notifications/" >
+            <a href="<?php echo URLROOT; ?>/Supplier/notifications/" >
                 <button class="button">Collection Notifications</button>
             </a>
         </div>
         <div class="order">
             <div class="head">
-                <h5>Tea Leaves</h5>
+                <h5>Tea Leaves(This year)</h5>
                 <i class='bx bx-plus'></i>
                 <i class='bx bx-filter'></i>
             </div>
@@ -115,6 +115,7 @@
                                 <th id="table-head">Time</th>
                                 <th id="table-head">Order ID</th>
                                 <th id="table-head">Amount in kg</th>
+                                <th id="table-head">Status</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -123,25 +124,35 @@
                                 <td>08:00am</td>
                                 <td>11</td>
                                 <td>20</td>
+                                <td>Pending</td>
                             </tr>
                             <tr>
                                 <td>2024/11/05</td>
                                 <td>09:00am</td>
                                 <td>10</td>
-                                <td>15</td>
+                                <td>20</td>
+                                <td>Delivered</td>
                             </tr>
                             <tr>
                                 <td>2024/10/12</td>
                                 <td>08:00am</td>
                                 <td>9</td>
-                                <td>30</td>
+                                <td>20</td>
+                                <td>Delivered</td>
+                            </tr>
+                            <tr>
+                                <td>2024/10/07</td>
+                                <td>09:00am</td>
+                                <td>12</td>
+                                <td>26</td>
+                                <td>Delivered</td>
                             </tr>
                         </tbody>
                     </table>
                 </div>
             </div>
             
-            <a href="<?php echo URLROOT; ?>/Supplier/cancel_pickup/" >
+            <a href="<?php echo URLROOT; ?>/Supplier/cancelpickup/" >
                 <button class="button">Cancel Pickup</button>
             </a>
 
@@ -150,52 +161,55 @@
 
 </main>
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="<?php echo URLROOT; ?>/css/script.js"></script>
 
         <!-- TEA ORDER CHART -->
         <script>
-        const ctx = document.getElementById('teaLeavesChart').getContext('2d');
-        
-        new Chart(ctx, {
-            type: 'pie',
-            data: {
-                labels: ['January', 'February', 'March', 'April', 'May', 'June'],
-                datasets: [{
-                    data: [280, 250, 180, 120, 100, 210],
-                    backgroundColor: [
-                        '#FF6384',
-                        '#36A2EB',
-                        '#FFCE56',
-                        '#4BC0C0',
-                        '#9966FF',
-                        '#FF9F40'
-                    ],
-                    borderWidth: 1
-                }]
-            },
-            options: {
-                responsive: true,
-                plugins: {
-                    legend: {
-                        position: 'right',
-                        labels: {
-                            font: {
-                                size: 14
+        document.addEventListener('DOMContentLoaded', function() {
+            const ctx = document.getElementById('teaLeavesChart').getContext('2d');
+            const tealeavesChart = new Chart(ctx, {
+                type: 'pie',
+                data: {
+                    labels: ['June', 'July', 'August', 'September', 'October', 'November', 'December'],
+                    datasets: [{
+                        data: [210, 180, 120, 90, 200, 320, 0],
+                        backgroundColor: [
+                            '#FF6384',
+                            '#36A2EB',
+                            '#36923B',
+                            '#FFCE56',
+                            '#4BC0C0',
+                            '#9966FF',
+                            '#9'
+                        ],
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: {
+                            position: 'right',
+                            labels: {
+                                font: {
+                                    size: 14
+                                }
                             }
-                        }
-                    },
-                    tooltip: {
-                        callbacks: {
-                            label: function(context) {
-                                const label = context.label || '';
-                                const value = context.raw || 0;
-                                const total = context.dataset.data.reduce((a, b) => a + b, 0);
-                                const percentage = ((value / total) * 100).toFixed(1);
-                                return `${label}: ${value} (${percentage}%)`;
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    const label = context.label || '';
+                                    const value = context.raw || 0;
+                                    const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                                    const percentage = ((value / total) * 100).toFixed(1);
+                                    return `${label}: ${value} (${percentage}%)`;
+                                }
                             }
                         }
                     }
                 }
-            }
+            })
         });
         </script>
         <script>
@@ -204,10 +218,10 @@
                 var teaLeavesCollectionChart = new Chart(ctx, {
                     type: 'line',
                     data: {
-                        labels: ['January', 'February', 'March', 'April', 'May', 'June'], 
+                        labels: ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'], 
                         datasets: [{
                             label: 'Tea Leaves Collections',
-                            data: [280, 250, 180, 120, 100, 210], // Example data 
+                            data: [280, 250, 180, 120, 100, 210, 180, 120, 90, 200, 320, 0], // Example data 
                             fill: false,
                             backgroundColor: 'rgba(75, 192, 192, 0.2)',
                             borderColor: 'rgba(75, 192, 192, 1)',
@@ -244,7 +258,6 @@
                 });
             });
         </script>
-        <script src="<?php echo URLROOT; ?>/css/components/script.js"></script>
     </body>
 </html>
     

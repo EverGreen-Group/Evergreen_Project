@@ -45,6 +45,7 @@
                                     <th>Supplier ID</th>
                                     <th>Quantity</th>
                                     <th>Order Date</th>
+                                    <th>Order Time</th>
                                     <th>Accepted/Rejected</th>
                                 </tr>
                             </thead>
@@ -53,6 +54,7 @@
                                     <td>001<br>
                                     <td>2Kg</td>
                                     <td>2024/11/10</td>
+                                    <td>12:59pm<br>
                                     <td>
                                         <button class="pending-btn">pending</button>
                                     </td>
@@ -61,24 +63,27 @@
                                     <td>002<br>
                                     <td>1Kg</td>
                                     <td>2024/11/1</td>
+                                    <td>01:23pm<br>
                                     <td>
-                                    <button class="accept-btn">Accepted</button>
+                                        <button class="accept-btn">Accepted</button>
                                     </td>
                                 </tr>
                                 <tr>
                                     <td>003<br>
                                     <td>3Kg</td>
                                     <td>2024/11/1</td>
+                                    <td>10:15am<br>
                                     <td>
-                                    <button class="reject-btn">Rejected</button>
+                                        <button class="reject-btn">Rejected</button>
                                     </td>
                                 </tr>
                                 <tr>
                                     <td>001<br>
                                     <td>5Kg</td>
                                     <td>2024/10/12</td>
+                                    <td>04:40pm<br>
                                     <td>
-                                    <button class="accept-btn">Accepted</button>
+                                        <button class="accept-btn">Accepted</button>
                                     </td>
                                 </tr>
                             </tbody>
@@ -99,33 +104,31 @@
                         </div>
                         <form action="submit_complaint.php" method="post" class="complaint-form">
                             <div class="form-group">
+
                             <div class="form-group">
                                 <label for="description">Full Name:</label>
                                 <input type="fullname" id="fullname" name="fullname" required>
+
+                            <div class="form-group">
+                                <label for="total_amount">Packet Amount:</label>
+                                <input type="number" id="total_amount" name="total_amount" min="1" max="50" required>
                             </div>
-                                <label for="complaint-type">Packet Quantity: </label>
-                                <select id="complaint-type" name="complaint_type" required>
-                                    <option value="quality">1</option>
-                                    <option value="service">2</option>
-                                    <option value="delivery">5</option>
-                                    <option value="other">10</option>
-                                    <option value="delivery">20</option>
-                                    <option value="other">30</option>
-                                    <option value="other">other</option>
-                                </select>
-                            </div>
+
                             <div class="form-group">
                                 <label for="description">Address:</label>
                                 <input type="address" id="address" name="address" required>
                             </div>
+                            
                             <div class="form-group">
                                 <label for="email">Email:</label>
                                 <input type="email" id="email" name="email" required>
                             </div>
+
                             <div class="form-group">
                                 <label for="phone">Phone Number:</label>
                                 <input type="text" id="phone" name="phone">
                             </div>
+
                             <button type="submit" class="button" onclick="submitmessage()">Submit Request</button>
                             <button type="submit" class="button" onclick="refreshPage()">Cancel</button>
                         </form>
@@ -185,7 +188,7 @@
                 });
             });
         </script>
-        <script src="<?php echo URLROOT; ?>/css/components/script.js"></script>
+        <script src="<?php echo URLROOT; ?>/css/script.js"></script>
     </body>
 </html>
     

@@ -147,9 +147,15 @@ class Database
     //execute the prepared statement
     public function execute() {
         try {
-            return $this->statement->execute();
+            $result = $this->statement->execute();
+            if (!$result) {
+                $errorInfo = $this->statement->errorInfo();
+                $this->error = "SQL Error: " . $errorInfo[2];
+                return false;
+            }
+            return true;
         } catch (PDOException $e) {
-            // Log error if needed
+            $this->error = $e->getMessage();
             return false;
         }
     }

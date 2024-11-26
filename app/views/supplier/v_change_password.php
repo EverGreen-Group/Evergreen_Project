@@ -45,11 +45,11 @@
 
                 <button type="submit" class="button">Change Password</button>
             </form>
-            <a href="Profile.php">
+            <a href="<?php echo URLROOT; ?> /Supplier/profile/">
                 <button class="button">Back</button>
             </a>
         </div>
     </section>
-    <script src="<?php echo URLROOT; ?>/css/components/script.js"></script>
+    <script src="<?php echo URLROOT; ?>/css/script.js"></script>
 </body>
 </html>

@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" href="<?php echo URLROOT; ?>/css/components/style.css" />
+    <link rel="stylesheet" href="<?php echo URLROOT; ?>/css/style.css" />
     <title>Tea Leaves Supplier</title>
 </head>
 <body>
@@ -14,7 +14,7 @@
         </a>
         <ul class="side-menu top">
 			<li>
-				<a href="<?php echo URLROOT; ?>/supplier/">
+				<a href="<?php echo URLROOT; ?>/supplier/index">
 					<i class='bx bxs-dashboard'></i>
 					<span class="text">Dashboard</span>
 				</a>
@@ -26,31 +26,31 @@
 				</a>
 			</li>			
 			<li>
-					<a href="<?php echo URLROOT; ?>/supplier/v_tea_orders">
+					<a href="<?php echo URLROOT; ?>/supplier/teaorders">
 					<i class='bx bxs-doughnut-chart'></i>
 					<span class="text">Tea Orders</span>
 				</a>
 			</li>
 			<li>
-				<a href="<?php echo URLROOT; ?>/supplier/v_notifications">
+				<a href="<?php echo URLROOT; ?>/supplier/notifications">
 					<i class='bx bxs-message-dots'></i>
 					<span class="text">Notifications</span>
 				</a>
 			</li>
 			<li>
-					<a href="<?php echo URLROOT; ?>/supplier/v_payments">
+					<a href="<?php echo URLROOT; ?>/supplier/payments">
 					<i class='bx bxs-group'></i>
 					<span class="text">Payments</span>
 				</a>
 			</li>
 			<li>
-				<a href="<?php echo URLROOT; ?>/supplier/v_profile">
+				<a href="<?php echo URLROOT; ?>/supplier/profile">
 					<i class='bx bxs-group'></i>
 					<span class="text">Profile</span>
 				</a>
 			</li>
 			<li>
-				<a href="<?php echo URLROOT; ?>/supplier/v_complaints">
+				<a href="<?php echo URLROOT; ?>/supplier/complaints">
 					<i class='bx bxs-group'></i>
 					<span class="text">Submit Complaint</span>
 				</a>
@@ -58,7 +58,7 @@
 		</ul>
         <ul class="side-menu">
             <li>
-                <a href="<?php echo URLROOT; ?>/supplier/v_settings">
+                <a href="<?php echo URLROOT; ?>/supplier/settings">
                     <i class='bx bxs-cog'></i>
                     <span class="text">Settings</span>
                 </a>
