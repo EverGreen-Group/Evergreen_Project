@@ -599,5 +599,44 @@ class M_SupplierApplication {
         
         return $this->db->execute();
     }
+    public function insertSupplier($applicationId, $userId, $contactNumber, $latitude, $longitude, $isActive, $isDeleted, $numberOfCollections, $avgCollectionAmount, $totalCollections) {
+        $sql = "INSERT INTO suppliers (
+            user_id,
+            contact_number,
+            application_id,
+            latitude,
+            longitude,
+            is_active,
+            is_deleted,
+            number_of_collections,
+            avg_collection,
+            total_collection
+        ) VALUES (
+            :user_id,
+            :contact_number,
+            :application_id,
+            :latitude,
+            :longitude,
+            :is_active,
+            :is_deleted,
+            :number_of_collections,
+            :avg_collection,
+            :total_collection
+        )";
+
+        $this->db->query($sql);
+        $this->db->bind(':user_id', $userId);
+        $this->db->bind(':contact_number', $contactNumber);
+        $this->db->bind(':application_id', $applicationId);
+        $this->db->bind(':latitude', $latitude);
+        $this->db->bind(':longitude', $longitude);
+        $this->db->bind(':is_active', $isActive);
+        $this->db->bind(':is_deleted', $isDeleted);
+        $this->db->bind(':number_of_collections', $numberOfCollections);
+        $this->db->bind(':avg_collection', $avgCollectionAmount);
+        $this->db->bind(':total_collection', $totalCollections);
+        
+        return $this->db->execute();
+    }
 
 }

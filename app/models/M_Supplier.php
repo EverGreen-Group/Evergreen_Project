@@ -24,23 +24,24 @@ class M_Supplier {
     }
 
     public function getAllUnallocatedSuppliers() {
-        $this->db->query('SELECT * FROM suppliers WHERE is_active = 1 AND supplier_id NOT IN (SELECT supplier_id FROM routes)');
+        $this->db->query('SELECT * FROM suppliers WHERE is_active = 1 AND supplier_id NOT IN (SELECT supplier_id FROM route_suppliers)');
         return $this->db->resultSet();
     }
 
     public function getAllUnallocatedSuppliersForDay($day) {
         $this->db->query(
-            "SELECT * FROM suppliers s 
+            "SELECT s.* FROM suppliers s 
              WHERE s.is_active = 1 
+             AND s.is_deleted = 0
              AND s.supplier_id NOT IN (
                  SELECT supplier_id FROM route_suppliers rs 
                  JOIN routes r ON rs.route_id = r.route_id 
                  WHERE r.status = 'Active'
              )
-             AND FIND_IN_SET(:day, preferred_days) > 0"
+             AND FIND_IN_SET(:day, preferred_days) = 0"
         );
         
-        $this->db->bind(':day', strtolower($day));
+        $this->db->bind(':day', $day);
         return $this->db->resultSet();
     }
 } 

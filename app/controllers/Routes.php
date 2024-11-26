@@ -72,10 +72,11 @@ class Routes extends Controller {
     public function create() {
         if ($_SERVER['REQUEST_METHOD'] == 'GET') {
             $vehicles = $this->vehicleModel->getUnassignedVehicles();
+            $unassignedSuppliers = $this->supplierModel->getAllUnallocatedSuppliers();
             $data = [
                 'title' => 'Create Route',
                 'vehicles' => $vehicles,
-                'suppliers' => []
+                'suppliers' => $unassignedSuppliers
             ];
             $this->view('routes/v_create_route', $data);
         } 

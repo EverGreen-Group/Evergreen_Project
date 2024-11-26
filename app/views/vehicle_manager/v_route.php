@@ -33,13 +33,13 @@
 
 
 <!-- Route Capacity Overview -->
-<div class="table-data">
+<!-- <div class="table-data">
     <div class="order">
         <div class="head">
             <h3>Route Capacity Overview</h3>
         </div>
         <div class="shifts-overview">
-            <!-- Morning Shift -->
+
             <div class="shift-block">
                 <div class="shift-header">
                     <i class='bx bx-sun'></i>
@@ -73,7 +73,7 @@
                 </div>
             </div>
 
-            <!-- Afternoon Shift -->
+
             <div class="shift-block">
                 <div class="shift-header">
                     <i class='bx bx-sun'></i>
@@ -95,7 +95,6 @@
                 </div>
             </div>
 
-            <!-- Night Shift -->
             <div class="shift-block">
                 <div class="shift-header">
                     <i class='bx bx-moon'></i>
@@ -118,37 +117,12 @@
             </div>
         </div>
     </div>
-</div>
+</div> -->
 
 
 
-  <!-- First row with two tables -->
-  <div class="table-data table-container">
-    <!-- Left table: Unallocated Suppliers -->
-    <div class="order">
-        <div class="head">
-            <h3>Unallocated Suppliers</h3>
-            <i class='bx bx-search'></i>
-        </div>
-        <table>
-            <thead>
-                <tr>
-                    <th>Supplier ID</th>
-                    <th>Name</th>
-                </tr>
-            </thead>
-            <tbody>
-                <?php foreach ($data['unassignedSuppliersList'] as $supplier): ?>
-                    <tr>
-                        <td><?php echo htmlspecialchars($supplier->supplier_id); ?></td>
-                        <td><?php echo htmlspecialchars($supplier->first_name); ?></td>
-                    </tr>
-                <?php endforeach; ?>
-            </tbody>
-        </table>
-    </div>
-
-    <!-- Right table: Routes - NO SUPPLIER DETAILS HERE -->
+  <!-- First row with Routes table -->
+  <div class="table-data">
     <div class="order">
         <div class="head">
             <h3>Routes</h3>
@@ -170,6 +144,32 @@
                         <td><?php echo htmlspecialchars($route->route_name); ?></td>
                         <td><?php echo htmlspecialchars($route->number_of_suppliers); ?></td>
                         <td><?php echo htmlspecialchars($route->license_plate); ?></td>
+                    </tr>
+                <?php endforeach; ?>
+            </tbody>
+        </table>
+    </div>
+  </div>
+
+  <!-- Second row with Unallocated Suppliers table -->
+  <div class="table-data">
+    <div class="order">
+        <div class="head">
+            <h3>Unallocated Suppliers</h3>
+            <i class='bx bx-search'></i>
+        </div>
+        <table>
+            <thead>
+                <tr>
+                    <th>Supplier ID</th>
+                    <th>Name</th>
+                </tr>
+            </thead>
+            <tbody>
+                <?php foreach ($data['unassignedSuppliersList'] as $supplier): ?>
+                    <tr>
+                        <td><?php echo htmlspecialchars($supplier->supplier_id); ?></td>
+                        <td><?php echo htmlspecialchars($supplier->first_name); ?></td>
                     </tr>
                 <?php endforeach; ?>
             </tbody>

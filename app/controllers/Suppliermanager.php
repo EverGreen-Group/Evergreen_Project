@@ -162,17 +162,31 @@ class SupplierManager extends Controller {
 
     public function confirmSupplierRole($applicationId) {
         try {
-            if ($this->supplierApplicationModel->confirmSupplierRole($applicationId)) {
-                flash('application_message', 'Supplier role confirmed successfully');
-            } else {
-                flash('application_message', 'Failed to confirm supplier role', 'alert alert-danger');
+            // Get application details first
+            $application = $this->supplierApplicationModel->getApplicationById($applicationId);
+            
+            if (!$application) {
+                throw new Exception('Application not found');
             }
+            
+            $this->supplierApplicationModel->confirmSupplierRole($applicationId);
+            $userId = $application->user_id;
+            $contactNumber = $application->primary_phone;
+            $latitude = $application->latitude;
+            $longitude = $application->longitude;
+            $isActive = 1;
+            $isDeleted = 0;
+            $numberOfCollections = 0;
+            $avgCollectionAmount = 0;
+            $totalCollections = 0;
+            $this->supplierApplicationModel->insertSupplier($applicationId, $userId, $contactNumber, $latitude, $longitude, $isActive, $isDeleted, $numberOfCollections, $avgCollectionAmount, $totalCollections);
+
             
             redirect('suppliermanager/applications');
             
         } catch (Exception $e) {
             error_log("Error confirming supplier role: " . $e->getMessage());
-            flash('application_message', 'Error confirming supplier role', 'alert alert-danger');
+            flash('application_message', 'Error confirming supplier role: ' . $e->getMessage(), 'alert alert-danger');
             redirect('suppliermanager/applications');
         }
     }
@@ -233,7 +247,7 @@ class SupplierManager extends Controller {
         $this->view('supplier_manager/v_settings', $data);
     }
 
-    
+
 
 }
 ?>

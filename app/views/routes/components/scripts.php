@@ -245,7 +245,7 @@ document.addEventListener('DOMContentLoaded', function() {
         .then(data => {
             if (data.success) {
                 alert('Route created successfully!');
-                window.location.href = `${URLROOT}/vehiclemanager/routes`;
+                window.location.href = `${URLROOT}/routes`;
             } else {
                 alert(data.message || 'Failed to create route');
             }
