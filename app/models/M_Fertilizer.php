@@ -49,5 +49,12 @@ class M_Fertilizer{
         $this->db->bind('id', $id);
         return $this->db->execute();
     }
+
+    public function getFertilizerById($id){
+        $sql = "SELECT * FROM Fertilizer WHERE id = :id";
+        $this->db->query($sql);
+        $this->db->bind('id', $id);
+        return $this->db->single();
+    }
 }
 
