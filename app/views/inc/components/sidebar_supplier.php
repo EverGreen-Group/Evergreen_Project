@@ -31,12 +31,12 @@
 					<span class="text">Tea Orders</span>
 				</a>
 			</li>
-			<li>
+			<!-- <li>
 				<a href="<?php echo URLROOT; ?>/supplier/notifications">
 					<i class='bx bxs-message-dots'></i>
 					<span class="text">Notifications</span>
 				</a>
-			</li>
+			</li> -->
 			<li>
 					<a href="<?php echo URLROOT; ?>/supplier/payments">
 					<i class='bx bxs-group'></i>
