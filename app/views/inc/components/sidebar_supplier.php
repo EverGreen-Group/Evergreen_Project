@@ -43,12 +43,7 @@
 					<span class="text">Payments</span>
 				</a>
 			</li>
-			<li>
-				<a href="<?php echo URLROOT; ?>/supplier/profile">
-					<i class='bx bxs-group'></i>
-					<span class="text">Profile</span>
-				</a>
-			</li>
+			
 			<li>
 				<a href="<?php echo URLROOT; ?>/supplier/complaints">
 					<i class='bx bxs-group'></i>
@@ -57,6 +52,13 @@
 			</li>
 		</ul>
         <ul class="side-menu">
+		<li>
+				<a href="<?php echo URLROOT; ?>/supplier/profile">
+					<i class='bx bxs-group'></i>
+					<span class="text">Profile</span>
+				</a>
+			</li>
+
             <li>
                 <a href="<?php echo URLROOT; ?>/supplier/settings">
                     <i class='bx bxs-cog'></i>
