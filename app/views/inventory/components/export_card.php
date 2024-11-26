@@ -3,8 +3,8 @@
     <div class="card-header">
       <div class="header-content">
         <div class="title-group">
-          <span class="id-number">#80149 -</span>
-          <h2 class="title">Summer Linen Jacket SS22</h2>
+          <span class="id-number">#1 -</span>
+          <h2 class="title">Black Tea Stock</h2>
         </div>
         <span class="badge">In progress</span>
       </div>
@@ -16,7 +16,7 @@
           <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <path d="M3 9V19a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V9M3 9V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v4M3 9h18M9 16v-4m6 4v-4"></path>
           </svg>
-          <span>Bozkurt Konfeksiyon San A.S.</span>
+          <span>Dilmah Company</span>
         </div>
         
         <div class="metadata-item">
@@ -24,7 +24,7 @@
             <path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"></path>
             <circle cx="12" cy="10" r="3"></circle>
           </svg>
-          <span>Turkey</span>
+          <span>colombo</span>
         </div>
         
         <div class="metadata-item">
@@ -32,7 +32,7 @@
             <path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"></path>
             <circle cx="12" cy="7" r="4"></circle>
           </svg>
-          <span>Stephanie Carvalho</span>
+          <span>Simaak nasrif</span>
         </div>
         
         <div class="metadata-item">
