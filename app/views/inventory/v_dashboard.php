@@ -28,7 +28,7 @@
 			<span class="text">
 				<h3>2834</h3>
 				<p>Export Stock</p>
-				
+
 			</span>
 		</li>
 		<li>
@@ -135,7 +135,7 @@
 	border: none;
 	border-radius: 4px;
 	cursor: pointer;">Approve</button>
-							<button style="padding: 8px 12px;
+							<button onclick="reportModel()" style="padding: 8px 12px; 
 	background-color: #2345;
 	color: white;
 	border: none;
@@ -154,7 +154,7 @@
 	border: none;
 	border-radius: 4px;
 	cursor: pointer;">Approve</button>
-							<button style="padding: 8px 12px;
+							<button style="padding: 8px 12px; 
 	background-color: #2345;
 	color: white;
 	border: none;
@@ -165,6 +165,21 @@
 					<!-- Add more rows as needed -->
 				</tbody>
 			</table>
+		</div>
+
+		<div id="reportModal" class="report-modal" style="display: none;">
+			<div class="modal-content" id="reportModalContent">
+				<span class="close" onclick="closeModal()">&times;</span>
+				<h2>Report</h2>
+				<div class="modal-body">
+					<textarea type="text" placeholder="Enter your report"></textarea>
+				</div>
+				<div class="modal-footer">
+					<button class="btn btn-primary">Submit</button>
+				</div>
+			</div>
+
+
 		</div>
 		<div class="todo">
 			<div class="head">
@@ -183,21 +198,25 @@
 
 		<div class="product-grid">
 			<div class="product-card">
+				<img src="<?php echo URLROOT; ?>/public/img//green tea.jpg" alt="Green Tea" class="product-image" style="height:300px; width: 300px;">
 				<h3>Green Tea</h3>
 				<p class="sold">120 items sold</p>
 			</div>
 
 			<div class="product-card">
+				<img src="<?php echo URLROOT; ?>/public/img/products/black tea.jpg" alt="Black Tea" class="product-image" style="height:300px; width: 300px;">
 				<h3>Black Tea</h3>
 				<p class="sold">100 items sold</p>
 			</div>
 
 			<div class="product-card">
+				<img src="<?php echo URLROOT; ?>/public/img/products/tea.jpg" alt="White Tea" class="product-image" style="height:300px; width: 300px;">
 				<h3>White Tea</h3>
 				<p class="sold">90 items sold</p>
 			</div>
 
 			<div class="product-card">
+				<img src="<?php echo URLROOT; ?>/public/img/black tea.jpg" alt="Pink Tea" class="product-image" style="height:300px; width: 300px;">
 				<h3>Pink Tea</h3>
 				<p class="sold">80 items sold</p>
 			</div>
@@ -219,7 +238,7 @@
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
-	document.addEventListener('DOMContentLoaded', function () {
+	document.addEventListener('DOMContentLoaded', function() {
 		var ctx = document.getElementById('machineAllocationChart').getContext('2d');
 		var machineAllocationChart = new Chart(ctx, {
 			type: 'bar',
@@ -275,6 +294,33 @@
 				}
 			}
 		});
+	});
+
+
+	function reportModel() {
+		const modal = document.getElementById('reportModal');
+		const model2 = document.getElementById('reportModalContent');
+		modal.style.display = 'flex';
+		modal.style.backgroundColor = 'rgba(0, 0, 0, 0.5)';
+		modal.style.backdropFilter = 'blur(1px)';
+		//model2.style.opacity = '1';
+
+		// Add animation class
+		const modalContent = modal.querySelector('.modal-content');
+		modalContent.style.animation = 'modalPop 0.3s ease-out';
+	}
+
+	function closeModal() {
+		const modal = document.getElementById('reportModal');
+		modal.style.display = 'none';
+	}
+
+	// Improved click outside listener
+	window.addEventListener('click', function(event) {
+		const modal = document.getElementById('reportModal');
+		if (event.target === modal) {
+			closeModal();
+		}
 	});
 </script>
 
