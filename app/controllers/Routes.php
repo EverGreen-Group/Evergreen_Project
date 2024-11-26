@@ -72,33 +72,38 @@ class Routes extends Controller {
     public function create() {
         if ($_SERVER['REQUEST_METHOD'] == 'GET') {
             $vehicles = $this->vehicleModel->getUnassignedVehicles();
-            $suppliers = $this->supplierModel->getAllUnallocatedSuppliers();
             $data = [
                 'title' => 'Create Route',
                 'vehicles' => $vehicles,
-                'suppliers' => $suppliers
+                'suppliers' => []
             ];
             $this->view('routes/v_create_route', $data);
         } 
         elseif ($_SERVER['REQUEST_METHOD'] == 'POST') {
-            // Get POST data
             $data = json_decode(file_get_contents('php://input'));
             
-            // Validate data
-            if (!isset($data->route_name) || !isset($data->vehicle_id) || empty($data->suppliers)) {
-                echo json_encode(['success' => false, 'message' => 'Missing required fields']);
-                return;
-            }
-
             try {
-                $routeId = $this->routeModel->createRouteWithSuppliers([
+                $routeData = [
                     'route_name' => $data->route_name,
+                    'day_of_week' => $data->day_of_week,
+                    'date' => $data->date,
                     'vehicle_id' => $data->vehicle_id,
-                    'status' => $data->status,
-                    'suppliers' => $data->suppliers
-                ]);
-
-                echo json_encode(['success' => true, 'route_id' => $routeId]);
+                    'number_of_suppliers' => count($data->suppliers),
+                    'status' => 'Active'
+                ];
+    
+                $routeId = $this->routeModel->createRoute($routeData);
+                
+                if ($routeId) {
+                    // Handle supplier assignments
+                    foreach ($data->suppliers as $index => $supplier) {
+                        $this->routeModel->assignSupplierToRoute($routeId, $supplier->id, $index + 1);
+                    }
+                    
+                    echo json_encode(['success' => true, 'route_id' => $routeId]);
+                } else {
+                    throw new Exception('Failed to create route');
+                }
             } catch (Exception $e) {
                 echo json_encode(['success' => false, 'message' => $e->getMessage()]);
             }
@@ -309,5 +314,29 @@ class Routes extends Controller {
                 ]);
             }
         }
+    }
+
+    public function getUnallocatedSuppliersForDay($day = null) {
+        header('Content-Type: application/json');
+        try {
+            if (!$day) {
+                $day = isset($_GET['day']) ? $_GET['day'] : null;
+                if (!$day) {
+                    throw new Exception('Day parameter is required');
+                }
+            }
+            
+            $suppliers = $this->supplierModel->getAllUnallocatedSuppliersForDay($day);
+            echo json_encode([
+                'success' => true,
+                'suppliers' => $this->formatSuppliersForMap($suppliers)
+            ]);
+        } catch (Exception $e) {
+            echo json_encode([
+                'success' => false,
+                'message' => $e->getMessage()
+            ]);
+        }
+        exit;
     }
 }

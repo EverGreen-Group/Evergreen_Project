@@ -9,6 +9,21 @@
            class="form-control">
 </div>
 
+<!-- Route Day Selection -->
+<div class="form-group">
+    <label for="routeDay">Select Day</label>
+    <select id="routeDay" name="routeDay" required class="form-control">
+        <option value="" disabled selected>Choose a day</option>
+        <option value="monday">Monday</option>
+        <option value="tuesday">Tuesday</option>
+        <option value="wednesday">Wednesday</option>
+        <option value="thursday">Thursday</option>
+        <option value="friday">Friday</option>
+        <option value="saturday">Saturday</option>
+        <option value="sunday">Sunday</option>
+    </select>
+</div>
+
 <!-- Vehicle Selection -->
 <div class="form-group">
     <label for="vehicle">Select Vehicle</label>

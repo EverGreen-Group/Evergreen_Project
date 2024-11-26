@@ -260,6 +260,29 @@ document.addEventListener('DOMContentLoaded', function() {
     document.getElementById('routeName').addEventListener('input', updateSubmitButton);
     document.getElementById('vehicle').addEventListener('change', updateSubmitButton);
 });
+
+// Add this to your existing JavaScript
+document.getElementById('routeDay').addEventListener('change', function() {
+    const selectedDay = this.value;
+    if (selectedDay) {
+        // Clear current suppliers
+        clearSuppliers(); // You'll need to implement this function
+        
+        // Fetch suppliers for selected day
+        fetch(`<?php echo URLROOT; ?>/routes/getUnallocatedSuppliersForDay?day=${selectedDay}`)
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // Update your suppliers list and map
+                    updateSuppliersList(data.suppliers); // You'll need to implement this function
+                    updateMapMarkers(data.suppliers);    // You'll need to implement this function
+                } else {
+                    console.error('Error fetching suppliers:', data.message);
+                }
+            })
+            .catch(error => console.error('Error:', error));
+    }
+});
 </script>
 
 <script async defer
