@@ -68,22 +68,23 @@
 				</thead>
 				<tbody>
 					<tr>
-						<td>John Doe</td>
+					    <td>John Doe</td>
 						<td>500 units</td>
 						<td>2024-03-20 09:30 AM</td>
 						<td class="actions">
 							<button style="padding: 8px 12px;
-	background-color: #28a745;
-	color: white;
-	border: none;
-	border-radius: 4px;
-	cursor: pointer;">Approve</button>
+	                                background-color: #28a745;
+	                                color: white;
+	                                border: none;
+	                                border-radius: 4px;
+	                                cursor: pointer;">Approve</button>
 							<button style="padding: 8px 12px;
-	background-color: #2345;
-	color: white;
-	border: none;
-	border-radius: 4px;
-	cursor: pointer;">Reject</button>
+	                                background-color: #2345;
+	                                color: white;	
+	                                border: none;
+									margin-left: 10px;
+	                                border-radius: 4px;
+	                                cursor: pointer;">Reject</button>
 						</td>
 					</tr>
 					<tr>
@@ -92,17 +93,18 @@
 						<td>2024-03-20 09:30 AM</td>
 						<td class="actions">
 							<button style="padding: 8px 12px;
-	background-color: #28a745;
-	color: white;
-	border: none;
-	border-radius: 4px;
-	cursor: pointer;">Approve</button>
+	                                background-color: #28a745;
+	                                color: white;
+	                                border: none;
+	                                border-radius: 4px;
+	                                cursor: pointer;">Approve</button>
 							<button style="padding: 8px 12px;
-	background-color: #2345;
-	color: white;
-	border: none;
-	border-radius: 4px;
-	cursor: pointer;">Reject</button>
+	                                background-color: #2345;
+	                                color: white;	
+	                                border: none;
+									margin-left: 10px;
+	                                border-radius: 4px;
+	                                cursor: pointer;">Reject</button>
 						</td>
 					</tr>
 					<tr>
@@ -110,18 +112,19 @@
 						<td>500 units</td>
 						<td>2024-03-20 09:30 AM</td>
 						<td class="actions">
-							<button style="padding: 8px 12px;
-	background-color: #28a745;
-	color: white;
-	border: none;
-	border-radius: 4px;
-	cursor: pointer;">Approve</button>
-							<button style="padding: 8px 12px;
-	background-color: #2345;
-	color: white;
-	border: none;
-	border-radius: 4px;
-	cursor: pointer;">Reject</button>
+							<button onclick="reportModel()" style="padding: 8px 12px;
+	                                background-color: #28a745;
+	                                color: white;
+	                                border: none;
+	                                border-radius: 4px;
+	                                cursor: pointer;">Approve</button>
+							<button onclick="reportModel()" style="padding: 8px 12px;
+	                                background-color: #2345;
+	                                color: white;
+	                                border: none;
+									margin-left: 10px;
+	                                border-radius: 4px;
+	                                cursor: pointer;">Reject</button>
 						</td>
 					</tr>
 					<tr>
@@ -129,18 +132,19 @@
 						<td>500 units</td>
 						<td>2024-03-20 09:30 AM</td>
 						<td class="actions">
-							<button style="padding: 8px 12px;
-	background-color: #28a745;
-	color: white;
-	border: none;
-	border-radius: 4px;
-	cursor: pointer;">Approve</button>
+							<button onclick="reportModel()" style="padding: 8px 12px;
+	                                background-color: #28a745;
+	                                color: white;
+	                                border: none;
+	                                border-radius: 4px;
+	                                cursor: pointer;">Approve</button>
 							<button onclick="reportModel()" style="padding: 8px 12px; 
-	background-color: #2345;
-	color: white;
-	border: none;
-	border-radius: 4px;
-	cursor: pointer;">Reject</button>
+	                                background-color: #2345;
+	                                color: white;
+									margin-left: 10px;
+	                                border: none;
+	                                border-radius: 4px;
+	                                cursor: pointer;">Reject</button>
 						</td>
 					</tr>
 					<tr>
@@ -148,18 +152,19 @@
 						<td>750 units</td>
 						<td>2024-03-20 10:15 AM</td>
 						<td class="actions">
-							<button style="padding: 8px 12px;
-	background-color: #28a745;
-	color: white;
-	border: none;
-	border-radius: 4px;
-	cursor: pointer;">Approve</button>
-							<button style="padding: 8px 12px; 
-	background-color: #2345;
-	color: white;
-	border: none;
-	border-radius: 4px;
-	cursor: pointer;">Reject</button>
+							<button onclick="reportModel()" style="padding: 8px 12px;
+	                                background-color: #28a745;
+	                                color: white;
+	                                border: none;
+	                                border-radius: 4px;
+	                                cursor: pointer;">Approve</button>
+							<button onclick="reportModel()" style="padding: 8px 12px; 
+	                                background-color: #2345;
+	                                color: white;
+									margin-left: 10px;
+	                                border: none;
+	                                border-radius: 4px;
+	                                cursor: pointer;">Reject</button>
 						</td>
 					</tr>
 					<!-- Add more rows as needed -->
@@ -198,26 +203,26 @@
 
 		<div class="product-grid">
 			<div class="product-card">
-				<img src="<?php echo URLROOT; ?>/public/img//green tea.jpg" alt="Green Tea" class="product-image" style="height:300px; width: 300px;">
+				<img src="<?php echo URLROOT; ?>/public/img//green tea1.webp" alt="Green Tea" class="product-image" style="height:300px; width: 300px;">
 				<h3>Green Tea</h3>
 				<p class="sold">120 items sold</p>
 			</div>
 
 			<div class="product-card">
-				<img src="<?php echo URLROOT; ?>/public/img/products/black tea.jpg" alt="Black Tea" class="product-image" style="height:300px; width: 300px;">
+				<img src="<?php echo URLROOT; ?>/public/img/black tea.jpg" alt="Black Tea" class="product-image" style="height:300px; width: 300px;">
 				<h3>Black Tea</h3>
 				<p class="sold">100 items sold</p>
 			</div>
 
 			<div class="product-card">
-				<img src="<?php echo URLROOT; ?>/public/img/products/tea.jpg" alt="White Tea" class="product-image" style="height:300px; width: 300px;">
+				<img src="<?php echo URLROOT; ?>/public/img/white tea.webp" alt="White Tea" class="product-image" style="height:300px; width: 300px;">
 				<h3>White Tea</h3>
 				<p class="sold">90 items sold</p>
 			</div>
 
 			<div class="product-card">
-				<img src="<?php echo URLROOT; ?>/public/img/black tea.jpg" alt="Pink Tea" class="product-image" style="height:300px; width: 300px;">
-				<h3>Pink Tea</h3>
+				<img src="<?php echo URLROOT; ?>/public/img/oolong tea.webp" alt="oolong Tea" class="product-image" style="height:300px; width: 300px;">
+				<h3>Oolong Tea</h3>
 				<p class="sold">80 items sold</p>
 			</div>
 		</div>

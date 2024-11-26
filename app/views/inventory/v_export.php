@@ -24,10 +24,7 @@
       padding: 0;
     } */
 
-    body {
-      font-family: Arial, sans-serif;
-      background-color: #f5f5f5;
-    }
+    
 
 
     .card1 {
@@ -216,7 +213,7 @@
     /* item card css */
 
     .card4 {
-      width: 100%;
+    
       margin: 20px;
       margin-right: 20px;
       background-color: white;
@@ -356,7 +353,6 @@
 
     .cardrelese{
       width: 100%;
-      background-color:;
     }
 
     /* Add more styles as needed */
@@ -426,26 +422,24 @@
         <form>
           <div class="form-grid">
             <div class="form-group">
-              <label>Land Owner First Name*</label>
+              <label>Export Stock Name*</label>
               <input type="text" class="form-control" placeholder="Enter First Name" required>
-              <span class="error-text">Please enter first name</span>
+              <span class="error-text">Please enter stock name</span>
             </div>
             <div class="form-group">
-              <label>Land Owner Last Name</label>
+              <label>Company for Export*</label>
               <input type="text" class="form-control" placeholder="Enter your Last Name">
               <span class="error-text">Please enter last name</span>
             </div>
 
 
             <div class="form-group">
-              <label>Land Squre*</label>
+              <label>Export Confirmation Date*</label>
               <input type="date" class="form-control" required>
               <span class="error-text">Please enter squere of land</span>
             </div>
             <div class="form-group">
-              <label>
-
-              </label>
+              <label>Export Manager name*</label>
               <input type="text" class="form-control" placeholder="Enter First Name" def required>
               <span class="error-text">Please enter address</span>
             </div>
@@ -455,8 +449,8 @@
               <span class="error-text">Please enter city</span>
             </div>
             <div class="form-group">
-              <label>Export Proof*</label>
-              <input type="image" class="form-control" placeholder="Enter your...." required>
+              <label>Export Quantity*</label>
+              <input type="text" class="form-control" placeholder="Enter your...." required>
               <span class="error-text">Please enter ....</span>
             </div>
             <div class="form-group">

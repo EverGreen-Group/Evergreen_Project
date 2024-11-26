@@ -34,7 +34,7 @@
         <span class="text">Machine Allocation</span>
       </a>
     </li>
-    <li>
+    <li class="<?php echo (basename($_SERVER['REQUEST_URI']) == 'export') ? 'active' : ''; ?>">
       <a href="../inventory/export">
         <i class="bx bxs-group"></i>
         <span class="text">Export</span>
