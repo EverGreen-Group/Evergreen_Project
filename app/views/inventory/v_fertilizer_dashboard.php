@@ -13,7 +13,7 @@
 </head>
 
 <body>
-
+    <?php require APPROOT . '/views/inc/components/header.php' ?>
     <!-- Top nav bar -->
     <?php require APPROOT . '/views/inc/components/topnavbar.php' ?>
     <!-- Side bar -->
@@ -114,6 +114,95 @@
                         </tr> -->
                     </tbody>
                 </table>
+
+                <!-- Fertilizer Constraints Section -->
+            <div class="table-data">
+                <div class="order">
+                    <div class="head">
+                        <h3>Fertilizer Request Constraints</h3>
+                        <button class="btn-save" onclick="saveConstraints()">
+                            <i class='bx bx-save'></i>
+                            Save Changes
+                        </button>
+                    </div>
+                    <div class="constraints-container">
+                        <div class="constraint-group">
+                            <div class="constraint-item">
+                                <span class="constraint-label">Maximum Order Per Supplier</span>
+                                <div class="constraint-input">
+                                    <input type="number" id="maxOrder" value="20" min="0">
+                                    <span class="unit">kg</span>
+                                </div>
+                            </div>
+                            <div class="constraint-info">
+                                <i class='bx bx-info-circle'></i>
+                                <span>Maximum amount a supplier can request per order</span>
+                            </div>
+                        </div>
+
+                        <div class="constraint-group">
+                            <div class="constraint-item">
+                                <span class="constraint-label">Minimum Stock Level</span>
+                                <div class="constraint-input">
+                                    <input type="number" id="minStock" value="500" min="0">
+                                    <span class="unit">kg</span>
+                                </div>
+                            </div>
+                            <div class="constraint-info">
+                                <i class='bx bx-info-circle'></i>
+                                <span>Alert threshold for low stock warning</span>
+                            </div>
+                        </div>
+
+                        <div class="constraint-group">
+                            <div class="constraint-item">
+                                <span class="constraint-label">Order Frequency Limit</span>
+                                <div class="constraint-input">
+                                    <select id="orderFrequency">
+                                        <option value="7">Weekly</option>
+                                        <option value="14">Bi-weekly</option>
+                                        <option value="30" selected>Monthly</option>
+                                        <option value="90">Quarterly</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="constraint-info">
+                                <i class='bx bx-info-circle'></i>
+                                <span>How often a supplier can place new orders</span>
+                            </div>
+                        </div>
+
+                        <div class="constraint-group">
+                            <div class="constraint-item">
+                                <span class="constraint-label">Quantity per Acre</span>
+                                <div class="constraint-input">
+                                    <input type="number" id="qtyPerAcre" value="2.5" step="0.5" min="0">
+                                    <span class="unit">kg</span>
+                                </div>
+                            </div>
+                            <div class="constraint-info">
+                                <i class='bx bx-info-circle'></i>
+                                <span>Recommended fertilizer amount per acre of land</span>
+                            </div>
+                        </div>
+
+                        <div class="constraint-group">
+                            <div class="constraint-item">
+                                <span class="constraint-label">Previous Supply Window</span>
+                                <div class="constraint-input">
+                                    <input type="number" id="supplyWindow" value="30" min="0">
+                                    <span class="unit">days</span>
+                                </div>
+                            </div>
+                            <div class="constraint-info">
+                                <i class='bx bx-info-circle'></i>
+                                <span>Check previous supply within this time period</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
             </section>
 
         </div>
