@@ -17,7 +17,7 @@ class Inventory extends controller
 
     public function index()
     {
-        $products = $this->productModel->getProduct();
+        $products = $this->productModel->getAllProducts();
 
         $data = [
             'products' => $products
@@ -39,11 +39,16 @@ class Inventory extends controller
     public function getfertilizer(){
         
     }
+    public function order(){
+        $data = [];
+
+        $this->view('inventory/v_order', $data);
+    }
 
     public function createproduct()
     {
         if ($_SERVER['REQUEST_METHOD'] == 'POST') {
-            $_POST = filter_input_array(INPUT_POST, FILTER_SANITIZE_STRING);
+            $_POST = filter_input_array(INPUT_POST);
             $data = [
                 'product-name' => trim($_POST['product-name']),
                 "location" => trim($_POST['location']),
@@ -123,9 +128,12 @@ class Inventory extends controller
             ) {
 
                 if ($this->productModel->createProduct($data)) {
-
+                    flash('product_message', 'Product Added');
                     redirect('inventory/product');
                 } else {
+                    echo "<pre>";
+                    print_r($data);
+                    echo "</pre>";
                     die('Something went wrong');
                 }
             } else {
@@ -261,7 +269,8 @@ class Inventory extends controller
     }
 
     public function updatefertilizer($id){
-        if($_SERVER('REQUEST_METHOD')=='POST'){
+
+        if($_SERVER['REQUEST_METHOD']=='POST'){
             $data = [
                  'id' => $id,
                 'fertilizer_name' => $_POST['fertilizer_name'],
@@ -288,6 +297,13 @@ class Inventory extends controller
 
             }
 
+        }else{
+            $fertilizer = $this->fertilizerModel->getFertilizerById($id);
+            $data = [
+                'id' => $id,
+                'fertilizer' => $fertilizer
+            ];  
+            $this->view('inventory/v_update_fertilizer', $data);
         }
     }
 
@@ -454,5 +470,7 @@ class Inventory extends controller
         }
         redirect('inventory/fertilizerdashboard');
     }
+
+ 
 
 }
