@@ -63,6 +63,51 @@
                                 <option value="last-3-months">Last 3 Months</option>
                             </select>
                         </div>
+                        <div class="form-group">
+                            <label>Select Complaint Type:</label>
+                            <select id="complaint-type" name="complaint_type" >
+                                <option value="quality">Quality</option>
+                                <option value="delivery">Orders</option>
+                                <option value="service">Service</option>
+                                <option value="delivery">Delivery</option>
+                                <option value="delivery">Inquiry</option>
+                                <option value="other">Other</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <table>
+                                <tr>
+                                    <th>Date</th>
+                                    <th>Complaint</th>
+                                    <th>Status</th>
+                                </tr>
+                                <tr>
+                                    <td>24/05/29</td>
+                                    <td>The quality of the product was..<small><u>View</u></small></td>
+                                    <td><button class="accept-btn">Done</button></td>
+                                </tr>
+                                <tr>
+                                    <td>24/05/29</td>
+                                    <td>The order of tea packs I got ..<small><u>View</u></small></td>
+                                    <td><button class="accept-btn">Done</button></td>
+                                </tr>
+                                <tr>
+                                    <td>24/05/29</td>
+                                    <td>The fertilizer quality is less..<small><u>View</u></small></td>
+                                    <td><button class="accept-btn">Done</button></td>
+                                </tr>
+                                <tr>
+                                    <td>24/05/29</td>
+                                    <td>The quality of the orders are..<small><u>View</u></small></td>
+                                    <td><button class="accept-btn">Done</button></td>
+                                </tr>
+                                <tr>
+                                    <td>24/05/29</td>
+                                    <td>The tea quality is not good..<small><u>View</u></small></td>
+                                    <td><button class="accept-btn">Done</button></td>
+                                </tr>
+                            </table>
+                        </div>
                         <div class="chart-container">
                             <canvas id="complaintTypesChart"></canvas>
                         </div>
@@ -296,7 +341,166 @@
             border-radius: 4px;
             outline: none;
         }
+        .complaint-container {
+            position: relative;
+            display: inline-block;
+            max-width: 200px;
+        }
+        .complaint-preview {
+            display: inline-block;
+            max-width: 100%;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .complaint-full-tooltip {
+            visibility: hidden;
+            position: absolute;
+            z-index: 10;
+            background-color: #f9f9f9;
+            border: 1px solid #ddd;
+            padding: 10px;
+            border-radius: 4px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+            width: 250px;
+            max-width: 300px;
+            top: 100%;
+            left: 0;
+            opacity: 0;
+            transition: opacity 0.3s ease, visibility 0.3s;
+        }
+        .complaint-container:hover .complaint-full-tooltip {
+            visibility: visible;
+            opacity: 1;
+        }
+        .view-details {
+            color: blue;
+            text-decoration: underline;
+            cursor: help;
+            margin-left: 5px;
+        }
         </style>
+        <script>
+            document.addEventListener('DOMContentLoaded', function() {
+            const complaintTable = document.querySelector('.form-group table tbody');
+            
+            // Update the complaints data to include full descriptions
+            const complaints = [
+                {
+                    date: '24/05/29',
+                    preview: 'The quality of the product was...',
+                    full: 'The quality of the product was problematic and did not meet our standard expectations. We found multiple issues with the manufacturing process that significantly impact the product\'s performance and reliability.'
+                },
+                {
+                    date: '24/05/29',
+                    preview: 'The order of tea packs I got...',
+                    full: 'The order of tea packs I received was incomplete and did not match the original specification. There were discrepancies in the quantity and packaging that need to be addressed immediately.'
+                },
+                {
+                    date: '24/05/29',
+                    preview: 'The fertilizer quality is less...',
+                    full: 'The fertilizer quality is significantly lower than the promised standards. The nutrient content appears to be reduced, which could potentially harm crop growth and yield.'
+                },
+                {
+                    date: '24/05/29',
+                    preview: 'The quality of the orders are...',
+                    full: 'The overall quality of the orders has been inconsistent and below the expected standards. Multiple issues with product consistency and packaging have been observed.'
+                },
+                {
+                    date: '24/05/29',
+                    preview: 'The tea quality is not good...',
+                    full: 'The tea quality is substandard and does not meet the quality criteria we expect. The flavor, aroma, and overall composition are significantly inferior to previous shipments.'
+                }
+            ];
+
+            // Function to create a complaint row with hover tooltip
+            function createComplaintRow(complaint) {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${complaint.date}</td>
+                    <td>
+                        <div class="complaint-container">
+                            <span class="complaint-preview">${complaint.preview}</span>
+                            <small class="view-details">View</small>
+                            <div class="complaint-full-tooltip">
+                                ${complaint.full}
+                            </div>
+                        </div>
+                    </td>
+                    <td><button class="accept-btn">Done</button></td>
+                `;
+                return row;
+            }
+
+            // Clear existing rows and populate with new structure
+            complaintTable.innerHTML = '';
+            complaints.forEach(complaint => {
+                complaintTable.appendChild(createComplaintRow(complaint));
+            });
+
+            // Function to render complaints
+            function renderComplaints(filteredComplaints) {
+                // Clear existing rows
+                complaintTable.innerHTML = '';
+
+                // Populate table with filtered complaints
+                filteredComplaints.forEach(complaint => {
+                    const row = document.createElement('tr');
+                    row.innerHTML = `
+                        <td>${complaint.date}</td>
+                        <td>${complaint.description}<small><u>View</u></small></td>
+                        <td><button class="accept-btn">Done</button></td>
+                    `;
+                    complaintTable.appendChild(row);
+                });
+                }
+
+                // Event listener for complaint type selection
+                complaintTypeSelect.addEventListener('change', function() {
+                    const selectedType = this.value;
+                    
+                    // Filter complaints based on selected type
+                    const filteredComplaints = selectedType === 'other' 
+                        ? complaints 
+                        : complaints.filter(complaint => complaint.type === selectedType);
+
+                    // Render filtered complaints
+                    renderComplaints(filteredComplaints);
+
+                    // Update chart data dynamically (optional)
+                    updateComplaintTypeChart(selectedType);
+                });
+
+                // Optional: Function to update chart based on selected type
+                function updateComplaintTypeChart(selectedType) {
+                    // This is a sample implementation - you'd want to replace with your actual chart update logic
+                    const chartLabels = [
+                        'Quality Issues',
+                        'Late Delivery',
+                        'Quantity Discrepancy',
+                        'Communication Issues',
+                        'Payment Disputes'
+                    ];
+
+                    const chartData = {
+                        'quality': [50, 10, 10, 15, 15],
+                        'delivery': [20, 40, 20, 10, 10],
+                        'service': [30, 20, 15, 25, 10],
+                        'other': [30, 25, 20, 15, 10]
+                    };
+
+                    // Update chart data
+                    const chart = Chart.getChart('complaintTypesChart');
+                    if (chart) {
+                        chart.data.datasets[0].data = chartData[selectedType] || chartData['other'];
+                        chart.update();
+                    }
+                }
+
+                // Initial render with all complaints
+                renderComplaints(complaints);
+            });
+        </script>
     </body>
 </html>
     
