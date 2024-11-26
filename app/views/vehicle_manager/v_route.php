@@ -20,12 +20,12 @@
   </div>
 
   <div class="action-buttons">
-      <a href="<?php echo URLROOT; ?>/vehiclemanager/createRoute" class="btn btn-primary">
+      <a href="<?php echo URLROOT; ?>/routes/create" class="btn btn-primary">
           <i class='bx bx-plus'></i>
           Create Route
       </a>
 
-      <a href="<?php echo URLROOT; ?>/vehiclemanager/updateRoute" class="btn btn-primary">
+      <a href="<?php echo URLROOT; ?>/routes/update" class="btn btn-primary">
           <i class='bx bx-plus'></i>
           Update Route
       </a>

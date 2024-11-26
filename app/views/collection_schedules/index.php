@@ -29,12 +29,12 @@
                 <div class="filter-controls">
                     <select id="week-filter">
                         <option value="all">All Weeks</option>
-                        <option value="1">Week 1</option>
+                        <option value="1" selected>Week 1</option>
                         <option value="2">Week 2</option>
                     </select>
                     <select id="day-filter">
                         <option value="all">All Days</option>
-                        <option value="mon">Monday</option>
+                        <option value="mon" selected>Monday</option>
                         <option value="tue">Tuesday</option>
                         <option value="wed">Wednesday</option>
                         <option value="thu">Thursday</option>
@@ -44,8 +44,8 @@
                     </select>
                     <select id="shift-filter">
                         <option value="all">All Shifts</option>
-                        <?php foreach ($data['shifts'] as $shift): ?>
-                            <option value="<?= $shift->shift_id; ?>"><?= $shift->shift_name; ?></option>
+                        <?php foreach ($data['shifts'] as $index => $shift): ?>
+                            <option value="<?= $shift->shift_id; ?>" <?= $index === 0 ? 'selected' : ''; ?>><?= $shift->shift_name; ?></option>
                         <?php endforeach; ?>
                     </select>
                     <button onclick="resetFilters()" class="reset-btn">
@@ -422,6 +422,22 @@ document.addEventListener('DOMContentLoaded', function() {
     document.getElementById('day-filter').addEventListener('change', filterSchedules);
     document.getElementById('shift-filter').addEventListener('change', filterSchedules);
 });
+
+// Ensure default values are set when page loads
+document.addEventListener('DOMContentLoaded', function() {
+    // Set default values
+    document.getElementById('week-filter').value = '1';
+    document.getElementById('day-filter').value = 'mon';
+    document.getElementById('shift-filter').value = '<?= $data['shifts'][0]->shift_id ?? "all" ?>';
+    
+    // Trigger any filter change events if needed
+    triggerFilterChange();
+});
+
+function triggerFilterChange() {
+    // Trigger your existing filter logic here
+    // This depends on how your filtering is implemented
+}
 </script>
 
 <?php require APPROOT . '/views/inc/components/footer.php'; ?>

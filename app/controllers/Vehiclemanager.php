@@ -1,7 +1,6 @@
 <?php
 require_once '../app/models/M_VehicleManager.php';
 require_once '../app/models/M_Route.php';      // Add Route model
-require_once '../app/models/M_Team.php';       // Add Team model
 require_once '../app/models/M_Vehicle.php';    // Add Vehicle model
 require_once '../app/models/M_Shift.php';      // Add Shift model
 require_once '../app/models/M_CollectionSchedule.php';  // Add CollectionSchedule model
@@ -16,7 +15,6 @@ require_once '../app/models/M_CollectionSupplierRecord.php';
 class VehicleManager extends Controller {
     private $vehicleManagerModel;
     private $routeModel;       // Declare a variable for Route model
-    private $teamModel;        // Declare a variable for Team model
     private $vehicleModel;     // Declare a variable for Vehicle model
     private $shiftModel;       // Declare a variable for Shift model
     private $scheduleModel;     // Declare a variable for CollectionSchedule model
@@ -48,7 +46,6 @@ class VehicleManager extends Controller {
         // Initialize models
         $this->vehicleManagerModel = new M_VehicleManager();
         $this->routeModel = new M_Route();        // Instantiate Route model
-        $this->teamModel = new M_Team();          // Instantiate Team model
         $this->vehicleModel = new M_Vehicle();    // Instantiate Vehicle model
         $this->shiftModel = new M_Shift();        // Instantiate Shift model
         $this->scheduleModel = new M_CollectionSchedule();  // Instantiate CollectionSchedule model
@@ -62,53 +59,7 @@ class VehicleManager extends Controller {
     }
 
 
-    public function index() {
-        // Get dashboard stats from the model
-        $stats = $this->vehicleManagerModel->getDashboardStats();
 
-        // Fetch all necessary data for the dropdowns
-        $routes = $this->routeModel->getAllRoutes();
-        $teams = $this->teamModel->getAllTeams();
-        $vehicles = $this->vehicleModel->getAllVehicles();
-        $shifts = $this->shiftModel->getAllShifts();
-        $schedules = $this->scheduleModel->getAllSchedules();
-        $ongoingCollections = $this->collectionModel->getOngoingCollections();
-
-        // Pass the stats and data for the dropdowns to the view
-        $this->view('vehicle_manager/v_collection', [
-            'stats' => $stats,
-            'routes' => $routes,
-            'teams' => $teams,
-            'vehicles' => $vehicles,
-            'shifts' => $shifts,
-            'schedules' => $schedules,
-            'ongoing_collections' => $ongoingCollections
-        ]);
-    }
-
-    public function applications() {
-        // Get dashboard stats from the model
-        $stats = $this->vehicleManagerModel->getDashboardStats();
-
-        // Fetch all necessary data for the dropdowns
-        $routes = $this->routeModel->getAllRoutes();
-        $teams = $this->teamModel->getAllTeams();
-        $vehicles = $this->vehicleModel->getAllVehicles();
-        $shifts = $this->shiftModel->getAllShifts();
-        $schedules = $this->scheduleModel->getAllSchedules();
-        $ongoingCollections = $this->collectionModel->getOngoingCollections();
-
-        // Pass the stats and data for the dropdowns to the view
-        $this->view('vehicle_manager/v_collection', [
-            'stats' => $stats,
-            'routes' => $routes,
-            'teams' => $teams,
-            'vehicles' => $vehicles,
-            'shifts' => $shifts,
-            'schedules' => $schedules,
-            'ongoing_collections' => $ongoingCollections
-        ]);
-    }
 
     public function getSupplierRecords($collectionId) {
         $records = $this->collectionSupplierRecordModel->getSupplierRecords($collectionId);
@@ -127,142 +78,10 @@ class VehicleManager extends Controller {
         echo json_encode(['success' => $success]);
     }
 
-    // Add method to handle the assignment of collections
-    public function createSchedule() {
-        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-            $data = [
-                'route_id' => $_POST['route_id'],
-                'team_id' => $_POST['team_id'],
-                'vehicle_id' => $_POST['vehicle_id'],
-                'shift_id' => $_POST['shift_id'],
-                'week_number' => $_POST['week_number'],
-                'days_of_week' => isset($_POST['days_of_week']) ? implode(',', $_POST['days_of_week']) : ''
-            ];
-
-            // Call the model to create a new schedule
-            $result = $this->scheduleModel->create($data);
-
-            if ($result) {
-                flash('schedule_success', 'Schedule created successfully');
-                redirect('vehiclemanager/index');
-            } else {
-                flash('schedule_error', 'Error creating schedule');
-                redirect('vehiclemanager/index');
-            }
-        }
-    }
     
     
 
     // Other methods remain unchanged
-    public function vehicle() {
-        $data = [
-            'totalVehicles' => $this->vehicleModel->getTotalVehicles(),
-            'availableVehicles' => $this->vehicleModel->getAvailableVehicles(),
-            'vehicles' => $this->vehicleModel->getVehicleDetails(),
-            'vehicleTypeStats' => $this->vehicleModel->getVehicleTypeStats()
-        ];
-
-        $this->view('vehicle_manager/v_vehicle', $data);
-    }
-
-    public function team() {
-        $teamStats = $this->teamModel->getTeamStatistics();
-        $teams = $this->teamModel->getTeamsWithMembers();
-        $unassignedDrivers = $this->teamModel->getUnassignedDrivers(); // Fetch unassigned drivers
-        $unassignedPartners = $this->teamModel->getUnassignedPartner(); // Fetch unassigned partners
-
-        $data = [
-            'teamStats' => $teamStats,
-            'teams' => $teams,
-            'unassigned_drivers' => $unassignedDrivers, // Add unassigned drivers to the data array
-            'unassigned_partners' => $unassignedPartners // Add unassigned partners to the data array
-        ];
-        
-        $this->view('vehicle_manager/v_team', $data);
-    }
-
-    public function updateTeam() {
-        if ($_SERVER['REQUEST_METHOD'] == 'POST') {
-            $_POST = filter_input_array(INPUT_POST, FILTER_SANITIZE_STRING);
-
-            $data = [
-                'team_id' => trim($_POST['team_id']),
-                'team_name' => trim($_POST['team_name']),
-                'driver_id' => trim($_POST['driver_id']),
-                'partner_id' => trim($_POST['partner_id']),
-                'status' => trim($_POST['status'])
-            ];
-
-            if (empty($data['team_name'])) {
-                $_SESSION['flash_messages']['team_message'] = [
-                    'message' => 'Please enter team name',
-                    'class' => 'alert alert-danger'
-                ];
-                redirect('vehiclemanager/team');
-                return;
-            }
-
-            if ($this->teamModel->updateTeam($data)) {
-                $_SESSION['flash_messages']['team_message'] = [
-                    'message' => 'Team updated successfully',
-                    'class' => 'alert alert-success'
-                ];
-            } else {
-                $_SESSION['flash_messages']['team_message'] = [
-                    'message' => 'Failed to update team',
-                    'class' => 'alert alert-danger'
-                ];
-            }
-            redirect('vehiclemanager/team');
-        }
-    }
-
-    public function createTeam() {
-        if ($_SERVER['REQUEST_METHOD'] == 'POST') {
-            $_POST = filter_input_array(INPUT_POST, FILTER_SANITIZE_STRING);
-
-            // Get manager_id using helper
-            $manager_id = $this->userHelper->getManagerId($_SESSION['user_id']);
-            if (!$manager_id) {
-                die('Invalid manager access');
-            }
-
-            $data = [
-                'team_name' => trim($_POST['team_name']),
-                'driver_id' => !empty($_POST['driver_id']) ? trim($_POST['driver_id']) : null,
-                'partner_id' => !empty($_POST['partner_id']) ? trim($_POST['partner_id']) : null,
-                'status' => trim($_POST['status']),
-                'manager_id' => $this->userHelper->getManagerId($_SESSION['user_id'])
-            ];
-
-            // Validate team name
-            if (empty($data['team_name'])) {
-                die('Please enter team name');
-            }
-
-            // Debug line - remove in production
-            error_log('Creating team with data: ' . print_r($data, true));
-
-            if ($this->teamModel->createTeam($data)) {
-                $_SESSION['flash_messages'] = [
-                    'team_message' => [
-                        'message' => 'Team created successfully',
-                        'class' => 'alert alert-success'
-                    ]
-                ];
-            } else {
-                $_SESSION['flash_messages'] = [
-                    'team_message' => [
-                        'message' => 'Failed to create team',
-                        'class' => 'alert alert-danger'
-                    ]
-                ];
-            }
-            redirect('vehiclemanager/team');
-        }
-    }
-
     public function route() {
         $allRoutes = $this->routeModel->getAllRoutes();
         $totalRoutes = $this->routeModel->getTotalRoutes();
@@ -460,159 +279,6 @@ class VehicleManager extends Controller {
         // Handle logout functionality
     }
 
-    public function uploadVehicleImage() {
-        if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES['vehicle_image'])) {
-            $vehicle_id = $_POST['vehicle_id'];
-            $file = $_FILES['vehicle_image'];
-            
-            // Configure upload settings
-            $upload_dir = 'uploads/vehicles/';
-            $file_extension = strtolower(pathinfo($file['name'], PATHINFO_EXTENSION));
-            $file_name = uniqid() . '.' . $file_extension;
-            $file_path = $upload_dir . $file_name;
-            
-            // Check file type
-            $allowed_types = ['jpg', 'jpeg', 'png'];
-            if (!in_array($file_extension, $allowed_types)) {
-                echo json_encode(['error' => 'Invalid file type']);
-                return;
-            }
-            
-            // Move uploaded file
-            if (move_uploaded_file($file['tmp_name'], $file_path)) {
-                // Save to database
-                $result = $this->vehicleModel->saveVehicleDocument(
-                    $vehicle_id,
-                    'Image',
-                    $file_path
-                );
-                
-                echo json_encode(['success' => true, 'file_path' => $file_path]);
-            } else {
-                echo json_encode(['error' => 'Failed to upload file']);
-            }
-        }
-    }
-
-    public function createVehicle() {
-        if ($_SERVER['REQUEST_METHOD'] == 'POST') {
-            try {
-                // Sanitize POST data
-                $_POST = filter_input_array(INPUT_POST, FILTER_SANITIZE_STRING);
-
-                // Create vehicle
-                $result = $this->vehicleModel->createVehicle($_POST);
-                
-                if ($result === true) {
-                    flash('vehicle_message', 'Vehicle Added Successfully', 'alert alert-success');
-                    redirect('vehiclemanager/index');
-                } else {
-                    flash('vehicle_message', $result, 'alert alert-danger');
-                    redirect('vehiclemanager/index');
-                }
-            } catch (Exception $e) {
-                flash('vehicle_message', 'Error creating vehicle: ' . $e->getMessage(), 'alert alert-danger');
-                redirect('vehiclemanager/index');
-            }
-        } else {
-            redirect('vehiclemanager/index');
-        }
-    }
-
-    public function updateVehicle() {
-        // Prevent PHP errors from being output
-        error_reporting(E_ALL);
-        ini_set('display_errors', 0);
-        
-        // Set JSON header
-        header('Content-Type: application/json');
-
-        try {
-            if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-                throw new Exception('Method not allowed');
-            }
-
-            // Get JSON data from request body
-            $json = file_get_contents('php://input');
-            if (!$json) {
-                throw new Exception('No data received');
-            }
-
-            $data = json_decode($json);
-            if (!$data || !isset($data->vehicle_id)) {
-                throw new Exception('Invalid data format');
-            }
-
-            // Log the received data for debugging
-            error_log('Received vehicle update data: ' . print_r($data, true));
-
-            $result = $this->vehicleModel->updateVehicle($data);
-            
-            if ($result === true) {
-                echo json_encode([
-                    'success' => true,
-                    'message' => 'Vehicle updated successfully'
-                ]);
-            } else {
-                echo json_encode([
-                    'success' => false,
-                    'message' => is_string($result) ? $result : 'Failed to update vehicle'
-                ]);
-            }
-
-        } catch (Exception $e) {
-            error_log('Vehicle Update Error: ' . $e->getMessage());
-            echo json_encode([
-                'success' => false,
-                'message' => 'Error: ' . $e->getMessage()
-            ]);
-        }
-        exit; // Ensure no additional output
-    }
-
-    public function getVehicleById($id) {
-        $vehicle = $this->vehicleModel->getVehicleById($id);
-        if ($vehicle) {
-            echo json_encode($vehicle);
-        } else {
-            echo json_encode(['error' => 'Vehicle not found']);
-        }
-    }
-
-    public function deleteVehicle($id) {
-        header('Content-Type: application/json');
-        
-        try {
-            // Log the request method and ID
-            error_log("Delete request received for vehicle ID: " . $id);
-            error_log("Request method: " . $_SERVER['REQUEST_METHOD']);
-
-            if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-                throw new Exception('Invalid request method');
-            }
-
-            // Try to delete the vehicle
-            if ($this->vehicleModel->deleteVehicle($id)) {
-                error_log("Vehicle " . $id . " deleted successfully");
-                echo json_encode([
-                    'success' => true,
-                    'message' => 'Vehicle deleted successfully'
-                ]);
-            } else {
-                throw new Exception('Failed to delete vehicle from database');
-            }
-
-        } catch (Exception $e) {
-            error_log("Error in deleteVehicle: " . $e->getMessage());
-            echo json_encode([
-                'success' => false,
-                'message' => $e->getMessage()
-            ]);
-        }
-        exit;
-    }
-
-
     public function getRouteSuppliers($routeId) {
         header('Content-Type: application/json');
         
@@ -758,25 +424,6 @@ class VehicleManager extends Controller {
         }
     }
 
-    public function deleteTeam($teamId) {
-        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-            die('Invalid request method');
-        }
-
-        if ($this->teamModel->setTeamVisibility($teamId, 0)) {
-            $_SESSION['flash_messages']['team_message'] = [
-                'message' => 'Team deleted successfully',
-                'class' => 'alert alert-success'
-            ];
-        } else {
-            $_SESSION['flash_messages']['team_message'] = [
-                'message' => 'Failed to delete team',
-                'class' => 'alert alert-danger'
-            ];
-        }
-        redirect('vehiclemanager/team');
-    }
-
     public function getCollectionRoute($collectionId) {
         // Get collection details
         $collection = $this->collectionModel->getCollectionById($collectionId);
@@ -853,135 +500,6 @@ class VehicleManager extends Controller {
                 echo json_encode(['success' => false]);
             }
         }
-    }
-
-    public function addVehicle() {
-        if ($_SERVER['REQUEST_METHOD'] == 'GET') {
-            $data = [
-                'title' => 'Add New Vehicle'
-            ];
-            $this->view('vehicle_manager/v_add_vehicle', $data);
-        } else {
-            // Handle POST request
-            $this->handleVehicleSubmission();
-        }
-    }
-
-    private function handleVehicleSubmission() {
-        try {
-            // Basic vehicle data
-            $vehicleData = [
-                'license_plate' => $_POST['license_plate'],
-                'vehicle_type' => $_POST['vehicle_type'],
-                'engine_number' => $_POST['engine_number'],
-                'chassis_number' => $_POST['chassis_number'],
-                'status' => $_POST['status'],
-                'condition' => $_POST['condition'],
-                'make' => $_POST['make'],
-                'model' => $_POST['model'],
-                'manufacturing_year' => $_POST['manufacturing_year'],
-                'color' => $_POST['color'],
-                'fuel_type' => $_POST['fuel_type'],
-                'mileage' => $_POST['mileage'],
-                'capacity' => $_POST['capacity'],
-                'seating_capacity' => $_POST['seating_capacity'],
-                'owner_name' => $_POST['owner_name'],
-                'owner_contact' => $_POST['owner_contact'],
-                'registration_date' => $_POST['registration_date'],
-                'last_serviced_date' => $_POST['last_serviced_date'],
-                'last_maintenance' => $_POST['last_maintenance'],
-                'next_maintenance' => $_POST['next_maintenance']
-            ];
-
-            // Handle vehicle image
-            if (isset($_FILES['vehicle_image']) && $_FILES['vehicle_image']['error'] === UPLOAD_ERR_OK) {
-                $this->handleVehicleImage($_FILES['vehicle_image'], $_POST['license_plate']);
-            }
-
-            // Create vehicle (temporarily without documents)
-            $result = $this->vehicleModel->createVehicle($vehicleData);
-
-            if ($result) {
-                flash('vehicle_message', 'Vehicle added successfully', 'alert-success');
-                redirect('vehiclemanager/vehicle'); // Changed from vehiclemanager to vehiclemanager/vehicles
-            } else {
-                flash('vehicle_message', 'Failed to add vehicle', 'alert-danger');
-                redirect('vehiclemanager/addVehicle');
-            }
-
-        } catch (Exception $e) {
-            flash('vehicle_message', 'Error: ' . $e->getMessage(), 'alert-danger');
-            redirect('vehiclemanager/addVehicle');
-        }
-    }
-
-    private function handleFileUpload($file, $uploadDir) {
-        $uploadDir = '../public/uploads/' . $uploadDir . '/';
-        $fileName = uniqid() . '_' . basename($file['name']);
-        $targetPath = $uploadDir . $fileName;
-
-        if (move_uploaded_file($file['tmp_name'], $targetPath)) {
-            return $fileName;
-        }
-        return false;
-    }
-
-    private function handleVehicleImage($file, $licensePlate) {
-        try {
-            if ($file['error'] === UPLOAD_ERR_OK) {
-                // Define the upload directory path
-                $uploadDir = UPLOADROOT . '/vehicle_photos/';
-                
-                // Log the upload directory path
-                error_log("Upload directory: " . $uploadDir);
-                
-                // Create directory if it doesn't exist
-                if (!file_exists($uploadDir)) {
-                    if (!mkdir($uploadDir, 0777, true)) {
-                        error_log("Failed to create directory: " . $uploadDir);
-                        return false;
-                    }
-                }
-
-                $fileName = $licensePlate . '.jpg';
-                $targetPath = $uploadDir . $fileName;
-                
-                // Log the target path
-                error_log("Target path: " . $targetPath);
-
-                // Check if file is actually uploaded
-                if (is_uploaded_file($file['tmp_name'])) {
-                    // Move the uploaded file
-                    if (move_uploaded_file($file['tmp_name'], $targetPath)) {
-                        error_log("File successfully uploaded to: " . $targetPath);
-                        return true;
-                    } else {
-                        error_log("Failed to move uploaded file. Error: " . error_get_last()['message']);
-                        return false;
-                    }
-                } else {
-                    error_log("File was not uploaded via HTTP POST");
-                    return false;
-                }
-            } else {
-                error_log("File upload error code: " . $file['error']);
-                return false;
-            }
-        } catch (Exception $e) {
-            error_log("Error uploading vehicle image: " . $e->getMessage());
-            return false;
-        }
-    }
-
-    public function checkVehicleUsage($id) {
-        $schedules = $this->scheduleModel->getSchedulesByVehicleId($id);
-        $collections = $this->collectionModel->getCollectionsByVehicleId($id);
-
-        echo json_encode([
-            'inUse' => !empty($schedules) || !empty($collections),
-            'schedules' => !empty($schedules),
-            'collections' => !empty($collections)
-        ]);
     }
 
     public function getRouteDetails($routeId) {

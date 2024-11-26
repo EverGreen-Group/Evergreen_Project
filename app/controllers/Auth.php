@@ -139,13 +139,13 @@ class Auth extends Controller {
                             header('Location: ' . URLROOT . '/vehicledriver/');
                             break;
                         case RoleHelper::VEHICLE_MANAGER:
-                            header('Location: ' . URLROOT . '/vehiclemanager/');
+                            header('Location: ' . URLROOT . '/vehiclemanager/collections');
                             break;
                         case RoleHelper::SUPPLIER:
                             header('Location: ' . URLROOT . '/supplier/');
                             break;
                         case RoleHelper::ADMIN:
-                            header('Location: ' . URLROOT . '/');
+                            header('Location: ' . URLROOT . '/vehiclemanager/collections');
                             break;
                         case RoleHelper::DRIVING_PARTNER:
                             header('Location: ' . URLROOT . '/drivingpartner/');
