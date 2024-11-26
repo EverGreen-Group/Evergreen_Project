@@ -22,13 +22,13 @@
 				</div>
 
                 
-                <div class="table-data">
+                <!-- <div class="table-data">
                     <div class="order">
                     <div class="chart-container">
                         <canvas id="incomeCostChart" width="400" height="100"></canvas>
                     </div>
                     </div>
-                </div>
+                </div> -->
                 <div class="table-data">
                 <div class="order">
                         <div class="head">
@@ -124,6 +124,14 @@
                         <a href="<?php echo URLROOT; ?>/Supplier/paymentanalysis" >
                             <button class="button">Analysis</button>
                         </a>
+                    </div>
+                </div>
+
+                <div class="table-data">
+                    <div class="order">
+                    <div class="chart-container">
+                        <canvas id="incomeCostChart" width="400" height="100"></canvas>
+                    </div>
                     </div>
                 </div>
         </main>
