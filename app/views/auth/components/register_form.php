@@ -17,11 +17,6 @@
     </div>
 
     <div class="auth-form-group">
-        <label for="date_of_birth">Date of Birth</label>
-        <input type="date" id="date_of_birth" name="date_of_birth" required>
-    </div>
-
-    <div class="auth-form-group">
         <label for="password">Password</label>
         <div class="password-input">
             <input type="password" id="password" name="password" required

@@ -99,6 +99,7 @@ class SupplierManager extends Controller {
         $structures = $supplierApplicationModel->getStructures($applicationId);
         $propertyDetails = $supplierApplicationModel->getPropertyDetails($applicationId);
         $address = $supplierApplicationModel->getAddress($applicationId);
+        $ownershipDetails = $supplierApplicationModel->getOwnershipDetails($applicationId);
 
         // Prepare data array
         $data = [
@@ -108,7 +109,7 @@ class SupplierManager extends Controller {
                 'status' => $application->status,
                 'primary_phone' => $application->primary_phone,
                 'secondary_phone' => $application->secondary_phone,
-                'whatsapp_number' => $application->whatsapp_number,
+                'preferred_days' => $application->preferred_days,
                 'created_at' => $application->created_at,
                 'updated_at' => $application->updated_at
             ],
@@ -120,7 +121,8 @@ class SupplierManager extends Controller {
             'infrastructure' => $infrastructure,
             'structures' => $structures,
             'property' => $propertyDetails,
-            'address' => $address
+            'address' => $address,
+            'ownership' => $ownershipDetails
         ];
 
         // Load the view
@@ -158,6 +160,22 @@ class SupplierManager extends Controller {
         $this->view('supplier_manager/v_suppliers', $data);
     }
 
+    public function confirmSupplierRole($applicationId) {
+        try {
+            if ($this->supplierApplicationModel->confirmSupplierRole($applicationId)) {
+                flash('application_message', 'Supplier role confirmed successfully');
+            } else {
+                flash('application_message', 'Failed to confirm supplier role', 'alert alert-danger');
+            }
+            
+            redirect('suppliermanager/applications');
+            
+        } catch (Exception $e) {
+            error_log("Error confirming supplier role: " . $e->getMessage());
+            flash('application_message', 'Error confirming supplier role', 'alert alert-danger');
+            redirect('suppliermanager/applications');
+        }
+    }
 
     public function supplierStatement() {
         $data = [];
@@ -214,6 +232,8 @@ class SupplierManager extends Controller {
 
         $this->view('supplier_manager/v_settings', $data);
     }
+
+    
 
 }
 ?>

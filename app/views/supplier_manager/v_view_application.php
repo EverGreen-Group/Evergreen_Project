@@ -1,8 +1,7 @@
 <?php require APPROOT . '/views/inc/components/header.php'; ?>
 
-<!-- Add Leaflet CSS and JS -->
-<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<!-- Add Google Maps JS -->
+<script src="https://maps.googleapis.com/maps/api/js?key=YOUR_GOOGLE_MAPS_API_KEY"></script>
 
 <!-- Add this JavaScript block right after header -->
 <script>
@@ -35,6 +34,7 @@
 
 <!-- MAIN -->
 <main>
+
     <div class="head-title">
         <div class="left">
             <h1>Application Details</h1>
@@ -136,22 +136,35 @@
                 <h3>Property Details</h3>
             </div>
             <div class="section-content">
-                <div class="info-row">
-                    <span class="label">Total Land Area:</span>
-                    <span class="value"><?= $data['property']->total_land_area ?> acres</span>
-                </div>
-                <div class="info-row">
-                    <span class="label">Tea Cultivation Area:</span>
-                    <span class="value"><?= $data['property']->tea_cultivation_area ?> acres</span>
-                </div>
-                <div class="info-row">
-                    <span class="label">Elevation:</span>
-                    <span class="value"><?= $data['property']->elevation ?> meters</span>
-                </div>
-                <div class="info-row">
-                    <span class="label">Slope:</span>
-                    <span class="value"><?= ucfirst($data['property']->slope) ?></span>
-                </div>
+                <?php if ($data['ownership']): ?>
+                    <div class="info-row">
+                        <span class="label">Ownership Type:</span>
+                        <span class="value"><?= ucfirst($data['ownership']->ownership_type) ?></span>
+                    </div>
+                    <div class="info-row">
+                        <span class="label">Ownership Duration:</span>
+                        <span class="value"><?= $data['ownership']->ownership_duration ?> years</span>
+                    </div>
+                <?php endif; ?>
+                
+                <?php if ($data['property']): ?>
+                    <div class="info-row">
+                        <span class="label">Total Land Area:</span>
+                        <span class="value"><?= $data['property']->total_land_area ?> acres</span>
+                    </div>
+                    <div class="info-row">
+                        <span class="label">Tea Cultivation Area:</span>
+                        <span class="value"><?= $data['property']->tea_cultivation_area ?> acres</span>
+                    </div>
+                    <div class="info-row">
+                        <span class="label">Elevation:</span>
+                        <span class="value"><?= $data['property']->elevation ?> meters</span>
+                    </div>
+                    <div class="info-row">
+                        <span class="label">Slope:</span>
+                        <span class="value"><?= ucfirst($data['property']->slope) ?></span>
+                    </div>
+                <?php endif; ?>
             </div>
         </div>
     </div>
@@ -173,7 +186,7 @@
     </div>
 
     <!-- Tea Information -->
-    <div class="table-data">
+    <!-- <div class="table-data">
         <div class="order">
             <div class="head">
                 <h3>Tea Information</h3>
@@ -200,10 +213,10 @@
                 </div>
             </div>
         </div>
-    </div>
+    </div> -->
 
     <!-- Infrastructure -->
-    <div class="table-data">
+    <!-- <div class="table-data">
         <div class="order">
             <div class="head">
                 <h3>Infrastructure</h3>
@@ -230,7 +243,7 @@
                 </div>
             </div>
         </div>
-    </div>
+    </div> -->
 
     <!-- Address Information -->
     <div class="table-data">
@@ -344,39 +357,42 @@ function confirmSupplierRole(applicationId) {
 
 // Map initialization
 <script>
-    // Add this before map initialization
-    if (typeof L === 'undefined') {
-        console.error('Leaflet is not loaded!');
-    } else {
-        console.log('Leaflet is loaded successfully');
+    function initMap() {
+        // Get coordinates from PHP, with fallback to Sri Lanka's center
+        const defaultLat = 7.8731;
+        const defaultLng = 80.7718;
+        const lat = <?= !empty($data['address']->latitude) ? $data['address']->latitude : 'defaultLat' ?>;
+        const lng = <?= !empty($data['address']->longitude) ? $data['address']->longitude : 'defaultLng' ?>;
+
+        // Create map
+        const map = new google.maps.Map(document.getElementById('map'), {
+            center: { lat: lat, lng: lng },
+            zoom: 15,
+            mapTypeId: google.maps.MapTypeId.ROADMAP
+        });
+
+        // Add marker
+        const marker = new google.maps.Marker({
+            position: { lat: lat, lng: lng },
+            map: map,
+            title: 'Property Location'
+        });
+
+        // Add info window
+        const infoWindow = new google.maps.InfoWindow({
+            content: `<b>Property Location</b><br>${<?= json_encode($data['address']->line1) ?>}`
+        });
+
+        marker.addListener('click', () => {
+            infoWindow.open(map, marker);
+        });
+
+        // Open info window by default
+        infoWindow.open(map, marker);
     }
 
-    // Initialize the map with Sri Lanka's center coordinates as default
-    const defaultLat = 7.8731;
-    const defaultLng = 80.7718;
-    
-    // Get coordinates from PHP, with fallback to default
-    const lat = <?= !empty($data['address']->latitude) ? $data['address']->latitude : 'defaultLat' ?>;
-    const lng = <?= !empty($data['address']->longitude) ? $data['address']->longitude : 'defaultLng' ?>;
-
-    // Initialize the map
-    const map = L.map('map').setView([lat, lng], 13);
-
-    // Add OpenStreetMap tiles
-    L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-    }).addTo(map);
-
-    // Add marker
-    const marker = L.marker([lat, lng]).addTo(map);
-    
-    // Add popup
-    marker.bindPopup(`<b>Property Location</b><br>${<?= json_encode($data['address']->line1) ?>}`).openPopup();
-
-    // Force map to update its size container
-    setTimeout(() => {
-        map.invalidateSize();
-    }, 100);
+    // Initialize map when page loads
+    window.onload = initMap;
 </script>
 </script>
 

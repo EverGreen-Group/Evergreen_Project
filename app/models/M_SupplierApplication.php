@@ -11,20 +11,24 @@ class M_SupplierApplication {
         
         try {
             // 1. Insert main application
-            $this->db->query('INSERT INTO supplier_applications (user_id, primary_phone, secondary_phone, whatsapp_number) 
-                             VALUES (:user_id, :primary_phone, :secondary_phone, :whatsapp_number)');
+            $this->db->query('INSERT INTO supplier_applications 
+                (user_id, primary_phone, secondary_phone, preferred_days) 
+                VALUES 
+                (:user_id, :primary_phone, :secondary_phone, :preferred_days)');
             
             $this->db->bind(':user_id', $data['user_id']);
             $this->db->bind(':primary_phone', $data['primary_phone']);
             $this->db->bind(':secondary_phone', $data['secondary_phone']);
-            $this->db->bind(':whatsapp_number', $data['whatsapp_number']);
+            $this->db->bind(':preferred_days', $data['preferred_days']);
+            
+            // Add debug logging
+            error_log("Inserting application data: " . print_r($data, true));
             
             if (!$this->db->execute()) {
                 throw new Exception("Failed to insert main application");
             }
             
             $applicationId = $this->db->lastInsertId();
-            error_log("Application ID generated: " . $applicationId);
 
             // 2. Insert address
             $this->db->query('INSERT INTO application_addresses 
@@ -34,173 +38,153 @@ class M_SupplierApplication {
             
             $this->db->bind(':application_id', $applicationId);
             $this->db->bind(':line1', $data['address']['line1']);
-            $this->db->bind(':line2', $data['address']['line2']);
+            $this->db->bind(':line2', $data['address']['line2'] ?? null);
             $this->db->bind(':city', $data['address']['city']);
             $this->db->bind(':district', $data['address']['district']);
             $this->db->bind(':postal_code', $data['address']['postal_code']);
             $this->db->bind(':latitude', $data['address']['latitude']);
             $this->db->bind(':longitude', $data['address']['longitude']);
             
+            // Add debug logging
+            error_log("Inserting address data: " . print_r($data['address'], true));
+            
             if (!$this->db->execute()) {
-                throw new Exception("Failed to insert address");
+                $error = $this->db->error();
+                error_log("Database error: " . print_r($error, true));
+                throw new Exception("Failed to insert address: " . ($error ? json_encode($error) : 'Unknown error'));
             }
 
-            // 3. Insert tea varieties (if present in the form data)
-            if (!empty($data['teaVarieties'])) {
-                $this->db->query('INSERT INTO application_tea_varieties (application_id, variety_name) 
-                                 VALUES (:application_id, :variety_name)');
+            // 3. Insert property details
+            $this->db->query('INSERT INTO application_property_details 
+                (application_id, total_land_area, tea_cultivation_area, elevation, slope) 
+                VALUES 
+                (:application_id, :total_land_area, :tea_cultivation_area, :elevation, :slope)');
+            
+            $this->db->bind(':application_id', $applicationId);
+            $this->db->bind(':total_land_area', $data['property']['total_land_area']);
+            $this->db->bind(':tea_cultivation_area', $data['property']['tea_cultivation_area']);
+            $this->db->bind(':elevation', $data['property']['elevation']);
+            $this->db->bind(':slope', $data['property']['slope']);
+            
+            if (!$this->db->execute()) {
+                throw new Exception("Failed to insert property details");
+            }
+
+            // 4. Insert infrastructure details
+            // Map form values to database enum values
+            $vehicleAccessMap = [
+                'full' => 'All Weather Access',
+                'partial' => 'Fair Weather Only',
+                'limited' => 'Limited Access',
+                'none' => 'No Vehicle Access'
+            ];
+
+            $this->db->query('INSERT INTO application_infrastructure 
+                (application_id, vehicle_access) 
+                VALUES (:application_id, :vehicle_access)');
+            
+            $this->db->bind(':application_id', $applicationId);
+            $vehicleAccess = $vehicleAccessMap[$data['infrastructure']['vehicle_access']] ?? null;
+            
+            if (!$vehicleAccess) {
+                throw new Exception("Invalid vehicle access value: " . $data['infrastructure']['vehicle_access']);
+            }
+            
+            $this->db->bind(':vehicle_access', $vehicleAccess);
+            
+            // Add debug logging
+            error_log("Vehicle access value: " . $vehicleAccess);
+            
+            if (!$this->db->execute()) {
+                $error = $this->db->error();
+                error_log("Database error: " . print_r($error, true));
+                throw new Exception("Failed to insert infrastructure details: " . ($error ? json_encode($error) : 'Unknown error'));
+            }
+
+            // 5. Insert water sources
+            if (!empty($data['infrastructure']['water_sources'])) {
+                // Map form values to database enum values
+                $waterSourceMap = [
+                    'river' => 'Stream/River',
+                    'well' => 'Well',
+                    'stream' => 'Stream/River',
+                    'rainwater' => 'Rain Water',
+                    'other' => 'Public Water Supply'
+                ];
+
+                $this->db->query('INSERT INTO application_water_sources 
+                    (application_id, source_type) VALUES (:application_id, :source_type)');
                 
-                foreach ($data['teaVarieties'] as $variety) {
+                foreach ($data['infrastructure']['water_sources'] as $source) {
+                    // Map the source type to database enum
+                    $dbSourceType = $waterSourceMap[$source] ?? null;
+                    
+                    if (!$dbSourceType) {
+                        error_log("Invalid water source type: " . $source);
+                        continue; // Skip invalid sources
+                    }
+
                     $this->db->bind(':application_id', $applicationId);
-                    $this->db->bind(':variety_name', $variety);
-                    if (!$this->db->execute()) {
-                        throw new Exception("Failed to insert tea variety: " . $variety);
-                    }
-                }
-            }
-
-            // 4. Insert property details
-            if (!empty($data['property'])) {
-                $this->db->query('INSERT INTO application_property_details 
-                    (application_id, total_land_area, tea_cultivation_area, elevation, slope) 
-                    VALUES 
-                    (:application_id, :total_land_area, :tea_cultivation_area, :elevation, :slope)');
-                
-                $this->db->bind(':application_id', $applicationId);
-                $this->db->bind(':total_land_area', $data['property']['total_land_area']);
-                $this->db->bind(':tea_cultivation_area', $data['property']['tea_cultivation_area']);
-                $this->db->bind(':elevation', $data['property']['elevation']);
-                $this->db->bind(':slope', $data['property']['slope']);
-                
-                if (!$this->db->execute()) {
-                    throw new Exception("Failed to insert property details");
-                }
-            }
-
-            // 5. Handle document uploads with better error handling
-            foreach ($documents as $type => $file) {
-                try {
-                    // Log the document processing
-                    error_log("Processing document: " . $type);
-                    error_log("File details: " . print_r($file, true));
+                    $this->db->bind(':source_type', $dbSourceType);
                     
-                    // Upload the document
-                    $filePath = $this->uploadDocument($file, $type);
-                    error_log("File uploaded successfully to: " . $filePath);
-                    
-                    // Insert document record
-                    $this->db->query('INSERT INTO application_documents 
-                        (application_id, document_type, file_path) 
-                        VALUES 
-                        (:application_id, :document_type, :file_path)');
-                    
-                    $params = [
-                        'application_id' => $applicationId,
-                        'document_type' => $type,
-                        'file_path' => $filePath
-                    ];
-                    
-                    // Log the SQL parameters
-                    error_log("SQL parameters: " . print_r($params, true));
-                    
-                    $this->db->bind(':application_id', $params['application_id']);
-                    $this->db->bind(':document_type', $params['document_type']);
-                    $this->db->bind(':file_path', $params['file_path']);
+                    // Add debug logging
+                    error_log("Inserting water source: " . $dbSourceType);
                     
                     if (!$this->db->execute()) {
-                        $error = $this->db->getError();
-                        error_log("Database error while inserting document: " . print_r($error, true));
-                        throw new Exception("Failed to insert document record for: " . $type . 
-                                          " - DB Error: " . ($error ? json_encode($error) : 'Unknown error'));
-                    }
-                    
-                    error_log("Document record inserted successfully for: " . $type);
-                    
-                } catch (Exception $e) {
-                    error_log("Error processing document {$type}: " . $e->getMessage());
-                    throw $e;
-                }
-            }
-
-            // 6. Insert ownership details (if present in form data)
-            if (!empty($data['ownership'])) {
-                $this->db->query('INSERT INTO application_ownership_details (application_id, ownership_type, ownership_duration) 
-                                 VALUES (:application_id, :ownership_type, :ownership_duration)');
-                
-                $this->db->bind(':application_id', $applicationId);
-                $this->db->bind(':ownership_type', $data['ownership']['ownership_type']);
-                $this->db->bind(':ownership_duration', $data['ownership']['ownership_duration']);
-                
-                if (!$this->db->execute()) {
-                    throw new Exception("Failed to insert ownership details");
-                }
-            }
-
-            // 7. Insert tea details (if present in form data)
-            if (!empty($data['tea_details'])) {
-                $this->db->query('INSERT INTO application_tea_details (application_id, plant_age, monthly_production) 
-                                 VALUES (:application_id, :plant_age, :monthly_production)');
-                
-                $this->db->bind(':application_id', $applicationId);
-                $this->db->bind(':plant_age', $data['tea_details']['plant_age']);
-                $this->db->bind(':monthly_production', $data['tea_details']['monthly_production']);
-                
-                if (!$this->db->execute()) {
-                    throw new Exception("Failed to insert tea details");
-                }
-            }
-
-            // Insert infrastructure details
-            if (!empty($data['infrastructure'])) {
-                // Insert main infrastructure details
-                $this->db->query('INSERT INTO application_infrastructure 
-                    (application_id, access_road, vehicle_access) 
-                    VALUES (:application_id, :access_road, :vehicle_access)');
-                
-                $this->db->bind(':application_id', $applicationId);
-                $this->db->bind(':access_road', $data['infrastructure']['access_road']);
-                $this->db->bind(':vehicle_access', $data['infrastructure']['vehicle_access']);
-                
-                if (!$this->db->execute()) {
-                    throw new Exception("Failed to insert infrastructure details");
-                }
-
-                // Insert water sources
-                if (!empty($data['infrastructure']['water_source'])) {
-                    $this->db->query('INSERT INTO application_water_sources 
-                        (application_id, source_type) VALUES (:application_id, :source_type)');
-                    
-                    foreach ($data['infrastructure']['water_source'] as $source) {
-                        $this->db->bind(':application_id', $applicationId);
-                        $this->db->bind(':source_type', $source);
-                        if (!$this->db->execute()) {
-                            throw new Exception("Failed to insert water source: " . $source);
-                        }
-                    }
-                }
-
-                // Insert structures
-                if (!empty($data['infrastructure']['structures'])) {
-                    $this->db->query('INSERT INTO application_structures 
-                        (application_id, structure_type) VALUES (:application_id, :structure_type)');
-                    
-                    foreach ($data['infrastructure']['structures'] as $structure) {
-                        $this->db->bind(':application_id', $applicationId);
-                        $this->db->bind(':structure_type', $structure);
-                        if (!$this->db->execute()) {
-                            throw new Exception("Failed to insert structure: " . $structure);
-                        }
+                        $error = $this->db->error();
+                        error_log("Database error: " . print_r($error, true));
+                        throw new Exception("Failed to insert water source: " . ($error ? json_encode($error) : 'Unknown error'));
                     }
                 }
             }
 
-            // Insert bank details
-            if (!empty($data['bank_info'])) {
-                $this->db->query('INSERT INTO supplier_bank_info 
-                    (application_id, account_holder_name, bank_name, branch_name, account_number, account_type) 
-                    VALUES 
-                    (:application_id, :account_holder_name, :bank_name, :branch_name, :account_number, :account_type)');
+            // 6. Insert structures
+            if (!empty($data['infrastructure']['structures'])) {
+                // Map form values to exact database enum values
+                $structures = [
+                    'storage' => 'Storage Facility',
+                    'processing' => 'Equipment Storage',
+                    'office' => 'Worker Rest Area',
+                    'residence' => 'Living Quarters',
+                    'other' => 'None'
+                ];
+
+                $this->db->query('INSERT INTO application_structures 
+                    (application_id, structure_type) VALUES (:application_id, :structure_type)');
                 
+                foreach ($data['infrastructure']['structures'] as $structure) {
+                    $dbStructureType = $structures[$structure] ?? null;
+                    
+                    if (!$dbStructureType) {
+                        error_log("Invalid structure type: " . $structure);
+                        continue; // Skip invalid structures
+                    }
+
+                    $this->db->bind(':application_id', $applicationId);
+                    $this->db->bind(':structure_type', $dbStructureType);
+                    
+                    // Add debug logging
+                    error_log("Inserting structure type: " . $dbStructureType);
+                    
+                    if (!$this->db->execute()) {
+                        $error = $this->db->error();
+                        error_log("Database error: " . print_r($error, true));
+                        throw new Exception("Failed to insert structure: " . ($error ? json_encode($error) : 'Unknown error'));
+                    }
+                }
+            }
+
+            // 7. Insert bank details
+            $this->db->query('INSERT INTO supplier_bank_info 
+                (application_id, account_holder_name, bank_name, branch_name, account_number, account_type) 
+                VALUES 
+                (:application_id, :account_holder_name, :bank_name, :branch_name, :account_number, :account_type)');
+            
+            // Debug: Log the values before binding
+            error_log("Application ID: " . $applicationId);
+            error_log("Bank Info Data: " . print_r($data['bank_info'], true));
+            
+            try {
                 $this->db->bind(':application_id', $applicationId);
                 $this->db->bind(':account_holder_name', $data['bank_info']['account_holder_name']);
                 $this->db->bind(':bank_name', $data['bank_info']['bank_name']);
@@ -209,31 +193,88 @@ class M_SupplierApplication {
                 $this->db->bind(':account_type', $data['bank_info']['account_type']);
                 
                 if (!$this->db->execute()) {
-                    throw new Exception("Failed to insert bank details");
+                    $pdoError = $this->db->getPDO()->errorInfo();
+                    error_log("PDO Error: " . print_r($pdoError, true));
+                    throw new Exception("Failed to insert bank details: " . ($pdoError[2] ?? 'Unknown error'));
+                }
+            } catch (PDOException $e) {
+                error_log("PDO Exception: " . $e->getMessage());
+                if ($e->getCode() == 23000) { // Duplicate entry error
+                    throw new Exception("This account number is already registered");
+                }
+                throw $e;
+            }
+
+            // Define required documents first
+            $requiredDocuments = [
+                'land_deed',
+                'tax_receipt', 
+                'tea_cultivation_certificate',
+                'id_proof',
+                'bank_statement'
+            ];
+
+            // Define document type mapping
+            $documentTypeMap = [
+                'land_deed' => 'ownership_proof',
+                'tax_receipt' => 'tax_receipts',
+                'tea_cultivation_certificate' => 'grama_cert',
+                'id_proof' => 'nic',
+                'bank_statement' => 'bank_passbook'
+            ];
+
+            // Then use both arrays in the foreach loops that follow
+            foreach ($requiredDocuments as $docType) {
+                if (!isset($_FILES['documents']['name'][$docType]) || 
+                    empty($_FILES['documents']['name'][$docType])) {
+                    throw new Exception("Missing upload for: " . $docType);
                 }
             }
 
-            // Store documents
-            foreach ($documents as $docType => $docData) {
-                $sql = "INSERT INTO supplier_documents 
-                        (supplier_id, document_type, encrypted_data, original_name) 
-                        VALUES (:supplier_id, :doc_type, :encrypted_data, :original_name)";
+            // Process each document
+            foreach ($requiredDocuments as $docType) {
+                $file = [
+                    'name' => $_FILES['documents']['name'][$docType],
+                    'type' => $_FILES['documents']['type'][$docType],
+                    'tmp_name' => $_FILES['documents']['tmp_name'][$docType],
+                    'error' => $_FILES['documents']['error'][$docType],
+                    'size' => $_FILES['documents']['size'][$docType]
+                ];
+
+                $filePath = $this->uploadDocument($file, $docType);
                 
-                $this->db->query($sql);
-                $this->db->bind(':supplier_id', $applicationId);
-                $this->db->bind(':doc_type', $docType);
-                $this->db->bind(':encrypted_data', $docData['encrypted_data']);
-                $this->db->bind(':original_name', $docData['original_name']);
-                $this->db->execute();
+                // Map the document type to database enum value
+                $dbDocType = $documentTypeMap[$docType] ?? null;
+                
+                if (!$dbDocType) {
+                    error_log("Invalid document type mapping for: " . $docType);
+                    throw new Exception("Invalid document type: " . $docType);
+                }
+
+                $this->db->query('INSERT INTO application_documents 
+                    (application_id, document_type, file_path) 
+                    VALUES 
+                    (:application_id, :document_type, :file_path)');
+                
+                $this->db->bind(':application_id', $applicationId);
+                $this->db->bind(':document_type', $dbDocType);
+                $this->db->bind(':file_path', $filePath);
+                
+                // Add debug logging
+                error_log("Inserting document: Type=" . $dbDocType . ", Path=" . $filePath);
+                
+                if (!$this->db->execute()) {
+                    $error = $this->db->error();
+                    error_log("Database error: " . print_r($error, true));
+                    throw new Exception("Failed to insert document record for: " . $docType);
+                }
             }
 
             $this->db->commit();
-            error_log("Transaction committed successfully");
             return true;
 
         } catch (Exception $e) {
             error_log("Error in createApplication: " . $e->getMessage());
-            error_log("Stack trace: " . $e->getTraceAsString());
             $this->db->rollBack();
             throw $e;
         }
@@ -429,16 +470,33 @@ class M_SupplierApplication {
     }
 
     public function getTeaDetails($applicationId) {
-        $this->db->query('SELECT * FROM application_tea_details WHERE application_id = :application_id');
+        $this->db->query('SELECT * FROM application_tea_details 
+                         WHERE application_id = :application_id');
         $this->db->bind(':application_id', $applicationId);
-        return $this->db->single();
+        
+        $result = $this->db->single();
+        
+        // Add debug logging
+        if (!$result) {
+            error_log("No tea details found for application ID: " . $applicationId);
+        }
+        
+        return $result;
     }
 
     public function getInfrastructure($applicationId) {
         $this->db->query('SELECT * FROM application_infrastructure 
-                          WHERE application_id = :application_id');
+                         WHERE application_id = :application_id');
         $this->db->bind(':application_id', $applicationId);
-        return $this->db->single();
+        
+        $result = $this->db->single();
+        
+        // Add debug logging
+        if (!$result) {
+            error_log("No infrastructure found for application ID: " . $applicationId);
+        }
+        
+        return $result;
     }
 
     public function getStructures($applicationId) {
@@ -463,7 +521,17 @@ class M_SupplierApplication {
     }
 
     public function getApplicationById($applicationId) {
-        $this->db->query('SELECT * FROM supplier_applications WHERE application_id = :application_id');
+        $this->db->query('SELECT 
+            application_id,
+            user_id,
+            status,
+            primary_phone,
+            secondary_phone,
+            preferred_days,
+            created_at,
+            updated_at 
+        FROM supplier_applications 
+        WHERE application_id = :application_id');
         $this->db->bind(':application_id', $applicationId);
         return $this->db->single();
     }
@@ -502,6 +570,34 @@ class M_SupplierApplication {
             flash('application_message', 'Something went wrong while rejecting the application', 'alert alert-danger');
         }
         redirect('suppliermanager/applications');
+    }
+
+    public function getOwnershipDetails($applicationId) {
+        $this->db->query('SELECT * FROM application_ownership_details 
+                         WHERE application_id = :application_id');
+        $this->db->bind(':application_id', $applicationId);
+        
+        $result = $this->db->single();
+        
+        if (!$result) {
+            error_log("No ownership details found for application ID: " . $applicationId);
+        }
+        
+        return $result;
+    }
+
+    public function confirmSupplierRole($applicationId) {
+        $sql = "UPDATE supplier_applications sa 
+                JOIN users u ON sa.user_id = u.user_id 
+                SET sa.status = 'approved', 
+                    u.role_id = 5,
+                    u.approval_status = 'Approved'
+                WHERE sa.application_id = :application_id";
+        
+        $this->db->query($sql);
+        $this->db->bind(':application_id', $applicationId);
+        
+        return $this->db->execute();
     }
 
 }

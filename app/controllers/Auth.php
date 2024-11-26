@@ -17,7 +17,6 @@ class Auth extends Controller {
             'email' => '',
             'first_name' => '',
             'last_name' => '',
-            'date_of_birth' => '',
             'password' => '',
             'confirm_password' => '',
             'error' => ''
@@ -31,7 +30,6 @@ class Auth extends Controller {
                 'email' => trim($_POST['email']),
                 'first_name' => trim($_POST['first_name']),
                 'last_name' => trim($_POST['last_name']),
-                'date_of_birth' => trim($_POST['date_of_birth']),
                 'password' => trim($_POST['password']),
                 'confirm_password' => trim($_POST['confirm_password']),
                 'error' => ''
@@ -41,7 +39,6 @@ class Auth extends Controller {
             if (empty($data['email']) || 
                 empty($data['first_name']) || 
                 empty($data['last_name']) || 
-                empty($data['date_of_birth']) || 
                 empty($data['password']) ||
                 empty($data['confirm_password'])) {
                 $data['error'] = 'Please fill in all fields';
@@ -53,12 +50,14 @@ class Auth extends Controller {
                 $data['error'] = 'Password must be at least 6 characters long';
             } elseif ($data['password'] !== $data['confirm_password']) {
                 $data['error'] = 'Passwords do not match';
-            } elseif (!$this->validateDateOfBirth($data['date_of_birth'])) {
-                $data['error'] = 'You must be at least 18 years old to register';
             } else {
                 try {
                     // Hash password
-                    $data['password'] = password_hash($data['password'], PASSWORD_DEFAULT);
+                    $hashedPassword = password_hash($data['password'], PASSWORD_DEFAULT);
+
+                    
+                    $data['password'] = $hashedPassword;
+
 
                     // Set default role_id and approval_status
                     $data['role_id'] = RoleHelper::getRoleByTitle('Website User');
@@ -86,19 +85,6 @@ class Auth extends Controller {
         $this->view('auth/v_register', $data);
     }
 
-    /**
-     * Validate date of birth to ensure user is at least 18 years old
-     * @param string $dob Date of birth in Y-m-d format
-     * @return bool
-     */
-    private function validateDateOfBirth($dob) {
-        $dobDate = new DateTime($dob);
-        $today = new DateTime();
-        $age = $today->diff($dobDate)->y;
-        
-        return $age >= 18;
-    }
-
     public function login() {
         // Redirect if already logged in
         $this->preventLoginAccess();
@@ -121,10 +107,30 @@ class Auth extends Controller {
             } else {
                 $user = $this->userModel->findUserByEmail($data['username']);
                 
-                // Add these debug lines
-                var_dump($user); // Check if user is found
-                var_dump($data['password']); // Check the submitted password
-                var_dump($user->password); // Check the stored hashed password
+                echo "<pre>";
+                echo "=== Login Attempt Debug ===\n";
+                echo "Email attempting login: \n";
+                var_dump($data['username']);
+                echo "Password submitted: \n";
+                var_dump($data['password']);
+                
+                if ($user) {
+                    echo "User found in database:\n";
+                    var_dump($user);
+                    echo "Password verify result: \n";
+                    var_dump(password_verify($data['password'], $user->password));
+                    
+                    // Test a direct hash comparison
+                    $testHash = password_hash($data['password'], PASSWORD_DEFAULT);
+                    echo "Test hash of input password: \n";
+                    var_dump($testHash);
+                    echo "Would verify with test hash: \n";
+                    var_dump(password_verify($data['password'], $testHash));
+                } else {
+                    echo "No user found with this email\n";
+                }
+                echo "=== End Debug ===\n";
+                echo "</pre>";
                 
                 if ($user && password_verify($data['password'], $user->password)) {
                     $_SESSION['user_id'] = $user->user_id;
@@ -139,13 +145,13 @@ class Auth extends Controller {
                             header('Location: ' . URLROOT . '/vehicledriver/');
                             break;
                         case RoleHelper::VEHICLE_MANAGER:
-                            header('Location: ' . URLROOT . '/vehiclemanager/collections');
+                            header('Location: ' . URLROOT . '/vehiclemanager/');
                             break;
                         case RoleHelper::SUPPLIER:
                             header('Location: ' . URLROOT . '/supplier/');
                             break;
                         case RoleHelper::ADMIN:
-                            header('Location: ' . URLROOT . '/vehiclemanager/collections');
+                            header('Location: ' . URLROOT . '/collections');
                             break;
                         case RoleHelper::DRIVING_PARTNER:
                             header('Location: ' . URLROOT . '/drivingpartner/');
@@ -218,52 +224,38 @@ class Auth extends Controller {
                 // Prepare application data
                 $applicationData = [
                     'user_id' => $_SESSION['user_id'],
-                    'primary_phone' => $_POST['primaryPhone'],
-                    'secondary_phone' => !empty($_POST['secondaryPhone']) ? $_POST['secondaryPhone'] : null,
-                    'whatsapp_number' => !empty($_POST['whatsappNumber']) ? $_POST['whatsappNumber'] : null,
+                    'primary_phone' => $_POST['primary_phone'],
+                    'secondary_phone' => !empty($_POST['secondary_phone']) ? $_POST['secondary_phone'] : null,
                     
                     'address' => [
                         'line1' => $_POST['line1'],
                         'line2' => !empty($_POST['line2']) ? $_POST['line2'] : null,
                         'city' => $_POST['city'],
                         'district' => $_POST['district'],
-                        'postal_code' => $_POST['postalCode'],
+                        'postal_code' => $_POST['postal_code'],
                         'latitude' => $_POST['latitude'],
                         'longitude' => $_POST['longitude']
                     ],
                     
-                    'teaVarieties' => isset($_POST['tea_varieties']) ? $_POST['tea_varieties'] : [],
-                    
-                    'ownership' => [
-                        'ownership_type' => $_POST['ownership_type'],
-                        'ownership_duration' => $_POST['ownership_duration']
-                    ],
-                    
-                    'tea_details' => [
-                        'plant_age' => $_POST['plant_age'],
-                        'monthly_production' => $_POST['monthly_production']
-                    ],
-                    
                     'property' => [
-                        'total_land_area' => $_POST['totalLandArea'],
-                        'tea_cultivation_area' => $_POST['teaCultivationArea'],
+                        'total_land_area' => $_POST['total_land_area'],
+                        'tea_cultivation_area' => $_POST['tea_cultivation_area'],
                         'elevation' => $_POST['elevation'],
                         'slope' => $_POST['slope']
                     ],
                     
                     'infrastructure' => [
-                        'water_source' => isset($_POST['water_source']) ? $_POST['water_source'] : [],
-                        'access_road' => $_POST['access_road'],
+                        'water_sources' => isset($_POST['water_sources']) ? $_POST['water_sources'] : [],
                         'vehicle_access' => $_POST['vehicle_access'],
                         'structures' => isset($_POST['structures']) ? $_POST['structures'] : []
                     ],
                     
                     'bank_info' => [
-                        'account_holder_name' => $_POST['accountHolderName'],
-                        'bank_name' => $_POST['bankName'],
-                        'branch_name' => $_POST['branchName'],
-                        'account_number' => $_POST['accountNumber'],
-                        'account_type' => $_POST['accountType']
+                        'account_holder_name' => $_POST['account_holder_name'],
+                        'bank_name' => $_POST['bank_name'],
+                        'branch_name' => $_POST['branch_name'],
+                        'account_number' => $_POST['account_number'],
+                        'account_type' => $_POST['account_type']
                     ]
                 ];
 
@@ -272,33 +264,51 @@ class Auth extends Controller {
 
                 // Validate file uploads
                 $documents = [];
-                $requiredDocs = ['nic', 'ownership_proof', 'tax_receipts', 'bank_passbook', 'grama_cert'];
-                
+                $requiredDocs = [
+                    'land_deed',
+                    'tax_receipt', 
+                    'tea_cultivation_certificate',
+                    'id_proof',
+                    'bank_statement'
+                ];
+
+                // Check if documents array was submitted
+                if (!isset($_FILES['documents']) || !is_array($_FILES['documents'])) {
+                    throw new Exception("No documents were uploaded");
+                }
+
                 foreach ($requiredDocs as $doc) {
-                    // Check if file exists and there are no upload errors
-                    if (!isset($_FILES[$doc]) || !is_array($_FILES[$doc])) {
+                    // Check if this document exists in the uploaded files
+                    if (!isset($_FILES['documents']['name'][$doc])) {
                         throw new Exception("Missing upload for: {$doc}");
                     }
 
                     // Check for specific upload errors
-                    if ($_FILES[$doc]['error'] !== UPLOAD_ERR_OK) {
-                        $errorMessage = $this->getFileUploadError($_FILES[$doc]['error']);
+                    if ($_FILES['documents']['error'][$doc] !== UPLOAD_ERR_OK) {
+                        $errorMessage = $this->getFileUploadError($_FILES['documents']['error'][$doc]);
                         throw new Exception("Error uploading {$doc}: {$errorMessage}");
                     }
 
-                    // Validate file type (add allowed types as needed)
+                    // Validate file type
                     $allowedTypes = ['image/jpeg', 'image/png', 'application/pdf'];
-                    if (!in_array($_FILES[$doc]['type'], $allowedTypes)) {
+                    if (!in_array($_FILES['documents']['type'][$doc], $allowedTypes)) {
                         throw new Exception("{$doc} must be a JPG, PNG, or PDF file");
                     }
 
-                    // Validate file size (e.g., 5MB limit)
-                    $maxSize = 5 * 1024 * 1024; // 5MB in bytes
-                    if ($_FILES[$doc]['size'] > $maxSize) {
+                    // Validate file size (5MB limit)
+                    $maxSize = 5 * 1024 * 1024;
+                    if ($_FILES['documents']['size'][$doc] > $maxSize) {
                         throw new Exception("{$doc} must be less than 5MB");
                     }
 
-                    $documents[$doc] = $_FILES[$doc];
+                    // Create individual file array for each document
+                    $documents[$doc] = [
+                        'name' => $_FILES['documents']['name'][$doc],
+                        'type' => $_FILES['documents']['type'][$doc],
+                        'tmp_name' => $_FILES['documents']['tmp_name'][$doc],
+                        'error' => $_FILES['documents']['error'][$doc],
+                        'size' => $_FILES['documents']['size'][$doc]
+                    ];
                 }
 
                 // Add validation for latitude and longitude before the file validation
@@ -310,9 +320,9 @@ class Auth extends Controller {
                 $lat = floatval($_POST['latitude']);
                 $lng = floatval($_POST['longitude']);
 
-                if ($lat < 5.9 || $lat > 9.9 || $lng < 79.5 || $lng > 81.9) {
-                    throw new Exception('Location must be within Sri Lanka');
-                }
+                // if ($lat < 5.9 || $lat > 9.9 || $lng < 79.5 || $lng > 81.9) {
+                //     throw new Exception('Location must be within Sri Lanka');
+                // }
 
                 // Try to save the application
                 $result = $supplierApplicationModel->createApplication($applicationData, $documents);
