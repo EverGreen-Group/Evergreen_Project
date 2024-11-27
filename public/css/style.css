@@ -398,7 +398,7 @@ body {
 }
 
 #content main .table-data {
-  display: flex;
+  /* display: flex; */
   flex-wrap: wrap;
   grid-gap: 24px;
   margin-top: 24px;
@@ -409,6 +409,7 @@ body {
   border-radius: 20px;
   background: var(--light);
   padding: 24px;
+  margin-bottom: 20px;
   overflow-x: auto;
 }
 #content main .table-data .head {
@@ -1495,4 +1496,275 @@ color: var(--dark);
 	border-radius: 5px;
 	cursor: pointer;
     vertical-align: middle;
+}
+
+/* Add or update these CSS rules */
+
+/* Make the main content responsive */
+main {
+    width: 100%;
+    padding: 24px 20px;
+    max-width: 100%;
+}
+
+/* Responsive box-info */
+.box-info {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    gap: 20px;
+    margin-bottom: 24px;
+}
+
+/* Responsive tables */
+.table-data {
+    width: 100%;
+    overflow-x: auto;
+}
+
+.table {
+    min-width: 600px; /* Minimum width to prevent squishing */
+    width: 100%;
+}
+
+/* Chart container responsive */
+.order {
+    width: 100%;
+    overflow-x: hidden;
+}
+
+.chart-container {
+    width: 100%;
+    max-width: 100%;
+    overflow-x: auto;
+}
+
+/* Responsive header */
+.head-title {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+@media screen and (min-width: 768px) {
+    .head-title {
+        flex-direction: row;
+        justify-content: space-between;
+        align-items: center;
+    }
+}
+
+/* Mobile adjustments */
+@media screen and (max-width: 768px) {
+    .box-info li {
+        padding: 16px;
+    }
+
+    .head-title h1 {
+        font-size: 24px;
+    }
+
+    .btn-download {
+        width: 100%;
+        text-align: center;
+    }
+
+    /* Adjust chart size for mobile */
+    #teaLeavesCollectionChart {
+        height: 300px !important;
+    }
+
+    .order .head {
+        flex-direction: column;
+        gap: 10px;
+    }
+}
+
+/* Small mobile adjustments */
+@media screen and (max-width: 480px) {
+    .box-info li {
+        padding: 12px;
+    }
+
+    .head-title h1 {
+        font-size: 20px;
+    }
+
+    .table td, .table th {
+        padding: 8px;
+        font-size: 14px;
+    }
+}
+
+/* Complaint Form Responsive Styles */
+.complaint-form {
+    width: 100%;
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 20px;
+}
+
+.form-group {
+    margin-bottom: 20px;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 8px;
+    font-weight: 500;
+}
+
+.form-group input,
+.form-group select,
+.form-group textarea {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    font-size: 16px;
+}
+
+.form-group textarea {
+    resize: vertical;
+    min-height: 100px;
+}
+
+/* Rating Section Responsive */
+.rating {
+    width: 100%;
+    padding: 15px;
+    margin-bottom: 20px;
+}
+
+#review-container {
+    width: 100%;
+    padding: 15px;
+}
+
+.reviews ul {
+    padding-left: 0;
+    list-style: none;
+}
+
+.reviews li {
+    margin-bottom: 15px;
+    padding: 10px;
+    background: #f8f9fa;
+    border-radius: 5px;
+}
+
+/* Button Responsive Styles */
+.button {
+    padding: 10px 20px;
+    margin: 5px;
+    min-width: 120px;
+}
+
+/* Mobile Adjustments */
+@media screen and (max-width: 768px) {
+    .head-title {
+        flex-direction: column;
+        padding: 0 15px;
+    }
+
+    .head-title .left {
+        width: 100%;
+    }
+
+    .breadcrumb {
+        margin-bottom: 15px;
+    }
+
+    .rating {
+        text-align: center;
+    }
+
+    .stars {
+        display: block;
+        margin: 10px 0;
+    }
+
+    .reviews li {
+        font-size: 14px;
+    }
+
+    .table-data {
+        padding: 15px;
+    }
+
+    .order {
+        padding: 15px;
+    }
+
+    .complaint-form {
+        padding: 15px;
+    }
+
+    .button {
+        width: 100%;
+        margin: 5px 0;
+    }
+}
+
+/* Small Mobile Adjustments */
+@media screen and (max-width: 480px) {
+    .head-title h1 {
+        font-size: 20px;
+    }
+
+    .form-group label {
+        font-size: 14px;
+    }
+
+    .form-group input,
+    .form-group select,
+    .form-group textarea {
+        font-size: 14px;
+        padding: 8px;
+    }
+
+    .reviews h4 {
+        font-size: 16px;
+    }
+
+    .reviews li {
+        font-size: 13px;
+        padding: 8px;
+    }
+}
+
+/* Button Container for better mobile layout */
+.button-group {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-top: 20px;
+}
+
+@media screen and (min-width: 768px) {
+    .button-group {
+        flex-direction: row;
+        justify-content: flex-start;
+    }
+    
+    .button {
+        width: auto;
+    }
+}
+
+.chart-wrapper {
+    position: relative;
+    margin: auto;
+    width: 100%;
+    max-width: 1400px;
+    height: 50vh; /* This makes the height responsive to viewport height */
+    min-height: 300px; /* Minimum height on small screens */
+    padding: 20px;
+}
+
+/* Add media queries for smaller screens */
+@media screen and (max-width: 768px) {
+    .chart-wrapper {
+        padding: 10px;
+        height: 40vh;
+    }
 }
