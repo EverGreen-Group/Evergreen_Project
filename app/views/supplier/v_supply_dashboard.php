@@ -48,58 +48,7 @@
         </li>
     </ul>
 
-    <div class="table-data">
-        
-        <div class="order">
-            <div class="head">
-                <h3>Collection over past months</h3>
-                <i class='bx bx-search'></i>
-                <i class='bx bx-filter'></i>
-
-                <div class="table-data">
-                <div class="chart-container">
-                    <h5>Tea Leaves Collections Chart(Last 6 Months)</h5>
-                    <canvas id="teaLeavesChart"></canvas>
-                </div>
-                </div>
-            </div>
-            <?php if(isset($data['pending_requests']) && !empty($data['pending_requests'])): ?>
-                <table>
-                    <thead>
-                        <tr>
-                            <th>Request ID</th>
-                            <th>Date</th>
-                            <th>Quantity (kg)</th>
-                            <th>Status</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <?php foreach($data['pending_requests'] as $request): ?>
-                            <tr>
-                                <td><?php echo $request['id']; ?></td>
-                                <td><?php echo $request['date']; ?></td>
-                                <td><?php echo $request['quantity']; ?></td>
-                                <td><?php echo $request['status']; ?></td>
-                            </tr>
-                        <?php endforeach; ?>
-                    </tbody>
-                </table>
-            <?php else: ?>
-                <div>No pending requests</div>
-            <?php endif; ?>
-            <a href="<?php echo URLROOT; ?>/Supplier/notifications/" >
-                <button class="button">Collection Notifications</button>
-            </a>
-        </div>
-        <div class="order">
-            <div class="head">
-                <h5>Tea Leaves(This year)</h5>
-                <i class='bx bx-plus'></i>
-                <i class='bx bx-filter'></i>
-            </div>
-            <canvas id="teaLeavesCollectionChart" width="300" height="200"></canvas>
-        </div>
-        <div class="todo">
+    <div class="todo">
             <div class="head">
                 <h3>Scheduled Collection Dates</h3>
             </div>
@@ -153,10 +102,65 @@
             </div>
             
             <a href="<?php echo URLROOT; ?>/Supplier/cancelpickup/" >
-                <button class="button">Cancel Pickup</button>
+                <button class="button">Request Pickup</button>
             </a>
 
         </div>
+
+    <div class="table-data">
+        
+        <!-- <div class="order">
+            <div class="head">
+                <h3>Collection over past months</h3>
+                <i class='bx bx-search'></i>
+                <i class='bx bx-filter'></i>
+
+                <div class="table-data">
+                <div class="chart-container">
+                    <h5>Tea Leaves Collections Chart(Last 6 Months)</h5>
+                    <canvas id="teaLeavesChart"></canvas>
+                </div>
+                </div>
+            </div>
+            <?php if(isset($data['pending_requests']) && !empty($data['pending_requests'])): ?>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Request ID</th>
+                            <th>Date</th>
+                            <th>Quantity (kg)</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <?php foreach($data['pending_requests'] as $request): ?>
+                            <tr>
+                                <td><?php echo $request['id']; ?></td>
+                                <td><?php echo $request['date']; ?></td>
+                                <td><?php echo $request['quantity']; ?></td>
+                                <td><?php echo $request['status']; ?></td>
+                            </tr>
+                        <?php endforeach; ?>
+                    </tbody>
+                </table>
+            <?php else: ?>
+                <div>No pending requests</div>
+            <?php endif; ?>
+            <a href="<?php echo URLROOT; ?>/Supplier/notifications/" >
+                <button class="button">Collection Notifications</button>
+            </a>
+        </div> -->
+        <div class="order">
+            <div class="head">
+                <h5>Tea Leaves(This year)</h5>
+                <i class='bx bx-plus'></i>
+                <i class='bx bx-filter'></i>
+            </div>
+            <div class="chart-wrapper">
+                <canvas id="teaLeavesCollectionChart"></canvas>
+            </div>
+        </div>
+        
     </div>
 
 </main>
@@ -218,41 +222,81 @@
                 var teaLeavesCollectionChart = new Chart(ctx, {
                     type: 'line',
                     data: {
-                        labels: ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'], 
+                        labels: ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'],
                         datasets: [{
                             label: 'Tea Leaves Collections',
-                            data: [280, 250, 180, 120, 100, 210, 180, 120, 90, 200, 320, 0], // Example data 
-                            fill: false,
-                            backgroundColor: 'rgba(75, 192, 192, 0.2)',
-                            borderColor: 'rgba(75, 192, 192, 1)',
-                            borderWidth: 2
+                            data: [280, 250, 180, 120, 100, 210, 180, 120, 90, 200, 320, 0],
+                            fill: true,
+                            backgroundColor: 'rgba(0, 128, 0, 0.1)',
+                            borderColor: '#008000',
+                            borderWidth: 3,
+                            tension: 0.4,
+                            pointBackgroundColor: '#008000',
+                            pointBorderColor: '#ffffff',
+                            pointBorderWidth: 2,
+                            pointRadius: 5,
+                            pointHoverRadius: 8
                         }]
                     },
                     options: {
                         responsive: true,
+                        maintainAspectRatio: false,
                         plugins: {
                             legend: {
                                 position: 'bottom',
+                                labels: {
+                                    font: {
+                                        size: 14
+                                    },
+                                    color: '#008000'
+                                }
                             },
                             title: {
                                 display: true,
-                                text: 'Tea Leaves Collections (Monthly)'
+                                text: 'Tea Leaves Collections (Monthly)',
+                                color: '#008000',
+                                font: {
+                                    size: 16,
+                                    weight: 'bold'
+                                }
                             }
                         },
                         scales: {
                             x: {
                                 title: {
                                     display: true,
-                                    text: 'Month'
+                                    text: 'Month',
+                                    color: '#008000'
+                                },
+                                grid: {
+                                    display: false
+                                },
+                                ticks: {
+                                    color: '#008000'
                                 }
                             },
                             y: {
                                 title: {
                                     display: true,
-                                    text: 'Amount'
+                                    text: 'Amount (kg)',
+                                    color: '#008000'
                                 },
-                                beginAtZero: true
+                                beginAtZero: true,
+                                grid: {
+                                    color: 'rgba(0, 128, 0, 0.1)'
+                                },
+                                ticks: {
+                                    color: '#008000'
+                                }
                             }
+                        },
+                        interaction: {
+                            intersect: false,
+                            mode: 'index'
+                        },
+                        hover: {
+                            mode: 'nearest',
+                            intersect: true
                         }
                     }
                 });
