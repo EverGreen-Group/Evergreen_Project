@@ -22,10 +22,10 @@
 
         <header style="margin: 20px;">
             <h1>Fertilizer</h1>
-            <div class="search-filter">
+            <!-- <div class="search-filter">
                 <input type="text" placeholder="Search">
                 <button class="filter-btn">Filter</button>
-            </div>
+            </div> -->
             <a href="<?php echo URLROOT; ?>/inventory/fertilizerdashboard">
                 <button class="create-btn">Fertilizer Dashboard</button>
             </a>

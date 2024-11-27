@@ -29,8 +29,8 @@
 
             </div>
             <div class="header-actions">
-                <input type="text" placeholder="Search">
-                <button class="filter-btn">Filter</button>
+                <!-- <input type="text" placeholder="Search">
+                <button class="filter-btn">Filter</button> -->
                 
                 <a href="<?php echo URLROOT; ?>/inventory/createproduct">
                     <button class="create-product">+ Create New Product</button>
