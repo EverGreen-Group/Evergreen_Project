@@ -89,8 +89,10 @@ $totalRatings = array_sum($ratings);
                         <label for="phone">Phone Number:</label>
                         <input type="text" id="phone" name="phone">
                     </div>
-                    <button type="submit" class="button" onclick="submitmessage()">Submit Complaint</button>
-                    <button type="button" class="button" onclick="refreshPage()">Cancel</button>
+                    <div class="button-group">
+                        <button type="submit" class="button" onclick="submitmessage()">Submit Complaint</button>
+                        <button type="button" class="button" onclick="refreshPage()">Cancel</button>
+                    </div>
                 </form>
             </div>
         </div>
