@@ -61,6 +61,7 @@
 				<thead>
 					<tr>
 						<th>Driver Name</th>
+						<th>Collection No</th>
 						<th>Quantity</th>
 						<th>Time</th>
 						<th>Actions</th>
@@ -68,9 +69,10 @@
 				</thead>
 				<tbody>
 					<tr>
-					    <td>John Doe</td>
-						<td>500 units</td>
-						<td>2024-03-20 09:30 AM</td>
+					    <td>Michael Chen</td>
+						<td style="text-align: center;"> 12</td>
+						<td>325 units</td>
+						<td>2024-03-20 08:15 PM</td>
 						<td class="actions">
 							<button style="padding: 8px 12px;
 	                                background-color: #28a745;
@@ -88,9 +90,10 @@
 						</td>
 					</tr>
 					<tr>
-						<td>John Doe</td>
-						<td>500 units</td>
-						<td>2024-03-20 09:30 AM</td>
+						<td>Sarah Williams</td>
+						<td style="text-align: center;"> 8</td>
+						<td>680 units</td>
+						<td>2024-03-20 09:45 PM</td>
 						<td class="actions">
 							<button style="padding: 8px 12px;
 	                                background-color: #28a745;
@@ -108,9 +111,10 @@
 						</td>
 					</tr>
 					<tr>
-						<td>John Doe</td>
-						<td>500 units</td>
-						<td>2024-03-20 09:30 AM</td>
+						<td>Raj Patel</td>
+						<td style="text-align: center;"> 2</td>
+						<td>450 units</td>
+						<td>2024-03-20 10:20 PM</td>
 						<td class="actions">
 							<button onclick="reportModel()" style="padding: 8px 12px;
 	                                background-color: #28a745;
@@ -128,9 +132,10 @@
 						</td>
 					</tr>
 					<tr>
-						<td>John Doe</td>
-						<td>500 units</td>
-						<td>2024-03-20 09:30 AM</td>
+						<td>Emma Rodriguez</td>
+						<td style="text-align: center;"> 24</td>
+						<td>275 units</td>
+						<td>2024-03-20 08:50 PM</td>
 						<td class="actions">
 							<button onclick="reportModel()" style="padding: 8px 12px;
 	                                background-color: #28a745;
@@ -148,9 +153,10 @@
 						</td>
 					</tr>
 					<tr>
-						<td>Jane Smith</td>
-						<td>750 units</td>
-						<td>2024-03-20 10:15 AM</td>
+						<td>David Kim</td>
+						<td style="text-align: center;"> 17</td>
+						<td>590 units</td>
+						<td>2024-03-20 10:55 PM</td>
 						<td class="actions">
 							<button onclick="reportModel()" style="padding: 8px 12px;
 	                                background-color: #28a745;

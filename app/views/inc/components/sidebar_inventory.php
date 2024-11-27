@@ -22,7 +22,7 @@
         <span class="text">Fertilizer</span>
       </a>
     </li>
-    <li>
+    <li class="<?php echo (basename($_SERVER['REQUEST_URI']) == 'order') ? 'active' : ''; ?>">
       <a href="../inventory/order">
         <i class="bx bx-trip"></i>
         <span class="text">Order</span>
