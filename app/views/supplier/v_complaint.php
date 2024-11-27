@@ -23,18 +23,18 @@
 
 
         <?php
-// Mock data for ratings
-$ratings = [
-    5 => 50,
-    4 => 30,
-    3 => 15,
-    2 => 10,
-    1 => 5
-];
+        // Mock data for ratings
+        $ratings = [
+            5 => 50,
+            4 => 30,
+            3 => 15,
+            2 => 10,
+            1 => 5
+        ];
 
-// Calculate the total number of ratings
-$totalRatings = array_sum($ratings);
-?>
+        // Calculate the total number of ratings
+        $totalRatings = array_sum($ratings);
+        ?>
 
         <!-- Ratings Section -->
         <div class="rating">
@@ -99,16 +99,18 @@ $totalRatings = array_sum($ratings);
     </div>
 </main>
 
-<script>document.addEventListener('DOMContentLoaded', () => {
-    const bars = document.querySelectorAll('.bar');
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        const bars = document.querySelectorAll('.bar');
 
-    bars.forEach(bar => {
-        const percentage = bar.dataset.percentage;
-        const fill = bar.querySelector('.fill');
-        fill.style.width = percentage + '%';
+        bars.forEach(bar => {
+            const percentage = bar.dataset.percentage;
+            const fill = bar.querySelector('.fill');
+            fill.style.width = percentage + '%';
+        });
     });
-});
 </script>
 <script src="<?php echo URLROOT; ?>/css/script.js"></script>
 </body>
+
 </html>
