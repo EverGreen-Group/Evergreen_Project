@@ -25,55 +25,45 @@
         <div class="order">
         
         <div class="head">
-            <h1>Cancel Pickup Request</h1>
+            <h1>Pickup Request</h1>
         </div>
-            <form action="#" method="POST" class="complaint-form">
+            <form action="#" method="POST" class="complaint-form" id="cancelPickupForm">
                 <div class="form-group">
-                    <label for="fullname">Full Name:</label>
-                    <input type="text" id="fullname" name="fullname" required>
+                    <label for="name">Name:</label>
+                    <input type="text" id="name" name="name" required>
                 </div>
 
                 <div class="form-group">
-                    <label for="email">Email:</label>
-                    <input type="email" id="email" name="email" required>
+                    <label for="pickup_date">Pickup Date:</label>
+                    <input type="date" id="pickup_date" name="pickup_date" required>
                 </div>
 
                 <div class="form-group">
-                    <label for="address">Address:</label>
-                    <input type="text" id="address" name="address" required>
+                    <label for="pickup_time">Pickup Time:</label>
+                    <input type="time" id="pickup_time" name="pickup_time" required>
                 </div>
 
                 <div class="form-group">
-                    <label for="route_no">Route No:</label>
-                    <input type="text" id="route_no" name="route_no" required>
+                    <label for="quantity">Estimated Quantity (kg):</label>
+                    <input type="number" id="quantity" name="quantity" min="1" required>
                 </div>
 
-                <div class="form-group">
-                    <label for="date1">Supposed Pickup Date:</label>
-                    <input type="date" id="date1" name="date1" required>
-                </div>
-
-                <div class="form-group">
-                    <label for="time1">Supposed Pickup Time:</label>
-                    <input type="time" id="time1" name="time1" required>
-                </div>
-
-                <div class="form-group">
-                    <label for="date2">Chosen Pickup Date:</label>
-                    <input type="date" id="date2" name="date2" required>
-                </div>
-
-                <div class="form-group">
-                    <label for="time2">Chosen Pickup Time:</label>
-                    <input type="time" id="time2" name="time2" required>
-                </div>
-                <button type="submit" class="button">Cancel Pickup</button>
+                <button type="submit" class="button" onclick="showSuccessMessage(event)">send request</button>
             </form>
                 <a href="<?php echo URLROOT; ?>/Supplier/" >
                     <button class="button">Back</button>
                 </a>
         </div>
     </section>
+    
+    <!-- Add this script before the closing body tag -->
+    <script>
+        function showSuccessMessage(event) {
+            event.preventDefault(); // Prevent form submission
+            alert("Request sent successfully!");
+            document.getElementById('cancelPickupForm').submit(); // Submit the form
+        }
+    </script>
     <script src="<?php echo URLROOT; ?>/css/script.js"></script>
 </body>
 </html>
