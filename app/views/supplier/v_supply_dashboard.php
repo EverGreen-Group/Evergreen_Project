@@ -48,9 +48,68 @@
         </li>
     </ul>
 
+    <div class="todo">
+            <div class="head">
+                <h3>Scheduled Collection Dates</h3>
+            </div>
+            <div class="table-data">
+                <div class="order">
+                    <div class="head">
+                        <h4>Tea Leaves Collections</h4>
+                    </div>
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th id="table-head">Date</th>
+                                <th id="table-head">Time</th>
+                                <th id="table-head">Order ID</th>
+                                <th id="table-head">Amount in kg</th>
+                                <th id="table-head">Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>Tomorrow</td>
+                                <td>08:00am</td>
+                                <td>11</td>
+                                <td>20</td>
+                                <td>Pending</td>
+                            </tr>
+                            <tr>
+                                <td>2024/11/05</td>
+                                <td>09:00am</td>
+                                <td>10</td>
+                                <td>20</td>
+                                <td>Delivered</td>
+                            </tr>
+                            <tr>
+                                <td>2024/10/12</td>
+                                <td>08:00am</td>
+                                <td>9</td>
+                                <td>20</td>
+                                <td>Delivered</td>
+                            </tr>
+                            <tr>
+                                <td>2024/10/07</td>
+                                <td>09:00am</td>
+                                <td>12</td>
+                                <td>26</td>
+                                <td>Delivered</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            
+            <a href="<?php echo URLROOT; ?>/Supplier/cancelpickup/" >
+                <button class="button">Request Pickup</button>
+            </a>
+
+        </div>
+
     <div class="table-data">
         
-        <div class="order">
+        <!-- <div class="order">
             <div class="head">
                 <h3>Collection over past months</h3>
                 <i class='bx bx-search'></i>
@@ -58,7 +117,7 @@
 
                 <div class="table-data">
                 <div class="chart-container">
-                    <h4>Tea Leaves Collections Chart(Monthly)</h4>
+                    <h5>Tea Leaves Collections Chart(Last 6 Months)</h5>
                     <canvas id="teaLeavesChart"></canvas>
                 </div>
                 </div>
@@ -87,115 +146,74 @@
             <?php else: ?>
                 <div>No pending requests</div>
             <?php endif; ?>
-            <a href="<?php echo URLROOT; ?>/Supplier/v_notifications/" >
+            <a href="<?php echo URLROOT; ?>/Supplier/notifications/" >
                 <button class="button">Collection Notifications</button>
             </a>
-        </div>
+        </div> -->
         <div class="order">
             <div class="head">
-                <h5>Tea Leaves</h5>
+                <h5>Tea Leaves(This year)</h5>
                 <i class='bx bx-plus'></i>
                 <i class='bx bx-filter'></i>
             </div>
-            <canvas id="teaLeavesCollectionChart" width="300" height="200"></canvas>
-        </div>
-        <div class="todo">
-            <div class="head">
-                <h3>Scheduled Collection Dates</h3>
+            <div class="chart-wrapper">
+                <canvas id="teaLeavesCollectionChart"></canvas>
             </div>
-            <div class="table-data">
-                <div class="order">
-                    <div class="head">
-                        <h4>Tea Leaves Collections</h4>
-                    </div>
-                    <table class="table">
-                        <thead>
-                            <tr>
-                                <th id="table-head">Date</th>
-                                <th id="table-head">Time</th>
-                                <th id="table-head">Order ID</th>
-                                <th id="table-head">Amount in kg</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <tr>
-                                <td>Tomorrow</td>
-                                <td>08:00am</td>
-                                <td>11</td>
-                                <td>20</td>
-                            </tr>
-                            <tr>
-                                <td>2024/11/05</td>
-                                <td>09:00am</td>
-                                <td>10</td>
-                                <td>15</td>
-                            </tr>
-                            <tr>
-                                <td>2024/10/12</td>
-                                <td>08:00am</td>
-                                <td>9</td>
-                                <td>30</td>
-                            </tr>
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-            
-            <a href="<?php echo URLROOT; ?>/Supplier/cancel_pickup/" >
-                <button class="button">Cancel Pickup</button>
-            </a>
-
         </div>
+        
     </div>
 
 </main>
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="<?php echo URLROOT; ?>/css/script.js"></script>
 
         <!-- TEA ORDER CHART -->
         <script>
-        const ctx = document.getElementById('teaLeavesChart').getContext('2d');
-        
-        new Chart(ctx, {
-            type: 'pie',
-            data: {
-                labels: ['January', 'February', 'March', 'April', 'May', 'June'],
-                datasets: [{
-                    data: [280, 250, 180, 120, 100, 210],
-                    backgroundColor: [
-                        '#FF6384',
-                        '#36A2EB',
-                        '#FFCE56',
-                        '#4BC0C0',
-                        '#9966FF',
-                        '#FF9F40'
-                    ],
-                    borderWidth: 1
-                }]
-            },
-            options: {
-                responsive: true,
-                plugins: {
-                    legend: {
-                        position: 'right',
-                        labels: {
-                            font: {
-                                size: 14
+        document.addEventListener('DOMContentLoaded', function() {
+            const ctx = document.getElementById('teaLeavesChart').getContext('2d');
+            const tealeavesChart = new Chart(ctx, {
+                type: 'pie',
+                data: {
+                    labels: ['June', 'July', 'August', 'September', 'October', 'November', 'December'],
+                    datasets: [{
+                        data: [210, 180, 120, 90, 200, 320, 0],
+                        backgroundColor: [
+                            '#FF6384',
+                            '#36A2EB',
+                            '#36923B',
+                            '#FFCE56',
+                            '#4BC0C0',
+                            '#9966FF',
+                            '#9'
+                        ],
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: {
+                            position: 'right',
+                            labels: {
+                                font: {
+                                    size: 14
+                                }
                             }
-                        }
-                    },
-                    tooltip: {
-                        callbacks: {
-                            label: function(context) {
-                                const label = context.label || '';
-                                const value = context.raw || 0;
-                                const total = context.dataset.data.reduce((a, b) => a + b, 0);
-                                const percentage = ((value / total) * 100).toFixed(1);
-                                return `${label}: ${value} (${percentage}%)`;
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    const label = context.label || '';
+                                    const value = context.raw || 0;
+                                    const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                                    const percentage = ((value / total) * 100).toFixed(1);
+                                    return `${label}: ${value} (${percentage}%)`;
+                                }
                             }
                         }
                     }
                 }
-            }
+            })
         });
         </script>
         <script>
@@ -204,47 +222,86 @@
                 var teaLeavesCollectionChart = new Chart(ctx, {
                     type: 'line',
                     data: {
-                        labels: ['January', 'February', 'March', 'April', 'May', 'June'], 
+                        labels: ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'],
                         datasets: [{
                             label: 'Tea Leaves Collections',
-                            data: [280, 250, 180, 120, 100, 210], // Example data 
-                            fill: false,
-                            backgroundColor: 'rgba(75, 192, 192, 0.2)',
-                            borderColor: 'rgba(75, 192, 192, 1)',
-                            borderWidth: 2
+                            data: [280, 250, 180, 120, 100, 210, 180, 120, 90, 200, 320, 0],
+                            fill: true,
+                            backgroundColor: 'rgba(0, 128, 0, 0.1)',
+                            borderColor: '#008000',
+                            borderWidth: 3,
+                            tension: 0.4,
+                            pointBackgroundColor: '#008000',
+                            pointBorderColor: '#ffffff',
+                            pointBorderWidth: 2,
+                            pointRadius: 5,
+                            pointHoverRadius: 8
                         }]
                     },
                     options: {
                         responsive: true,
+                        maintainAspectRatio: false,
                         plugins: {
                             legend: {
                                 position: 'bottom',
+                                labels: {
+                                    font: {
+                                        size: 14
+                                    },
+                                    color: '#008000'
+                                }
                             },
                             title: {
                                 display: true,
-                                text: 'Tea Leaves Collections (Monthly)'
+                                text: 'Tea Leaves Collections (Monthly)',
+                                color: '#008000',
+                                font: {
+                                    size: 16,
+                                    weight: 'bold'
+                                }
                             }
                         },
                         scales: {
                             x: {
                                 title: {
                                     display: true,
-                                    text: 'Month'
+                                    text: 'Month',
+                                    color: '#008000'
+                                },
+                                grid: {
+                                    display: false
+                                },
+                                ticks: {
+                                    color: '#008000'
                                 }
                             },
                             y: {
                                 title: {
                                     display: true,
-                                    text: 'Amount'
+                                    text: 'Amount (kg)',
+                                    color: '#008000'
                                 },
-                                beginAtZero: true
+                                beginAtZero: true,
+                                grid: {
+                                    color: 'rgba(0, 128, 0, 0.1)'
+                                },
+                                ticks: {
+                                    color: '#008000'
+                                }
                             }
+                        },
+                        interaction: {
+                            intersect: false,
+                            mode: 'index'
+                        },
+                        hover: {
+                            mode: 'nearest',
+                            intersect: true
                         }
                     }
                 });
             });
         </script>
-        <script src="<?php echo URLROOT; ?>/css/components/script.js"></script>
     </body>
 </html>
     

@@ -21,6 +21,11 @@
         </div>
     </div>
 
+
+
+
+
+
     <!-- Box Info -->
     <ul class="box-info">
         <li>
@@ -128,6 +133,10 @@
         </div>
     <?php endif; ?>
 
+
+    <?php flash('schedule_error'); ?>
+    <?php flash('schedule_success'); ?>
+
     <!-- Collection Schedules Section -->
     <div class="table-data">
         <div class="order">
@@ -157,7 +166,7 @@
                                 <td><?php echo $schedule->route_name; ?></td>
                                 <td><?php echo $schedule->team_name; ?></td>
                                 <td><?php echo $schedule->license_plate; ?></td>
-                                <td><?php echo $schedule->shift_name; ?></td>
+                                <td><?php echo $schedule->shift_name; ?> (<?php echo $schedule->start_time; ?> - <?php echo $schedule->end_time; ?>)</td>
                                 <td>Week <?php echo $schedule->week_number; ?></td>
                                 <td><?php echo ucwords(str_replace(',', ', ', $schedule->days_of_week)); ?></td>
                                 <td><?php echo date('Y-m-d H:i', strtotime($schedule->created_at)); ?></td>
@@ -189,6 +198,9 @@
             </table>
         </div>
     </div>
+
+    <?php flash('schedule_create_error'); ?>
+    <?php flash('schedule_create_success'); ?>
 
     <!-- Create New Schedule Section -->
     <div class="table-data">
@@ -331,13 +343,13 @@
                 <div class="form-group">
                     <label>Collection Days:</label>
                     <div style="display: grid; grid-template-columns: repeat(7, 1fr); gap: 10px;">
-                        <label><input type="checkbox" name="edit_days_of_week[]" value="mon"> Mon</label>
-                        <label><input type="checkbox" name="edit_days_of_week[]" value="tue"> Tue</label>
-                        <label><input type="checkbox" name="edit_days_of_week[]" value="wed"> Wed</label>
-                        <label><input type="checkbox" name="edit_days_of_week[]" value="thu"> Thu</label>
-                        <label><input type="checkbox" name="edit_days_of_week[]" value="fri"> Fri</label>
-                        <label><input type="checkbox" name="edit_days_of_week[]" value="sat"> Sat</label>
-                        <label><input type="checkbox" name="edit_days_of_week[]" value="sun"> Sun</label>
+                        <label><input type="checkbox" name="days_of_week[]" value="mon"> Mon</label>
+                        <label><input type="checkbox" name="days_of_week[]" value="tue"> Tue</label>
+                        <label><input type="checkbox" name="days_of_week[]" value="wed"> Wed</label>
+                        <label><input type="checkbox" name="days_of_week[]" value="thu"> Thu</label>
+                        <label><input type="checkbox" name="days_of_week[]" value="fri"> Fri</label>
+                        <label><input type="checkbox" name="days_of_week[]" value="sat"> Sat</label>
+                        <label><input type="checkbox" name="days_of_week[]" value="sun"> Sun</label>
                     </div>
                 </div>
 
@@ -362,7 +374,7 @@
             
             // Handle checkboxes for days
             const days = schedule.days_of_week.split(',');
-            document.querySelectorAll('input[name="edit_days_of_week[]"]').forEach(checkbox => {
+            document.querySelectorAll('input[name="days_of_week[]"]').forEach(checkbox => {
                 checkbox.checked = days.includes(checkbox.value);
             });
         }
@@ -892,5 +904,47 @@ document.addEventListener('DOMContentLoaded', function() {
     opacity: 0.8;
 }
 </style>
+
+<script>
+function updateCountdown() {
+    const countdownElement = document.querySelector('.countdown');
+    if (!countdownElement) return;
+
+    const startTime = new Date(countdownElement.dataset.startTime).getTime();
+    const endTime = new Date(countdownElement.dataset.endTime).getTime();
+    const windowTime = startTime - (10 * 60 * 1000); // 10 minutes before
+    let hasReloaded = false; // Flag to prevent multiple reloads
+
+    function update() {
+        const now = new Date().getTime();
+        const distanceToStart = windowTime - now;
+        const distanceToEnd = endTime - now;
+
+        if (distanceToStart < 0 && distanceToEnd > 0 && !hasReloaded) {
+            countdownElement.innerHTML = "You can now mark yourself as ready!";
+            // Optionally, you can enable the "Mark as Ready" button here
+            // document.querySelector('.btn-primary').disabled = false;
+            hasReloaded = true; // Set the flag to true to prevent further reloads
+            // location.reload(); // Uncomment if you still want to reload once
+            return;
+        }
+
+        if (distanceToStart > 0) {
+            const hours = Math.floor(distanceToStart / (1000 * 60 * 60));
+            const minutes = Math.floor((distanceToStart % (1000 * 60 * 60)) / (1000 * 60));
+            const seconds = Math.floor((distanceToStart % (1000 * 60)) / 1000);
+
+            countdownElement.innerHTML = `Time until ready: ${hours}h ${minutes}m ${seconds}s`;
+        } else {
+            countdownElement.innerHTML = "Shift has started, you can still mark yourself as ready!";
+        }
+    }
+
+    update();
+    setInterval(update, 1000);
+}
+
+document.addEventListener('DOMContentLoaded', updateCountdown);
+</script>
 
 <?php require APPROOT . '/views/inc/components/footer.php'; ?>

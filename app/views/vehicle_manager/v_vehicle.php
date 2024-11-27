@@ -1,5 +1,3 @@
-<!-- Add this near the top of your view -->
-<?php flash('vehicle_message'); ?>
 <?php require APPROOT . '/views/inc/components/header.php'; ?>
 
 <!-- Side bar -->
@@ -17,6 +15,18 @@
               <li><a href="#">Dashboard</a></li>
           </ul>
       </div>
+  </div>
+
+  <div class="action-buttons">
+      <a href="<?php echo URLROOT; ?>/vehiclemanager/addVehicle" class="btn btn-primary">
+          <i class='bx bx-plus'></i>
+          Add New Vehicle
+      </a>
+
+      <a href="<?php echo URLROOT; ?>/vehiclemanager/updateVehicle" class="btn btn-primary">
+          <i class='bx bx-plus'></i>
+          Update Vehicle
+      </a>
   </div>
 
   <ul class="vehicle-box-info">
@@ -270,6 +280,8 @@
         });
     });
   </script>
+
+  <?php flash('vehicle_message'); ?>
   <!-- New section for vehicle cards -->
   <div class="vehicle-cards-section">
       <h2>All Vehicles</h2>
@@ -279,9 +291,8 @@
               <div class="vehicle-card" style="display: flex; margin-bottom: 20px; border: 1px solid #ddd; padding: 10px; border-radius: 8px;">
                   <!-- Left side - Image with fixed dimensions -->
                   <div style="margin-right: 20px;">
-                      <img src="https://i.ikman-st.com/isuzu-elf-freezer-105-feet-2014-for-sale-kalutara/e1f96b60-f1f5-488a-9cbc-620cba3f5f77/620/466/fitted.jpg" 
-                           alt="Vehicle"
-                           style="width: 200px; height: 150px; object-fit: cover;">
+                      <img src="<?php echo URLROOT; ?>/public/uploads/vehicle_photos/<?php echo $vehicle->license_plate; ?>.jpg" 
+                           alt="Vehicle <?php echo $vehicle->license_plate; ?>">
                   </div>
                   
                   <!-- Right side - Info -->
@@ -304,296 +315,10 @@
       <span class="close">&times;</span>
       <h2>Vehicle Details</h2>
       <div id="vehicleDetailsContent"></div>
-      <div class="modal-actions">
-        <!-- <button id="editVehicleBtn" class="btn btn-primary">Edit</button> -->
-        <button id="deleteVehicleBtn" class="btn btn-danger">Delete</button>
-      </div>
     </div>
   </div>
 
-  <!-- Create and Edit Vehicle Section -->
-  <div class="table-data">
-    <div class="order" style="display: flex; gap: 20px;">
-        <!-- Create Form -->
-        <div style="flex: 1;">
-            <div class="head">
-                <h3>Create New Vehicle</h3>
-            </div>
-            <form id="createVehicleForm" method="POST" action="<?php echo URLROOT; ?>/vehiclemanager/createVehicle">
-                <div style="display: flex; gap: 20px;">
-                    <div class="form-group" style="flex: 1;">
-                        <label for="license_plate">License Plate:</label>
-                        <input type="text" id="license_plate" name="license_plate" required>
-                    </div>
-                    <div class="form-group" style="flex: 1;">
-                        <label for="status">Status:</label>
-                        <select id="status" name="status" required>
-                            <option value="Available">Available</option>
-                            <option value="In-Use">In-Use</option>
-                            <option value="Maintenance">Maintenance</option>
-                        </select>
-                    </div>
-                </div>
 
-                <div style="display: flex; gap: 20px;">
-                    <div class="form-group" style="flex: 1;">
-                        <label for="owner_name">Owner Name:</label>
-                        <input type="text" id="owner_name" name="owner_name">
-                    </div>
-                    <div class="form-group" style="flex: 1;">
-                        <label for="owner_contact">Owner Contact:</label>
-                        <input type="text" id="owner_contact" name="owner_contact">
-                    </div>
-                </div>
-
-                <div style="display: flex; gap: 20px;">
-                    <div class="form-group" style="flex: 1;">
-                        <label for="vehicle_type">Vehicle Type:</label>
-                        <select id="vehicle_type" name="vehicle_type" required>
-                            <option value="Truck">Truck</option>
-                            <option value="Van">Van</option>
-                            <option value="Car">Car</option>
-                            <option value="Bus">Bus</option>
-                            <option value="Three-Wheeler">Three-Wheeler</option>
-                            <option value="Other">Other</option>
-                        </select>
-                    </div>
-                    <div class="form-group" style="flex: 1;">
-                        <label for="capacity">Capacity (Tons):</label>
-                        <input type="number" id="capacity" name="capacity" step="0.01" required>
-                    </div>
-                </div>
-
-                <div style="display: flex; gap: 20px;">
-                    <div class="form-group" style="flex: 1;">
-                        <label for="insurance_expiry_date">Insurance Expiry Date:</label>
-                        <input type="date" id="insurance_expiry_date" name="insurance_expiry_date">
-                    </div>
-                    <div class="form-group" style="flex: 1;">
-                        <label for="road_tax_expiry_date">Road Tax Expiry Date:</label>
-                        <input type="date" id="road_tax_expiry_date" name="road_tax_expiry_date">
-                    </div>
-                </div>
-
-                <div style="display: flex; gap: 20px;">
-                    <div class="form-group" style="flex: 1;">
-                        <label for="color">Color:</label>
-                        <input type="text" id="color" name="color">
-                    </div>
-                    <div class="form-group" style="flex: 1;">
-                        <label for="engine_number">Engine Number:</label>
-                        <input type="text" id="engine_number" name="engine_number">
-                    </div>
-                </div>
-
-                <div style="display: flex; gap: 20px;">
-                    <div class="form-group" style="flex: 1;">
-                        <label for="chassis_number">Chassis Number:</label>
-                        <input type="text" id="chassis_number" name="chassis_number">
-                    </div>
-                    <div class="form-group" style="flex: 1;">
-                        <label for="seating_capacity">Seating Capacity:</label>
-                        <input type="number" id="seating_capacity" name="seating_capacity">
-                    </div>
-                </div>
-
-                <div style="display: flex; gap: 20px;">
-                    <div class="form-group" style="flex: 1;">
-                        <label for="condition">Condition:</label>
-                        <select id="condition" name="condition">
-                            <option value="New">New</option>
-                            <option value="Good">Good</option>
-                            <option value="Fair">Fair</option>
-                            <option value="Poor">Poor</option>
-                        </select>
-                    </div>
-                    <div class="form-group" style="flex: 1;">
-                        <label for="last_serviced_date">Last Serviced Date:</label>
-                        <input type="date" id="last_serviced_date" name="last_serviced_date">
-                    </div>
-                </div>
-
-                <div style="display: flex; gap: 20px;">
-                    <div class="form-group" style="flex: 1;">
-                        <label for="last_maintenance">Last Maintenance:</label>
-                        <input type="date" id="last_maintenance" name="last_maintenance">
-                    </div>
-                    <div class="form-group" style="flex: 1;">
-                        <label for="next_maintenance">Next Maintenance:</label>
-                        <input type="date" id="next_maintenance" name="next_maintenance">
-                    </div>
-                </div>
-
-                <div style="display: flex; gap: 20px;">
-                    <div class="form-group" style="flex: 1;">
-                        <label for="mileage">Mileage:</label>
-                        <input type="number" id="mileage" name="mileage">
-                    </div>
-                    <div class="form-group" style="flex: 1;">
-                        <label for="fuel_type">Fuel Type:</label>
-                        <select id="fuel_type" name="fuel_type">
-                            <option value="Petrol">Petrol</option>
-                            <option value="Diesel">Diesel</option>
-                            <option value="Electric">Electric</option>
-                            <option value="Hybrid">Hybrid</option>
-                        </select>
-                    </div>
-                </div>
-
-                <div style="display: flex; gap: 20px;">
-                    <div class="form-group" style="flex: 1;">
-                        <label for="registration_date">Registration Date:</label>
-                        <input type="date" id="registration_date" name="registration_date">
-                    </div>
-                    <div class="form-group" style="flex: 1;">
-                        <label for="file_path">Vehicle Image URL:</label>
-                        <input type="text" id="file_path" name="file_path" placeholder="Enter image URL">
-                    </div>
-                </div>
-
-                <button type="submit" class="btn-submit">Create Vehicle</button>
-            </form>
-        </div>
-
-        <!-- Vertical Separator -->
-        <div class="vertical-separator"></div>
-
-        <!-- Edit Form -->
-        <div style="flex: 1;">
-            <div class="head">
-                <h3>Edit Vehicle</h3>
-            </div>
-            <form id="editVehicleForm" method="POST" action="<?php echo URLROOT; ?>/vehiclemanager/updateVehicle">
-                <div class="form-group">
-                    <label for="edit_vehicle_select">Select Vehicle:</label>
-                    <select id="edit_vehicle_select" name="vehicle_id" required onchange="loadVehicleData(this.value)">
-                        <option value="">Select a vehicle</option>
-                        <?php foreach ($data['vehicles'] as $vehicle): ?>
-                            <option value="<?= $vehicle->vehicle_id ?>"><?= $vehicle->license_plate ?></option>
-                        <?php endforeach; ?>
-                    </select>
-                </div>
-
-                <div style="display: flex; gap: 20px;">
-                    <div class="form-group" style="flex: 1;">
-                        <label for="edit_license_plate">License Plate:</label>
-                        <input type="text" id="edit_license_plate" name="license_plate" required>
-                    </div>
-                    <div class="form-group" style="flex: 1;">
-                        <label for="edit_status">Status:</label>
-                        <select id="edit_status" name="status" required>
-                            <option value="Available">Available</option>
-                            <option value="In-Use">In-Use</option>
-                            <option value="Maintenance">Maintenance</option>
-                        </select>
-                    </div>
-                </div>
-
-                <div style="display: flex; gap: 20px;">
-                    <div class="form-group" style="flex: 1;">
-                        <label for="edit_owner_name">Owner Name:</label>
-                        <input type="text" id="edit_owner_name" name="owner_name">
-                    </div>
-                    <div class="form-group" style="flex: 1;">
-                        <label for="edit_owner_contact">Owner Contact:</label>
-                        <input type="text" id="edit_owner_contact" name="owner_contact">
-                    </div>
-                </div>
-
-                <div style="display: flex; gap: 20px;">
-                    <div class="form-group" style="flex: 1;">
-                        <label for="edit_capacity">Capacity (Tons):</label>
-                        <input type="number" id="edit_capacity" name="capacity" step="0.01">
-                    </div>
-                    <div class="form-group" style="flex: 1;">
-                        <label for="edit_seating_capacity">Seating Capacity:</label>
-                        <input type="number" id="edit_seating_capacity" name="seating_capacity">
-                    </div>
-                </div>
-
-                <div style="display: flex; gap: 20px;">
-                    <div class="form-group" style="flex: 1;">
-                        <label for="edit_insurance_expiry_date">Insurance Expiry Date:</label>
-                        <input type="date" id="edit_insurance_expiry_date" name="insurance_expiry_date">
-                    </div>
-                    <div class="form-group" style="flex: 1;">
-                        <label for="edit_road_tax_expiry_date">Road Tax Expiry Date:</label>
-                        <input type="date" id="edit_road_tax_expiry_date" name="road_tax_expiry_date">
-                    </div>
-                </div>
-
-                <div style="display: flex; gap: 20px;">
-                    <div class="form-group" style="flex: 1;">
-                        <label for="edit_color">Color:</label>
-                        <input type="text" id="edit_color" name="color">
-                    </div>
-                    <div class="form-group" style="flex: 1;">
-                        <label for="edit_engine_number">Engine Number:</label>
-                        <input type="text" id="edit_engine_number" name="engine_number">
-                    </div>
-                </div>
-
-                <div style="display: flex; gap: 20px;">
-                    <div class="form-group" style="flex: 1;">
-                        <label for="edit_chassis_number">Chassis Number:</label>
-                        <input type="text" id="edit_chassis_number" name="chassis_number">
-                    </div>
-                    <div class="form-group" style="flex: 1;">
-                        <label for="edit_condition">Condition:</label>
-                        <select id="edit_condition" name="condition">
-                            <option value="">Select condition</option>
-                            <option value="New">New</option>
-                            <option value="Good">Good</option>
-                            <option value="Fair">Fair</option>
-                            <option value="Poor">Poor</option>
-                        </select>
-                    </div>
-                </div>
-
-                <div style="display: flex; gap: 20px;">
-                    <div class="form-group" style="flex: 1;">
-                        <label for="edit_last_serviced_date">Last Serviced Date:</label>
-                        <input type="date" id="edit_last_serviced_date" name="last_serviced_date">
-                    </div>
-                    <div class="form-group" style="flex: 1;">
-                        <label for="edit_last_maintenance">Last Maintenance:</label>
-                        <input type="date" id="edit_last_maintenance" name="last_maintenance">
-                    </div>
-                </div>
-
-                <div style="display: flex; gap: 20px;">
-                    <div class="form-group" style="flex: 1;">
-                        <label for="edit_next_maintenance">Next Maintenance:</label>
-                        <input type="date" id="edit_next_maintenance" name="next_maintenance">
-                    </div>
-                    <div class="form-group" style="flex: 1;">
-                        <label for="edit_mileage">Mileage:</label>
-                        <input type="number" id="edit_mileage" name="mileage">
-                    </div>
-                </div>
-
-                <div style="display: flex; gap: 20px;">
-                    <div class="form-group" style="flex: 1;">
-                        <label for="edit_fuel_type">Fuel Type:</label>
-                        <select id="edit_fuel_type" name="fuel_type">
-                            <option value="">Select fuel type</option>
-                            <option value="Petrol">Petrol</option>
-                            <option value="Diesel">Diesel</option>
-                            <option value="Electric">Electric</option>
-                            <option value="Hybrid">Hybrid</option>
-                        </select>
-                    </div>
-                    <div class="form-group" style="flex: 1;">
-                        <label for="edit_registration_date">Registration Date:</label>
-                        <input type="date" id="edit_registration_date" name="registration_date">
-                    </div>
-                </div>
-
-                <button type="submit" class="btn-submit">Update Vehicle</button>
-            </form>
-        </div>
-    </div>
-</div>
 
 <script>
 document.getElementById('editVehicleForm').addEventListener('submit', function(e) {
@@ -797,32 +522,7 @@ function showVehicleDetails(vehicle) { ... }
 function loadVehicleData(vehicleId) { ... }
 </script>
 
-<!-- Maintenance List Table -->
-<div class="table-data">
-  <div class="order">
-    <div class="head">
-      <h3>Maintenance List</h3>
-      <button id="addMaintenanceBtn" class="btn btn-primary">Add Maintenance</button>
-    </div>
-    <table id="maintenanceTable">
-      <thead>
-        <tr>
-          <th>VNO</th>
-          <th>Reg Date</th>
-          <th>Vehicle Name</th>
-          <th>Maintenance Type</th>
-          <th>Last Maintenance</th>
-          <th>Next Maintenance</th>
-          <th>Days Left</th>
-          <th>Actions</th>
-        </tr>
-      </thead>
-      <tbody id="maintenanceTableBody">
-        <!-- Table rows will be dynamically added here -->
-      </tbody>
-    </table>
-  </div>
-</div>
+
 
 <!-- Add/Edit Maintenance Form Modal -->
 <div id="maintenanceFormModal" class="modal">
@@ -1046,12 +746,20 @@ function loadVehicleData(vehicleId) { ... }
       const container = document.getElementById('vehicleCardsContainer');
       container.innerHTML = '';
       vehicles.forEach(vehicle => {
+        const defaultImage = '<?php echo URLROOT; ?>/public/uploads/vehicle_photos/default-vehicle.jpg';
+        const vehicleImage = vehicle.license_plate ? 
+            '<?php echo URLROOT; ?>/public/uploads/vehicle_photos/' + vehicle.license_plate + '.jpg' : 
+            defaultImage;
+
         const card = document.createElement('div');
         card.className = 'vehicle-card';
         card.innerHTML = `
-          <img src="${vehicle.file_path || '<?php echo URLROOT; ?>/public/images/default-vehicle.jpg'}" 
+          <div class="delete-button" onclick="event.stopPropagation(); confirmDelete(${vehicle.vehicle_id});">
+              <i class='bx bx-trash'></i>
+          </div>
+          <img src="${vehicleImage}" 
                alt="Vehicle ${vehicle.license_plate}"
-               onerror="this.src='<?php echo URLROOT; ?>/public/images/default-vehicle.jpg'">
+               onerror="this.src='${defaultImage}'">
           <div class="vehicle-card-info">
               <h3>${vehicle.license_plate || 'N/A'}</h3>
               <div class="vehicle-status">
@@ -1079,65 +787,84 @@ function loadVehicleData(vehicleId) { ... }
       };
 
       content.innerHTML = `
-          <div class="vehicle-details">
-              <div class="vehicle-image-large">
-                  <img src="${vehicle.file_path || '/path/to/default/image.jpg'}" 
-                       alt="Vehicle ${vehicle.license_plate}"
-                       onerror="this.src='/path/to/default/image.jpg'"
-                       style="max-width: 100%; height: auto;">
+          <div class="vehicle-modal-content">
+              <div class="vehicle-modal-image">
+                  <img src="https://i.ikman-st.com/isuzu-elf-freezer-105-feet-2014-for-sale-kalutara/e1f96b60-f1f5-488a-9cbc-620cba3f5f77/620/466/fitted.jpg" 
+                       alt="Vehicle Image">
               </div>
-              <div class="details-grid">
-                  <p><strong>Vehicle ID:</strong> ${vehicle.vehicle_id}</p>
-                  <p><strong>License Plate:</strong> ${vehicle.license_plate}</p>
-                  <p><strong>Status:</strong> ${vehicle.status}</p>
-                  <p><strong>Owner Name:</strong> ${vehicle.owner_name || 'N/A'}</p>
-                  <p><strong>Owner Contact:</strong> ${vehicle.owner_contact || 'N/A'}</p>
-                  <p><strong>Capacity:</strong> ${vehicle.capacity || 'N/A'} Tons</p>
-                  <p><strong>Vehicle Type:</strong> ${vehicle.vehicle_type || 'N/A'}</p>
-                  <p><strong>Color:</strong> ${vehicle.color || 'N/A'}</p>
-                  <p><strong>Engine Number:</strong> ${vehicle.engine_number || 'N/A'}</p>
-                  <p><strong>Chassis Number:</strong> ${vehicle.chassis_number || 'N/A'}</p>
-                  <p><strong>Seating Capacity:</strong> ${vehicle.seating_capacity || 'N/A'}</p>
-                  <p><strong>Condition:</strong> ${vehicle.condition || 'N/A'}</p>
-                  <p><strong>Last Serviced Date:</strong> ${formatDate(vehicle.last_serviced_date)}</p>
-                  <p><strong>Last Maintenance:</strong> ${formatDate(vehicle.last_maintenance)}</p>
-                  <p><strong>Next Maintenance:</strong> ${formatDate(vehicle.next_maintenance)}</p>
-                  <p><strong>Mileage:</strong> ${vehicle.mileage || 'N/A'}</p>
-                  <p><strong>Fuel Type:</strong> ${vehicle.fuel_type || 'N/A'}</p>
-                  <p><strong>Registration Date:</strong> ${formatDate(vehicle.registration_date)}</p>
+              <div class="vehicle-modal-details">
+                  <div class="detail-group">
+                      <h3>Basic Information</h3>
+                      <div class="detail-row">
+                          <span class="label">License Plate:</span>
+                          <span class="value">${vehicle.license_plate}</span>
+                      </div>
+                      <div class="detail-row">
+                          <span class="label">Vehicle Type:</span>
+                          <span class="value">${vehicle.vehicle_type}</span>
+                      </div>
+                      <div class="detail-row">
+                          <span class="label">Status:</span>
+                          <span class="value status-badge ${vehicle.status.toLowerCase()}">${vehicle.status}</span>
+                      </div>
+                  </div>
+
+                  <div class="detail-group">
+                      <h3>Specifications</h3>
+                      <div class="detail-row">
+                          <span class="label">Capacity:</span>
+                          <span class="value">${vehicle.capacity} Tons</span>
+                      </div>
+                      <div class="detail-row">
+                          <span class="label">Fuel Type:</span>
+                          <span class="value">${vehicle.fuel_type}</span>
+                      </div>
+                  </div>
+
+                  <div class="detail-group">
+                      <h3>Maintenance</h3>
+                      <div class="detail-row">
+                          <span class="label">Last Maintenance:</span>
+                          <span class="value">${vehicle.last_maintenance || 'N/A'}</span>
+                      </div>
+                      <div class="detail-row">
+                          <span class="label">Next Maintenance:</span>
+                          <span class="value">${vehicle.next_maintenance || 'N/A'}</span>
+                      </div>
+                  </div>
               </div>
           </div>
       `;
       modal.style.display = 'block';
 
-      // Set up edit and delete buttons
-      document.getElementById('editVehicleBtn').onclick = () => editVehicle(vehicle);
-      document.getElementById('deleteVehicleBtn').onclick = () => {
-          if (confirm('Are you sure you want to delete this vehicle?')) {
-              const formData = new FormData();
-              formData.append('vehicle_id', vehicle.vehicle_id);
-
-              fetch('<?php echo URLROOT; ?>/vehiclemanager/deleteVehicle', {
-                  method: 'POST',
-                  body: formData
-              })
-              .then(response => response.json())
-              .then(data => {
-                  if (data.success) {
-                      // Close the modal
-                      modal.style.display = 'none';
-                      // Reload the page to show updated list
-                      window.location.reload();
-                  } else {
-                      alert('Failed to delete vehicle');
-                  }
-              })
-              .catch(error => {
-                  console.error('Error:', error);
-                  alert('An error occurred while deleting the vehicle');
-              });
-          }
-      };
+      // Set up delete button handler
+      const deleteButton = document.getElementById('deleteVehicleBtn');
+      if (deleteButton) {
+          deleteButton.onclick = () => {
+              if (confirm('Are you sure you want to delete this vehicle?')) {
+                  fetch(`<?php echo URLROOT; ?>/vehiclemanager/deleteVehicle/${vehicle.vehicle_id}`, {
+                      method: 'POST',
+                      headers: {
+                          'Content-Type': 'application/json',
+                          'X-Requested-With': 'XMLHttpRequest'
+                      }
+                  })
+                  .then(response => response.json())
+                  .then(data => {
+                      if (data.success) {
+                          modal.style.display = 'none';
+                          window.location.reload();
+                      } else {
+                          alert(data.message || 'Failed to delete vehicle');
+                      }
+                  })
+                  .catch(error => {
+                      console.error('Error:', error);
+                      alert('An error occurred while deleting the vehicle');
+                  });
+              }
+          };
+      }
     }
 
     // Function to show add/edit vehicle form
@@ -1420,6 +1147,216 @@ function editMaintenance(event) {
   });
 </script>
 
+<style>
+.vehicle-modal-content {
+    padding: 20px;
+}
+
+.vehicle-modal-image {
+    width: 100%;
+    height: 250px;
+    overflow: hidden;
+    border-radius: 8px;
+    margin-bottom: 20px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background-color: #f5f5f5;
+}
+
+.vehicle-modal-image img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    object-position: center;
+}
+
+.vehicle-modal-details {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.detail-group {
+    border-bottom: 1px solid #eee;
+    padding-bottom: 15px;
+}
+
+.detail-group h3 {
+    color: var(--main);
+    margin-bottom: 10px;
+    font-size: 1.2em;
+}
+
+.detail-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 0;
+}
+
+.detail-row .label {
+    color: #666;
+    font-weight: 500;
+    flex: 1;
+}
+
+.detail-row .value {
+    flex: 2;
+    color: #333;
+}
+
+.status-badge {
+    padding: 5px 12px;
+    border-radius: 15px;
+    font-size: 0.9em;
+    display: inline-block;
+}
+
+.status-badge.available {
+    background: #e8f5e9;
+    color: #2e7d32;
+}
+
+.status-badge.in-use {
+    background: #e3f2fd;
+    color: #1565c0;
+}
+
+.status-badge.maintenance {
+    background: #fff3e0;
+    color: #ef6c00;
+}
+
+/* Responsive adjustments */
+@media screen and (max-width: 768px) {
+    .vehicle-modal-details {
+        gap: 15px;
+    }
+    
+    .detail-row {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 5px;
+    }
+    
+    .detail-row .label,
+    .detail-row .value {
+        flex: none;
+    }
+}
+</style>
+
+<style>
+.action-buttons {
+    margin: 20px 0;
+    display: flex;
+    gap: 15px;
+    justify-content: flex-end;
+}
+
+.btn-primary {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background-color: var(--main);
+    color: var(--light);
+    padding: 10px 20px;
+    border-radius: 5px;
+    text-decoration: none;
+    transition: background-color 0.3s ease;
+}
+
+.btn-primary:hover {
+    background-color: var(--main-dark);
+}
+
+.btn-primary i {
+    font-size: 1.2em;
+}
+</style>
+
+<style>
+    /* Add this to your existing styles */
+    .alert {
+        position: fixed;
+        top: 80px; /* Adjust based on your header height */
+        right: 20px;
+        z-index: 1000;
+        padding: 15px;
+        border-radius: 5px;
+        box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+        max-width: 300px;
+    }
+
+    .alert-success {
+        background-color: #d4edda;
+        color: #155724;
+        border: 1px solid #c3e6cb;
+    }
+
+    .alert-danger {
+        background-color: #f8d7da;
+        color: #721c24;
+        border: 1px solid #f5c6cb;
+    }
+</style>
+
+<style>
+    .delete-button {
+        position: absolute;
+        top: 10px;
+        right: 10px;
+        background-color: rgba(220, 53, 69, 0.9);
+        color: white;
+        width: 32px;
+        height: 32px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        opacity: 0;
+        transition: opacity 0.3s ease;
+    }
+
+    .vehicle-card {
+        position: relative;
+    }
+
+    .vehicle-card:hover .delete-button {
+        opacity: 1;
+    }
+
+    .delete-button:hover {
+        background-color: #dc3545;
+    }
+</style>
+
+<script>
+async function confirmDelete(vehicleId) {
+    if (confirm('Are you sure you want to delete this vehicle?')) {
+        try {
+            const formData = new FormData();
+            formData.append('vehicle_id', vehicleId);
+
+            const response = await fetch(`<?php echo URLROOT; ?>/vehiclemanager/deleteVehicle/${vehicleId}`, {
+                method: 'POST',
+                body: formData
+            });
+
+            if (response.ok) {
+                window.location.reload(); // Reload the page after successful deletion
+            } else {
+                alert('Failed to delete vehicle. Please try again.');
+            }
+        } catch (error) {
+            console.error('Error:', error);
+            alert('An error occurred while deleting the vehicle.');
+        }
+    }
+}
+</script>
 
 </main>
 <!-- MAIN -->

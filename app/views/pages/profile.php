@@ -2,6 +2,10 @@
 <?php require APPROOT . '/views/inc/components/sidebar_vehicle_driver.php'; ?>
 <?php require APPROOT . '/views/inc/components/topnavbar.php'; ?>
 
+
+<!-- var_dump($_SESSION); -->
+
+
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
 <main class="profile-main">
@@ -14,18 +18,10 @@
 
     <?php
     // Hardcoded driver data for demonstration
-    $driver = [
-        'name' => 'Chaminda Perera',
-        'license_number' => 'DL123456',
-        'registration_date' => '2023-01-15',
-        'current_shift_id' => 'SHIFT001',
-        'current_team_id' => 'TEAM005',
-        'hours_worked' => 8,
-        'collections_driven' => 12,
-        'email' => 'chaminda.perera@example.com',
-        'phone' => '+94 77 123 4567',
-        'address' => '123 Rampart Street, Fort, Galle, Sri Lanka'
-    ];
+
+    $userModel = new M_User();
+    $userInfo = $userModel->getUserById($_SESSION['user_id']);
+
 
     // Hardcoded team data for demonstration
     $team = [
@@ -67,148 +63,137 @@
                 <img src="https://i.pravatar.cc/150?img=68" alt="Driver Avatar" class="profile-avatar">
             </div>
             <div class="profile-info">
-                <h2 class="profile-name"><?php echo $driver['name']; ?></h2>
-                <p class="profile-id">ID: <?php echo $driver['license_number']; ?></p>
-                <div class="profile-contact">
-                    <p><i class="fas fa-envelope"></i> <?php echo $driver['email']; ?></p>
-                    <p><i class="fas fa-phone"></i> <?php echo $driver['phone']; ?></p>
-                    <p><i class="fas fa-map-marker-alt"></i> <?php echo $driver['address']; ?></p>
+                <div class="detail-grid">
+
+                    <div class="detail-item">
+                        <span class="detail-label">First Name</span>
+                        <span class="detail-value"><?php echo htmlspecialchars($userInfo['first_name']); ?></span>
+                    </div>
+                    <div class="detail-item">
+                        <span class="detail-label">Last Name</span>
+                        <span class="detail-value"><?php echo htmlspecialchars($userInfo['last_name']); ?></span>
+                    </div>
+                    <div class="detail-item">
+                        <span class="detail-label">Email</span>
+                        <span class="detail-value"><?php echo htmlspecialchars($userInfo['email']); ?></span>
+                    </div>
+                    <div class="detail-item">
+                        <span class="detail-label">NIC</span>
+                        <span class="detail-value"><?php echo htmlspecialchars($userInfo['nic']); ?></span>
+                    </div>
+                    <div class="detail-item">
+                        <span class="detail-label">Gender</span>
+                        <span class="detail-value"><?php echo htmlspecialchars($userInfo['gender']); ?></span>
+                    </div>
+                    <div class="detail-item">
+                        <span class="detail-label">Date of Birth</span>
+                        <span class="detail-value"><?php echo date('F j, Y', strtotime($userInfo['date_of_birth'])); ?></span>
+                    </div>
                 </div>
             </div>
         </div>
+        <?php
+        require_once APPROOT . '/models/M_Driver.php';
+        if (RoleHelper::hasRole(RoleHelper::DRIVER)): 
+            // Get driver details
+            $driverModel = new M_Driver();
+            $driverDetails = $driverModel->getDriverDetails($_SESSION['user_id']);
+        ?>
         <div class="profile-details">
             <h3>Driver Information</h3>
-            <div class="detail-grid">
+            <div class="detail-grid single-row">
                 <div class="detail-item">
                     <span class="detail-label">License Number</span>
-                    <span class="detail-value"><?php echo $driver['license_number']; ?></span>
+                    <span class="detail-value"><?php echo $driverDetails ? htmlspecialchars($driverDetails->license_no) : 'Not Available'; ?></span>
                 </div>
                 <div class="detail-item">
                     <span class="detail-label">Registration Date</span>
-                    <span class="detail-value"><?php echo $driver['registration_date']; ?></span>
+                    <span class="detail-value">
+                        <?php echo $driverDetails && $driverDetails->registration_date ? 
+                            date('F j, Y', strtotime($driverDetails->registration_date)) : 'Not Available'; ?>
+                    </span>
                 </div>
                 <div class="detail-item">
-                    <span class="detail-label">Current Shift ID</span>
-                    <span class="detail-value"><?php echo $driver['current_shift_id']; ?></span>
+                    <span class="detail-label">Current Shift</span>
+                    <span class="detail-value"><?php echo $driverDetails && $driverDetails->current_shift ? 
+                        htmlspecialchars($driverDetails->current_shift) : 'Not Assigned'; ?></span>
                 </div>
                 <div class="detail-item">
-                    <span class="detail-label">Current Team ID</span>
-                    <span class="detail-value"><?php echo $driver['current_team_id']; ?></span>
+                    <span class="detail-label">Current Team</span>
+                    <span class="detail-value"><?php echo $driverDetails && $driverDetails->current_team ? 
+                        htmlspecialchars($driverDetails->current_team) : 'Not Assigned'; ?></span>
                 </div>
             </div>
-            <h3>Performance Metrics</h3>
-            <div class="metrics-grid">
-                <div class="metric-item">
-                    <span class="metric-value"><?php echo $driver['hours_worked']; ?></span>
-                    <span class="metric-label">Hours Worked</span>
-                </div>
-                <div class="metric-item">
-                    <span class="metric-value"><?php echo $driver['collections_driven']; ?></span>
-                    <span class="metric-label">Collections Driven</span>
-                </div>
-            </div>
-            <h3>Team Information</h3>
-            <div class="card-grid">
-                <div class="info-card horizontal">
-                    <div class="card-image">
-                        <img src="https://i.ikman-st.com/isuzu-elf-freezer-105-feet-2014-for-sale-kalutara/e1f96b60-f1f5-488a-9cbc-620cba3f5f77/620/466/fitted.jpg" alt="Vehicle Image" class="team-image">
-                    </div>
-                    <div class="card-content">
-                        <h4>Team: <?php echo $team['name']; ?></h4>
-                        <p><strong>Vehicle ID:</strong> <?php echo $vehicle['id']; ?></p>
-                        <p><strong>Vehicle:</strong> <?php echo $vehicle['name']; ?></p>
-                        <p><strong>Type:</strong> <?php echo $vehicle['type']; ?></p>
-                        <p><strong>Current Capacity:</strong> <?php echo $vehicle['capacity']; ?></p>
-                        <div class="card-actions">
-                            <a href="#" class="btn btn-secondary" onclick="reportIssue('vehicle')"><i class="fas fa-flag"></i> Report Issue</a>
+
+            <?php 
+            // Get team information if driver has one
+            if ($driverDetails->team_id): 
+            ?>
+                <h3>Team Information</h3>
+                <div class="card-grid">
+                    <?php if ($driverDetails->vehicle_id): ?>
+                    <div class="info-card horizontal">
+                        <div class="card-image">
+                            <img src="<?php echo $driverDetails->vehicle_image; ?>" alt="Vehicle Image" class="team-image">
+                        </div>
+                        <div class="card-content">
+                            <h4>Team: <?php echo htmlspecialchars($driverDetails->current_team); ?></h4>
+                            <p><strong>Vehicle ID:</strong> <?php echo htmlspecialchars($driverDetails->vehicle_id); ?></p>
+                            <p><strong>Vehicle:</strong> <?php echo htmlspecialchars($driverDetails->vehicle_type); ?></p>
+                            <p><strong>Status:</strong> <?php echo htmlspecialchars($driverDetails->vehicle_status); ?></p>
+                            <div class="card-actions">
+                                <a href="#" class="btn btn-secondary" onclick="reportIssue('vehicle')">
+                                    <i class="fas fa-flag"></i> Report Issue
+                                </a>
+                            </div>
                         </div>
                     </div>
-                </div>
-                <div class="info-card horizontal">
-                    <div class="card-image">
-                        <img src="https://i.pravatar.cc/150?img=56" alt="Partner Image" class="team-image">
-                    </div>
-                    <div class="card-content">
-                        <h4>Partner Information</h4>
-                        <p><strong>Partner ID:</strong> <?php echo $team['partner_id']; ?></p>
-                        <p><strong>Name:</strong> <?php echo $team['partner_name']; ?></p>
-                        <p><strong>Email:</strong> <?php echo $team['partner_email']; ?></p>
-                        <p><strong>Phone:</strong> <?php echo $team['partner_phone']; ?></p>
-                        <div class="card-actions">
-                            <a href="#" class="btn btn-secondary" onclick="reportUser()"><i class="fas fa-flag"></i> Report User</a>
+                    <?php endif; ?>
+
+                    <?php if ($driverDetails->partner_id): ?>
+                    <div class="info-card horizontal">
+                        <div class="card-image">
+                            <?php
+                            // theres some underlying issue with the image path, ill check this later
+                            // var_dump($driverDetails->partner_photo);
+                            // var_dump($driverDetails->partner_image_type);
+                            // var_dump(UPLOADROOT);
+
+                            $photoFileName = $driverDetails && $driverDetails->partner_photo 
+                                ? $driverDetails->partner_photo . '.' . $driverDetails->partner_image_type
+                                : '';
+                            
+                            // Use UPLOADURL for the web-accessible path
+                            $photoPath = $photoFileName && file_exists(UPLOADPATH . '/user_photos/' . $photoFileName)
+                                ? UPLOADURL . '/user_photos/' . $photoFileName
+                                : URLROOT . '/img/default-avatar.jpg';
+                            
+                            // Debug
+                            // echo "<!-- File exists check: " . UPLOADPATH . '/user_photos/' . $photoFileName . " -->";
+                            // echo "<!-- Final URL: " . $photoPath . " -->";
+                            ?>
+                            <img src="<?php echo htmlspecialchars($photoPath); ?>" 
+                                 alt="Partner Image" 
+                                 class="team-image"
+                                 onerror="this.src='<?php echo URLROOT; ?>/img/default-avatar.jpg'">
+                        </div>
+                        <div class="card-content">
+                            <h4>Partner Information</h4>
+                            <p><strong>Partner ID:</strong> <?php echo htmlspecialchars($driverDetails->partner_id); ?></p>
+                            <p><strong>Name:</strong> <?php echo htmlspecialchars($driverDetails->partner_name); ?></p>
+                            <p><strong>Phone:</strong> <?php echo htmlspecialchars($driverDetails->partner_phone); ?></p>
+                            <div class="card-actions">
+                                <a href="#" class="btn btn-secondary" onclick="reportUser()">
+                                    <i class="fas fa-flag"></i> Report User
+                                </a>
+                            </div>
                         </div>
                     </div>
+                    <?php endif; ?>
                 </div>
-            </div>
-            <h3>Financial Information (Last Shift)</h3>
-            <div class="card-grid financial-grid">
-                <div class="info-card">
-                    <div class="card-content">
-                        <h4>Total Earnings</h4>
-                        <p class="large-text">LKR <?php echo number_format($total_earnings, 2); ?></p>
-                        <p>Last completed shift</p>
-                    </div>
-                </div>
-                <div class="info-card">
-                    <div class="card-content">
-                        <h4>Earnings Breakdown</h4>
-                        <table class="financial-table">
-                            <?php foreach ($financial as $key => $value): ?>
-                                <tr>
-                                    <td><?php echo ucwords(str_replace('_', ' ', $key)); ?></td>
-                                    <td class="amount <?php echo $value >= 0 ? 'positive' : 'negative'; ?>">
-                                        LKR <?php echo number_format(abs($value), 2); ?>
-                                    </td>
-                                </tr>
-                            <?php endforeach; ?>
-                        </table>
-                    </div>
-                </div>
-            </div>
-            <h3>Earnings Trend (Last 30 Days)</h3>
-            <div class="chart-container">
-                <canvas id="earningsChart"></canvas>
-            </div>
-            <h3>Work History</h3>
-            <div class="work-history">
-                <table class="history-table">
-                    <thead>
-                        <tr>
-                            <th>Date</th>
-                            <th>Shift ID</th>
-                            <th>Hours</th>
-                            <th>Collections</th>
-                            <th>Performance</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr>
-                            <td>2023-05-15</td>
-                            <td>SHIFT089</td>
-                            <td>8.5</td>
-                            <td>12</td>
-                            <td><span class="performance high">Excellent</span></td>
-                        </tr>
-                        <tr>
-                            <td>2023-05-14</td>
-                            <td>SHIFT088</td>
-                            <td>7.5</td>
-                            <td>10</td>
-                            <td><span class="performance medium">Good</span></td>
-                        </tr>
-                        <tr>
-                            <td>2023-05-13</td>
-                            <td>SHIFT087</td>
-                            <td>8.0</td>
-                            <td>11</td>
-                            <td><span class="performance high">Excellent</span></td>
-                        </tr>
-                        <!-- Add more rows as needed -->
-                    </tbody>
-                </table>
-                <a href="#" class="btn btn-primary">View Full History</a>
-            </div>
+            <?php endif; ?>
         </div>
+        <?php endif; ?>
     </div>
 </main>
 
@@ -225,47 +210,6 @@ function reportIssue(type) {
     alert('Report ' + type + ' issue functionality to be implemented.');
 }
 
-// Sample data for the last 30 days
-const last30Days = <?php echo json_encode(array_map(function($i) {
-    return date('M d', strtotime("-$i days"));
-}, range(29, 0, -1))); ?>;
-
-const earnings = <?php echo json_encode(array_map(function() {
-    return rand(1800, 2800); // Random earnings between 1800 and 2800 LKR
-}, range(30, 1))); ?>;
-
-// Create the chart
-const ctx = document.getElementById('earningsChart').getContext('2d');
-new Chart(ctx, {
-    type: 'line',
-    data: {
-        labels: last30Days,
-        datasets: [{
-            label: 'Daily Earnings (LKR)',
-            data: earnings,
-            borderColor: 'rgb(75, 192, 192)',
-            tension: 0.1
-        }]
-    },
-    options: {
-        responsive: true,
-        scales: {
-            y: {
-                beginAtZero: true,
-                title: {
-                    display: true,
-                    text: 'Earnings (LKR)'
-                }
-            },
-            x: {
-                title: {
-                    display: true,
-                    text: 'Date'
-                }
-            }
-        }
-    }
-});
 </script>
 
 <style>
@@ -332,13 +276,13 @@ new Chart(ctx, {
 
 .profile-info {
     flex: 1;
+    padding: 1rem;
 }
 
 .profile-name {
-    font-size: 1.75rem;
-    font-weight: 600;
+    font-size: 1.8rem;
+    color: #333;
     margin-bottom: 0.5rem;
-    color: #2c3e50;
 }
 
 .profile-id {
@@ -348,16 +292,69 @@ new Chart(ctx, {
 }
 
 .profile-contact {
-    font-size: 0.95rem;
+    margin-top: 1rem;
+}
+
+.info-row-group {
+    display: flex;
+    gap: 1rem;
+    margin-bottom: 1rem;
+}
+
+.info-row {
+    flex: 1;
+    display: flex;
+    background: #f5f5f5;
+    padding: 0.75rem;
+    border-radius: 4px;
+}
+
+.info-row label {
+    width: 120px;
+    color: #666;
+    font-weight: 500;
+}
+
+.info-row p {
+    margin: 0;
+    color: #333;
 }
 
 .profile-contact p {
-    margin-bottom: 0.5rem;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.5rem;
+    background: #f8f9fa;
+    border-radius: 6px;
+    font-size: 0.95rem;
+    color: #444;
 }
 
 .profile-contact i {
     width: 20px;
-    color: #007bff;
+    height: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #fff;
+    border-radius: 50%;
+    padding: 1rem;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+/* Icon specific colors */
+.profile-contact i.fa-user { color: #2196F3; }
+.profile-contact i.fa-envelope { color: #4CAF50; }
+.profile-contact i.fa-id-card { color: #FF9800; }
+.profile-contact i.fa-venus-mars { color: #9C27B0; }
+.profile-contact i.fa-calendar-alt { color: #F44336; }
+
+/* Responsive design */
+@media (max-width: 768px) {
+    .profile-contact {
+        grid-template-columns: 1fr; /* Single column on mobile */
+    }
 }
 
 .profile-details {
@@ -635,6 +632,36 @@ new Chart(ctx, {
     padding: 20px;
     border-radius: 8px;
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0);
+}
+
+.detail-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1rem;
+    margin-top: 1rem;
+}
+
+.detail-item {
+    background: #f8f9fa;
+    padding: 1rem;
+    border-radius: 8px;
+}
+
+.detail-label {
+    display: block;
+    color: #666;
+    font-size: 0.9rem;
+    margin-bottom: 0.5rem;
+}
+
+.detail-value {
+    color: #333;
+    font-weight: 500;
+}
+
+.detail-grid.single-row {
+    grid-template-columns: repeat(4, 1fr);  /* Creates 4 equal columns */
+    gap: 1rem;
 }
 </style>
 

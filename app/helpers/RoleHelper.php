@@ -97,5 +97,21 @@ class RoleHelper {
                 return null; // Return null if no matching title is found
         }
     }
+
+    public static function getControllerNameByRole($roleId) {
+        // Map role IDs to their controller names
+        $controllerMap = [
+            6 => 'vehicledriver',    // Driver
+            8 => 'drivingpartner',   // Driving Partner
+            9 => 'employeemanager',  // Employee Manager
+            11 => 'inventorymanager', // Inventory Manager
+            10 => 'vehiclemanager',  // Vehicle Manager
+            5 => 'supplier',         // Supplier
+            2 => 'suppliermanager'   // Supplier Manager
+            // ... add other role mappings as needed ...
+        ];
+        
+        return isset($controllerMap[$roleId]) ? $controllerMap[$roleId] : '';
+    }
 }
 ?>

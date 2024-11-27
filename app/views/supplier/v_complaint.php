@@ -23,18 +23,18 @@
 
 
         <?php
-// Mock data for ratings
-$ratings = [
-    5 => 50,
-    4 => 30,
-    3 => 15,
-    2 => 10,
-    1 => 5
-];
+        // Mock data for ratings
+        $ratings = [
+            5 => 50,
+            4 => 30,
+            3 => 15,
+            2 => 10,
+            1 => 5
+        ];
 
-// Calculate the total number of ratings
-$totalRatings = array_sum($ratings);
-?>
+        // Calculate the total number of ratings
+        $totalRatings = array_sum($ratings);
+        ?>
 
         <!-- Ratings Section -->
         <div class="rating">
@@ -60,23 +60,6 @@ $totalRatings = array_sum($ratings);
                     <li><strong>Emily White:</strong> "Had a minor issue, but the customer service resolved it promptly. Great experience!"</li>
                 </ul>
             </div>
-            <div>
-                <div class="rating-container">
-                    <h3> Ratings</h3>
-                    <div class="rating-bar-graph">
-                        <?php foreach ($ratings as $stars => $count): 
-                            $percentage = ($totalRatings > 0) ? ($count / $totalRatings) * 100 : 0; ?>
-                            <div class="rating-bar">
-                                <span class="stars"><?php echo $stars; ?> Stars</span>
-                                <div class="bar" data-percentage="<?php echo $percentage; ?>">
-                                    <span class="fill"></span>
-                                </div>
-                                <span class="count"><?php echo $count; ?></span>
-                            </div>
-                        <?php endforeach; ?>
-                    </div>
-                </div>
-            </div>
         </div>
 
         <div class="table-data">
@@ -91,7 +74,7 @@ $totalRatings = array_sum($ratings);
                             <option value="quality">Quality</option>
                             <option value="service">Service</option>
                             <option value="delivery">Delivery</option>
-                            <option value="other">Other</option>
+                            <option value="other">Other(State in the description)</option>
                         </select>
                     </div>
                     <div class="form-group">
@@ -106,24 +89,28 @@ $totalRatings = array_sum($ratings);
                         <label for="phone">Phone Number:</label>
                         <input type="text" id="phone" name="phone">
                     </div>
-                    <button type="submit" class="button" onclick="submitmessage()">Submit Complaint</button>
-                    <button type="button" class="button" onclick="refreshPage()">Cancel</button>
+                    <div class="button-group">
+                        <button type="submit" class="button" onclick="submitmessage()">Submit Complaint</button>
+                        <button type="button" class="button" onclick="refreshPage()">Cancel</button>
+                    </div>
                 </form>
             </div>
         </div>
     </div>
 </main>
 
-<script>document.addEventListener('DOMContentLoaded', () => {
-    const bars = document.querySelectorAll('.bar');
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        const bars = document.querySelectorAll('.bar');
 
-    bars.forEach(bar => {
-        const percentage = bar.dataset.percentage;
-        const fill = bar.querySelector('.fill');
-        fill.style.width = percentage + '%';
+        bars.forEach(bar => {
+            const percentage = bar.dataset.percentage;
+            const fill = bar.querySelector('.fill');
+            fill.style.width = percentage + '%';
+        });
     });
-});
 </script>
-<script src="<?php echo URLROOT; ?>/css/components/script.js"></script>
+<script src="<?php echo URLROOT; ?>/css/script.js"></script>
 </body>
+
 </html>

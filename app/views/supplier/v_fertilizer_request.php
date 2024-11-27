@@ -6,227 +6,250 @@
 <?php require APPROOT . '/views/inc/components/topnavbar.php'; ?>
 
 <!-- MAIN -->
-            <main>
-                <div class="head-title">
-                    <div class="left">
-                        <h1>Tea Leaves Supplier</h1>
-                        <ul class="breadcrumb">
-                            <li>
-                                <a href="SupplyDashboard.html">Home > </a>
-                            </li>
-                            <li><i class='bx bx-chevron-right'></i></li>
-                            <li>
-                                <a class="active" href="#"> Fertilizer Requests</a>
-                            </li>
-                        </ul>
-                    </div>
-    
-                    <div class="table-data">
+<main>
+    <div class="head-title">
+        <div class="left">
+            <h1>Tea Leaves Supplier</h1>
+            <ul class="breadcrumb">
+                <li>
+                    <a href="SupplyDashboard.html">Home </a>
+                </li>
+                <li><i class='bx bx-chevron-right'></i></li>
+                <li>
+                    <a class="active" href="#"> Fertilizer Requests</a>
+                </li>
+            </ul>
+        </div>
+
+        <!-- <div class="table-data">
                         <div class="todo">
                             <div class="head">
                                 <h3>Fertilizer Request History</h3>
+                                <h5>Last 6 months</h5>
                                 <i class='bx bx-plus'></i>
                                 <i class='bx bx-filter'></i>
                             </div>
                             <canvas id="fertilizerRequestChart" ></canvas>
                         </div>
-                        <div class="tea-order-history">
+                        <div class="todo">
                             <div class="head">
+                                <h5>This year</h5>
                                 <i class='bx bx-plus'></i>
                                 <i class='bx bx-filter'></i>
                             </div>
                             <canvas id="fertilizerChart" width="500" height="400"></canvas>
                         </div>
+                    </div> -->
+
+
+        <div class="table-data">
+            <div class="order">
+                <div class="head">
+                    <h3>Available Fertilizer Types</h3>
+                </div>
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>Fertilizer Type</th>
+                            <th>Description</th>
+                            <th>Recommended Usage</th>
+                            <th>Unit Price(kg)</th>
+                            <th>Unit Price(Pack)</th>
+                            <th>Unit Price(Box)</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <?php foreach ($data['fertilizer_types'] as $fertilizer): ?>
+                            <tr>
+                                <td><?php echo htmlspecialchars($fertilizer->name); ?></td>
+                                <td><?php echo htmlspecialchars($fertilizer->description); ?></td>
+                                <td><?php echo htmlspecialchars($fertilizer->recommended_usage); ?></td>
+                                <td><?php echo number_format($fertilizer->unit_price_kg, 2); ?></td>
+                                <td><?php echo number_format($fertilizer->unit_price_packs, 2); ?></td>
+                                <td><?php echo number_format($fertilizer->unit_price_box, 2); ?></td>
+                            </tr>
+                        <?php endforeach; ?>
+                    </tbody>
+                </table>
+            </div>
+            <div class="table-data">
+                <div class="order">
+                    <div class="head">
+                        <h3>Request Form</h3>
+                        <a href="<?php echo URLROOT; ?>/Supplier/">
+                            <button class="button">Dashboard</button>
+                        </a>
                     </div>
 
-                
-                <div class="table-data">
-                    <div class="order">
-                        <div class="head">
-                            <h3>Fertilizer Requests History</h3>
-                        </div>
-                        <table class="table">
-                            <thead>
-                                <tr>
-                                    <th>Order id</th>
-                                    <th>Supplier id</th>
-                                    <th>Order Date and Time</th>
-                                    <th>Amount in kg</th>
-                                    <th>Payment Status</th>
-                                    <th>Update order</th>
-                                    <th>Cancel order</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <?php foreach ($data['orders'] as $order): ?>
-                                    <tr>
-                                        <td><?php echo $order->order_id; ?></td> 
-                                        <td><?php echo $order->supplier_id; ?></td>
-                                        <td><?php echo $order->order_date; ?></td>
-                                        <td><?php echo $order->total_amount; ?></td>
-                                        <td><?php echo $order->payment_status; ?></td>
-                                        <td>
-                                            <a href="<?php echo URLROOT; ?>/Supplier/editFertilizerRequest/<?php echo $order->order_id; ?>" class="btn-edit btn-primary">
-                                                Edit
-                                            </a>
-                                        </td>
-                                        <td>
-                                            <a href="<?php echo URLROOT; ?>/Supplier/deleteFertilizerRequest/<?php echo $order->order_id; ?>" class="btn-delete btn-primary">
-                                                Delete
-                                            </a>
-                                        </td>
+                    <form method="POST" class="complaint-form" id="fertilizerForm">
+                        <div class="form-group">
 
-
-
-                                    </tr>
-                                <?php endforeach; ?>
-                            </tbody>
-
-                        </table>
-
-                    </div>
-
-
-                    <div class="table-data">
-                        <div class="order">
-                            <div class="head">
-                                <h3>Request Form</h3>
-                                <a href="FertilizerPage.php">
-                                <button class="button">Dashboard</button>
-                                </a>
+                            <div class="form-group">
+                                <label for="type_id">Fertilizer Type:</label>
+                                <select id="type_id" name="type_id" required>
+                                    <option value="">Select Fertilizer</option>
+                                    <?php foreach ($data['fertilizer_types'] as $type): ?>
+                                        <option value="<?php echo $type->type_id; ?>"
+                                            data-unit-price-kg="<?php echo $type->unit_price_kg; ?>"
+                                            data-pack-price="<?php echo $type->unit_price_packs; ?>"
+                                            data-box-price="<?php echo $type->unit_price_box; ?>">
+                                            <?php echo $type->name; ?>
+                                        </option>
+                                    <?php endforeach; ?>
+                                </select>
                             </div>
 
-                            <form action="<?php echo URLROOT; ?>/supplier/requestFertilizer" method="POST" class="complaint-form">
-                                <div class="form-group">
-                                    <div class="form-group">
-                                        <label for="supplier_id">Supplier ID:</label>
-                                        <input type="text" id="supplier_id" name="supplier_id" required>
-                                    </div>
-                                    <div class="form-group">
-                                        <label for="total_amount">Total Amount (kg):</label>
-                                        <input type="number" id="total_amount" name="total_amount" value="<?php echo $order->total_amount; ?>" max="50" required>
-                                    </div>
-                                    <!--
-                                    <div class="form-group">
-                                        <label for="address">Address:</label>
-                                        <input type="address" id="address" name="address" required>
-                                    </div>
-                                    <div class="form-group">
-                                        <label for="email">Email:</label>
-                                        <input type="email" id="email" name="email" required>
-                                    </div>
-                                    <div class="form-group">
-                                        <label for="phone">Phone Number:</label>
-                                        <input type="text" id="phone" name="phone_number" >
-                                    </div>-->
+                            <div class="form-group">
+                                <label for="unit">Unit:</label>
+                                <select id="unit" name="unit" required>
+                                    <option value="">Select Unit</option>
+                                    <option value="kg">Kilograms (kg)</option>
+                                    <option value="packs">Packs</option>
+                                    <option value="box">Box</option>
+                                </select>
+                            </div>
 
-                                    <button type="submit" class="button" onclick="submitmessage()">Submit Request</button>
-                                    <button type="submit" class="button" onclick="refreshPage()">Cancel</button>
-                                </div>
-                            </form>
-                            
+                            <div class="form-group">
+                                <label for="total_amount">Total Amount:</label>
+                                <input type="number" id="total_amount" name="total_amount" min="1" max="50" required>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="price_per_unit">Price Per Unit:</label>
+                                <input type="number" id="price_per_unit" name="price_per_unit" readonly>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="total_price">Total Price:</label>
+                                <input type="number" id="total_price" name="total_price" readonly>
+                            </div>
+                            <button type="submit" class="button">Submit Request</button>
+                            <button type="button" class="button"
+                                onclick="document.getElementById('fertilizerForm').reset()">Cancel</button>
                         </div>
-                    </div>
+                    </form>
+
                 </div>
-            </main>
-        </section>
-        <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+            </div>
+            <div class="order">
+                <div class="head">
+                    <h3>Fertilizer Requests History</h3>
+                </div>
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>Order id</th>
+                            <th>Fertilizer Type</th>
+                            <th>Order Date</th>
+                            <th>Order Time</th>
+                            <th>Amount</th>
+                            <th>Unit</th>
+                            <th>Price</th>
+                            <th>Payment Status</th>
+                            <th>Update order</th>
+                            <th>Cancel order</th>
+                        </tr>
+                    </thead>
+                    <tbody>
 
-<!-- TEA ORDER CHART -->
+                        <?php foreach ($data['orders'] as $order): ?>
+                            <tr>
+                                <td><?php echo $order->order_id; ?></td>
+                                <td><?php echo $order->fertilizer_name; ?></td>
+                                <td><?php echo $order->order_date; ?></td>
+                                <td><?php echo $order->order_time; ?></td>
+                                <td><?php echo $order->total_amount; ?></td>
+                                <td><?php echo $order->unit; ?></td>
+                                <td><?php echo $order->total_price; ?></td>
+                                <td><?php echo isset($order->payment_status) ? $order->payment_status : 'Pending'; ?></td>
+                                <td>
+                                    <a href="<?php echo URLROOT; ?>/Supplier/editFertilizerRequest/<?php echo $order->order_id; ?>"
+                                        class="btn-edit btn-primary">
+                                        Edit
+                                    </a>
+                                </td>
+                                <td>
+                                    <button class="btn-delete" data-id="<?php echo $order->order_id; ?>">Delete</button>
+                                </td>
+                            </tr>
+                        <?php endforeach; ?>
+
+                    </tbody>
+                </table>
+            </div>
+        </div>
+</main>
+</section>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="<?php echo URLROOT; ?>/css/script.js"></script>
 <script>
-    document.addEventListener('DOMContentLoaded', function() {
-        var ctx = document.getElementById('fertilizerChart').getContext('2d');
-        var fertilizerChart = new Chart(ctx, {
-            type: 'line',
-            data: {
-                labels: ['January', 'February', 'March', 'April', 'May', 'June'],
-                datasets: [{
-                    label: 'Requests',
-                    data: [120, 10, 200, 180, 220, 80], // Example data 
-                    fill: false,
-                    backgroundColor: 'rgba(75, 192, 192, 0.2)',
-                    borderColor: 'rgba(75, 192, 192, 1)',
-                    borderWidth: 2
-                }]
-            },
-            options: {
-                responsive: true,
-                plugins: {
-                    legend: {
-                        position: 'bottom',
-                    },
-                    title: {
-                        display: true,
-                        text: 'Requests (Monthly)'
-                    }
-                },
-                scales: {
-                    x: {
-                        title: {
-                            display: true,
-                            text: 'Month'
-                        }
-                    },
-                    y: {
-                        title: {
-                            display: true,
-                            text: 'Number of Requests'
-                        },
-                        beginAtZero: true
-                    }
-                }
-            }
-        });
-    });
+    window.FERTILIZER_TYPES = <?php echo json_encode($data['fertilizer_types']); ?>;
 </script>
-<script src="../public/script.js"></script>
-    
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
-    <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            var ctx = document.getElementById('fertilizerRequestChart').getContext('2d');
-            var fertilizerRequestChart = new Chart(ctx, {
-                type: 'pie',
-                data: {
-                    labels: ['June', 'July', 'August', 'September', 'October', 'November'],
-                    datasets: [{
-                        data: [120, 10, 200, 180, 220, 80 ], // Example data for tea orders
-                        backgroundColor: [
-                            'rgba(255, 99, 132, 0.8)',
-                            'rgba(54, 162, 235, 0.8)',
-                            'rgba(255, 206, 86, 0.8)',
-                            'rgba(75, 192, 192, 0.8)',
-                            'rgba(153, 102, 255, 0.8)',
-                            'rgba(255, 159, 64, 0.8)'
-                        ],
-                        borderColor: [
-                            'rgba(255, 99, 132, 1)',
-                            'rgba(54, 162, 235, 1)',
-                            'rgba(255, 206, 86, 1)',
-                            'rgba(75, 192, 192, 1)',
-                            'rgba(153, 102, 255, 1)',
-                            'rgba(255, 159, 64, 1)'
-                        ],
-                        borderWidth: 1
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    plugins: {
-                        legend: {
-                            position: 'bottom',
-                        },
-                        title: {
-                            display: true,
-                            text: 'Fertilizer Request History (Monthly Distribution)'
-                        }
-                    }
+
+
+
+
+<script>
+
+    /* FERTILIZER REQUESTS */
+    /* ORDER POPUP */
+    document.getElementById('fertilizerForm').addEventListener('submit', function (e) {
+        e.preventDefault();
+
+        const formData = new FormData(this);
+
+        fetch('<?php echo URLROOT; ?>/supplier/createFertilizerOrder', {
+            method: 'POST',
+            body: formData
+        })
+            .then(response => response.json())
+            .then(data => {
+                showNotification(data.message, data.success);
+                if (data.success) {
+                    setTimeout(() => {
+                        window.location.reload();
+                    }, 3000);
                 }
+            })
+            .catch(error => {
+                showNotification('An error occurred. Please try again.', false);
             });
-        });
-    </script>
-    <script src="<?php echo URLROOT; ?>/css/components/script.js"></script>
-</html>
+    });
+
+    function showNotification(message, isSuccess) {
+        const notification = document.getElementById('notification');
+        notification.textContent = message;
+        notification.className = 'notification ' + (isSuccess ? 'success' : 'error');
+        notification.style.display = 'block';
+
+        // Fade out after 3 seconds
+        setTimeout(() => {
+            notification.style.animation = 'fadeOut 0.5s ease-out';
+            setTimeout(() => {
+                notification.style.display = 'none';
+                notification.style.animation = '';
+            }, 500);
+        }, 3000);
+    }
+
+</script>
+
+<!-- DELETE MODAL -->
+
+<div id="deleteModal" class="modal">
+    <div class="modal-content">
+        <h2>Confirm Delete</h2>
+        <p>Are you sure you want to delete this order?</p>
+        <div class="modal-buttons">
+            <button id="confirmDeleteBtn" class="btn-delete"
+                onclick="window.location.href='<?php echo URLROOT; ?>/Supplier/deleteFertilizerRequest/<?php echo $order->order_id; ?>'">Delete</button>
+            <button onclick="closeModal()" class="btn-cancel">Cancel</button>
+        </div>
+    </div>
+</div>
+</div>
 </body>
-    
+
+</html>

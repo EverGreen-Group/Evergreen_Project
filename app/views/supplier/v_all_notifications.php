@@ -22,36 +22,47 @@
     
                 <div class="table-data">
                     <div class="order">
-                        <div>
+                        <div class="head">
+                            <h3>Notifications</h3>
+                        </div>
+                        <div class="table-data">
+                            <div class="order">
+                                <div>
                             <table class="complaint-type">
                                 <tr>
                                     <th>Notification</th>
-                                    <th>Date and Time</th>
+                                    <th>Date</th>
+                                    <th>Time</th>
                                     <th>Done</th>
                                 </tr>
                                 <tr>
                                     <td>collection today at 10:00pm</td>
                                     <td>2024/11/10</td>
-                                    <td class="btn-done">Done</td>
+                                    <td>12:02am</td>
+                                    <td class="btn-done">Pending</td>
                                 </tr>
                                 <tr>
                                     <td>collection confirmed</td>
                                     <td>2024/11/04</td>
+                                    <td>10:56am</td>
                                     <td class="btn-done">Done</td>
                                 </tr>
                                 <tr>
                                     <td>leaf collection today at 08:00am</td>
                                     <td>2024/10/27</td>
+                                    <td>01:32am</td>
                                     <td class="btn-done">Done</td>
                                 </tr>
                                 <tr>
                                     <td>collection late message</td>
                                     <td>2024/10/20</td>
+                                    <td>03:34pm</td>
                                     <td class="btn-done">Done</td>
                                 </tr>
                                 <tr>
                                     <td>collection confirm request</td>
                                     <td>2024/10/11</td>
+                                    <td>12:59pm</td>
                                     <td class="btn-done">Done</td>
                                 </tr>
                             </table>
@@ -64,7 +75,7 @@
             </main>
             </div>
         </section>
-        <script src="<?php echo URLROOT; ?>/css/components/script.js"></script>
+        <script src="<?php echo URLROOT; ?>/css/script.js"></script>
     </body>
     </html>
     
