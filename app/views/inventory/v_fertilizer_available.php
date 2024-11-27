@@ -22,10 +22,10 @@
 
         <header style="margin: 20px;">
             <h1>Fertilizer</h1>
-            <div class="search-filter">
+            <!-- <div class="search-filter">
                 <input type="text" placeholder="Search">
                 <button class="filter-btn">Filter</button>
-            </div>
+            </div> -->
             <a href="<?php echo URLROOT; ?>/inventory/fertilizerdashboard">
                 <button class="create-btn">Fertilizer Dashboard</button>
             </a>
@@ -54,7 +54,7 @@
                             <td>ishan</td>
                             <td>galle</td>
                             <td>Nov 23, 2023</td>
-                            <td><span class="status accept">Accept</span></td>
+                            <td><span class="status">Accept</span></td>
                             <td><button class="action-btn accept-btn">Approve</button></td>
                             <td><button class="action-btn reject-btn">Reject</button></td>
                         </tr>
@@ -65,7 +65,7 @@
                             <td>Simaak</td>
                             <td>galle</td>
                             <td>Nov 23, 2023</td>
-                            <td><span class="status accept">Accept</span></td>
+                            <td><span class="status">Accept</span></td>
                             <td><button class="action-btn accept-btn">Approve</button></td>
                             <td><button class="action-btn reject-btn">Reject</button></td>
                         </tr>

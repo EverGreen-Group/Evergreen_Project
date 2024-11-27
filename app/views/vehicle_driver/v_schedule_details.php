@@ -2,7 +2,23 @@
 <?php require APPROOT . '/views/inc/components/sidebar_vehicle_driver.php'; ?>
 <?php require APPROOT . '/views/inc/components/topnavbar.php'; ?>
 
+<?php
+function isWithinShiftTime($startTime, $endTime) {
+    $now = new DateTime();
+    $startDateTime = new DateTime($startTime);
+    $endDateTime = new DateTime($endTime);
+
+    // Debug output
+    echo "Current time: " . $now->format('Y-m-d H:i:s') . "<br>";
+    echo "Start time: " . $startDateTime->format('Y-m-d H:i:s') . "<br>";
+    echo "End time: " . $endDateTime->format('Y-m-d H:i:s') . "<br>";
+
+    return $now >= $startDateTime && $now <= $endDateTime;
+}
+?>
+
 <main class="schedule-details-main">
+
     <div class="content-header">
         <div class="header-text">
             <h1>Collection Details</h1>
@@ -58,8 +74,8 @@
                     <tbody>
                         <?php foreach ($data['routeSuppliers'] as $supplier): ?>
                         <tr>
-                            <td><?php echo htmlspecialchars($supplier->supplier_name); ?></td>
-                            <td><?php echo htmlspecialchars($supplier->location); ?></td>
+                            <td><?php echo htmlspecialchars($supplier->first_name . ' ' . $supplier->last_name); ?></td>
+                            <td><?php echo htmlspecialchars($supplier->coordinates); ?></td>
                             <td><?php echo htmlspecialchars($supplier->contact_number); ?></td>
                             <td>
                                 <?php if (isset($supplier->collection_status)): ?>
@@ -82,12 +98,34 @@
         <?php if ($data['userRole'] == 'driver' || $data['userRole'] == 'driving_partner'): ?>
             <section class="ready-status">
                 <h2>Ready Status</h2>
-                <?php if ($data['isReady']): ?>
+                <?php 
+                $shiftStartTime = date('Y-m-d ') . $data['schedule']->start_time;
+                $shiftEndTime = date('Y-m-d ') . $data['schedule']->end_time;
+                $isTimeValid = isWithinShiftTime($shiftStartTime, $shiftEndTime);
+
+                echo "Is time valid? " . ($isTimeValid ? 'Yes' : 'No') . "<br>";
+                ?>
+
+                <?php if ($data['collection'] && $data['collection']->start_time): ?>
+                    <div class="collection-started">
+                        <p>Collection in progress</p>
+                        <a href="<?php echo URLROOT; ?>/vehicledriver/collection/<?php echo $data['collection']->collection_id; ?>" 
+                           class="btn btn-primary">
+                            <i class="fas fa-route"></i> View Collection Route
+                        </a>
+                    </div>
+                <?php elseif ($data['isReady']): ?>
                     <p>You are marked as ready for this collection.</p>
                 <?php else: ?>
-                    <form action="<?php echo URLROOT; ?>/vehicledriver/setReady/<?php echo $data['schedule']->schedule_id; ?>" method="POST">
-                        <button type="submit" class="btn btn-primary">Mark as Ready</button>
-                    </form>
+                    <?php if ($isTimeValid): ?>
+                        <form action="<?php echo URLROOT; ?>/vehicledriver/setReady/<?php echo $data['schedule']->schedule_id; ?>" method="POST">
+                            <button type="submit" class="btn btn-primary">Mark as Ready</button>
+                        </form>
+                    <?php else: ?>
+                        <div class="time-notice">
+                            <p>You can mark yourself as ready only during the shift time.</p>
+                        </div>
+                    <?php endif; ?>
                 <?php endif; ?>
             </section>
         <?php endif; ?>
@@ -328,6 +366,31 @@
     .header-actions {
         display: flex;
         gap: 1rem;
+    }
+
+    .collection-started {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 1rem;
+        background-color: #d1fae5;
+        border-radius: 8px;
+        margin-top: 1rem;
+    }
+
+    .collection-started p {
+        color: #065f46;
+        font-weight: 500;
+        margin: 0;
+    }
+
+    .time-notice {
+        background-color: #fff3cd;
+        color: #856404;
+        padding: 1rem;
+        border-radius: 6px;
+        margin-top: 1rem;
+        text-align: center;
     }
 </style>
 

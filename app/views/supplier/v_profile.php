@@ -21,7 +21,7 @@
                 </ul>
             </div>
                 
-            <a href="<?php echo URLROOT; ?>/Supplier/change_password/" >
+            <a href="<?php echo URLROOT; ?>/Supplier/changepassword/" >
                 <button class="button">Change Password</button>
             </a>
 
@@ -68,9 +68,36 @@
         </div>
     </main>
 </section>
-<script src="<?php echo URLROOT; ?>/css/components/script.js"></script>
+<script src="<?php echo URLROOT; ?>/css/script.js"></script>
 </body>
 </html>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

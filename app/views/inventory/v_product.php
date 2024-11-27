@@ -29,8 +29,8 @@
 
             </div>
             <div class="header-actions">
-                <input type="text" placeholder="Search">
-                <button class="filter-btn">Filter</button>
+                <!-- <input type="text" placeholder="Search">
+                <button class="filter-btn">Filter</button> -->
                 
                 <a href="<?php echo URLROOT; ?>/inventory/createproduct">
                     <button class="create-product">+ Create New Product</button>
@@ -57,7 +57,7 @@
                         <div class="product-info">
                             <h3><?php echo $product->product_name; ?></h3>
                             <p>Quantity: <?php echo $product->quantity; ?>     <?php echo $product->unit; ?></p>
-                            <p>Price: $<?php echo $product->price; ?></p>
+                            <p>Price: Rs.<?php echo $product->price; ?></p>
                         </div>
                     </div>
                 <?php endforeach; ?>
@@ -136,7 +136,7 @@
             document.getElementById('modal-product-code').textContent = product.code;
             document.getElementById('modal-product-location').textContent = product.location;
             document.getElementById('modal-product-details').textContent = product.details;
-            document.getElementById('modal-product-price').textContent = '$' + product.price;
+            document.getElementById('modal-product-price').textContent = 'Rs.' + product.price;
             document.getElementById('modal-product-quantity').textContent = product.quantity;
             document.getElementById('modal-product-unit').textContent = product.unit;
 

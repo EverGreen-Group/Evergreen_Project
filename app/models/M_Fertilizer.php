@@ -28,13 +28,33 @@ class M_Fertilizer{
         else{
             return false;
         }
-
-
-
         
+    }
 
+    public function getfertilizer(){
+        $sql = "SELECT * FROM Fertilizer";
+        $this->db->query($sql);
 
-        
+        try {
+            return $this->db->resultSet();
+        } catch (PDOException $e) {
+            error_log("Database Error: " . $e->getMessage());
+            return false;
+        }
+    }
+
+    public function deleteFertilizer($id){
+        $sql = "DELETE FROM Fertilizer WHERE id = :id";
+        $this->db->query($sql);
+        $this->db->bind('id', $id);
+        return $this->db->execute();
+    }
+
+    public function getFertilizerById($id){
+        $sql = "SELECT * FROM Fertilizer WHERE id = :id";
+        $this->db->query($sql);
+        $this->db->bind('id', $id);
+        return $this->db->single();
     }
 }
 

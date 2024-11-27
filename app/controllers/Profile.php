@@ -5,66 +5,37 @@ require_once '../app/helpers/RoleHelper.php';
 
 class Profile extends Controller {
     private $userModel;
+    private $driverModel;
 
     public function __construct() {
-        // Check if user is logged in
-        requireAuth();
-        
-        // Initialize user model
-        $this->userModel = new M_User();
+        $this->userModel = $this->model('M_User');
+        $this->driverModel = $this->model('M_Driver');
     }
 
     public function index() {
-        // Get user data
-        $userId = $_SESSION['user_id'];
-        // $userData = $this->userModel->getUserById($userId);
-        
-        $data = [];
-        // Get role-specific data
-        // $roleSpecificData = $this->getRoleSpecificData($userData->role);
-
-        // $data = [
-        //     'userData' => $userData,
-        //     'roleData' => $roleSpecificData,
-        //     'userRole' => RoleHelper::getRole(),
-        //     'isAdmin' => RoleHelper::isAdmin(),
-        // ];
-
-        // Load the appropriate view based on user role
-        $this->view('pages/profile', $data);
-    }
-
-    private function getRoleSpecificData($role) {
-        switch($role) {
-            case RoleHelper::VEHICLE_MANAGER:
-                return [
-                    'vehicles' => $this->userModel->getAssignedVehicles($_SESSION['user_id']),
-                    'teams' => $this->userModel->getAssignedTeams($_SESSION['user_id'])
-                ];
-            case RoleHelper::SUPPLIER:
-                return [
-                    'collections' => $this->userModel->getSupplierCollections($_SESSION['user_id']),
-                    'statistics' => $this->userModel->getSupplierStats($_SESSION['user_id'])
-                ];
-            case RoleHelper::DRIVER:
-                return [
-                    'assignedVehicle' => $this->userModel->getDriverVehicle($_SESSION['user_id']),
-                    'assignedTeam' => $this->userModel->getDriverTeam($_SESSION['user_id']),
-                    'collections' => $this->userModel->getDriverCollections($_SESSION['user_id'])
-                ];
-            case RoleHelper::PARTNER:
-                return [
-                    'assignedTeam' => $this->userModel->getPartnerTeam($_SESSION['user_id']),
-                    'collections' => $this->userModel->getPartnerCollections($_SESSION['user_id'])
-                ];
-            case RoleHelper::ADMIN:
-                return [
-                    'systemStats' => $this->userModel->getSystemStats(),
-                    'userManagement' => $this->userModel->getUserManagementStats()
-                ];
-            default:
-                return [];
+        // Check if user is logged in
+        if (!isset($_SESSION['user_id'])) {
+            redirect('users/login');
         }
+
+        // Get basic user info
+        $userInfo = $this->userModel->getUserById($_SESSION['user_id']);
+        
+        // Initialize data array
+        $data = [
+            'title' => 'Profile',
+            'userInfo' => $userInfo,
+            'driverDetails' => null,
+            'financial' => [] // Initialize if needed
+        ];
+
+        // If user is a driver, get driver-specific details
+        if (RoleHelper::hasRole(RoleHelper::DRIVER)) {
+            $driverDetails = $this->driverModel->getDriverDetails($_SESSION['user_id']);
+            $data['driverDetails'] = $driverDetails;
+        }
+
+        $this->view('pages/profile', $data);
     }
 
     public function update() {

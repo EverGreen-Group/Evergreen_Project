@@ -7,7 +7,6 @@
   <title><?php echo SITENAME; ?></title>
   <link rel="stylesheet" href="<?php echo URLROOT; ?>/css/components/topnavbar_style.css" />
   <link href="https://unpkg.com/boxicons@2.0.9/css/boxicons.min.css" rel="stylesheet" />
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 
 <body>
@@ -16,6 +15,7 @@
   <?php require APPROOT . '/views/inc/components/topnavbar.php' ?>
   <!-- Side bar -->
   <?php require APPROOT . '/views/inc/components/sidebar_inventory.php' ?>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <style>
     /* Reset some default styles */
     /* * {
@@ -24,13 +24,10 @@
       padding: 0;
     } */
 
-    body {
-      font-family: Arial, sans-serif;
-      background-color: #f5f5f5;
-    }
+    
 
 
-    .card {
+    .card1 {
       background-color: #00a99d;
       color: #fff;
       padding: 20px;
@@ -202,6 +199,162 @@
       font-size: 14px;
     }
 
+    .chart-container {
+      background-color: #fff;
+      border-radius: 5px;
+      padding: 20px;
+      margin: 20px;
+      width: 100%;
+      height: 400px;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    }
+
+
+    /* item card css */
+
+    .card4 {
+    
+      margin: 20px;
+      margin-right: 20px;
+      background-color: white;
+      border-radius: 8px;
+      box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
+      border: 1px solid #e5e7eb;
+      font-family: Arial, sans-serif;
+    }
+
+    .card-header {
+      padding: 24px 24px 8px 24px;
+    }
+
+    .header-content {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .title-group {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .id-number {
+      color: #6B7280;
+    }
+
+    .title {
+      font-size: 18px;
+      font-weight: 600;
+      margin: 0;
+    }
+
+    .badge {
+      background-color: #EFF6FF;
+      color: #1D4ED8;
+      padding: 4px 12px;
+      border-radius: 9999px;
+      font-size: 14px;
+      font-weight: 500;
+    }
+
+    .card-content {
+      padding: 16px 24px 24px 24px;
+    }
+
+    .metadata-container {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 24px;
+      font-size: 14px;
+      color: #4B5563;
+    }
+
+    .metadata-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .icon {
+      width: 16px;
+      height: 16px;
+      fill: currentColor;
+    }
+
+    .progress-container {
+      margin-top: 16px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 14px;
+      color: #2563EB;
+    }
+
+    .update-text {
+      color: #6B7280;
+    }
+
+    /* form styles */
+    .form-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 20px;
+    }
+
+    .form-group {
+      margin-bottom: 20px;
+    }
+
+    .form-group label {
+      display: block;
+      margin-bottom: 8px;
+      color: #333;
+    }
+
+    .form-control {
+      width: 100%;
+      padding: 12px;
+      border: 1px solid #ddd;
+      border-radius: 5px;
+      font-size: 14px;
+    }
+
+    .form-control:focus {
+      outline: none;
+      border-color: #4834d4;
+    }
+
+    select.form-control {
+      appearance: none;
+      background: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='none' stroke='%23333' viewBox='0 0 12 12'%3E%3Cpath d='M3 5l3 3 3-3'/%3E%3C/svg%3E") no-repeat right 12px center;
+    }
+
+    .error-text {
+      color: #ff4444;
+      font-size: 12px;
+      margin-top: 5px;
+    }
+
+    .btn {
+      background: #2ec720;
+      color: white;
+      padding: 12px 30px;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      font-size: 16px;
+      float: right;
+    }
+
+    .btn:hover {
+      background: #3a2bb7;
+    }
+
+    .cardrelese{
+      width: 100%;
+    }
+
     /* Add more styles as needed */
   </style>
   </head>
@@ -210,19 +363,19 @@
     <!-- Add the rest of the content here -->
 
     <div class="container2">
-      <div class="card">
+      <div class="card1">
         <h3>Last month Export</h3>
         <p>2000kg</p>
       </div>
-      <div class="card">
+      <div class="card1">
         <h3>Processing Stock</h3>
         <p>4000kg</p>
       </div>
-      <div class="card">
+      <div class="card1">
         <h3>Total Exports</h3>
         <p>1900Ton</p>
       </div>
-      <div class="card">
+      <div class="card1">
         <h3>Ready Stock</h3>
         <p>400kg</p>
       </div>
@@ -233,85 +386,143 @@
       <div class="Last-export">
         <h2>Last Exports</h2>
         <ul class="event-list">
-  <!-- Headers -->
-  <li class="event-header">
-    <span class="event-type">Month</span>
-    <span class="event-location">Quantity</span>
-    <span class="event-method">Price</span>
-  </li>
-  <!-- Data Rows -->
-  <li>
-    <span class="event-type">September</span>
-    <span class="event-location">2000</span>
-    <span class="event-method">200</span>
-  </li>
-  <li>
-    <span class="event-type">October</span>
-    <span class="event-location">2500</span>
-    <span class="event-method">190</span>
-  </li>
-  <li>
-    <span class="event-type">November</span>
-    <span class="event-location">2100</span>
-    <span class="event-method">197</span>
-  </li>
-  <li>
-    <span class="event-type">August</span>
-    <span class="event-location">2150</span>
-    <span class="event-method">218</span>
-  </li>
-</ul>
-  
+          <!-- Headers -->
+          <li class="event-header">
+            <span class="event-type">Month</span>
+            <span class="event-location">Quantity</span>
+            <span class="event-method">Price</span>
+          </li>
+          <!-- Data Rows -->
+          <li>
+            <span class="event-type">September</span>
+            <span class="event-location">2000</span>
+            <span class="event-method">200</span>
+          </li>
+          <li>
+            <span class="event-type">October</span>
+            <span class="event-location">2500</span>
+            <span class="event-method">190</span>
+          </li>
+          <li>
+            <span class="event-type">November</span>
+            <span class="event-location">2100</span>
+            <span class="event-method">197</span>
+          </li>
+          <li>
+            <span class="event-type">August</span>
+            <span class="event-location">2150</span>
+            <span class="event-method">218</span>
+          </li>
+        </ul>
+
       </div>
 
-      <section class="pending-works">
-        <h2>Pending Works</h2>
-        <div class="work-item">
-          <div class="work-status progress">
-            <div class="progress-bar"></div>
-            <span>In Process</span>
+      <section class="Last-export">
+        <h2>Relese Exports</h2>
+        <form>
+          <div class="form-grid">
+            <div class="form-group">
+              <label>Export Stock Name*</label>
+              <input type="text" class="form-control" placeholder="Enter First Name" required>
+              <span class="error-text">Please enter stock name</span>
+            </div>
+            <div class="form-group">
+              <label>Company for Export*</label>
+              <input type="text" class="form-control" placeholder="Enter your Last Name">
+              <span class="error-text">Please enter last name</span>
+            </div>
+
+
+            <div class="form-group">
+              <label>Export Confirmation Date*</label>
+              <input type="date" class="form-control" required>
+              <span class="error-text">Please enter squere of land</span>
+            </div>
+            <div class="form-group">
+              <label>Export Manager name*</label>
+              <input type="text" class="form-control" placeholder="Enter First Name" def required>
+              <span class="error-text">Please enter address</span>
+            </div>
+            <div class="form-group">
+              <label>Export Price(per kg)</label>
+              <input type="text" class="form-control" placeholder="Enter Last Name">
+              <span class="error-text">Please enter city</span>
+            </div>
+            <div class="form-group">
+              <label>Export Quantity*</label>
+              <input type="text" class="form-control" placeholder="Enter your...." required>
+              <span class="error-text">Please enter ....</span>
+            </div>
+            <div class="form-group">
+              <label>Export Reg No</label>
+              <input type="text" class="form-control" placeholder="Enter your land reg no" required>
+            </div>
+
           </div>
-          <h3>Green Tea</h3>
-          <p>Nov 16, 2024</p>
-        </div>
-        <div class="work-item">
-          <div class="work-status success">
-            <div class="progress-bar"></div>
-            <span>Packing completed</span>
-          </div>
-          <h3>natural Tea</h3>
-          <p>Jul 17, 2024</p>
-        </div>
-        <div class="work-item">
-          <div class="work-status failed">
-            <div class="progress-bar"></div>
-            <span>In Process</span>
-          </div>
-          <h3>Green Tea</h3>
-          <p>Nov 18, 2024</p>
-        </div>
-        <div class="work-item">
-          <div class="work-status progress">
-            <div class="progress-bar"></div>
-            <span>In Process</span>
-          </div>
-          <h3>Black Tea</h3>
-          <p>Nov 19, 2024</p>
-        </div>
-        <div class="work-item">
-          <div class="work-status success">
-            <div class="progress-bar"></div>
-            <span>Packing Completed</span>
-          </div>
-          <h3>Black Tea</h3>
-          <p>Nov 20, 2024</p>
-        </div>
+          <button type="submit" class="btn">Next</button>
+        </form>
       </section>
     </div>
-
-    <div>
+    <div class="container2">
+      <div class="chart-container">
+        <canvas id="monthlyExportChart"></canvas>
+      </div>
 
     </div>
+    <!-- Add this after your existing container2 div -->
+    <div class='cardrelese'>
+      <?php require APPROOT .'/views/inventory/components/export_card.php';?>
+    </div>
+
+
+
+    <!-- chart javascript of that -->
+
+    <script>
+      document.addEventListener('DOMContentLoaded', function () {
+        var monthlyCtx = document.getElementById('monthlyExportChart').getContext('2d');
+        var monthlyExportChart = new Chart(monthlyCtx, {
+          type: 'bar',
+          data: {
+            labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
+            datasets: [{
+              label: 'Export Quantity (kg)',
+              data: [2000, 2200, 1800, 2400, 2100, 1900, 2300, 2150, 2000, 2500, 2100, 1950], // Replace with your actual data
+              backgroundColor: '#00a99d',
+              borderColor: '#008f84',
+              borderWidth: 1
+            }]
+          },
+          options: {
+            responsive: true,
+            scales: {
+              y: {
+                beginAtZero: true,
+                title: {
+                  display: true,
+                  text: 'Export Quantity (kg)'
+                }
+              },
+              x: {
+                title: {
+                  display: true,
+                  text: 'Months'
+                }
+              }
+            },
+            plugins: {
+              title: {
+                display: true,
+                text: 'Monthly Export Overview',
+                font: {
+                  size: 16
+                }
+              }
+            }
+          }
+        });
+      });
+    </script>
   </body>
 
 </html>

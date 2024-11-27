@@ -23,7 +23,7 @@ li {
 
 	--light: #f9f9f9;
 	--main: #007664;
-	--light-main: #cbeae5;
+	--light-main: #f0f2f2;
 	--grey: #d8e9e5;
 	--dark-grey: #aaaaaa;
 	--dark: #342E37;
@@ -46,6 +46,7 @@ body.dark {
 	--dark: #FBFBFB;
 	--light-grey: #7d7d7d;
 	--light-black: #2e315a;
+	--light-main: #656886;
 }
 
 body {
@@ -453,17 +454,17 @@ body {
 	padding-bottom: 10px;
 	font-size: 15px;
 	text-align: center;
-	color: black;
+	color: var(--dark);
 	border: none;
 	border-radius: 10px 10px 0 0;
-	border-bottom: 1px solid var(--grey);
+	border-bottom: 0.2px solid var(--grey);
 }
 #content main .table-data .order table td {
 	padding: 16px 0;
 	color: black;
 	text-align: center;
     vertical-align: middle;
-	border-bottom: 1px solid var(--dark-grey);
+	border-bottom: 0.2px solid var(--grey);
 	background-color: var(--light-main);
 	height: 80px;
 }
@@ -620,7 +621,8 @@ body {
     color: #888;
 }
 .button {
-    margin-top: 1rem;
+    margin-top: 15px;
+    margin-right: 10px;
     padding: 0.75rem 2rem;
     background-color: #008000; 
     color: #fff;
@@ -734,8 +736,8 @@ body {
 }
 .btn-primary {
 	color: white;
-	width: 100px;
-	height: 40px;
+	width: 80px;
+	height: 35px;
 	display: flex;
 	justify-content: center;
 	align-items: center;
@@ -815,12 +817,12 @@ body {
 	width: 40%;
 }
 .reviews li {
-	background-color: rgba(89, 255, 64, 0.626);
+	background-color: rgb(224, 224, 232);
 	color: black;
 	padding: 15px;
-	border-radius: 10px;
-	border: 1px solid rgb(19, 145, 0);
-	width: 150%;
+	border-radius: 8px;
+	border: 1px solid rgb(204, 205, 213);
+	width: 200%;
 	align-content: center;
 }
 .reviews {
@@ -836,13 +838,6 @@ body {
 	padding: 20px;
 	margin-right: 30px;
 	background-color: var(--light);
-}
-.rating-container{
-	background-color: rgba(89, 255, 64, 0.626);
-	flex: 1;
-	padding: 10px;
-	border-radius: 20px;
-	border: 1px solid rgb(19, 145, 0);
 }
 #review-container {
 	background-color: var(--light-black);
@@ -910,7 +905,6 @@ body {
     background-color: var(--light-black);
 	padding: 30px;
 }
-}
 .profile-info label {
     display: inline-block;
     width: 120px;
@@ -923,10 +917,6 @@ body {
     margin-bottom: 15px;
     border: 1px solid #ddd;
     border-radius: 4px;
-}
-.button {
-    margin-top: 15px;
-    margin-right: 10px;
 }
 .profile-info tr td {
     padding: 10px 20px;
@@ -1038,4 +1028,122 @@ a {
 }
 .pending-btn {
 	background-color: chocolate;
+}
+
+
+/*DELETE MODAL STYLES */
+.modal {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    z-index: 1000;
+    justify-content: center;
+    align-items: center;
+}
+
+.modal-content {
+    background-color: #fff;
+    padding: 20px;
+    border-radius: 5px;
+    width: 90%;
+    max-width: 500px;
+    position: relative;
+    animation: modalFadeIn 0.3s ease-out;
+}
+
+@keyframes modalFadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(-20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.modal h2 {
+    margin: 0 0 15px 0;
+    color: #333;
+}
+
+.modal p {
+    margin: 0 0 20px 0;
+    color: #666;
+}
+
+.modal-buttons {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+}
+
+.btn-delete {
+    background-color: #dc3545;
+    color: white;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+.btn-delete:hover {
+    background-color: #c82333;
+}
+
+.btn-cancel {
+    background-color: #6c757d;
+    color: white;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+.btn-cancel:hover {
+    background-color: #5a6268;
+}
+
+/* ORDER POPUP */
+.popup {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    padding: 15px 25px;
+    border-radius: 5px;
+    z-index: 1000;
+    animation: slideIn 0.5s ease-out;
+}
+
+.popup-success {
+    background-color: #4CAF50;
+    color: white;
+}
+
+.popup-error {
+    background-color: #f44336;
+    color: white;
+}
+
+@keyframes slideIn {
+    from {
+        transform: translateX(100%);
+        opacity: 0;
+    }
+    to {
+        transform: translateX(0);
+        opacity: 1;
+    }
+}
+
+.popup-content {
+    display: flex;
+    align-items: center;
+    gap: 10px;
 }

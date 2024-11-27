@@ -70,84 +70,54 @@ class M_Vehicle {
 
     public function createVehicle($data) {
         try {
-            // Check if license plate already exists
-            if ($this->checkLicensePlateExists($data['license_plate'])) {
-                return "Error: License plate '" . $data['license_plate'] . "' already exists";
-            }
-
             $this->db->beginTransaction();
 
-            // First insert the vehicle
-            $this->db->query('INSERT INTO vehicles (
-                license_plate, status, vehicle_type, owner_name, 
-                owner_contact, capacity, seating_capacity, 
-                insurance_expiry_date, road_tax_expiry_date, 
-                color, engine_number, chassis_number, 
-                `condition`, last_serviced_date, last_maintenance, 
-                next_maintenance, mileage, fuel_type, 
-                registration_date
+            $sql = "INSERT INTO vehicles (
+                license_plate, vehicle_type, engine_number, chassis_number,
+                status, `condition`, make, model, manufacturing_year,
+                color, fuel_type, mileage, capacity, seating_capacity,
+                owner_name, owner_contact, registration_date,
+                last_serviced_date, last_maintenance, next_maintenance
             ) VALUES (
-                :license_plate, :status, :vehicle_type, :owner_name,
-                :owner_contact, :capacity, :seating_capacity,
-                :insurance_expiry_date, :road_tax_expiry_date,
-                :color, :engine_number, :chassis_number,
-                :condition, :last_serviced_date, :last_maintenance,
-                :next_maintenance, :mileage, :fuel_type,
-                :registration_date
-            )');
+                :license_plate, :vehicle_type, :engine_number, :chassis_number,
+                :status, :condition, :make, :model, :manufacturing_year,
+                :color, :fuel_type, :mileage, :capacity, :seating_capacity,
+                :owner_name, :owner_contact, :registration_date,
+                :last_serviced_date, :last_maintenance, :next_maintenance
+            )";
 
-            // Bind values
+            $this->db->query($sql);
+
+            // Bind values with correct data types and NULL handling
             $this->db->bind(':license_plate', $data['license_plate']);
-            $this->db->bind(':status', $data['status']);
             $this->db->bind(':vehicle_type', $data['vehicle_type']);
-            $this->db->bind(':owner_name', $data['owner_name']);
-            $this->db->bind(':owner_contact', $data['owner_contact']);
-            $this->db->bind(':capacity', $data['capacity']);
-            $this->db->bind(':seating_capacity', $data['seating_capacity']);
-            $this->db->bind(':insurance_expiry_date', $data['insurance_expiry_date']);
-            $this->db->bind(':road_tax_expiry_date', $data['road_tax_expiry_date']);
-            $this->db->bind(':color', $data['color']);
             $this->db->bind(':engine_number', $data['engine_number']);
             $this->db->bind(':chassis_number', $data['chassis_number']);
-            $this->db->bind(':condition', $data['condition']);
-            $this->db->bind(':last_serviced_date', $data['last_serviced_date']);
-            $this->db->bind(':last_maintenance', $data['last_maintenance']);
-            $this->db->bind(':next_maintenance', $data['next_maintenance']);
-            $this->db->bind(':mileage', $data['mileage']);
-            $this->db->bind(':fuel_type', $data['fuel_type']);
-            $this->db->bind(':registration_date', $data['registration_date']);
+            $this->db->bind(':status', $data['status'] ?: 'Available');
+            $this->db->bind(':condition', $data['condition'] ?: NULL);
+            $this->db->bind(':make', $data['make'] ?: NULL);
+            $this->db->bind(':model', $data['model'] ?: NULL);
+            $this->db->bind(':manufacturing_year', $data['manufacturing_year'] ?: NULL);
+            $this->db->bind(':color', $data['color'] ?: NULL);
+            $this->db->bind(':fuel_type', $data['fuel_type'] ?: 'Petrol');
+            $this->db->bind(':mileage', $data['mileage'] ?: NULL);
+            $this->db->bind(':capacity', $data['capacity'] ?: NULL);
+            $this->db->bind(':seating_capacity', $data['seating_capacity'] ?: NULL);
+            $this->db->bind(':owner_name', $data['owner_name'] ?: NULL);
+            $this->db->bind(':owner_contact', $data['owner_contact'] ?: NULL);
+            $this->db->bind(':registration_date', $data['registration_date'] ?: NULL);
+            $this->db->bind(':last_serviced_date', $data['last_serviced_date'] ?: NULL);
+            $this->db->bind(':last_maintenance', $data['last_maintenance'] ?: NULL);
+            $this->db->bind(':next_maintenance', $data['next_maintenance'] ?: NULL);
 
-            // Execute vehicle insert
-            if (!$this->db->execute()) {
-                throw new Exception("Failed to insert vehicle record");
-            }
-
-            // Get the newly created vehicle ID
-            $vehicleId = $this->db->lastInsertId();
-
-            // Now insert the document record
-            $this->db->query('INSERT INTO vehicle_documents (
-                vehicle_id, document_type, file_path
-            ) VALUES (
-                :vehicle_id, :document_type, :file_path
-            )');
-
-            $this->db->bind(':vehicle_id', $vehicleId);
-            $this->db->bind(':document_type', 'Image');
-            $this->db->bind(':file_path', 'https://i.ikman-st.com/isuzu-elf-freezer-105-feet-2014-for-sale-kalutara/e1f96b60-f1f5-488a-9cbc-620cba3f5f77/620/466/fitted.jpg');
-
-            if (!$this->db->execute()) {
-                throw new Exception("Failed to create vehicle document");
-            }
-
+            $result = $this->db->execute();
             $this->db->commit();
-            error_log("Vehicle and document created successfully");
-            return true;
 
-        } catch (Exception $e) {
+            return $result;
+        } catch (PDOException $e) {
             $this->db->rollBack();
-            error_log("Vehicle Creation Error: " . $e->getMessage());
-            return "Error: " . $e->getMessage();
+            error_log("Error creating vehicle: " . $e->getMessage());
+            return false;
         }
     }
 
@@ -234,30 +204,53 @@ class M_Vehicle {
         return $row->count > 0;
     }
 
-    public function deleteVehicle($vehicleId) {
+    public function deleteVehicle($id) {
         try {
             $this->db->beginTransaction();
 
-            // First delete related documents
-            $this->db->query('DELETE FROM vehicle_documents WHERE vehicle_id = :vehicle_id');
-            $this->db->bind(':vehicle_id', $vehicleId);
-            $this->db->execute();
-
-            // Then delete the vehicle
-            $this->db->query('DELETE FROM vehicles WHERE vehicle_id = :vehicle_id');
-            $this->db->bind(':vehicle_id', $vehicleId);
-            
-            if ($this->db->execute()) {
-                $this->db->commit();
-                return true;
+            // Delete vehicle image if exists
+            $vehicle = $this->getVehicleById($id);
+            if ($vehicle) {
+                $imagePath = APPROOT . '/../public/uploads/vehicle_photos/' . $vehicle->license_plate . '.jpg';
+                if (file_exists($imagePath)) {
+                    unlink($imagePath);
+                }
             }
-            
-            throw new Exception("Failed to delete vehicle");
 
+            // Delete vehicle record
+            $this->db->query('DELETE FROM vehicles WHERE vehicle_id = :id');
+            $this->db->bind(':id', $id);
+            
+            $result = $this->db->execute();
+            $this->db->commit();
+            
+            return $result;
         } catch (Exception $e) {
             $this->db->rollBack();
+            error_log("Error deleting vehicle: " . $e->getMessage());
             return false;
         }
+    }
+
+    public function isVehicleInUse($vehicle_id) {
+        // Check if vehicle is assigned to any active collection schedules
+        $this->db->query('SELECT COUNT(*) as count FROM collection_schedules WHERE vehicle_id = :vehicle_id AND status = "active"');
+        $this->db->bind(':vehicle_id', $vehicle_id);
+        $result = $this->db->single();
+        
+        return $result->count > 0;
+    }
+
+    public function getVehicleDocuments($vehicleId) {
+        $this->db->query("SELECT * FROM vehicle_document WHERE vehicle_id = :vehicle_id");
+        $this->db->bind(':vehicle_id', $vehicleId);
+        return $this->db->resultSet();
+    }
+
+    public function getMaintenanceRecords($vehicleId) {
+        $this->db->query("SELECT * FROM maintenance_records WHERE vehicle_id = :vehicle_id ORDER BY maintenance_date DESC");
+        $this->db->bind(':vehicle_id', $vehicleId);
+        return $this->db->resultSet();
     }
 
 }

@@ -17,7 +17,7 @@ class Inventory extends controller
 
     public function index()
     {
-        $products = $this->productModel->getProduct();
+        $products = $this->productModel->getAllProducts();
 
         $data = [
             'products' => $products
@@ -36,10 +36,19 @@ class Inventory extends controller
         $this->view('inventory/v_product', $data);
     }
 
+    public function getfertilizer(){
+        
+    }
+    public function order(){
+        $data = [];
+
+        $this->view('inventory/v_order', $data);
+    }
+
     public function createproduct()
     {
         if ($_SERVER['REQUEST_METHOD'] == 'POST') {
-            $_POST = filter_input_array(INPUT_POST, FILTER_SANITIZE_STRING);
+            $_POST = filter_input_array(INPUT_POST);
             $data = [
                 'product-name' => trim($_POST['product-name']),
                 "location" => trim($_POST['location']),
@@ -119,9 +128,12 @@ class Inventory extends controller
             ) {
 
                 if ($this->productModel->createProduct($data)) {
-
+                    flash('product_message', 'Product Added');
                     redirect('inventory/product');
                 } else {
+                    echo "<pre>";
+                    print_r($data);
+                    echo "</pre>";
                     die('Something went wrong');
                 }
             } else {
@@ -151,9 +163,19 @@ class Inventory extends controller
 
     public function fertilizerdashboard()
     {
-        $data = [];
+
+        $fertilizer = $this->fertilizerModel->getfertilizer();
+        $data = [
+            'fertilizer' => $fertilizer
+        ];
+
+        
 
         $this->view('inventory/v_fertilizer_dashboard', $data);
+
+        echo "<pre>";
+        print_r($data);
+        echo "</pre>";
     }
 
     public function fertilizer()
@@ -244,6 +266,45 @@ class Inventory extends controller
             $this->view('inventory/v_create_fertilizer', $data);
         }
 
+    }
+
+    public function updatefertilizer($id){
+
+        if($_SERVER['REQUEST_METHOD']=='POST'){
+            $data = [
+                 'id' => $id,
+                'fertilizer_name' => $_POST['fertilizer_name'],
+                'company_name' => $_POST['company_name'],
+                'details' => $_POST['details'],
+                'code' => $_POST['code'],
+                'price' => $_POST['price'],
+                'quantity' => $_POST['quantity'],
+                'unit' => $_POST['unit'],
+                'fertilizer_name_err' => '',
+                'company_name_err' => '',
+                'details_err' => '',
+                'code_err' => '',
+                'price_err' => '',
+                'quantity_err' => '',
+                'unit_err' => '',
+
+            ];
+
+            if (
+                !empty($data['fertilizer_name']) && !empty($data['company_name']) && !empty($data['details'])
+                && !empty($data['code']) && !empty($data['price']) && !empty($data['quantity']) && !empty($data['unit'])
+            ){
+
+            }
+
+        }else{
+            $fertilizer = $this->fertilizerModel->getFertilizerById($id);
+            $data = [
+                'id' => $id,
+                'fertilizer' => $fertilizer
+            ];  
+            $this->view('inventory/v_update_fertilizer', $data);
+        }
     }
 
     public function machine()
@@ -392,5 +453,24 @@ class Inventory extends controller
         }
         redirect('inventory/product');
     }
+
+    public function recodes(){
+        $data = [];
+
+        $this->view('inventory/v_recodes', $data);
+    }
+
+    public function deletefertilizer($id){
+        if($_SERVER['REQUEST_METHOD']=='GET'){
+            if($this->fertilizerModel->deleteFertilizer($id)){
+                flash('fertilizer_message', 'Fertilizer Removed');
+            }else{
+                flash('fertilizer_message', 'Something went wrong', 'alert alert-danger');
+            }
+        }
+        redirect('inventory/fertilizerdashboard');
+    }
+
+ 
 
 }
