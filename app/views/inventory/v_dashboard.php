@@ -4,6 +4,228 @@
 <?php require APPROOT . '/views/inc/components/sidebar_inventory.php' ?>
 <!-- Top nav bar -->
 <?php require APPROOT . '/views/inc/components/topnavbar.php' ?>
+<head>
+	<style>
+		
+/*inventory dashboard topselling ection*/
+
+.top-selling-section {
+  margin: 40px auto;
+  padding: 20px;
+  background-color: #fff;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+/* Section header */
+.section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.section-header h2 {
+  font-size: 24px;
+  color: #333;
+}
+
+.section-header .view-all {
+  font-size: 16px;
+  color: #27ae60;
+  text-decoration: none;
+}
+
+.section-header .view-all:hover {
+  text-decoration: underline;
+}
+
+/* Product grid */
+.product-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 20px;
+}
+
+.product-card {
+  background-color: #fff;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  padding: 20px;
+  text-align: center;
+  transition: box-shadow 0.3s ease;
+}
+
+.product-card:hover {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.product-card h3 {
+  font-size: 18px;
+  color: #333;
+  margin-bottom: 10px;
+}
+
+.product-card .sold {
+  font-size: 16px;
+  color: #27ae60;
+  font-weight: bold;
+}
+
+/* Pagination */
+.pagination {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-top: 20px;
+}
+
+.pagination button {
+  background-color: #fff;
+  border: 1px solid #e0e0e0;
+  padding: 8px 12px;
+  font-size: 16px;
+  color: #333;
+  margin: 0 5px;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.pagination button:hover {
+  background-color: #27ae60;
+  color: #fff;
+}
+
+.pagination button.active {
+  background-color: #27ae60;
+  color: #fff;
+}
+
+.pagination span {
+  font-size: 16px;
+  margin: 0 5px;
+}
+
+.order table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 20px;
+}
+
+.order th,
+.order td {
+  border: 1px solid #ddd;
+  padding: 8px;
+  text-align: left;
+}
+
+.order th {
+  background-color: #f2f2f2;
+  font-weight: bold;
+}
+
+.order tr:nth-child(even) {
+  background-color: #f9f9f9;
+}
+
+.order tr:hover {
+  background-color: #f5f5f5;
+}
+
+
+/* Report Modal */
+.report-modal {
+  display: none;
+  position: fixed;
+  z-index: 1000;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.modal-content {
+  background-color: #fff;
+  border-radius: 8px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  width: 90%;
+  max-width: 400px;
+  position: relative;
+  animation: modalPop 0.3s ease-out;
+}
+
+@keyframes modalPop {
+  0% {
+      transform: scale(0.7);
+      opacity: 0;
+  }
+  100% {
+      transform: scale(1);
+      opacity: 1;
+  }
+}
+
+.modal-content h2 {
+  margin: 0;
+  padding: 15px 20px;
+  border-bottom: 1px solid #eee;
+}
+
+.modal-body {
+  padding: 20px;
+}
+
+.modal-body textarea {
+  width: 100%;
+  min-height: 100px;
+  padding: 10px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  resize: vertical;
+}
+
+.modal-footer {
+  padding: 15px 20px;
+  border-top: 1px solid #eee;
+  text-align: right;
+}
+
+.modal-footer button {
+  padding: 8px 16px;
+  background-color: #007bff;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.modal-footer button:hover {
+  background-color: #0056b3;
+}
+
+.close {
+  position: absolute;
+  right: 10px;
+  top: 10px;
+  font-size: 24px;
+  cursor: pointer;
+  color: #666;
+}
+
+.close:hover {
+  color: #333;
+}
+
+#content main .table-data {
+	display: flex;
+}
+	</style>
+</head>
 
 <!-- MAIN -->
 <main>
