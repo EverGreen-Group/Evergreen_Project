@@ -9,7 +9,106 @@
     <link rel="stylesheet" href="<?php echo URLROOT; ?>/css/components/topnavbar_style.css" />
     <link href="https://unpkg.com/boxicons@2.0.9/css/boxicons.min.css" rel="stylesheet" />
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        .fertilizer-constraints {
+            margin: 20px 0;
+            padding: 20px;
+            background-color: #fff;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
 
+        .constraints-order {
+            width: 100%;
+        }
+
+        .constraints-head {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .constraints-head h3 {
+            color: #2B2D42;
+            font-size: 1.2rem;
+        }
+
+        .btn-save {
+            background-color: #36A2EB;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 4px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            transition: background-color 0.3s;
+        }
+
+        .btn-save:hover {
+            background-color: #2d8ac7;
+        }
+
+        .constraints-container {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .constraint-group {
+            background-color: #f8f9fa;
+            padding: 15px;
+            border-radius: 6px;
+        }
+
+        .constraint-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+
+        .constraint-label {
+            font-weight: 500;
+            color: #2B2D42;
+        }
+
+        .constraint-input {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .constraint-input input,
+        .constraint-input select {
+            width: 100px;
+            padding: 6px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+
+        .constraint-input select {
+            width: 120px;
+        }
+
+        .unit {
+            color: #666;
+        }
+
+        .constraint-info {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            color: #666;
+            font-size: 0.9rem;
+        }
+
+        .constraint-info i {
+            color: #36A2EB;
+        }
+    </style>
 </head>
 
 <body>
@@ -116,9 +215,9 @@
                 </table>
 
                 <!-- Fertilizer Constraints Section -->
-            <div class="table-data">
-                <div class="order">
-                    <div class="head">
+            <div class="table-data fertilizer-constraints">
+                <div class="constraints-order">
+                    <div class="constraints-head">
                         <h3>Fertilizer Request Constraints</h3>
                         <button class="btn-save" onclick="saveConstraints()">
                             <i class='bx bx-save'></i>
