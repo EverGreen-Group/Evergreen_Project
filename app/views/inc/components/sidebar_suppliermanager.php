@@ -37,12 +37,12 @@
 					<span class="text">Tea Leaves Supply</span>
 				</a>
 			</li>			
-			<li>
+			<!-- <li>
 					<a href="<?php echo URLROOT; ?>/Suppliermanager/fertilizerorders">
 					<i class='bx bxs-basket' ></i>
 					<span class="text">Fertilizer Orders</span>
 				</a>
-			</li>
+			</li> -->
 			<li>
 					<a href="<?php echo URLROOT; ?>/Suppliermanager/payments">
 					<i class='bx bx-wallet' ></i>
