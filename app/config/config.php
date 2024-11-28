@@ -2,10 +2,10 @@
 
 //databasse configarations
 // define('DB_HOST', '34.93.234.68');
-define('DB_HOST', 'mysql-tfms.alwaysdata.net');
-define('DB_USER', 'tfms');
-define('DB_PASSWORD', 'tfmsgroupproject');
-define('DB_NAME','tfms_tfms');
+define('DB_HOST', 'localhost');
+define('DB_USER', 'root');
+define('DB_PASSWORD', '');
+define('DB_NAME','tfms');
 //APPROOT
 define('APPROOT',dirname(dirname(__FILE__)));
 

@@ -291,7 +291,7 @@
 				</thead>
 				<tbody>
 					<tr>
-					    <td>Michael Chen</td>
+					    <td>Tharusha</td>
 						<td style="text-align: center;"> 12</td>
 						<td>325 units</td>
 						<td>2024-03-20 08:15 PM</td>
@@ -312,7 +312,7 @@
 						</td>
 					</tr>
 					<tr>
-						<td>Sarah Williams</td>
+						<td>Shashika</td>
 						<td style="text-align: center;"> 8</td>
 						<td>680 units</td>
 						<td>2024-03-20 09:45 PM</td>
@@ -333,7 +333,7 @@
 						</td>
 					</tr>
 					<tr>
-						<td>Raj Patel</td>
+						<td>Ashan</td>
 						<td style="text-align: center;"> 2</td>
 						<td>450 units</td>
 						<td>2024-03-20 10:20 PM</td>
@@ -354,7 +354,7 @@
 						</td>
 					</tr>
 					<tr>
-						<td>Emma Rodriguez</td>
+						<td>Manusha</td>
 						<td style="text-align: center;"> 24</td>
 						<td>275 units</td>
 						<td>2024-03-20 08:50 PM</td>
@@ -375,7 +375,7 @@
 						</td>
 					</tr>
 					<tr>
-						<td>David Kim</td>
+						<td>Sandaru</td>
 						<td style="text-align: center;"> 17</td>
 						<td>590 units</td>
 						<td>2024-03-20 10:55 PM</td>
