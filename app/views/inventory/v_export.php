@@ -28,7 +28,7 @@
 
 
     .card1 {
-      background-color: #00a99d;
+      background-color: green;
       color: #fff;
       padding: 20px;
       margin: 20px;
@@ -487,9 +487,9 @@
             labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
             datasets: [{
               label: 'Export Quantity (kg)',
-              data: [2000, 2200, 1800, 2400, 2100, 1900, 2300, 2150, 2000, 2500, 2100, 1950], // Replace with your actual data
-              backgroundColor: '#00a99d',
-              borderColor: '#008f84',
+              data: [2000, 2200, 1800, 2400, 2100, 1900, 2300, 2150, 2000, 2500, 2100, 1950],
+              backgroundColor: '#2ec720',
+              borderColor: '#25a019',
               borderWidth: 1
             }]
           },
