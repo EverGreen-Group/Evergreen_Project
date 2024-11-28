@@ -302,7 +302,7 @@
 	                                border: none;
 	                                border-radius: 4px;
 	                                cursor: pointer;">Approve</button>
-							<button style="padding: 8px 12px;
+							<button onclick="reportModel()" style="padding: 8px 12px;
 	                                background-color: #2345;
 	                                color: white;	
 	                                border: none;
@@ -323,7 +323,7 @@
 	                                border: none;
 	                                border-radius: 4px;
 	                                cursor: pointer;">Approve</button>
-							<button style="padding: 8px 12px;
+							<button onclick="reportModel()" style="padding: 8px 12px;
 	                                background-color: #2345;
 	                                color: white;	
 	                                border: none;
@@ -338,7 +338,7 @@
 						<td>450 units</td>
 						<td>2024-03-20 10:20 PM</td>
 						<td class="actions">
-							<button onclick="reportModel()" style="padding: 8px 12px;
+							<button onclick="" style="padding: 8px 12px;
 	                                background-color: #28a745;
 	                                color: white;
 	                                border: none;
@@ -359,7 +359,7 @@
 						<td>275 units</td>
 						<td>2024-03-20 08:50 PM</td>
 						<td class="actions">
-							<button onclick="reportModel()" style="padding: 8px 12px;
+							<button onclick="" style="padding: 8px 12px;
 	                                background-color: #28a745;
 	                                color: white;
 	                                border: none;
@@ -380,7 +380,7 @@
 						<td>590 units</td>
 						<td>2024-03-20 10:55 PM</td>
 						<td class="actions">
-							<button onclick="reportModel()" style="padding: 8px 12px;
+							<button onclick="" style="padding: 8px 12px;
 	                                background-color: #28a745;
 	                                color: white;
 	                                border: none;
