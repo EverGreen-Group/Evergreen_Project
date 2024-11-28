@@ -1,46 +1,9 @@
 <?php
 class Collectionschedules extends Controller {
     private $collectionScheduleModel;
-    private $vehicleManagerModel;
-    private $routeModel;
-    private $teamModel;
-    private $vehicleModel;
-    private $shiftModel;
-    private $scheduleModel;
 
     public function __construct() {
         $this->collectionScheduleModel = $this->model('M_CollectionSchedule');
-        $this->vehicleManagerModel = $this->model('M_VehicleManager');
-        $this->routeModel = $this->model('M_Route');
-        $this->teamModel = $this->model('M_Team');
-        $this->vehicleModel = $this->model('M_Vehicle');
-        $this->shiftModel = $this->model('M_Shift');
-        $this->collectionModel = $this->model('M_Collection');
-        $this->scheduleModel = new M_CollectionSchedule();  // Instantiate CollectionSchedule model
-    }
-
-    public function index() {
-
-        $stats = $this->vehicleManagerModel->getDashboardStats();
-
-        // Fetch all necessary data for the dropdowns
-        $routes = $this->routeModel->getAllRoutes();
-        $teams = $this->teamModel->getAllTeams();
-        $vehicles = $this->vehicleModel->getAllVehicles();
-        $shifts = $this->shiftModel->getAllShifts();
-        $schedules = $this->scheduleModel->getAllSchedules();
-        $ongoingCollections = $this->collectionModel->getOngoingCollections();
-
-        // Pass the stats and data for the dropdowns to the view
-        $this->view('collection_schedules/index', [
-            'stats' => $stats,
-            'routes' => $routes,
-            'teams' => $teams,
-            'vehicles' => $vehicles,
-            'shifts' => $shifts,
-            'schedules' => $schedules,
-            'ongoing_collections' => $ongoingCollections
-        ]);
     }
 
     public function create() {

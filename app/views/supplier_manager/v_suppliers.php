@@ -72,21 +72,24 @@
         <!-- Weekly Collection Graph -->
         <div class="order" style="flex: 0.5;">
             <div class="head">
-                <h3>Collection History</h3>
+                <h3>Weekly Collection Overview</h3>
                 <div class="head-actions">
                     <a href="<?php echo URLROOT; ?>/supplier_manager/supplierStatement/<?php echo isset($_GET['id']) ? $_GET['id'] : ''; ?>" 
                        class="btn-download" 
                        id="statementBtn">
                         <i class='bx bx-file'></i> Monthly Statement
                     </a>
-                    <button class="btn-download" onclick="downloadCollectionHistory()">
-                        <i class='bx bx-download'></i> Download History
+                    <button class="btn-download" onclick="downloadMonthlyStats()">
+                        <i class='bx bx-download'></i> Download Stats
                     </button>
+                    <select id="time-period">
+                        <option value="week">Weekly View</option>
+                        <option value="month">Monthly View</option>
+                    </select>
                 </div>
             </div>
             <div class="graph-container">
                 <canvas id="teaLeavesGraph"></canvas>
-                <div id="collection-trend"></div>
             </div>
         </div>
 
@@ -590,81 +593,140 @@ select, input[type="number"] {
 <script src="<?php echo URLROOT; ?>/css/components/script.js"></script>
 
 <script>
-// Collection comparison data
-const collectionData = {
+// Weekly collection data (in kilograms)
+const weeklyData = {
     current: {
-        date: '2024-03-14',  // Current collection date
-        amount: 250          // Current collection amount in kg
+        labels: ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'],
+        collections: [1200, 1450, 1350, 1600, 1500, 800]
     },
-    previous: {
-        date: '2024-03-07',  // Previous collection date
-        amount: 235          // Previous collection amount in kg
+    last: {
+        labels: ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'],
+        collections: [1300, 1550, 1250, 1500, 1400, 750]
     }
 };
 
 // Initialize the chart
 const ctx = document.getElementById('teaLeavesGraph').getContext('2d');
-let collectionChart = new Chart(ctx, {
-    type: 'line',
+let weeklyChart = new Chart(ctx, {
+    type: 'bar',
     data: {
-        labels: ['Feb 15', 'Feb 22', 'Feb 29', 'Mar 07', 'Mar 14'],
+        labels: weeklyData.current.labels,
         datasets: [{
-            label: 'Collection Amount',
-            data: [32, 38, 34, 33, 35],
+            label: 'Current Week',
+            data: weeklyData.current.collections,
+            backgroundColor: 'rgba(141, 159, 45, 0.8)',  // #8D9F2D with opacity
+            borderColor: '#8D9F2D',
+            borderWidth: 1,
+            barPercentage: 0.6,
+            categoryPercentage: 0.5
+        },
+        {
+            label: 'Previous Week',
+            data: weeklyData.last.collections,
+            backgroundColor: 'rgba(0, 118, 100, 0.6)', // #007664 with opacity
             borderColor: '#007664',
-            backgroundColor: 'rgba(0, 118, 100, 0.1)',
-            borderWidth: 2,
-            fill: true,
-            tension: 0
+            borderWidth: 1,
+            barPercentage: 0.6,
+            categoryPercentage: 0.5
+        },
+        {
+            label: 'Change',
+            data: weeklyData.current.collections.map((curr, index) => {
+                const prev = weeklyData.last.collections[index];
+                return curr - prev;
+            }),
+            backgroundColor: (context) => {
+                const change = context.dataset.data[context.dataIndex];
+                return change >= 0 ? 'rgba(76, 175, 80, 0.5)' : 'rgba(244, 67, 54, 0.5)';
+            },
+            borderColor: (context) => {
+                const change = context.dataset.data[context.dataIndex];
+                return change >= 0 ? '#4CAF50' : '#f44336';
+            },
+            borderWidth: 1,
+            hidden: true,  // Hidden by default
+            barPercentage: 0.4,
+            categoryPercentage: 0.5
         }]
     },
     options: {
         responsive: true,
         maintainAspectRatio: false,
-        plugins: {
-            legend: {
-                position: 'top',
-            },
-            tooltip: {
-                callbacks: {
-                    label: function(context) {
-                        return `Collection: ${context.parsed.y} kg`;
-                    }
-                }
-            }
+        interaction: {
+            intersect: false,
+            mode: 'index'
         },
         scales: {
+            x: {
+                stacked: false,
+                grid: {
+                    display: false
+                }
+            },
             y: {
-                beginAtZero: false,
+                beginAtZero: true,
                 title: {
                     display: true,
                     text: 'Collection Amount (kg)'
                 }
+            }
+        },
+        plugins: {
+            title: {
+                display: false
             },
-            x: {
-                grid: {
-                    display: false
+            legend: {
+                position: 'top',
+                align: 'end',
+                onClick: function(e, legendItem, legend) {
+                    const index = legendItem.datasetIndex;
+                    const ci = legend.chart;
+                    
+                    if (index === 2) {  // Change dataset
+                        ci.data.datasets[0].hidden = !ci.data.datasets[0].hidden;
+                        ci.data.datasets[1].hidden = !ci.data.datasets[1].hidden;
+                        ci.data.datasets[2].hidden = !ci.data.datasets[2].hidden;
+                    } else {
+                        ci.data.datasets[index].hidden = !ci.data.datasets[index].hidden;
+                    }
+                    ci.update();
+                }
+            },
+            tooltip: {
+                callbacks: {
+                    label: function(context) {
+                        const label = context.dataset.label || '';
+                        const value = context.parsed.y;
+                        
+                        if (context.datasetIndex === 2) {  // Change dataset
+                            const sign = value >= 0 ? '+' : '';
+                            return `${label}: ${sign}${value} kg`;
+                        }
+                        return `${label}: ${value} kg`;
+                    }
                 }
             }
         }
     }
 });
 
-// Update trend indicator
-const lastValue = 250;
-const previousValue = 235;
-const change = lastValue - previousValue;
-const changePercentage = ((change / previousValue) * 100).toFixed(1);
-
-document.getElementById('collection-trend').innerHTML = `
-    <div class="trend-indicator ${change >= 0 ? 'positive' : 'negative'}">
-        <div class="trend-label">Last Collection Change:</div>
-        <div class="trend-value">
-            <i class='bx ${change >= 0 ? 'bx-trending-up' : 'bx-trending-down'}'></i>
-            <span>${change >= 0 ? '+' : ''}${change} kg (${changePercentage}%)</span>
-        </div>
-    </div>
-`;
+// Update the week selection event listener
+document.getElementById('time-period').addEventListener('change', function() {
+    const selectedPeriod = this.value;
+    if (selectedPeriod === 'week') {
+        weeklyChart.data.datasets[0].data = weeklyData.current.collections;
+        weeklyChart.data.datasets[1].data = weeklyData.last.collections;
+    } else {
+        weeklyChart.data.datasets[0].data = weeklyData.last.collections;
+        weeklyChart.data.datasets[1].data = weeklyData.current.collections;
+    }
+    // Recalculate changes
+    weeklyChart.data.datasets[2].data = weeklyChart.data.datasets[0].data.map((curr, index) => {
+        const prev = weeklyChart.data.datasets[1].data[index];
+        return curr - prev;
+    });
+    weeklyChart.update();
+});
 </script>
 
 <style>
@@ -1675,192 +1737,6 @@ document.getElementById('currentSupplier').addEventListener('change', function()
     opacity: 0.6;
     cursor: not-allowed;
     pointer-events: none;
-}
-</style>
-
-<style>
-.change-indicator {
-    text-align: center;
-    padding: 10px;
-    margin-top: 10px;
-    font-weight: 500;
-}
-
-.change-indicator.positive {
-    color: #4CAF50;
-}
-
-.change-indicator.negative {
-    color: #f44336;
-}
-
-.change-value {
-    font-size: 1.2em;
-    margin-right: 8px;
-}
-
-.change-percentage {
-    font-size: 0.9em;
-    opacity: 0.8;
-}
-
-.graph-container {
-    position: relative;
-    padding-bottom: 40px;
-}
-</style>
-
-<script>
-// Sample data structure for collections
-const collectionHistory = {
-    dates: ['2024-02-15', '2024-02-22', '2024-02-29', '2024-03-07', '2024-03-14'],
-    amounts: [245, 238, 252, 235, 250],
-    deductions: [10, 8, 12, 9, 11],
-    finalAmounts: [235, 230, 240, 226, 239]
-};
-
-// Initialize the chart
-const ctx = document.getElementById('teaLeavesGraph').getContext('2d');
-let collectionChart = new Chart(ctx, {
-    type: 'line',
-    data: {
-        labels: collectionHistory.dates,
-        datasets: [{
-            label: 'Collection Amount',
-            data: collectionHistory.amounts,
-            borderColor: '#007664',
-            backgroundColor: 'rgba(0, 118, 100, 0.1)',
-            borderWidth: 2,
-            fill: true,
-            tension: 0.4
-        }]
-    },
-    options: {
-        responsive: true,
-        maintainAspectRatio: false,
-        plugins: {
-            legend: {
-                position: 'top',
-            },
-            tooltip: {
-                callbacks: {
-                    label: function(context) {
-                        return `Collection: ${context.parsed.y} kg`;
-                    }
-                }
-            }
-        },
-        scales: {
-            y: {
-                beginAtZero: false,
-                title: {
-                    display: true,
-                    text: 'Collection Amount (kg)'
-                }
-            },
-            x: {
-                grid: {
-                    display: false
-                }
-            }
-        }
-    }
-});
-
-// Function to update the chart with new data
-function updateCollectionGraph(data) {
-    collectionChart.data.labels = data.dates;
-    collectionChart.data.datasets[0].data = data.amounts;
-    collectionChart.data.datasets[1].data = data.finalAmounts;
-    
-    // Calculate and display trend
-    const lastTwoCollections = {
-        current: data.finalAmounts[data.finalAmounts.length - 1],
-        previous: data.finalAmounts[data.finalAmounts.length - 2]
-    };
-    
-    const change = lastTwoCollections.current - lastTwoCollections.previous;
-    const changePercentage = ((change / lastTwoCollections.previous) * 100).toFixed(1);
-    
-    const trendIndicator = document.getElementById('collection-trend');
-    trendIndicator.className = `trend-indicator ${change >= 0 ? 'positive' : 'negative'}`;
-    trendIndicator.innerHTML = `
-        <div class="trend-label">Last Collection Change:</div>
-        <div class="trend-value">
-            <i class='bx ${change >= 0 ? 'bx-trending-up' : 'bx-trending-down'}'></i>
-            <span>${change >= 0 ? '+' : ''}${change} kg (${changePercentage}%)</span>
-        </div>
-    `;
-    
-    collectionChart.update();
-}
-
-// Function to download collection history
-function downloadCollectionHistory() {
-    const data = [
-        ['Date', 'Gross Weight (kg)', 'Deduction (kg)', 'Net Weight (kg)']
-    ];
-    
-    for (let i = 0; i < collectionHistory.dates.length; i++) {
-        data.push([
-            collectionHistory.dates[i],
-            collectionHistory.amounts[i],
-            collectionHistory.deductions[i],
-            collectionHistory.finalAmounts[i]
-        ]);
-    }
-    
-    const csvContent = data.map(row => row.join(',')).join('\n');
-    const blob = new Blob([csvContent], { type: 'text/csv' });
-    const url = window.URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = 'collection_history.csv';
-    a.click();
-    window.URL.revokeObjectURL(url);
-}
-</script>
-
-<style>
-.trend-indicator {
-    text-align: center;
-    padding: 15px;
-    margin-top: 10px;
-    background: #f8f9fa;
-    border-radius: 8px;
-}
-
-.trend-indicator.positive {
-    color: #4CAF50;
-}
-
-.trend-indicator.negative {
-    color: #f44336;
-}
-
-.trend-label {
-    font-size: 0.9em;
-    color: #666;
-    margin-bottom: 5px;
-}
-
-.trend-value {
-    font-size: 1.2em;
-    font-weight: 500;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 8px;
-}
-
-.trend-value i {
-    font-size: 1.4em;
-}
-
-.graph-container {
-    height: 300px;
-    position: relative;
-    padding: 20px 10px;
 }
 </style>
 

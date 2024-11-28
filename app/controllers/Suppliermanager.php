@@ -56,8 +56,26 @@ class SupplierManager extends Controller {
 
     public function index() {
         // Get dashboard stats from the model
-        $data =[];
-        $this->view('suppliermanager/applications', $data);
+        $stats = $this->vehicleManagerModel->getDashboardStats();
+
+        // Fetch all necessary data for the dropdowns
+        $routes = $this->routeModel->getAllRoutes();
+        $teams = $this->teamModel->getAllTeams();
+        $vehicles = $this->vehicleModel->getAllVehicles();
+        $shifts = $this->shiftModel->getAllShifts();
+        $schedules = $this->scheduleModel->getAllSchedules();
+        $ongoingCollections = $this->collectionModel->getOngoingCollections();
+
+        // Pass the stats and data for the dropdowns to the view
+        $this->view('vehicle_manager/v_collection', [
+            'stats' => $stats,
+            'routes' => $routes,
+            'teams' => $teams,
+            'vehicles' => $vehicles,
+            'shifts' => $shifts,
+            'schedules' => $schedules,
+            'ongoing_collections' => $ongoingCollections
+        ]);
     }
 
     public function applications() {
@@ -99,7 +117,6 @@ class SupplierManager extends Controller {
         $structures = $supplierApplicationModel->getStructures($applicationId);
         $propertyDetails = $supplierApplicationModel->getPropertyDetails($applicationId);
         $address = $supplierApplicationModel->getAddress($applicationId);
-        $ownershipDetails = $supplierApplicationModel->getOwnershipDetails($applicationId);
 
         // Prepare data array
         $data = [
@@ -109,7 +126,7 @@ class SupplierManager extends Controller {
                 'status' => $application->status,
                 'primary_phone' => $application->primary_phone,
                 'secondary_phone' => $application->secondary_phone,
-                'preferred_days' => $application->preferred_days,
+                'whatsapp_number' => $application->whatsapp_number,
                 'created_at' => $application->created_at,
                 'updated_at' => $application->updated_at
             ],
@@ -121,8 +138,7 @@ class SupplierManager extends Controller {
             'infrastructure' => $infrastructure,
             'structures' => $structures,
             'property' => $propertyDetails,
-            'address' => $address,
-            'ownership' => $ownershipDetails
+            'address' => $address
         ];
 
         // Load the view
@@ -160,36 +176,6 @@ class SupplierManager extends Controller {
         $this->view('supplier_manager/v_suppliers', $data);
     }
 
-    public function confirmSupplierRole($applicationId) {
-        try {
-            // Get application details first
-            $application = $this->supplierApplicationModel->getApplicationById($applicationId);
-            
-            if (!$application) {
-                throw new Exception('Application not found');
-            }
-            
-            $this->supplierApplicationModel->confirmSupplierRole($applicationId);
-            $userId = $application->user_id;
-            $contactNumber = $application->primary_phone;
-            $latitude = $application->latitude;
-            $longitude = $application->longitude;
-            $isActive = 1;
-            $isDeleted = 0;
-            $numberOfCollections = 0;
-            $avgCollectionAmount = 0;
-            $totalCollections = 0;
-            $this->supplierApplicationModel->insertSupplier($applicationId, $userId, $contactNumber, $latitude, $longitude, $isActive, $isDeleted, $numberOfCollections, $avgCollectionAmount, $totalCollections);
-
-            
-            redirect('suppliermanager/applications');
-            
-        } catch (Exception $e) {
-            error_log("Error confirming supplier role: " . $e->getMessage());
-            flash('application_message', 'Error confirming supplier role: ' . $e->getMessage(), 'alert alert-danger');
-            redirect('suppliermanager/applications');
-        }
-    }
 
     public function supplierStatement() {
         $data = [];
@@ -246,8 +232,6 @@ class SupplierManager extends Controller {
 
         $this->view('supplier_manager/v_settings', $data);
     }
-
-
 
 }
 ?>

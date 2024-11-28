@@ -39,8 +39,6 @@
     </li>
   </ul>
 
-
-
   <!-- Then your shift-management-row div continues below -->
   <div class="shift-management-row">
     <!-- Create Shift Form -->

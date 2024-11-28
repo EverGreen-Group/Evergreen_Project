@@ -8,7 +8,7 @@ class M_Vehicle {
     }
 
     public function getAllVehicles() {
-        $this->db->query("SELECT * FROM vehicles");
+        $this->db->query("SELECT vehicle_id, license_plate, vehicle_type, capacity, status, owner_name, last_maintenance, next_maintenance, fuel_type FROM vehicles");
         return $this->db->resultSet();
     }
 
@@ -24,14 +24,28 @@ class M_Vehicle {
         return $result->available;
     }
 
-    public function getUnassignedVehicles() {
-        $this->db->query("SELECT * FROM vehicles WHERE vehicle_id NOT IN (SELECT vehicle_id FROM routes)");
-        return $this->db->resultSet();
-    }
-
     public function getVehicleDetails() {
         $this->db->query("SELECT 
-            v.*,
+            v.vehicle_id, 
+            v.license_plate, 
+            v.status, 
+            v.owner_name, 
+            v.owner_contact,
+            v.capacity, 
+            v.vehicle_type, 
+            v.insurance_expiry_date, 
+            v.road_tax_expiry_date,
+            v.color, 
+            v.engine_number, 
+            v.chassis_number, 
+            v.seating_capacity, 
+            v.`condition`, 
+            v.last_serviced_date, 
+            v.last_maintenance, 
+            v.next_maintenance, 
+            v.mileage,
+            v.fuel_type, 
+            v.registration_date,
             vd.file_path
             FROM vehicles v
             LEFT JOIN vehicle_documents vd ON v.vehicle_id = vd.vehicle_id 

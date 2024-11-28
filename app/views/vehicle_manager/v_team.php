@@ -239,7 +239,7 @@
               <div class="head">
                   <h3>Create New Team</h3>
               </div>
-              <form id="createTeamForm" method="POST" action="<?php echo URLROOT; ?>/teams/create">
+              <form id="createTeamForm" method="POST" action="<?php echo URLROOT; ?>/vehiclemanager/createTeam">
                   <div style="display: flex; gap: 20px;">
                       <div class="form-group" style="flex: 1;">
                           <label for="team_name">Team Name:</label>
@@ -291,7 +291,7 @@
               <div class="head">
                   <h3>Update Team</h3>
               </div>
-              <form id="updateTeamForm" method="POST" action="<?php echo URLROOT; ?>/teams/update">
+              <form id="updateTeamForm" method="POST" action="<?php echo URLROOT; ?>/vehiclemanager/updateTeam">
                   <div style="display: flex; gap: 20px;">
                       <div class="form-group" style="flex: 1;">
                           <label for="edit_team_select">Select Team:</label>
@@ -932,7 +932,7 @@ function removeTeamMember(type) {
 
 function deleteTeam(teamId) {
     if (confirm('Are you sure you want to delete this team?')) {
-        fetch(`<?php echo URLROOT; ?>/teams/delete/${teamId}`, {
+        fetch(`<?php echo URLROOT; ?>/vehiclemanager/deleteTeam/${teamId}`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -952,11 +952,11 @@ function deleteTeam(teamId) {
         })
         .then(data => {
             // Instead of immediate reload, let the controller handle the redirect
-            window.location.href = '<?php echo URLROOT; ?>/teams';
+            window.location.href = '<?php echo URLROOT; ?>/vehiclemanager/team';
         })
         .catch(error => {
             console.error('Error:', error);
-            window.location.href = '<?php echo URLROOT; ?>/teams';
+            window.location.href = '<?php echo URLROOT; ?>/vehiclemanager/team';
         });
     }
 }

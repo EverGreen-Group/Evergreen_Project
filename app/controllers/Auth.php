@@ -15,10 +15,13 @@ class Auth extends Controller {
 
         $data = [
             'email' => '',
+            'title' => '',
             'first_name' => '',
             'last_name' => '',
+            'nic' => '',
+            'gender' => '',
+            'date_of_birth' => '',
             'password' => '',
-            'confirm_password' => '',
             'error' => ''
         ];
 
@@ -30,45 +33,37 @@ class Auth extends Controller {
                 'email' => trim($_POST['email']),
                 'first_name' => trim($_POST['first_name']),
                 'last_name' => trim($_POST['last_name']),
+                'nic' => trim($_POST['nic']),
+                'gender' => trim($_POST['gender']),
+                'date_of_birth' => trim($_POST['date_of_birth']),
                 'password' => trim($_POST['password']),
-                'confirm_password' => trim($_POST['confirm_password']),
                 'error' => ''
             ];
 
             // Validate data
             if (empty($data['email']) || 
-                empty($data['first_name']) || 
-                empty($data['last_name']) || 
-                empty($data['password']) ||
-                empty($data['confirm_password'])) {
+                empty($data['first_name']) || empty($data['last_name']) || 
+                empty($data['nic']) || empty($data['gender']) || 
+                empty($data['date_of_birth']) || empty($data['password'])) {
                 $data['error'] = 'Please fill in all fields';
             } elseif (!filter_var($data['email'], FILTER_VALIDATE_EMAIL)) {
                 $data['error'] = 'Please enter a valid email';
             } elseif ($this->userModel->findUserByEmail($data['email'])) {
                 $data['error'] = 'Email is already registered';
-            } elseif (strlen($data['password']) < 6) {
-                $data['error'] = 'Password must be at least 6 characters long';
-            } elseif ($data['password'] !== $data['confirm_password']) {
-                $data['error'] = 'Passwords do not match';
+            } elseif ($this->userModel->findUserByNIC($data['nic'])) {
+                $data['error'] = 'NIC is already registered';
             } else {
                 try {
                     // Hash password
-                    $hashedPassword = password_hash($data['password'], PASSWORD_DEFAULT);
-
-                    
-                    $data['password'] = $hashedPassword;
-
+                    $data['password'] = password_hash($data['password'], PASSWORD_DEFAULT);
 
                     // Set default role_id and approval_status
-                    $data['role_id'] = RoleHelper::getRoleByTitle('Website User');
-                    $data['approval_status'] = 'None';
-
-                    // Remove confirm_password before saving
-                    unset($data['confirm_password']);
+                    $data['role_id'] = RoleHelper::getRoleByTitle('Website User'); // Website User role
+                    $data['approval_status'] = 'None'; // Default status
 
                     // Register user
                     if ($this->userModel->register($data)) {
-                        $_SESSION['success_message'] = 'Registration successful! Please login.';
+                        // Redirect to login with success message
                         header('Location: ' . URLROOT . '/auth/login');
                         exit();
                     } else {
@@ -76,8 +71,6 @@ class Auth extends Controller {
                     }
                 } catch (PDOException $e) {
                     $data['error'] = 'Registration failed. Please check your information.';
-                    // Log the error for debugging
-                    error_log("Registration Error: " . $e->getMessage());
                 }
             }
         }
@@ -107,30 +100,10 @@ class Auth extends Controller {
             } else {
                 $user = $this->userModel->findUserByEmail($data['username']);
                 
-                echo "<pre>";
-                echo "=== Login Attempt Debug ===\n";
-                echo "Email attempting login: \n";
-                var_dump($data['username']);
-                echo "Password submitted: \n";
-                var_dump($data['password']);
-                
-                if ($user) {
-                    echo "User found in database:\n";
-                    var_dump($user);
-                    echo "Password verify result: \n";
-                    var_dump(password_verify($data['password'], $user->password));
-                    
-                    // Test a direct hash comparison
-                    $testHash = password_hash($data['password'], PASSWORD_DEFAULT);
-                    echo "Test hash of input password: \n";
-                    var_dump($testHash);
-                    echo "Would verify with test hash: \n";
-                    var_dump(password_verify($data['password'], $testHash));
-                } else {
-                    echo "No user found with this email\n";
-                }
-                echo "=== End Debug ===\n";
-                echo "</pre>";
+                // Add these debug lines
+                var_dump($user); // Check if user is found
+                var_dump($data['password']); // Check the submitted password
+                var_dump($user->password); // Check the stored hashed password
                 
                 if ($user && password_verify($data['password'], $user->password)) {
                     $_SESSION['user_id'] = $user->user_id;
@@ -151,7 +124,7 @@ class Auth extends Controller {
                             header('Location: ' . URLROOT . '/supplier/');
                             break;
                         case RoleHelper::ADMIN:
-                            header('Location: ' . URLROOT . '/collections');
+                            header('Location: ' . URLROOT . '/');
                             break;
                         case RoleHelper::DRIVING_PARTNER:
                             header('Location: ' . URLROOT . '/drivingpartner/');
@@ -224,38 +197,52 @@ class Auth extends Controller {
                 // Prepare application data
                 $applicationData = [
                     'user_id' => $_SESSION['user_id'],
-                    'primary_phone' => $_POST['primary_phone'],
-                    'secondary_phone' => !empty($_POST['secondary_phone']) ? $_POST['secondary_phone'] : null,
+                    'primary_phone' => $_POST['primaryPhone'],
+                    'secondary_phone' => !empty($_POST['secondaryPhone']) ? $_POST['secondaryPhone'] : null,
+                    'whatsapp_number' => !empty($_POST['whatsappNumber']) ? $_POST['whatsappNumber'] : null,
                     
                     'address' => [
                         'line1' => $_POST['line1'],
                         'line2' => !empty($_POST['line2']) ? $_POST['line2'] : null,
                         'city' => $_POST['city'],
                         'district' => $_POST['district'],
-                        'postal_code' => $_POST['postal_code'],
+                        'postal_code' => $_POST['postalCode'],
                         'latitude' => $_POST['latitude'],
                         'longitude' => $_POST['longitude']
                     ],
                     
+                    'teaVarieties' => isset($_POST['tea_varieties']) ? $_POST['tea_varieties'] : [],
+                    
+                    'ownership' => [
+                        'ownership_type' => $_POST['ownership_type'],
+                        'ownership_duration' => $_POST['ownership_duration']
+                    ],
+                    
+                    'tea_details' => [
+                        'plant_age' => $_POST['plant_age'],
+                        'monthly_production' => $_POST['monthly_production']
+                    ],
+                    
                     'property' => [
-                        'total_land_area' => $_POST['total_land_area'],
-                        'tea_cultivation_area' => $_POST['tea_cultivation_area'],
+                        'total_land_area' => $_POST['totalLandArea'],
+                        'tea_cultivation_area' => $_POST['teaCultivationArea'],
                         'elevation' => $_POST['elevation'],
                         'slope' => $_POST['slope']
                     ],
                     
                     'infrastructure' => [
-                        'water_sources' => isset($_POST['water_sources']) ? $_POST['water_sources'] : [],
+                        'water_source' => isset($_POST['water_source']) ? $_POST['water_source'] : [],
+                        'access_road' => $_POST['access_road'],
                         'vehicle_access' => $_POST['vehicle_access'],
                         'structures' => isset($_POST['structures']) ? $_POST['structures'] : []
                     ],
                     
                     'bank_info' => [
-                        'account_holder_name' => $_POST['account_holder_name'],
-                        'bank_name' => $_POST['bank_name'],
-                        'branch_name' => $_POST['branch_name'],
-                        'account_number' => $_POST['account_number'],
-                        'account_type' => $_POST['account_type']
+                        'account_holder_name' => $_POST['accountHolderName'],
+                        'bank_name' => $_POST['bankName'],
+                        'branch_name' => $_POST['branchName'],
+                        'account_number' => $_POST['accountNumber'],
+                        'account_type' => $_POST['accountType']
                     ]
                 ];
 
@@ -264,51 +251,33 @@ class Auth extends Controller {
 
                 // Validate file uploads
                 $documents = [];
-                $requiredDocs = [
-                    'land_deed',
-                    'tax_receipt', 
-                    'tea_cultivation_certificate',
-                    'id_proof',
-                    'bank_statement'
-                ];
-
-                // Check if documents array was submitted
-                if (!isset($_FILES['documents']) || !is_array($_FILES['documents'])) {
-                    throw new Exception("No documents were uploaded");
-                }
-
+                $requiredDocs = ['nic', 'ownership_proof', 'tax_receipts', 'bank_passbook', 'grama_cert'];
+                
                 foreach ($requiredDocs as $doc) {
-                    // Check if this document exists in the uploaded files
-                    if (!isset($_FILES['documents']['name'][$doc])) {
+                    // Check if file exists and there are no upload errors
+                    if (!isset($_FILES[$doc]) || !is_array($_FILES[$doc])) {
                         throw new Exception("Missing upload for: {$doc}");
                     }
 
                     // Check for specific upload errors
-                    if ($_FILES['documents']['error'][$doc] !== UPLOAD_ERR_OK) {
-                        $errorMessage = $this->getFileUploadError($_FILES['documents']['error'][$doc]);
+                    if ($_FILES[$doc]['error'] !== UPLOAD_ERR_OK) {
+                        $errorMessage = $this->getFileUploadError($_FILES[$doc]['error']);
                         throw new Exception("Error uploading {$doc}: {$errorMessage}");
                     }
 
-                    // Validate file type
+                    // Validate file type (add allowed types as needed)
                     $allowedTypes = ['image/jpeg', 'image/png', 'application/pdf'];
-                    if (!in_array($_FILES['documents']['type'][$doc], $allowedTypes)) {
+                    if (!in_array($_FILES[$doc]['type'], $allowedTypes)) {
                         throw new Exception("{$doc} must be a JPG, PNG, or PDF file");
                     }
 
-                    // Validate file size (5MB limit)
-                    $maxSize = 5 * 1024 * 1024;
-                    if ($_FILES['documents']['size'][$doc] > $maxSize) {
+                    // Validate file size (e.g., 5MB limit)
+                    $maxSize = 5 * 1024 * 1024; // 5MB in bytes
+                    if ($_FILES[$doc]['size'] > $maxSize) {
                         throw new Exception("{$doc} must be less than 5MB");
                     }
 
-                    // Create individual file array for each document
-                    $documents[$doc] = [
-                        'name' => $_FILES['documents']['name'][$doc],
-                        'type' => $_FILES['documents']['type'][$doc],
-                        'tmp_name' => $_FILES['documents']['tmp_name'][$doc],
-                        'error' => $_FILES['documents']['error'][$doc],
-                        'size' => $_FILES['documents']['size'][$doc]
-                    ];
+                    $documents[$doc] = $_FILES[$doc];
                 }
 
                 // Add validation for latitude and longitude before the file validation
@@ -320,9 +289,9 @@ class Auth extends Controller {
                 $lat = floatval($_POST['latitude']);
                 $lng = floatval($_POST['longitude']);
 
-                // if ($lat < 5.9 || $lat > 9.9 || $lng < 79.5 || $lng > 81.9) {
-                //     throw new Exception('Location must be within Sri Lanka');
-                // }
+                if ($lat < 5.9 || $lat > 9.9 || $lng < 79.5 || $lng > 81.9) {
+                    throw new Exception('Location must be within Sri Lanka');
+                }
 
                 // Try to save the application
                 $result = $supplierApplicationModel->createApplication($applicationData, $documents);
