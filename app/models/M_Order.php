@@ -2,6 +2,23 @@
 
 <?php
 //M_Order.php
+
+class Order {
+    // Function to create an order
+    public function create($product, $quantity) {
+        $db = Database::connect();
+        $query = $db->prepare("INSERT INTO orders (product, quantity) VALUES (?, ?)");
+        $query->execute([$product, $quantity]);
+    }
+
+    // Function to get all orders
+    public function getAll() {
+        $db = Database::connect();
+        $query = $db->query("SELECT * FROM orders");
+        return $query->fetchAll(PDO::FETCH_ASSOC);
+    }
+}
+
 class M_Order {
     private $db;
     private $stripeSecretKey;
@@ -14,6 +31,8 @@ class M_Order {
         require_once dirname(dirname(__DIR__)) . '/vendor/autoload.php';
         \Stripe\Stripe::setApiKey($this->stripeSecretKey);
     }
+
+    
 
     public function createOrder($userId, $orderData) {
         $this->db->beginTransaction();
