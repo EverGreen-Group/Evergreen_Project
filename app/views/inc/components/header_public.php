@@ -1,126 +1,182 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title><?php echo SITENAME;?></title>
-    <link rel="stylesheet" href="<?php echo URLROOT;?>/public/css/style.css">
+    <title><?php echo SITENAME; ?></title>
+    <link rel="stylesheet" href="<?php echo URLROOT; ?>/public/css/style.css">
     <link href="https://unpkg.com/boxicons@2.0.9/css/boxicons.min.css" rel="stylesheet" />
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500&display=swap" rel="stylesheet">
 </head>
+<style>
+    body {
+        background-color: #f8f9fa;
+        margin: 0;
+        font-family: "Poppins", sans-serif;
+    }
+
+    .public-header {
+        width: 100%;
+        background-color: transparent;
+        padding: 20px;
+        box-sizing: border-box;
+        border-bottom: none;
+        box-shadow: none;
+    }
+
+    .public-nav {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 15px 30px;
+        background-color: rgba(255, 255, 255, 0.95);
+        border-radius: 50px;
+        box-shadow: 0 2px 15px rgba(0, 0, 0, 0.05);
+        position: relative;
+        z-index: 1;
+    }
+
+    .nav-brand {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .nav-brand img {
+        height: 24px;
+        width: auto;
+    }
+
+    .nav-brand a {
+        text-decoration: none;
+        color: #333;
+        font-weight: 500;
+        font-size: 18px;
+    }
+
+    .nav-links {
+        display: flex;
+        gap: 30px;
+        align-items: center;
+    }
+
+    .nav-links a {
+        text-decoration: none;
+        color: #555;
+        font-size: 14px;
+        font-weight: 500;
+        text-transform: uppercase;
+        transition: color 0.3s ease;
+    }
+
+    .nav-links a:hover,
+    .nav-links a.active {
+        color: #22a45d;
+    }
+
+    .nav-auth {
+        display: flex;
+        gap: 10px;
+        /* border: 1px solid red; */
+    }
+
+    .nav-button {
+        background-color: #e8ffd4 !important;
+        color: #22a45d !important;
+        border: none;
+        padding: 8px 20px;
+        border-radius: 20px;
+        font-size: 14px;
+        font-weight: 500;
+        text-decoration: none;
+        transition: all 0.3s ease;
+        /* display: inline-block;
+    border: 1px solid blue; */
+    }
+
+.nav-button:hover {
+    background-color: #d4ff7f !important;
+}
+
+/* Add these new styles and update existing ones */
+
+/* Add hamburger menu icon */
+.mobile-menu-btn {
+    display: none;
+    font-size: 24px;
+    cursor: pointer;
+    color: #333;
+}
+
+/* Add media query for mobile */
+@media screen and (max-width: 891px) {
+    .public-nav {
+        flex-wrap: wrap;
+        border-radius: 25px;
+        padding: 15px 20px;
+    }
+
+    .mobile-menu-btn {
+        display: block;
+    }
+
+    .nav-brand {
+        flex: 1;
+    }
+
+    .nav-links {
+        display: none; /* Hidden by default */
+        width: 100%;
+        flex-direction: column;
+        gap: 15px;
+        padding: 15px 0;
+        margin-top: 15px;
+        border-top: 1px solid #eee;
+        order: 3;
+    }
+
+    .nav-links.active {
+        display: flex;
+    }
+
+    .nav-auth {
+        order: 2;
+    }
+
+    .nav-button {
+        padding: 6px 15px;
+        font-size: 13px;
+    }
+}
+</style>
+
 <body>
-    <nav class="main-nav">
-        <div class="nav-wrapper">
-            <div class="logo">
-                <a href="<?php echo URLROOT; ?>">
-                    <img src="<?php echo URLROOT; ?>/public/img/logo.svg" alt="EverGreen">
-                    <span>EverGreen</span>
+    <header class="public-header">
+        <nav class="public-nav">
+            <div class="nav-brand">
+                <img src="<?php echo URLROOT; ?>/public/img/logo.svg" alt="EverGreen">
+                <a href="<?php echo URLROOT; ?>">EverGreen</a>
+            </div>
+            <div class="nav-links">
+                <a href="<?php echo URLROOT; ?>" class="<?php echo ($_GET['url'] ?? '') === '' ? 'active' : ''; ?>">
+                    HOME
+                </a>
+                <a href="<?php echo URLROOT; ?>/pages/store"
+                    class="<?php echo ($_GET['url'] ?? '') === 'pages/store' ? 'active' : ''; ?>">
+                    STORE
+                </a>
+                <a href="<?php echo URLROOT; ?>/profile"
+                    class="<?php echo ($_GET['url'] ?? '') === 'profile/' ? 'active' : ''; ?>">
+                    PROFILE
                 </a>
             </div>
-
-            <button class="mobile-menu-btn" aria-label="Toggle menu" aria-expanded="false">
-                <span class="bar"></span>
-                <span class="bar"></span>
-                <span class="bar"></span>
-            </button>
-
-            <div class="nav-menu">
-                <a href="<?php echo URLROOT; ?>" class="nav-link <?php echo ($_GET['url'] ?? '') === '' ? 'active' : ''; ?>">
-                    <i class='bx bxs-home'></i>
-                    Home
-                </a>
-                
-                <!-- About Dropdown -->
-                <div class="nav-dropdown">
-                    <button class="dropdown-trigger">
-                        <i class='bx bxs-info-circle'></i>
-                        About
-                        <i class='bx bx-chevron-down'></i>
-                    </button>
-                    <div class="dropdown-content">
-                        <a href="<?php echo URLROOT; ?>/pages/about">About Us</a>
-                        <a href="<?php echo URLROOT; ?>/pages/team">Our Team</a>
-                        <a href="<?php echo URLROOT; ?>/pages/mission">Mission & Vision</a>
-                    </div>
-                </div>
-                
-                <!-- Management Dropdown -->
-                <div class="nav-dropdown">
-                    <button class="dropdown-trigger">
-                        <i class='bx bxs-truck'></i>
-                        Management
-                        <i class='bx bx-chevron-down'></i>
-                    </button>
-                    <div class="dropdown-content">
-                        <a href="<?php echo URLROOT; ?>/vehicles">Vehicle Management</a>
-                        <a href="<?php echo URLROOT; ?>/supply">Supply Management</a>
-                        <a href="<?php echo URLROOT; ?>/inventory">Inventory</a>
-                    </div>
-                </div>
-
-                <a href="<?php echo URLROOT; ?>/marketplace" class="nav-link <?php echo ($_GET['url'] ?? '') === 'marketplace' ? 'active' : ''; ?>">
-                    <i class='bx bxs-store'></i>
-                    Marketplace
-                </a>
-
-                <!-- Blog Dropdown -->
-                <div class="nav-dropdown">
-                    <button class="dropdown-trigger">
-                        <i class='bx bxs-book-content'></i>
-                        Blog
-                        <i class='bx bx-chevron-down'></i>
-                    </button>
-                    <div class="dropdown-content">
-                        <a href="<?php echo URLROOT; ?>/blog">All Posts</a>
-                        <a href="<?php echo URLROOT; ?>/blog/categories">Categories</a>
-                        <?php if(isset($_SESSION['user_id'])) : ?>
-                            <a href="<?php echo URLROOT; ?>/blog/create">Create Post</a>
-                        <?php endif; ?>
-                    </div>
-                </div>
-
-                <a href="<?php echo URLROOT; ?>/contact" class="nav-link <?php echo ($_GET['url'] ?? '') === 'contact' ? 'active' : ''; ?>">
-                    <i class='bx bxs-contact'></i>
-                    Contact
-                </a>
-            </div>
-
-            <div class="nav-buttons">
-                <?php if(isset($_SESSION['user_id'])) : ?>
-                    <div class="nav-dropdown">
-                        <button class="dropdown-trigger user-menu">
-                            <i class='bx bxs-user-circle'></i>
-                            <span>Account</span>
-                            <i class='bx bx-chevron-down'></i>
-                        </button>
-                        <div class="dropdown-content">
-                            <a href="<?php echo URLROOT; ?>/profile">
-                                <i class='bx bxs-user-detail'></i>
-                                Profile
-                            </a>
-                            <a href="<?php echo URLROOT; ?>/dashboard">
-                                <i class='bx bxs-dashboard'></i>
-                                Dashboard
-                            </a>
-                            <a href="<?php echo URLROOT; ?>/auth/logout" class="logout-link">
-                                <i class='bx bxs-log-out'></i>
-                                Logout
-                            </a>
-                        </div>
-                    </div>
-                <?php else : ?>
-                    <a href="<?php echo URLROOT; ?>/auth/login" class="login-btn">
-                        <i class='bx bxs-user'></i>
-                        Login
-                    </a>
-                    <a href="<?php echo URLROOT; ?>/auth/register" class="register-btn">
-                        <i class='bx bxs-user-plus'></i>
-                        Register
-                    </a>
+            <div class="nav-auth">
+                <?php if (isset($_SESSION['user_id'])): ?>
+                    <a href="<?php echo URLROOT; ?>/auth/logout" class="nav-button">Logout</a>
+                <?php else: ?>
+                    <a href="<?php echo URLROOT; ?>/auth/login" class="nav-button">Login</a>
                 <?php endif; ?>
             </div>
-        </div>
-    </nav>
-</body>
-</html>
-    
+        </nav>
+    </header>

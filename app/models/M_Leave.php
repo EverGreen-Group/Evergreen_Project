@@ -11,32 +11,21 @@ class M_Leave {
         return $this->db->resultSet();
     }
 
-    public function getRecentLeaveRequests() {
-        $this->db->query("SELECT l.*, 
-                        u.first_name, 
-                        u.last_name,
-                        lt.name as leave_type_name
-                        FROM leaves l
-                        JOIN users u ON l.user_id = u.user_id
-                        JOIN leave_types lt ON l.leave_type_id = lt.id
-                        WHERE l.status = 'Pending'
-                        ORDER BY l.created_at DESC
-                        LIMIT 5");
-        
-        return $this->db->resultSet();
-    }
-
     public function getLeaveBalance($employeeId) {
-        $this->db->query("SELECT 
-                         lt.name as leave_type,
-                         lb.total_allocated as total_days,
-                         lb.total_used as used_days,
-                         lb.remaining as remaining_days
-                         FROM leave_balances lb
-                         JOIN leave_types lt ON lb.leave_type_id = lt.id
-                         WHERE lb.staff_id = :employee_id
-                         AND lb.year = YEAR(CURRENT_DATE())");
+        $sql = "SELECT lt.name, lt.max_days_per_year - COALESCE(SUM(
+            CASE 
+                WHEN lr.status = 'approved' 
+                THEN DATEDIFF(lr.end_date, lr.start_date) + 1 
+                ELSE 0 
+            END
+        ), 0) as remaining_days
+        FROM leave_types lt
+        LEFT JOIN leave_requests lr ON lr.leave_type = lt.id 
+            AND lr.employee_id = :employee_id 
+            AND YEAR(lr.start_date) = YEAR(CURRENT_DATE)
+        GROUP BY lt.id, lt.name, lt.max_days_per_year";
         
+        $this->db->query($sql);
         $this->db->bind(':employee_id', $employeeId);
         return $this->db->resultSet();
     }
@@ -112,18 +101,6 @@ class M_Leave {
         $this->db->bind(':user_id', $userId);
         
         return $this->db->execute();
-    }
-
-    public function getEmployeeLeaves($id) {
-        $this->db->query("SELECT l.*, 
-                         lt.name as leave_type_name
-                         FROM leaves l
-                         JOIN leave_types lt ON l.leave_type_id = lt.id
-                         WHERE l.user_id = :id
-                         ORDER BY l.start_date DESC");
-        
-        $this->db->bind(':id', $id);
-        return $this->db->resultSet();
     }
 } 
 ?> 

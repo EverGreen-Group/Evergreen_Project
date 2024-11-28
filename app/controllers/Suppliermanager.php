@@ -148,9 +148,9 @@ class SupplierManager extends Controller {
     public function approveApplication($applicationId) {
         // Update application status to 'approved'
         if ($this->supplierApplicationModel->updateApplicationStatus($applicationId, 'approved')) {
-            flash('application_message', 'Application has been approved successfully');
+            // flash('application_message', 'Application has been approved successfully');
         } else {
-            flash('application_message', 'Something went wrong while approving the application', 'alert alert-danger');
+            // flash('application_message', 'Something went wrong while approving the application', 'alert alert-danger');
         }
         redirect('suppliermanager/applications');
     }
@@ -158,9 +158,9 @@ class SupplierManager extends Controller {
     public function rejectApplication($applicationId) {
         // Update application status to 'rejected'
         if ($this->supplierApplicationModel->updateApplicationStatus($applicationId, 'rejected')) {
-            flash('application_message', 'Application has been rejected successfully');
+            // flash('application_message', 'Application has been rejected successfully');
         } else {
-            flash('application_message', 'Something went wrong while rejecting the application', 'alert alert-danger');
+            // flash('application_message', 'Something went wrong while rejecting the application', 'alert alert-danger');
         }
         redirect('suppliermanager/applications');
     }
@@ -176,5 +176,64 @@ class SupplierManager extends Controller {
         $this->view('supplier_manager/v_suppliers', $data);
     }
 
+
+    public function supplierStatement() {
+        $data = [];
+        $this->view('shared/supplier/v_view_monthly_statement', $data);
+    }
+
+    public function allcomplaints()
+    {
+        $data = [];
+
+        $this->view('supplier_manager/v_all_complaints', $data);
+    }
+
+    public function complaints()
+    {
+        $data = [];
+
+        $this->view('supplier_manager/v_complaints', $data);
+    }
+
+    public function requests()
+    {
+        $data = [];
+
+        $this->view('supplier_manager/v_supplier_requests', $data);
+    }
+
+
+    public function payments()
+    {
+        $data = [];
+
+        $this->view('supplier_manager/v_payments', $data);
+    }
+
+    public function profile()
+    {
+        $data = [];
+
+        $this->view('supplier_manager/v_profile', $data);
+    }
+
+
+    public function chat()
+    {
+        $data = [];
+
+        $this->view('supplier_manager/v_chat', $data);
+    }
+
+    public function settings()
+    {
+        $data = [];
+
+        $this->view('supplier_manager/v_settings', $data);
+    }
+
 }
 ?>
+
+
