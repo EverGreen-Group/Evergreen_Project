@@ -9,108 +9,212 @@
 <main>
     <div class="head-title">
         <div class="left">
-            <h1>Tea Leaves Supplier</h1>
+            <h1>Submit Complaint</h1>
             <ul class="breadcrumb">
-                <li>
-                    <a href="SupplyDashboard.html">Home</a>
-                </li>
+                <li><a href="<?php echo URLROOT; ?>/supplier">Home</a></li>
                 <li><i class='bx bx-chevron-right'></i></li>
-                <li>
-                    <a class="active" href="#">Complaint</a>
-                </li>
+                <li><a class="active" href="#">Complaint</a></li>
             </ul>
         </div>
+    </div>
 
-
-        <?php
-        // Mock data for ratings
-        $ratings = [
-            5 => 50,
-            4 => 30,
-            3 => 15,
-            2 => 10,
-            1 => 5
-        ];
-
-        // Calculate the total number of ratings
-        $totalRatings = array_sum($ratings);
-        ?>
-
-        <!-- Ratings Section -->
-        <div class="rating">
-            <div>
-                <h4>Average Rating:</h4>
-                <span class="stars">
-                    <i class="bx bxs-star" style="color: gold;"></i>
-                    <i class="bx bxs-star" style="color: gold;"></i>
-                    <i class="bx bxs-star" style="color: gold;"></i>
-                    <i class="bx bxs-star" style="color: gold;"></i>
-                    <i class="bx bxs-star-half" style="color: gold;"></i>
-                </span>
-                <p>4.5 out of 5 stars</p>
+    <div class="table-data">
+        <div class="order">
+            <div class="head">
+                <h3>Complaint</h3>
             </div>
-        </div>
-        <div id="review-container">
-            <!-- Feedback Section -->
-            <div class="reviews">
-                <ul>
-                    <h4>Reviews:</h4>
-                    <li><strong>Jane Doe:</strong> "Excellent service and timely delivery! Couldn't be happier."</li>
-                    <li><strong>John Smith:</strong> "The quality of tea leaves is top-notch. Highly recommend this supplier."</li>
-                    <li><strong>Emily White:</strong> "Had a minor issue, but the customer service resolved it promptly. Great experience!"</li>
-                </ul>
-            </div>
-        </div>
-
-        <div class="table-data">
-            <div class="order">
-                <div class="head">
-                    <h3>Complaint Form</h3>
+            
+            <form action="<?php echo URLROOT; ?>/supplier/submitComplaint" method="post" enctype="multipart/form-data">
+                <div class="form-group">
+                    <label for="complaint-type">Complaint Type</label>
+                    <select id="complaint-type" name="complaint_type" required>
+                        <option value="">Select type</option>
+                        <option value="quality">Quality Issues</option>
+                        <option value="delivery">Delivery Problems</option>
+                        <option value="payment">Payment Issues</option>
+                        <option value="service">Customer Service</option>
+                        <option value="other">Other</option>
+                    </select>
                 </div>
-                <form action="submit_complaint.php" method="post" class="complaint-form">
-                    <div class="form-group">
-                        <label for="complaint-type">Complaint Type:</label>
-                        <select id="complaint-type" name="complaint_type" required>
-                            <option value="quality">Quality</option>
-                            <option value="service">Service</option>
-                            <option value="delivery">Delivery</option>
-                            <option value="other">Other(State in the description)</option>
-                        </select>
+
+                <div class="form-group">
+                    <label for="subject">Subject</label>
+                    <input type="text" id="subject" name="subject" placeholder="Brief description of the issue" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="description">Description</label>
+                    <textarea id="description" name="description" placeholder="Provide detailed information about your complaint" rows="4" required></textarea>
+                </div>
+
+                <div class="form-group">
+                    <label for="images">Attach Images (Optional)</label>
+                    <div class="file-upload">
+                        <input type="file" id="images" name="images[]" accept="image/*" multiple>
+                        <label for="images" class="file-label">
+                            <i class='bx bx-upload'></i>
+                            <span>Choose Files</span>
+                        </label>
+                        <div id="image-preview" class="image-preview"></div>
                     </div>
-                    <div class="form-group">
-                        <label for="description">Description:</label>
-                        <textarea id="description" name="description" rows="5" required></textarea>
-                    </div>
-                    <div class="form-group">
-                        <label for="email">Your Email:</label>
-                        <input type="email" id="email" name="email" required>
-                    </div>
-                    <div class="form-group">
-                        <label for="phone">Phone Number:</label>
-                        <input type="text" id="phone" name="phone">
-                    </div>
-                    <div class="button-group">
-                        <button type="submit" class="button" onclick="submitmessage()">Submit Complaint</button>
-                        <button type="button" class="button" onclick="refreshPage()">Cancel</button>
-                    </div>
-                </form>
-            </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="priority">Priority Level</label>
+                    <select id="priority" name="priority" required>
+                        <option value="low">Low</option>
+                        <option value="medium">Medium</option>
+                        <option value="high">High</option>
+                    </select>
+                </div>
+
+                <div class="form-actions">
+                    <button type="submit" class="btn-submit">Submit Complaint</button>
+                    <button type="button" class="btn-cancel" onclick="window.location.href='<?php echo URLROOT; ?>/supplier'">Cancel</button>
+                </div>
+            </form>
         </div>
     </div>
 </main>
 
-<script>
-    document.addEventListener('DOMContentLoaded', () => {
-        const bars = document.querySelectorAll('.bar');
+<style>
+    .form-group {
+        margin-bottom: 20px;
+    }
 
-        bars.forEach(bar => {
-            const percentage = bar.dataset.percentage;
-            const fill = bar.querySelector('.fill');
-            fill.style.width = percentage + '%';
+    .form-group label {
+        display: block;
+        margin-bottom: 8px;
+        font-weight: 500;
+        color: #333;
+    }
+
+    .form-group input,
+    .form-group select,
+    .form-group textarea {
+        width: 100%;
+        padding: 10px;
+        border: 1px solid #ddd;
+        border-radius: 5px;
+        font-size: 16px;
+    }
+
+    .form-group textarea {
+        resize: vertical;
+        min-height: 100px;
+    }
+
+    .file-upload {
+        position: relative;
+    }
+
+    .file-upload input[type="file"] {
+        display: none;
+    }
+
+    .file-label {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 10px;
+        background: #f5f5f5;
+        border: 2px dashed #ddd;
+        border-radius: 5px;
+        cursor: pointer;
+        text-align: center;
+    }
+
+    .file-label:hover {
+        background: #eee;
+    }
+
+    .image-preview {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        margin-top: 10px;
+    }
+
+    .image-preview img {
+        width: 80px;
+        height: 80px;
+        object-fit: cover;
+        border-radius: 5px;
+    }
+
+    .form-actions {
+        display: flex;
+        gap: 10px;
+        margin-top: 20px;
+    }
+
+    .btn-submit,
+    .btn-cancel {
+        flex: 1;
+        padding: 12px;
+        border: none;
+        border-radius: 5px;
+        font-size: 16px;
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+
+    .btn-submit {
+        background: var(--main);
+        color: white;
+    }
+
+    .btn-submit:hover {
+        background: var(--main-dark);
+        opacity: 0.9;
+    }
+
+    .btn-cancel {
+        background: #f5f5f5;
+        color: #333;
+    }
+
+    .btn-cancel:hover {
+        background: #e0e0e0;
+    }
+
+    @media screen and (max-width: 360px) {
+        .form-group input,
+        .form-group select,
+        .form-group textarea {
+            font-size: 14px;
+        }
+
+        .form-actions {
+            flex-direction: column;
+        }
+
+        .btn-submit,
+        .btn-cancel {
+            width: 100%;
+        }
+
+        .image-preview img {
+            width: 60px;
+            height: 60px;
+        }
+    }
+</style>
+
+<script>
+    document.getElementById('images').addEventListener('change', function(e) {
+        const preview = document.getElementById('image-preview');
+        preview.innerHTML = '';
+        
+        [...e.target.files].forEach(file => {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const img = document.createElement('img');
+                img.src = e.target.result;
+                preview.appendChild(img);
+            }
+            reader.readAsDataURL(file);
         });
     });
 </script>
 <script src="<?php echo URLROOT; ?>/css/script.js"></script>
-</body>
-
-</html>

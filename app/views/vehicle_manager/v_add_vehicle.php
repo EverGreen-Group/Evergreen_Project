@@ -109,7 +109,7 @@
 
                     <!-- Capacity Details -->
                     <div class="form-group">
-                        <label for="capacity">Cargo Capacity (Tons)</label>
+                        <label for="capacity">Vehicle Capacity (kg)</label>
                         <input type="number" id="capacity" name="capacity" 
                                step="0.01" min="0" max="100"
                                title="Capacity must be between 0 and 100 tons">
@@ -161,108 +161,6 @@
                                onchange="previewImage(this)">
                         <div id="imagePreview" class="image-preview"></div>
                         <div id="uploadError" class="text-danger"></div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Legal Documents Section -->
-        <div class="table-data">
-            <div class="order">
-                <div class="head">
-                    <h3>Legal Documents</h3>
-                    <p class="text-muted">Documents can be added later if not immediately available</p>
-                </div>
-                
-                <!-- Revenue License -->
-                <div class="document-section">
-                    <h4>Revenue License</h4>
-                    <div class="document-grid">
-                        <div class="form-group">
-                            <label for="revenue_number">License Number</label>
-                            <input type="text" id="revenue_number" name="documents[Revenue License][number]">
-                        </div>
-                        <div class="form-group">
-                            <label for="revenue_issue">Issue Date</label>
-                            <input type="date" id="revenue_issue" name="documents[Revenue License][issue_date]">
-                        </div>
-                        <div class="form-group">
-                            <label for="revenue_expiry">Expiry Date</label>
-                            <input type="date" id="revenue_expiry" name="documents[Revenue License][expiry_date]">
-                        </div>
-                        <div class="form-group">
-                            <label for="revenue_file">Document File</label>
-                            <input type="file" id="revenue_file" name="documents[Revenue License][file]" accept=".pdf,.jpg,.jpeg,.png">
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Insurance Certificate -->
-                <div class="document-section">
-                    <h4>Insurance Certificate</h4>
-                    <div class="document-grid">
-                        <div class="form-group">
-                            <label for="insurance_number">Insurance Number</label>
-                            <input type="text" id="insurance_number" name="documents[Insurance Certificate][number]">
-                        </div>
-                        <div class="form-group">
-                            <label for="insurance_issue">Issue Date</label>
-                            <input type="date" id="insurance_issue" name="documents[Insurance Certificate][issue_date]">
-                        </div>
-                        <div class="form-group">
-                            <label for="insurance_expiry">Expiry Date</label>
-                            <input type="date" id="insurance_expiry" name="documents[Insurance Certificate][expiry_date]">
-                        </div>
-                        <div class="form-group">
-                            <label for="insurance_file">Document File</label>
-                            <input type="file" id="insurance_file" name="documents[Insurance Certificate][file]" accept=".pdf,.jpg,.jpeg,.png">
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Emission Test -->
-                <div class="document-section">
-                    <h4>Emission Test Certificate</h4>
-                    <div class="document-grid">
-                        <div class="form-group">
-                            <label for="emission_number">Certificate Number</label>
-                            <input type="text" id="emission_number" name="documents[Emission Test][number]">
-                        </div>
-                        <div class="form-group">
-                            <label for="emission_issue">Issue Date</label>
-                            <input type="date" id="emission_issue" name="documents[Emission Test][issue_date]">
-                        </div>
-                        <div class="form-group">
-                            <label for="emission_expiry">Expiry Date</label>
-                            <input type="date" id="emission_expiry" name="documents[Emission Test][expiry_date]">
-                        </div>
-                        <div class="form-group">
-                            <label for="emission_file">Document File</label>
-                            <input type="file" id="emission_file" name="documents[Emission Test][file]" accept=".pdf,.jpg,.jpeg,.png">
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Route Permit -->
-                <div class="document-section">
-                    <h4>Route Permit</h4>
-                    <div class="document-grid">
-                        <div class="form-group">
-                            <label for="permit_number">Permit Number</label>
-                            <input type="text" id="permit_number" name="documents[Route Permit][number]">
-                        </div>
-                        <div class="form-group">
-                            <label for="permit_issue">Issue Date</label>
-                            <input type="date" id="permit_issue" name="documents[Route Permit][issue_date]">
-                        </div>
-                        <div class="form-group">
-                            <label for="permit_expiry">Expiry Date</label>
-                            <input type="date" id="permit_expiry" name="documents[Route Permit][expiry_date]">
-                        </div>
-                        <div class="form-group">
-                            <label for="permit_file">Document File</label>
-                            <input type="file" id="permit_file" name="documents[Route Permit][file]" accept=".pdf,.jpg,.jpeg,.png">
-                        </div>
                     </div>
                 </div>
             </div>

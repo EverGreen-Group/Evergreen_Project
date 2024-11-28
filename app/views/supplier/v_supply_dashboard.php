@@ -1,307 +1,263 @@
 <?php require APPROOT . '/views/inc/components/header.php'; ?>
-
-<!-- Side bar -->
 <?php require APPROOT . '/views/inc/components/sidebar_supplier.php'; ?>
-<!-- Top nav bar -->
 <?php require APPROOT . '/views/inc/components/topnavbar.php'; ?>
+<?php require APPROOT . '/views/supplier/css/dashboard_style.php'; ?>
 
-<!-- MAIN -->
 <main>
+    <!-- Dashboard Header -->
     <div class="head-title">
         <div class="left">
-            <h1>Tea Leaves Supplier Dashboard</h1>
+            <h1>Supplier Dashboard</h1>
             <ul class="breadcrumb">
-                <li><a href="#">Dashboard</a></li>
+                <li>
+                    <i class='bx bx-home'></i>
+                    <a href="<?php echo URLROOT; ?>/Supplier/dashboard/">Dashboard</a>
+                </li>
             </ul>
         </div>
-        <a href="#" class="btn-download">
-            <i class='bx bxs-cloud-download'></i>
-            <span class="text">Download Report</span>
-        </a>
     </div>
 
-    <!-- Box Info -->
-    <ul class="box-info">
-        <li>
-            <i class='bx bxs-calendar-check'></i>
-            <span class="text">
-                <h3><?php echo isset($data['total_collections']) ? $data['total_collections'] : '0'; ?></h3>
-                <p>Total Collections</p>
-                <small>This Month</small>
-            </span>
-        </li>
-        <li>
-            <i class='bx bxs-leaf'></i>
-            <span class="text">
-                <h3><?php echo isset($data['total_quantity']) ? $data['total_quantity'] . 'kg' : '0kg'; ?></h3>
-                <p>Total Tea Leaves</p>
-                <small>This Month</small>
-            </span>
-        </li>
-        <li>
-            <i class='bx bxs-dollar-circle'></i>
-            <span class="text">
-                <h3>Rs. <?php echo isset($data['total_earnings']) ? number_format($data['total_earnings'], 2) : '0.00'; ?></h3>
-                <p>Total Earnings</p>
-                <small>This Month</small>
-            </span>
-        </li>
-    </ul>
 
-    <div class="todo">
-            <div class="head">
-                <h3>Scheduled Collection Dates</h3>
+    <div class="stats-container">
+
+        <div class="stat-item">
+            <div class="stat-header">
+                <i class='bx bxs-calendar-check'></i>
+                <span>Collections</span>
             </div>
-            <div class="table-data">
-                <div class="order">
-                    <div class="head">
-                        <h4>Tea Leaves Collections</h4>
+            <div class="stat-value">
+                <?php echo isset($data['total_collections']) ? $data['total_collections'] : '3'; ?>
+                <small>this month</small>
+            </div>
+        </div>
+        <div class="stat-divider"></div>
+        <div class="stat-item">
+            <div class="stat-header">
+                <i class='bx bx-leaf'></i>
+                <span>Tea Leaves</span>
+            </div>
+            <div class="stat-value">
+                <?php echo isset($data['total_quantity']) ? $data['total_quantity'] : '120'; ?>
+                <small>kg this month</small>
+            </div>
+        </div>
+    </div>
+
+
+    <!-- Current Set Date Card -->
+    <div class="schedule-section">
+        
+        <div class="schedule-card current-schedule">
+            <div class="card-content">
+                <div class="schedule-info">
+                    <div class="info-item">
+                        <i class='bx bx-calendar'></i>
+                        <span>Every Monday</span>
                     </div>
-                    <table class="table">
-                        <thead>
-                            <tr>
-                                <th id="table-head">Date</th>
-                                <th id="table-head">Time</th>
-                                <th id="table-head">Order ID</th>
-                                <th id="table-head">Amount in kg</th>
-                                <th id="table-head">Status</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <tr>
-                                <td>Tomorrow</td>
-                                <td>08:00am</td>
-                                <td>11</td>
-                                <td>20</td>
-                                <td>Pending</td>
-                            </tr>
-                            <tr>
-                                <td>2024/11/05</td>
-                                <td>09:00am</td>
-                                <td>10</td>
-                                <td>20</td>
-                                <td>Delivered</td>
-                            </tr>
-                            <tr>
-                                <td>2024/10/12</td>
-                                <td>08:00am</td>
-                                <td>9</td>
-                                <td>20</td>
-                                <td>Delivered</td>
-                            </tr>
-                            <tr>
-                                <td>2024/10/07</td>
-                                <td>09:00am</td>
-                                <td>12</td>
-                                <td>26</td>
-                                <td>Delivered</td>
-                            </tr>
-                        </tbody>
-                    </table>
+                    <div class="info-item">
+                        <i class='bx bx-time-five'></i>
+                        <span>08:00 AM</span>
+                    </div>
                 </div>
-            </div>
-            
-            <a href="<?php echo URLROOT; ?>/Supplier/cancelpickup/" >
-                <button class="button">Request Pickup</button>
-            </a>
-
-        </div>
-
-    <div class="table-data">
-        
-        <!-- <div class="order">
-            <div class="head">
-                <h3>Collection over past months</h3>
-                <i class='bx bx-search'></i>
-                <i class='bx bx-filter'></i>
-
-                <div class="table-data">
-                <div class="chart-container">
-                    <h5>Tea Leaves Collections Chart(Last 6 Months)</h5>
-                    <canvas id="teaLeavesChart"></canvas>
+                <div class="schedule-action">
+                    <select class="schedule-select">
+                        <option value="" disabled selected>Select New Day</option>
+                        <option value="monday">Monday</option>
+                        <option value="tuesday">Tuesday</option>
+                        <option value="wednesday">Wednesday</option>
+                        <option value="thursday">Thursday</option>
+                        <option value="friday">Friday</option>
+                    </select>
+                    <button class="change-schedule-btn">
+                        <i class='bx bx-calendar-edit'></i>
+                        <span>Request Schedule Change</span>
+                    </button>
                 </div>
-                </div>
-            </div>
-            <?php if(isset($data['pending_requests']) && !empty($data['pending_requests'])): ?>
-                <table>
-                    <thead>
-                        <tr>
-                            <th>Request ID</th>
-                            <th>Date</th>
-                            <th>Quantity (kg)</th>
-                            <th>Status</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <?php foreach($data['pending_requests'] as $request): ?>
-                            <tr>
-                                <td><?php echo $request['id']; ?></td>
-                                <td><?php echo $request['date']; ?></td>
-                                <td><?php echo $request['quantity']; ?></td>
-                                <td><?php echo $request['status']; ?></td>
-                            </tr>
-                        <?php endforeach; ?>
-                    </tbody>
-                </table>
-            <?php else: ?>
-                <div>No pending requests</div>
-            <?php endif; ?>
-            <a href="<?php echo URLROOT; ?>/Supplier/notifications/" >
-                <button class="button">Collection Notifications</button>
-            </a>
-        </div> -->
-        <div class="order">
-            <div class="head">
-                <h5>Tea Leaves(This year)</h5>
-                <i class='bx bx-plus'></i>
-                <i class='bx bx-filter'></i>
-            </div>
-            <div class="chart-wrapper">
-                <canvas id="teaLeavesCollectionChart"></canvas>
             </div>
         </div>
         
     </div>
+
+    <div class="section-divider"></div>
+
+    <!-- Schedule Section -->
+    <div class="schedule-section">
+        <div class="section-header">
+            <h3>Scheduled Collections</h3>
+        </div>
+        
+        <div class="schedule-card">
+            <button class="nav-btn prev-btn">
+                <i class='bx bx-chevron-left'></i>
+            </button>
+
+            <div class="card-content">
+                <div class="card-header">
+                    <div class="status-badge today">Today</div>
+                </div>
+                <div class="card-body">
+                    <div class="schedule-info">
+                        <div class="info-item">
+                            <i class='bx bx-calendar'></i>
+                            <span>Today</span>
+                        </div>
+                        <div class="info-item">
+                            <i class='bx bx-time-five'></i>
+                            <span>08:00 AM</span>
+                        </div>
+                    </div>
+                    <div class="schedule-action">
+                        <a href="<?php echo URLROOT; ?>/Supplier/scheduleDetails" class="view-details-btn">
+                            <i class='bx bx-info-circle'></i>
+                            <span>View Details</span>
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <button class="nav-btn next-btn">
+                <i class='bx bx-chevron-right'></i>
+            </button>
+        </div>
+
+        <div class="card-navigation">
+            <span class="current-card">1</span>
+            <span>/</span>
+            <span class="total-cards">4</span>
+        </div>
+    </div>
+
+    <div class="section-divider"></div>
+
 
 </main>
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-<script src="<?php echo URLROOT; ?>/css/script.js"></script>
+<script>
 
-        <!-- TEA ORDER CHART -->
-        <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            const ctx = document.getElementById('teaLeavesChart').getContext('2d');
-            const tealeavesChart = new Chart(ctx, {
-                type: 'pie',
-                data: {
-                    labels: ['June', 'July', 'August', 'September', 'October', 'November', 'December'],
-                    datasets: [{
-                        data: [210, 180, 120, 90, 200, 320, 0],
-                        backgroundColor: [
-                            '#FF6384',
-                            '#36A2EB',
-                            '#36923B',
-                            '#FFCE56',
-                            '#4BC0C0',
-                            '#9966FF',
-                            '#9'
-                        ],
-                        borderWidth: 1
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    plugins: {
-                        legend: {
-                            position: 'right',
-                            labels: {
-                                font: {
-                                    size: 14
-                                }
-                            }
-                        },
-                        tooltip: {
-                            callbacks: {
-                                label: function(context) {
-                                    const label = context.label || '';
-                                    const value = context.raw || 0;
-                                    const total = context.dataset.data.reduce((a, b) => a + b, 0);
-                                    const percentage = ((value / total) * 100).toFixed(1);
-                                    return `${label}: ${value} (${percentage}%)`;
-                                }
-                            }
-                        }
-                    }
-                }
-            })
-        });
-        </script>
-        <script>
-            document.addEventListener('DOMContentLoaded', function() {
-                var ctx = document.getElementById('teaLeavesCollectionChart').getContext('2d');
-                var teaLeavesCollectionChart = new Chart(ctx, {
-                    type: 'line',
-                    data: {
-                        labels: ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'],
-                        datasets: [{
-                            label: 'Tea Leaves Collections',
-                            data: [280, 250, 180, 120, 100, 210, 180, 120, 90, 200, 320, 0],
-                            fill: true,
-                            backgroundColor: 'rgba(0, 128, 0, 0.1)',
-                            borderColor: '#008000',
-                            borderWidth: 3,
-                            tension: 0.4,
-                            pointBackgroundColor: '#008000',
-                            pointBorderColor: '#ffffff',
-                            pointBorderWidth: 2,
-                            pointRadius: 5,
-                            pointHoverRadius: 8
-                        }]
-                    },
-                    options: {
-                        responsive: true,
-                        maintainAspectRatio: false,
-                        plugins: {
-                            legend: {
-                                position: 'bottom',
-                                labels: {
-                                    font: {
-                                        size: 14
-                                    },
-                                    color: '#008000'
-                                }
-                            },
-                            title: {
-                                display: true,
-                                text: 'Tea Leaves Collections (Monthly)',
-                                color: '#008000',
-                                font: {
-                                    size: 16,
-                                    weight: 'bold'
-                                }
-                            }
-                        },
-                        scales: {
-                            x: {
-                                title: {
-                                    display: true,
-                                    text: 'Month',
-                                    color: '#008000'
-                                },
-                                grid: {
-                                    display: false
-                                },
-                                ticks: {
-                                    color: '#008000'
-                                }
-                            },
-                            y: {
-                                title: {
-                                    display: true,
-                                    text: 'Amount (kg)',
-                                    color: '#008000'
-                                },
-                                beginAtZero: true,
-                                grid: {
-                                    color: 'rgba(0, 128, 0, 0.1)'
-                                },
-                                ticks: {
-                                    color: '#008000'
-                                }
-                            }
-                        },
-                        interaction: {
-                            intersect: false,
-                            mode: 'index'
-                        },
-                        hover: {
-                            mode: 'nearest',
-                            intersect: true
-                        }
-                    }
-                });
-            });
-        </script>
-    </body>
-</html>
-    
+</script>
+
+<!-- Scripts -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="<?php echo URLROOT; ?>/public/css/script.js"></script>
+
+<!-- Add this after your main content but before closing </main> -->
+<div class="modal" id="scheduleDetailsModal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3>Collection Details</h3>
+            <button class="close-modal">
+                <i class='bx bx-x'></i>
+            </button>
+        </div>
+        <div class="modal-body">
+            <div class="detail-group">
+                <h4>Collection Information</h4>
+                <div class="detail-item">
+                    <span class="label">Date:</span>
+                    <span class="value">Today</span>
+                </div>
+                <div class="detail-item">
+                    <span class="label">Time:</span>
+                    <span class="value">08:00 AM</span>
+                </div>
+                <div class="detail-item">
+                    <span class="label">Order ID:</span>
+                    <span class="value">#11</span>
+                </div>
+                <div class="detail-item">
+                    <span class="label">Quantity:</span>
+                    <span class="value">20 kg</span>
+                </div>
+            </div>
+            <div class="detail-group">
+                <h4>Status Updates</h4>
+                <div class="status-timeline">
+                    <div class="timeline-item active">
+                        <div class="timeline-dot"></div>
+                        <div class="timeline-content">
+                            <p class="time">08:00 AM</p>
+                            <p class="status">Collection Scheduled</p>
+                        </div>
+                    </div>
+                    <div class="timeline-item">
+                        <div class="timeline-dot"></div>
+                        <div class="timeline-content">
+                            <p class="time">Pending</p>
+                            <p class="status">Collector Arrival</p>
+                        </div>
+                    </div>
+                    <div class="timeline-item">
+                        <div class="timeline-dot"></div>
+                        <div class="timeline-content">
+                            <p class="time">Pending</p>
+                            <p class="status">Collection Complete</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Add this to your existing JavaScript file
+function initializeModal() {
+    const modal = document.getElementById('scheduleDetailsModal');
+    const viewDetailsBtn = document.querySelector('.view-details-btn');
+    const closeModalBtn = document.querySelector('.close-modal');
+
+    viewDetailsBtn.addEventListener('click', () => {
+        modal.classList.add('active');
+        document.body.style.overflow = 'hidden'; // Prevent background scrolling
+    });
+
+    closeModalBtn.addEventListener('click', () => {
+        modal.classList.remove('active');
+        document.body.style.overflow = ''; // Restore scrolling
+    });
+
+    // Close modal when clicking outside
+    modal.addEventListener('click', (e) => {
+        if (e.target === modal) {
+            modal.classList.remove('active');
+            document.body.style.overflow = '';
+        }
+    });
+}
+
+// Add this to your DOMContentLoaded event
+document.addEventListener('DOMContentLoaded', function() {
+    initializeScheduleCards();
+    initializeModal();
+});
+</script>
+
+<style>
+    .schedule-action {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+    }
+
+    .schedule-select {
+        width: 100%;
+        padding: 8px 12px;
+        border: 1px solid #008000;
+        border-radius: 25px;
+        background: white;
+        color: #2b2b2b;
+        font-size: 0.95rem;
+        cursor: pointer;
+        outline: none;
+        transition: all 0.3s ease;
+    }
+
+    .schedule-select:hover {
+        border-color: #006400;
+        box-shadow: 0 2px 5px rgba(0, 128, 0, 0.1);
+    }
+
+    .schedule-select:focus {
+        border-color: #006400;
+        box-shadow: 0 2px 5px rgba(0, 128, 0, 0.1);
+    }
+</style>

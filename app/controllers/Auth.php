@@ -130,7 +130,7 @@ class Auth extends Controller
                             header('Location: ' . URLROOT . '/supplier/');
                             break;
                         case RoleHelper::ADMIN:
-                            header('Location: ' . URLROOT . '/');
+                            header('Location: ' . URLROOT . '/vehiclemanager/');
                             break;
                         case RoleHelper::DRIVING_PARTNER:
                             header('Location: ' . URLROOT . '/drivingpartner/');

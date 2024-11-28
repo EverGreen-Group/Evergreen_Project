@@ -53,6 +53,35 @@
     </li>
   </ul>
 
+
+  <?php flash('vehicle_message'); ?>
+  <!-- New section for vehicle cards -->
+  <div class="vehicle-cards-section">
+      <h2>All Vehicles</h2>
+      <div class="vehicle-cards-container" id="vehicleCardsContainer">
+          <?php foreach ($data['vehicles'] as $vehicle): ?>
+              <!-- Basic card with flexbox -->
+              <div class="vehicle-card" style="display: flex; margin-bottom: 20px; border: 1px solid #ddd; padding: 10px; border-radius: 8px;">
+                  <!-- Left side - Image with fixed dimensions -->
+                  <div style="margin-right: 20px;">
+                      <img src="<?php echo URLROOT; ?>/public/uploads/vehicle_photos/<?php echo $vehicle->license_plate; ?>.jpg" 
+                           alt="Vehicle <?php echo $vehicle->license_plate; ?>">
+                  </div>
+                  
+                  <!-- Right side - Info -->
+                  <div>
+                      <h3 style="margin: 0 0 10px 0;"><?php echo htmlspecialchars($vehicle->license_plate); ?></h3>
+                      <span style="display: inline-block; padding: 5px 10px; background: #e8f5e9; color: #2e7d32; border-radius: 15px; margin-bottom: 10px;">
+                          <?php echo htmlspecialchars($vehicle->status); ?>
+                      </span>
+                      <p><strong>Type:</strong> <?php echo htmlspecialchars($vehicle->vehicle_type); ?></p>
+                      <p><strong>Capacity:</strong> <?php echo htmlspecialchars($vehicle->capacity); ?> Tons</p>
+                  </div>
+              </div>
+          <?php endforeach; ?>
+      </div>
+  </div>
+
   <!-- Vehicle Information Table -->
   <div class="table-data">
     <div class="order">
@@ -281,33 +310,7 @@
     });
   </script>
 
-  <?php flash('vehicle_message'); ?>
-  <!-- New section for vehicle cards -->
-  <div class="vehicle-cards-section">
-      <h2>All Vehicles</h2>
-      <div class="vehicle-cards-container" id="vehicleCardsContainer">
-          <?php foreach ($data['vehicles'] as $vehicle): ?>
-              <!-- Basic card with flexbox -->
-              <div class="vehicle-card" style="display: flex; margin-bottom: 20px; border: 1px solid #ddd; padding: 10px; border-radius: 8px;">
-                  <!-- Left side - Image with fixed dimensions -->
-                  <div style="margin-right: 20px;">
-                      <img src="<?php echo URLROOT; ?>/public/uploads/vehicle_photos/<?php echo $vehicle->license_plate; ?>.jpg" 
-                           alt="Vehicle <?php echo $vehicle->license_plate; ?>">
-                  </div>
-                  
-                  <!-- Right side - Info -->
-                  <div>
-                      <h3 style="margin: 0 0 10px 0;"><?php echo htmlspecialchars($vehicle->license_plate); ?></h3>
-                      <span style="display: inline-block; padding: 5px 10px; background: #e8f5e9; color: #2e7d32; border-radius: 15px; margin-bottom: 10px;">
-                          <?php echo htmlspecialchars($vehicle->status); ?>
-                      </span>
-                      <p><strong>Type:</strong> <?php echo htmlspecialchars($vehicle->vehicle_type); ?></p>
-                      <p><strong>Capacity:</strong> <?php echo htmlspecialchars($vehicle->capacity); ?> Tons</p>
-                  </div>
-              </div>
-          <?php endforeach; ?>
-      </div>
-  </div>
+
 
   <!-- Vehicle details modal -->
   <div id="vehicleDetailsModal" class="modal">

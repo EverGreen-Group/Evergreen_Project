@@ -26,18 +26,6 @@
 				</a>
 			</li>			
 			<li>
-					<a href="<?php echo URLROOT; ?>/supplier/teaorders">
-					<i class='bx bxs-doughnut-chart'></i>
-					<span class="text">Tea Orders</span>
-				</a>
-			</li>
-			<!-- <li>
-				<a href="<?php echo URLROOT; ?>/supplier/notifications">
-					<i class='bx bxs-message-dots'></i>
-					<span class="text">Notifications</span>
-				</a>
-			</li> -->
-			<li>
 					<a href="<?php echo URLROOT; ?>/supplier/payments">
 					<i class='bx bxs-group'></i>
 					<span class="text">Payments</span>
@@ -65,12 +53,12 @@
                     <span class="text">Settings</span>
                 </a>
             </li>
-            <li>
-                <a href="#" class="logout">
-                    <i class='bx bxs-log-out-circle'></i>
-                    <span class="text">Logout</span>
-                </a>
-            </li>
+			<li>
+			<a href="<?php echo URLROOT; ?>/auth/logout" class="logout">
+				<i class="bx bxs-log-out-circle"></i>
+				<span class="text">Logout</span>
+			</a>
+			</li>
         </ul>
     </section>
 

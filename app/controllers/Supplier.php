@@ -52,12 +52,12 @@ class Supplier extends Controller {
         $this->view('supplier/v_confirmation_history', $data);
     }
 
-    public function teaorders()
-    {
-        $data = [];
+    // public function teaorders()
+    // {
+    //     $data = [];
 
-        $this->view('supplier/v_new_order', $data);
-    }
+    //     $this->view('supplier/v_new_order', $data);
+    // }
 
     public function payments()
     {
@@ -258,7 +258,13 @@ class Supplier extends Controller {
         exit;
     }
 
-    
+    public function viewMonthlyIncome() {
+        $data = [
+            'title' => 'Schedule Details'
+        ];
+
+        $this->view('shared/supplier/v_view_monthly_statement', $data);
+    }
 
     // form validation function 
     private function validateRequest($data) {
@@ -410,6 +416,12 @@ class Supplier extends Controller {
         return $order && $order->supplier_id == $_SESSION['user_id'];
     }
     
-    
+    public function scheduleDetails() {
+        $data = [
+            'title' => 'Schedule Details'
+        ];
+
+        $this->view('supplier/v_schedule_details', $data);
+    }
 }
 ?>

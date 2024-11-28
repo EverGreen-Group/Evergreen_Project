@@ -523,6 +523,12 @@ class VehicleDriver extends controller {
 
         $this->view('vehicle_driver/v_collection_status', $data);
     }
+
+
+    public function setReadyTest() {
+        $data = [];
+        $this->view('v_schedule_details.php', $data);
+    }
 }
 
 ?>
