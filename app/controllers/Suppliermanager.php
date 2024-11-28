@@ -175,9 +175,11 @@ class SupplierManager extends Controller {
 
         $this->view('supplier_manager/v_suppliers', $data);
     }
-    public function collections() {
+
+
+    public function supplierStatement() {
         $data = [];
-        $this->view('supplier_manager/v_collection', $data);
+        $this->view('shared/supplier/v_view_monthly_statement', $data);
     }
 
     public function allcomplaints()
@@ -194,18 +196,11 @@ class SupplierManager extends Controller {
         $this->view('supplier_manager/v_complaints', $data);
     }
 
-    public function fertilizerorders()
+    public function requests()
     {
         $data = [];
 
-        $this->view('supplier_manager/v_fertilizer_orders', $data);
-    }
-
-    public function leafsupply()
-    {
-        $data = [];
-
-        $this->view('supplier_manager/v_leaf_supply', $data);
+        $this->view('supplier_manager/v_supplier_requests', $data);
     }
 
 

@@ -21,6 +21,9 @@ class Collectionschedules extends Controller {
             'days_of_week' => isset($_POST['days_of_week']) ? $_POST['days_of_week'] : []
         ];
 
+        // Debug: Print data
+        error_log(print_r($data, true));
+
         // Validation rules
         $errors = [];
 
@@ -61,23 +64,34 @@ class Collectionschedules extends Controller {
             return;
         }
 
-        // Check for schedule conflicts
+        // Check for schedule conflicts and create entries
         foreach ($data['days_of_week'] as $day) {
-            $checkData = array_merge($data, ['day' => $day]);
-            if ($this->collectionScheduleModel->checkConflict($checkData)) {
+            // Create a new data array for each day
+            $singleDayData = [
+                'route_id' => $data['route_id'],
+                'team_id' => $data['team_id'],
+                'vehicle_id' => $data['vehicle_id'],
+                'shift_id' => $data['shift_id'],
+                'week_number' => $data['week_number'],
+                'days_of_week' => $day  // Single day value
+            ];
+
+            // Check for conflicts
+            if ($this->collectionScheduleModel->checkConflict($singleDayData)) {
                 flash('schedule_create_error', "Schedule conflict detected for $day", 'alert alert-danger');
+                redirect('vehiclemanager/');
+                return;
+            }
+
+            // Create schedule for this day
+            if (!$this->collectionScheduleModel->create($singleDayData)) {
+                flash('schedule_create_error', "Failed to create schedule for $day", 'alert alert-danger');
                 redirect('vehiclemanager/');
                 return;
             }
         }
 
-        // Attempt to create schedule
-        if ($this->collectionScheduleModel->create($data)) {
-            flash('schedule_create_success', 'Collection schedule created successfully!', 'alert alert-success');
-        } else {
-            flash('schedule_create_error', 'Failed to create collection schedule', 'alert alert-danger');
-        }
-
+        flash('schedule_create_success', 'Collection schedule created successfully!', 'alert alert-success');
         redirect('vehiclemanager/');
     }
 
