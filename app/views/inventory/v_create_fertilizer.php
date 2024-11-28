@@ -25,31 +25,37 @@
                     <h2>Add New Fertilizer</h2>
                     <button class="close-btn">&times;</button>
                 </div>
-                <form>
+                <form action="<?php echo URLROOT; ?>/inventory/createfertilizer" method="POST">
                     <!-- Basic Information Section -->
                     <section class="form-section">
                         <h3>Basic information</h3>
                         <div class="form-group">
                             <div class="form-control">
                                 <label for="fertilizer-name">Fertilizer name</label>
-                                <input type="text" id="fertilizer-name" placeholder="B750">
+                                <input type="text" id="fertilizer-name" name="fertilizer_name" placeholder="Enter Fertilizer name" value="<?php echo isset($data['fertilizer_name']) ? $data['fertilizer_name'] : ''; ?>">
                             </div>
                             <div class="form-control">
                                 <label for="company-name">Company name</label>
-                                <select id="company-name">
-                                    <option>CIC</option>
-                                    <!-- Add more options as needed -->
+                                <select id="company-name" name="company_name">
+                                    <option value="cic"<?php echo (isset($data['company_name']) && $data['company_name'] == 'cic') ? 'selected' : ''; ?> >CIC</option>
+                                    <option value="baur"<?php echo (isset($data['company_name']) && $data['company_name'] == 'baur') ? 'selected' : ''; ?>>Baur</option>
+                                    <option value="brown"<?php echo (isset($data['company_name']) && $data['company_name'] == 'brown') ? 'selected' : ''; ?>>Brown & Company</option>
+                                    <option value="hayleys"<?php echo (isset($data['company_name']) && $data['company_name'] == 'hayleys') ? 'selected' : ''; ?>>Hayleys</option>
+                                    <option value="lankem"<?php echo (isset($data['company_name']) && $data['company_name'] == 'lankem') ? 'selected' : ''; ?>>Lankem Ceylon</option>
+                                    
+            
+                                
                                 </select>
                             </div>
                         </div>
                         <div class="form-group">
                             <div class="form-control">
                                 <label for="details">Details</label>
-                                <input type="text" id="details" placeholder="Enter details">
+                                <input type="text" id="details" name="details" placeholder="Enter details" value="<?php echo isset($data['details']) ? $data['details'] : ''; ?>">
                             </div>
                             <div class="form-control">
                                 <label for="code">Code</label>
-                                <input type="text" id="code" placeholder="Enter Code">
+                                <input type="text" id="code" name="code" placeholder="Enter Code" value="<?php echo isset($data['code']) ? $data['code'] : ''; ?>">
                             </div>
                         </div>
                     </section>
@@ -70,7 +76,7 @@
                             <label for="price">Price</label>
                             <div class="price-input">
                                 <span>$</span>
-                                <input type="number" id="price" placeholder="Enter price">
+                                <input type="number" id="price" name="price" placeholder="Enter price" value="<?php echo isset($data['price']) ? $data['price'] : ''; ?>">
                             </div>
                         </div>
                     </section>
@@ -81,12 +87,16 @@
                         <div class="form-group">
                             <div class="form-control">
                                 <label for="quantity">Quantity</label>
-                                <input type="number" id="quantity" placeholder="Enter quantity">
+                                <input type="number" id="quantity" name="quantity" placeholder="Enter quantity" value="<?php echo isset($data['quantity']) ? $data['quantity'] : ''; ?>">
                             </div>
                             <div class="form-control">
                                 <label for="unit">Unit</label>
-                                <select id="unit">
-                                    <option>Item</option>
+                                <select id="unit" name="unit">
+                                    <option value="item"<?php echo (isset($data['unit']) && $data['unit'] == 'item') ? 'selected' : ''; ?>>Item</option>
+                                    <option value="kg"<?php echo (isset($data['unit']) && $data['unit'] == 'kg') ? 'selected' : ''; ?>>Kg</option>
+                                    <option value="bag"<?php echo (isset($data['unit']) && $data['unit'] == 'bag') ? 'selected' : ''; ?>>Bag</option>
+                                    <option value="ton"<?php echo (isset($data['unit']) && $data['unit'] == 'ton') ? 'selected' : ''; ?>>Ton</option>
+
                                     <!-- Add more options as needed -->
                                 </select>
                             </div>

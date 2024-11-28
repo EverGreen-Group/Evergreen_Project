@@ -10,7 +10,7 @@
         <main>
 			<div class="head-title">
 				<div class="left">
-					<h1>Tea Leaves Supplier</h1>
+					<h1>Fertilizer</h1>
 					<ul class="breadcrumb">
 						<li>
 							<a href="SupplyDashboard.html">Home ></a>
@@ -63,9 +63,35 @@
         </main>
 		</div>
     </section>
-    <script src="<?php echo URLROOT; ?>/css/components/script.js"></script>
+    <script src="<?php echo URLROOT; ?>/css/script.js"></script>
 </body>
 </html>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

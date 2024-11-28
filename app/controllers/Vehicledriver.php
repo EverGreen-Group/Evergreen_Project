@@ -299,7 +299,6 @@ class VehicleDriver extends controller {
     }
 
 
-
     // Add this new method to get current driver location
     private function getCurrentDriverLocation() {
         // If you have a stored location in session or database, retrieve it
@@ -523,6 +522,12 @@ class VehicleDriver extends controller {
         ];
 
         $this->view('vehicle_driver/v_collection_status', $data);
+    }
+
+
+    public function setReadyTest() {
+        $data = [];
+        $this->view('v_schedule_details.php', $data);
     }
 }
 

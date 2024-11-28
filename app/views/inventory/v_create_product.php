@@ -20,7 +20,8 @@
         <?php require APPROOT . '/views/inc/components/sidebar_inventory.php' ?>
         <div class="screen">
             <div class="form-container">
-                <form class="create-product-form" action="<?php echo URLROOT; ?>/Inventory/createproduct" method="POST">
+                <form class="create-product-form" action="<?php echo URLROOT; ?>/Inventory/createproduct" method="POST"
+                    enctype="multipart/form-data">
                     <div class="form-header">
                         <h2>Create New Product</h2>
                     </div>
@@ -58,8 +59,13 @@
                     <div class="form-section">
                         <h3>Media (Images)</h3>
                         <div class="media-upload-area">
-                            <div class="upload-placeholder">
-                                <span>+</span>
+                            <input type="file" id="product_image" name="product_image" accept="image/*"
+                                onchange="previewImage(this)">
+                            <div class="image-preview" id="imagePreview">
+                                <img src="" alt="Image Preview" id="preview" style="display: none;">
+                                <div class="upload-placeholder" id="placeholder">
+                                    <span>+</span>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -116,3 +122,21 @@
         </div>
     </main>
     <?php require APPROOT . '/views/inc/components/footer.php' ?>
+    <script>
+        function previewImage(input) {
+            const preview = document.getElementById('preview');
+            const placeholder = document.getElementById('placeholder');
+
+            if (input.files && input.files[0]) {
+                const reader = new FileReader();
+
+                reader.onload = function (e) {
+                    preview.src = e.target.result;
+                    preview.style.display = 'block';
+                    placeholder.style.display = 'none';
+                }
+
+                reader.readAsDataURL(input.files[0]);
+            }
+        }
+    </script>

@@ -871,6 +871,8 @@ document.addEventListener('DOMContentLoaded', function() {
         margin-top: 1rem;
         text-align: center;
     }
+<<<<<<< HEAD
+=======
 
     /* Extra small screen adjustments */
     @media (max-width: 528px) {
@@ -1031,6 +1033,7 @@ document.addEventListener('DOMContentLoaded', function() {
             flex-direction: column;
         }
     }
+>>>>>>> simaak
 </style>
 
 <?php require APPROOT . '/views/inc/components/footer.php'; ?> 

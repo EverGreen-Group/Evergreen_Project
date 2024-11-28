@@ -314,41 +314,34 @@ updateCountdowns();
     color: var(--dark);
     margin: 0;
 }
-
 .route-box-info li .text p {
     font-size: 14px;
     color: var(--dark-grey);
     margin: 0;
 }
-
 /* Table Styles */
 table {
     width: 100%;
     border-collapse: collapse;
 }
-
 th, td {
     padding: 12px;
     text-align: left;
     border-bottom: 1px solid var(--border-color);
 }
-
 th {
     font-weight: 600;
     color: var(--dark-grey);
 }
-
 .status {
     padding: 6px 12px;
     border-radius: 20px;
     font-size: 14px;
 }
-
 .status.completed {
     background: var(--light-success);
     color: var(--success);
 }
-
 .status.pending {
     background: var(--light-warning);
     color: var(--warning);

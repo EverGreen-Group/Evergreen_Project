@@ -68,29 +68,43 @@
                         </div>
                     </div>
 
-                    <!-- Supplier Incompetence Reports -->
+                    <!-- Missed Collection -->
                     <div class="order" style="flex: 1;">
                         <div class="head">
-                            <h3>Supplier Performance Issues</h3>
+                            <h3>Missed Collection</h3>
                         </div>
-                        <div class="performance-list">
-                            <div class="performance-item">
-                                <div class="supplier-details">
-                                    <span class="supplier-id">SUP27429</span>
-                                    <span class="supplier-name">John Doe</span>
-                                </div>
-                                <div class="issue-count critical">5 complaints</div>
-                                <div class="issue-types">Quality Issues, Late Delivery</div>
-                            </div>
-                            <div class="performance-item">
-                                <div class="supplier-details">
-                                    <span class="supplier-id">SUP13445</span>
-                                    <span class="supplier-name">Sarah Smith</span>
-                                </div>
-                                <div class="issue-count high">3 complaints</div>
-                                <div class="issue-types">Quantity Discrepancy</div>
-                            </div>
-                            <!-- Add more performance items as needed -->
+                        <div class="table-data">
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th>Supplier ID</th>
+                                        <th>Supplier Name</th>
+                                        <th>Missed Date</th>
+                                        <th>Reason</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td>SUP27429</td>
+                                        <td>John Doe</td>
+                                        <td>2024-03-01</td>
+                                        <td>Late Arrival</td>
+                                    </tr>
+                                    <tr>
+                                        <td>SUP13445</td>
+                                        <td>Sarah Smith</td>
+                                        <td>2024-03-02</td>
+                                        <td>Vehicle Breakdown</td>
+                                    </tr>
+                                    <tr>
+                                        <td>SUP98765</td>
+                                        <td>Michael Brown</td>
+                                        <td>2024-03-03</td>
+                                        <td>Weather Conditions</td>
+                                    </tr>
+                                    <!-- Add more rows as needed -->
+                                </tbody>
+                            </table>
                         </div>
                     </div>
                 </div>
@@ -100,18 +114,6 @@
                     <div class="order">
                         <div class="head">
                             <h3>Recent Complaints</h3>
-                            <div class="head-actions">
-                                <div class="search-box">
-                                    <i class='bx bx-search'></i>
-                                    <input type="text" placeholder="Search complaints...">
-                                </div>
-                                <select class="filter-select">
-                                    <option value="all">All Status</option>
-                                    <option value="new">New</option>
-                                    <option value="in-progress">In Progress</option>
-                                    <option value="resolved">Resolved</option>
-                                </select>
-                            </div>
                         </div>
                         
                         <table>
@@ -122,8 +124,6 @@
                                     <th>Category</th>
                                     <th>Subject</th>
                                     <th>Submitted</th>
-                                    <th>Status</th>
-                                    <th>Priority</th>
                                     <th>Actions</th>
                                 </tr>
                             </thead>
@@ -144,33 +144,15 @@
                                             <span class="time">08:30 AM</span>
                                         </div>
                                     </td>
-                                    <td><span class="status new">New</span></td>
-                                    <td><span class="priority high">High</span></td>
                                     <td>
-                                        <div class="actions">
-                                            <button class="btn-action" title="View Details">
-                                                <i class='bx bx-show'></i>
-                                            </button>
-                                            <button class="btn-action" title="Assign">
-                                                <i class='bx bx-user-plus'></i>
-                                            </button>
-                                            <button class="btn-action" title="Update Status">
-                                                <i class='bx bx-revision'></i>
-                                            </button>
-                                        </div>
+                                        <button class="btn-action" title="View Details">
+                                            <i class='bx bx-show'></i> View
+                                        </button>
                                     </td>
                                 </tr>
                                 <!-- More complaint rows... -->
                             </tbody>
                         </table>
-
-                        <div class="pagination">
-                            <button class="btn-page"><i class='bx bx-chevron-left'></i></button>
-                            <button class="btn-page active">1</button>
-                            <button class="btn-page">2</button>
-                            <button class="btn-page">3</button>
-                            <button class="btn-page"><i class='bx bx-chevron-right'></i></button>
-                        </div>
                     </div>
                 </div>
             </main>
@@ -299,6 +281,122 @@
             border: 1px solid var(--grey);
             border-radius: 4px;
             outline: none;
+        }
+
+        .status {
+            padding: 0.2rem 0.5rem;
+            border-radius: 4px;
+            font-weight: bold;
+        }
+
+        .status.action-required {
+            background-color: #ffe5e5; /* Light red */
+            color: #d32f2f; /* Dark red */
+        }
+
+        .status.resolved {
+            background-color: #d4edda; /* Light green */
+            color: #155724; /* Dark green */
+        }
+
+        .table-data {
+            margin-top: 20px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th, td {
+            padding: 12px 15px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+
+        th {
+            background-color: #f4f4f4;
+            color: #333;
+        }
+
+        tbody tr:hover {
+            background-color: #f1f1f1; /* Light grey on hover */
+        }
+
+        .status {
+            padding: 0.2rem 0.5rem;
+            border-radius: 4px;
+            font-weight: bold;
+        }
+
+        .status.new {
+            background-color: #e7f3fe; /* Light blue */
+            color: #31708f; /* Dark blue */
+        }
+
+        .status.in-progress {
+            background-color: #fff3cd; /* Light yellow */
+            color: #856404; /* Dark yellow */
+        }
+
+        .status.resolved {
+            background-color: #d4edda; /* Light green */
+            color: #155724; /* Dark green */
+        }
+
+        .priority {
+            padding: 0.2rem 0.5rem;
+            border-radius: 4px;
+            font-weight: bold;
+        }
+
+        .priority.high {
+            background-color: #f8d7da; /* Light red */
+            color: #721c24; /* Dark red */
+        }
+
+        .priority.medium {
+            background-color: #fff3cd; /* Light yellow */
+            color: #856404; /* Dark yellow */
+        }
+
+        .priority.low {
+            background-color: #d4edda; /* Light green */
+            color: #155724; /* Dark green */
+        }
+
+        .search-box {
+            display: flex;
+            align-items: center;
+            border: 1px solid var(--grey);
+            border-radius: 4px;
+            padding: 5px;
+        }
+
+        .search-box input {
+            border: none;
+            outline: none;
+            padding: 5px;
+        }
+
+        .filter-select {
+            margin-left: 10px;
+            padding: 5px;
+            border: 1px solid var(--grey);
+            border-radius: 4px;
+        }
+
+        .btn-action {
+            background-color: #007bff; /* Bootstrap primary color */
+            color: white;
+            border: none;
+            border-radius: 4px;
+            padding: 5px 10px;
+            cursor: pointer;
+        }
+
+        .btn-action:hover {
+            background-color: #0056b3; /* Darker shade on hover */
         }
         </style>
     </body>

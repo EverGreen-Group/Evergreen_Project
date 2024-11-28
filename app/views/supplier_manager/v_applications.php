@@ -118,72 +118,88 @@
     </div>
 
     <!-- Land Inspection Requests -->
-    <div class="table-data">
-        <div class="order">
-            <div class="head">
-                <h3>Land Inspection Requests</h3>
-                <div class="head-actions">
-                    <select class="filter-select">
-                        <option value="all">All Requests</option>
-                        <option value="pending">Pending</option>
-                        <option value="scheduled">Scheduled</option>
-                        <option value="completed">Completed</option>
-                    </select>
-                </div>
+<div class="table-data">
+    <div class="order">
+        <div class="head">
+            <h3>Land Inspection Requests</h3>
+            <div class="head-actions">
+                <select class="filter-select">
+                    <option value="all">All Requests</option>
+                    <option value="pending">Pending</option>
+                    <option value="scheduled">Scheduled</option>
+                    <option value="completed">Completed</option>
+                </select>
             </div>
-            <table>
-                <thead>
-                    <tr>
-                        <th>Request ID</th>
-                        <th>Supplier ID</th>
-                        <th>Land Area (Acres)</th>
-                        <th>Location</th>
-                        <th>Preferred Date</th>
-                        <th>Status</th>
-                        <th>Actions</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <tr>
-                        <td>INS001</td>
-                        <td>SUP001</td>
-                        <td>2.5</td>
-                        <td>Galle, Sri Lanka</td>
-                        <td>2024-03-15</td>
-                        <td><span class="status-badge pending">Pending</span></td>
-                        <td>
-                            <div class="action-buttons">
-                                <button class="btn-approve" onclick="scheduleInspection('INS001')">
-                                    <i class='bx bx-calendar'></i> Schedule
-                                </button>
-                                <button class="btn-view" onclick="viewDetails('INS001')">
-                                    <i class='bx bx-detail'></i> Details
-                                </button>
-                            </div>
-                        </td>
-                    </tr>
-                    <tr>
-                        <td>INS002</td>
-                        <td>SUP003</td>
-                        <td>1.8</td>
-                        <td>Matara, Sri Lanka</td>
-                        <td>2024-03-18</td>
-                        <td><span class="status-badge scheduled">Scheduled</span></td>
-                        <td>
-                            <div class="action-buttons">
-                                <button class="btn-approve" onclick="scheduleInspection('INS002')">
-                                    <i class='bx bx-calendar'></i> Schedule
-                                </button>
-                                <button class="btn-view" onclick="viewDetails('INS002')">
-                                    <i class='bx bx-detail'></i> Details
-                                </button>
-                            </div>
-                        </td>
-                    </tr>
-                </tbody>
-            </table>
         </div>
+        <table>
+            <thead>
+                <tr>
+                    <th>Request ID</th>
+                    <th>Supplier ID</th>
+                    <th>Land Area (Acres)</th>
+                    <th>Location</th>
+                    <th>Preferred Date</th>
+                    <th>Scheduled Date</th>
+                    <th>Scheduled Time</th>
+                    <th>Status</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>INS001</td>
+                    <td>SUP001</td>
+                    <td>2.5</td>
+                    <td>Galle, Sri Lanka</td>
+                    <td>2024-03-15</td>
+                    <td>
+                        <input type="date" class="inline-date-input" id="scheduleDate-INS001">
+                    </td>
+                    <td>
+                        <input type="time" class="inline-time-input" id="scheduleTime-INS001">
+                    </td>
+                    <td><span class="status-badge pending">Pending</span></td>
+                    <td>
+                        <div class="action-buttons">
+                            <button class="btn-approve" onclick="scheduleInspection('INS001')">
+                                <i class='bx bx-calendar'></i> Schedule
+                            </button>
+                        </div>
+                    </td>
+                </tr>
+                <!-- More rows can be added similarly -->
+            </tbody>
+        </table>
     </div>
+</div>
+
+<style>
+.inline-date-input, .inline-time-input {
+    width: 100%;
+    padding: 5px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 0.8rem;
+}
+</style>
+
+<script>
+function scheduleInspection(requestId) {
+    const dateInput = document.getElementById(`scheduleDate-${requestId}`);
+    const timeInput = document.getElementById(`scheduleTime-${requestId}`);
+    
+    if (dateInput.value && timeInput.value) {
+        console.log('Scheduling inspection:', {
+            requestId: requestId,
+            date: dateInput.value,
+            time: timeInput.value
+        });
+        // Here you would typically make an AJAX call to save the scheduling
+    } else {
+        alert('Please select both date and time');
+    }
+}
+</script>
 </main>
 
 <?php require APPROOT . '/views/inc/components/footer.php'; ?>
@@ -368,23 +384,53 @@
 
 <script>
 function scheduleInspection(requestId) {
-    // Add your scheduling logic here
-    console.log('Scheduling inspection for:', requestId);
+    // Set the request ID in the modal
+    document.getElementById('requestId').value = requestId;
+    
+    // Show the modal
+    document.getElementById('scheduleInspectionModal').style.display = 'block';
 }
 
+function closeModal() {
+    // Hide the modal
+    document.getElementById('scheduleInspectionModal').style.display = 'none';
+}
+
+document.getElementById('inspectionForm').addEventListener('submit', function(event) {
+    event.preventDefault(); // Prevent the default form submission
+
+    const requestId = document.getElementById('requestId').value;
+    const inspectionDate = document.getElementById('inspectionDate').value;
+    const inspectionTime = document.getElementById('inspectionTime').value;
+
+    // Add your scheduling logic here
+    console.log('Scheduling inspection for:', requestId, 'on', inspectionDate, 'at', inspectionTime);
+
+    // Close the modal after scheduling
+    closeModal();
+});
+
+// Close modal when clicking outside of it
+window.onclick = function(event) {
+    const modal = document.getElementById('scheduleInspectionModal');
+    if (event.target == modal) {
+        closeModal();
+    }
+};
+
+// Existing functions
 function markComplete(requestId) {
-    // Add your completion logic here
     console.log('Marking inspection as complete:', requestId);
 }
 
 function viewDetails(requestId) {
-    // Add your view details logic here
     console.log('Viewing details for:', requestId);
 }
 
 document.querySelector('.filter-select').addEventListener('change', function() {
-    // Add your filtering logic here
     const status = this.value;
     console.log('Filtering by status:', status);
 });
 </script>
+
+

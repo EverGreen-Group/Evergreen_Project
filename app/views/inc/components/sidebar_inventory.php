@@ -22,7 +22,7 @@
         <span class="text">Fertilizer</span>
       </a>
     </li>
-    <li>
+    <li class="<?php echo (basename($_SERVER['REQUEST_URI']) == 'order') ? 'active' : ''; ?>">
       <a href="../inventory/order">
         <i class="bx bx-trip"></i>
         <span class="text">Order</span>
@@ -34,18 +34,18 @@
         <span class="text">Machine Allocation</span>
       </a>
     </li>
-    <li>
+    <li class="<?php echo (basename($_SERVER['REQUEST_URI']) == 'export') ? 'active' : ''; ?>">
       <a href="../inventory/export">
         <i class="bx bxs-group"></i>
         <span class="text">Export</span>
       </a>
     </li>
-    <li>
+    <!-- <li>
       <a href="../inventory/recodes">
         <i class="bx bxs-group"></i>
         <span class="text">Recodes</span>
       </a>
-    </li>
+    </li> -->
   </ul>
   <ul class="side-menu">
     <li>

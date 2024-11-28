@@ -168,6 +168,7 @@
                     <th>Name</th>
                     <th>Suppliers</th>
                     <th>Status</th>
+                    <th>Actions</th>
                 </tr>
             </thead>
             <tbody>
@@ -180,6 +181,13 @@
                             <span class="status <?php echo htmlspecialchars($route->status === 'Active' ? 'completed' : 'error'); ?>">
                                 <?php echo htmlspecialchars($route->status); ?>
                             </span>
+                        </td>
+                        <td>
+                            <form action="<?php echo URLROOT; ?>/vehiclemanager/deleteRoute/" method="POST" style="display: inline;" 
+                                  onsubmit="return confirm('Are you sure you want to delete this route?');">
+                                <input type="hidden" name="route_id" value="<?php echo $route->route_id; ?>">
+                                <button type="submit" class="delete-btn">Delete</button>
+                            </form>
                         </td>
                     </tr>
                 <?php endforeach; ?>
@@ -762,6 +770,21 @@
 
     #routeSupplierTable {
         margin-top: 10px;
+    }
+
+    /* Add this to your CSS file */
+    .delete-btn {
+        background-color: red;
+        color: white;
+        border: none;
+        border-radius: 5px;
+        padding: 5px 10px;
+        cursor: pointer;
+        transition: background-color 0.3s ease;
+    }
+
+    .delete-btn:hover {
+        background-color: darkred;
     }
 </style>
 

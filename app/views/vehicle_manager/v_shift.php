@@ -10,7 +10,6 @@
 
 
 
-
   <!-- Shift Management Section -->
   <div class="head-title">
     <div class="left">
@@ -570,7 +569,6 @@
 }
 
 h2 {
-    color: var(--dark);
     margin-bottom: 20px;
 }
 

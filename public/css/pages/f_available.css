@@ -11,17 +11,19 @@ h1, h2, h3 {
 .container {
     max-width: 100%;
     min-height: 100vh;
-    margin: 0;
+    margin: 20px;
     width: 100%;
     background-color: white;
     padding: 20px;
     box-sizing: border-box;
+    border-radius: 10px;
 }
 
 header {
     display: flex;
     justify-content: space-between;
     align-items: center;
+    margin-top: 20px;
     margin-bottom: 20px;
 }
 

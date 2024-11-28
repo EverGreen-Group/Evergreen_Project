@@ -160,6 +160,7 @@
           </div>
           <div class="info-row">
               <div class="info-label">Number of Collections:</div>
+              <!-- <div class="info-value" id="detailNumberOfCollections"></div> -->
               <div class="info-value" id="detailNumberOfCollections"></div>
           </div>
           <div class="info-row">
@@ -182,7 +183,6 @@
                   <tr>
                       <th>Driver ID</th>
                       <th>Name</th>
-                      <th>Contact</th>
                       <th>Status</th>
                   </tr>
               </thead>
@@ -191,7 +191,6 @@
                       <tr>
                           <td><?php echo htmlspecialchars($driver->driver_id); ?></td>
                           <td><?php echo htmlspecialchars($driver->driver_name); ?></td>
-                          <td><?php echo htmlspecialchars($driver->contact_number ?? 'N/A'); ?></td>
                           <td>
                               <span class="status completed">Available</span>
                           </td>
@@ -840,8 +839,8 @@ function showTeamDetails(team) {
     document.getElementById('detailStatus').innerText = team.status;
 
     // Populate new fields
-    document.getElementById('detailNumberOfCollections').innerText = team.number_of_collections || 'N/A'; // Assuming this data is available
-    document.getElementById('detailTotalQuantityCollected').innerText = team.total_quantity_collected || '0.00'; // Assuming this data is available
+    document.getElementById('detailNumberOfCollections').innerText = team.number_of_collections || '3'; // Assuming this data is available
+    document.getElementById('detailTotalQuantityCollected').innerText = team.total_quantity_collected || '2100 kg'; // Assuming this data is available
 
     // Populate images
     document.getElementById('detailDriverImage').src = team.driver_image_url || 'https://randomuser.me/api/portraits/men/1.jpg';

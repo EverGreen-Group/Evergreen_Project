@@ -10,7 +10,7 @@
 
 <div class="head-title">
     <div class="left">
-        <h1>Vehicle Manager Dashboard</h1>
+        <h1>Collection Management</h1>
         <ul class="breadcrumb">
             <li><a href="#">Dashboard</a></li>
         </ul>

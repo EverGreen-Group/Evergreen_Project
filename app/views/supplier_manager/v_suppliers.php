@@ -33,9 +33,6 @@
             </select>
         </div>
 
-        <a href="#" class="btn-download" id="monthlyStatementBtn" onclick="viewMonthlyStatement()">
-            <i class='bx bxs-navigation'></i> View Monthly Statement
-        </a>
     </div>
 
     <!-- Box Info -->
@@ -74,18 +71,13 @@
             <div class="head">
                 <h3>Weekly Collection Overview</h3>
                 <div class="head-actions">
-                    <a href="<?php echo URLROOT; ?>/supplier_manager/supplierStatement/<?php echo isset($_GET['id']) ? $_GET['id'] : ''; ?>" 
+                    <a href="<?php echo URLROOT; ?>/suppliermanager/supplierStatement/<?php echo isset($_GET['id']) ? $_GET['id'] : ''; ?>" 
                        class="btn-download" 
                        id="statementBtn">
                         <i class='bx bx-file'></i> Monthly Statement
                     </a>
-                    <button class="btn-download" onclick="downloadMonthlyStats()">
-                        <i class='bx bx-download'></i> Download Stats
-                    </button>
-                    <select id="time-period">
-                        <option value="week">Weekly View</option>
-                        <option value="month">Monthly View</option>
-                    </select>
+
+
                 </div>
             </div>
             <div class="graph-container">
@@ -592,142 +584,6 @@ select, input[type="number"] {
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script src="<?php echo URLROOT; ?>/css/components/script.js"></script>
 
-<script>
-// Weekly collection data (in kilograms)
-const weeklyData = {
-    current: {
-        labels: ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'],
-        collections: [1200, 1450, 1350, 1600, 1500, 800]
-    },
-    last: {
-        labels: ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'],
-        collections: [1300, 1550, 1250, 1500, 1400, 750]
-    }
-};
-
-// Initialize the chart
-const ctx = document.getElementById('teaLeavesGraph').getContext('2d');
-let weeklyChart = new Chart(ctx, {
-    type: 'bar',
-    data: {
-        labels: weeklyData.current.labels,
-        datasets: [{
-            label: 'Current Week',
-            data: weeklyData.current.collections,
-            backgroundColor: 'rgba(141, 159, 45, 0.8)',  // #8D9F2D with opacity
-            borderColor: '#8D9F2D',
-            borderWidth: 1,
-            barPercentage: 0.6,
-            categoryPercentage: 0.5
-        },
-        {
-            label: 'Previous Week',
-            data: weeklyData.last.collections,
-            backgroundColor: 'rgba(0, 118, 100, 0.6)', // #007664 with opacity
-            borderColor: '#007664',
-            borderWidth: 1,
-            barPercentage: 0.6,
-            categoryPercentage: 0.5
-        },
-        {
-            label: 'Change',
-            data: weeklyData.current.collections.map((curr, index) => {
-                const prev = weeklyData.last.collections[index];
-                return curr - prev;
-            }),
-            backgroundColor: (context) => {
-                const change = context.dataset.data[context.dataIndex];
-                return change >= 0 ? 'rgba(76, 175, 80, 0.5)' : 'rgba(244, 67, 54, 0.5)';
-            },
-            borderColor: (context) => {
-                const change = context.dataset.data[context.dataIndex];
-                return change >= 0 ? '#4CAF50' : '#f44336';
-            },
-            borderWidth: 1,
-            hidden: true,  // Hidden by default
-            barPercentage: 0.4,
-            categoryPercentage: 0.5
-        }]
-    },
-    options: {
-        responsive: true,
-        maintainAspectRatio: false,
-        interaction: {
-            intersect: false,
-            mode: 'index'
-        },
-        scales: {
-            x: {
-                stacked: false,
-                grid: {
-                    display: false
-                }
-            },
-            y: {
-                beginAtZero: true,
-                title: {
-                    display: true,
-                    text: 'Collection Amount (kg)'
-                }
-            }
-        },
-        plugins: {
-            title: {
-                display: false
-            },
-            legend: {
-                position: 'top',
-                align: 'end',
-                onClick: function(e, legendItem, legend) {
-                    const index = legendItem.datasetIndex;
-                    const ci = legend.chart;
-                    
-                    if (index === 2) {  // Change dataset
-                        ci.data.datasets[0].hidden = !ci.data.datasets[0].hidden;
-                        ci.data.datasets[1].hidden = !ci.data.datasets[1].hidden;
-                        ci.data.datasets[2].hidden = !ci.data.datasets[2].hidden;
-                    } else {
-                        ci.data.datasets[index].hidden = !ci.data.datasets[index].hidden;
-                    }
-                    ci.update();
-                }
-            },
-            tooltip: {
-                callbacks: {
-                    label: function(context) {
-                        const label = context.dataset.label || '';
-                        const value = context.parsed.y;
-                        
-                        if (context.datasetIndex === 2) {  // Change dataset
-                            const sign = value >= 0 ? '+' : '';
-                            return `${label}: ${sign}${value} kg`;
-                        }
-                        return `${label}: ${value} kg`;
-                    }
-                }
-            }
-        }
-    }
-});
-
-// Update the week selection event listener
-document.getElementById('time-period').addEventListener('change', function() {
-    const selectedPeriod = this.value;
-    if (selectedPeriod === 'week') {
-        weeklyChart.data.datasets[0].data = weeklyData.current.collections;
-        weeklyChart.data.datasets[1].data = weeklyData.last.collections;
-    } else {
-        weeklyChart.data.datasets[0].data = weeklyData.last.collections;
-        weeklyChart.data.datasets[1].data = weeklyData.current.collections;
-    }
-    // Recalculate changes
-    weeklyChart.data.datasets[2].data = weeklyChart.data.datasets[0].data.map((curr, index) => {
-        const prev = weeklyChart.data.datasets[1].data[index];
-        return curr - prev;
-    });
-    weeklyChart.update();
-});
-</script>
 
 <style>
 .collection-stats {
@@ -824,64 +680,8 @@ document.getElementById('time-period').addEventListener('change', function() {
 }
 </style>
 
-<script>
-function downloadMonthlyStats() {
-    // Example data - replace with actual data from your backend
-    const monthlyData = [
-        ['Date', 'Collection Amount (kg)', 'Number of Suppliers', 'Average per Supplier'],
-        ['2024-01-01', '1200', '24', '50'],
-        ['2024-01-02', '1450', '24', '60.4'],
-        // ... more data rows
-    ];
 
-    // Convert data to CSV format
-    const csvContent = monthlyData.map(row => row.join(',')).join('\n');
-
-    // Create blob and download link
-    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-    const link = document.createElement('a');
-    const url = URL.createObjectURL(blob);
-    
-    link.setAttribute('href', url);
-    link.setAttribute('download', `tea_collection_stats_${new Date().toISOString().slice(0,7)}.csv`);
-    link.style.visibility = 'hidden';
-    
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-}
-</script>
-
-<script>
-document.addEventListener('DOMContentLoaded', function() {
-    const ctx = document.getElementById('collectionProgress').getContext('2d');
-    const progressPercentage = 65; // Example percentage
-
-    new Chart(ctx, {
-        type: 'doughnut',
-        data: {
-            datasets: [{
-                data: [progressPercentage, 100 - progressPercentage],
-                backgroundColor: ['#007664', '#e0e0e0'], // Main color and grey for remaining
-                borderWidth: 0
-            }]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            cutout: '80%', // Adjust the thickness of the ring
-            plugins: {
-                tooltip: {
-                    enabled: false // Disable tooltips
-                }
-            }
-        }
-    });
-
-    // Update the percentage text
-    document.getElementById('progress-percentage').textContent = `${progressPercentage}%`;
-});
-</script>
+>
 
 <style>
 .supplier-card {
@@ -1038,47 +838,7 @@ document.addEventListener('DOMContentLoaded', function() {
 }
 </style>
 
-<script>
-document.addEventListener('DOMContentLoaded', function() {
-    // Tea Types Distribution Chart
-    const teaTypesCtx = document.getElementById('teaTypesChart').getContext('2d');
-    new Chart(teaTypesCtx, {
-        type: 'pie',
-        data: {
-            labels: ['Normal Leaves', 'Super Leaves'],
-            datasets: [{
-                data: [1250, 750],
-                backgroundColor: ['#4CAF50', '#2196F3'],
-                borderWidth: 0
-            }]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            plugins: {
-                legend: {
-                    display: false
-                },
-                tooltip: {
-                    callbacks: {
-                        label: function(context) {
-                            const value = context.raw;
-                            const total = context.dataset.data.reduce((a, b) => a + b, 0);
-                            const percentage = ((value / total) * 100).toFixed(1);
-                            return `${value}kg (${percentage}%)`;
-                        }
-                    }
-                }
-            }
-        }
-    });
 
-    // Update chart when period changes
-    document.getElementById('leaf-period').addEventListener('change', function() {
-        // Add logic to update chart data based on selected period
-    });
-});
-</script>
 
 <style>
 .profile-main {
@@ -1711,33 +1471,46 @@ function updateDashboard(supplierId) {
 </script>
 
 <script>
-function viewMonthlyStatement() {
-    const supplierId = document.getElementById('currentSupplier').value;
-    if (!supplierId) {
-        alert('Please select a supplier first');
-        return;
-    }
-    
-    window.location.href = `<?php echo URLROOT; ?>/suppliermanager/supplierStatement/${supplierId}`;
-}
+    // Sample data for the line graph
+    const collectionDates = ['2023-10-01', '2023-10-02', '2023-10-03', '2023-10-04', '2023-10-05'];
+    const teaLeavesCollected = [45, 43, 41, 39, 44]; // Sample values for tea leaves collected
 
-// Update button state when supplier changes
-document.getElementById('currentSupplier').addEventListener('change', function() {
-    const monthlyStatementBtn = document.getElementById('monthlyStatementBtn');
-    if (this.value) {
-        monthlyStatementBtn.classList.remove('disabled');
-    } else {
-        monthlyStatementBtn.classList.add('disabled');
-    }
-});
+    const ctx = document.getElementById('teaLeavesGraph').getContext('2d');
+    const teaLeavesGraph = new Chart(ctx, {
+        type: 'line', // Specify the type of chart
+        data: {
+            labels: collectionDates, // X-axis labels
+            datasets: [{
+                label: 'Tea Leaves Collected (kg)', // Label for the dataset
+                data: teaLeavesCollected, // Data for the Y-axis
+                borderColor: 'rgba(75, 192, 192, 1)', // Line color
+                backgroundColor: 'rgba(75, 192, 192, 0.2)', // Area color
+                borderWidth: 2,
+                fill: false // Fill the area under the line
+            }]
+        },
+        options: {
+            responsive: true,
+            scales: {
+                x: {
+                    title: {
+                        display: true,
+                        text: 'Collection Dates' // X-axis title
+                    }
+                },
+                y: {
+                    title: {
+                        display: true,
+                        text: 'Amount (kg)' // Y-axis title
+                    },
+                    beginAtZero: true, // Start Y-axis at zero
+                    max: 50, // Set a custom maximum value for the Y-axis
+                    min: 30
+                }
+            }
+        }
+    });
 </script>
 
-<style>
-.btn-download.disabled {
-    opacity: 0.6;
-    cursor: not-allowed;
-    pointer-events: none;
-}
-</style>
 
 <?php require APPROOT . '/views/inc/components/footer.php'; ?>

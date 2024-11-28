@@ -20,18 +20,18 @@
 
     <main>
 
-        <div class="container">
-            <header>
-                <h1>Fertilizer</h1>
-                <div class="search-filter">
-                    <input type="text" placeholder="Search">
-                    <button class="filter-btn">Filter</button>
-                </div>
-                <a href="<?php echo URLROOT; ?>/inventory/fertilizerdashboard">
-                    <button class="create-btn">Fertilizer Dashboard</button>
-                </a>
-            </header>
+        <header style="margin: 20px;">
+            <h1>Fertilizer</h1>
+            <!-- <div class="search-filter">
+                <input type="text" placeholder="Search">
+                <button class="filter-btn">Filter</button>
+            </div> -->
+            <a href="<?php echo URLROOT; ?>/inventory/fertilizerdashboard">
+                <button class="create-btn">Fertilizer Dashboard</button>
+            </a>
+        </header>
 
+        <div class="container">
             <section class="orders">
                 <h2>Available Orders <span class="inventory-count">10 Inventory Plans</span></h2>
                 <table>
@@ -42,8 +42,8 @@
                             <th>Location</th>
                             <th>Inventory Date</th>
                             <th>Status</th>
-                            <th>Button</th>
-                            <th>Button</th>
+                            <th>Approved</th>
+                            <th>Discard</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -54,8 +54,8 @@
                             <td>ishan</td>
                             <td>galle</td>
                             <td>Nov 23, 2023</td>
-                            <td><span class="status accept">Accept</span></td>
-                            <td><button class="action-btn accept-btn">Button</button></td>
+                            <td><span class="status">Accept</span></td>
+                            <td><button class="action-btn accept-btn">Approve</button></td>
                             <td><button class="action-btn reject-btn">Reject</button></td>
                         </tr>
                         <tr>
@@ -65,8 +65,8 @@
                             <td>Simaak</td>
                             <td>galle</td>
                             <td>Nov 23, 2023</td>
-                            <td><span class="status accept">Accept</span></td>
-                            <td><button class="action-btn accept-btn">Button</button></td>
+                            <td><span class="status">Accept</span></td>
+                            <td><button class="action-btn accept-btn">Approve</button></td>
                             <td><button class="action-btn reject-btn">Reject</button></td>
                         </tr>
                         <!-- Additional rows go here -->
