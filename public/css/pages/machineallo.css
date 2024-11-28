@@ -101,12 +101,12 @@ tbody tr:hover {
 }
 
 .detail {
-    background-color: #056b8a;
+    background-color:#28a745;
     color: white;
 }
 
 .detail:hover {
-    background-color: #e207ff;
+    background-color: hwb(145 6% 39%);
     color: white;
 }
 
