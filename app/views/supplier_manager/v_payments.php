@@ -29,51 +29,111 @@
                 </div>
             </div>
 
-            <!-- Today's Pending Payments -->
+            <!-- Monthly Supplier Payrolls -->
             <div class="table-data">
                 <div class="order">
                     <div class="head">
-                        <h3>Today's Pending Payments</h3>
+                        <h3>Monthly Payment Overview - 2024</h3>
                         <div class="head-info">
-                            <span class="total-amount">Total: Rs. 125,450</span>
-                            <span class="total-suppliers">15 Suppliers</span>
+                            <select class="year-select">
+                                <option value="2024">2024</option>
+                                <option value="2023">2023</option>
+                            </select>
+                        </div>
+                    </div>
+                    <table class="payment-overview-table">
+                        <thead>
+                            <tr>
+                                <th>Month</th>
+                                <th>Total Suppliers</th>
+                                <th>Total Tea Weight (kg)</th>
+                                <th>Gross Amount (Rs.)</th>
+                                <th>Fertilizer Deductions (Rs.)</th>
+                                <th>Net Amount (Rs.)</th>
+                                <th>Status</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr class="clickable-row">
+                                <td>March</td>
+                                <td>15</td>
+                                <td>2,450.5</td>
+                                <td>285,740.00</td>
+                                <td>65,000.00</td>
+                                <td>220,740.00</td>
+                                <td><span class="status pending">Pending</span></td>
+                                <td><a href="<?php echo URLROOT; ?>/supplier/monthlyPayments/2024-03" class="view-btn">View Details</a></td>
+                            </tr>
+                            <tr class="clickable-row">
+                                <td>February</td>
+                                <td>14</td>
+                                <td>2,280.0</td>
+                                <td>265,300.00</td>
+                                <td>48,000.00</td>
+                                <td>217,300.00</td>
+                                <td><span class="status processed">Completed</span></td>
+                                <td><a href="<?php echo URLROOT; ?>/supplier/monthlyPayments/2024-02" class="view-btn">View Details</a></td>
+                            </tr>
+                            <tr class="clickable-row">
+                                <td>January</td>
+                                <td>13</td>
+                                <td>2,150.0</td>
+                                <td>248,500.00</td>
+                                <td>52,000.00</td>
+                                <td>196,500.00</td>
+                                <td><span class="status processed">Completed</span></td>
+                                <td><a href="<?php echo URLROOT; ?>/supplier/monthlyPayments/2024-01" class="view-btn">View Details</a></td>
+                            </tr>
+                        </tbody>
+                        <tfoot>
+                            <tr>
+                                <td><strong>Year Total</strong></td>
+                                <td><strong>14 (avg)</strong></td>
+                                <td><strong>6,880.5</strong></td>
+                                <td><strong>799,540.00</strong></td>
+                                <td><strong>165,000.00</strong></td>
+                                <td><strong>634,540.00</strong></td>
+                                <td colspan="2"></td>
+                            </tr>
+                        </tfoot>
+                    </table>
+                </div>
+            </div>
+
+            <div class="table-data">
+                <!-- Monthly Fertilizer Summary -->
+                <div class="order">
+                    <div class="head">
+                        <h3>Monthly Fertilizer Purchases Summary</h3>
+                        <div class="head-info">
+                            <span class="total-amount">Total Value: Rs. 65,000.00</span>
                         </div>
                     </div>
                     <table>
                         <thead>
                             <tr>
-                                <th>Supplier ID</th>
-                                <th>Name</th>
-                                <th>Supply Time</th>
-                                <th>Quantity (kg)</th>
-                                <th>Est. Amount</th>
-                                <th>Status</th>
+                                <th>Fertilizer Type</th>
+                                <th>Total Quantity (kg)</th>
+                                <th>Unit Price (Rs.)</th>
+                                <th>Total Value (Rs.)</th>
+                                <th>No. of Orders</th>
                             </tr>
                         </thead>
                         <tbody>
                             <tr>
-                                <td>SUP001</td>
-                                <td>John Doe</td>
-                                <td>08:30 AM</td>
-                                <td>25</td>
-                                <td>Rs. 2,875</td>
-                                <td><span class="status processing">Processing</span></td>
+                                <td>NPK 15-15-15</td>
+                                <td>250</td>
+                                <td>180.00</td>
+                                <td>45,000.00</td>
+                                <td>15</td>
                             </tr>
                             <tr>
-                                <td>SUP014</td>
-                                <td>Sarah Smith</td>
-                                <td>09:15 AM</td>
-                                <td>32</td>
-                                <td>Rs. 3,680</td>
-                                <td><span class="status processed">Processed</span></td>
-                            </tr>
-                            <tr>
-                                <td>SUP023</td>
-                                <td>Mike Johnson</td>
-                                <td>10:00 AM</td>
-                                <td>18</td>
-                                <td>Rs. 2,070</td>
-                                <td><span class="status processing">Processing</span></td>
+                                <td>Urea</td>
+                                <td>125</td>
+                                <td>160.00</td>
+                                <td>20,000.00</td>
+                                <td>8</td>
                             </tr>
                         </tbody>
                     </table>
@@ -91,73 +151,77 @@
                     </div>
                     
                     <div class="config-grid">
-                        <!-- Base Rate Section -->
+                        <!-- Base Rates Section -->
                         <div class="config-section">
                             <h4><i class='bx bx-money'></i> Base Rates</h4>
                             <div class="config-item">
-                                <label>Standard Base Rate</label>
+                                <label>Normal Leaf Rate</label>
                                 <div class="input-control">
                                     <span class="prefix">Rs.</span>
-                                    <input type="number" value="100" step="0.50" min="0">
+                                    <input type="number" value="95" step="0.50" min="0">
                                     <span class="suffix">/kg</span>
                                 </div>
                             </div>
                             <div class="config-item">
-                                <label>Peak Season Bonus</label>
+                                <label>Super Leaf Rate</label>
                                 <div class="input-control">
-                                    <input type="number" value="10" min="0" max="100">
-                                    <span class="suffix">%</span>
+                                    <span class="prefix">Rs.</span>
+                                    <input type="number" value="120" step="0.50" min="0">
+                                    <span class="suffix">/kg</span>
                                 </div>
                             </div>
                         </div>
 
-                        <!-- Quality Grades Section -->
+                        <!-- Moisture Content Deductions -->
                         <div class="config-section">
-                            <h4><i class='bx bx-medal'></i> Quality Grades</h4>
+                            <h4><i class='bx bx-droplet'></i> Moisture Deductions</h4>
                             <div class="config-item">
-                                <label>Grade A (Premium)</label>
+                                <label>Low Moisture (Below 68%)</label>
                                 <div class="input-control">
-                                    <input type="number" value="20" min="0" max="100">
-                                    <span class="suffix">% bonus</span>
+                                    <input type="number" value="5" min="0" max="100">
+                                    <span class="suffix">% deduction</span>
                                 </div>
                             </div>
                             <div class="config-item">
-                                <label>Grade B (Standard)</label>
-                                <div class="base-rate-text">Base Rate</div>
+                                <label>Optimal Range</label>
+                                <div class="range-input">
+                                    <input type="number" value="68" min="0" max="100">
+                                    <span>% to</span>
+                                    <input type="number" value="72" min="0" max="100">
+                                    <span>%</span>
+                                </div>
                             </div>
                             <div class="config-item">
-                                <label>Grade C (Low)</label>
+                                <label>High Moisture (Above 72%)</label>
                                 <div class="input-control">
-                                    <input type="number" value="10" min="0" max="100">
+                                    <input type="number" value="8" min="0" max="100">
                                     <span class="suffix">% deduction</span>
                                 </div>
                             </div>
                         </div>
 
-                        <!-- Quality Parameters Section -->
+                        <!-- Leaf Age Deductions -->
                         <div class="config-section">
-                            <h4><i class='bx bx-leaf'></i> Quality Parameters</h4>
+                            <h4><i class='bx bx-time'></i> Leaf Age Deductions</h4>
                             <div class="config-item">
-                                <label>Moisture Content Range</label>
-                                <div class="range-input">
-                                    <input type="number" value="70" min="0" max="100">
-                                    <span>% to</span>
-                                    <input type="number" value="75" min="0" max="100">
-                                    <span>%</span>
+                                <label>4-6 Hours Old</label>
+                                <div class="input-control">
+                                    <input type="number" value="3" min="0" max="100">
+                                    <span class="suffix">% deduction</span>
                                 </div>
                             </div>
                             <div class="config-item">
-                                <label>Maximum Collection Time</label>
-                                <div class="time-input">
-                                    <input type="number" value="4" min="1" max="24">
-                                    <span>hours</span>
+                                <label>6-8 Hours Old</label>
+                                <div class="input-control">
+                                    <input type="number" value="5" min="0" max="100">
+                                    <span class="suffix">% deduction</span>
                                 </div>
                             </div>
                             <div class="config-item">
-                                <label>Contamination Tolerance</label>
-                                <div class="rate-input">
-                                    <input type="number" value="2" min="0" max="100">
-                                    <span>%</span>
+                                <label>Over 8 Hours Old</label>
+                                <div class="input-control">
+                                    <input type="number" value="10" min="0" max="100">
+                                    <span class="suffix">% deduction</span>
                                 </div>
                             </div>
                         </div>
@@ -332,7 +396,112 @@
     .status.processing {
         animation: pulse 1.5s ease-in-out infinite;
     }
+
+    /* Add these new styles */
+    .month-select {
+        padding: 0.5rem 2rem 0.5rem 1rem;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        background-color: white;
+        font-size: 0.9rem;
+        color: #333;
+        cursor: pointer;
+        appearance: none;
+        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='%23333' viewBox='0 0 16 16'%3E%3Cpath d='M7.247 11.14L2.451 5.658C1.885 5.013 2.345 4 3.204 4h9.592a1 1 0 0 1 .753 1.659l-4.796 5.48a1 1 0 0 1-1.506 0z'/%3E%3C/svg%3E");
+        background-repeat: no-repeat;
+        background-position: calc(100% - 0.75rem) center;
+    }
+
+    .view-btn {
+        padding: 0.4rem 0.8rem;
+        background-color: var(--main);
+        color: var(--light);
+        border-radius: 4px;
+        font-size: 0.85rem;
+        text-decoration: none;
+        transition: background-color 0.3s;
+    }
+
+    .view-btn:hover {
+        background-color: var(--main-dark);
+    }
+
+    table tfoot {
+        background-color: #f8f9fa;
+    }
+
+    table tfoot td {
+        padding: 12px;
+        border-top: 2px solid #ddd;
+    }
+
+    .status.paid {
+        background-color: var(--main);
+        color: var(--light);
+    }
+
+    .status.pending {
+        background-color: var(--yellow);
+        color: var(--dark);
+    }
+
+    .year-select {
+        padding: 0.5rem 2rem 0.5rem 1rem;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        background-color: white;
+        font-size: 0.9rem;
+        color: #333;
+        cursor: pointer;
+        appearance: none;
+        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='%23333' viewBox='0 0 16 16'%3E%3Cpath d='M7.247 11.14L2.451 5.658C1.885 5.013 2.345 4 3.204 4h9.592a1 1 0 0 1 .753 1.659l-4.796 5.48a1 1 0 0 1-1.506 0z'/%3E%3C/svg%3E");
+        background-repeat: no-repeat;
+        background-position: calc(100% - 0.75rem) center;
+    }
+
+    .clickable-row {
+        cursor: pointer;
+        transition: background-color 0.2s;
+    }
+
+    .clickable-row:hover {
+        background-color: #f0f4f8 !important;
+    }
+
+    .payment-overview-table td {
+        vertical-align: middle;
+    }
+
+    .status.pending {
+        background-color: var(--yellow);
+        color: var(--dark);
+    }
+
+    .status.processed {
+        background-color: var(--main);
+        color: var(--light);
+    }
     </style>
+    <script>
+    document.querySelectorAll('.clickable-row').forEach(row => {
+        row.addEventListener('click', function(e) {
+            // Ignore click if it's on the View Details button
+            if (e.target.closest('.view-btn')) return;
+            
+            // Get the month from the first cell
+            const month = this.cells[0].textContent.toLowerCase();
+            const year = document.querySelector('.year-select').value;
+            const url = `<?php echo URLROOT; ?>/supplier/monthlyPayments/${year}-${month}`;
+            window.location.href = url;
+        });
+    });
+
+    document.querySelector('.year-select').addEventListener('change', function() {
+        const selectedYear = this.value;
+        // Reload the page with the selected year
+        window.location.href = `<?php echo URLROOT; ?>/supplier/payments/${selectedYear}`;
+    });
+    </script>
     </body>
 </html>
     

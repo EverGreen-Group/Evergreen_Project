@@ -1,65 +1,5 @@
-<?php
-// Assume these are set elsewhere in your application
-$pageTitle = "Driver Dashboard";
-$driverName = "John Doe";
-$teamName = "Alpha Team";
-$vehicleInfo = "Toyota Hilux (ABC-1234)";
-
-// This would be dynamically fetched in a real application
-$driverLocation = ['lat' => 6.223440958667509, 'lng' => 80.2850332126462];
 
 
-
-
-$collections = [
-    [
-        'id' => 1,
-        'supplierName' => "Simaak Niyaz",
-        'remarks' => "Meet at the main gate, call upon arrival",
-        'location' => ['lat' => 6.2173037, 'lng' => 80.2564385],
-        'address' => "123 Tea Lane, Galle",
-        'image' => "https://randomuser.me/api/portraits/men/5.jpg",
-        'estimatedCollection' => 500
-    ],
-    [
-        'id' => 2,
-        'supplierName' => "Mountain Top Tea",
-        'remarks' => "Entrance is on the north side of the building",
-        'location' => ['lat' => 6.243808243551064, 'lng' => 80.25967072303547],
-        'address' => "456 Hill Road, Galle",
-        'image' => "https://randomuser.me/api/portraits/men/7.jpg",
-        'estimatedCollection' => 350
-    ],
-    [
-        'id' => 3,
-        'supplierName' => "Valley View Estates",
-        'remarks' => "Please use service entrance",
-        'location' => ['lat' => 6.282762791987652, 'lng' => 80.26495604611944],
-        'address' => "789 Valley Street, Galle",
-        'image' => "https://randomuser.me/api/portraits/men/8.jpg",
-        'estimatedCollection' => 600
-    ],
-    [
-        'id' => 4,
-        'supplierName' => "Valley View Estates",
-        'remarks' => "Please use service entrance",
-        'location' => ['lat' => 6.221843659731916, 'lng' => 80.2425869548138],
-        'address' => "789 Valley Street, Galle",
-        'image' => "https://randomuser.me/api/portraits/men/8.jpg",
-        'estimatedCollection' => 340
-    ],
-    [
-        'id' => 5,
-        'supplierName' => "Valley View Estates",
-        'remarks' => "Please use service entrance",
-        'location' => ['lat' => 6.217412876212934, 'lng' => 80.28222702962783],
-        'address' => "789 Valley Street, Galle",
-        'image' => "https://randomuser.me/api/portraits/men/8.jpg",
-        'estimatedCollection' => 349
-    ]
-    
-];
-?>
 
 <style>
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
@@ -95,9 +35,10 @@ $collections = [
         display: grid;
         grid-template-columns: 60% 40%;
         grid-template-rows: auto 1fr auto;
-        height: calc(100vh - 60px);
-        gap: 20px;
-        padding: 20px;
+        height: 100vh;
+        gap: 0;
+        padding: 0;
+        margin: 0;
         box-sizing: border-box;
     }
 
@@ -105,9 +46,12 @@ $collections = [
         grid-column: 1 / 2;
         grid-row: 1 / 3;
         height: 100%;
-        border-radius: 8px;
+        width: 100%;
+        border-radius: 0;
         overflow: hidden;
-        /* outline: 3px solid var(--card-outline); */
+        background-color: #f5f5f5;
+        position: relative;
+        z-index: 1;
     }
 
     .card {
@@ -115,7 +59,8 @@ $collections = [
         border-radius: 8px;
         box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
         padding: 20px;
-        /* outline: 3px solid var(--card-outline); */
+        position: relative;
+        z-index: 999;
     }
 
     .current-supplier {
@@ -169,6 +114,8 @@ $collections = [
         justify-content: center;
         gap: 8px;
         margin-top: 12px;
+        position: relative;
+        z-index: 1000;
     }
 
     .upcoming-collections {
@@ -249,6 +196,8 @@ $collections = [
         transition: background-color 0.3s, transform 0.1s;
         text-transform: uppercase;
         letter-spacing: 0.5px;
+        position: relative;
+        z-index: 1001;
     }
 
     .action-btn:hover {
@@ -283,39 +232,182 @@ $collections = [
         font-weight: 600;
     }
 
+    /* Media query for screens less than 1200px */
+    @media screen and (max-width: 1199px) {
+        .dashboard-container {
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            padding: 0;
+            margin: 0;
+        }
+
+        #map-container {
+            flex: 1;
+            width: 100%;
+            height: calc(100vh - 56px);
+        }
+
+        /* Hide supplier profile and collection list */
+        .current-supplier,
+        .upcoming-collections {
+            display: none;
+        }
+
+        /* Style for bottom action buttons */
+        .supplier-actions {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: white;
+            padding: 8px;
+            box-shadow: 0 -2px 10px rgba(0,0,0,0.1);
+            z-index: 1000;
+            height: 56px;
+        }
+    }
+
+    /* Override the default main padding for this view specifically */
+    main {
+        padding: 0 !important; /* Use !important to override any existing styles */
+    }
+
+    @media screen and (max-width: 1199px) {
+        main {
+            padding: 0 !important;
+        }
+    }
+
+    /* Mobile styles for shift-info */
+    @media screen and (max-width: 1199px) {
+        .shift-info {
+            position: fixed;
+            bottom: 0;
+            left: 60px; /* Account for sidebar */
+            right: 0;
+            background: white;
+            padding: 8px;
+            box-shadow: 0 -2px 10px rgba(0,0,0,0.1);
+            z-index: 1000;
+            display: flex;
+            justify-content: space-between;
+            gap: 8px;
+        }
+
+        .mobile-actions {
+            display: flex;
+            width: 100%;
+            gap: 8px;
+        }
+
+        .mobile-btn {
+            flex: 1;
+            padding: 8px;
+            border: none;
+            border-radius: 6px;
+            font-weight: 600;
+            font-size: 0.85rem;
+            text-transform: uppercase;
+            color: white;
+            height: 40px;
+        }
+
+        .arrived-btn {
+            background-color: var(--primary-color);
+        }
+
+        .route-btn {
+            background-color: #2196F3;
+        }
+
+        /* Hide desktop elements */
+        .current-supplier,
+        .upcoming-collections,
+        .shift-details,
+        .button-row:not(.mobile-actions) {
+            display: none;
+        }
+    }
+
+    #arrived-btn {
+        background-color: #ff0000 !important; /* Temporary bright red to make it visible */
+        border: 2px solid black !important;   /* Temporary border to make it stand out */
+        pointer-events: auto !important;      /* Force pointer events */
+    }
 </style>
 
 <?php require APPROOT . '/views/inc/components/header.php'; ?>
 
 <!-- Side bar -->
-<?php require APPROOT . '/views/inc/components/sidebar_vehicle_driver.php'; ?>
+<?php require APPROOT . '/views/inc/components/sidebar_driver_collections.php'; ?>
+
 
 <!-- Top nav bar -->
 <?php require APPROOT . '/views/inc/components/topnavbar.php'; ?>
 
 <!-- MAIN -->
 <main>
+
+    <script>
+    function markArrival(collectionId, supplierId) {
+        const URLROOT = '<?php echo URLROOT; ?>';
+        console.log('Marking arrival for:', { collectionId, supplierId });
+        
+        fetch(`${URLROOT}/vehicledriver/markArrival`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                collection_id: collectionId,
+                supplier_id: supplierId
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.status === 'success') {
+                location.reload();
+            } else {
+                alert('Failed to mark arrival: ' + data.message);
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Failed to mark arrival');
+        });
+    }
+    </script>
+
     <div class="dashboard-container">
-        <div id="map-container"></div>
+        <div id="map-container">
+            <?php if (!empty($collections)): ?>
+            <div class="mobile-supplier-card" id="mobile-supplier-card">
+                <div class="stop-number">1</div>
+                <img src="<?php echo $collections[0]['image']; ?>" alt="Supplier" class="supplier-img">
+                <div class="supplier-text">
+                    <div class="supplier-name"><?php echo $collections[0]['supplierName']; ?></div>
+                </div>
+            </div>
+            <?php endif; ?>
+        </div>
         
         <div class="current-supplier card">
             <div class="supplier-card">
-                <?php if (!empty($data['collections'])): ?>
-                    <?php $currentSupplier = $data['collections'][0]; ?>
+                <?php if (!empty($data['collectionSupplierRecords'])): ?>
+                    <?php $currentSupplier = $data['collectionSupplierRecords'][0]; ?>
                     <div class="supplier-image-container">
-                        <img src="<?php echo $currentSupplier['image']; ?>" 
-                             alt="<?php echo htmlspecialchars($currentSupplier['supplierName']); ?>"
-                             class="supplier-profile-image"
-                             onerror="this.src='<?php echo URLROOT; ?>/public/img/default-user.png'">
+                        <img src="<?php echo URLROOT; ?>/public/img/default-user.png" 
+                             alt="<?php echo htmlspecialchars($currentSupplier->supplier_name); ?>"
+                             class="supplier-profile-image">
                     </div>
                     <div class="supplier-info">
-                        <h4><?php echo $currentSupplier['supplierName']; ?></h4>
-                        <p><?php echo $currentSupplier['remarks']; ?></p>
-                        <p id="supplier-collection">Est. Collection: <?php echo $currentSupplier['estimatedCollection']; ?>kg</p>
-                        <div class="supplier-actions">
-                            <button class="action-btn" onclick="callSupplier()">Call</button>
+                        <h4><?php echo htmlspecialchars($currentSupplier->supplier_name); ?></h4>
+                        <p><?php echo htmlspecialchars($currentSupplier->notes ?? 'No special instructions'); ?></p>
+                        <p id="supplier-collection">Est. Collection: <?php echo htmlspecialchars($currentSupplier->quantity ?? '0'); ?>kg</p>
+                        <div class="supplier-actions" style="pointer-events: auto;">
                             <button class="action-btn" onclick="alertSupplier()">Alert</button>
-                            <button class="action-btn" onclick="navigateToSupplier(<?php echo $currentSupplier['location']['lat']; ?>, <?php echo $currentSupplier['location']['lng']; ?>)">
+                            <button class="action-btn" onclick="navigateToSupplier(<?php echo $currentSupplier->latitude; ?>, <?php echo $currentSupplier->longitude; ?>)">
                                 <i class="fas fa-directions"></i> Navigate
                             </button>
                         </div>
@@ -331,27 +423,21 @@ $collections = [
 
         <div class="upcoming-collections card">
             <h3>Collection Suppliers</h3>
-            <?php if (!empty($data['collections'])): ?>
-                <?php foreach ($data['collections'] as $supplier): ?>
+            <?php if (!empty($data['collectionSupplierRecords'])): ?>
+                <?php foreach ($data['collectionSupplierRecords'] as $supplier): ?>
                     <div class="collection-item">
                         <div class="supplier-list-image">
-                            <img src="<?php echo $supplier['image']; ?>" 
-                                 alt="<?php echo htmlspecialchars($supplier['supplierName']); ?>"
-                                 onerror="this.src='<?php echo URLROOT; ?>/public/img/default-user.png'">
+                            <img src="<?php echo URLROOT; ?>/public/img/default-user.png" 
+                                 alt="<?php echo htmlspecialchars($supplier->supplier_name); ?>">
                         </div>
                         <div class="collection-item-details">
-                            <strong><?php echo htmlspecialchars($supplier['supplierName']); ?></strong><br>
-                            Status: <span class="status-badge <?php echo strtolower($supplier['status']); ?>">
-                                <?php echo $supplier['status']; ?>
+                            <strong><?php echo htmlspecialchars($supplier->supplier_name); ?></strong><br>
+                            Status: <span class="status-badge <?php echo strtolower($supplier->status); ?>">
+                                <?php echo $supplier->status; ?>
                             </span>
-                            <?php if ($supplier['arrival_time']): ?>
-                                <br><small>Arrived: <?php echo date('H:i', strtotime($supplier['arrival_time'])); ?></small>
+                            <?php if ($supplier->arrival_time): ?>
+                                <br><small>Arrived: <?php echo date('H:i', strtotime($supplier->arrival_time)); ?></small>
                             <?php endif; ?>
-                        </div>
-                        <div class="supplier-actions">
-                            <button class="action-btn" onclick="navigateToSupplier(<?php echo $supplier['location']['lat']; ?>, <?php echo $supplier['location']['lng']; ?>)">
-                                <i class="fas fa-directions"></i>
-                            </button>
                         </div>
                     </div>
                 <?php endforeach; ?>
@@ -360,29 +446,16 @@ $collections = [
             <?php endif; ?>
         </div>
 
-        <div class="shift-info card">
-            <div class="shift-details">
-                <div class="shift-detail">
-                    <h4>Shift Time</h4>
-                    <p id="shift-time"><?php echo date('H:i', strtotime($data['schedule']->start_time)) . ' - ' . date('H:i', strtotime($data['schedule']->end_time)); ?></p>
-                </div>
-                <div class="shift-detail">
-                    <h4>Elapsed Time</h4>
-                    <p id="elapsed-time">00:00:00</p>
-                </div>
-                <div class="shift-detail">
-                    <h4>Team Name</h4>
-                    <p id="team-name"><?php echo htmlspecialchars($data['teamName']); ?></p>
-                </div>
-                <div class="shift-detail">
-                    <h4>Vehicle</h4>
-                    <p id="vehicle-info"><?php echo htmlspecialchars($data['vehicleInfo']); ?></p>
-                </div>
-            </div>
-            <div class="button-row">
-                <button id="arrived-btn" class="action-btn">Arrived</button>
-                <button id="delay-btn" class="action-btn warning">Report Delay</button>
-                <button id="cancel-btn" class="action-btn warning">Cancel Collection</button>
+        <div class="shift-info">
+            <div class="mobile-actions">
+                <button onclick="markArrival(<?php echo $data['collectionSupplierRecords'][0]->collection_id; ?>, <?php echo $data['collectionSupplierRecords'][0]->supplier_id; ?>)" class="mobile-btn arrived-btn">
+                    <i class='bx bx-check'></i>
+                    Arrived
+                </button>
+                <button onclick="navigate()" class="mobile-btn route-btn">
+                    <i class='bx bx-navigation'></i>
+                    Navigate
+                </button>
             </div>
         </div>
     </div>
@@ -394,110 +467,150 @@ $collections = [
     let directionsService;
     let directionsRenderer;
     let driverMarker;
+    let watchId;
 
-    const collections = <?php echo json_encode($collections); ?>;
-    const driverLocation = <?php echo json_encode($driverLocation); ?>;
+    const collections = <?php echo json_encode(array_map(function($supplier) {
+        return [
+            'id' => $supplier->supplier_id,
+            'arrival_time' => $supplier->arrival_time,
+            'location' => [
+                'lat' => floatval($supplier->latitude),
+                'lng' => floatval($supplier->longitude)
+            ]
+        ];
+    }, $data['collectionSupplierRecords'])); ?>;
+    let driverLocation = <?php echo json_encode($driverLocation); ?>;
     const URLROOT = '<?php echo URLROOT; ?>';
 
     function initMap() {
-        directionsService = new google.maps.DirectionsService();
-        firstRouteRenderer = new google.maps.DirectionsRenderer({
-            suppressMarkers: true,
-            polylineOptions: {
-                strokeColor: "#FF0000", // Red for the first route
-                strokeWeight: 5
+        try {
+            // Initialize map with a default center (will be updated when we get location)
+            map = new google.maps.Map(document.getElementById("map-container"), {
+                center: { lat: 6.927079, lng: 79.861244 }, // Default to Sri Lanka
+                zoom: 10,
+                disableDefaultUI: true,
+                zoomControl: false,
+                mapTypeControl: false,
+                streetViewControl: false,
+                fullscreenControl: false,
+                styles: [
+                    {
+                        featureType: "poi",
+                        elementType: "labels",
+                        stylers: [{ visibility: "off" }]
+                    },
+                    {
+                        featureType: "transit",
+                        elementType: "labels",
+                        stylers: [{ visibility: "off" }]
+                    },
+                    { elementType: "geometry", stylers: [{ color: "#242f3e" }] },
+                    { elementType: "labels.text.stroke", stylers: [{ color: "#242f3e" }] },
+                    { elementType: "labels.text.fill", stylers: [{ color: "#746855" }] },
+                    {
+                        featureType: "administrative.locality",
+                        elementType: "labels.text.fill",
+                        stylers: [{ color: "#d59563" }],
+                    },
+                    {
+                        featureType: "road",
+                        elementType: "geometry",
+                        stylers: [{ color: "#38414e" }]
+                    },
+                    {
+                        featureType: "road",
+                        elementType: "geometry.stroke",
+                        stylers: [{ color: "#212a37" }]
+                    },
+                    {
+                        featureType: "road",
+                        elementType: "labels.text.fill",
+                        stylers: [{ color: "#9ca5b3" }]
+                    },
+                    {
+                        featureType: "water",
+                        elementType: "geometry",
+                        stylers: [{ color: "#17263c" }]
+                    },
+                    {
+                        featureType: "water",
+                        elementType: "labels.text.fill",
+                        stylers: [{ color: "#515c6d" }]
+                    },
+                    {
+                        featureType: "water",
+                        elementType: "labels.text.stroke",
+                        stylers: [{ color: "#17263c" }]
+                    }
+                ],
+                disableDefaultUI: false
+            });
+
+            // Start watching driver's location
+            if (navigator.geolocation) {
+                watchId = navigator.geolocation.watchPosition(
+                    (position) => {
+                        driverLocation = {
+                            lat: position.coords.latitude,
+                            lng: position.coords.longitude
+                        };
+                        
+                        // Update driver marker and recenter map
+                        addDriverMarker(driverLocation);
+                        
+                        // Update routes with new driver location
+                        updateRoute();
+                    },
+                    (error) => {
+                        console.error('Geolocation error:', error);
+                        alert('Unable to get your location. Please enable location services.');
+                    },
+                    {
+                        enableHighAccuracy: true,
+                        timeout: 5000,
+                        maximumAge: 0
+                    }
+                );
+            } else {
+                alert('Geolocation is not supported by this browser.');
             }
-        });
 
+            // Initialize other map components
+            directionsService = new google.maps.DirectionsService();
+            firstRouteRenderer = new google.maps.DirectionsRenderer({
+                suppressMarkers: true,
+                polylineOptions: {
+                    strokeColor: "#FF0000",
+                    strokeWeight: 5
+                }
+            });
 
-        // Renderer for the remaining routes (in green)
-        remainingRouteRenderer = new google.maps.DirectionsRenderer({
-            suppressMarkers: true,
-            polylineOptions: {
-                strokeColor: "#4CAF50", // Green for remaining routes
-                strokeWeight: 5
-            }
-        });
+            remainingRouteRenderer = new google.maps.DirectionsRenderer({
+                suppressMarkers: true,
+                polylineOptions: {
+                    strokeColor: "#4CAF50",
+                    strokeWeight: 5
+                }
+            });
 
-        map = new google.maps.Map(document.getElementById("map-container"), {
-            center: driverLocation,
-            zoom: 14, // Increased zoom level
-            styles: [
-                {
-                    featureType: "poi",
-                    elementType: "labels",
-                    stylers: [{ visibility: "off" }]
-                },
-                {
-                    featureType: "transit",
-                    elementType: "labels",
-                    stylers: [{ visibility: "off" }]
-                },
-                { elementType: "geometry", stylers: [{ color: "#242f3e" }] },
-                { elementType: "labels.text.stroke", stylers: [{ color: "#242f3e" }] },
-                { elementType: "labels.text.fill", stylers: [{ color: "#746855" }] },
-                {
-                    featureType: "administrative.locality",
-                    elementType: "labels.text.fill",
-                    stylers: [{ color: "#d59563" }],
-                },
-                {
-                    featureType: "road",
-                    elementType: "geometry",
-                    stylers: [{ color: "#38414e" }],
-                },
-                {
-                    featureType: "road",
-                    elementType: "geometry.stroke",
-                    stylers: [{ color: "#212a37" }],
-                },
-                {
-                    featureType: "road",
-                    elementType: "labels.text.fill",
-                    stylers: [{ color: "#9ca5b3" }],
-                },
-                {
-                    featureType: "water",
-                    elementType: "geometry",
-                    stylers: [{ color: "#17263c" }],
-                },
-                {
-                    featureType: "water",
-                    elementType: "labels.text.fill",
-                    stylers: [{ color: "#515c6d" }],
-                },
-                {
-                    featureType: "water",
-                    elementType: "labels.text.stroke",
-                    stylers: [{ color: "#17263c" }],
-                },
-            ],
-            disableDefaultUI: true
-        });
+            console.log('Map initialized successfully');
 
-        remainingRouteRenderer.setMap(map);
-        
-        addCustomMarkers();
-        firstRouteRenderer.setMap(map);
-        
-        updateRoute();
+            remainingRouteRenderer.setMap(map);
+            addCustomMarkers();
+            firstRouteRenderer.setMap(map);
+            updateRoute();
+        } catch (error) {
+            console.error('Error initializing map:', error);
+        }
     }
 
-    // function navigateToSupplier() { 
-    //     const driverLat = driverLocation.lat;
-    //     const driverLng = driverLocation.lng;
-        
-    //     const supplier = collections[0]; // Get the first supplier
-    //     const supplierLat = supplier.location.lat;
-    //     const supplierLng = supplier.location.lng;
-
-    //     const url = `https://www.google.com/maps/dir/?api=1&origin=${driverLat},${driverLng}&destination=${supplierLat},${supplierLng}&travelmode=driving`;
-        
-    //     window.open(url, '_blank');
-    // }
-    // old method, it just takes from the collection array
-
-
+    // Add this function to check if map loads
+    window.addEventListener('load', function() {
+        console.log('Window loaded');
+        if (typeof google === 'undefined') {
+            console.error('Google Maps not loaded');
+        }
+    });
 
     function navigateToSupplier(lat, lng) {
         const url = `https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}`;
@@ -716,44 +829,14 @@ $collections = [
                     strokeColor: "#FFFFFF"
                 },
                 label: {
-                    text: `${collection.supplierName}`,  // Display only supplier name above marker
+                    text: `${index + 1}`,  // Just show the order number
                     color: "#FFFFFF",
                     fontSize: "14px",
                     fontWeight: "bold",
                     className: 'map-label',
                 },
-                title: `${collection.supplierName} - ${collection.estimatedCollection}kg`  // Tooltip on hover
+                title: `Stop ${index + 1}: ${collection.supplierName}`  // Show name only on hover
             });
-
-            // Create a custom overlay for the offset label
-            const labelOverlay = new google.maps.OverlayView();
-            labelOverlay.onAdd = function() {
-                const div = document.createElement('div');
-                div.style.position = 'absolute';
-                div.style.color = '#FFFFFF';
-                div.style.fontSize = '14px';
-                div.style.fontWeight = 'bold';
-                div.style.textShadow = '1px 1px 2px rgba(0,0,0,0.8)';
-                div.innerHTML = `${collection.estimatedCollection}kg`;
-                this.div_ = div;
-                const panes = this.getPanes();
-                panes.overlayLayer.appendChild(div);
-            };
-
-            labelOverlay.draw = function() {
-                const overlayProjection = this.getProjection();
-                const position = overlayProjection.fromLatLngToDivPixel(marker.getPosition());
-                const div = this.div_;
-                div.style.left = (position.x - 30) + 'px';
-                div.style.top = (position.y + 20) + 'px';  // Offset to the bottom
-            };
-
-            labelOverlay.onRemove = function() {
-                this.div_.parentNode.removeChild(this.div_);
-                this.div_ = null;
-            };
-
-            labelOverlay.setMap(map);
         });
     }
 
@@ -831,56 +914,6 @@ $collections = [
         // Implement actual alerting functionality here
     }
 
-    document.getElementById("arrived-btn").addEventListener("click", function() {
-        // Get the current collection ID from the URL
-        const urlParts = window.location.pathname.split('/');
-        const collectionId = urlParts[urlParts.length - 1];  // Gets the last part of the URL which is the collection ID
-        
-        // Get the first unvisited supplier
-        const currentSupplier = collections.find(supplier => !supplier.arrival_time);
-        const supplierId = currentSupplier ? currentSupplier.id : null;
-
-        if (supplierId) {
-            markArrival(collectionId, supplierId);
-        } else {
-            alert('No suppliers left to mark as arrived');
-        }
-    });
-
-    document.getElementById("delay-btn").addEventListener("click", function() {
-        alert("Delay reported. Our team will follow up with the supplier.");
-    });
-
-    document.getElementById("cancel-btn").addEventListener("click", function() {
-        alert("Collection cancelled. Please provide a reason in the next screen.");
-    });
-
-    function markArrival(collectionId, supplierId) {
-        console.log(collectionId, supplierId);
-        fetch(`${URLROOT}/vehicledriver/markArrival`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-                collection_id: collectionId,
-                supplier_id: supplierId
-            })
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.status === 'success') {
-                // Refresh the page or update the UI
-                location.reload();
-            } else {
-                alert('Failed to mark arrival: ' + data.message);
-            }
-        })
-        .catch(error => {
-            console.error('Error:', error);
-            alert('Failed to mark arrival');
-        });
-    }
 
     // Initialize the map and update shift info when the window loads
     window.onload = function() {
@@ -889,6 +922,48 @@ $collections = [
         setInterval(updateShiftInfo, 1000); // Update every second
         updateRoute();
     };
+
+    function navigate() {
+        // Get the current supplier's location
+        const currentSupplier = collections.find(supplier => !supplier.arrival_time);
+        if (!currentSupplier) {
+            alert('No destination found');
+            return;
+        }
+
+        // Open Google Maps with directions
+        const destination = `${currentSupplier.location.lat},${currentSupplier.location.lng}`;
+        const mapsUrl = `https://www.google.com/maps/dir/?api=1&destination=${destination}&travelmode=driving`;
+        window.open(mapsUrl, '_blank');
+    }
+
+    // Add cleanup function to remove geolocation watcher
+    function cleanup() {
+        if (watchId) {
+            navigator.geolocation.clearWatch(watchId);
+        }
+    }
+
+    // Add event listener for page unload
+    window.addEventListener('unload', cleanup);
+
+    // And let's simplify the click handler
+    document.addEventListener('DOMContentLoaded', function() {
+        const arrivedBtn = document.getElementById("arrived-btn");
+        if (arrivedBtn) {
+            arrivedBtn.onclick = function() {
+                const collectionId = <?php echo $data['collection']->collection_id; ?>;
+                const supplierId = <?php echo $data['collectionSupplierRecords'][0]->supplier_id ?? 'null'; ?>;
+                
+                if (supplierId) {
+                    markArrival(collectionId, supplierId);
+                } else {
+                    alert('No suppliers left to mark as arrived');
+                }
+            };
+        }
+    });
 </script>
+<script src="<?php echo URLROOT; ?>/css/components/script.js"></script>
 
 <?php require APPROOT . '/views/inc/components/footer.php'; ?>

@@ -1,265 +1,119 @@
 <?php require APPROOT . '/views/inc/components/header.php'; ?>
+
+<!-- Add the QR Scanner library in the head section -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html5-qrcode/2.3.8/html5-qrcode.min.js" integrity="sha512-r6rDA7W6ZeQhvl8S7yRVQUKVHdexq+GAlNkNNqVC7YyIV+NwqCTJe2hDWCiffTyRNOeGEzRRJ9ifvRm/HCzGYg==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+
 <?php require APPROOT . '/views/inc/components/sidebar_driving_partner.php'; ?>
 <?php require APPROOT . '/views/inc/components/topnavbar.php'; ?>
 
 <main>
+    <div class="head-title">
+        <div class="left">
+            <h1>Supplier Collection</h1>
+            <ul class="breadcrumb">
+                <li><a href="#">Dashboard</a></li>
+            </ul>
+        </div>
+    </div>
     <!-- Weight Tracking Section -->
-    <ul class="route-box-info">
+    <ul class="box-info">
         <li>
             <i class='bx bx-package'></i>
             <span class="text">
                 <p>Tare Weight</p>
-                <h3>3,500 kg</h3>
+                <h3><?php echo number_format($data['collection']->initial_weight_bridge, 2); ?> kg</h3>
                 <span>Empty Vehicle</span>
-            </span>
-        </li>
-        <li>
-            <i class='bx bx-weight'></i>
-            <span class="text">
-                <p>Gross Weight</p>
-                <h3>4,250 kg</h3>
-                <span>Current Total</span>
             </span>
         </li>
         <li>
             <i class='bx bx-leaf'></i>
             <span class="text">
                 <p>Net Weight</p>
-                <h3>750 kg</h3>
+                <h3><?php echo number_format($data['collection']->total_quantity, 2); ?> kg</h3>
                 <span>Tea Leaves</span>
-            </span>
-        </li>
-        <li>
-            <i class='bx bx-trending-up'></i>
-            <span class="text">
-                <p>Remaining</p>
-                <h3>750 kg</h3>
-                <span>Available Capacity</span>
             </span>
         </li>
     </ul>
 
     <!-- First Row: Container for Supplier Info and Collection Progress -->
-    <div class="info-progress-container">
         <!-- Current Supplier Info -->
-        <div class="order supplier-card">
-            <div class="head">
-                <h3>Current Supplier</h3>
-                <i class='bx bx-user'></i>
-            </div>
-            <div class="supplier-info">
-                <div class="supplier-profile">
-                    <img src="https://randomuser.me/api/portraits/men/58.jpg" alt="Supplier Image">
-                    <h4>Nimal Silva</h4>
-                </div>
-                <div class="supplier-details">
-                    <p><i class='bx bx-map'></i> Kahawatta, Sri Lanka</p>
-                    <p><i class='bx bx-phone'></i> 071-9876543</p>
-                    <p><i class='bx bx-id-card'></i> 199934567890</p>
-                    <p><i class='bx bx-leaf'></i> Expected: 150 kg</p>
-                </div>
-                <div class="supplier-actions">
-                    <button class="btn-call" onclick="makeCall('0719876543')">
-                        <i class='bx bx-phone-call'></i> Call
-                    </button>
-                </div>
-            </div>
-        </div>
-
-        <!-- Collection Progress Table -->
         <div class="table-data">
-        <div class="order progress-card">
-            <div class="head">
-                <h3>Collection Progress</h3>
-                <i class='bx bx-list-check'></i>
-            </div>
-            <table>
-                <thead>
-                    <tr>
-                        <th>Supplier</th>
-                        <th>Location</th>
-                        <th>Expected</th>
-                        <th>Collected</th>
-                        <th>Status</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <tr class="completed">
-                        <td>Kamal Perera</td>
-                        <td>Ratnapura</td>
-                        <td>200 kg</td>
-                        <td>195 kg</td>
-                        <td><span class="status completed">Collected</span></td>
-                    </tr>
-                    <tr class="current">
-                        <td>Nimal Silva</td>
-                        <td>Kahawatta</td>
-                        <td>150 kg</td>
-                        <td>-</td>
-                        <td><span class="status pending">At Location</span></td>
-                    </tr>
-                    <tr class="upcoming disabled">
-                        <td>Saman Fernando</td>
-                        <td>Pelmadulla</td>
-                        <td>300 kg</td>
-                        <td>-</td>
-                        <td><span class="status inactive">Pending</span></td>
-                    </tr>
-                </tbody>
-            </table>
-            </div>
-        </div>
-    </div>
-
-    <!-- Collection Form in next row -->
-    <div class="table-data">
-        <div class="order" style="width: 100%;">
-            <div class="head">
-                <h3>Record Collection</h3>
-                <i class='bx bx-notepad'></i>
-            </div>
-            <form id="weightForm" class="collection-form" onsubmit="submitWeight(event)">
-                <!-- Weight Details -->
-                <div class="form-row">
-                    <div class="form-group">
-                        <label>Supplier NIC</label>
-                        <input type="text" required name="supplier_nic" pattern="^\d{9}[vVxX]$|^\d{12}$" placeholder="199934567890">
+            <?php if (!empty($data['collections'])): ?>
+                <?php 
+                $currentSupplier = $data['collections'][0]; // Get the first supplier 
+                $hasArrived = !empty($currentSupplier['arrival_time']);
+                $buttonClass = $hasArrived ? '' : 'disabled';
+                ?>
+                <div class="supplier-info">
+                    <div class="supplier-profile">
+                        <img src="<?php echo $currentSupplier['image']; ?>" alt="Supplier Image">
+                        <h4><?php echo $currentSupplier['supplierName']; ?></h4>
                     </div>
-                    <div class="form-group">
-                        <label>Gross Weight (kg)</label>
-                        <input type="number" step="0.01" required name="gross_weight">
+                    <div class="supplier-details">
+                        <p><i class='bx bx-phone'></i> <?php echo $currentSupplier['contact']; ?></p>
+                        <p><i class='bx bx-leaf'></i> Expected: <?php echo $currentSupplier['estimatedCollection']; ?> kg</p>
+                        <?php if ($currentSupplier['remarks']): ?>
+                            <p><i class='bx bx-note'></i> <?php echo $currentSupplier['remarks']; ?></p>
+                        <?php endif; ?>
+                        <?php if (!$hasArrived): ?>
+                            <p class="waiting-message"><i class='bx bx-time'></i> Waiting to arrive at location</p>
+                        <?php endif; ?>
                     </div>
-                    <div class="form-group">
-                        <label>Net Weight (kg)</label>
-                        <input type="number" step="0.01" readonly name="net_weight">
+                    <div class="supplier-actions">
+                        <button class="btn-call <?php echo $buttonClass; ?>" 
+                                onclick="<?php echo $hasArrived ? "makeCall('{$currentSupplier['contact']}')" : ''; ?>"
+                                <?php echo $hasArrived ? '' : 'disabled'; ?>>
+                            <i class='bx bx-phone-call'></i> Call
+                        </button>
                     </div>
-                </div>
-
-                <div class="form-row">
-                    <div class="form-group">
-                        <label>Odometer Reading (km)</label>
-                        <input type="number" required name="odometer_reading">
-                    </div>
-                </div>
-
-                <!-- Quality Assessment -->
-                <div class="form-row">
-                    <div class="form-group">
-                        <label>Leaf Condition</label>
-                        <select name="leaf_condition" required>
-                            <option value="">Select condition</option>
-                            <option value="excellent">Excellent</option>
-                            <option value="good">Good</option>
-                            <option value="fair">Fair</option>
-                            <option value="poor">Poor</option>
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <label>Wetness Level</label>
-                        <select name="wetness" required>
-                            <option value="">Select wetness</option>
-                            <option value="dry">Dry</option>
-                            <option value="slightly_wet">Slightly Wet</option>
-                            <option value="wet">Wet</option>
-                            <option value="very_wet">Very Wet</option>
-                        </select>
-                    </div>
-                </div>
-
-                <div class="form-group">
-                    <label>Notes</label>
-                    <textarea name="notes" rows="2"></textarea>
-                </div>
-
-                <!-- Signature -->
-                <div class="form-group">
-                    <label>Supplier's Signature</label>
-                    <div class="signature-pad">
-                        <canvas id="signaturePad"></canvas>
-                        <button type="button" class="btn-clear" onclick="clearSignature()">
-                            <i class='bx bx-refresh'></i> Clear
+                    <div class="supplier-actions">
+                        <button class="btn-record <?php echo $buttonClass; ?>"
+                                onclick="<?php echo $hasArrived ? "window.location.href='" . URLROOT . "/drivingpartner/record_collection/{$currentSupplier['id']}/{$data['collection']->collection_id}'" : ''; ?>"
+                                <?php echo $hasArrived ? '' : 'disabled'; ?>>
+                            <i class='bx bx-edit'></i> Record Collection
                         </button>
                     </div>
                 </div>
-
-                <div class="form-actions">
-                    <button type="submit" class="btn-submit">
-                        <i class='bx bx-check'></i> Submit Collection
-                    </button>
+            <?php else: ?>
+                <div class="supplier-info">
+                    <p class="no-supplier">No suppliers remaining in collection route</p>
                 </div>
-            </form>
+            <?php endif; ?>
+            <div class="order collection-progress">
+                <div class="head">
+                    <h3>Collection Progress</h3>
+                </div>
+                <div class="progress-cards">
+                    <?php foreach ($data['collections'] as $supplier): 
+                        $statusClass = $supplier['collection_time'] ? 'completed' : 
+                            ($supplier['arrival_time'] ? 'current' : 'upcoming');
+                        $statusText = $supplier['collection_time'] ? 'Collected' : 
+                            ($supplier['arrival_time'] ? 'At Location' : 'Pending');
+                    ?>
+                        <div class="progress-card <?php echo $statusClass; ?>">
+                            <div class="supplier-header">
+                                <span class="supplier-id">#<?php echo $supplier['id']; ?></span>
+                                <span class="status <?php echo $statusClass; ?>"><?php echo $statusText; ?></span>
+                            </div>
+                            <div class="supplier-name"><?php echo $supplier['supplierName']; ?></div>
+                            <?php if ($supplier['collection_time'] && isset($supplier['quantity']) && $supplier['quantity'] > 0): ?>
+                                <div class="collected-amount">
+                                    <i class='bx bx-leaf'></i>
+                                    <?php echo number_format($supplier['quantity'], 2); ?> kg
+                                </div>
+                            <?php endif; ?>
+                        </div>
+                    <?php endforeach; ?>
+                </div>
+            </div>
         </div>
+
+
     </div>
+
 </main>
 
 <style>
-.route-box-info {
-    display: grid;
-    grid-template-columns: repeat(4, 1fr);
-    grid-gap: 24px;
-    margin-top: 24px;
-    margin-bottom: 24px;
-}
-
-.route-box-info li {
-    padding: 24px;
-    background: var(--light);
-    border-radius: 20px;
-    display: flex;
-    align-items: center;
-    grid-gap: 24px;
-    cursor: pointer;
-}
-
-.route-box-info li:hover {
-    transform: scale(1.01);
-    transition: all 0.2s ease;
-}
-
-.route-box-info li .bx {
-    width: 80px;
-    height: 80px;
-    border-radius: 10px;
-    font-size: 36px;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-}
-
-.route-box-info li:nth-child(1) .bx {
-    background: var(--light-blue);
-    color: var(--blue);
-}
-
-.route-box-info li:nth-child(2) .bx {
-    background: var(--light-yellow);
-    color: var(--yellow);
-}
-
-.route-box-info li:nth-child(3) .bx {
-    background: var(--light-green);
-    color: var(--green);
-}
-
-.route-box-info li:nth-child(4) .bx {
-    background: var(--light-orange);
-    color: var(--orange);
-}
-
-.route-box-info li .text h3 {
-    font-size: 24px;
-    font-weight: 600;
-    color: var(--dark);
-}
-
-.route-box-info li .text p {
-    color: var(--dark);
-}
-
-.route-box-info li .text span {
-    font-size: 12px;
-    color: var(--dark-grey);
-}
 
 /* Remove the old weight-metrics styles */
 .weight-metrics {
@@ -281,38 +135,6 @@ tr.completed {
 
 /* Rest of the existing styles from v_collection.php */
 
-.table-data {
-    display: flex;
-    flex-direction: row;
-    gap: 24px;
-    margin-top: 24px;
-    width: 100%;
-    color: var(--dark);
-}
-
-.table-data .order {
-    background: var(--light);
-    padding: 24px;
-    border-radius: 20px;
-}
-
-.table-data .order:nth-child(1) {
-    flex: 0 0 30%;
-    margin: 0;
-}
-
-.table-data .order:nth-child(2) {
-    flex: 0 0 70%;
-    margin: 0;
-}
-
-.table-data:nth-child(4) .order {
-    flex: 0 0 100%;
-}
-
-.table-data .order table {
-    width: 100%;
-}
 
 .supplier-info {
     padding: 20px;
@@ -403,207 +225,160 @@ tr.completed {
     font-size: 18px;
 }
 
-.collection-form {
-    padding: 20px;
-}
-
-.form-row {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-    gap: 15px;
-    margin-bottom: 15px;
-}
-
-.form-group {
-    margin-bottom: 15px;
-}
-
-.form-group label {
-    display: block;
-    margin-bottom: 5px;
-    color: var(--dark);
-}
-
-.form-group input,
-.form-group select,
-.form-group textarea {
+.table-data {
     width: 100%;
-    padding: 8px;
-    border: 1px solid var(--grey);
-    border-radius: 5px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 20px;
+    margin-top: 20px;
+}
+
+.supplier-info {
+    flex: 1;
+    min-width: 300px;
     background: var(--light);
+    padding: 20px;
+    border-radius: 10px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
 }
 
-.signature-pad {
-    border: 1px solid var(--grey);
-    border-radius: 5px;
-    padding: 10px;
-    margin-top: 5px;
+.collection-progress {
+    flex: 1;
+    min-width: 300px;
+    background: var(--light);
+    padding: 20px;
+    border-radius: 10px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
 }
 
-.signature-pad canvas {
-    width: 100%;
-    height: 150px;
-    border: 1px solid var(--grey);
-    margin-bottom: 10px;
+/* New styles for progress cards */
+.progress-cards {
+    display: grid;
+    gap: 15px;
+    margin-top: 15px;
 }
 
-.btn-submit, .btn-clear {
-    padding: 10px 20px;
-    border: none;
-    border-radius: 5px;
-    cursor: pointer;
+.progress-card {
+    background: white;
+    border-radius: 8px;
+    padding: 15px;
+    border-left: 4px solid #ddd;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+}
+
+.progress-card.completed {
+    border-left-color: #4CAF50;
+}
+
+.progress-card.current {
+    border-left-color: #2196F3;
+}
+
+.progress-card.upcoming {
+    border-left-color: #9E9E9E;
+}
+
+.supplier-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 8px;
+}
+
+.supplier-id {
+    color: #666;
+    font-size: 0.9rem;
+}
+
+.supplier-name {
+    font-weight: 500;
+    font-size: 1.1rem;
+    margin-bottom: 8px;
+}
+
+.collected-amount {
     display: flex;
     align-items: center;
     gap: 5px;
+    color: #4CAF50;
+    font-weight: 500;
 }
 
-.btn-submit {
-    background: var(--blue);
-    color: var(--light);
+.collected-amount i {
+    font-size: 1.1rem;
 }
 
-.btn-clear {
-    background: var(--grey);
-    color: var(--dark);
-}
-
-/* Make the collection form take full width */
-.table-data:nth-child(3) {
-    display: block;
-}
-
-/* Container for supplier info and collection progress */
-.info-progress-container {
-    display: flex;
-    gap: 24px;
-    margin-top: 24px;
-    width: 100%;
-    min-height: 400px;
-}
-
-/* Supplier card */
-.info-progress-container .supplier-card {
-    flex: 0 0 30%;
-    background: var(--light);
-    padding: 24px;
+.status {
+    padding: 4px 8px;
     border-radius: 20px;
-    height: 100%;
-    display: flex;
-    flex-direction: column;
+    font-size: 0.75rem;
+    font-weight: 500;
 }
 
-/* Progress table card */
-.info-progress-container .progress-card {
-    flex: 0 0 70%;
-    background: var(--light);
-    padding: 24px;
-    border-radius: 20px;
-    height: 100%;
-    display: flex;
-    flex-direction: column;
+.status.completed {
+    background: #E8F5E9;
+    color: #2E7D32;
 }
 
-/* Ensure table takes remaining space */
-.info-progress-container .progress-card table {
-    flex: 1;
-    margin-top: 20px;
+.status.current {
+    background: #E3F2FD;
+    color: #1565C0;
 }
 
-/* Style for NIC input */
-input[name="supplier_nic"] {
-    font-family: monospace;
-    letter-spacing: 1px;
+.status.upcoming {
+    background: #F5F5F5;
+    color: #616161;
 }
 
-/* Validation style for NIC */
-input[name="supplier_nic"]:invalid {
-    border-color: var(--red);
+/* Media Queries */
+@media screen and (max-width: 857px) {
+    .table-data {
+        flex-direction: column;
+    }
+
+    .supplier-info,
+    .collection-progress {
+        width: 100%;
+        min-width: 100%;
+    }
+
+    .progress-cards {
+        grid-template-columns: 1fr;
+    }
 }
 
-input[name="supplier_nic"]:valid {
-    border-color: var(--green);
+@media screen and (min-width: 858px) {
+    .progress-cards {
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    }
 }
 
-/* Update submit button styles */
-.btn-submit {
-    padding: 12px 24px;
-    border: none;
-    border-radius: 8px;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    font-size: 15px;
-    background: #27ae60;  /* Green color */
-    color: var(--light);
-    transition: all 0.3s ease;
-    margin-top: 20px;
+/* Add these styles */
+.btn-call.disabled,
+.btn-record.disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    background-color: #999 !important;
+    transform: none !important;
 }
 
-.btn-submit:hover {
-    background: #219a52;  /* Darker green on hover */
+.waiting-message {
+    color: #f39c12;
+    margin-top: 10px;
+    font-style: italic;
+}
+
+.waiting-message i {
+    color: #f39c12;
+}
+
+/* Update existing hover styles */
+.btn-record:not(.disabled):hover,
+.btn-call:not(.disabled):hover {
+    opacity: 0.8;
     transform: translateY(-2px);
 }
 
-.btn-submit .bx {
-    font-size: 20px;
-}
-
-.form-actions {
-    display: flex;
-    justify-content: flex-end;
-    margin-top: 20px;
-    padding: 0 20px 20px 20px;
-}
 </style>
-
-<script>
-function openWeightModal(supplierName) {
-    document.getElementById('weightModal').style.display = 'block';
-}
-
-function closeModal() {
-    document.getElementById('weightModal').style.display = 'none';
-}
-
-function submitWeight(event) {
-    event.preventDefault();
-    // Add your weight submission logic here
-    closeModal();
-    // Refresh the page or update the UI
-}
-
-function makeCall(phoneNumber) {
-    window.location.href = `tel:${phoneNumber}`;
-}
-
-// Add signature pad initialization
-let signaturePad;
-
-function initSignaturePad() {
-    const canvas = document.getElementById('signaturePad');
-    signaturePad = new SignaturePad(canvas);
-}
-
-function clearSignature() {
-    signaturePad.clear();
-}
-
-// Calculate net weight automatically
-document.addEventListener('DOMContentLoaded', function() {
-    const form = document.getElementById('weightForm');
-    const grossInput = form.querySelector('[name="gross_weight"]');
-    const netInput = form.querySelector('[name="net_weight"]');
-    const tareWeight = parseFloat(document.getElementById('tareWeight').textContent);
-
-    function calculateNet() {
-        const gross = parseFloat(grossInput.value) || 0;
-        netInput.value = (gross - tareWeight).toFixed(2);
-    }
-
-    grossInput.addEventListener('input', calculateNet);
-});
-</script>
-
+<script src="<?php echo URLROOT; ?>/css/components/script.js"></script>
 <?php require APPROOT . '/views/inc/components/footer.php'; ?> 

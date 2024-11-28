@@ -8,136 +8,163 @@ require_once APPROOT . '/helpers/RoleHelper.php';
 
 <main class="shift-management-main">
 
-    <?php
-    echo '<pre>';
-    print_r($data);
-    print_r($_SESSION);
-    echo '</pre>';
-    ?>
     <div class="shift-header">
         <h1>Shift Management</h1>
     </div>
 
     <div class="shift-content">
-        <section class="upcoming-shifts">
-            <h2>Upcoming Shifts</h2>
-            <?php if (isset($data['error'])): ?>
-                <div class="alert alert-warning"><?php echo $data['error']; ?></div>
-            <?php else: ?>
-                <table class="shift-table">
-                    <thead>
-                        <tr>
-                            <th>Day</th>
-                            <th>Time</th>
-                            <th>Team</th>
-                            <th>Countdown</th>
-                            <th>Status</th>
-                            <th>Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <?php 
-                        if (!empty($data['upcomingShifts'])):
-                            // Prepare sorted shifts array
-                            $sortedShifts = [];
-                            foreach ($data['upcomingShifts'] as $shift) {
-                                $days = explode(',', $shift->days_of_week);
-                                foreach ($days as $day) {
-                                    $nextDate = date('Y-m-d', strtotime("next $day"));
-                                    $startDateTime = $nextDate . ' ' . $shift->start_time;
-                                    $timestamp = strtotime($startDateTime);
-                                    
-                                    // Only include future shifts
-                                    if ($timestamp > time()) {
-                                        $sortedShifts[] = [
-                                            'day' => ucfirst($day),
-                                            'startDateTime' => $startDateTime,
-                                            'timestamp' => $timestamp,
-                                            'shift' => $shift
-                                        ];
+        <!-- Desktop View (>590px) -->
+        <div class="desktop-view">
+            <div class="main-content">
+                <section class="upcoming-shifts">
+                    <h2>Upcoming Shifts</h2>
+                    <?php if (isset($data['error'])): ?>
+                        <div class="alert alert-warning"><?php echo $data['error']; ?></div>
+                    <?php else: ?>
+                        <table class="shift-table">
+                            <thead>
+                                <tr>
+                                    <th>Day</th>
+                                    <th>Time</th>
+                                    <th>Team</th>
+                                    <th>Countdown</th>
+                                    <th>Status</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <?php 
+                                if (!empty($data['upcomingShifts'])):
+                                    // Prepare sorted shifts array
+                                    $sortedShifts = [];
+                                    foreach ($data['upcomingShifts'] as $shift) {
+                                        $days = explode(',', $shift->days_of_week);
+                                        foreach ($days as $day) {
+                                            $nextDate = date('Y-m-d', strtotime("next $day"));
+                                            $startDateTime = $nextDate . ' ' . $shift->start_time;
+                                            $timestamp = strtotime($startDateTime);
+                                            
+                                            // Only include future shifts
+                                            if ($timestamp > time()) {
+                                                $sortedShifts[] = [
+                                                    'day' => ucfirst($day),
+                                                    'startDateTime' => $startDateTime,
+                                                    'timestamp' => $timestamp,
+                                                    'shift' => $shift
+                                                ];
+                                            }
+                                        }
                                     }
-                                }
-                            }
 
-                            // Sort shifts by timestamp
-                            usort($sortedShifts, function($a, $b) {
-                                return $a['timestamp'] - $b['timestamp'];
-                            });
+                                    // Sort shifts by timestamp
+                                    usort($sortedShifts, function($a, $b) {
+                                        return $a['timestamp'] - $b['timestamp'];
+                                    });
 
-                            foreach ($sortedShifts as $sortedShift):
-                                $shift = $sortedShift['shift'];
-                        ?>
-                            <tr>
-                                <td><?php echo $sortedShift['day']; ?></td>
-                                <td><?php echo $shift->start_time . ' - ' . $shift->end_time; ?></td>
-                                <td><?php echo $shift->team_name; ?></td>
-                                <td>
-                                    <span class="countdown" data-start="<?php echo $sortedShift['startDateTime']; ?>">
-                                        Calculating...
-                                    </span>
-                                </td>
-                                <td><span class="status-active">Active</span></td>
-                                <td>
-                                    <?php
-                                    $baseUrl = RoleHelper::getControllerNameByRole($_SESSION['role_id']);
-                                    ?>
-                                    <a href="<?php echo URLROOT; ?>/<?php echo $baseUrl; ?>/scheduleDetails/<?php echo $shift->schedule_id; ?>" 
-                                       class="btn btn-primary btn-sm">View Details</a>
-                                </td>
-                            </tr>
-                        <?php 
-                            endforeach;
-                        else: 
-                        ?>
-                            <tr>
-                                <td colspan="6" class="text-center">No shifts available</td>
-                            </tr>
-                        <?php endif; ?>
-                    </tbody>
-                </table>
+                                    foreach ($sortedShifts as $sortedShift):
+                                        $shift = $sortedShift['shift'];
+                                ?>
+                                    <tr>
+                                        <td><?php echo $sortedShift['day']; ?></td>
+                                        <td><?php echo $shift->start_time . ' - ' . $shift->end_time; ?></td>
+                                        <td><?php echo $shift->team_name; ?></td>
+                                        <td>
+                                            <span class="countdown" data-start="<?php echo $sortedShift['startDateTime']; ?>">
+                                                Calculating...
+                                            </span>
+                                        </td>
+                                        <td><span class="status-active">Active</span></td>
+                                        <td>
+                                            <?php
+                                            $baseUrl = RoleHelper::getControllerNameByRole($_SESSION['role_id']);
+                                            ?>
+                                            <a href="<?php echo URLROOT; ?>/<?php echo $baseUrl; ?>/scheduleDetails/<?php echo $shift->schedule_id; ?>" 
+                                               class="btn btn-primary btn-sm">View Details</a>
+                                        </td>
+                                    </tr>
+                                <?php 
+                                    endforeach;
+                                else: 
+                                ?>
+                                    <tr>
+                                        <td colspan="6" class="text-center">No shifts available</td>
+                                    </tr>
+                                <?php endif; ?>
+                            </tbody>
+                        </table>
+                    <?php endif; ?>
+                </section>
+            </div>
+            
+            <div class="side-content">
+                <section class="next-collection">
+                    <h2>Next Collection</h2>
+                    <?php if (!empty($sortedShifts)): 
+                        $nextShift = $sortedShifts[0]['shift']; ?>
+                        <div class="next-collection-details">
+                            <p><strong>Day:</strong> <?php echo $sortedShifts[0]['day']; ?></p>
+                            <p><strong>Time:</strong> <?php echo $nextShift->start_time; ?></p>
+                            <p><strong>Team:</strong> <?php echo $nextShift->team_name; ?></p>
+                            <div class="countdown-wrapper">
+                                <span class="countdown" data-start="<?php echo $sortedShifts[0]['startDateTime']; ?>">
+                                    Calculating...
+                                </span>
+                            </div>
+                        </div>
+                    <?php else: ?>
+                        <p>No upcoming collections</p>
+                    <?php endif; ?>
+                </section>
+
+                <section class="today-progress">
+                    <h2>Today's Progress</h2>
+                    <!-- Add your progress content here -->
+                    <div class="progress-stats">
+                        <div class="stat-item">
+                            <span class="stat-label">Collections</span>
+                            <span class="stat-value">0/0</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-label">Total Weight</span>
+                            <span class="stat-value">0 kg</span>
+                        </div>
+                    </div>
+                </section>
+            </div>
+        </div>
+
+        <!-- Mobile View (≤590px) -->
+        <div class="mobile-only-cards">
+            <?php 
+            if (!empty($sortedShifts)):
+                foreach ($sortedShifts as $sortedShift):
+                    $shift = $sortedShift['shift'];
+            ?>
+                <div class="shift-card">
+                    <div class="shift-card-header">
+                        <h3><?php echo $sortedShift['day']; ?></h3>
+                        <span class="status-active">Active</span>
+                    </div>
+                    <div class="shift-card-body">
+                        <p><strong>Time:</strong> <?php echo $shift->start_time . ' - ' . $shift->end_time; ?></p>
+                        <p><strong>Team:</strong> <?php echo $shift->team_name; ?></p>
+                        <p><strong>Countdown:</strong></p>
+                        <span class="countdown" data-start="<?php echo $sortedShift['startDateTime']; ?>">
+                            Calculating...
+                        </span>
+                    </div>
+                    <div class="shift-card-actions">
+                        <a href="<?php echo URLROOT; ?>/<?php echo $baseUrl; ?>/scheduleDetails/<?php echo $shift->schedule_id; ?>" 
+                           class="btn btn-primary btn-sm">View Details</a>
+                    </div>
+                </div>
+            <?php 
+                endforeach;
+            else: 
+            ?>
+                <div class="no-shifts">No shifts available</div>
             <?php endif; ?>
-        </section>
-
-        <section class="shift-actions">
-            <h2>Shift Management Actions</h2>
-            <div class="action-buttons">
-                <button class="btn btn-primary" onclick="requestLeave()">Request Leave</button>
-                <button class="btn btn-secondary" onclick="requestShiftSwap()">Request Shift Swap</button>
-                <button class="btn btn-secondary" onclick="requestTeamChange()">Request Team Change</button>
-            </div>
-        </section>
-
-        <?php
-        // Format shifts for the calendar
-        $calendarShifts = [];
-        if (!empty($data['upcomingShifts'])) {
-            foreach ($data['upcomingShifts'] as $shift) {
-                $days = explode(',', $shift->days_of_week);
-                foreach ($days as $day) {
-                    $nextDate = date('Y-m-d', strtotime("next $day"));
-                    if (!isset($calendarShifts[$nextDate])) {
-                        $calendarShifts[$nextDate] = [];
-                    }
-                    $calendarShifts[$nextDate][] = [
-                        'start_time' => $shift->start_time,
-                        'end_time' => $shift->end_time,
-                        'location' => $shift->team_name,
-                    ];
-                }
-            }
-        }
-        ?>
-
-        <section class="shift-calendar">
-            <h2>Shift Calendar</h2>
-            <div id="shift-calendar">
-                <?php 
-                // Pass the formatted shifts to the calendar component
-                $data['shifts'] = $calendarShifts;
-                require APPROOT . '/views/inc/components/calendar.php'; 
-                ?>
-            </div>
-        </section>
+        </div>
     </div>
 </main>
 
@@ -369,6 +396,65 @@ updateCountdowns();
 .fc-button-primary:disabled {
     background-color: #339989 !important;
     border-color: #2d8579 !important;
+}
+
+/* Base styles */
+.desktop-view {
+    display: none; /* Hidden by default */
+}
+
+.mobile-only-cards {
+    display: none;
+}
+
+/* Media queries */
+@media screen and (min-width: 591px) {
+    .desktop-view {
+        display: grid;
+        grid-template-columns: 2fr 1fr;
+        gap: 2rem;
+    }
+
+    .mobile-only-cards {
+        display: none !important;
+    }
+}
+
+@media screen and (max-width: 590px) {
+    .desktop-view {
+        display: none !important;
+    }
+
+    .mobile-only-cards {
+        display: block;
+    }
+}
+
+/* Try this more specific selector */
+.shift-content .desktop-view {
+    display: none !important;
+}
+
+@media screen and (min-width: 591px) {
+    .shift-content .desktop-view {
+        display: grid;
+        grid-template-columns: 2fr 1fr;
+        gap: 2rem;
+    }
+
+    .shift-content .mobile-only-cards {
+        display: none !important;
+    }
+}
+
+@media screen and (max-width: 590px) {
+    .shift-content .desktop-view {
+        display: none !important;
+    }
+
+    .shift-content .mobile-only-cards {
+        display: block !important;
+    }
 }
 </style>
 
