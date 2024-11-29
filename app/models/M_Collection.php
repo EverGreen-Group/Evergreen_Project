@@ -375,4 +375,26 @@ class M_Collection {
         return $this->db->resultSet();
     }
 
+    public function updateCollection($data) {
+        $sql = "UPDATE collections SET 
+                    status = :status,
+                    vehicle_manager_approved = :vehicle_manager_approved,
+                    initial_weight_bridge = :initial_weight_bridge,
+                    vehicle_manager_id = :vehicle_manager_id,
+                    vehicle_manager_approved_at = :vehicle_manager_approved_at
+                WHERE collection_id = :collection_id";
+
+        $this->db->query($sql); // Prepare the query
+
+        // Bind the parameters
+        $this->db->bind(':status', $data['status']);
+        $this->db->bind(':vehicle_manager_approved', $data['vehicle_manager_approved']);
+        $this->db->bind(':initial_weight_bridge', $data['initial_weight_bridge']);
+        $this->db->bind(':vehicle_manager_id', $data['vehicle_manager_id']);
+        $this->db->bind(':vehicle_manager_approved_at', $data['vehicle_manager_approved_at']);
+        $this->db->bind(':collection_id', $data['collection_id']);
+
+        return $this->db->execute(); // Execute the prepared statement
+    }
+
 } 

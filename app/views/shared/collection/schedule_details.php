@@ -118,7 +118,7 @@ if (isset($data['collection']) && $data['collection']) {
                                                    placeholder="Enter bag token..."
                                                    pattern="[A-Za-z0-9]+"
                                                    autocomplete="off">
-                                            <button type="button" class="add-bag-btn">Add Bag</button>
+                                            <button type="button" class="add-bag-btn" style="color: #007664">Add Bag</button>
                                         </div>
                                     </div>
 
@@ -130,7 +130,7 @@ if (isset($data['collection']) && $data['collection']) {
                                     </div>
 
                                     <div class="form-actions">
-                                        <button type="submit" class="btn btn-primary">Confirm Bag Assignment</button>
+                                        <button type="submit" class="btn btn-primary" style="color: #007664">Confirm Bag Assignment</button>
                                     </div>
                                 </form>
                             </div>
@@ -163,6 +163,9 @@ if (isset($data['collection']) && $data['collection']) {
                             <div class="collection-stage waiting">
                                 <h3>Waiting for Vehicle Manager</h3>
                                 <p>Collection setup is being reviewed...</p>
+                                <form action="<?php echo URLROOT; ?>/vehicledriver/approveTemp/<?php echo $data['collection']->collection_id; ?>" method="POST">
+                                    <button type="submit" class="btn btn-primary" style="color: white; background-color: var(--main)">Approve Vehicle Manager</button>
+                                </form>
                             </div>
                         <?php elseif ($managerApproved && !$driverReady): ?>
                             <!-- Step 3a: Manager approved, waiting for driver -->
@@ -170,7 +173,7 @@ if (isset($data['collection']) && $data['collection']) {
                                 <div class="collection-stage ready">
                                     <h3>Ready to Begin</h3>
                                     <form action="<?php echo URLROOT; ?>/vehicledriver/setReady/<?php echo $data['collection']->schedule_id; ?>" method="POST">
-                                        <button type="submit" class="btn btn-primary">Set Ready</button>
+                                        <button type="submit" class="btn btn-primary" style="color: white; background-color:var(--main)">Set Ready</button>
                                     </form>
                                 </div>
                             <?php else: ?>

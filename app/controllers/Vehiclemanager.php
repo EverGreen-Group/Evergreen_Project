@@ -489,6 +489,20 @@ class VehicleManager extends Controller {
     }
 
     public function updateVehicle() {
+        if ($_SERVER['REQUEST_METHOD'] == 'GET') {
+            // Render the update vehicle view (if applicable)
+            $data = [
+                'title' => 'Update Vehicle'
+                // You can add more data here if needed
+            ];
+            $this->view('vehicle_manager/v_update_vehicle', $data); // Assuming you have a view for updating vehicles
+        } else {
+            // Handle POST request
+            $this->handleVehicleUpdateSubmission();
+        }
+    }
+
+    private function handleVehicleUpdateSubmission() {
         // Prevent PHP errors from being output
         error_reporting(E_ALL);
         ini_set('display_errors', 0);
@@ -1055,6 +1069,24 @@ class VehicleManager extends Controller {
             ]);
         }
         exit;
+    }
+
+
+    public function deleteRoute() {
+        if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+            $route_id = $_POST['route_id'];
+            
+            // Call model method to delete route
+            if ($this->routeModel->deleteRoute($route_id)) {
+                // Redirect with success message
+                flash('route_message', 'Route deleted successfully');
+                redirect('vehiclemanager/route');
+            } else {
+                // Redirect with error message
+                flash('route_message', 'Failed to delete route', 'error');
+                redirect('vehiclemanager/route');
+            }
+        }
     }
 
 }

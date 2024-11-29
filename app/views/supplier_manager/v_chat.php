@@ -14,43 +14,34 @@
     </div>
 
     <div class="chat-container">
-        <!-- Suppliers List -->
-        <div class="suppliers-list">
-            <div class="search-box">
-                <i class='bx bx-search'></i>
-                <input type="text" placeholder="Search suppliers...">
-            </div>
-            
-            <div class="suppliers">
-                <div class="supplier active">
-                    <img src="<?php echo URLROOT; ?>/public/uploads/supplier_photos/default-supplier.png" alt="Supplier">
-                    <div class="supplier-info">
-                        <h4>John Doe</h4>
-                        <p>SUP001 - Deniyaya Route</p>
-                        <span class="last-message">Last message: 5 mins ago</span>
-                    </div>
-                    <span class="unread-count">2</span>
+        <!-- Chat Requests -->
+        <div class="chat-requests">
+            <h2>Chat Requests</h2>
+            <div class="request-card">
+                <div class="supplier-info">
+                    <h4>John Doe</h4>
+                    <p>SUP001 - Deniyaya Route</p>
                 </div>
-                
-                <!-- More suppliers... -->
-                <div class="supplier">
-                    <img src="<?php echo URLROOT; ?>/public/uploads/supplier_photos/default-supplier.png" alt="Supplier">
-                    <div class="supplier-info">
-                        <h4>Jane Smith</h4>
-                        <p>SUP002 - Morawaka Route</p>
-                        <span class="last-message">Last message: Yesterday</span>
-                    </div>
-                </div>
+                <button class="accept-btn">Accept</button>
             </div>
+            <div class="request-card">
+                <div class="supplier-info">
+                    <h4>Jane Smith</h4>
+                    <p>SUP002 - Morawaka Route</p>
+                </div>
+                <button class="accept-btn">Accept</button>
+            </div>
+            <!-- More requests... -->
         </div>
 
         <!-- Chat Area -->
-        <div class="chat-area">
+        <div class="chat-area" style="display: none;">
             <div class="chat-header">
                 <div class="chat-user-info">
-                    <h3>John Doe</h3>
-                    <span>SUP001 • Online</span>
+                    <h3 id="chat-supplier-name">John Doe</h3>
+                    <span id="chat-supplier-id">SUP001 • Online</span>
                 </div>
+                <button class="end-chat-btn">End Chat</button>
             </div>
 
             <div class="messages">
@@ -89,78 +80,39 @@
     overflow: hidden;
 }
 
-.suppliers-list {
+.chat-requests {
     width: 300px;
     background: white;
     border-right: 1px solid var(--grey);
-}
-
-.search-box {
     padding: 1rem;
-    border-bottom: 1px solid var(--grey);
+}
+
+.request-card {
     display: flex;
+    justify-content: space-between;
     align-items: center;
-    gap: 0.5rem;
-}
-
-.search-box input {
-    width: 100%;
-    padding: 0.5rem;
-    border: none;
-    outline: none;
-}
-
-.suppliers {
-    overflow-y: auto;
-    height: calc(100% - 60px);
-}
-
-.supplier {
-    display: flex;
-    align-items: center;
-    gap: 1rem;
     padding: 1rem;
-    cursor: pointer;
+    border: 1px solid var(--grey);
+    border-radius: 10px;
+    margin-bottom: 1rem;
     transition: background 0.3s;
-    position: relative;
 }
 
-.supplier:hover, .supplier.active {
+.request-card:hover {
     background: #f5f5f5;
 }
 
-.supplier img {
-    width: 40px;
-    height: 40px;
-    border-radius: 50%;
-}
-
-.supplier-info {
-    flex: 1;
-}
-
-.supplier-info h4 {
-    margin: 0;
-    font-size: 0.9rem;
-}
-
-.supplier-info p {
-    margin: 0;
-    font-size: 0.8rem;
-    color: #666;
-}
-
-.last-message {
-    font-size: 0.75rem;
-    color: #999;
-}
-
-.unread-count {
+.accept-btn {
     background: var(--main);
     color: white;
-    padding: 0.2rem 0.5rem;
-    border-radius: 10px;
-    font-size: 0.75rem;
+    border: none;
+    border-radius: 5px;
+    padding: 0.5rem 1rem;
+    cursor: pointer;
+}
+
+.accept-btn:hover {
+    background: var(--main-dark);
 }
 
 .chat-area {
@@ -172,6 +124,22 @@
 .chat-header {
     padding: 1rem;
     border-bottom: 1px solid var(--grey);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.end-chat-btn {
+    background: red;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    padding: 0.5rem 1rem;
+    cursor: pointer;
+}
+
+.end-chat-btn:hover {
+    background: darkred;
 }
 
 .chat-user-info span {
@@ -255,5 +223,31 @@
     background: var(--main-dark);
 }
 </style>
+
+<script>
+    // JavaScript to handle accepting chat requests
+    document.querySelectorAll('.accept-btn').forEach(button => {
+        button.addEventListener('click', function() {
+            const requestCard = this.closest('.request-card');
+            const supplierName = requestCard.querySelector('h4').innerText;
+            const supplierId = requestCard.querySelector('p').innerText.split(' - ')[0]; // Extract supplier ID
+
+            // Update chat area with supplier info
+            document.getElementById('chat-supplier-name').innerText = supplierName;
+            document.getElementById('chat-supplier-id').innerText = supplierId;
+
+            // Hide chat requests and show chat area
+            document.querySelector('.chat-requests').style.display = 'none';
+            document.querySelector('.chat-area').style.display = 'flex';
+        });
+    });
+
+    // JavaScript to handle ending the chat
+    document.querySelector('.end-chat-btn').addEventListener('click', function() {
+        // Hide chat area and show chat requests again
+        document.querySelector('.chat-area').style.display = 'none';
+        document.querySelector('.chat-requests').style.display = 'block';
+    });
+</script>
 
 <?php require APPROOT . '/views/inc/components/footer.php'; ?>

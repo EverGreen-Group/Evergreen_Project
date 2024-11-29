@@ -14,11 +14,65 @@
 <main>
     <div class="head-title">
         <div class="left">
-            <h1>Vehicle Manager Dashboard</h1>
+            <h1>Collection Management</h1>
             <ul class="breadcrumb">
                 <li><a href="#">Dashboard</a></li>
             </ul>
         </div>
+
+        <div class="datetime-display">
+            <div class="date">
+                <i class='bx bx-calendar'></i>
+                <span><?php echo date('l, F j, Y'); ?></span>
+            </div>
+            <div class="time" id="live-time">
+                <i class='bx bx-time-five'></i>
+                <span>Loading...</span>
+            </div>
+        </div>
+
+        <style>
+        .datetime-display {
+            display: flex;
+            gap: 2rem;
+            background: var(--light);
+            padding: 1rem;
+            border-radius: 10px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            margin-bottom: 1.5rem;
+        }
+
+        .datetime-display .date,
+        .datetime-display .time {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 1.1rem;
+            color: var(--dark);
+        }
+
+        .datetime-display i {
+            font-size: 1.2rem;
+            color: var(--main);
+        }
+    </style>
+
+    <script>
+        function updateTime() {
+            const timeElement = document.querySelector('#live-time span');
+            const now = new Date();
+            timeElement.textContent = now.toLocaleTimeString('en-US', { 
+                hour: '2-digit', 
+                minute: '2-digit', 
+                second: '2-digit',
+                hour12: true 
+            });
+        }
+
+        // Update time immediately and then every second
+        updateTime();
+        setInterval(updateTime, 1000);
+    </script>
     </div>
 
 
@@ -56,89 +110,75 @@
 
 
 
-    <!-- Ongoing Collection Tracking Section -->
-    <?php if (!empty($data['ongoing_collections'])): ?>
-        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
-            <!-- Collections Table -->
-            <div class="table-data">
-                <div class="order">
-                    <div class="head">
-                        <h3>Collections</h3>
-                    </div>
-                    <table>
-                        <thead>
-                            <tr>
-                                <th>Collection ID</th>
-                                <th>Route</th>
-                                <th>Team</th>
-                                <th>Vehicle</th>
-                                <th>Shift</th>
-                                <th>Status</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <?php foreach ($data['ongoing_collections'] as $collection): ?>
-                                <tr>
-                                    <td><?= $collection->collection_id ?></td>
-                                    <td><?= $collection->route_name ?></td>
-                                    <td><?= $collection->team_name ?></td>
-                                    <td><?= $collection->license_plate ?></td>
-                                    <td><?= $collection->shift_name ?></td>
-                                    <td><?= $collection->status ?></td>
-                                </tr>
-                            <?php endforeach; ?>
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-
-            <!-- Tracking Interface -->
-            <div class="table-data">
-                <div class="order">
-                    <div class="head">
-                        <h3>Track Ongoing Collection</h3>
-                        <select id="ongoing-collection-select">
-                            <option value="">Select a collection</option>
-                            <?php foreach ($data['ongoing_collections'] as $collection): ?>
-                                <option value="<?= $collection->collection_id ?>">
-                                    Collection <?= $collection->collection_id ?> - <?= $collection->team_name ?>
-                                </option>
-                            <?php endforeach; ?>
-                        </select>
-                    </div>
-                    <div id="map-container" style="height: 200px; width: 100%;"></div>
-                    <div id="collection-details">
-                        <h4>Collection Details</h4>
-                        <p><b>Team: </b><span id="team-name">-</span></p>
-                        <p><b>Route: </b><span id="route-name">-</span></p>
-                        
-                        <!-- Supplier Collection Status Table -->
-                        <div class="supplier-status">
-                            <h4>Supplier Collection Status</h4>
-                            <table>
-                                <thead>
-                                    <tr>
-                                        <th>Supplier</th>
-                                        <th>Status</th>
-                                        <th>Quantity (kg)</th>
-                                        <th>Time</th>
-                                        <th>Actions</th>
-                                    </tr>
-                                </thead>
-                                <tbody id="supplier-status-body">
-                                    <!-- Dynamically populated via JavaScript -->
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    <?php endif; ?>
-
-
     <?php flash('schedule_error'); ?>
     <?php flash('schedule_success'); ?>
+
+    <div class="table-data">
+        <div class="order">
+            <div class="head">
+                <h3>Active Collections</h3>
+                <i class='bx bx-leaf'></i>
+            </div>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Collection ID</th>
+                        <th>Route</th>
+                        <th>Team</th>
+                        <th>Status</th>
+                        <th>Progress</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>COL001</td>
+                        <td>Route A</td>
+                        <td>Team 1</td>
+                        <td><span class="status pending">In Progress</span></td>
+                        <td>65%</td>
+                    </tr>
+                    <tr>
+                        <td>COL002</td>
+                        <td>Route B</td>
+                        <td>Team 2</td>
+                        <td><span class="status completed">Completed</span></td>
+                        <td>100%</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div class="order">
+            <div class="head">
+                <h3>Today's Routes</h3>
+                <i class='bx bx-map'></i>
+            </div>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Route ID</th>
+                        <th>Vehicle</th>
+                        <th>Driver</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>RT001</td>
+                        <td>VH001</td>
+                        <td>John Doe</td>
+                        <td><span class="status completed">Active</span></td>
+                    </tr>
+                    <tr>
+                        <td>RT002</td>
+                        <td>VH003</td>
+                        <td>Jane Smith</td>
+                        <td><span class="status completed">Active</span></td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
 
     <!-- Collection Schedules Section -->
     <div class="table-data">
@@ -175,8 +215,7 @@
                                 <td><?php echo date('Y-m-d H:i', strtotime($schedule->created_at)); ?></td>
                                 <td>
                                     <form action="<?php echo URLROOT; ?>/collectionschedules/toggleActive" method="POST" style="display: inline;">
-                                        <input type="hidden" name="schedule_id" value="<?php echo $schedule->schedule_id; ?>">
-                                        <button type="submit" class="status-btn <?php echo $schedule->is_active ? 'active' : 'inactive'; ?>">
+                                        <button type="submit" class="status-btn <?php echo $schedule->is_active ? 'active' : 'inactive'; ?>" style="background-color: var(--main)"> 
                                             <?php echo $schedule->is_active ? 'Active' : 'Inactive'; ?>
                                         </button>
                                     </form>
@@ -948,6 +987,9 @@ function updateCountdown() {
 }
 
 document.addEventListener('DOMContentLoaded', updateCountdown);
-</script>
+
+
+
+
 
 <?php require APPROOT . '/views/inc/components/footer.php'; ?>

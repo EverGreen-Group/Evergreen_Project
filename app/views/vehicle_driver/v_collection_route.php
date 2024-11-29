@@ -346,6 +346,148 @@
 <!-- Top nav bar -->
 <?php require APPROOT . '/views/inc/components/topnavbar.php'; ?>
 
+
+<script>
+
+
+    function initMap() {
+        try {
+            // Initialize map with a default center (will be updated when we get location)
+            const map = new google.maps.Map(document.getElementById("map-container"), {
+                center: { lat: 6.2173037, lng: 80.2564385 }, // Default to Sri Lanka
+                zoom: 14,
+                disableDefaultUI: true,
+                zoomControl: false,
+                mapTypeControl: false,
+                streetViewControl: false,
+                fullscreenControl: false,
+                styles: [
+                    {
+                        featureType: "poi",
+                        elementType: "labels",
+                        stylers: [{ visibility: "off" }]
+                    },
+                    {
+                        featureType: "transit",
+                        elementType: "labels",
+                        stylers: [{ visibility: "off" }]
+                    },
+                    { elementType: "geometry", stylers: [{ color: "#242f3e" }] },
+                    { elementType: "labels.text.stroke", stylers: [{ color: "#242f3e" }] },
+                    { elementType: "labels.text.fill", stylers: [{ color: "#746855" }] },
+                    {
+                        featureType: "administrative.locality",
+                        elementType: "labels.text.fill",
+                        stylers: [{ color: "#d59563" }],
+                    },
+                    {
+                        featureType: "road",
+                        elementType: "geometry",
+                        stylers: [{ color: "#38414e" }]
+                    },
+                    {
+                        featureType: "road",
+                        elementType: "geometry.stroke",
+                        stylers: [{ color: "#212a37" }]
+                    },
+                    {
+                        featureType: "road",
+                        elementType: "labels.text.fill",
+                        stylers: [{ color: "#9ca5b3" }]
+                    },
+                    {
+                        featureType: "water",
+                        elementType: "geometry",
+                        stylers: [{ color: "#17263c" }]
+                    },
+                    {
+                        featureType: "water",
+                        elementType: "labels.text.fill",
+                        stylers: [{ color: "#515c6d" }]
+                    },
+                    {
+                        featureType: "water",
+                        elementType: "labels.text.stroke",
+                        stylers: [{ color: "#17263c" }]
+                    }
+                ],
+            });
+
+            // Hard-coded driver location
+            const driverLocation = { lat: 6.2173037, lng: 80.2564385 }; // Example driver location
+            const driverMarker = new google.maps.Marker({
+                position: driverLocation,
+                map: map,
+                icon: {
+                    path: google.maps.SymbolPath.FORWARD_CLOSED_ARROW,
+                    scale: 8,
+                    fillColor: "#FF5722",
+                    fillOpacity: 1,
+                    strokeWeight: 2
+                },
+                title: "Driver's Location"
+            });
+
+            // Hard-coded supplier location
+            const supplierLocation = { lat: 6.221911, lng: 80.2419331 }; // Example supplier location
+            const supplierMarker = new google.maps.Marker({
+                position: supplierLocation,
+                map: map,
+                icon: {
+                    path: google.maps.SymbolPath.CIRCLE,
+                    scale: 10,
+                    fillColor: "#4CAF50",
+                    fillOpacity: 1,
+                    strokeWeight: 2,
+                    strokeColor: "#FFFFFF"
+                },
+                title: "Supplier Location"
+            });
+
+            // Optional: Add a line connecting driver and supplier location
+            const routeLine = new google.maps.Polyline({
+                path: [driverLocation, supplierLocation],
+                geodesic: true,
+                strokeColor: "#2196F3",
+                strokeOpacity: 0.8,
+                strokeWeight: 3,
+                map: map
+            });
+
+            // Start watching driver's location
+            // if (navigator.geolocation) {
+            //     navigator.geolocation.watchPosition(
+            //         (position) => {
+            //             const updatedDriverLocation = {
+            //                 lat: position.coords.latitude,
+            //                 lng: position.coords.longitude
+            //             };
+                        
+            //             // Update driver marker and recenter map
+            //             driverMarker.setPosition(updatedDriverLocation);
+            //             map.setCenter(updatedDriverLocation);
+            //         },
+            //         (error) => {
+            //             console.error('Geolocation error:', error);
+            //             alert('Unable to get your location. Please enable location services.');
+            //         },
+            //         {
+            //             enableHighAccuracy: true,
+            //             timeout: 5000,
+            //             maximumAge: 0
+            //         }
+            //     );
+            // } else {
+            //     alert('Geolocation is not supported by this browser.');
+            // }
+
+            console.log('Map initialized successfully');
+        } catch (error) {
+            console.error('Error initializing map:', error);
+        }
+    }
+</script>
+
 <!-- MAIN -->
 <main>
 
@@ -482,127 +624,6 @@
     let driverLocation = <?php echo json_encode($driverLocation); ?>;
     const URLROOT = '<?php echo URLROOT; ?>';
 
-    function initMap() {
-        try {
-            // Initialize map with a default center (will be updated when we get location)
-            map = new google.maps.Map(document.getElementById("map-container"), {
-                center: { lat: 6.927079, lng: 79.861244 }, // Default to Sri Lanka
-                zoom: 10,
-                disableDefaultUI: true,
-                zoomControl: false,
-                mapTypeControl: false,
-                streetViewControl: false,
-                fullscreenControl: false,
-                styles: [
-                    {
-                        featureType: "poi",
-                        elementType: "labels",
-                        stylers: [{ visibility: "off" }]
-                    },
-                    {
-                        featureType: "transit",
-                        elementType: "labels",
-                        stylers: [{ visibility: "off" }]
-                    },
-                    { elementType: "geometry", stylers: [{ color: "#242f3e" }] },
-                    { elementType: "labels.text.stroke", stylers: [{ color: "#242f3e" }] },
-                    { elementType: "labels.text.fill", stylers: [{ color: "#746855" }] },
-                    {
-                        featureType: "administrative.locality",
-                        elementType: "labels.text.fill",
-                        stylers: [{ color: "#d59563" }],
-                    },
-                    {
-                        featureType: "road",
-                        elementType: "geometry",
-                        stylers: [{ color: "#38414e" }]
-                    },
-                    {
-                        featureType: "road",
-                        elementType: "geometry.stroke",
-                        stylers: [{ color: "#212a37" }]
-                    },
-                    {
-                        featureType: "road",
-                        elementType: "labels.text.fill",
-                        stylers: [{ color: "#9ca5b3" }]
-                    },
-                    {
-                        featureType: "water",
-                        elementType: "geometry",
-                        stylers: [{ color: "#17263c" }]
-                    },
-                    {
-                        featureType: "water",
-                        elementType: "labels.text.fill",
-                        stylers: [{ color: "#515c6d" }]
-                    },
-                    {
-                        featureType: "water",
-                        elementType: "labels.text.stroke",
-                        stylers: [{ color: "#17263c" }]
-                    }
-                ],
-                disableDefaultUI: false
-            });
-
-            // Start watching driver's location
-            if (navigator.geolocation) {
-                watchId = navigator.geolocation.watchPosition(
-                    (position) => {
-                        driverLocation = {
-                            lat: position.coords.latitude,
-                            lng: position.coords.longitude
-                        };
-                        
-                        // Update driver marker and recenter map
-                        addDriverMarker(driverLocation);
-                        
-                        // Update routes with new driver location
-                        updateRoute();
-                    },
-                    (error) => {
-                        console.error('Geolocation error:', error);
-                        alert('Unable to get your location. Please enable location services.');
-                    },
-                    {
-                        enableHighAccuracy: true,
-                        timeout: 5000,
-                        maximumAge: 0
-                    }
-                );
-            } else {
-                alert('Geolocation is not supported by this browser.');
-            }
-
-            // Initialize other map components
-            directionsService = new google.maps.DirectionsService();
-            firstRouteRenderer = new google.maps.DirectionsRenderer({
-                suppressMarkers: true,
-                polylineOptions: {
-                    strokeColor: "#FF0000",
-                    strokeWeight: 5
-                }
-            });
-
-            remainingRouteRenderer = new google.maps.DirectionsRenderer({
-                suppressMarkers: true,
-                polylineOptions: {
-                    strokeColor: "#4CAF50",
-                    strokeWeight: 5
-                }
-            });
-
-            console.log('Map initialized successfully');
-
-            remainingRouteRenderer.setMap(map);
-            addCustomMarkers();
-            firstRouteRenderer.setMap(map);
-            updateRoute();
-        } catch (error) {
-            console.error('Error initializing map:', error);
-        }
-    }
 
     // Add this function to check if map loads
     window.addEventListener('load', function() {

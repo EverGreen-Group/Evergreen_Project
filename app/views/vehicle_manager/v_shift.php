@@ -569,7 +569,6 @@
 }
 
 h2 {
-    color: var(--dark);
     margin-bottom: 20px;
 }
 

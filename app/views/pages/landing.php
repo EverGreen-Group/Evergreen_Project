@@ -5,11 +5,11 @@
     <div class="hero-section">
         <div class="hero-content">
             <div class="hero-text">
-                <h1>Connecting Tea Suppliers with Excellence</h1>
+                <h1>Connecting Tea Leaves Suppliers with Excellence</h1>
                 <p>A modern platform designed for tea leaf suppliers to manage collections, track deliveries, and grow their business.</p>
                 <div class="hero-cta">
-                    <a href="<?php echo URLROOT; ?>/auth/supplier_register/" class="cta-button">Get Started</a>
-                    <a href="<?php echo URLROOT; ?>/users/login" class="login-link">
+                    <a href="<?php echo URLROOT; ?>/auth/supplier_register/" class="cta-button">Become a Supplier</a>
+                    <a href="<?php echo URLROOT; ?>/auth/login" class="login-link">
                         Already registered? Sign in <i class='bx bx-right-arrow-alt'></i>
                     </a>
                 </div>
@@ -20,7 +20,7 @@
         </div>
         <div class="hero-stats">
             <div class="stat-card">
-                <span class="stat-number">500+</span>
+                <span class="stat-number">400+</span>
                 <span class="stat-label">Active Suppliers</span>
             </div>
             <div class="stat-card">

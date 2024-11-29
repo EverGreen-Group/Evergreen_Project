@@ -215,6 +215,7 @@
         </div>
     </div>
 
+
     <!-- Completed Collections Section -->
     <div class="table-data">
         <div class="order">

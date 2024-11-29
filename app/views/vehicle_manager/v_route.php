@@ -8,16 +8,6 @@
 <!-- MAIN -->
 <main>
 
-<div style="background: #f0f0f0; padding: 10px; margin-bottom: 20px;">
-    Debug Info:
-    <pre>
-    <?php 
-    echo "Unallocated Suppliers:\n";
-    print_r($data); 
-    ?>
-    </pre>
-</div>
-
   <!-- Route Management Section -->
   <div class="head-title">
       <div class="left">
@@ -74,6 +64,18 @@
         <label for="routeName">Route Name:</label>
         <input type="text" id="routeName" name="routeName" required>
 
+        <label for="daySelect">Day:</label>
+        <select id="daySelect" name="day">
+            <option value="" disabled selected>Select a day</option>
+            <option value="Monday">Monday</option>
+            <option value="Tuesday">Tuesday</option>
+            <option value="Wednesday">Wednesday</option>
+            <option value="Thursday">Thursday</option>
+            <option value="Friday">Friday</option>
+            <option value="Saturday">Saturday</option>
+            <option value="Sunday">Sunday</option>
+        </select>
+
         <label for="status">Status:</label>
         <select id="status" name="status" required>
           <option value="Active">Active</option>
@@ -85,6 +87,8 @@
           <option value="" disabled selected>Select a supplier</option>
         </select>
         <button type="button" id="addSupplierButton">Add Supplier Stop</button>
+
+
 
         <h3>Route Stops:</h3>
         <ul id="stopList"></ul>
@@ -145,6 +149,7 @@
                     <th>Supplier ID</th>
                     <th>Name</th>
                     <th>Location</th>
+                    <th>Preferred Day</th>
                 </tr>
             </thead>
             <tbody>
@@ -158,6 +163,27 @@
                                data-name="<?php echo htmlspecialchars($supplier->supplier_name); ?>">
                                 <?php echo htmlspecialchars($supplier->coordinates); ?>
                             </a>
+                        </td>
+                        <td>
+                            <span class="preferred-day">
+                                <?php 
+                                    // Hardcoded preferred days based on supplier ID
+                                    switch ($supplier->supplier_id) {
+                                        case 1:
+                                            echo 'Monday'; // Hardcoded preferred day for Supplier 1
+                                            break;
+                                        case 2:
+                                            echo 'Wednesday'; // Hardcoded preferred day for Supplier 2
+                                            break;
+                                        case 3:
+                                            echo 'Friday'; // Hardcoded preferred day for Supplier 3
+                                            break;
+                                        default:
+                                            echo 'Not Specified'; // Default case if no match
+                                            break;
+                                    }
+                                ?>
+                            </span>
                         </td>
                     </tr>
                 <?php endforeach; ?>
@@ -178,6 +204,7 @@
                     <th>Name</th>
                     <th>Suppliers</th>
                     <th>Status</th>
+                    <th>Actions</th>
                 </tr>
             </thead>
             <tbody>
@@ -190,6 +217,13 @@
                             <span class="status <?php echo htmlspecialchars($route->status === 'Active' ? 'completed' : 'error'); ?>">
                                 <?php echo htmlspecialchars($route->status); ?>
                             </span>
+                        </td>
+                        <td>
+                            <form action="<?php echo URLROOT; ?>/vehiclemanager/deleteRoute/" method="POST" style="display: inline;" 
+                                  onsubmit="return confirm('Are you sure you want to delete this route?');">
+                                <input type="hidden" name="route_id" value="<?php echo $route->route_id; ?>">
+                                <button type="submit" class="delete-btn">Delete</button>
+                            </form>
                         </td>
                     </tr>
                 <?php endforeach; ?>
@@ -772,6 +806,21 @@
 
     #routeSupplierTable {
         margin-top: 10px;
+    }
+
+    /* Add this to your CSS file */
+    .delete-btn {
+        background-color: red;
+        color: white;
+        border: none;
+        border-radius: 5px;
+        padding: 5px 10px;
+        cursor: pointer;
+        transition: background-color 0.3s ease;
+    }
+
+    .delete-btn:hover {
+        background-color: darkred;
     }
 </style>
 

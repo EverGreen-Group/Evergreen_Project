@@ -28,7 +28,7 @@ require APPROOT . '/views/inc/components/topnavbar.php';
                 <div class="supplier-card">
                     <div class="supplier-info">
                         <div class="supplier-profile">
-                            <img src="<?php echo URLROOT; ?>/public/img/default-user.png" alt="Supplier">
+                            <img src="<?php echo URLROOT; ?>/public/uploads/supplier_photos/default-supplier.png" alt="Supplier">
                             <h4><?php echo $currentSupplier->supplier_name; ?></h4>
                             <span class="supplier-id">#<?php echo $currentSupplier->supplier_id; ?></span>
                         </div>
@@ -37,7 +37,7 @@ require APPROOT . '/views/inc/components/topnavbar.php';
                                 <i class='bx bx-map'></i>
                                 Location
                             </button>
-                            <button class="btn-call" onclick="callSupplier('<?php echo $currentSupplier->contact_number; ?>')">
+                            <button class="btn-call" onclick="callSupplier('<?php echo $currentSupplier->contact_number; ?>')" style="background-color: var(--main)">
                                 <i class='bx bx-phone'></i>
                                 Contact
                             </button>
@@ -79,7 +79,7 @@ require APPROOT . '/views/inc/components/topnavbar.php';
                         </div>
                         <div class="supplier-detail">
                             <strong>Status:</strong> 
-                            <span class="status <?php echo $cardStatus ?: strtolower($record->status); ?>">
+                            <span class="status" style="color: white; background-color: var(--main)" <?php echo $cardStatus ?: strtolower($record->status); ?>">
                                 <?php 
                                 if ($record->collection_time) {
                                     echo 'Collected';

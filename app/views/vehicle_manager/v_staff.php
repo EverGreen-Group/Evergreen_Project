@@ -20,31 +20,22 @@ require APPROOT . '/views/inc/components/topnavbar.php';
 
   <ul class="route-box-info">
     <li>
-        <i class='bx bxs-map'></i>
-        <span class="text">
-            <p>Total Drivers</p>
-            <h3><?php echo isset($data['totalDrivers']->total_drivers) ? $data['totalDrivers']->total_drivers : 0; ?></h3>
-        </span>
-    </li>
-    <li>
         <i class='bx bxs-check-circle'></i>
         <span class="text">
-            <p>Total Partners</p>
-            <h3><?php echo isset($data['totalPartners']->total_partners) ? $data['totalPartners']->total_partners : 0; ?></h3>
+            <p>Approved Leaves</p>
+            <h3><?php echo isset($data['approvedLeaves']->total_approved) ? $data['approvedLeaves']->total_approved : 3; ?></h3>
         </span>
     </li>
     <li>
-        <i class='bx bxs-x-circle'></i>
+        <i class='bx bxs-hourglass'></i>
         <span class="text">
-            <p>Total Unavailable</p>
+            <p>Pending Leaves</p>
             <h3><?php 
-                $total = 0;
-                if (isset($data['totalUnavailableDriver']->total_drivers_unavailable) && 
-                    isset($data['totalUnavailablePartner']->total_partners_unavailable)) {
-                    $total = (int)$data['totalUnavailableDriver']->total_drivers_unavailable + 
-                            (int)$data['totalUnavailablePartner']->total_partners_unavailable;
+                $totalPending = 3;
+                if (isset($data['pendingLeaves']->total_pending)) {
+                    $totalPending = (int)$data['pendingLeaves']->total_pending;
                 }
-                echo $total;
+                echo $totalPending;
             ?></h3>
         </span>
     </li>
@@ -77,16 +68,24 @@ require APPROOT . '/views/inc/components/topnavbar.php';
                 </tr>
             </thead>
             <tbody>
-                <?php foreach ($data['currentLeaves'] as $leave): ?>
-                    <tr>
-                        <td><?php echo $leave->employee_id; ?></td>
-                        <td><?php echo $leave->staff_name; ?></td>
-                        <td><?php echo $leave->leave_type; ?></td>
-                        <td><?php echo date('d M', strtotime($leave->start_date)); ?></td>
-                        <td><?php echo date('d M', strtotime($leave->end_date)); ?></td>
-                        <td><span class="status <?php echo $leave->status; ?>"><?php echo $leave->status; ?></span></td>
-                    </tr>
-                <?php endforeach; ?>
+                <!-- Hardcoded entries -->
+                <tr>
+                    <td>001</td>
+                    <td>John Doe</td>
+                    <td>Sick Leave</td>
+                    <td><?php echo date('d M', strtotime('2023-10-01')); ?></td>
+                    <td><?php echo date('d M', strtotime('2023-10-05')); ?></td>
+                    <td><span class="status approved">Approved</span></td>
+                </tr>
+                <tr>
+                    <td>002</td>
+                    <td>Jane Smith</td>
+                    <td>Annual Leave</td>
+                    <td><?php echo date('d M', strtotime('2023-10-10')); ?></td>
+                    <td><?php echo date('d M', strtotime('2023-10-15')); ?></td>
+                    <td><span class="status approved">Approved</span></td>
+                </tr>
+
             </tbody>
         </table>
     </div>
@@ -111,24 +110,56 @@ require APPROOT . '/views/inc/components/topnavbar.php';
                 </tr>
             </thead>
             <tbody>
-                <?php foreach ($data['pendingLeaves'] as $leave): ?>
-                    <tr>
-                        <td><?php echo $leave->employee_id; ?></td>
-                        <td><?php echo $leave->staff_name; ?></td>
-                        <td><?php echo $leave->leave_type; ?></td>
-                        <td><?php echo $leave->total_days; ?></td>
-                        <td><?php echo date('d M', strtotime($leave->start_date)); ?></td>
-                        <td><?php echo date('d M', strtotime($leave->end_date)); ?></td>
-                        <td>
-                            <button class="btn-approve" onclick="updateLeaveStatus(<?php echo $leave->id; ?>, 'approved', <?php echo $data['manager_id']; ?>)">
-                                <i class='bx bx-check'></i>
-                            </button>
-                            <button class="btn-reject" onclick="updateLeaveStatus(<?php echo $leave->id; ?>, 'rejected', <?php echo $data['user_id']; ?>)">
-                                <i class='bx bx-x'></i>
-                            </button>
-                        </td>
-                    </tr>
-                <?php endforeach; ?>
+                <!-- Hardcoded entries -->
+                <tr>
+                    <td>001</td>
+                    <td>John Doe</td>
+                    <td>Sick Leave</td>
+                    <td>5</td>
+                    <td><?php echo date('d M', strtotime('2023-10-01')); ?></td>
+                    <td><?php echo date('d M', strtotime('2023-10-05')); ?></td>
+                    <td>
+                        <button class="btn-approve" onclick="updateLeaveStatus(1, 'approved', 5)">
+                            <i class='bx bx-check'></i>
+                        </button>
+                        <button class="btn-reject" onclick="updateLeaveStatus(1, 'rejected', 5)">
+                            <i class='bx bx-x'></i>
+                        </button>
+                    </td>
+                </tr>
+                <tr>
+                    <td>002</td>
+                    <td>Jane Smith</td>
+                    <td>Annual Leave</td>
+                    <td>10</td>
+                    <td><?php echo date('d M', strtotime('2023-10-10')); ?></td>
+                    <td><?php echo date('d M', strtotime('2023-10-20')); ?></td>
+                    <td>
+                        <button class="btn-approve" onclick="updateLeaveStatus(2, 'approved', 5)">
+                            <i class='bx bx-check'></i>
+                        </button>
+                        <button class="btn-reject" onclick="updateLeaveStatus(2, 'rejected', 5)">
+                            <i class='bx bx-x'></i>
+                        </button>
+                    </td>
+                </tr>
+                <tr>
+                    <td>003</td>
+                    <td>Emily Johnson</td>
+                    <td>Casual Leave</td>
+                    <td>3</td>
+                    <td><?php echo date('d M', strtotime('2023-10-15')); ?></td>
+                    <td><?php echo date('d M', strtotime('2023-10-18')); ?></td>
+                    <td>
+                        <button class="btn-approve" onclick="updateLeaveStatus(3, 'approved', 5)">
+                            <i class='bx bx-check'></i>
+                        </button>
+                        <button class="btn-reject" onclick="updateLeaveStatus(3, 'rejected', 5)">
+                            <i class='bx bx-x'></i>
+                        </button>
+                    </td>
+                </tr>
+                <!-- Additional hardcoded entries can be added here -->
             </tbody>
         </table>
     </div>
@@ -145,38 +176,86 @@ require APPROOT . '/views/inc/components/topnavbar.php';
   <!-- Vehicle Drivers Table -->
   <div class="table-data">
     <div class="order">
-      <div class="head">
-        <h3>Vehicle Drivers</h3>
-        <i class='bx bx-search'></i>
-      </div>
-      <table id="driversTable">
-        <thead>
-          <tr>
-            <th>Driver ID</th>
-            <th>Employee ID</th>
-            <th>License No</th>
-            <th>Status</th>
-            <th>Experience Years</th>
-            <th>Actions</th>
-          </tr>
-        </thead>
-        <tbody>
-          <?php foreach ($data['drivers'] as $driver): ?>
-            <tr>
-              <td><?php echo $driver->driver_id; ?></td>
-              <td><?php echo $driver->employee_id; ?></td>
-              <td><?php echo $driver->license_no; ?></td>
-              <td><?php echo $driver->status; ?></td>
-              <td><?php echo $driver->experience_years; ?></td>
-              <td>
-                <button class="btn-delete" onclick="removeStaff(<?php echo $driver->driver_id; ?>, 'driver')">
-                  <i class='bx bx-trash'></i>
-                </button>
-              </td>
-            </tr>
-          <?php endforeach; ?>
-        </tbody>
-      </table>
+        <div class="head">
+            <h3>Vehicle Drivers</h3>
+            <i class='bx bx-search'></i>
+        </div>
+        <table>
+            <thead>
+                <tr>
+                    <th>Driver ID</th>
+                    <th>Employee ID</th>
+                    <th>License No</th>
+                    <th>Status</th>
+                    <th>Experience Years</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                <!-- Hardcoded entries -->
+                <tr>
+                    <td>DR001</td>
+                    <td>EMP001</td>
+                    <td>LIC123456</td>
+                    <td><span class="status completed">Active</span></td>
+                    <td>5</td>
+                    <td>
+                        <button class="btn-delete" onclick="removeStaff('DR001', 'driver')">
+                            <i class='bx bx-trash'></i>
+                        </button>
+                    </td>
+                </tr>
+                <tr>
+                    <td>DR002</td>
+                    <td>EMP002</td>
+                    <td>LIC654321</td>
+                    <td><span class="status completed">Active</span></td>
+                    <td>3</td>
+                    <td>
+                        <button class="btn-delete" onclick="removeStaff('DR002', 'driver')">
+                            <i class='bx bx-trash'></i>
+                        </button>
+                    </td>
+                </tr>
+                <tr>
+                    <td>DR003</td>
+                    <td>EMP003</td>
+                    <td>LIC789012</td>
+                    <td><span class="status completed">Active</span></td>
+                    <td>7</td>
+                    <td>
+                        <button class="btn-delete" onclick="removeStaff('DR003', 'driver')">
+                            <i class='bx bx-trash'></i>
+                        </button>
+                    </td>
+                </tr>
+                <tr>
+                    <td>DR004</td>
+                    <td>EMP004</td>
+                    <td>LIC456789</td>
+                    <td><span class="status error">Inactive</span></td>
+                    <td>4</td>
+                    <td>
+                        <button class="btn-delete" onclick="removeStaff('DR004', 'driver')">
+                            <i class='bx bx-trash'></i>
+                        </button>
+                    </td>
+                </tr>
+                <tr>
+                    <td>DR005</td>
+                    <td>EMP005</td>
+                    <td>LIC987654</td>
+                    <td><span class="status error">Inactive</span></td>
+                    <td>2</td>
+                    <td>
+                        <button class="btn-delete" onclick="removeStaff('DR005', 'driver')">
+                            <i class='bx bx-trash'></i>
+                        </button>
+                    </td>
+                </tr>
+                <!-- Additional hardcoded entries can be added here -->
+            </tbody>
+        </table>
     </div>
   </div>
 
@@ -217,30 +296,54 @@ require APPROOT . '/views/inc/components/topnavbar.php';
   <!-- Vehicle Managers Table -->
   <div class="table-data">
     <div class="order">
-      <div class="head">
-        <h3>Vehicle Managers</h3>
-        <i class='bx bx-search'></i>
-      </div>
-      <table id="managersTable">
-        <thead>
-          <tr>
-            <th>Manager ID</th>
-            <th>Employee ID</th>
-            <th>Manager Type</th>
-            <th>Status</th>
-          </tr>
-        </thead>
-        <tbody>
-          <?php foreach ($data['managers'] as $manager): ?>
-            <tr>
-              <td><?php echo $manager->manager_id; ?></td>
-              <td><?php echo $manager->employee_id; ?></td>
-              <td><?php echo $manager->manager_type; ?></td>
-              <td><?php echo $manager->status; ?></td>
-            </tr>
-          <?php endforeach; ?>
-        </tbody>
-      </table>
+        <div class="head">
+            <h3>Vehicle Managers</h3>
+            <i class='bx bx-search'></i>
+        </div>
+        <table id="managersTable">
+            <thead>
+                <tr>
+                    <th>Manager ID</th>
+                    <th>Employee ID</th>
+                    <th>Manager Type</th>
+                    <th>Status</th>
+                </tr>
+            </thead>
+            <tbody>
+                <!-- Hardcoded entries -->
+                <tr>
+                    <td>001</td>
+                    <td>EMP001</td>
+                    <td>Fleet Manager</td>
+                    <td>Active</td>
+                </tr>
+                <tr>
+                    <td>002</td>
+                    <td>EMP002</td>
+                    <td>Operations Manager</td>
+                    <td>Inactive</td>
+                </tr>
+                <tr>
+                    <td>003</td>
+                    <td>EMP003</td>
+                    <td>Logistics Manager</td>
+                    <td>Active</td>
+                </tr>
+                <tr>
+                    <td>004</td>
+                    <td>EMP004</td>
+                    <td>Safety Manager</td>
+                    <td>Active</td>
+                </tr>
+                <tr>
+                    <td>005</td>
+                    <td>EMP005</td>
+                    <td>Maintenance Manager</td>
+                    <td>Inactive</td>
+                </tr>
+                <!-- Additional hardcoded entries can be added here -->
+            </tbody>
+        </table>
     </div>
   </div>
 
@@ -257,17 +360,31 @@ document.addEventListener('DOMContentLoaded', function() {
     const monthlyCtx = document.getElementById('monthlyLeaveChart');
     if (monthlyCtx) {
         console.log('Monthly chart canvas found');
-        const monthlyData = <?php echo json_encode($data['monthlyLeaveStats'] ?? []); ?>;
+
+        // Hardcoded monthly data
+        const monthlyData = [
+            { month: 1, count: 5 },  // January
+            { month: 2, count: 3 },  // February
+            { month: 3, count: 8 },  // March
+            { month: 4, count: 2 },  // April
+            { month: 5, count: 6 },  // May
+            { month: 6, count: 4 },  // June
+            { month: 7, count: 7 },  // July
+            { month: 8, count: 5 },  // August
+            { month: 9, count: 9 },  // September
+            { month: 10, count: 10 }, // October
+            { month: 11, count: 1 },  // November
+            { month: 12, count: 0 }   // December
+        ];
         console.log('Monthly data:', monthlyData);
         
         const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
         const chartData = Array(12).fill(0);
         
-        if (monthlyData) {
-            monthlyData.forEach(item => {
-                chartData[item.month - 1] = parseInt(item.count);
-            });
-        }
+        // Populate chartData with hardcoded values
+        monthlyData.forEach(item => {
+            chartData[item.month - 1] = item.count; // Use the hardcoded counts
+        });
         
         new Chart(monthlyCtx, {
             type: 'bar',
@@ -311,9 +428,11 @@ document.addEventListener('DOMContentLoaded', function() {
     const leaveTypesCtx = document.getElementById('leaveTypesChart');
     if (leaveTypesCtx) {
         console.log('Leave types chart canvas found');
-        const labels = <?php echo json_encode(array_column($data['leaveTypeStats'] ?? [], 'name')); ?>;
-        const chartData = <?php echo json_encode(array_column($data['leaveTypeStats'] ?? [], 'count')); ?>;
-        
+
+        // Hardcoded labels and data for leave types
+        const labels = ['Sick Leave', 'Annual Leave', 'Casual Leave', 'Maternity Leave', 'Paternity Leave', 'Unpaid Leave'];
+        const chartData = [10, 15, 5, 3, 2, 1]; // Example counts for each leave type
+
         new Chart(leaveTypesCtx, {
             type: 'pie',
             data: {
@@ -492,7 +611,7 @@ document.addEventListener('DOMContentLoaded', function() {
   }
 
   .btn-approve {
-    background-color: #4CAF50;
+    background-color: var(--main);
     color: white;
   }
 

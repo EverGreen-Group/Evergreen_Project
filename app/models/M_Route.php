@@ -205,5 +205,31 @@ class M_Route {
         
         return $this->db->execute();
     }
+
+
+    public function deleteRoute($route_id) {
+        // Start a transaction
+        $this->db->beginTransaction();
+        
+        try {
+            // Delete from route_suppliers
+            $this->db->query('DELETE FROM route_suppliers WHERE route_id = :route_id');
+            $this->db->bind(':route_id', $route_id);
+            $this->db->execute();
+
+            // Delete from routes
+            $this->db->query('DELETE FROM routes WHERE route_id = :route_id');
+            $this->db->bind(':route_id', $route_id);
+            $this->db->execute();
+
+            // Commit the transaction
+            $this->db->commit();
+            return true;
+        } catch (Exception $e) {
+            // Rollback the transaction if something failed
+            $this->db->rollBack();
+            return false;
+        }
+    }
 }
 ?>

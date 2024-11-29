@@ -55,16 +55,10 @@
   </ul>
   <ul class="side-menu">
     <li>
-      <a href="personal-details.html" class="logout">
-        <i class="bx bxs-user-detail"></i>
-        <span class="text">Personal Details</span>
-      </a>
-    </li>
-    <li>
-      <a href="sidebar/logout.html" class="logout">
-        <i class="bx bxs-log-out-circle"></i>
-        <span class="text">Logout</span>
-      </a>
+        <a href="<?php echo URLROOT; ?>/auth/logout" class="logout">
+            <i class="bx bxs-log-out-circle"></i>
+            <span class="text">Logout</span>
+        </a>
     </li>
   </ul>
 </section>
