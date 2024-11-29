@@ -489,6 +489,20 @@ class VehicleManager extends Controller {
     }
 
     public function updateVehicle() {
+        if ($_SERVER['REQUEST_METHOD'] == 'GET') {
+            // Render the update vehicle view (if applicable)
+            $data = [
+                'title' => 'Update Vehicle'
+                // You can add more data here if needed
+            ];
+            $this->view('vehicle_manager/v_update_vehicle', $data); // Assuming you have a view for updating vehicles
+        } else {
+            // Handle POST request
+            $this->handleVehicleUpdateSubmission();
+        }
+    }
+
+    private function handleVehicleUpdateSubmission() {
         // Prevent PHP errors from being output
         error_reporting(E_ALL);
         ini_set('display_errors', 0);

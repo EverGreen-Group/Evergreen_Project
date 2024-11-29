@@ -139,9 +139,18 @@
 
   <div class="chart-row">
     <div class="chart-container">
-      <h3>Vehicle Usage Overview</h3>
-      <div class="chart-wrapper">
-        <canvas id="vehicleUsageChart"></canvas>
+      <h3>Track Vehicle</h3>
+      <div id="map-container" style="height: 200px; width: 100%;"></div>
+      
+      <div class="vehicle-status">
+          <label for="vehicleSelect">Select Vehicle:</label>
+          <select id="vehicleSelect">
+              <option value="">-- Select a Vehicle --</option>
+              <option value="1">Vehicle 1 - Active</option>
+              <option value="2">Vehicle 2 - Inactive</option>
+              <option value="3">Vehicle 3 - Active</option>
+          </select>
+          <div id="vehicleInfo" style="margin-top: 10px;"></div>
       </div>
     </div>
 
@@ -246,29 +255,6 @@
   <script>
     document.addEventListener('DOMContentLoaded', function() {
         // Vehicle Usage Chart (using dummy data for now)
-        const ctx = document.getElementById('vehicleUsageChart').getContext('2d');
-        new Chart(ctx, {
-            type: 'line',
-            data: {
-                labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
-                datasets: [{
-                    label: 'Vehicle Usage (Trips)',
-                    data: [50, 60, 70, 55, 80, 95, 90, 85, 100, 110, 115, 120],
-                    backgroundColor: 'rgba(54, 162, 235, 0.6)',
-                    borderColor: 'rgba(54, 162, 235, 1)',
-                    borderWidth: 1
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                scales: {
-                    y: {
-                        beginAtZero: true
-                    }
-                }
-            }
-        });
 
         // Vehicle Types Chart (using real database data)
         const vehicleData = <?php echo json_encode($data['vehicleTypeStats']); ?>;
@@ -771,7 +757,7 @@ function loadVehicleData(vehicleId) { ... }
                   </span>
               </div>
               <p><strong>Type:</strong> ${vehicle.vehicle_type || 'N/A'}</p>
-              <p><strong>Capacity:</strong> ${vehicle.capacity || 'N/A'} Tons</p>
+              <p><strong>Capacity:</strong> ${vehicle.capacity || 'N/A'} Kg</p>
               <p><strong>Owner:</strong> ${vehicle.owner_name || 'N/A'}</p>
           </div>
         `;
@@ -816,7 +802,7 @@ function loadVehicleData(vehicleId) { ... }
                       <h3>Specifications</h3>
                       <div class="detail-row">
                           <span class="label">Capacity:</span>
-                          <span class="value">${vehicle.capacity} Tons</span>
+                          <span class="value">${vehicle.capacity} kg</span>
                       </div>
                       <div class="detail-row">
                           <span class="label">Fuel Type:</span>
@@ -1334,6 +1320,16 @@ function editMaintenance(event) {
     .delete-button:hover {
         background-color: #dc3545;
     }
+
+    .vehicle-status select {
+    width: 100%; /* Full width for the dropdown */
+    padding: 10px; /* Padding inside the dropdown */
+    border: 1px solid #ccc; /* Border for the dropdown */
+    border-radius: 4px; /* Rounded corners */
+    font-size: 16px; /* Font size for the dropdown */
+    background-color: #fff; /* White background for the dropdown */
+    cursor: pointer; /* Pointer cursor on hover */
+}
 </style>
 
 <script>
@@ -1361,10 +1357,35 @@ async function confirmDelete(vehicleId) {
 }
 </script>
 
+<!-- Include Google Maps API -->
+<script async defer src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCdt_khahhXrKdrA8cLgKeQB2CZtde-_Vc&callback=initMap"></script>
+<script>
+    let map;
+
+    function initMap() {
+        // Hardcoded vehicle location (example coordinates)
+        const vehicleLocation = { lat: 6.2202197, lng: 80.2448223 }; // Example coordinates for Sri Lanka
+
+        // Initialize the map
+        map = new google.maps.Map(document.getElementById('map-container'), {
+            center: vehicleLocation,
+            zoom: 13,
+        });
+
+        // Add a marker for the vehicle location
+        new google.maps.Marker({
+            position: vehicleLocation,
+            map: map,
+            title: 'Vehicle Location'
+        });
+    }
+
+</script>
+
 </main>
-<!-- MAIN -->
-<!-- MAIN -->
+
+
 </section>
-<!-- CONTENT -->
+
 
 <?php require APPROOT . '/views/inc/components/footer.php'; ?>

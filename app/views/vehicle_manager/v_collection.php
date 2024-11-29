@@ -14,7 +14,7 @@
 <main>
     <div class="head-title">
         <div class="left">
-            <h1>Vehicle Manager Dashboard</h1>
+            <h1>Collection Management</h1>
             <ul class="breadcrumb">
                 <li><a href="#">Dashboard</a></li>
             </ul>
@@ -144,13 +144,6 @@
                         <td><span class="status completed">Completed</span></td>
                         <td>100%</td>
                     </tr>
-                    <tr>
-                        <td>COL003</td>
-                        <td>Route C</td>
-                        <td>Team 3</td>
-                        <td><span class="status process">Starting</span></td>
-                        <td>0%</td>
-                    </tr>
                 </tbody>
             </table>
         </div>
@@ -180,13 +173,7 @@
                         <td>RT002</td>
                         <td>VH003</td>
                         <td>Jane Smith</td>
-                        <td><span class="status pending">Scheduled</span></td>
-                    </tr>
-                    <tr>
-                        <td>RT003</td>
-                        <td>VH002</td>
-                        <td>Mike Ross</td>
-                        <td><span class="status process">Preparing</span></td>
+                        <td><span class="status completed">Active</span></td>
                     </tr>
                 </tbody>
             </table>
@@ -228,8 +215,7 @@
                                 <td><?php echo date('Y-m-d H:i', strtotime($schedule->created_at)); ?></td>
                                 <td>
                                     <form action="<?php echo URLROOT; ?>/collectionschedules/toggleActive" method="POST" style="display: inline;">
-                                        <input type="hidden" name="schedule_id" value="<?php echo $schedule->schedule_id; ?>">
-                                        <button type="submit" class="status-btn <?php echo $schedule->is_active ? 'active' : 'inactive'; ?>">
+                                        <button type="submit" class="status-btn <?php echo $schedule->is_active ? 'active' : 'inactive'; ?>" style="background-color: var(--main)"> 
                                             <?php echo $schedule->is_active ? 'Active' : 'Inactive'; ?>
                                         </button>
                                     </form>

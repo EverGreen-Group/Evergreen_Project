@@ -443,7 +443,7 @@ class VehicleDriver extends controller {
             try {
                 $collection = $this->collectionScheduleModel->getCollectionById($collectionId);
                 if (!$collection) {
-                    redirect('vehicledriver/shift');
+                    redirect('vehicledriver/');
                 }
 
                 // Verify conditions before starting
@@ -528,6 +528,32 @@ class VehicleDriver extends controller {
     public function setReadyTest() {
         $data = [];
         $this->view('v_schedule_details.php', $data);
+    }
+
+
+    public function approveTemp($collectionId) {
+        // Load the collection model
+        $this->collectionModel = $this->model('M_Collection');
+
+        // Prepare the data to update
+        $data = [
+            'collection_id' => $collectionId,
+            // 'status' => 'In Progress',
+            'status' => 'Pending',
+            'vehicle_manager_approved' => 1,
+            'initial_weight_bridge' => 13000,
+            'vehicle_manager_id' => 5, // Temporary vehicle manager ID
+            'vehicle_manager_approved_at' => date('Y-m-d H:i:s') // Current datetime
+        ];
+
+        // Update the collection in the database
+        if ($this->collectionModel->updateCollection($data)) {
+            // Redirect or set a success message
+            redirect('vehicledriver/scheduleDetails/' . $collectionId);
+        } else {
+            // Handle the error (e.g., set an error message)
+            redirect('vehicledriver/shift'); // Redirect to a suitable page on failure
+        }
     }
 }
 

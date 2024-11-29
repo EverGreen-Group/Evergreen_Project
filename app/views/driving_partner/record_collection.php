@@ -7,7 +7,6 @@
 <?php require APPROOT . '/views/inc/components/topnavbar.php'; ?>
 
 <main>
-    <?php print_r($data); ?>
     <div class="head-title">
         <div class="left">
             <h1>Record Collection</h1>
@@ -67,8 +66,8 @@
                     <label for="supplierPin">Enter Supplier PIN</label>
                     <input type="password" id="supplierPin" name="supplierPin" required class="form-control">
                 </div>
-                <button type="submit" class="btn-confirm">
-                    <i class='bx bx-check-circle'></i> Confirm Collection
+                <button type="submit" class="btn-confirm" style="color: white; background-color: var(--main)">
+                    <i class='bx bx-check-circle'></i> Confirm PIN
                 </button>
             </form>
         </div>
