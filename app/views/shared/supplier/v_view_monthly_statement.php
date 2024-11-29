@@ -1,7 +1,16 @@
 <?php require APPROOT . '/views/inc/components/header.php'; ?>
 
 <!-- Side bar -->
-<?php require APPROOT . '/views/inc/components/sidebar_suppliermanager.php'; ?>
+<?php 
+// Assuming you have a way to get the user role, e.g., from session or user object // Example of getting user role from session
+
+// Conditional inclusion of the sidebar based on user role
+if (RoleHelper::hasRole(RoleHelper::SUPPLIER_MANAGER)) {
+    require APPROOT . '/views/inc/components/sidebar_suppliermanager.php';
+} else {
+    require APPROOT . '/views/inc/components/sidebar_supplier.php';
+}
+?>
 <!-- Top nav bar -->
 <?php require APPROOT . '/views/inc/components/topnavbar.php'; ?>
 
@@ -9,7 +18,7 @@
         <main>
         <div class="head-title">
                 <div class="left">
-                    <h1>Monthly Statement</h1>
+                    <h1>Supplier Payment History</h1>
                     <ul class="breadcrumb">
                         <li>
                             <a href="#">Dashboard</a>

@@ -63,7 +63,7 @@ class Supplier extends Controller {
     {
         $data = [];
 
-        $this->view('supplier/v_payments', $data);
+        $this->view('shared/supplier/v_view_monthly_statement', $data);
     }
 
     public function paymentanalysis()

@@ -260,4 +260,40 @@ document.addEventListener('DOMContentLoaded', function() {
         border-color: #006400;
         box-shadow: 0 2px 5px rgba(0, 128, 0, 0.1);
     }
+
+    /* Add this CSS to your stylesheet */
+    .stats-container {
+        display: flex; /* Use flexbox for layout */
+        flex-wrap: wrap; /* Allow items to wrap to the next line */
+        justify-content: space-between; /* Space items evenly */
+        margin: 0 auto; /* Center the container */
+        padding: 10px; /* Add some padding */
+    }
+
+    .stat-item {
+        flex: 1 1 45%; /* Allow items to grow and shrink, with a base width of 45% */
+        box-sizing: border-box; /* Include padding and border in the element's total width and height */
+        margin: 10px; /* Add margin for spacing */
+        min-width: 200px; /* Set a minimum width for smaller screens */
+    }
+
+    .stat-header {
+        display: flex; /* Use flexbox for header layout */
+        align-items: center; /* Center items vertically */
+    }
+
+    .stat-value {
+        font-size: 1.5em; /* Adjust font size for better visibility */
+    }
+
+    /* Media query for smaller screens */
+    @media (max-width: 768px) {
+        .stats-container {
+            flex-direction: column; /* Stack items vertically on small screens */
+        }
+
+        .stat-item {
+            flex: 1 1 100%; /* Make each item take full width */
+        }
+    }
 </style>

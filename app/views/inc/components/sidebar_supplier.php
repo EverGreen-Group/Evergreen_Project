@@ -27,7 +27,7 @@
 			</li>			
 			<li>
 					<a href="<?php echo URLROOT; ?>/supplier/payments">
-					<i class='bx bxs-group'></i>
+					<i class='bx bxs-dollar-circle'></i>
 					<span class="text">Payments</span>
 				</a>
 			</li>
@@ -46,13 +46,6 @@
 					<span class="text">Profile</span>
 				</a>
 			</li>
-
-            <li>
-                <a href="<?php echo URLROOT; ?>/supplier/settings">
-                    <i class='bx bxs-cog'></i>
-                    <span class="text">Settings</span>
-                </a>
-            </li>
 			<li>
 			<a href="<?php echo URLROOT; ?>/auth/logout" class="logout">
 				<i class="bx bxs-log-out-circle"></i>

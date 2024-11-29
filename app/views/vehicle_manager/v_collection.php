@@ -990,4 +990,6 @@ document.addEventListener('DOMContentLoaded', updateCountdown);
 
 
 
+
+
 <?php require APPROOT . '/views/inc/components/footer.php'; ?>
