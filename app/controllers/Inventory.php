@@ -471,6 +471,12 @@ class Inventory extends controller
         redirect('inventory/fertilizerdashboard');
     }
 
+    public function settings(){
+        $data = [];
+
+        $this->view('inventory/v_setting', $data);
+    }
+
  
 
 }

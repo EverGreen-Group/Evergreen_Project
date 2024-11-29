@@ -478,7 +478,7 @@
     }
 
     .progress-step.active .step-number {
-        background: #86E211;
+        background: #007664;
         color: white;
     }
 
@@ -527,7 +527,7 @@
     }
 
     .next-btn {
-        background: #86E211;
+        background: #007664;
         color: white;
     }
 
