@@ -99,7 +99,7 @@
 
     /* Add your internal CSS styles here */
     body {
-      font-family: Arial, sans-serif;
+      font-family: var(--poppins);
       margin: 0;
       padding: 0;
     }
@@ -337,7 +337,7 @@
     }
 
     .btn {
-      background: #2ec720;
+      background: var(--main);
       color: white;
       padding: 12px 30px;
       border: none;
@@ -423,12 +423,12 @@
           <div class="form-grid">
             <div class="form-group">
               <label>Export Stock Name*</label>
-              <input type="text" class="form-control" placeholder="Enter First Name" required>
+              <input type="text" class="form-control" placeholder="Enter Stock Name" required>
               <span class="error-text">Please enter stock name</span>
             </div>
             <div class="form-group">
               <label>Company for Export*</label>
-              <input type="text" class="form-control" placeholder="Enter your Last Name">
+              <input type="text" class="form-control" placeholder="Enter Company Name">
               <span class="error-text">Please enter last name</span>
             </div>
 
@@ -436,30 +436,30 @@
             <div class="form-group">
               <label>Export Confirmation Date*</label>
               <input type="date" class="form-control" required>
-              <span class="error-text">Please enter squere of land</span>
+              <span class="error-text">Please enter confirmation date</span>
             </div>
             <div class="form-group">
               <label>Export Manager name*</label>
-              <input type="text" class="form-control" placeholder="Enter First Name" def required>
-              <span class="error-text">Please enter address</span>
+              <input type="text" class="form-control" placeholder="Enter Manager Name" required>
+              <span class="error-text">Please enter manager name</span>
             </div>
             <div class="form-group">
               <label>Export Price(per kg)</label>
-              <input type="text" class="form-control" placeholder="Enter Last Name">
-              <span class="error-text">Please enter city</span>
+              <input type="text" class="form-control" placeholder="Enter Price" required>
+              <span class="error-text">Please enter price</span>
             </div>
             <div class="form-group">
               <label>Export Quantity*</label>
-              <input type="text" class="form-control" placeholder="Enter your...." required>
-              <span class="error-text">Please enter ....</span>
+              <input type="text" class="form-control" placeholder="Enter Quantity" required>
+              <span class="error-text">Please enter quantity</span>
             </div>
             <div class="form-group">
               <label>Export Reg No</label>
-              <input type="text" class="form-control" placeholder="Enter your land reg no" required>
+              <input type="text" class="form-control" placeholder="Enter Reg No" required>
             </div>
 
           </div>
-          <button type="submit" class="btn">Next</button>
+            <button type="submit" class="btn">Next</button>
         </form>
       </section>
     </div>
