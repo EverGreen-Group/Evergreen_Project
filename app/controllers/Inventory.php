@@ -471,10 +471,11 @@ class Inventory extends controller
         redirect('inventory/fertilizerdashboard');
     }
 
-    public function settings(){
+    public function payments()
+    {
         $data = [];
 
-        $this->view('inventory/v_setting', $data);
+        $this->view('inventory/v_payments', $data);
     }
 
  

@@ -25,18 +25,7 @@
 					<span class="text">Suppliers</span>
 				</a>
 			</li>		
-			<li>
-					<a href="<?php echo URLROOT; ?>/Suppliermanager/requests">
-					<i class='bx bxs-basket' ></i>
-					<span class="text">Availability</span>
-				</a>
-			</li>
-			<li>
-					<a href="<?php echo URLROOT; ?>/Suppliermanager/payments">
-					<i class='bx bx-wallet' ></i>
-					<span class="text">Payments</span>
-				</a>
-			</li>
+
 			<li>
 				<a href="<?php echo URLROOT; ?>/Suppliermanager/chat">
 					<i class='bx bxs-message-dots' ></i>
