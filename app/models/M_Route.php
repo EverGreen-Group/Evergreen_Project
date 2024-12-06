@@ -118,6 +118,8 @@ class M_Route {
                 s.contact_number,
                 s.latitude,
                 s.longitude,
+                s.preferred_day,
+                s.last_updated,
                 u.first_name,
                 u.last_name,
                 CONCAT(u.first_name, ' ', u.last_name) as full_name,

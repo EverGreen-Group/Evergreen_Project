@@ -8,6 +8,7 @@
 <!-- MAIN -->
 <main>
 
+
   <!-- Route Management Section -->
   <div class="head-title">
       <div class="left">
@@ -166,23 +167,7 @@
                         </td>
                         <td>
                             <span class="preferred-day">
-                                <?php 
-                                    // Hardcoded preferred days based on supplier ID
-                                    switch ($supplier->supplier_id) {
-                                        case 1:
-                                            echo 'Monday'; // Hardcoded preferred day for Supplier 1
-                                            break;
-                                        case 2:
-                                            echo 'Wednesday'; // Hardcoded preferred day for Supplier 2
-                                            break;
-                                        case 3:
-                                            echo 'Friday'; // Hardcoded preferred day for Supplier 3
-                                            break;
-                                        default:
-                                            echo 'Not Specified'; // Default case if no match
-                                            break;
-                                    }
-                                ?>
+                                <?php echo $supplier->preferred_day; ?>
                             </span>
                         </td>
                     </tr>
@@ -870,6 +855,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Replace hardcoded suppliers with data from PHP
     const suppliers = <?php echo json_encode($unallocatedSuppliers); ?>;
+
     
     let map;
     let directionsService;
@@ -899,73 +885,7 @@ document.addEventListener('DOMContentLoaded', () => {
         directionsRenderer.setMap(map);
     }
 
-    function calculateDistance(point1, point2) {
-        return google.maps.geometry.spherical.computeDistanceBetween(
-            new google.maps.LatLng(point1.lat, point1.lng),
-            new google.maps.LatLng(point2.lat, point2.lng)
-        );
-    }
 
-    function dijkstraRoute(startPoint, stops) {
-        if (stops.length === 0) return [];
-        
-        // Create distances object to store shortest distances
-        const distances = {};
-        const previous = {};
-        const unvisited = new Set();
-        
-        // Initialize distances
-        stops.forEach(stop => {
-            distances[stop.id] = Infinity;
-            previous[stop.id] = null;
-            unvisited.add(stop.id);
-        });
-        
-        // Set distance to first stop from factory
-        const firstStop = stops[0];
-        distances[firstStop.id] = calculateDistance(startPoint, firstStop.location);
-        
-        while (unvisited.size > 0) {
-            // Get stop with minimum distance
-            let current = null;
-            let minDistance = Infinity;
-            
-            unvisited.forEach(stopId => {
-                if (distances[stopId] < minDistance) {
-                    minDistance = distances[stopId];
-                    current = stopId;
-                }
-            });
-            
-            if (!current) break;
-            
-            unvisited.delete(current);
-            
-            // Update distances to all other unvisited stops
-            const currentStop = stops.find(stop => stop.id === current);
-            unvisited.forEach(stopId => {
-                const targetStop = stops.find(stop => stop.id === stopId);
-                const distance = calculateDistance(currentStop.location, targetStop.location);
-                const totalDistance = distances[current] + distance;
-                
-                if (totalDistance < distances[stopId]) {
-                    distances[stopId] = totalDistance;
-                    previous[stopId] = current;
-                }
-            });
-        }
-        
-        // Reconstruct the ordered route
-        const orderedStops = [];
-        let current = stops[stops.length - 1].id;
-        
-        while (current) {
-            orderedStops.unshift(stops.find(stop => stop.id === current));
-            current = previous[current];
-        }
-        
-        return orderedStops;
-    }
 
     function updateMap() {
         if (!map) {
@@ -992,12 +912,9 @@ document.addEventListener('DOMContentLoaded', () => {
         });
         markers.push(factoryMarker);
 
-        // If there are stops, calculate optimal order and add numbered markers
         if (currentRoute.stops.length > 0) {
-            const orderedStops = dijkstraRoute(factoryLocation, currentRoute.stops);
             
-            // Add numbered markers for suppliers in optimal order
-            orderedStops.forEach((stop, index) => {
+            currentRoute.stops.forEach((stop, index) => {
                 const supplierMarker = new google.maps.Marker({
                     position: stop.location,
                     map: map,
@@ -1012,15 +929,31 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    function populateSupplierDropdown() {
-        supplierSelect.innerHTML = '<option value="" disabled selected>Select a supplier</option>';
-        suppliers.forEach(supplier => {
+    function populateSupplierDropdown(selectedDay) {
+        const supplierSelect = document.getElementById('supplierSelect');
+        supplierSelect.innerHTML = '<option value="" disabled selected>Select a supplier</option>'; // Reset the dropdown
+
+        // Filter suppliers based on the selected day
+        const filteredSuppliers = suppliers.filter(supplier => supplier.preferred_day === selectedDay);
+        console.log('Filtered Suppliers:', filteredSuppliers); // Debugging output
+
+        // Populate the supplier dropdown with filtered suppliers
+        filteredSuppliers.forEach(supplier => {
             const option = document.createElement('option');
             option.value = supplier.id;
             option.textContent = supplier.name;
             supplierSelect.appendChild(option);
         });
     }
+
+// Event listener for the daySelect dropdown
+document.getElementById('daySelect').addEventListener('change', function() {
+    const selectedDay = this.value;
+    console.log('Selected Day:', selectedDay); // Log the selected day
+    console.log('Available Suppliers:', suppliers); // Log the suppliers array
+
+    populateSupplierDropdown(selectedDay); // Call the function to populate suppliers
+});
 
     function updateStopList() {
         stopList.innerHTML = '';
@@ -1047,7 +980,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
                 
                 updateStopList();
-                updateMap(); // This will recalculate Dijkstra's and update markers
+                updateMap(); 
             });
         });
     }
@@ -1434,283 +1367,15 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     });
 
-    // Update the click handler for route cards
-    document.addEventListener('click', async function(e) {
-        if (e.target.closest('.route-card')) {
-            const card = e.target.closest('.route-card');
-            const routeId = card.dataset.routeId;
-            
-            try {
-                console.log('Fetching route data for ID:', routeId); // Debug log
-                
-                const response = await fetch(`<?php echo URLROOT; ?>/vehiclemanager/getRouteDetails/${routeId}`, {
-                    headers: {
-                        'Accept': 'application/json'
-                    }
-                });
 
-                // Log the raw response for debugging
-                const rawResponse = await response.text();
-                console.log('Raw response:', rawResponse);
 
-                // Try to parse the response
-                let routeData;
-                try {
-                    routeData = JSON.parse(rawResponse);
-                    console.log('Parsed route data:', routeData);
-                } catch (parseError) {
-                    console.error('Failed to parse response:', parseError);
-                    throw new Error('Invalid server response');
-                }
 
-                if (!routeData) {
-                    throw new Error('No route data received');
-                }
-
-                // Open the edit modal with the route data
-                openRouteModal(routeData);
-
-            } catch (error) {
-                console.error('Error fetching route details:', error);
-                alert('Error loading route details: ' + error.message);
-            }
-        }
-    });
-
-    // Add this function to handle route selection and update the table
-    async function updateRouteSupplierTable(routeId) {
-        try {
-            const response = await fetch(`<?php echo URLROOT; ?>/vehiclemanager/getRouteSuppliers/${routeId}`);
-            const data = await response.json();
-            
-            console.log('Route supplier data:', data); // Debug log
-
-            // Get the table elements
-            const routeNameDisplay = document.querySelector('.route-name');
-            const supplierTableBody = document.querySelector('#routeSupplierTable tbody');
-
-            if (!data.success) {
-                throw new Error(data.error || 'Failed to load route suppliers');
-            }
-
-            // Update route name display
-            routeNameDisplay.textContent = `Route: ${data.data.route.name}`;
-
-            // Clear existing table rows
-            supplierTableBody.innerHTML = '';
-
-            // Check if there are suppliers
-            if (!data.data.suppliers || data.data.suppliers.length === 0) {
-                supplierTableBody.innerHTML = `
-                    <tr>
-                        <td colspan="4" class="text-center">No suppliers assigned to this route</td>
-                    </tr>`;
-                return;
-            }
-
-            // Add suppliers to table
-            data.data.suppliers.forEach((supplier) => {
-                const row = document.createElement('tr');
-                row.innerHTML = `
-                    <td>${supplier.stop_order || '-'}</td>
-                    <td>${supplier.id}</td>
-                    <td>${supplier.name}</td>
-                    <td>${supplier.location.lat}, ${supplier.location.lng}</td>
-                `;
-                supplierTableBody.appendChild(row);
-            });
-
-        } catch (error) {
-            console.error('Error updating supplier table:', error);
-            alert('Error loading route suppliers: ' + error.message);
-        }
-    }
-
-    // Update your route click handler
-    document.addEventListener('click', function(e) {
-        const routeCard = e.target.closest('.route-card');
-        if (routeCard) {
-            const routeId = routeCard.dataset.routeId;
-            if (routeId) {
-                // Update the supplier table
-                updateRouteSupplierTable(routeId);
-                
-                // Highlight the selected route card
-                document.querySelectorAll('.route-card').forEach(card => {
-                    card.classList.remove('selected');
-                });
-                routeCard.classList.add('selected');
-            }
-        }
-    });
 });
 
-// Global initMap function for Google Maps callback
-function initMap() {
-    // This function will be called by the Google Maps API
-    // It will trigger the initialization of the map in our application
-    const event = new Event('googlemapsloaded');
-    window.dispatchEvent(event);
-}
-
-document.addEventListener('DOMContentLoaded', function() {
-    const locationModal = document.getElementById('locationModal');
-    const locationMap = document.getElementById('locationMap');
-    const locationTitle = document.getElementById('locationTitle');
-    let locationGoogleMap = null;
-
-    // Close modal when clicking the X
-    document.querySelector('#locationModal .close').onclick = function() {
-        locationModal.style.display = 'none';
-    };
-
-    // Close modal when clicking outside
-    window.onclick = function(event) {
-        if (event.target == locationModal) {
-            locationModal.style.display = 'none';
-        }
-    };
-
-    // Handle location link clicks
-    document.querySelectorAll('.location-link').forEach(link => {
-        link.addEventListener('click', function(e) {
-            e.preventDefault();
-            const coordinates = this.dataset.coordinates.split(',');
-            const name = this.dataset.name;
-            const lat = parseFloat(coordinates[0]);
-            const lng = parseFloat(coordinates[1]);
-
-            locationModal.style.display = 'block';
-            locationTitle.textContent = `Location of ${name}`;
-
-            // Initialize map if not already done
-            if (!locationGoogleMap) {
-                locationGoogleMap = new google.maps.Map(locationMap, {
-                    zoom: 15,
-                    center: { lat, lng }
-                });
-            }
-
-            // Center map on new coordinates
-            locationGoogleMap.setCenter({ lat, lng });
-
-            // Add marker
-            new google.maps.Marker({
-                position: { lat, lng },
-                map: locationGoogleMap,
-                title: name
-            });
-        });
-    });
-});
 </script>
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-<script>
-    // Example route data with average kg of tea leaves added
-    const routeData = [
-        { routeName: 'Route 1', distance: 120, fuelCost: 50, capacityUtilization: 80, avgKg: 500 },
-        { routeName: 'Route 2', distance: 150, fuelCost: 65, capacityUtilization: 90, avgKg: 700 },
-        { routeName: 'Route 3', distance: 200, fuelCost: 100, capacityUtilization: 70, avgKg: 450 },
-        { routeName: 'Route 4', distance: 90, fuelCost: 40, capacityUtilization: 50, avgKg: 600 },
-        { routeName: 'Route 5', distance: 110, fuelCost: 55, capacityUtilization: 85, avgKg: 650 },
-    ];
 
-    // Function to calculate efficiency score for each route
-    function calculateEfficiencyScore(route) {
-        return (route.distance * route.fuelCost) / route.capacityUtilization;
-    }
-
-    // Prepare data for the efficiency scatter plot
-    const scatterData = routeData.map(route => ({
-        x: route.distance,
-        y: calculateEfficiencyScore(route),
-        label: route.routeName
-    }));
-
-    // Create the scatter plot using Chart.js
-    const ctxEfficiency = document.getElementById('routeEfficiencyChart').getContext('2d');
-    new Chart(ctxEfficiency, {
-        type: 'scatter',
-        data: {
-            datasets: [{
-                label: 'Route Efficiency Score vs Distance',
-                data: scatterData,
-                backgroundColor: 'rgba(75, 192, 192, 0.6)',
-                borderColor: 'rgba(75, 192, 192, 1)',
-                borderWidth: 1,
-                pointRadius: 5
-            }]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            scales: {
-                x: {
-                    title: {
-                        display: true,
-                        text: 'Distance (km)'
-                    }
-                },
-                y: {
-                    title: {
-                        display: true,
-                        text: 'Efficiency Score'
-                    }
-                }
-            },
-            plugins: {
-                tooltip: {
-                    callbacks: {
-                        label: function(tooltipItem) {
-                            const route = scatterData[tooltipItem.dataIndex];
-                            return `${route.label}: Efficiency Score = ${route.y.toFixed(2)}, Distance = ${route.x} km`;
-                        }
-                    }
-                }
-            }
-        }
-    });
-
-    // Prepare data for the bar chart (average KG of tea leaves per route)
-    const avgKgData = routeData.map(route => route.avgKg);
-    const routeNames = routeData.map(route => route.routeName);
-
-    // Create the bar chart for average KG per route
-    const ctxAvgKg = document.getElementById('avgKgChart').getContext('2d');
-    new Chart(ctxAvgKg, {
-        type: 'bar',
-        data: {
-            labels: routeNames,
-            datasets: [{
-                label: 'Average KG of Tea Leaves',
-                data: avgKgData,
-                backgroundColor: 'rgba(54, 162, 235, 0.6)',
-                borderColor: 'rgba(54, 162, 235, 1)',
-                borderWidth: 1
-            }]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            scales: {
-                y: {
-                    beginAtZero: true,
-                    title: {
-                        display: true,
-                        text: 'Average KG of Tea Leaves'
-                    }
-                },
-                x: {
-                    title: {
-                        display: true,
-                        text: 'Routes'
-                    }
-                }
-            }
-        }
-    });
-</script>
 
 <!-- Google Maps API Script -->
 <script async defer src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCdt_khahhXrKdrA8cLgKeQB2CZtde-_Vc&callback=initMap"></script>

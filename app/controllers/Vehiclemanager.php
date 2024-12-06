@@ -244,6 +244,7 @@ class VehicleManager extends Controller {
             return [
                 'id' => $supplier->supplier_id,
                 'name' => $supplier->full_name, // Changed from supplier_name to full_name
+                'preferred_day' => $supplier->preferred_day, // Include preferred_day
                 'location' => [
                     'lat' => (float)$supplier->latitude,
                     'lng' => (float)$supplier->longitude
