@@ -95,7 +95,7 @@ class Auth extends Controller
         ];
 
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-            $_POST = filter_input_array(INPUT_POST, FILTER_SANITIZE_STRING);
+            $_POST = filter_input_array(INPUT_POST);
 
             $data['username'] = trim($_POST['username']);
             $data['password'] = trim($_POST['password']);
@@ -106,10 +106,6 @@ class Auth extends Controller
             } else {
                 $user = $this->userModel->findUserByEmail($data['username']);
 
-                // Add these debug lines
-                var_dump($user); // Check if user is found
-                var_dump($data['password']); // Check the submitted password
-                var_dump($user->password); // Check the stored hashed password
 
                 if ($user && password_verify($data['password'], $user->password)) {
                     $_SESSION['user_id'] = $user->user_id;
@@ -134,6 +130,12 @@ class Auth extends Controller
                             break;
                         case RoleHelper::DRIVING_PARTNER:
                             header('Location: ' . URLROOT . '/drivingpartner/');
+                            break;
+                        case RoleHelper::INVENTORY_MANAGER:
+                            header('Location: ' . URLROOT . '/inventory/');
+                            break;
+                        case RoleHelper::SUPPLIER_MANAGER:
+                            header('Location: ' . URLROOT . '/suppliermanager/applications/');
                             break;
                         default:
                             header('Location: ' . URLROOT . '/');

@@ -471,6 +471,13 @@ class Inventory extends controller
         redirect('inventory/fertilizerdashboard');
     }
 
+    public function payments()
+    {
+        $data = [];
+
+        $this->view('inventory/v_payments', $data);
+    }
+
  
 
 }

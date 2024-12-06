@@ -40,6 +40,13 @@
         <span class="text">Export</span>
       </a>
     </li>
+
+    <li class="<?php echo (basename($_SERVER['REQUEST_URI']) == 'payments') ? 'active' : ''; ?>">
+      <a href="../inventory/payments">
+        <i class="bx bxs-group"></i>
+        <span class="text">Payments</span>
+      </a>
+    </li>
     <!-- <li>
       <a href="../inventory/recodes">
         <i class="bx bxs-group"></i>
