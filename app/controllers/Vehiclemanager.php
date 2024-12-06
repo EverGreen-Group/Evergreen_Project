@@ -556,9 +556,9 @@ class VehicleManager extends Controller {
     public function getVehicleById($id) {
         $vehicle = $this->vehicleModel->getVehicleById($id);
         if ($vehicle) {
-            echo json_encode($vehicle);
+            echo json_encode(['success' => true, 'vehicle' => $vehicle]);
         } else {
-            echo json_encode(['error' => 'Vehicle not found']);
+            echo json_encode(['success' => false]);
         }
     }
 
@@ -893,8 +893,8 @@ class VehicleManager extends Controller {
                 'title' => 'Add New Vehicle'
             ];
             $this->view('vehicle_manager/v_add_vehicle', $data);
-        } else {
-            // Handle POST request
+        } else if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+            // send thru postt
             $this->handleVehicleSubmission();
         }
     }
@@ -905,24 +905,12 @@ class VehicleManager extends Controller {
             $vehicleData = [
                 'license_plate' => $_POST['license_plate'],
                 'vehicle_type' => $_POST['vehicle_type'],
-                'engine_number' => $_POST['engine_number'],
-                'chassis_number' => $_POST['chassis_number'],
                 'status' => $_POST['status'],
-                'condition' => $_POST['condition'],
                 'make' => $_POST['make'],
                 'model' => $_POST['model'],
                 'manufacturing_year' => $_POST['manufacturing_year'],
                 'color' => $_POST['color'],
-                'fuel_type' => $_POST['fuel_type'],
-                'mileage' => $_POST['mileage'],
-                'capacity' => $_POST['capacity'],
-                'seating_capacity' => $_POST['seating_capacity'],
-                'owner_name' => $_POST['owner_name'],
-                'owner_contact' => $_POST['owner_contact'],
-                'registration_date' => $_POST['registration_date'],
-                'last_serviced_date' => $_POST['last_serviced_date'],
-                'last_maintenance' => $_POST['last_maintenance'],
-                'next_maintenance' => $_POST['next_maintenance']
+                'capacity' => $_POST['capacity']
             ];
 
             // Handle vehicle image

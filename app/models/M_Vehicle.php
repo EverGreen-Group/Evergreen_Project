@@ -26,27 +26,7 @@ class M_Vehicle {
 
     public function getVehicleDetails() {
         $this->db->query("SELECT 
-            v.vehicle_id, 
-            v.license_plate, 
-            v.status, 
-            v.owner_name, 
-            v.owner_contact,
-            v.capacity, 
-            v.vehicle_type, 
-            v.insurance_expiry_date, 
-            v.road_tax_expiry_date,
-            v.color, 
-            v.engine_number, 
-            v.chassis_number, 
-            v.seating_capacity, 
-            v.`condition`, 
-            v.last_serviced_date, 
-            v.last_maintenance, 
-            v.next_maintenance, 
-            v.mileage,
-            v.fuel_type, 
-            v.registration_date,
-            vd.file_path
+            v.*
             FROM vehicles v
             LEFT JOIN vehicle_documents vd ON v.vehicle_id = vd.vehicle_id 
             AND vd.document_type = 'Image'");
@@ -73,17 +53,13 @@ class M_Vehicle {
             $this->db->beginTransaction();
 
             $sql = "INSERT INTO vehicles (
-                license_plate, vehicle_type, engine_number, chassis_number,
-                status, `condition`, make, model, manufacturing_year,
-                color, fuel_type, mileage, capacity, seating_capacity,
-                owner_name, owner_contact, registration_date,
-                last_serviced_date, last_maintenance, next_maintenance
+                license_plate, vehicle_type,
+                status, make, model, manufacturing_year,
+                color, capacity
             ) VALUES (
-                :license_plate, :vehicle_type, :engine_number, :chassis_number,
-                :status, :condition, :make, :model, :manufacturing_year,
-                :color, :fuel_type, :mileage, :capacity, :seating_capacity,
-                :owner_name, :owner_contact, :registration_date,
-                :last_serviced_date, :last_maintenance, :next_maintenance
+                :license_plate, :vehicle_type,
+                :status, :make, :model, :manufacturing_year,
+                :color, :capacity
             )";
 
             $this->db->query($sql);
@@ -91,24 +67,12 @@ class M_Vehicle {
             // Bind values with correct data types and NULL handling
             $this->db->bind(':license_plate', $data['license_plate']);
             $this->db->bind(':vehicle_type', $data['vehicle_type']);
-            $this->db->bind(':engine_number', $data['engine_number']);
-            $this->db->bind(':chassis_number', $data['chassis_number']);
             $this->db->bind(':status', $data['status'] ?: 'Available');
-            $this->db->bind(':condition', $data['condition'] ?: NULL);
             $this->db->bind(':make', $data['make'] ?: NULL);
             $this->db->bind(':model', $data['model'] ?: NULL);
             $this->db->bind(':manufacturing_year', $data['manufacturing_year'] ?: NULL);
             $this->db->bind(':color', $data['color'] ?: NULL);
-            $this->db->bind(':fuel_type', $data['fuel_type'] ?: 'Petrol');
-            $this->db->bind(':mileage', $data['mileage'] ?: NULL);
             $this->db->bind(':capacity', $data['capacity'] ?: NULL);
-            $this->db->bind(':seating_capacity', $data['seating_capacity'] ?: NULL);
-            $this->db->bind(':owner_name', $data['owner_name'] ?: NULL);
-            $this->db->bind(':owner_contact', $data['owner_contact'] ?: NULL);
-            $this->db->bind(':registration_date', $data['registration_date'] ?: NULL);
-            $this->db->bind(':last_serviced_date', $data['last_serviced_date'] ?: NULL);
-            $this->db->bind(':last_maintenance', $data['last_maintenance'] ?: NULL);
-            $this->db->bind(':next_maintenance', $data['next_maintenance'] ?: NULL);
 
             $result = $this->db->execute();
             $this->db->commit();
