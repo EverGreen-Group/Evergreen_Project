@@ -54,7 +54,7 @@
                                 <div class="form-group">
                                     <label for="type_id">Fertilizer Type:</label>
 
-                                    <div>
+                                    <div class="form-group">
                                         <select id="type_id" name="type_id" required>
                                             <option value="">Select Fertilizer</option>
                                             <?php foreach($data['fertilizer_types'] as $type): ?>

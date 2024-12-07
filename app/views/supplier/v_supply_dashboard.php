@@ -43,91 +43,93 @@
         </div>
     </div>
 
+    <div class="table-data order head">
 
-    <!-- Current Set Date Card -->
-    <div class="schedule-section">
-        
-        <div class="schedule-card current-schedule">
-            <div class="card-content">
-                <div class="schedule-info">
-                    <div class="info-item">
-                        <i class='bx bx-calendar'></i>
-                        <span>Every Monday</span>
-                    </div>
-                    <div class="info-item">
-                        <i class='bx bx-time-five'></i>
-                        <span>08:00 AM</span>
-                    </div>
-                </div>
-                <div class="schedule-action">
-                    <select class="schedule-select">
-                        <option value="" disabled selected>Select New Day</option>
-                        <option value="monday">Monday</option>
-                        <option value="tuesday">Tuesday</option>
-                        <option value="wednesday">Wednesday</option>
-                        <option value="thursday">Thursday</option>
-                        <option value="friday">Friday</option>
-                    </select>
-                    <button class="change-schedule-btn">
-                        <i class='bx bx-calendar-edit'></i>
-                        <span>Request Schedule Change</span>
-                    </button>
-                </div>
-            </div>
-        </div>
-        
-    </div>
-
-    <div class="section-divider"></div>
-
-    <!-- Schedule Section -->
-    <div class="schedule-section">
-        <div class="section-header">
-            <h3>Scheduled Collections</h3>
-        </div>
-        
-        <div class="schedule-card">
-            <button class="nav-btn prev-btn">
-                <i class='bx bx-chevron-left'></i>
-            </button>
-
-            <div class="card-content">
-                <div class="card-header">
-                    <div class="status-badge today">Today</div>
-                </div>
-                <div class="card-body">
+        <!-- Current Set Date Card -->
+        <div class="schedule-section">
+            
+            <div class="schedule-card current-schedule">
+                <div class="card-content">
                     <div class="schedule-info">
-                        <div class="info-item">
-                            <i class='bx bx-calendar'></i>
-                            <span>Today</span>
-                        </div>
-                        <div class="info-item">
-                            <i class='bx bx-time-five'></i>
-                            <span>08:00 AM</span>
+                        <div class="stats-container">
+                            <div class="info-item">
+                                <i class='bx bx-calendar'></i>
+                                <span>Every Monday</span>
+                            </div>
+                            <div class="info-item">
+                                <i class='bx bx-time-five'></i>
+                                <span>08:00 AM</span>
+                            </div>
                         </div>
                     </div>
                     <div class="schedule-action">
-                        <a href="<?php echo URLROOT; ?>/Supplier/scheduleDetails" class="view-details-btn">
-                            <i class='bx bx-info-circle'></i>
-                            <span>View Details</span>
-                        </a>
+                        <select class="schedule-select">
+                            <option value="" disabled selected>Select New Day</option>
+                            <option value="monday">Monday</option>
+                            <option value="tuesday">Tuesday</option>
+                            <option value="wednesday">Wednesday</option>
+                            <option value="thursday">Thursday</option>
+                            <option value="friday">Friday</option>
+                        </select>
+                        <button class="change-schedule-btn">
+                            <i class='bx bx-calendar-edit'></i>
+                            <span>Request Schedule Change</span>
+                        </button>
                     </div>
                 </div>
             </div>
 
-            <button class="nav-btn next-btn">
-                <i class='bx bx-chevron-right'></i>
-            </button>
-        </div>
+            <div class="section-divider"></div>
 
-        <div class="card-navigation">
-            <span class="current-card">1</span>
-            <span>/</span>
-            <span class="total-cards">4</span>
+            <!-- Schedule Section -->
+            <div class="schedule-section">
+                <div class="section-header">
+                    <h3>Scheduled Collections</h3>
+                
+                <div class="schedule-card">
+                    <button class="nav-btn prev-btn">
+                        <i class='bx bx-chevron-left'></i>
+                    </button>
+
+                    <div class="card-content">
+                        <div class="card-header">
+                            <div class="status-badge today">Today</div>
+                        </div>
+                        <div class="card-body">
+                            <div class="schedule-info">
+                                <div class="info-item">
+                                    <i class='bx bx-calendar'></i>
+                                    <span>Today</span>
+                                </div>
+                                <div class="info-item">
+                                    <i class='bx bx-time-five'></i>
+                                    <span>08:00 AM</span>
+                                </div>
+                            </div>
+                            <div class="schedule-action">
+                                <a href="<?php echo URLROOT; ?>/Supplier/scheduleDetails" class="view-details-btn">
+                                    <i class='bx bx-info-circle'></i>
+                                    <span>View Details</span>
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+
+                    <button class="nav-btn next-btn">
+                        <i class='bx bx-chevron-right'></i>
+                    </button>
+                </div>
+
+                <div class="card-navigation">
+                    <span class="current-card">1</span>
+                    <span>/</span>
+                    <span class="total-cards">4</span>
+                </div>
+            </div>
+
+            <div class="section-divider"></div>
         </div>
     </div>
-
-    <div class="section-divider"></div>
 
 
 </main>

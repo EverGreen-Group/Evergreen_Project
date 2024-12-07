@@ -152,9 +152,9 @@
             </script>
         </div>
         <div class="table-data">
-
-
-                <form method="POST" class="request-form" id="fertilizerForm">
+            <h4>Request Fertilizers</h4>
+            
+                <form action="<?php echo URLROOT; ?>/supplier/createFertilizerOrder" method="POST" class="request-form" id="fertilizerForm">
                     <div class="form-container">
                         <div class="form-group">
                             <label for="type_id">Fertilizer Type:</label>
@@ -241,13 +241,12 @@
                             <td><?php echo $order->total_price; ?></td>
                             <td><?php echo isset($order->payment_status) ? $order->payment_status : 'Pending'; ?></td>
                             <td>
-                                <a href="<?php echo URLROOT; ?>/Supplier/editFertilizerRequest/<?php echo $order->order_id; ?>"
-                                    class="btn-edit btn-primary">
-                                    Edit
+                                <a href="<?php echo URLROOT; ?>/Supplier/editFertilizerRequest/<?php echo $order->order_id; ?>" >
+                                    <button class="btn-edit btn-primary">Edit</button>
                                 </a>
                             </td>
                             <td>
-                                <button class="btn-delete" data-id="<?php echo $order->order_id; ?>">Delete</button>
+                                <button class="btn-delete btn-primary" data-id="<?php echo $order->order_id; ?>">Delete</button>
                             </td>
                         </tr>
                     <?php endforeach; ?>

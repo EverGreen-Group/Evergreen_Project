@@ -60,9 +60,9 @@
                         <input type="text" id="date" name="date" class="input readonly" value="2024-01-15" readonly>
                     </div>
                     
-                    <div class="button-container">
-                        <a href="<?php echo URLROOT; ?>/Supplier/changepassword/" class="button">
-                            Change Password
+                    <div class="accept-btn">
+                        <a href="<?php echo URLROOT; ?>/Supplier/" class="button">
+                            Cancel
                         </a>
                     </div>
                 </div>

@@ -160,12 +160,12 @@
     }
 
     .btn-submit {
-        background: var(--main);
+        background: #008000;
         color: white;
     }
 
     .btn-submit:hover {
-        background: var(--main-dark);
+        background: #004200;
         opacity: 0.9;
     }
 
