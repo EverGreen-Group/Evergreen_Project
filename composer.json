@@ -1,0 +1,21 @@
+{
+    "name": "evergreen/app",
+    "description": "EverGreen E-commerce Project",
+    "type": "project",
+    "license": "MIT",
+    "autoload": {
+        "psr-4": {
+            "Evergreen\\App\\": "src/"
+        }
+    },
+    "authors": [
+        {
+            "name": "Your Name",
+            "email": "2022cs046@stu.ucsc.cmb.ac.lk"
+        }
+    ],
+    "minimum-stability": "dev",
+    "require": {
+        "stripe/stripe-php": "^16.4@beta"
+    }
+}
