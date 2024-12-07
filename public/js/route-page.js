@@ -547,14 +547,13 @@ document.getElementById("daySelect").addEventListener("change", function () {
 
 // Existing day select event listener...
 
-// Add vehicle select event listener
+// Vehicle select event listener
 document
   .getElementById("vehicleSelect")
   .addEventListener("change", function () {
     const selectedOption = this.options[this.selectedIndex];
     const vehicleId = this.value;
 
-    // Fetch detailed vehicle information
     fetch(`${URLROOT}/vehiclemanager/getVehicleDetails/${vehicleId}`)
       .then((response) => response.json())
       .then((response) => {
@@ -571,14 +570,20 @@ document
             vehicle.vehicle_type;
 
           // Update capacity info
-          document.getElementById("usedCapacity").textContent = "0 kg"; // Initial value
+          document.getElementById("usedCapacity").textContent = "0 kg";
           document.getElementById(
             "remainingCapacity"
           ).textContent = `${vehicle.capacity} kg`;
 
-          // Update vehicle image if available
-          if (vehicle.image_url) {
-            document.getElementById("vehicleImage").src = vehicle.image_url;
+          // Update vehicle image with correct path
+          if (vehicle.license_plate) {
+            document.getElementById(
+              "vehicleImage"
+            ).src = `${URLROOT}/public/uploads/vehicle_photos/${vehicle.license_plate}.jpg`;
+          } else {
+            document.getElementById(
+              "vehicleImage"
+            ).src = `${URLROOT}/public/uploads/vehicle_photos/default-vehicle.jpg`;
           }
         }
       })
