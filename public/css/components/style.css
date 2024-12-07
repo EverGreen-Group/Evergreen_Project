@@ -23,7 +23,7 @@ li {
   --light: #f9f9f9;
   --main: #007664;
   --light-main: #ebf2f1;
-  --grey: #d8e9e5;
+  --grey: #e3ebe9;
   --dark-grey: #aaaaaa;
   --dark: #342e37;
   --red: #db504a;
@@ -41,7 +41,7 @@ html {
 
 body.dark {
   --light: #0c0c1e;
-  --grey: #4a4a60;
+  --grey: #38384b;
   --dark: #fbfbfb;
   --light-grey: #7d7d7d;
   --light-black: #2e315a;
@@ -439,7 +439,7 @@ body {
   padding-bottom: 10px;
   font-size: 15px;
   text-align: center;
-  color: black;
+  color: var(--dark);
   border: none;
   border-radius: 10px 10px 0 0;
   border-bottom: 1px solid var(--grey);
@@ -714,12 +714,12 @@ body {
 }
 .btn-primary {
   color: white;
-  width: 100px;
-  height: 40px;
+  width: 80px;
+  height: 30px;
   display: flex;
   justify-content: center;
   align-items: center;
-  font-size: 14px;
+  font-size: 12px;
   border: none;
   outline: none;
   border-radius: 5px;
@@ -727,10 +727,10 @@ body {
   vertical-align: middle;
 }
 .btn-edit {
-  background: var(--main);
+  background: #008000;
 }
 .btn-edit:hover {
-  background-color: #008000;
+  background-color: var(--main);
 }
 .btn-delete {
   background: red;
