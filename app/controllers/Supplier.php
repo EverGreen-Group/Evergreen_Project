@@ -1,6 +1,7 @@
 <?php
 require_once APPROOT . '/models/M_Fertilizer_Order.php';
 require_once '../app/helpers/auth_middleware.php';
+require_once APPROOT . '/models/M_Complaint.php';
 
 if (session_status() == PHP_SESSION_NONE) {
     session_start();
@@ -422,6 +423,79 @@ class Supplier extends Controller {
         ];
 
         $this->view('supplier/v_schedule_details', $data);
+    }
+
+    public function submitComplaint() {
+        // Check if the supplier is logged in
+        /*if (!isset($_SESSION['supplier_logged_in']) || !$_SESSION['supplier_logged_in']) {
+            echo "Error: You must be logged in to place an order.";
+            return;
+        }*/
+
+        //TEMP SUPPLIER ID
+        $supplier_id = 2;
+    
+        // Check if it's a POST request
+        if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+            // Initialize complaint model
+            $complaintModel = new Complaint();
+    
+            // Debug: Log received POST data
+            error_log('Complaint Submission POST Data: ' . print_r($_POST, true));
+            error_log('Complaint Submission FILES Data: ' . print_r($_FILES, true));
+    
+            // Handle file uploads
+            $uploadedImages = [];
+            if (!empty($_FILES['images']['name'][0])) {
+                $uploadDir = APPROOT . '/public/uploads/complaints/';
+                
+                // Create directory if it doesn't exist
+                if (!file_exists($uploadDir)) {
+                    mkdir($uploadDir, 0777, true);
+                }
+    
+                foreach ($_FILES['images']['tmp_name'] as $key => $tmpName) {
+                    $fileName = uniqid() . '_' . basename($_FILES['images']['name'][$key]);
+                    $uploadPath = $uploadDir . $fileName;
+    
+                    if (move_uploaded_file($tmpName, $uploadPath)) {
+                        $uploadedImages[] = $fileName;
+                    } else {
+                        // Debug: Log file upload failures
+                        error_log('File upload failed for: ' . $fileName);
+                    }
+                }
+            }
+    
+            // Prepare complaint data
+            $complaintData = [
+                'supplier_id' => $supplier_id,          // CHANGE TO $_SESSION['user_id'] AFTER LOGIN IS COMPLETED
+                'complaint_type' => trim($_POST['complaint_type']),
+                'subject' => trim($_POST['subject']),
+                'description' => trim($_POST['description']),
+                'images' => implode(',', $uploadedImages), // Store image filenames as CSV
+                'priority_level' => trim($_POST['priority'])
+            ];
+    
+            // Debug: Log complaint data before submission
+            error_log('Prepared Complaint Data: ' . print_r($complaintData, true));
+    
+            // Submit complaint
+            $result = $complaintModel->submitComplaint($complaintData);
+    
+            if ($result) {
+                flash('message', 'Complaint submitted successfully', 'alert alert-success');
+                redirect('supplier/complaints');
+            } else {
+                // Log failure details
+                error_log('Complaint submission failed for user: ' . $_SESSION['user_id']);
+                flash('message', 'Failed to submit complaint. Please try again.', 'alert alert-danger');
+                redirect('supplier/complaints');
+            }
+        } else {
+            // Redirect if not a POST request
+            redirect('supplier/complaints');
+        }
     }
 }
 ?>
