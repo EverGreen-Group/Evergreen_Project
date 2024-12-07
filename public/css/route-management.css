@@ -1,0 +1,896 @@
+.route-box-info {
+  display: flex;
+  justify-content: space-between;
+  gap: 24px;
+  margin-top: 36px;
+  list-style: none;
+  padding: 0;
+}
+
+.route-box-info li {
+  flex: 1;
+  background: var(--light);
+  border-radius: 20px;
+  padding: 24px;
+  display: flex;
+  align-items: center;
+  gap: 24px;
+}
+
+.route-box-info li i {
+  font-size: 36px;
+  color: var(--main);
+  background: var(--light-main);
+  border-radius: 10%;
+  padding: 16px;
+}
+
+.route-box-info li .text h3 {
+  font-size: 24px;
+  font-weight: 600;
+  color: var(--dark);
+  margin: 0;
+}
+
+.route-box-info li .text p {
+  font-size: 14px;
+  color: var(--dark-grey);
+  margin: 0;
+}
+
+.routes-section {
+  margin-top: 40px;
+}
+
+.create-route-btn {
+  padding: 10px 20px;
+  background-color: var(--main);
+  color: white;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  margin-top: 20px;
+}
+
+.create-route-btn:hover {
+  background-color: var(--main-dark);
+}
+
+.routes-container {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 20px;
+  margin-top: 20px;
+}
+
+.route-card {
+  background: var(--light);
+  border-radius: 10px;
+  padding: 15px;
+  width: calc(25% - 15px);
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+  cursor: pointer;
+  transition: transform 0.3s ease;
+}
+
+.route-card:hover {
+  transform: translateY(-5px);
+}
+
+.route-card h3 {
+  margin-top: 0;
+  color: var(--dark);
+}
+
+.route-card p {
+  margin: 5px 0;
+  color: var(--dark-grey);
+}
+
+.modal {
+  display: none;
+  position: fixed;
+  z-index: 8000;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.5);
+  overflow-y: auto;
+}
+
+.modal-content {
+  display: flex;
+  flex-direction: column;
+  background-color: var(--light);
+  margin: 5% auto;
+  padding: 20px;
+  border-radius: 10px;
+  width: 80%;
+  height: 80vh;
+  max-width: 1000px;
+  position: relative;
+  padding-bottom: 70px;
+}
+
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20px;
+  border-bottom: 1px solid #eee;
+  position: relative;
+}
+
+.modal-header h2 {
+  margin: 0;
+  color: var(--dark);
+}
+
+.close {
+  position: absolute;
+  right: 20px;
+  top: 50%;
+  transform: translateY(-50%);
+  cursor: pointer;
+  opacity: 0;
+}
+
+#routeForm {
+  display: flex;
+  gap: 20px;
+  height: calc(100% - 60px);
+}
+
+#routeForm > :not(#map) {
+  flex: 1;
+  overflow-y: auto;
+}
+
+#map {
+  flex: 1;
+  min-height: 600px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+}
+
+#routeForm label {
+  font-weight: bold;
+  color: var(--dark);
+}
+
+#routeForm input,
+#routeForm select {
+  width: 100%;
+  padding: 8px;
+  border: 1px solid var(--dark-grey);
+  border-radius: 5px;
+  font-size: 14px;
+}
+
+.submit-btn {
+  width: auto;
+  min-width: 200px;
+  padding: 12px 30px;
+  background: var(--main);
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 14px;
+}
+
+.submit-btn:hover {
+  opacity: 0.9;
+}
+
+#stopList {
+  list-style-type: none;
+  padding: 0;
+  margin-bottom: 0;
+}
+
+#stopList li {
+  margin-bottom: 5px;
+}
+
+.remove-stop {
+  color: red;
+  cursor: pointer;
+  margin-left: 10px;
+}
+
+@media screen and (max-width: 1024px) {
+  .route-card {
+    width: calc(33.33% - 13.33px);
+  }
+}
+
+@media screen and (max-width: 768px) {
+  .route-card {
+    width: calc(50% - 10px);
+  }
+}
+
+@media screen and (max-width: 480px) {
+  .route-card {
+    width: 100%;
+  }
+}
+
+/* Styles for full-width charts */
+#chartContainer,
+#avgKgChartContainer {
+  width: 30%;
+  margin-top: 30px; /* Add some space between the graphs */
+}
+
+.chart-row-wrapper {
+  display: flex;
+  justify-content: center; /* Centers the entire row of charts horizontally */
+  align-items: center; /* Aligns the charts vertically in the row */
+  margin: 30px 0; /* Adds spacing above and below the charts */
+}
+
+/* Chart container to control the width and height */
+.chart-container {
+  width: 50%; /* Each chart takes 45% of the row's width */
+  height: 300px; /* Set a fixed height */
+  margin: 0 20px; /* Adds space between the two charts */
+}
+
+/* Ensures the canvas takes full width/height of its container */
+canvas {
+  width: 100% !important;
+  height: 100% !important;
+}
+
+/* Add to your existing styles */
+.expand-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 5px;
+  transition: transform 0.3s ease;
+}
+
+.expand-btn.active i {
+  transform: rotate(180deg);
+}
+
+.expanded-details {
+  padding: 20px;
+  background: var(--light);
+  border-radius: 8px;
+  margin: 10px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.supplier-list-container {
+  width: 100%;
+}
+
+.supplier-list-header {
+  display: grid;
+  grid-template-columns: 80px 2fr 1fr 2fr 1fr;
+  gap: 20px;
+  padding: 15px 20px;
+  background: var(--main);
+  color: var(--light);
+  font-weight: 600;
+}
+
+.supplier-list-content {
+  max-height: 300px;
+  overflow-y: auto;
+}
+
+.supplier-item {
+  display: grid;
+  grid-template-columns: 80px 2fr 1fr 2fr 1fr;
+  gap: 20px;
+  padding: 15px 20px;
+  border-bottom: 1px solid var(--grey);
+  align-items: center;
+}
+
+.supplier-item:hover {
+  background: var(--grey);
+}
+
+.supplier-management {
+  display: flex;
+  gap: 20px;
+  margin-top: 20px;
+}
+
+.current-suppliers,
+.add-supplier {
+  flex: 1;
+}
+
+.supplier-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.supplier-list li {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px;
+  border-bottom: 1px solid #ddd;
+}
+
+.remove-supplier {
+  color: red;
+  cursor: pointer;
+}
+
+.action-buttons {
+  margin-top: 20px;
+  display: flex;
+  gap: 10px;
+  justify-content: flex-end;
+}
+
+.save-changes-btn,
+.cancel-changes-btn {
+  padding: 8px 16px;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+.save-changes-btn {
+  background: var(--main);
+  color: white;
+  border: none;
+}
+
+.cancel-changes-btn {
+  background: #dc3545;
+  color: white;
+  border: none;
+}
+
+/* Add to your existing styles */
+.location-link {
+  color: var(--main);
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+#locationModal {
+  display: none;
+  position: fixed;
+  z-index: 1001;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.5);
+}
+
+#locationModal .modal-content {
+  width: 80%;
+  max-width: 800px;
+}
+
+.supplier-timeline {
+  padding: 20px;
+  background: #fff;
+  border-radius: 8px;
+  margin-top: 20px;
+}
+
+.timeline-header {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 10px;
+}
+
+.timeline-content {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.expanded-content {
+  display: none; /* Hidden by default */
+}
+
+.expanded-content td {
+  padding: 0; /* Remove padding from td */
+}
+
+.supplier-list {
+  width: 100%;
+  background: var(--light);
+}
+
+.supplier-list-header {
+  display: grid;
+  grid-template-columns: 80px 2fr 1fr 2fr 1fr;
+  gap: 20px;
+  padding: 15px 20px;
+  background: var(--main);
+  color: var(--light);
+  font-weight: 600;
+}
+
+.supplier-list-content {
+  max-height: 300px;
+  overflow-y: auto;
+}
+
+.supplier-item {
+  display: grid;
+  grid-template-columns: 80px 2fr 1fr 2fr 1fr;
+  gap: 20px;
+  padding: 15px 20px;
+  border-bottom: 1px solid var(--grey);
+  align-items: center;
+}
+
+.supplier-item:hover {
+  background: var(--grey);
+}
+
+.expanded-content {
+  display: none;
+  position: relative;
+}
+
+.expanded-content::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: var(--light);
+  z-index: 1;
+}
+
+.supplier-list {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  z-index: 2;
+  background: var(--light);
+}
+
+.supplier-list-header {
+  display: grid;
+  grid-template-columns: 80px 2fr 1fr 2fr 1fr;
+  gap: 20px;
+  padding: 15px 20px;
+  background: var(--main);
+  color: var(--light);
+  font-weight: 600;
+}
+
+.supplier-list-content {
+  max-height: 300px;
+  overflow-y: auto;
+}
+
+.supplier-item {
+  display: grid;
+  grid-template-columns: 80px 2fr 1fr 2fr 1fr;
+  gap: 20px;
+  padding: 15px 20px;
+  border-bottom: 1px solid var(--grey);
+  align-items: center;
+}
+
+.supplier-item:hover {
+  background: var(--grey);
+}
+
+.table-container {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 24px;
+}
+
+.route-row {
+  cursor: pointer;
+}
+
+.route-row:hover {
+  background-color: var(--grey);
+}
+
+.route-row.selected {
+  background-color: var(--grey);
+}
+
+.route-name {
+  color: var(--dark-grey);
+  font-size: 14px;
+  margin: 0;
+}
+
+.supplier-details {
+  padding: 15px;
+  background: var(--light);
+  border-radius: 4px;
+  margin: 10px;
+}
+
+.supplier-details h4 {
+  margin-bottom: 10px;
+  color: var(--dark);
+}
+
+.supplier-details-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.supplier-details-table th,
+.supplier-details-table td {
+  padding: 8px;
+  text-align: left;
+  border-bottom: 1px solid var(--grey);
+}
+
+.supplier-details-table th {
+  background-color: var(--grey);
+  font-weight: 600;
+}
+
+.route-row.active {
+  background-color: var(--grey);
+}
+
+#routeSupplierTable {
+  margin-top: 10px;
+}
+
+/* Add this to your CSS file */
+.delete-btn {
+  background-color: red;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  padding: 5px 10px;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.delete-btn:hover {
+  background-color: darkred;
+}
+
+/* Add these styles to your existing CSS */
+.modal-two-columns {
+  display: flex;
+  gap: 20px;
+  flex: 1;
+}
+
+.left-column {
+  flex: 1;
+  padding-right: 20px;
+}
+
+.right-column {
+  flex: 1;
+}
+
+/* Add these styles to your existing CSS */
+.vehicle-info {
+  background: var(--light);
+  border-radius: 8px;
+  padding: 12px;
+  margin-bottom: 15px;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+}
+
+.vehicle-image {
+  width: 100%;
+  height: 150px;
+  overflow: hidden;
+  border-radius: 8px;
+  margin-bottom: 10px;
+}
+
+.vehicle-image img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.vehicle-details h3 {
+  margin: 0 0 10px 0;
+  color: var(--dark);
+  font-size: 16px;
+}
+
+.detail-item {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 5px;
+  padding: 5px 0;
+  border-bottom: 1px solid var(--grey);
+}
+
+.detail-item:last-child {
+  border-bottom: none;
+}
+
+.detail-item .label {
+  color: var(--dark-grey);
+  font-weight: 300;
+  font-size: 14px;
+}
+
+.detail-item .value {
+  color: var(--dark);
+  font-weight: 200;
+  font-size: 14px;
+}
+
+/* Adjust map height to accommodate smaller vehicle info */
+#map {
+  min-height: 280px;
+}
+
+/* Left Column Styles */
+.left-column {
+  padding: 12px;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.left-column label {
+  display: block;
+  color: var(--dark-grey);
+  font-size: 14px;
+  margin-bottom: 5px;
+  font-weight: 500;
+}
+
+.left-column input,
+.left-column select {
+  width: 100%;
+  padding: 8px;
+  margin-bottom: 15px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-size: 14px;
+}
+
+/* Capacity Info Box Styling */
+.capacity-info {
+  background: var(--light);
+  border-radius: 8px;
+  padding: 12px;
+  margin: 15px 0;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+}
+
+.capacity-item {
+  display: flex;
+  justify-content: space-between;
+  padding: 5px 0;
+  border-bottom: 1px solid var(--grey);
+  font-size: 14px;
+}
+
+.capacity-item:last-child {
+  border-bottom: none;
+}
+
+/* Supplier Selection Area */
+.supplier-select-container {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 15px;
+}
+
+#supplierSelect {
+  flex-grow: 1;
+}
+
+#addSupplierButton {
+  padding: 8px 15px;
+  background: var(--main);
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 14px;
+  height: 35px;
+  margin-top: 24px;
+}
+
+/* Route Stops Section */
+.left-column h3 {
+  color: var(--dark);
+  font-size: 16px;
+  margin: 15px 0 10px 0;
+}
+
+#stopList {
+  background: var(--light);
+  border-radius: 8px;
+  padding: 12px;
+  margin-bottom: 15px;
+  list-style: none;
+}
+
+#stopList li {
+  padding: 8px;
+  margin-bottom: 5px;
+  background: white;
+  border-radius: 4px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 14px;
+}
+
+/* Submit Button */
+.submit-btn {
+  width: 100%;
+  padding: 10px;
+  background: var(--main);
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 14px;
+  margin-top: 15px;
+}
+
+.submit-btn:hover {
+  background: var(--dark-blue);
+}
+
+/* Update/add these styles */
+.form-row {
+  display: flex;
+  gap: 15px;
+  align-items: center;
+  margin-bottom: 15px;
+}
+
+.form-group.supplier-select {
+  flex: 1;
+  margin-bottom: 0;
+}
+
+.form-group.supplier-select label {
+  display: block;
+  margin-bottom: 5px;
+}
+
+#supplierSelect {
+  width: 100%;
+  height: 35px;
+}
+
+#addSupplierButton {
+  height: 35px;
+  padding: 0 15px;
+  background: var(--main);
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 14px;
+  margin-top: 24px;
+}
+
+/* Remove box shadow from stopList */
+#stopList {
+  background: var(--light);
+  border-radius: 8px;
+  padding: 12px;
+  margin-bottom: 70px;
+  list-style: none;
+}
+
+/* Adjust form group spacing */
+.form-group {
+  margin-bottom: 15px;
+}
+
+.form-group label {
+  display: block;
+  margin-bottom: 5px;
+}
+
+/* Make all inputs and selects the same height */
+.form-group input,
+.form-group select {
+  height: 35px;
+  padding: 0 8px;
+}
+
+/* Add this to ensure proper spacing after the stop list */
+#stopList {
+  margin-bottom: 50px;
+}
+
+/* Clear the float after the form */
+#routeForm::after {
+  content: "";
+  display: table;
+  clear: both;
+}
+
+/* Make sure the left column can handle absolute positioning */
+.left-column {
+  position: relative;
+  padding-bottom: 60px; /* Space for the save button */
+}
+
+/* Reset margins for supplier selection */
+.form-row .form-group,
+.form-row .form-group.supplier-select {
+  margin: 0; /* Override all margins */
+}
+
+.supplier-select select,
+#supplierSelect {
+  margin: 0; /* Explicitly remove margin from select element */
+}
+
+/* Keep other styles the same */
+.form-row {
+  display: flex;
+  gap: 15px;
+  align-items: center;
+}
+
+.form-group.supplier-select {
+  flex: 1;
+}
+
+.form-group.supplier-select label {
+  display: block;
+  margin-bottom: 5px;
+}
+
+#supplierSelect {
+  width: 100%;
+  height: 35px;
+}
+
+#addSupplierButton {
+  height: 35px;
+  padding: 0 15px;
+  background: var(--main);
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 14px;
+  margin-top: 24px;
+}
+
+.button-container {
+  width: 100%;
+  padding: 20px 0;
+  text-align: center;
+  border-top: 1px solid #eee;
+  margin-top: 20px;
+}
+
+.modal-footer {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  padding: 15px;
+  text-align: center;
+  background: white;
+  border-top: 1px solid #eee;
+}

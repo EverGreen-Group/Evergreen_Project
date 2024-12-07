@@ -150,13 +150,7 @@ class M_Vehicle {
     }
 
     public function getVehicleById($id) {
-        $this->db->query("SELECT 
-            v.*, 
-            vd.file_path
-            FROM vehicles v
-            LEFT JOIN vehicle_documents vd ON v.vehicle_id = vd.vehicle_id 
-            AND vd.document_type = 'Image'
-            WHERE v.vehicle_id = :id");
+        $this->db->query('SELECT * FROM vehicles WHERE vehicle_id = :id');
         $this->db->bind(':id', $id);
         return $this->db->single();
     }
@@ -214,6 +208,13 @@ class M_Vehicle {
     public function getMaintenanceRecords($vehicleId) {
         $this->db->query("SELECT * FROM maintenance_records WHERE vehicle_id = :vehicle_id ORDER BY maintenance_date DESC");
         $this->db->bind(':vehicle_id', $vehicleId);
+        return $this->db->resultSet();
+    }
+
+    public function getAvailableVehiclesByDay($day) {
+        $this->db->query('SELECT v.* FROM vehicles v');
+        
+        
         return $this->db->resultSet();
     }
 

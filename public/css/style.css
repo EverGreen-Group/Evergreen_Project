@@ -1078,3 +1078,28 @@ body.dark .auth-form-group input {
   line-height: 1.5;
   opacity: 0.9;
 }
+
+.filter-container {
+  display: flex;
+  align-items: center;
+  margin-bottom: 15px;
+  padding: 10px;
+  background-color: #f9f9f9;
+  border-radius: 5px;
+}
+.filter-container label {
+  margin-right: 10px;
+  font-weight: bold;
+}
+#dayFilter {
+  padding: 8px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-size: 14px;
+  min-width: 150px;
+}
+#dayFilter:focus {
+  outline: none;
+  border-color: #007bff;
+  box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
+}

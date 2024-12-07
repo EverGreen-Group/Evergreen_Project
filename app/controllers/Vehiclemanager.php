@@ -39,6 +39,7 @@ class VehicleManager extends Controller {
             redirect('');
             exit();
         }
+        
 
         // Initialize models
         $this->vehicleManagerModel = new M_VehicleManager();
@@ -53,6 +54,11 @@ class VehicleManager extends Controller {
         $this->userHelper = new UserHelper();
         $this->collectionModel = $this->model('M_Collection');
         $this->collectionSupplierRecordModel = $this->model('M_CollectionSupplierRecord');
+    }
+
+    private function isAjaxRequest() {
+        return isset($_SERVER['HTTP_X_REQUESTED_WITH']) && 
+               strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) === 'xmlhttprequest';
     }
 
     public function index() {
@@ -1077,6 +1083,58 @@ class VehicleManager extends Controller {
             }
         }
     }
+
+    public function getAvailableVehicles($day) {
+        // Make sure nothing is output before this
+        ob_clean(); // Clear any previous output
+        
+        try {
+            $vehicles = $this->vehicleModel->getAvailableVehiclesByDay($day);
+            
+            header('Content-Type: application/json');
+            echo json_encode([
+                'status' => 'success',
+                'data' => $vehicles,
+                'message' => 'Vehicles retrieved successfully'
+            ]);
+            exit; // End the script after sending JSON
+        } catch (Exception $e) {
+            header('Content-Type: application/json');
+            echo json_encode([
+                'status' => 'error',
+                'message' => $e->getMessage()
+            ]);
+            exit;
+        }
+    }
+
+    public function getVehicleDetails($id) {
+        ob_clean();
+        
+        try {
+            $vehicle = $this->vehicleModel->getVehicleById($id);
+        
+            
+            header('Content-Type: application/json');
+            echo json_encode([
+                'status' => 'success',
+                'data' => $vehicle,
+                'message' => 'Vehicle details retrieved successfully'
+            ]);
+            exit;
+        } catch (Exception $e) {
+            header('Content-Type: application/json');
+            echo json_encode([
+                'status' => 'error',
+                'message' => $e->getMessage()
+            ]);
+            exit;
+        }
+    }
+
+
+
+
 
 }
 ?>
