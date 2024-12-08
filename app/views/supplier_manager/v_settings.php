@@ -48,5 +48,54 @@
         </main>
     </div>
     <script src="<?php echo URLROOT; ?>/css/components/script.js"></script>
+    
+    <style>
+        h1 {
+            color: var(--dark);
+        }
+        a {
+            color: var(--dark-grey);
+        }
+        #content main .breadcrumb .active {
+            color: var(--main);
+        }
+        .settings-container {
+            padding: 20px;
+            background-color: var(--light);
+            color: var(--dark);
+            border-radius: 20px;
+            width: 100%;
+            text-align: left;
+        }
+        .settings-container h1 {
+            font-size: 2rem;
+            margin-bottom: 20px;
+        }
+        .settings-section {
+            margin-bottom: 30px;
+            margin-left: 50px;
+        }
+        .settings-section h2 {
+            font-size: 1.5rem;
+            margin-bottom: 10px;
+        }
+        .select-textbox {
+            width: 60%;
+            padding: 10px;
+            margin-bottom: 15px;
+            border: 1px solid var(--grey);
+            border-radius: 5px;
+        }.button {
+            background-color: #008000;
+            width: 80px;
+            height: 30px;
+            border-radius: 5px;
+            border: none;
+            color: white;
+        }
+        .button:hover {
+            background-color: #006400;
+        }
+    </style>
     </body>
 </html>

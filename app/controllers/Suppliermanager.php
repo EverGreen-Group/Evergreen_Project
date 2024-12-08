@@ -14,6 +14,7 @@ require_once '../app/models/M_Collection.php';    // Add Collection model
 require_once '../app/models/M_CollectionSupplierRecord.php';
 require_once '../app/models/M_SupplierApplication.php';
 require_once '../app/models/M_Supplier.php';
+require_once '../app/models/M_Complaint.php';
 
 class SupplierManager extends Controller {
     private $vehicleManagerModel;
@@ -30,7 +31,7 @@ class SupplierManager extends Controller {
     private $collectionSupplierRecordModel;
     private $supplierApplicationModel;
     private $supplierModel;
-    
+    private $complaintModel;
 
     public function __construct() {
         // Check if user is logged in
@@ -52,6 +53,7 @@ class SupplierManager extends Controller {
         $this->collectionSupplierRecordModel = $this->model('M_CollectionSupplierRecord');
         $this->supplierApplicationModel = $this->model('M_SupplierApplication');
         $this->supplierModel = new M_Supplier();
+        $this->complaintModel = $this->model('M_Complaint');
     }
 
     public function index() {
@@ -192,8 +194,13 @@ class SupplierManager extends Controller {
 
     public function complaints()
     {
-        $data = [];
+        // Fetch complaints using the model method
+        $complaints = $this->complaintModel->getAllComplaints();
 
+        // Pass complaints to the view
+        $data['complaints'] = $complaints;
+
+        // Load the view with data
         $this->view('supplier_manager/v_complaints', $data);
     }
 

@@ -71,7 +71,7 @@
                     <!-- Missed Collection -->
                     <div class="order" style="flex: 1;">
                         <div class="head">
-                            <h3>Missed Collection</h3>
+                            <h3>Missed Collections</h3>
                         </div>
                         <div class="table-data">
                             <table>
@@ -120,37 +120,41 @@
                             <thead>
                                 <tr>
                                     <th>Complaint ID</th>
-                                    <th>Supplier</th>
+                                    <th>Supplier ID</th>
                                     <th>Category</th>
                                     <th>Subject</th>
-                                    <th>Submitted</th>
+                                    <th>description</th>
+                                    <th>Submitted Date</th>
+                                    <th>Submitted Time</th>
                                     <th>Actions</th>
                                 </tr>
                             </thead>
                             <tbody>
-                                <tr>
-                                    <td>#CM2024-001</td>
-                                    <td>
-                                        <div class="supplier-info">
-                                            <span class="id">SUP27429</span>
-                                            <span class="name">John Doe</span>
-                                        </div>
-                                    </td>
-                                    <td>Payment Delay</td>
-                                    <td>Late payment for February delivery</td>
-                                    <td>
-                                        <div class="time-info">
-                                            <span class="date">Mar 15, 2024</span>
-                                            <span class="time">08:30 AM</span>
-                                        </div>
-                                    </td>
-                                    <td>
-                                        <button class="btn-action" title="View Details">
-                                            <i class='bx bx-show'></i> View
-                                        </button>
-                                    </td>
-                                </tr>
-                                <!-- More complaint rows... -->
+                                <?php 
+                                // Check if complaints exist before looping
+                                if (!empty($data['complaints'])): 
+                                    foreach ($data['complaints'] as $complaint): 
+                                ?>
+                                    <tr>
+                                        <td><?php echo htmlspecialchars($complaint->complaint_id ?? 'N/A'); ?></td>
+                                        <td><?php echo htmlspecialchars($complaint->supplier_id ?? 'N/A'); ?></td>
+                                        <td><?php echo htmlspecialchars($complaint->complaint_type ?? 'N/A'); ?></td>
+                                        <td><?php echo htmlspecialchars($complaint->subject ?? 'N/A'); ?></td>
+                                        <td><?php echo htmlspecialchars($complaint->description ?? 'N/A'); ?></td>
+                                        <td><?php echo htmlspecialchars($complaint->submitted_date ?? 'N/A'); ?></td>
+                                        <td><?php echo htmlspecialchars($complaint->submitted_time ?? 'N/A'); ?></td>
+                                        <td>
+                                            <button class="btn-action">View</button>
+                                        </td>
+                                    </tr>
+                                <?php 
+                                    endforeach; 
+                                else: 
+                                ?>
+                                    <tr>
+                                        <td colspan="8" class="text-center">No complaints found</td>
+                                    </tr>
+                                <?php endif; ?>
                             </tbody>
                         </table>
                     </div>

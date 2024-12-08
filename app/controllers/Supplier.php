@@ -438,7 +438,7 @@ class Supplier extends Controller {
         // Check if it's a POST request
         if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             // Initialize complaint model
-            $complaintModel = new Complaint();
+            $complaintModel = new M_Complaint();
     
             // Debug: Log received POST data
             error_log('Complaint Submission POST Data: ' . print_r($_POST, true));

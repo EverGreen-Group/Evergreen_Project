@@ -1,6 +1,6 @@
 <?php
 
-class Complaint {
+class M_Complaint {
     /*
     // Function to create a new complaint
     public function create($type, $description, $email, $phone) {
@@ -64,6 +64,23 @@ class Complaint {
             
             return false;
         }
+    }
+
+    public function getAllComplaints() {
+        
+        $this->db->query("SELECT 
+            complaint_id, 
+            supplier_id, 
+            complaint_type, 
+            subject, 
+            description, 
+            submitted_date, 
+            submitted_time 
+            FROM supplier_complaints 
+            ORDER BY submitted_date DESC, submitted_time DESC 
+            LIMIT 10");
+        
+        return $this->db->resultset();
     }
 
 }
