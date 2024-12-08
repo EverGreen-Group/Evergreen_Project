@@ -194,7 +194,10 @@
       }
     });
   });
+
 </script>
+
+
 
 
   <!-- First row with two tables -->
@@ -254,6 +257,19 @@
     <div class="order">
         <div class="head">
             <h3>Routes</h3>
+            <div class="filter-container">
+            <label for="routes-day-filter">Filter by Day:</label>
+            <select id="routes-day-filter">
+                <option value="">All Days</option>
+                <option value="Monday">Monday</option>
+                <option value="Tuesday">Tuesday</option>
+                <option value="Wednesday">Wednesday</option>
+                <option value="Thursday">Thursday</option>
+                <option value="Friday">Friday</option>
+                <option value="Saturday">Saturday</option>
+                <option value="Sunday">Sunday</option>
+            </select>
+        </div>
             <i class='bx bx-search'></i>
         </div>
         <table>
@@ -262,6 +278,7 @@
                     <th>Route ID</th>
                     <th>Name</th>
                     <th>Suppliers</th>
+                    <th>Day</th>
                     <th>Status</th>
                     <th>Actions</th>
                 </tr>
@@ -272,6 +289,7 @@
                         <td><?php echo htmlspecialchars($route->route_id); ?></td>
                         <td><?php echo htmlspecialchars($route->route_name); ?></td>
                         <td><?php echo htmlspecialchars($route->number_of_suppliers); ?></td>
+                        <td><?php echo htmlspecialchars($route->day); ?></td>
                         <td>
                             <span class="status <?php echo htmlspecialchars($route->status === 'Active' ? 'completed' : 'error'); ?>">
                                 <?php echo htmlspecialchars($route->status); ?>
@@ -312,6 +330,8 @@
         lat: <?php echo M_Route::FACTORY_LAT; ?>, 
         lng: <?php echo M_Route::FACTORY_LONG; ?> 
     };
+
+
 </script>
 
 <script src="<?php echo URLROOT; ?>/public/js/route-page.js"></script>
@@ -326,3 +346,33 @@ echo '<script async defer src="https://maps.googleapis.com/maps/api/js?key=AIzaS
 
 require APPROOT . '/views/inc/components/footer.php'; 
 ?>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function() {
+        const routeDayFilter = document.getElementById("routes-day-filter");
+        const routesTable = document.querySelector("table tbody");
+
+        routeDayFilter.addEventListener("change", function() {
+            const selectedDay = this.value;
+            console.log("Selected day:", selectedDay); // Debug log
+
+            const rows = routesTable.getElementsByTagName("tr");
+            console.log("Found rows:", rows.length); // Debug log
+
+            Array.from(rows).forEach((row, index) => {
+                const dayCell = row.getElementsByTagName("td")[3]; // Index 3 is the Day column
+                if (dayCell) {
+                    const routeDay = dayCell.textContent.trim();
+                    console.log(`Row ${index}: ${routeDay} comparing with ${selectedDay}`); // Debug log
+                    
+                    const shouldShow = selectedDay === "" || routeDay === selectedDay;
+                    console.log(`Row ${index} should be ${shouldShow ? 'shown' : 'hidden'}`); // Debug log
+                    
+                    row.style.display = shouldShow ? "" : "none";
+                } else {
+                    console.log(`Row ${index}: No day cell found`); // Debug log
+                }
+            });
+        });
+    });
+</script>

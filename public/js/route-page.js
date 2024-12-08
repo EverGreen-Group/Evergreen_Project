@@ -120,7 +120,7 @@ document.addEventListener("DOMContentLoaded", () => {
     filteredSuppliers.forEach((supplier) => {
       const option = document.createElement("option");
       option.value = supplier.id;
-      option.textContent = supplier.name;
+      option.textContent = `${supplier.name} - ${supplier.average_collection} kg`;
       supplierSelect.appendChild(option);
     });
   }
@@ -138,9 +138,12 @@ document.addEventListener("DOMContentLoaded", () => {
     stopList.innerHTML = "";
     currentRoute.stops.forEach((stop, index) => {
       const li = document.createElement("li");
-      li.innerHTML = `${stop.name} <span class="remove-stop" data-id="${stop.id}">Remove</span>`;
+      li.innerHTML = `${stop.name} - ${stop.average_collection} kg <span class="remove-stop" data-id="${stop.id}">Remove</span>`;
       stopList.appendChild(li);
     });
+
+    // Update Used and Remaining Capacity
+    updateCapacity();
 
     document.querySelectorAll(".remove-stop").forEach((removeButton) => {
       removeButton.addEventListener("click", function () {
@@ -166,6 +169,31 @@ document.addEventListener("DOMContentLoaded", () => {
         updateMap();
       });
     });
+  }
+
+  function updateCapacity() {
+    const totalCapacity = currentRoute.stops.reduce(
+      (total, stop) => total + stop.average_collection,
+      0
+    );
+    document.getElementById("usedCapacity").textContent = `${Number(
+      totalCapacity
+    )} kg`;
+
+    // Get vehicle capacity and ensure it's a valid number
+    const vehicleCapacityText = document.getElementById(
+      "vehicleCapacityDisplay"
+    ).textContent;
+    const vehicleCapacity = parseInt(vehicleCapacityText);
+
+    // Check if vehicleCapacity is a valid number
+    if (isNaN(vehicleCapacity)) {
+      document.getElementById("remainingCapacity").textContent = "0 kg"; // Set to 0 if invalid
+    } else {
+      document.getElementById("remainingCapacity").textContent = `${
+        vehicleCapacity - totalCapacity
+      } kg`;
+    }
   }
 
   function displayRouteCards() {
@@ -215,6 +243,7 @@ document.addEventListener("DOMContentLoaded", () => {
         id: selectedSupplier.id,
         name: selectedSupplier.name,
         location: selectedSupplier.location,
+        average_collection: selectedSupplier.average_collection,
       });
 
       // Remove from dropdown
@@ -226,7 +255,7 @@ document.addEventListener("DOMContentLoaded", () => {
       }
 
       updateStopList();
-      updateMap(); // This will recalculate Dijkstra's and update markers
+      updateMap(); // Have to implement an algorithm later
     }
   });
 
@@ -237,6 +266,8 @@ document.addEventListener("DOMContentLoaded", () => {
       const routeData = {
         name: document.getElementById("routeName").value,
         status: document.getElementById("status").value,
+        day: document.getElementById("daySelect").value,
+        vehicle_id: document.getElementById("vehicleSelect").value,
         stops: currentRoute.stops.map((stop) => ({
           id: parseInt(stop.id),
         })),
@@ -281,228 +312,8 @@ document.addEventListener("DOMContentLoaded", () => {
   });
 
   // Initialize
-  populateSupplierDropdown();
+  // populateSupplierDropdown();
   displayRouteCards();
-
-  // Add these variables with your other global variables
-  const editModal = document.getElementById("editRouteModal");
-  const editRouteForm = document.getElementById("editRouteForm");
-  const editSupplierSelect = document.getElementById("editSupplierSelect");
-  const editStopList = document.getElementById("editStopList");
-  let editingRoute = null;
-  let editMap = null;
-  let editDirectionsService = null;
-  let editDirectionsRenderer = null;
-
-  function displayRouteCards() {
-    routesContainer.innerHTML = "";
-    routes.forEach((route) => {
-      const card = document.createElement("div");
-      card.className = "route-card";
-      card.innerHTML = `
-                <h3>${route.route_name}</h3>
-                <p>Status: ${route.status}</p>
-                <p>Stops: ${route.number_of_suppliers}</p>
-            `;
-      card.addEventListener("click", () => openEditRouteModal(route));
-      routesContainer.appendChild(card);
-    });
-  }
-
-  async function openEditRouteModal(route) {
-    console.log("Opening edit modal with route:", route); // Debug log
-
-    editingRoute = {
-      id: route.route_id,
-      name: route.route_name,
-      status: route.status,
-      start_location: {
-        lat: parseFloat(route.start_location_lat),
-        lng: parseFloat(route.start_location_long),
-      },
-      end_location: {
-        lat: parseFloat(route.end_location_lat),
-        lng: parseFloat(route.end_location_long),
-      },
-      stops: [],
-    };
-
-    try {
-      const url = `${URLROOT}/vehiclemanager/getRouteSuppliers/${route.route_id}`;
-      console.log("Fetching suppliers for route:", route.route_id); // Debug log
-
-      const response = await fetch(url);
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-
-      const routeSuppliers = await response.json();
-      console.log("Received suppliers:", routeSuppliers); // Debug log
-
-      // Update the stops array with the received suppliers
-      if (routeSuppliers.success) {
-        editingRoute.stops = routeSuppliers.data.suppliers; // Access the suppliers correctly
-      } else {
-        throw new Error(routeSuppliers.message || "Failed to load suppliers");
-      }
-
-      // Update the UI
-      updateEditStopList();
-    } catch (error) {
-      console.error("Error fetching route suppliers:", error);
-      alert("Error loading route details: " + error.message);
-    }
-  }
-
-  function populateEditSupplierDropdown() {
-    editSupplierSelect.innerHTML =
-      '<option value="" disabled selected>Select a supplier</option>';
-    suppliers.forEach((supplier) => {
-      // Only add suppliers not already in the route
-      if (!editingRoute.stops.find((stop) => stop.id === supplier.id)) {
-        const option = document.createElement("option");
-        option.value = supplier.id;
-        option.textContent = supplier.name;
-        editSupplierSelect.appendChild(option);
-      }
-    });
-  }
-
-  function updateEditStopList() {
-    const stopList = document.getElementById("editStopList");
-    stopList.innerHTML = ""; // Clear existing stops
-
-    if (Array.isArray(editingRoute.stops) && editingRoute.stops.length > 0) {
-      editingRoute.stops.forEach((stop, index) => {
-        const li = document.createElement("li");
-        li.innerHTML = `
-                    <span class="stop-number">${index + 1}</span>
-                    <span class="supplier-name">${stop.name}</span>
-                    <button type="button" class="remove-stop" onclick="removeStop(this)">×</button>
-                `;
-        stopList.appendChild(li);
-      });
-    } else {
-      const li = document.createElement("li");
-      li.textContent = "No stops available";
-      stopList.appendChild(li);
-    }
-  }
-
-  // Add event listeners
-  document.querySelector(".close-edit").addEventListener("click", () => {
-    editModal.style.display = "none";
-  });
-
-  document
-    .getElementById("editAddSupplierButton")
-    .addEventListener("click", () => {
-      const selectedSupplierId = editSupplierSelect.value;
-      const selectedSupplier = suppliers.find(
-        (supplier) => supplier.id === selectedSupplierId
-      );
-
-      if (
-        selectedSupplier &&
-        !editingRoute.stops.find((stop) => stop.id === selectedSupplier.id)
-      ) {
-        editingRoute.stops.push({
-          id: selectedSupplier.id,
-          name: selectedSupplier.name,
-          location: selectedSupplier.location,
-        });
-        updateEditStopList();
-        updateEditMap();
-
-        const option = editSupplierSelect.querySelector(
-          `option[value="${selectedSupplierId}"]`
-        );
-        if (option) {
-          option.remove();
-        }
-      }
-    });
-
-  editRouteForm.addEventListener("submit", async (e) => {
-    e.preventDefault();
-
-    const routeData = {
-      id: editingRoute.id,
-      name: document.getElementById("editRouteName").value,
-      status: document.getElementById("editStatus").value,
-      stops: editingRoute.stops.map((stop) => ({
-        id: parseInt(stop.id.replace("S", "")),
-      })),
-    };
-
-    try {
-      const response = await fetch(`${URLROOT}/vehiclemanager/updateRoute`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(routeData),
-      });
-
-      const result = await response.json();
-
-      if (result.success) {
-        alert("Route updated successfully!");
-        editModal.style.display = "none";
-        window.location.reload();
-      } else {
-        alert("Error: " + result.message);
-      }
-    } catch (error) {
-      console.error("Error:", error);
-      alert("An error occurred while updating the route");
-    }
-  });
-
-  // Helper function to add markers
-  function addRouteMarkers(map, routePoints) {
-    // Add factory marker
-    new google.maps.Marker({
-      position: routePoints[0].location,
-      map: map,
-      label: {
-        text: "F",
-        color: "white",
-      },
-      title: "Factory (Start)",
-    });
-
-    // Add numbered markers for suppliers
-    routePoints.slice(1).forEach((stop, index) => {
-      new google.maps.Marker({
-        position: stop.location,
-        map: map,
-        label: {
-          text: (index + 1).toString(),
-          color: "white",
-        },
-        title: `Stop ${index + 1}: ${stop.name}`,
-      });
-    });
-  }
-
-  function updateSupplierList(expandedRow, suppliers) {
-    const listContent = expandedRow.querySelector(".supplier-list-content");
-    listContent.innerHTML = "";
-
-    suppliers.forEach((supplier, index) => {
-      const supplierItem = document.createElement("div");
-      supplierItem.className = "supplier-item";
-      supplierItem.innerHTML = `
-                <div>${index + 1}</div>
-                <div>${supplier.supplier_name}</div>
-                <div>${supplier.contact_number}</div>
-                <div>${supplier.address}</div>
-                <div>${supplier.daily_capacity} kg</div>
-            `;
-      listContent.appendChild(supplierItem);
-    });
-  }
 });
 
 // FOR THE VEHICLE PART
@@ -548,44 +359,55 @@ document.getElementById("daySelect").addEventListener("change", function () {
 // Existing day select event listener...
 
 // Vehicle select event listener
+supplierSelect.disabled = true;
+
 document
   .getElementById("vehicleSelect")
   .addEventListener("change", function () {
     const selectedOption = this.options[this.selectedIndex];
     const vehicleId = this.value;
 
-    fetch(`${URLROOT}/vehiclemanager/getVehicleDetails/${vehicleId}`)
-      .then((response) => response.json())
-      .then((response) => {
-        if (response.status === "success" && response.data) {
-          const vehicle = response.data;
+    // Enable supplier select only if a vehicle is selected
+    if (vehicleId) {
+      supplierSelect.disabled = false; // Enable supplier select
 
-          // Update vehicle details section
-          document.getElementById("vehicleNumberDisplay").textContent =
-            vehicle.license_plate;
-          document.getElementById(
-            "vehicleCapacityDisplay"
-          ).textContent = `${vehicle.capacity}kg`;
-          document.getElementById("vehicleTypeDisplay").textContent =
-            vehicle.vehicle_type;
+      fetch(`${URLROOT}/vehiclemanager/getVehicleDetails/${vehicleId}`)
+        .then((response) => response.json())
+        .then((response) => {
+          if (response.status === "success" && response.data) {
+            const vehicle = response.data;
 
-          // Update capacity info
-          document.getElementById("usedCapacity").textContent = "0 kg";
-          document.getElementById(
-            "remainingCapacity"
-          ).textContent = `${vehicle.capacity} kg`;
-
-          // Update vehicle image with correct path
-          if (vehicle.license_plate) {
+            // Update vehicle details section
+            document.getElementById("vehicleNumberDisplay").textContent =
+              vehicle.license_plate;
             document.getElementById(
-              "vehicleImage"
-            ).src = `${URLROOT}/public/uploads/vehicle_photos/${vehicle.license_plate}.jpg`;
-          } else {
+              "vehicleCapacityDisplay"
+            ).textContent = `${vehicle.capacity}kg`;
+            document.getElementById("vehicleTypeDisplay").textContent =
+              vehicle.vehicle_type;
+
+            // Update capacity info
+            document.getElementById("usedCapacity").textContent = "0 kg"; // Initialize used capacity
             document.getElementById(
-              "vehicleImage"
-            ).src = `${URLROOT}/public/uploads/vehicle_photos/default-vehicle.jpg`;
+              "remainingCapacity"
+            ).textContent = `${vehicle.capacity} kg`; // Set remaining capacity based on vehicle capacity
+
+            // Update vehicle image with correct path
+            if (vehicle.license_plate) {
+              document.getElementById(
+                "vehicleImage"
+              ).src = `${URLROOT}/public/uploads/vehicle_photos/${vehicle.license_plate}.jpg`;
+            } else {
+              document.getElementById(
+                "vehicleImage"
+              ).src = `${URLROOT}/public/uploads/vehicle_photos/default-vehicle.jpg`;
+            }
           }
-        }
-      })
-      .catch((error) => console.error("Error:", error));
+        })
+        .catch((error) => console.error("Error:", error));
+    } else {
+      supplierSelect.disabled = true; // Disable supplier select if no vehicle is selected
+      document.getElementById("usedCapacity").textContent = "0 kg"; // Reset used capacity
+      document.getElementById("remainingCapacity").textContent = "0 kg"; // Reset remaining capacity
+    }
   });

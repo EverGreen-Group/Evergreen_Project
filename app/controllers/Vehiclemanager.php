@@ -254,7 +254,10 @@ class VehicleManager extends Controller {
                 'location' => [
                     'lat' => (float)$supplier->latitude,
                     'lng' => (float)$supplier->longitude
-                ]
+                ],
+                'average_collection' => $supplier->average_collection,
+                'number_of_collections' => $supplier->number_of_collections
+
             ];
         }, $unallocatedSuppliers);
 
@@ -1132,7 +1135,10 @@ class VehicleManager extends Controller {
         }
     }
 
-
+    public function getRoutesByDay($day) {
+        $routes = $this->routeModel->getRoutesByDay($day);
+        echo json_encode(['routes' => $routes]);
+    }
 
 
 

@@ -66,7 +66,9 @@ class M_Route {
                 end_location_long,
                 date,
                 number_of_suppliers,
-                status
+                status,
+                vehicle_id,
+                day
             ) VALUES (
                 :name,
                 :factory_lat,
@@ -75,7 +77,9 @@ class M_Route {
                 :factory_long,
                 CURRENT_DATE(),
                 :num_suppliers,
-                :status
+                :status,
+                :vehicle_id,
+                :day
             )");
             
             $this->db->bind(':name', $routeData->name);
@@ -83,6 +87,8 @@ class M_Route {
             $this->db->bind(':factory_long', self::FACTORY_LONG);
             $this->db->bind(':num_suppliers', count($routeData->stops));
             $this->db->bind(':status', $routeData->status);
+            $this->db->bind(':vehicle_id', $routeData->vehicle_id);
+            $this->db->bind(':day', $routeData->day);
             
             $this->db->execute();
             $routeId = $this->db->lastInsertId();
@@ -114,12 +120,7 @@ class M_Route {
     public function getUnallocatedSuppliers() {
         $this->db->query("
             SELECT 
-                s.supplier_id,
-                s.contact_number,
-                s.latitude,
-                s.longitude,
-                s.preferred_day,
-                s.last_updated,
+                s.*,
                 u.first_name,
                 u.last_name,
                 CONCAT(u.first_name, ' ', u.last_name) as full_name,
@@ -232,6 +233,12 @@ class M_Route {
             $this->db->rollBack();
             return false;
         }
+    }
+
+    public function getRoutesByDay($day) {
+        $this->db->query("SELECT * FROM routes WHERE day = :day AND is_deleted = 0");
+        $this->db->bind(':day', $day);
+        return $this->db->resultset();
     }
 }
 ?>
