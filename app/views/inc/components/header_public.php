@@ -32,7 +32,7 @@
         padding: 15px 30px;
         background-color: rgba(255, 255, 255, 0.95);
         border-radius: 50px;
-        box-shadow: 0 2px 15px rgba(0, 0, 0, 0.05);
+        box-shadow: 0 2px 35px rgba(34, 164, 93, 0.2);
         position: relative;
         z-index: 1;
     }
