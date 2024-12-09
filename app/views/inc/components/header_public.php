@@ -82,8 +82,8 @@
     }
 
     .nav-button {
-        background-color: #e8ffd4 !important;
-        color: #22a45d !important;
+        background-color: #22a45d !important;
+        color: white !important;
         border: none;
         padding: 8px 20px;
         border-radius: 20px;

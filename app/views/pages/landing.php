@@ -18,16 +18,6 @@
                 <img src="<?php echo URLROOT; ?>/public/uploads/hero-image2.png" alt="Tea Image">
             </div>
         </div>
-        <!-- <div class="hero-stats">
-            <div class="stat-card">
-                <span class="stat-number">400+</span>
-                <span class="stat-label">Active Suppliers</span>
-            </div>
-            <div class="stat-card">
-                <span class="stat-number">98%</span>
-                <span class="stat-label">Collection Rate</span>
-            </div>
-        </div> -->
     </div>
 
     <section class="features-section">
@@ -75,7 +65,6 @@
     }
 
     .hero-section {
-
         padding: 120px 0 80px;
         max-width: 1200px;
         margin: 0 auto;
@@ -84,7 +73,7 @@
     .hero-content {
         display: flex;
         align-items: center;
-        justify-content: space-betwollection Rateeen;
+        justify-content: space-between;
         gap: 20px;
     }
 
@@ -288,5 +277,35 @@
 
     .highlight {
         color: #22a45d; /* Green color for "Tea Leaves" */
+    }
+
+    @media (max-width: 1222px) {
+        .hero-image {
+            display: none; /* Hide the hero image */
+        }
+
+        .hero-content {
+            display: flex; /* Use flexbox for alignment */
+            flex-direction: column; /* Stack items vertically */
+            align-items: center; /* Center items horizontally */
+            text-align: center; /* Center text */
+        }
+
+        .hero-text {
+            margin: 0; /* Remove any margin if needed */
+        }
+
+        /* Responsive font sizes */
+        .hero-text h1 {
+            font-size: 2rem; /* Adjust as needed for smaller screens */
+        }
+
+        .hero-text p {
+            font-size: 1rem; /* Adjust as needed for smaller screens */
+        }
+
+        h2 {
+            font-size: 1.5rem; /* Adjust as needed for smaller screens */
+        }
     }
 </style>
