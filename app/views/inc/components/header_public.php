@@ -166,10 +166,40 @@
                     class="<?php echo ($_GET['url'] ?? '') === 'pages/store' ? 'active' : ''; ?>">
                     STORE
                 </a>
-                <a href="<?php echo URLROOT; ?>/profile"
-                    class="<?php echo ($_GET['url'] ?? '') === 'profile/' ? 'active' : ''; ?>">
-                    PROFILE
+                <a href="<?php echo URLROOT; ?>/pages/about"
+                    class="<?php echo ($_GET['url'] ?? '') === 'pages/store' ? 'active' : ''; ?>">
+                    ABOUT
                 </a>
+                
+                <?php if (RoleHelper::hasRole(RoleHelper::DRIVER)): ?>
+                    <a href="<?php echo URLROOT; ?>/vehicledriver/index" class="<?php echo ($_GET['url'] ?? '') === 'vehicledriver/index' ? 'active' : ''; ?>">
+                        DASHBOARD
+                    </a>
+                <?php endif; ?>
+
+                <?php if (RoleHelper::hasRole(RoleHelper::SUPPLIER_MANAGER)): ?>
+                    <a href="<?php echo URLROOT; ?>/suppliermanager/index" class="<?php echo ($_GET['url'] ?? '') === 'suppliermanager/index' ? 'active' : ''; ?>">
+                        SUPPLIER MANAGER
+                    </a>
+                <?php endif; ?>
+
+                <?php if (RoleHelper::hasRole(RoleHelper::EMPLOYEE)): ?>
+                    <a href="<?php echo URLROOT; ?>/employeemanager/index" class="<?php echo ($_GET['url'] ?? '') === 'employeemanager/index' ? 'active' : ''; ?>">
+                        EMPLOYEE DASHBOARD
+                    </a>
+                <?php endif; ?>
+
+                <?php if (RoleHelper::isAdmin()): ?>
+                    <a href="<?php echo URLROOT; ?>/admin/index" class="<?php echo ($_GET['url'] ?? '') === 'admin/index' ? 'active' : ''; ?>">
+                        ADMIN DASHBOARD
+                    </a>
+                <?php endif; ?>
+
+                <?php if (isset($_SESSION['user_id'])): ?>
+                    <a href="<?php echo URLROOT; ?>/profile" class="<?php echo ($_GET['url'] ?? '') === 'profile' ? 'active' : ''; ?>">
+                        Profile
+                    </a>
+                <?php endif; ?>
             </div>
             <div class="nav-auth">
                 <?php if (isset($_SESSION['user_id'])): ?>
