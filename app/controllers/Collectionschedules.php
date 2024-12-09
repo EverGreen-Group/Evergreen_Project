@@ -15,10 +15,10 @@ class Collectionschedules extends Controller {
         $data = [
             'route_id' => trim($_POST['route_id']),
             'team_id' => trim($_POST['team_id']),
-            'vehicle_id' => trim($_POST['vehicle_id']),
+            // Removed vehicle_id since it's no longer used
             'shift_id' => trim($_POST['shift_id']),
             'week_number' => trim($_POST['week_number']),
-            'days_of_week' => isset($_POST['days_of_week']) ? $_POST['days_of_week'] : []
+            'day' => trim($_POST['day']) // Changed from days_of_week to day
         ];
 
         // Debug: Print data
@@ -32,27 +32,9 @@ class Collectionschedules extends Controller {
             $errors[] = "Teams cannot be assigned to more than 6 days per week";
         }
 
-        // Check if vehicle is already assigned for the maximum allowed days
-        if ($this->collectionScheduleModel->getVehicleAssignmentCount($data['vehicle_id']) >= 6) {
-            $errors[] = "Vehicles cannot be assigned to more than 6 days per week";
-        }
-
-        // Validate days selection
-        if (empty($data['days_of_week'])) {
-            $errors[] = "Please select at least one day of the week";
-        }
-
-        // Check if selected days would exceed maximum days for team or vehicle
-        $existingTeamDays = $this->collectionScheduleModel->getTeamAssignedDays($data['team_id']);
-        $existingVehicleDays = $this->collectionScheduleModel->getVehicleAssignedDays($data['vehicle_id']);
-        $newTotalTeamDays = count(array_unique(array_merge($existingTeamDays, $data['days_of_week'])));
-        $newTotalVehicleDays = count(array_unique(array_merge($existingVehicleDays, $data['days_of_week'])));
-
-        if ($newTotalTeamDays > 6) {
-            $errors[] = "This assignment would exceed the maximum of 6 days per week for the team";
-        }
-        if ($newTotalVehicleDays > 6) {
-            $errors[] = "This assignment would exceed the maximum of 6 days per week for the vehicle";
+        // Validate day selection
+        if (empty($data['day'])) {
+            $errors[] = "Please select a day of the week";
         }
 
         // If there are any errors, display them and redirect
@@ -64,31 +46,13 @@ class Collectionschedules extends Controller {
             return;
         }
 
-        // Check for schedule conflicts and create entries
-        foreach ($data['days_of_week'] as $day) {
-            // Create a new data array for each day
-            $singleDayData = [
-                'route_id' => $data['route_id'],
-                'team_id' => $data['team_id'],
-                'vehicle_id' => $data['vehicle_id'],
-                'shift_id' => $data['shift_id'],
-                'week_number' => $data['week_number'],
-                'days_of_week' => $day  // Single day value
-            ];
 
-            // Check for conflicts
-            if ($this->collectionScheduleModel->checkConflict($singleDayData)) {
-                flash('schedule_create_error', "Schedule conflict detected for $day", 'alert alert-danger');
-                redirect('vehiclemanager/');
-                return;
-            }
 
-            // Create schedule for this day
-            if (!$this->collectionScheduleModel->create($singleDayData)) {
-                flash('schedule_create_error', "Failed to create schedule for $day", 'alert alert-danger');
-                redirect('vehiclemanager/');
-                return;
-            }
+        // Create schedule for this day
+        if (!$this->collectionScheduleModel->create($data)) {
+            flash('schedule_create_error', "Failed to create schedule for {$data['day']}", 'alert alert-danger');
+            redirect('vehiclemanager/');
+            return;
         }
 
         flash('schedule_create_success', 'Collection schedule created successfully!', 'alert alert-success');
@@ -129,35 +93,25 @@ class Collectionschedules extends Controller {
                 'schedule_id' => $_POST['schedule_id'],
                 'route_id' => $_POST['route_id'],
                 'team_id' => $_POST['team_id'],
-                'vehicle_id' => $_POST['vehicle_id'],
+                // Removed vehicle_id since it's no longer used
                 'shift_id' => $_POST['shift_id'],
                 'week_number' => $_POST['week_number'],
-                'days_of_week' => isset($_POST['days_of_week']) ? $_POST['days_of_week'] : []
+                // Removed day since it's not necessary to update
             ];
-
-            // Validate days selection
-            if (empty($data['days_of_week'])) {
-                flash('schedule_error', 'Please select at least one day of the week', 'alert alert-danger');
+    
+            // Check for schedule conflicts (excluding current schedule)
+            if ($this->collectionScheduleModel->checkConflict($data)) {
+                flash('schedule_error', "Schedule conflict detected for the selected route", 'alert alert-danger');
                 redirect('vehiclemanager/');
                 return;
             }
-
-            // Check for schedule conflicts (excluding current schedule)
-            foreach ($data['days_of_week'] as $day) {
-                $checkData = array_merge($data, ['day' => $day]);
-                if ($this->collectionScheduleModel->checkConflict($checkData)) {
-                    flash('schedule_error', "Schedule conflict detected for $day", 'alert alert-danger');
-                    redirect('vehiclemanager/');
-                    return;
-                }
-            }
-
+    
             if ($this->collectionScheduleModel->update($data)) {
                 flash('schedule_success', 'Collection schedule updated successfully');
             } else {
                 flash('schedule_error', 'Failed to update collection schedule');
             }
-
+    
             redirect('vehiclemanager/');
         }
     }

@@ -236,7 +236,17 @@ class M_Route {
     }
 
     public function getRoutesByDay($day) {
-        $this->db->query("SELECT * FROM routes WHERE day = :day AND is_deleted = 0");
+        $this->db->query("
+            SELECT r.* 
+            FROM routes r
+            LEFT JOIN collection_schedules cs ON r.route_id = cs.route_id 
+                AND cs.day = :day 
+                AND cs.is_active = 1
+            WHERE r.day = :day 
+            AND r.is_deleted = 0 
+            AND cs.route_id IS NULL
+        ");
+        
         $this->db->bind(':day', $day);
         return $this->db->resultset();
     }

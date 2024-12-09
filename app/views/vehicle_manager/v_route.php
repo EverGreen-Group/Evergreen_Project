@@ -197,6 +197,11 @@
 
 </script>
 
+<div class="routes-section">
+    <h2>All Routes</h2>
+    <button id="createRouteButton" class="create-route-btn">Create Route</button>
+    <div id="routesContainer" class="routes-container"></div>
+  </div>
 
 
 
@@ -310,11 +315,7 @@
   </div>
 
 
-  <div class="routes-section">
-    <h2>All Routes</h2>
-    <button id="createRouteButton" class="create-route-btn">Create Route</button>
-    <div id="routesContainer" class="routes-container"></div>
-  </div>
+
 
 
 
