@@ -446,6 +446,64 @@ body {
   grid-gap: 12px;
   padding-left: 6px;
 }
+
+/* Profile Styles */
+#content main .table-data .profile-container {
+  display: flex;
+  flex-direction: column;
+}
+
+#content main .table-data .profile-header {
+  display: flex;
+  align-items: center;
+  margin-bottom: 24px;
+}
+
+#content main .table-data .profile-image img {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  margin-right: 16px;
+}
+
+#content main .table-data .profile-info h2 {
+  font-size: 20px;
+  font-weight: 600;
+  margin-bottom: 4px;
+}
+
+#content main .table-data .profile-info p {
+  color: #6b7280;
+  margin-bottom: 8px;
+}
+
+#content main .table-data .edit-profile {
+  color: #4b5563;
+  font-size: 14px;
+  text-decoration: underline;
+}
+
+#content main .table-data .profile-details h3 {
+  font-size: 16px;
+  font-weight: 600;
+  margin-bottom: 12px;
+}
+
+#content main .table-data .profile-details p {
+  color: #6b7280;
+  margin-bottom: 16px;
+}
+
+#content main .table-data .profile-details ul {
+  list-style-type: none;
+  padding: 0;
+}
+
+#content main .table-data .profile-details li {
+  color: #6b7280;
+  margin-bottom: 8px;
+}
+
 #content main .table-data .order table td img {
   width: 36px;
   height: 36px;
