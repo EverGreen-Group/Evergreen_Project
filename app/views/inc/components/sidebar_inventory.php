@@ -53,12 +53,12 @@
         <span class="text">Recodes</span>
       </a>
     </li> -->
-    <li class="<?php echo (basename($_SERVER['REQUEST_URI']) == 'settings') ? 'active' : ''; ?>">
+    <!-- <li class="<?php echo (basename($_SERVER['REQUEST_URI']) == 'settings') ? 'active' : ''; ?>">
       <a href="../inventory/settings">
         <i class="bx bxs-cog"></i>
         <span class="text">Payment</span>
       </a>
-    </li>
+    </li> -->
   </ul>
   <ul class="side-menu">
     <li>
