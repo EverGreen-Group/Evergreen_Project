@@ -21,8 +21,8 @@ class M_Complaint {
             // Start transaction
             $this->db->beginTransaction();
     
-            // Debug: Log transaction start
-            error_log('Starting complaint submission transaction');
+            // Debug logging - print out the entire data array
+            error_log('Complaint Data Before Submission: ' . print_r($data, true));
     
             // Prepare SQL query to insert complaint
             $this->db->query("INSERT INTO supplier_complaints 
@@ -38,7 +38,7 @@ class M_Complaint {
             $this->db->bind(':images', $data['images']);
             $this->db->bind(':priority_level', $data['priority_level']);
     
-            // Execute the query
+            // Debug: Add error info retrieval
             $result = $this->db->execute();
             
             if (!$result) {
@@ -46,6 +46,7 @@ class M_Complaint {
                 $errorInfo = $this->db->errorInfo();
                 throw new Exception('Failed to submit complaint: ' . print_r($errorInfo, true));
             }
+    
     
             // Commit transaction
             $this->db->commit();

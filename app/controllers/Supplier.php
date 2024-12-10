@@ -2,6 +2,7 @@
 require_once APPROOT . '/models/M_Fertilizer_Order.php';
 require_once '../app/helpers/auth_middleware.php';
 require_once APPROOT . '/models/M_Complaint.php';
+require_once APPROOT . '/models/M_LandInspection.php';
 
 if (session_status() == PHP_SESSION_NONE) {
     session_start();
@@ -10,6 +11,8 @@ if (session_status() == PHP_SESSION_NONE) {
 class Supplier extends Controller {
 
     private $fertilizerOrderModel;
+    private $landInspectionModel;
+    private $complaintModel;
 
     public function __construct() {
         // Check if the user is logged in
@@ -22,13 +25,21 @@ class Supplier extends Controller {
         //     exit();
         // }
 
-        // Initialize the model
+        // Initialize fertilizer order model
         $this->fertilizerOrderModel = new M_Fertilizer_Order();
+        // Initialize complaint model
+        $this->complaintModel = new M_Complaint();
+        // Initialize land inspection model
+        $this->landInspectionModel = new M_LandInspection();
     }
 
     
     public function index() {
-        $data = [];
+        // Temporary supplier ID (replace with session after login implementation)
+        $supplier_id = 2;
+
+        $data['previous_inspections'] = $this->landInspectionModel->getPreviousInspectionRequests($supplier_id);
+
         $this->view('supplier/v_supply_dashboard', $data);
     }
 
@@ -437,8 +448,6 @@ class Supplier extends Controller {
     
         // Check if it's a POST request
         if ($_SERVER['REQUEST_METHOD'] == 'POST') {
-            // Initialize complaint model
-            $complaintModel = new M_Complaint();
     
             // Debug: Log received POST data
             error_log('Complaint Submission POST Data: ' . print_r($_POST, true));
@@ -466,7 +475,7 @@ class Supplier extends Controller {
                     }
                 }
             }
-    
+
             // Prepare complaint data
             $complaintData = [
                 'supplier_id' => $supplier_id,          // CHANGE TO $_SESSION['user_id'] AFTER LOGIN IS COMPLETED
@@ -481,7 +490,7 @@ class Supplier extends Controller {
             error_log('Prepared Complaint Data: ' . print_r($complaintData, true));
     
             // Submit complaint
-            $result = $complaintModel->submitComplaint($complaintData);
+            $result = $this->complaintModel->submitComplaint($complaintData);
     
             if ($result) {
                 flash('message', 'Complaint submitted successfully', 'alert alert-success');
@@ -496,6 +505,60 @@ class Supplier extends Controller {
             // Redirect if not a POST request
             redirect('supplier/complaints');
         }
+    }
+
+    public function requestInspection() {
+        // Check if the supplier is logged in
+        if (!isset($_SESSION['user_id'])) {
+            flash('message', 'Please log in to submit an inspection request', 'alert alert-danger');
+            redirect('login');
+            return;
+        }
+    
+        // Check if it's a POST request
+        if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+            // Validate and sanitize input
+            $data = [
+                'supplier_id' => $_SESSION['user_id'], // Using session user_id
+                'land_area' => filter_input(INPUT_POST, 'land_area', FILTER_VALIDATE_FLOAT),
+                'location' => trim(filter_input(INPUT_POST, 'location', FILTER_SANITIZE_STRING)),
+                'preferred_date' => trim(filter_input(INPUT_POST, 'preferred_date', FILTER_SANITIZE_STRING)),
+                'comments' => trim(filter_input(INPUT_POST, 'comments', FILTER_SANITIZE_STRING)) ?: null
+            ];
+    
+            // Basic validation
+            $errors = [];
+            if ($data['land_area'] === false || $data['land_area'] <= 0) {
+                $errors[] = 'Invalid land area';
+            }
+            if (empty($data['location'])) {
+                $errors[] = 'Location is required';
+            }
+            if (empty($data['preferred_date'])) {
+                $errors[] = 'Preferred date is required';
+            }
+    
+            if (empty($errors)) {
+                // Initialize land inspection model
+                $landInspectionModel = new M_LandInspection();
+    
+                // Submit inspection request
+                if ($landInspectionModel->submitInspectionRequest($data)) {
+                    flash('message', 'Land inspection request submitted successfully', 'alert alert-success');
+                    redirect('supplier/index');
+                } else {
+                    // Log the error for debugging
+                    error_log('Land Inspection Request Failed: ' . $landInspectionModel->getError());
+                    flash('message', 'Failed to submit land inspection request. Please try again.', 'alert alert-danger');
+                }
+            } else {
+                // If there are validation errors
+                flash('message', implode('<br>', $errors), 'alert alert-danger');
+            }
+        }
+    
+        // Redirect back to the dashboard or inspection request page
+        redirect('supplier/index');
     }
 }
 ?>

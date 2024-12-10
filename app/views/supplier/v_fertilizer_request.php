@@ -246,7 +246,9 @@
                                 </a>
                             </td>
                             <td>
-                                <button class="btn-delete btn-primary" data-id="<?php echo $order->order_id; ?>">Delete</button>
+                                <a href="<?php echo URLROOT; ?>/Supplier/deleteFertilizerRequest/<?php echo $order->order_id; ?>" >
+                                    <button class="btn-delete btn-primary" data-id="<?php echo $order->order_id; ?>">Delete</button>
+                                </a>
                             </td>
                         </tr>
                     <?php endforeach; ?>
@@ -267,102 +269,102 @@
 
 <style>
     /* Request Form Styles */
-.request-form {
-    background: white;
-    border-radius: 10px;
-    padding: 15px;
-}
-
-.form-container {
-    display: flex;
-    flex-direction: column;
-    gap: 15px;
-}
-
-.form-row {
-    display: flex;
-    gap: 15px;
-}
-
-.form-group {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    gap: 5px;
-}
-
-.form-group label {
-    font-size: 0.9rem;
-    color: #666;
-}
-
-.form-group select,
-.form-group input {
-    padding: 8px;
-    border: 1px solid #ddd;
-    border-radius: 5px;
-    font-size: 0.9rem;
-    width: 100%;
-}
-
-.form-group input[readonly] {
-    background-color: #f5f5f5;
-}
-
-.form-actions {
-    display: flex;
-    gap: 10px;
-    margin-top: 10px;
-}
-
-.btn-submit,
-.btn-cancel {
-    padding: 8px 20px;
-    border: none;
-    border-radius: 5px;
-    cursor: pointer;
-    font-size: 0.9rem;
-    flex: 1;
-    transition: all 0.3s ease;
-}
-
-.btn-submit {
-    background: #008000;
-    color: white;
-}
-
-.btn-submit:hover {
-    background: #006400;
-}
-
-.btn-cancel {
-    background: #f5f5f5;
-    color: #666;
-}
-
-.btn-cancel:hover {
-    background: #e0e0e0;
-}
-
-@media screen and (max-width: 360px) {
     .request-form {
-        padding: 10px;
+        background: white;
+        border-radius: 10px;
+        padding: 15px;
+    }
+
+    .form-container {
+        display: flex;
+        flex-direction: column;
+        gap: 15px;
     }
 
     .form-row {
+        display: flex;
+        gap: 15px;
+    }
+
+    .form-group {
+        flex: 1;
+        display: flex;
         flex-direction: column;
-        gap: 10px;
+        gap: 5px;
+    }
+
+    .form-group label {
+        font-size: 0.9rem;
+        color: #666;
+    }
+
+    .form-group select,
+    .form-group input {
+        padding: 8px;
+        border: 1px solid #ddd;
+        border-radius: 5px;
+        font-size: 0.9rem;
+        width: 100%;
+    }
+
+    .form-group input[readonly] {
+        background-color: #f5f5f5;
     }
 
     .form-actions {
-        flex-direction: column;
+        display: flex;
+        gap: 10px;
+        margin-top: 10px;
     }
 
     .btn-submit,
     .btn-cancel {
-        width: 100%;
+        padding: 8px 20px;
+        border: none;
+        border-radius: 5px;
+        cursor: pointer;
+        font-size: 0.9rem;
+        flex: 1;
+        transition: all 0.3s ease;
     }
-}
+
+    .btn-submit {
+        background: #008000;
+        color: white;
+    }
+
+    .btn-submit:hover {
+        background: #006400;
+    }
+
+    .btn-cancel {
+        background: #f5f5f5;
+        color: #666;
+    }
+
+    .btn-cancel:hover {
+        background: #e0e0e0;
+    }
+
+    @media screen and (max-width: 360px) {
+        .request-form {
+            padding: 10px;
+        }
+
+        .form-row {
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .form-actions {
+            flex-direction: column;
+        }
+
+        .btn-submit,
+        .btn-cancel {
+            width: 100%;
+        }
+    }
 </style>
 
 

@@ -134,7 +134,7 @@
         <table>
             <thead>
                 <tr>
-                    <th>Request ID</th>
+                    <th>Inspection ID</th>
                     <th>Supplier ID</th>
                     <th>Land Area (Acres)</th>
                     <th>Location</th>

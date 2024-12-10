@@ -130,12 +130,197 @@
             <div class="section-divider"></div>
         </div>
     </div>
+    <div class="table-data">
+        <div class="order">
+            <div class="head">
+                <h4>Submit Land Inspection Request</h4>
+            </div>
+        
+            <form action="<?php echo URLROOT; ?>/supplier/requestInspection" method="POST" class="request-form" >
+                <div class="form-container">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="land_area">Land Area(Acres):</label>
+                            <input type="number" id="land_area" name="land_area" min="1" step="0.1" required>
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="location">Location:</label>
+                            <input type="text" id="location" name="location" required>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="preferred_date">Preffered Date:</label>
+                            <input type="date" id="preferred_date" name="preferred_date" required>
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="comments">Comments(Optional):</label>
+                            <input type="text" id="comments" name="comments">
+                        </div>
+                    </div>
+
+                    <div class="form-actions">
+                        <button type="submit" class="btn-submit">Submit Request</button>
+                        <button type="button" class="btn-cancel" 
+                            onclick="document.getElementById('fertilizerForm').reset()">Cancel</button>
+                    </div>
+                </div>
+            </form>
+        </div>
+        
+        <div class="order">
+            <div class="head">
+                <h4>Previous Land Inspection Requests</h4>
+            </div>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Request ID</th>
+                        <th>Preferred Date</th>
+                        <th>Scheduled Date</th>
+                        <th>Scheduled Time</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <?php if (!empty($data['previous_inspections'])): ?>
+                        <?php foreach ($data['previous_inspections'] as $inspection): ?>
+                            <tr>
+                                <td><?php echo htmlspecialchars($inspection->request_id ?? 'N/A'); ?></td>
+                                <td><?php echo htmlspecialchars($inspection->preferred_date ?? 'N/A'); ?></td>
+                                <td><?php echo htmlspecialchars($inspection->scheduled_date ?? 'Not Scheduled'); ?></td>
+                                <td><?php echo htmlspecialchars($inspection->scheduled_time ?? 'Not Scheduled'); ?></td>
+                                <td>
+                                    <span class="status-badge 
+                                        <?php 
+                                        echo match(strtolower($inspection->status ?? '')) {
+                                            'pending' => 'pending',
+                                            'completed' => 'approved',
+                                            'cancelled' => 'rejected',
+                                            default => 'pending'
+                                        }; 
+                                        ?>">
+                                        <?php echo htmlspecialchars($inspection->status ?? 'Pending'); ?>
+                                    </span>
+                                </td>
+                            </tr>
+                        <?php endforeach; ?>
+                    <?php else: ?>
+                        <tr>
+                            <td colspan="5" class="text-center">No previous inspection requests found</td>
+                        </tr>
+                    <?php endif; ?>
+                </tbody>
+            </table>
+        </div>
+    </div>
 
 
 </main>
-<script>
+<style>
+    /* Request Form Styles */
+    .request-form {
+        background: white;
+        border-radius: 10px;
+        padding: 15px;
+    }
 
-</script>
+    .form-container {
+        display: flex;
+        flex-direction: column;
+        gap: 15px;
+    }
+
+    .form-row {
+        display: flex;
+        gap: 15px;
+    }
+
+    .form-group {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        gap: 5px;
+    }
+
+    .form-group label {
+        font-size: 0.9rem;
+        color: #666;
+    }
+
+    .form-group select,
+    .form-group input {
+        padding: 8px;
+        border: 1px solid #ddd;
+        border-radius: 5px;
+        font-size: 0.9rem;
+        width: 100%;
+    }
+
+    .form-group input[readonly] {
+        background-color: #f5f5f5;
+    }
+
+    .form-actions {
+        display: flex;
+        gap: 10px;
+        margin-top: 10px;
+    }
+
+    .btn-submit,
+    .btn-cancel {
+        padding: 8px 20px;
+        border: none;
+        border-radius: 5px;
+        cursor: pointer;
+        font-size: 0.9rem;
+        flex: 1;
+        transition: all 0.3s ease;
+    }
+
+    .btn-submit {
+        background: #008000;
+        color: white;
+    }
+
+    .btn-submit:hover {
+        background: #006400;
+    }
+
+    .btn-cancel {
+        background: #f5f5f5;
+        color: #666;
+    }
+
+    .btn-cancel:hover {
+        background: #e0e0e0;
+    }
+
+    @media screen and (max-width: 360px) {
+        .request-form {
+            padding: 10px;
+        }
+
+        .form-row {
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .form-actions {
+            flex-direction: column;
+        }
+
+        .btn-submit,
+        .btn-cancel {
+            width: 100%;
+        }
+    }
+</style>
 
 <!-- Scripts -->
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -299,3 +484,8 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
 </style>
+<script>
+    // Get today's date in YYYY-MM-DD format
+    const today = new Date().toISOString().split('T')[0];
+    document.getElementById('preferred_date').setAttribute('min', today);
+</script>
