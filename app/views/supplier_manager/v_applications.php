@@ -146,41 +146,47 @@
                 </tr>
             </thead>
             <tbody>
-                <tr>
-                    <td>INS001</td>
-                    <td>SUP001</td>
-                    <td>2.5</td>
-                    <td>Galle, Sri Lanka</td>
-                    <td>2024-03-15</td>
-                    <td>
-                        <input type="date" class="inline-date-input" id="scheduleDate-INS001">
-                    </td>
-                    <td>
-                        <input type="time" class="inline-time-input" id="scheduleTime-INS001">
-                    </td>
-                    <td><span class="status-badge pending">Pending</span></td>
-                    <td>
-                        <div class="action-buttons">
-                            <button class="btn-approve" onclick="scheduleInspection('INS001')">
-                                <i class='bx bx-calendar'></i> Schedule
-                            </button>
-                        </div>
-                    </td>
-                </tr>
-                <!-- More rows can be added similarly -->
+                <?php if ($data['previous_inspections']): ?>
+                    <?php foreach ($data['previous_inspections'] as $inspection): ?>
+                        <tr>
+                            <td><?php echo htmlspecialchars($inspection->inspection_id ?? 'N/A'); ?></td>
+                            <td><?php echo htmlspecialchars($inspection->supplier_id ?? 'N/A'); ?></td>
+                            <td><?php echo htmlspecialchars($inspection->land_area ?? 'N/A'); ?></td>
+                            <td><?php echo htmlspecialchars($inspection->location ?? 'N/A'); ?></td>
+                            <td><?php echo htmlspecialchars($inspection->preferred_date ?? 'N/A'); ?></td>
+                            <td><?php echo htmlspecialchars($inspection->scheduled_date ?? 'N/A'); ?></td>
+                            <td><?php echo htmlspecialchars($inspection->scheduled_time ?? 'N/A'); ?></td>
+                            <td><?php echo htmlspecialchars($inspection->status ?? 'N/A'); ?></td>
+                            <td>
+                                <div class="action-buttons">
+                                    <button class="btn-approve" onclick="">
+                                        <i class='bx bx-calendar'></i> Schedule
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                    <?php endforeach; ?>
+                <?php else: ?>
+                    <tr>
+                        <td colspan="9" class="text-center">No previous inspection requests found</td>
+                    </tr>
+                <?php endif; ?>
             </tbody>
         </table>
     </div>
 </div>
 
 <style>
-.inline-date-input, .inline-time-input {
-    width: 100%;
-    padding: 5px;
-    border: 1px solid #ddd;
-    border-radius: 4px;
-    font-size: 0.8rem;
-}
+    .inline-date-input, .inline-time-input {
+        width: 100%;
+        padding: 5px;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        font-size: 0.8rem;
+    }
+    .text-center {
+        text-align: center;
+    }
 </style>
 
 <script>
