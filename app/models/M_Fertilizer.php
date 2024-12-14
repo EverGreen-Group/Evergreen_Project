@@ -9,8 +9,8 @@ class M_Fertilizer{
 
     public function createFertilizer($data){
 
-        $sql = 'INSERT INTO Fertilizer (fertilizer_name, company_name, details, code, price, quantity, unit)
-        VALUES(:fertilizer_name, :company_name, :details, :code, :price, :quantity, :unit)';
+        $sql = 'INSERT INTO Fertilizer (fertilizer_name, company_name, details, code, price, quantity, unit,image_path)
+        VALUES(:fertilizer_name, :company_name, :details, :code, :price, :quantity, :unit, :image_path)';
 
         $this->db->query($sql);
         $this->db->bind('fertilizer_name', $data['fertilizer_name']);
@@ -20,6 +20,7 @@ class M_Fertilizer{
         $this->db->bind('price', $data['price']);
         $this->db->bind('quantity', $data['quantity']);
         $this->db->bind('unit', $data['unit']);
+        $this->db->bind(':image_path', $data['image_path']);
 
         //execute
         if($this->db->execute()){

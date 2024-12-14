@@ -25,7 +25,8 @@
                     <h2>Add New Fertilizer</h2>
                     <button class="close-btn">&times;</button>
                 </div>
-                <form action="<?php echo URLROOT; ?>/inventory/createfertilizer" method="POST">
+                <form action="<?php echo URLROOT; ?>/inventory/createfertilizer" method="POST"
+                    enctype="multipart/form-data">
                     <!-- Basic Information Section -->
                     <section class="form-section">
                         <h3>Basic information</h3>
