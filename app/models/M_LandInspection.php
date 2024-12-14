@@ -67,23 +67,25 @@ class M_LandInspection {
             try {
                 $sql = "SELECT 
                             lr.request_id, 
+                            lr.supplier_id, 
+                            lr.land_area, 
+                            lr.location, 
                             lr.preferred_date, 
                             li.inspection_id, 
-                            li.inspection_date, 
+                            li.status,
                             li.scheduled_date, 
-                            li.scheduled_time, 
-                            li.status 
+                            li.scheduled_time 
                         FROM land_inspection_requests lr
                         LEFT JOIN land_inspections li ON lr.request_id = li.request_id
                         WHERE lr.supplier_id = :supplier_id
                         ORDER BY lr.preferred_date DESC";
-    
+        
                 $stmt = $this->db->prepare($sql);
                 $stmt->bindValue(':supplier_id', $supplier_id, PDO::PARAM_INT);
                 $stmt->execute();
-    
+        
                 return $stmt->fetchAll(PDO::FETCH_OBJ);
-    
+        
             } catch (PDOException $e) {
                 $this->error = $e->getMessage();
                 return [];

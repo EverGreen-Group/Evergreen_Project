@@ -15,6 +15,7 @@ require_once '../app/models/M_CollectionSupplierRecord.php';
 require_once '../app/models/M_SupplierApplication.php';
 require_once '../app/models/M_Supplier.php';
 require_once '../app/models/M_Complaint.php';
+require_once '../app/models/M_LandInspection.php';
 
 class SupplierManager extends Controller {
     private $vehicleManagerModel;
@@ -32,6 +33,7 @@ class SupplierManager extends Controller {
     private $supplierApplicationModel;
     private $supplierModel;
     private $complaintModel;
+    private $landInspectionModel;
 
     public function __construct() {
         // Check if user is logged in
@@ -54,6 +56,7 @@ class SupplierManager extends Controller {
         $this->supplierApplicationModel = $this->model('M_SupplierApplication');
         $this->supplierModel = new M_Supplier();
         $this->complaintModel = $this->model('M_Complaint');
+        $this->landInspectionModel = new M_LandInspection();
     }
 
     public function index() {
@@ -82,15 +85,22 @@ class SupplierManager extends Controller {
     }
 
     public function applications() {
+
+        // Temporary supplier ID (replace with session after login implementation)
+        $supplier_id = 2;
+
         // Get all applications
         $applications = $this->model('M_SupplierApplication')->getAllApplications();
         
         // Get approved applications pending role assignment
         $approvedPendingRole = $this->model('M_SupplierApplication')->getApprovedPendingRoleApplications();
 
+        $inspections = $this->landInspectionModel->getPreviousInspectionRequests($supplier_id);
+
         $data = [
             'applications' => $applications,
-            'approved_pending_role' => $approvedPendingRole
+            'approved_pending_role' => $approvedPendingRole,
+            'previous_inspections' => $inspections
         ];
 
         // Load view
