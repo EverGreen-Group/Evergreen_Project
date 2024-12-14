@@ -22,7 +22,6 @@ li {
 
   --light: #f9f9f9;
   --main: #007664;
-  --light-main: #ebf2f1;
   --grey: #e3ebe9;
   --dark-grey: #aaaaaa;
   --dark: #342e37;
@@ -45,7 +44,6 @@ body.dark {
   --dark: #fbfbfb;
   --light-grey: #7d7d7d;
   --light-black: #2e315a;
-  --light-main: #cecece;
 }
 
 body {
@@ -453,7 +451,7 @@ body {
   text-align: center;
   vertical-align: middle;
   border-bottom: 1px solid var(--dark-grey);
-  background-color: var(--light-main);
+  background-color: whitesmoke;
   height: 80px;
 }
 #content main .table-data .order table tr td:first-child {

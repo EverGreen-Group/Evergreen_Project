@@ -509,17 +509,18 @@ class Supplier extends Controller {
 
     public function requestInspection() {
         // Check if the supplier is logged in
-        if (!isset($_SESSION['user_id'])) {
+        /*if (!isset($_SESSION['user_id'])) {
             flash('message', 'Please log in to submit an inspection request', 'alert alert-danger');
             redirect('login');
             return;
-        }
+        }*/
     
         // Check if it's a POST request
         if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             // Validate and sanitize input
             $data = [
-                'supplier_id' => $_SESSION['user_id'], // Using session user_id
+                //'supplier_id' => $_SESSION['user_id'], // Using session user_id
+                'supplier_id' => 2,
                 'land_area' => filter_input(INPUT_POST, 'land_area', FILTER_VALIDATE_FLOAT),
                 'location' => trim(filter_input(INPUT_POST, 'location', FILTER_SANITIZE_STRING)),
                 'preferred_date' => trim(filter_input(INPUT_POST, 'preferred_date', FILTER_SANITIZE_STRING)),

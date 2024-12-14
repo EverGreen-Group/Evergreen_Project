@@ -18,30 +18,34 @@
     </div>
 
 
-    <div class="stats-container">
-
-        <div class="stat-item">
-            <div class="stat-header">
-                <i class='bx bxs-calendar-check'></i>
-                <span>Collections</span>
-            </div>
-            <div class="stat-value">
-                <?php echo isset($data['total_collections']) ? $data['total_collections'] : '3'; ?>
-                <small>this month</small>
+    <div class="stats-wrapper">
+        <div class="stats-container">
+            <div class="stat-item">
+                <div class="stat-header">
+                    <i class='bx bxs-calendar-check'></i>
+                    <span>Collections</span>
+                </div>
+                <div class="stat-value">
+                    <?php echo isset($data['total_collections']) ? $data['total_collections'] : '3'; ?>
+                    <small>this month</small>
+                </div>
             </div>
         </div>
-        <div class="stat-divider"></div>
-        <div class="stat-item">
-            <div class="stat-header">
-                <i class='bx bx-leaf'></i>
-                <span>Tea Leaves</span>
-            </div>
-            <div class="stat-value">
-                <?php echo isset($data['total_quantity']) ? $data['total_quantity'] : '120'; ?>
-                <small>kg this month</small>
+
+        <div class="stats-container">
+            <div class="stat-item">
+                <div class="stat-header">
+                    <i class='bx bx-leaf'></i>
+                    <span>Tea Leaves</span>
+                </div>
+                <div class="stat-value">
+                    <?php echo isset($data['total_quantity']) ? $data['total_quantity'] : '120'; ?>
+                    <small>kg this month</small>
+                </div>
             </div>
         </div>
     </div>
+
 
     <div class="table-data order head">
 
@@ -178,7 +182,7 @@
                 <h4>Previous Land Inspection Requests</h4>
             </div>
             <table>
-                <thead>
+                <thead class="inspection-details">
                     <tr>
                         <th>Request ID</th>
                         <th>Preferred Date</th>
@@ -187,7 +191,7 @@
                         <th>Status</th>
                     </tr>
                 </thead>
-                <tbody>
+                <tbody class="inspection-details">
                     <?php if (!empty($data['previous_inspections'])): ?>
                         <?php foreach ($data['previous_inspections'] as $inspection): ?>
                             <tr>
@@ -223,7 +227,9 @@
 
 </main>
 <style>
-    /* Request Form Styles */
+    .inspection-details {
+        font-size: small;
+    }
     .request-form {
         background: white;
         border-radius: 10px;
@@ -386,36 +392,36 @@
 </div>
 
 <script>
-// Add this to your existing JavaScript file
-function initializeModal() {
-    const modal = document.getElementById('scheduleDetailsModal');
-    const viewDetailsBtn = document.querySelector('.view-details-btn');
-    const closeModalBtn = document.querySelector('.close-modal');
+    // Add this to your existing JavaScript file
+    function initializeModal() {
+        const modal = document.getElementById('scheduleDetailsModal');
+        const viewDetailsBtn = document.querySelector('.view-details-btn');
+        const closeModalBtn = document.querySelector('.close-modal');
 
-    viewDetailsBtn.addEventListener('click', () => {
-        modal.classList.add('active');
-        document.body.style.overflow = 'hidden'; // Prevent background scrolling
-    });
+        viewDetailsBtn.addEventListener('click', () => {
+            modal.classList.add('active');
+            document.body.style.overflow = 'hidden'; // Prevent background scrolling
+        });
 
-    closeModalBtn.addEventListener('click', () => {
-        modal.classList.remove('active');
-        document.body.style.overflow = ''; // Restore scrolling
-    });
-
-    // Close modal when clicking outside
-    modal.addEventListener('click', (e) => {
-        if (e.target === modal) {
+        closeModalBtn.addEventListener('click', () => {
             modal.classList.remove('active');
-            document.body.style.overflow = '';
-        }
-    });
-}
+            document.body.style.overflow = ''; // Restore scrolling
+        });
 
-// Add this to your DOMContentLoaded event
-document.addEventListener('DOMContentLoaded', function() {
-    initializeScheduleCards();
-    initializeModal();
-});
+        // Close modal when clicking outside
+        modal.addEventListener('click', (e) => {
+            if (e.target === modal) {
+                modal.classList.remove('active');
+                document.body.style.overflow = '';
+            }
+        });
+    }
+
+    // Add this to your DOMContentLoaded event
+    document.addEventListener('DOMContentLoaded', function() {
+        initializeScheduleCards();
+        initializeModal();
+    });
 </script>
 
 <style>
@@ -448,29 +454,55 @@ document.addEventListener('DOMContentLoaded', function() {
         box-shadow: 0 2px 5px rgba(0, 128, 0, 0.1);
     }
 
-    /* Add this CSS to your stylesheet */
     .stats-container {
-        display: flex; /* Use flexbox for layout */
-        flex-wrap: wrap; /* Allow items to wrap to the next line */
-        justify-content: space-between; /* Space items evenly */
-        margin: 0 auto; /* Center the container */
-        padding: 10px; /* Add some padding */
+        display: flex;
+        justify-content: space-between;
+        align-items: center; /* Align items vertically */
+        background-color: #f8f9fa; 
+        border: 1px solid #ddd; 
+        padding: 20px; 
+        margin: 10px; 
+        border-radius: 20px; 
+        width: 45%; 
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); 
+    }
+
+    .stats-container:nth-child(odd) {
+        margin-right: 5%; /* Space between odd and even elements */
     }
 
     .stat-item {
-        flex: 1 1 45%; /* Allow items to grow and shrink, with a base width of 45% */
-        box-sizing: border-box; /* Include padding and border in the element's total width and height */
-        margin: 10px; /* Add margin for spacing */
-        min-width: 200px; /* Set a minimum width for smaller screens */
+        text-align: center; 
     }
 
     .stat-header {
-        display: flex; /* Use flexbox for header layout */
-        align-items: center; /* Center items vertically */
+        display: flex;
+        align-items: center;
+        gap: 10px; /* Space between icon and text */
+        font-size: 1.2em; /* Slightly larger font */
+        color: #333; /* Darker font color */
     }
 
     .stat-value {
-        font-size: 1.5em; /* Adjust font size for better visibility */
+        margin-top: 10px;
+        font-size: 1.5em; /* Increase size of the value */
+        color: #555; /* Softer font color */
+    }
+
+    .stat-value small {
+        display: block;
+        font-size: 0.5em;
+        color: #777;
+    }
+
+    .stat-divider {
+        display: none; /* Hides the divider */
+    }
+
+    .stats-wrapper {
+        display: flex;
+        flex-wrap: wrap; /* Ensure wrapping on smaller screens */
+        gap: 10px; /* Gap between rows or boxes */
     }
 
     /* Media query for smaller screens */
