@@ -135,6 +135,10 @@
                 if (notifications.length > 0) {
                     notifications.forEach(notification => {
                         const listItem = document.createElement('li');
+                        const data = JSON.parse(notification.data); // Parse the JSON data
+                        const scheduleId = data.schedule_id; // Extract the schedule ID
+                        const link = data.link; // Extract the link
+
                         listItem.innerHTML = `
                             <div class="notification-item" data-id="${notification.id}">
                                 <div class="notification-content">
@@ -144,7 +148,8 @@
                                     </p>
                                 </div>
                                 <div class="notification-meta">
-                                    <a href="#" class="notification-action" onclick="markAsRead(${notification.id})">Mark as read</a>
+                                    <a href="${link ? link : '#'}" class="notification-action" onclick="handleNotificationClick(event, '${notification.id}', '${link}')">View</a>
+                                    <a href="#" class="notification-action" onclick="markAsRead(event, ${notification.id})">Mark as read</a>
                                 </div>
                             </div>
                         `;
@@ -160,7 +165,8 @@
             });
     });
 
-    function markAsRead(notificationId) {
+    function markAsRead(event, notificationId) {
+        event.preventDefault(); // Prevent the default link behavior
         fetch(`/Evergreen_Project/notifications/markAsRead/${notificationId}`, {
             method: 'POST'
         })
@@ -168,7 +174,6 @@
             if (response.ok) {
                 console.log('Notification marked as read');
                 // Optionally, remove the notification from the UI or update its status
-                // Find the notification item in the list and remove it
                 const notificationItem = document.querySelector(`.notification-item[data-id="${notificationId}"]`);
                 if (notificationItem) {
                     notificationItem.remove(); 
@@ -189,6 +194,18 @@
             .catch(error => {
                 console.error('Error fetching unread notification count:', error);
             });
+    }
+
+    function handleNotificationClick(event, notificationId, link) {
+        // Prevent the default action if there's no link
+        if (!link) {
+            event.preventDefault(); // Prevent the default link behavior
+            return; // Exit the function
+        }
+        // Optionally, you can mark the notification as read here if you want
+        markAsRead(notificationId);
+        // Redirect to the link
+        window.location.href = link;
     }
 </script>
 

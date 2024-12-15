@@ -119,39 +119,42 @@ class M_CollectionSchedule {
         return $this->db->resultSet();
     }
 
-    public function getScheduleDetails($scheduleId) {
-        $this->db->query("
-            SELECT 
-                cs.schedule_id,
-                cs.week_number,
-                cs.days_of_week,
-                r.route_name,
-                r.start_location_lat,
-                r.start_location_long,
-                r.end_location_lat,
-                r.end_location_long,
-                t.team_name,
-                v.vehicle_type,
-                v.license_plate as vehicle_number,
-                cs_shift.shift_name,
-                cs_shift.start_time,
-                cs_shift.end_time,
-                GROUP_CONCAT(DISTINCT csr.status) as collection_statuses
-            FROM collection_schedules cs
-            JOIN routes r ON cs.route_id = r.route_id
-            JOIN teams t ON cs.team_id = t.team_id
-            JOIN vehicles v ON cs.vehicle_id = v.vehicle_id
-            JOIN collection_shifts cs_shift ON cs.shift_id = cs_shift.shift_id
-            LEFT JOIN collection_supplier_records csr ON cs.schedule_id = csr.collection_id
-            WHERE cs.schedule_id = :schedule_id
-            AND cs.is_active = 1
-            AND cs.is_deleted = 0
-            GROUP BY cs.schedule_id
-        ");
+public function getScheduleDetails($scheduleId) {
+    $this->db->query("
+        SELECT 
+            cs.*,
+            r.route_name,
+            r.start_location_lat,
+            r.start_location_long,
+            r.end_location_lat,
+            r.end_location_long,
+            r.vehicle_id,
+            t.team_name,
+            v.*,
+            cs_shift.shift_name,
+            cs_shift.start_time,
+            cs_shift.end_time,
+            GROUP_CONCAT(DISTINCT CONCAT(u_d.first_name, ' ', u_d.last_name) SEPARATOR ', ') AS driver_names,
+            GROUP_CONCAT(DISTINCT CONCAT(u_p.first_name, ' ', u_p.last_name) SEPARATOR ', ') AS partner_names
+        FROM collection_schedules cs
+        JOIN routes r ON cs.route_id = r.route_id
+        JOIN teams t ON cs.team_id = t.team_id
+        JOIN collection_shifts cs_shift ON cs.shift_id = cs_shift.shift_id
+        LEFT JOIN vehicles v ON r.vehicle_id = v.vehicle_id
+        LEFT JOIN drivers d ON t.driver_id = d.driver_id
+        LEFT JOIN driving_partners p ON t.partner_id = p.partner_id
+        LEFT JOIN users u_d ON d.user_id = u_d.user_id
+        LEFT JOIN users u_p ON p.user_id = u_p.user_id
+        LEFT JOIN collection_supplier_records csr ON cs.schedule_id = csr.collection_id
+        WHERE cs.schedule_id = :schedule_id
+        AND cs.is_active = 1
+        AND cs.is_deleted = 0
+        GROUP BY cs.schedule_id
+    ");
 
-        $this->db->bind(':schedule_id', $scheduleId);
-        return $this->db->single();
-    }
+    $this->db->bind(':schedule_id', $scheduleId);
+    return $this->db->single();
+}
 
     public function getScheduleById($scheduleId) {
         $this->db->query("

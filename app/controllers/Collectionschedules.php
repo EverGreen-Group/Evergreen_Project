@@ -6,6 +6,17 @@ class Collectionschedules extends Controller {
         $this->collectionScheduleModel = $this->model('M_CollectionSchedule');
     }
 
+
+    public function viewSchedule($scheduleId) {
+        // Fetch the specific collection schedule details by its ID
+        $schedule = $this->collectionScheduleModel->getScheduleDetails($scheduleId);
+        
+
+        // Pass the schedule data to the view
+        $this->view('vehicle_manager/v_collection_schedule', [
+            'schedule' => $schedule
+        ]);
+    }    
     public function create() {
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
             redirect('vehiclemanager/dashboard');
