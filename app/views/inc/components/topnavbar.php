@@ -22,44 +22,8 @@
     </nav>
 
     <div id="notificationDropdown" class="notification-dropdown" style="display: none;">
-        <ul>
-            <li>
-                <div class="notification-item">
-                    <div class="notification-content">
-                        <h4 class="notification-title">TKT2207531</h4>
-                        <p class="notification-description">Lorem ipsum dolor Lorem ipsum dolor Lorem ipsum dolor</p>
-                    </div>
-                    <div class="notification-meta">
-                        <span class="notification-time">5 minutes ago</span>
-                        <a href="#" class="notification-action">Mark as read</a>
-                    </div>
-                </div>
-            </li>
-            <li>
-                <div class="notification-item">
-                    <div class="notification-content">
-                        <h4 class="notification-title">TKT2207532</h4>
-                        <p class="notification-description">Lorem ipsum dolor Lorem ipsum dolor Lorem ipsum dolor</p>
-                    </div>
-                    <div class="notification-meta">
-                        <span class="notification-time">20 minutes ago</span>
-                        <a href="#" class="notification-action">Mark as read</a>
-                    </div>
-                </div>
-            </li>
-            <li>
-                <div class="notification-item">
-                    <div class="notification-content">
-                        <h4 class="notification-title">TKT2207533</h4>
-                        <p class="notification-description">Lorem ipsum dolor Lorem ipsum dolor Lorem ipsum dolor</p>
-                    </div>
-                    <div class="notification-meta">
-                        <span class="notification-time">1 hour ago</span>
-                        <a href="#" class="notification-action">Mark as read</a>
-                    </div>
-                </div>
-            </li>
-            <!-- Add more notification items here -->
+        <ul id="notificationList">
+            <li>Loading notifications...</li>
         </ul>
     </div>
 
@@ -146,6 +110,86 @@
             }
         });
     });
+
+    document.addEventListener('DOMContentLoaded', function() {
+        const userId = <?php echo json_encode($_SESSION['user_id']); ?>;
+
+        // Fetch unread notifications count
+        fetch(`/Evergreen_Project/notifications/getUnreadNotificationCount`)
+            .then(response => response.json())
+            .then(data => {
+                const notificationCount = data.count;
+                document.querySelector('.num').textContent = notificationCount; 
+            })
+            .catch(error => {
+                console.error('Error fetching unread notification count:', error);
+            });
+
+        // forr dropdown
+        fetch(`/Evergreen_Project/notifications/getUnreadUserNotifications/${userId}`)
+            .then(response => response.json())
+            .then(notifications => {
+                const notificationList = document.getElementById('notificationList');
+                notificationList.innerHTML = ''; 
+
+                if (notifications.length > 0) {
+                    notifications.forEach(notification => {
+                        const listItem = document.createElement('li');
+                        listItem.innerHTML = `
+                            <div class="notification-item" data-id="${notification.id}">
+                                <div class="notification-content">
+                                    <h4 class="notification-title" style="color: green; font-weight: bold;">${notification.type}</h4>
+                                    <p class="notification-description">
+                                        ${notification.message} 
+                                    </p>
+                                </div>
+                                <div class="notification-meta">
+                                    <a href="#" class="notification-action" onclick="markAsRead(${notification.id})">Mark as read</a>
+                                </div>
+                            </div>
+                        `;
+                        notificationList.appendChild(listItem);
+                    });
+                } else {
+                    notificationList.innerHTML = '<li>No notifications available.</li>';
+                }
+            })
+            .catch(error => {
+                console.error('Error fetching notifications:', error);
+                document.getElementById('notificationList').innerHTML = '<li>Error loading notifications.</li>';
+            });
+    });
+
+    function markAsRead(notificationId) {
+        fetch(`/Evergreen_Project/notifications/markAsRead/${notificationId}`, {
+            method: 'POST'
+        })
+        .then(response => {
+            if (response.ok) {
+                console.log('Notification marked as read');
+                // Optionally, remove the notification from the UI or update its status
+                // Find the notification item in the list and remove it
+                const notificationItem = document.querySelector(`.notification-item[data-id="${notificationId}"]`);
+                if (notificationItem) {
+                    notificationItem.remove(); 
+                }
+                updateUnreadCount();
+            }
+        });
+    }
+
+    function updateUnreadCount() {
+        const userId = <?php echo json_encode($_SESSION['user_id']); ?>; // Get user ID from PHP
+        fetch(`/Evergreen_Project/notifications/getUnreadNotificationCount`)
+            .then(response => response.json())
+            .then(data => {
+                const notificationCount = data.count;
+                document.querySelector('.num').textContent = notificationCount; // Update the notification count
+            })
+            .catch(error => {
+                console.error('Error fetching unread notification count:', error);
+            });
+    }
 </script>
 
 <style>
@@ -155,13 +199,13 @@
         position: absolute;
         right: 10px;
         background-color: white;
-        border: 1px solid #ccc;
+        /* border: 1px solid #ccc; */
         box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
         z-index: 1000;
         width: 450px;
         padding: 10px 0;
         border-radius: 12px;
-        font-family: 'Lato', sans-serif; /* Changed from Poppins to Lato */
+        font-family: 'Lato', sans-serif;
     }
 
     .notification-dropdown ul {
@@ -173,14 +217,14 @@
     .notification-dropdown li {
         padding: 10px 15px;
         cursor: pointer;
-        font-size: 15px; /* Adjusted to match profile dropdown */
+        font-size: 15px;
         color: #333;
         transition: all 0.2s ease;
     }
 
     .notification-dropdown li:hover {
-        background-color: rgba(0, 123, 0, 0.05); /* Changed hover background to green */
-        color: #007b00; /* Changed hover text color to green */
+        background-color: rgba(0, 123, 0, 0.05);
+        color: #007b00;
     }
 
     .notification-item {
@@ -194,9 +238,9 @@
 
     .notification-title {
         margin: 0;
-        font-weight: 500;
-        font-size: 15px; /* Matching profile dropdown style */
-        color: #333;
+        font-weight: 1000;
+        font-size: 15px;
+        color: var(--main);
     }
 
     .notification-description {
@@ -219,7 +263,7 @@
 
     .notification-action {
         text-decoration: none;
-        color: #007b00; /* Changed action link color to green */
+        color: #007b00;
         font-weight: 500;
         font-size: 13px;
     }
@@ -228,7 +272,7 @@
         position: absolute;
         right: 10px;
         background-color: white;
-        border: 1px solid #ccc;
+        /* border: 1px solid #ccc; */
         box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
         z-index: 1000;
         width: 200px;
@@ -258,10 +302,10 @@
     }
 
     .profile-dropdown li:hover {
-        background-color: rgba(0, 123, 0, 0.05); /* Changed hover background to green */
+        background-color: rgba(0, 123, 0, 0.05);
     }
 
     .profile-dropdown li:hover a {
-        color: #007b00; /* Changed hover text color to green */
+        color: #007b00;
     }
 </style>
