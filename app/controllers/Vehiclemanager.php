@@ -67,7 +67,7 @@ class VehicleManager extends Controller {
 
         // Fetch all necessary data for the dropdowns
         $routes = $this->routeModel->getAllRoutes();
-        $teams = $this->teamModel->getAllTeams();
+        $drivers = $this->driverModel->getUnassignedDrivers();
         $vehicles = $this->vehicleModel->getAllVehicles();
         $shifts = $this->shiftModel->getAllShifts();
         $schedules = $this->scheduleModel->getAllSchedules();
@@ -77,7 +77,7 @@ class VehicleManager extends Controller {
         $this->view('vehicle_manager/v_collection', [
             'stats' => $stats,
             'routes' => $routes,
-            'teams' => $teams,
+            'drivers' => $drivers,
             'vehicles' => $vehicles,
             'shifts' => $shifts,
             'schedules' => $schedules,

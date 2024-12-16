@@ -25,7 +25,7 @@ class Collectionschedules extends Controller {
         // Get and sanitize POST data
         $data = [
             'route_id' => trim($_POST['route_id']),
-            'team_id' => trim($_POST['team_id']),
+            'driver_id' => trim($_POST['driver_id']),
             // Removed vehicle_id since it's no longer used
             'shift_id' => trim($_POST['shift_id']),
             'week_number' => trim($_POST['week_number']),
@@ -38,10 +38,6 @@ class Collectionschedules extends Controller {
         // Validation rules
         $errors = [];
 
-        // Check if team is already assigned for the maximum allowed days
-        if ($this->collectionScheduleModel->getTeamAssignmentCount($data['team_id']) >= 6) {
-            $errors[] = "Teams cannot be assigned to more than 6 days per week";
-        }
 
         // Validate day selection
         if (empty($data['day'])) {
@@ -103,7 +99,7 @@ class Collectionschedules extends Controller {
             $data = [
                 'schedule_id' => $_POST['schedule_id'],
                 'route_id' => $_POST['route_id'],
-                'team_id' => $_POST['team_id'],
+                'driver_id' => $_POST['driver_id'],
                 // Removed vehicle_id since it's no longer used
                 'shift_id' => $_POST['shift_id'],
                 'week_number' => $_POST['week_number'],

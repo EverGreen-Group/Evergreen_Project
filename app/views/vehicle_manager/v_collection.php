@@ -38,7 +38,6 @@
             background: var(--light);
             padding: 1rem;
             border-radius: 10px;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
             margin-bottom: 1.5rem;
         }
 
@@ -96,14 +95,6 @@
                 <h3><?php echo $stats['drivers']->total_drivers; ?></h3>
                 <p>Drivers</p>
                 <small><?php echo $stats['drivers']->available_drivers; ?> Available</small>
-            </span>
-        </li>
-        <li>
-            <i class='bx bxs-group'></i>
-            <span class="text">
-                <h3><?php echo $stats['partners']->total_partners; ?></h3>
-                <p>Driving Partners</p>
-                <small><?php echo $stats['partners']->available_partners; ?> Available</small>
             </span>
         </li>
     </ul>
@@ -191,7 +182,7 @@
                     <tr>
                         <th>Schedule ID</th>
                         <th>Route</th>
-                        <th>Team</th>
+                        <th>Driver</th>
                         <th>Vehicle</th>
                         <th>Shift</th>
                         <th>Week</th>
@@ -207,11 +198,11 @@
                             <tr>
                                 <td>CS<?php echo str_pad($schedule->schedule_id, 3, '0', STR_PAD_LEFT); ?></td>
                                 <td><?php echo $schedule->route_name; ?></td>
-                                <td><?php echo $schedule->team_name; ?></td>
+                                <td><?php echo $schedule->driver_name; ?></td>
                                 <td><?php echo $schedule->license_plate; ?></td>
                                 <td><?php echo $schedule->shift_name; ?> (<?php echo $schedule->start_time; ?> - <?php echo $schedule->end_time; ?>)</td>
                                 <td>Week <?php echo $schedule->week_number; ?></td>
-                                <td><?php echo $schedule->day; ?></td> <!-- Updated to use the single day value -->
+                                <td><?php echo $schedule->day; ?></td>
                                 <td><?php echo date('Y-m-d H:i', strtotime($schedule->created_at)); ?></td>
                                 <td>
                                     <form action="<?php echo URLROOT; ?>/collectionschedules/toggleActive" method="POST" style="display: inline;">
@@ -275,10 +266,10 @@
                 </div>
 
                 <div class="form-group">
-                    <label for="team">Team:</label>
-                    <select id="team" name="team_id" required>
-                        <?php foreach ($data['teams'] as $team): ?>
-                            <option value="<?= $team->team_id; ?>"><?= $team->team_name; ?></option>
+                    <label for="driver">Driver:</label>
+                    <select id="driver" name="driver_id" required>
+                        <?php foreach ($data['drivers'] as $driver): ?>
+                            <option value="<?= $driver->driver_id; ?>"><?= $driver->first_name; ?></option>
                         <?php endforeach; ?>
                     </select>
                 </div>
@@ -361,10 +352,10 @@
                 </div>
 
                 <div class="form-group">
-                    <label for="edit_team">Team:</label>
-                    <select id="edit_team" name="team_id" required>
-                        <?php foreach ($data['teams'] as $team): ?>
-                            <option value="<?= $team->team_id; ?>"><?= $team->team_name; ?></option>
+                    <label for="edit_driver">Driver:</label>
+                    <select id="edit_driver" name="driver_id" required>
+                        <?php foreach ($data['drivers'] as $driver): ?>
+                            <option value="<?= $driver->driver_id; ?>"><?= htmlspecialchars($driver->first_name); ?></option>
                         <?php endforeach; ?>
                     </select>
                 </div>
@@ -394,29 +385,38 @@
 </div>
 
 <script>
-   function loadScheduleData(scheduleId) {
-       fetch(`<?php echo URLROOT; ?>/collectionschedules/getSchedule/${scheduleId}`)
-           .then(response => response.json())
-           .then(data => {
-               if (data) {
-                   console.log(data); // Log the fetched data
-                   const routeElement = document.getElementById('edit_route');
-                   const teamElement = document.getElementById('edit_team');
-                   const shiftElement = document.getElementById('edit_shift');
-                   const weekNumberElement = document.getElementById('edit_week_number');
-                   const dayElement = document.getElementById('edit_day');
+function loadScheduleData(scheduleId) {
+    fetch(`<?php echo URLROOT; ?>/collectionschedules/getSchedule/${scheduleId}`)
+        .then(response => response.json())
+        .then(data => {
+            if (data) {
+                console.log(data); // Log the fetched data
 
-                   console.log(routeElement, teamElement, shiftElement, weekNumberElement, dayElement); // Log the elements
+                // Select the driver dropdown
+                const driverElement = document.getElementById('edit_driver');
+                
+                if (driverElement) {
+                    // Check if the driver option exists, if not, create it
+                    let driverOption = driverElement.querySelector(`option[value="${data.driver_id}"]`);
+                    
+                    if (!driverOption) {
+                        driverOption = document.createElement('option');
+                        driverOption.value = data.driver_id;
+                        driverOption.text = data.driver_name;
+                        driverElement.appendChild(driverOption);
+                    }
+                    
+                    driverElement.value = data.driver_id;
+                }
 
-                   if (routeElement) routeElement.value = data.route_id;
-                   if (teamElement) teamElement.value = data.team_id;
-                   if (shiftElement) shiftElement.value = data.shift_id;
-                   if (weekNumberElement) weekNumberElement.value = data.week_number;
-                   if (dayElement) dayElement.textContent = data.day; // Set the day as text
-               }
-           })
-           .catch(error => console.error('Error loading schedule data:', error));
-   }
+                // Set other form fields
+                document.getElementById('edit_route').value = data.route_id;
+                document.getElementById('edit_shift').value = data.shift_id;
+                document.getElementById('edit_week_number').value = data.week_number;
+            }
+        })
+        .catch(error => console.error('Error loading schedule data:', error));
+}
 </script>
 
 
