@@ -399,32 +399,6 @@ class VehicleManager extends Controller {
         }
     }
 
-    public function staff() {
-        // Get manager_id and add debug logging
-        $manager_id = $this->staffModel->getManagerIdByUserId($_SESSION['user_id']);
-        error_log("Controller got manager_id: " . $manager_id);
-        
-        $data = [
-            'drivers' => $this->staffModel->getAllDrivers(),
-            'partners' => $this->staffModel->getAllPartners(),
-            'managers' => $this->staffModel->getAllManagers(),
-            'totalDrivers' => $this->staffModel->getTotalDrivers(),
-            'totalPartners' => $this->staffModel->getTotalPartners(),
-            'totalUnavailableDriver' => $this->staffModel->getTotalUnavailableDriver(),
-            'totalUnavailablePartner' => $this->staffModel->getTotalUnavailablePartner(),
-            'currentLeaves' => $this->staffModel->getUpcomingLeaves(),
-            'pendingLeaves' => $this->staffModel->getPendingLeaves(),
-            'manager_id' => $manager_id,
-            'leaveTypeStats' => $this->staffModel->getLeaveTypeDistribution(),
-            'monthlyLeaveStats' => $this->staffModel->getMonthlyLeaveDistribution()
-        ];
-        
-        // Add debug logging
-        error_log("Data being sent to view: " . print_r($data, true));
-        
-        $this->view('vehicle_manager/v_staff', $data);
-    }
-
     public function settings() {
         $data = [];
         $this->view('vehicle_manager/v_settings', $data);

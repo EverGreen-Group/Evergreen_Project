@@ -34,12 +34,6 @@
         <span class="text">Shift</span>
       </a>
     </li>
-    <li class="<?php echo (basename($_SERVER['REQUEST_URI']) == 'staff') ? 'active' : ''; ?>">
-      <a href="<?php echo URLROOT; ?>/vehiclemanager/staff">
-        <i class="bx bxs-group"></i>
-        <span class="text">Staff</span>
-      </a>
-    </li>
   </ul>
   <ul class="side-menu">
     <li class="<?php echo (basename($_SERVER['REQUEST_URI']) == 'settings') ? 'active' : ''; ?>">
