@@ -117,7 +117,7 @@
                         <th>Route</th>
                         <th>Team</th>
                         <th>Status</th>
-                        <th>Progress</th>
+                        <th>Detals</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -126,14 +126,14 @@
                         <td>Route A</td>
                         <td>Team 1</td>
                         <td><span class="status pending">In Progress</span></td>
-                        <td>65%</td>
+                        <td><a href="#">VIEW</a></td>
                     </tr>
                     <tr>
                         <td>COL002</td>
                         <td>Route B</td>
                         <td>Team 2</td>
                         <td><span class="status completed">Completed</span></td>
-                        <td>100%</td>
+                        <td><a href="#">VIEW</a></td>
                     </tr>
                 </tbody>
             </table>
@@ -148,24 +148,26 @@
                 <thead>
                     <tr>
                         <th>Route ID</th>
-                        <th>Vehicle</th>
-                        <th>Driver</th>
-                        <th>Status</th>
+                        <th>Route Name</th>
+                        <th>Suppliers</th>
+                        <th>Vehicle Number</th>
                     </tr>
                 </thead>
                 <tbody>
-                    <tr>
-                        <td>RT001</td>
-                        <td>VH001</td>
-                        <td>John Doe</td>
-                        <td><span class="status completed">Active</span></td>
-                    </tr>
-                    <tr>
-                        <td>RT002</td>
-                        <td>VH003</td>
-                        <td>Jane Smith</td>
-                        <td><span class="status completed">Active</span></td>
-                    </tr>
+                    <?php if (!empty($todayRoutes)): ?>
+                        <?php foreach ($todayRoutes as $route): ?>
+                            <tr>
+                                <td><?= htmlspecialchars($route->route_id); ?></td>
+                                <td><?= htmlspecialchars($route->route_name); ?></td>
+                                <td><?= htmlspecialchars($route->number_of_suppliers); ?></td>
+                                <td><?= htmlspecialchars($route->license_plate); ?></td>
+                            </tr>
+                        <?php endforeach; ?>
+                    <?php else: ?>
+                        <tr>
+                            <td colspan="4" class="text-center">No routes available for today.</td>
+                        </tr>
+                    <?php endif; ?>
                 </tbody>
             </table>
         </div>

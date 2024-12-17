@@ -72,6 +72,7 @@ class VehicleManager extends Controller {
         $shifts = $this->shiftModel->getAllShifts();
         $schedules = $this->scheduleModel->getAllSchedules();
         $ongoingCollections = $this->collectionModel->getOngoingCollections();
+        $todayRoutes = $this->routeModel->getTodayAssignedRoutes();
 
         // Pass the stats and data for the dropdowns to the view
         $this->view('vehicle_manager/v_collection', [
@@ -81,7 +82,8 @@ class VehicleManager extends Controller {
             'vehicles' => $vehicles,
             'shifts' => $shifts,
             'schedules' => $schedules,
-            'ongoing_collections' => $ongoingCollections
+            'ongoing_collections' => $ongoingCollections,
+            'todayRoutes' => $todayRoutes 
         ]);
     }
 
@@ -141,7 +143,7 @@ class VehicleManager extends Controller {
         $this->view('vehicle_manager/v_vehicle', $data);
     }
 
-    public function team() {
+    public function driver() {
         $teamStats = $this->teamModel->getTeamStatistics();
         $teams = $this->teamModel->getTeamsWithMembers();
         $unassignedDrivers = $this->teamModel->getUnassignedDrivers(); // Fetch unassigned drivers

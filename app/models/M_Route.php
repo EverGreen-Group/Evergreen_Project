@@ -250,5 +250,22 @@ class M_Route {
         $this->db->bind(':day', $day);
         return $this->db->resultset();
     }
+
+    public function getTodayAssignedRoutes() {
+        $currentDay = date('l'); // Get the current day (e.g., 'Tuesday')
+    
+        $this->db->query("
+            SELECT r.*, v.license_plate 
+            FROM routes r
+            JOIN collection_schedules cs ON r.route_id = cs.route_id 
+            JOIN vehicles v ON r.vehicle_id = v.vehicle_id 
+            WHERE cs.day = :day 
+            AND cs.is_active = 1 
+            AND r.is_deleted = 0
+        ");
+        
+        $this->db->bind(':day', $currentDay);
+        return $this->db->resultSet(); // Use resultSet() to fetch the results
+    }
 }
 ?>
