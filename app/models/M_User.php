@@ -81,5 +81,25 @@ class M_User {
             'created_at' => $result->created_at
         ];
     }
+
+    public function getAllUnassignedUsers() {
+        $this->db->query("SELECT * FROM users WHERE user_id NOT IN (SELECT user_id FROM drivers) AND role_id = :role_id");
+        $this->db->bind(':role_id', 7);
+        return $this->db->resultSet();
+    }
+
+    public function updateUserRole($user_id, $role_id) {
+        $this->db->query("UPDATE users SET role_id = :role_id WHERE user_id = :user_id");
+        $this->db->bind(':role_id', $role_id);
+        $this->db->bind(':user_id', $user_id);
+        
+        return $this->db->execute();
+    }
+
+    public function getAllUserDrivers() {
+        $this->db->query("SELECT * FROM users WHERE user_id IN (SELECT user_id FROM drivers) AND role_id = :role_id");
+        $this->db->bind(':role_id', 6);
+        return $this->db->resultSet();
+    }
 }
 ?>

@@ -101,9 +101,11 @@ class M_Team {
         $this->db->query('
             SELECT 
                 d.*,
+                e.contact_number,
                 CONCAT(u.first_name, " ", u.last_name) AS driver_name
             FROM drivers d
             JOIN users u ON d.user_id = u.user_id
+            JOIN employees e ON d.employee_id = e.employee_id
             LEFT JOIN collection_schedules cs ON d.driver_id = cs.driver_id
             WHERE cs.driver_id IS NULL  -- This ensures we only get drivers not in any collection schedule
             ORDER BY d.driver_id ASC
@@ -246,9 +248,7 @@ class M_Team {
             SELECT 
                 d.driver_id,
                 CONCAT(ud.first_name, " ", ud.last_name) AS driver_name,
-                d.license_no,
-                d.experience_years,
-                d.contact_number,
+                e.contact_number,
                 d.status
             FROM drivers d
             JOIN employees e ON d.employee_id = e.employee_id
