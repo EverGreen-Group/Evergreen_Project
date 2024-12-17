@@ -478,7 +478,7 @@
     }
 
     .progress-step.active .step-number {
-        background: #86E211;
+        background: #22a45d;
         color: white;
     }
 
@@ -527,7 +527,7 @@
     }
 
     .next-btn {
-        background: #86E211;
+        background: #22a45d;
         color: white;
     }
 
@@ -549,8 +549,8 @@
 
     .auth-form-group input:focus,
     .auth-form-group select:focus {
-        border-color: #86E211;
-        box-shadow: 0 0 0 2px rgba(134, 226, 17, 0.2);
+        border-color: #22a45d;
+        box-shadow: 0 0 0 2px rgba(34, 164, 93, 0.2);
     }
 
     .auth-form-group input.error,
@@ -606,7 +606,7 @@
 
     .checkbox-item:hover {
         background: #e9ecef;
-        border-color: #86E211;
+        border-color: #22a45d;
     }
 
     .checkbox-item input[type="checkbox"] {
@@ -627,7 +627,7 @@
         border-radius: 5px;
         cursor: pointer;
         font-weight: 600;
-        background: #86E211;
+        background: #22a45d;
         color: white;
     }
 
@@ -639,7 +639,7 @@
     }
 
     input[type="file"]:hover {
-        border-color: #86E211;
+        border-color: #22a45d;
     }
 
     .auth-select {

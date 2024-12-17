@@ -53,4 +53,16 @@ class M_Driver{
         return $this->db->execute();
     }
 
+    public function getUnassignedDrivers() {
+        $this->db->query("
+            SELECT drivers.*, users.first_name
+            FROM drivers
+            INNER JOIN users ON drivers.user_id = users.user_id
+            LEFT JOIN collection_schedules ON drivers.driver_id = collection_schedules.driver_id
+            WHERE drivers.is_deleted = 0 AND collection_schedules.driver_id IS NULL
+        "); 
+
+        return $this->db->resultSet(); 
+    }
+
 }

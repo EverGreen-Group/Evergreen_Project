@@ -38,7 +38,6 @@
             background: var(--light);
             padding: 1rem;
             border-radius: 10px;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
             margin-bottom: 1.5rem;
         }
 
@@ -98,14 +97,6 @@
                 <small><?php echo $stats['drivers']->available_drivers; ?> Available</small>
             </span>
         </li>
-        <li>
-            <i class='bx bxs-group'></i>
-            <span class="text">
-                <h3><?php echo $stats['partners']->total_partners; ?></h3>
-                <p>Driving Partners</p>
-                <small><?php echo $stats['partners']->available_partners; ?> Available</small>
-            </span>
-        </li>
     </ul>
 
 
@@ -126,7 +117,7 @@
                         <th>Route</th>
                         <th>Team</th>
                         <th>Status</th>
-                        <th>Progress</th>
+                        <th>Detals</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -135,14 +126,14 @@
                         <td>Route A</td>
                         <td>Team 1</td>
                         <td><span class="status pending">In Progress</span></td>
-                        <td>65%</td>
+                        <td><a href="#">VIEW</a></td>
                     </tr>
                     <tr>
                         <td>COL002</td>
                         <td>Route B</td>
                         <td>Team 2</td>
                         <td><span class="status completed">Completed</span></td>
-                        <td>100%</td>
+                        <td><a href="#">VIEW</a></td>
                     </tr>
                 </tbody>
             </table>
@@ -157,24 +148,26 @@
                 <thead>
                     <tr>
                         <th>Route ID</th>
-                        <th>Vehicle</th>
-                        <th>Driver</th>
-                        <th>Status</th>
+                        <th>Route Name</th>
+                        <th>Suppliers</th>
+                        <th>Vehicle Number</th>
                     </tr>
                 </thead>
                 <tbody>
-                    <tr>
-                        <td>RT001</td>
-                        <td>VH001</td>
-                        <td>John Doe</td>
-                        <td><span class="status completed">Active</span></td>
-                    </tr>
-                    <tr>
-                        <td>RT002</td>
-                        <td>VH003</td>
-                        <td>Jane Smith</td>
-                        <td><span class="status completed">Active</span></td>
-                    </tr>
+                    <?php if (!empty($todayRoutes)): ?>
+                        <?php foreach ($todayRoutes as $route): ?>
+                            <tr>
+                                <td><?= htmlspecialchars($route->route_id); ?></td>
+                                <td><?= htmlspecialchars($route->route_name); ?></td>
+                                <td><?= htmlspecialchars($route->number_of_suppliers); ?></td>
+                                <td><?= htmlspecialchars($route->license_plate); ?></td>
+                            </tr>
+                        <?php endforeach; ?>
+                    <?php else: ?>
+                        <tr>
+                            <td colspan="4" class="text-center">No routes available for today.</td>
+                        </tr>
+                    <?php endif; ?>
                 </tbody>
             </table>
         </div>
@@ -191,11 +184,11 @@
                     <tr>
                         <th>Schedule ID</th>
                         <th>Route</th>
-                        <th>Team</th>
+                        <th>Driver</th>
                         <th>Vehicle</th>
                         <th>Shift</th>
                         <th>Week</th>
-                        <th>Days</th>
+                        <th>Day</th>
                         <th>Created At</th>
                         <th>Status</th>
                         <th>Actions</th>
@@ -207,11 +200,11 @@
                             <tr>
                                 <td>CS<?php echo str_pad($schedule->schedule_id, 3, '0', STR_PAD_LEFT); ?></td>
                                 <td><?php echo $schedule->route_name; ?></td>
-                                <td><?php echo $schedule->team_name; ?></td>
+                                <td><?php echo $schedule->driver_name; ?></td>
                                 <td><?php echo $schedule->license_plate; ?></td>
                                 <td><?php echo $schedule->shift_name; ?> (<?php echo $schedule->start_time; ?> - <?php echo $schedule->end_time; ?>)</td>
                                 <td>Week <?php echo $schedule->week_number; ?></td>
-                                <td><?php echo ucwords(str_replace(',', ', ', $schedule->days_of_week)); ?></td>
+                                <td><?php echo $schedule->day; ?></td>
                                 <td><?php echo date('Y-m-d H:i', strtotime($schedule->created_at)); ?></td>
                                 <td>
                                     <form action="<?php echo URLROOT; ?>/collectionschedules/toggleActive" method="POST" style="display: inline;">
@@ -222,7 +215,7 @@
                                 </td>
                                 <td>
                                     <form action="<?php echo URLROOT; ?>/collectionschedules/delete" method="POST" style="display: inline;" 
-                                          onsubmit="return confirm('Are you sure you want to delete this schedule?');">
+                                        onsubmit="return confirm('Are you sure you want to delete this schedule?');">
                                         <input type="hidden" name="schedule_id" value="<?php echo $schedule->schedule_id; ?>">
                                         <button type="submit" class="delete-btn">
                                             <i class='bx bx-trash'></i>
@@ -244,184 +237,191 @@
     <?php flash('schedule_create_error'); ?>
     <?php flash('schedule_create_success'); ?>
 
-    <!-- Create New Schedule Section -->
-    <div class="table-data">
-        <div class="order">
-            <div class="head">
-                <h3>Create New Schedule</h3>
-            </div>
-            <form id="createScheduleForm" method="POST" action="<?php echo URLROOT; ?>/collectionschedules/create">
-                <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px;">
-                    <div class="form-group">
-                        <label for="route">Route:</label>
-                        <select id="route" name="route_id" required>
-                            <?php foreach ($data['routes'] as $route): ?>
-                                <option value="<?= $route->route_id; ?>">
-                                    <?= htmlspecialchars($route->route_name); ?>
-                                </option>
-                            <?php endforeach; ?>
-                        </select>
-                    </div>
-
-                    <div class="form-group">
-                        <label for="team">Team:</label>
-                        <select id="team" name="team_id" required>
-                            <?php foreach ($data['teams'] as $team): ?>
-                                <option value="<?= $team->team_id; ?>"><?= $team->team_name; ?></option>
-                            <?php endforeach; ?>
-                        </select>
-                    </div>
-
-                    <div class="form-group">
-                        <label for="vehicle">Vehicle:</label>
-                        <select id="vehicle" name="vehicle_id" required>
-                            <?php foreach ($data['vehicles'] as $vehicle): ?>
-                                <option value="<?= $vehicle->vehicle_id; ?>"><?= $vehicle->license_plate; ?></option>
-                            <?php endforeach; ?>
-                        </select>
-                    </div>
-
-                    <div class="form-group">
-                        <label for="shift">Shift:</label>
-                        <select id="shift" name="shift_id" required>
-                            <?php foreach ($data['shifts'] as $shift): ?>
-                                <option value="<?= $shift->shift_id; ?>"><?= $shift->shift_name; ?></option>
-                            <?php endforeach; ?>
-                        </select>
-                    </div>
-
-                    <div class="form-group">
-                        <label for="week_number">Week:</label>
-                        <select id="week_number" name="week_number" required>
-                            <option value="1">Week 1</option>
-                            <option value="2">Week 2</option>
-                        </select>
-                    </div>
-                </div>
-
-                <div class="form-group">
-                    <label>Collection Days:</label>
-                    <div style="display: grid; grid-template-columns: repeat(7, 1fr); gap: 10px;">
-                        <label><input type="checkbox" name="days_of_week[]" value="mon"> Mon</label>
-                        <label><input type="checkbox" name="days_of_week[]" value="tue"> Tue</label>
-                        <label><input type="checkbox" name="days_of_week[]" value="wed"> Wed</label>
-                        <label><input type="checkbox" name="days_of_week[]" value="thu"> Thu</label>
-                        <label><input type="checkbox" name="days_of_week[]" value="fri"> Fri</label>
-                        <label><input type="checkbox" name="days_of_week[]" value="sat"> Sat</label>
-                        <label><input type="checkbox" name="days_of_week[]" value="sun"> Sun</label>
-                    </div>
-                </div>
-
-                <button type="submit" class="btn-submit">Create Schedule</button>
-            </form>
+<!-- Create New Schedule Section -->
+<div class="table-data">
+    <div class="order">
+        <div class="head">
+            <h3>Create New Schedule</h3>
         </div>
-    </div>
+        <form id="createScheduleForm" method="POST" action="<?php echo URLROOT; ?>/collectionschedules/create">
+            <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px;">
 
-    <!-- Edit Schedule Section -->
-    <div class="table-data">
-        <div class="order">
-            <div class="head">
-                <h3>Edit Schedule</h3>
-            </div>
-            <form id="editScheduleForm" method="POST" action="<?php echo URLROOT; ?>/collectionschedules/update">
                 <div class="form-group">
-                    <label for="schedule_id">Select Schedule:</label>
-                    <select id="schedule_id" name="schedule_id" required onchange="loadScheduleData(this.value)">
-                        <option value="">Select a schedule</option>
-                        <?php foreach ($data['schedules'] as $schedule): ?>
-                            <option value="<?= $schedule->schedule_id; ?>">
-                                Schedule <?= str_pad($schedule->schedule_id, 3, '0', STR_PAD_LEFT); ?>
-                            </option>
+                    <label for="day">Select Day:</label>
+                    <select id="day" name="day" required>
+                        <option value="" disabled selected>Select a day</option>
+                        <option value="Monday">Monday</option>
+                        <option value="Tuesday">Tuesday</option>
+                        <option value="Wednesday">Wednesday</option>
+                        <option value="Thursday">Thursday</option>
+                        <option value="Friday">Friday</option>
+                        <option value="Saturday">Saturday</option>
+                        <option value="Sunday">Sunday</option>
+                    </select>
+                </div>
+            
+                <div class="form-group">
+                    <label for="route">Route:</label>
+                    <select id="route" name="route_id" required>
+                        <option value="" disabled selected>Select a day first</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="driver">Driver:</label>
+                    <select id="driver" name="driver_id" required>
+                        <?php foreach ($data['drivers'] as $driver): ?>
+                            <option value="<?= $driver->driver_id; ?>"><?= $driver->first_name; ?></option>
                         <?php endforeach; ?>
                     </select>
                 </div>
 
-                <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px;">
-                    <div class="form-group">
-                        <label for="edit_route">Route:</label>
-                        <select id="edit_route" name="route_id" required>
-                            <?php foreach ($data['routes'] as $route): ?>
-                                <option value="<?= $route->route_id; ?>"><?= htmlspecialchars($route->route_name); ?></option>
-                            <?php endforeach; ?>
-                        </select>
-                    </div>
-
-                    <div class="form-group">
-                        <label for="edit_team">Team:</label>
-                        <select id="edit_team" name="team_id" required>
-                            <?php foreach ($data['teams'] as $team): ?>
-                                <option value="<?= $team->team_id; ?>"><?= $team->team_name; ?></option>
-                            <?php endforeach; ?>
-                        </select>
-                    </div>
-
-                    <div class="form-group">
-                        <label for="edit_vehicle">Vehicle:</label>
-                        <select id="edit_vehicle" name="vehicle_id" required>
-                            <?php foreach ($data['vehicles'] as $vehicle): ?>
-                                <option value="<?= $vehicle->vehicle_id; ?>"><?= $vehicle->license_plate; ?></option>
-                            <?php endforeach; ?>
-                        </select>
-                    </div>
-
-                    <div class="form-group">
-                        <label for="edit_shift">Shift:</label>
-                        <select id="edit_shift" name="shift_id" required>
-                            <?php foreach ($data['shifts'] as $shift): ?>
-                                <option value="<?= $shift->shift_id; ?>"><?= $shift->shift_name; ?></option>
-                            <?php endforeach; ?>
-                        </select>
-                    </div>
-
-                    <div class="form-group">
-                        <label for="edit_week_number">Week:</label>
-                        <select id="edit_week_number" name="week_number" required>
-                            <option value="1">Week 1</option>
-                            <option value="2">Week 2</option>
-                        </select>
-                    </div>
+                <div class="form-group">
+                    <label for="shift">Shift:</label>
+                    <select id="shift" name="shift_id" required>
+                        <?php foreach ($data['shifts'] as $shift): ?>
+                            <option value="<?= $shift->shift_id; ?>"><?= $shift->shift_name; ?></option>
+                        <?php endforeach; ?>
+                    </select>
                 </div>
 
                 <div class="form-group">
-                    <label>Collection Days:</label>
-                    <div style="display: grid; grid-template-columns: repeat(7, 1fr); gap: 10px;">
-                        <label><input type="checkbox" name="days_of_week[]" value="mon"> Mon</label>
-                        <label><input type="checkbox" name="days_of_week[]" value="tue"> Tue</label>
-                        <label><input type="checkbox" name="days_of_week[]" value="wed"> Wed</label>
-                        <label><input type="checkbox" name="days_of_week[]" value="thu"> Thu</label>
-                        <label><input type="checkbox" name="days_of_week[]" value="fri"> Fri</label>
-                        <label><input type="checkbox" name="days_of_week[]" value="sat"> Sat</label>
-                        <label><input type="checkbox" name="days_of_week[]" value="sun"> Sun</label>
-                    </div>
+                    <label for="week_number">Week:</label>
+                    <select id="week_number" name="week_number" required>
+                        <option value="1">Week 1</option>
+                        <option value="2">Week 2</option>
+                    </select>
                 </div>
 
-                <button type="submit" class="btn-submit">Update Schedule</button>
-            </form>
-        </div>
-    </div>
 
-    <script>
-    function loadScheduleData(scheduleId) {
-        // Find the schedule data from the existing schedules
-        <?php echo 'const schedules = ' . json_encode($data['schedules']) . ';'; ?>
-        
-        const schedule = schedules.find(s => s.schedule_id === scheduleId);
-        if (schedule) {
-            // Populate the edit form fields
-            document.getElementById('edit_route').value = schedule.route_id;
-            document.getElementById('edit_team').value = schedule.team_id;
-            document.getElementById('edit_vehicle').value = schedule.vehicle_id;
-            document.getElementById('edit_shift').value = schedule.shift_id;
-            document.getElementById('edit_week_number').value = schedule.week_number;
-            
-            // Handle checkboxes for days
-            const days = schedule.days_of_week.split(',');
-            document.querySelectorAll('input[name="days_of_week[]"]').forEach(checkbox => {
-                checkbox.checked = days.includes(checkbox.value);
-            });
-        }
-    }
-    </script>
+            </div>
+
+            <button type="submit" class="btn-submit">Create Schedule</button>
+        </form>
+    </div>
+</div>
+
+<script>
+    document.getElementById('day').addEventListener('change', function() {
+        const selectedDay = this.value;
+        const routeSelect = document.getElementById('route');
+
+        // Clear existing options
+        routeSelect.innerHTML = '<option value="" disabled selected>Select a route</option>';
+
+        // Fetch routes based on the selected day
+        fetch(`<?php echo URLROOT; ?>/routes/getRoutesByDay/${selectedDay}`)
+            .then(response => response.json())
+            .then(data => {
+                data.routes.forEach(route => {
+                    const option = document.createElement('option');
+                    option.value = route.route_id;
+                    option.textContent = route.route_name;
+                    routeSelect.appendChild(option);
+                });
+            })
+            .catch(error => console.error('Error fetching routes:', error));
+    });
+</script>
+
+<!-- Edit Schedule Section -->
+<div class="table-data">
+    <div class="order">
+        <div class="head">
+            <h3>Edit Schedule</h3>
+        </div>
+        <form id="editScheduleForm" method="POST" action="<?php echo URLROOT; ?>/collectionschedules/update">
+            <div class="form-group">
+                <label for="schedule_id">Select Schedule:</label>
+                <select id="schedule_id" name="schedule_id" required onchange="loadScheduleData(this.value)">
+                    <option value="">Select a schedule</option>
+                    <?php foreach ($data['schedules'] as $schedule): ?>
+                        <option value="<?= $schedule->schedule_id; ?>">
+                            Schedule <?= str_pad($schedule->schedule_id, 3, '0', STR_PAD_LEFT); ?>
+                        </option>
+                    <?php endforeach; ?>
+                </select>
+            </div>
+
+            <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px;">
+                <div class="form-group">
+                    <label for="edit_route">Route:</label>
+                    <select id="edit_route" name="route_id" required>
+                        <?php foreach ($data['routes'] as $route): ?>
+                            <option value="<?= $route->route_id; ?>"><?= htmlspecialchars($route->route_name); ?></option>
+                        <?php endforeach; ?>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="edit_driver">Driver:</label>
+                    <select id="edit_driver" name="driver_id" required>
+                        <?php foreach ($data['drivers'] as $driver): ?>
+                            <option value="<?= $driver->driver_id; ?>"><?= htmlspecialchars($driver->first_name); ?></option>
+                        <?php endforeach; ?>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="edit_shift">Shift:</label>
+                    <select id="edit_shift" name="shift_id" required>
+                        <?php foreach ($data['shifts'] as $shift): ?>
+                            <option value="<?= $shift->shift_id; ?>"><?= $shift->shift_name; ?></option>
+                        <?php endforeach; ?>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="edit_week_number">Week:</label>
+                    <select id="edit_week_number" name="week_number" required>
+                        <option value="1">Week 1</option>
+                        <option value="2">Week 2</option>
+                    </select>
+                </div>
+
+            </div>
+
+            <button type="submit" class="btn-submit">Update Schedule</button>
+        </form>
+    </div>
+</div>
+
+<script>
+function loadScheduleData(scheduleId) {
+    fetch(`<?php echo URLROOT; ?>/collectionschedules/getSchedule/${scheduleId}`)
+        .then(response => response.json())
+        .then(data => {
+            if (data) {
+                console.log(data); // Log the fetched data
+
+                // Select the driver dropdown
+                const driverElement = document.getElementById('edit_driver');
+                
+                if (driverElement) {
+                    // Check if the driver option exists, if not, create it
+                    let driverOption = driverElement.querySelector(`option[value="${data.driver_id}"]`);
+                    
+                    if (!driverOption) {
+                        driverOption = document.createElement('option');
+                        driverOption.value = data.driver_id;
+                        driverOption.text = data.driver_name;
+                        driverElement.appendChild(driverOption);
+                    }
+                    
+                    driverElement.value = data.driver_id;
+                }
+
+                // Set other form fields
+                document.getElementById('edit_route').value = data.route_id;
+                document.getElementById('edit_shift').value = data.shift_id;
+                document.getElementById('edit_week_number').value = data.week_number;
+            }
+        })
+        .catch(error => console.error('Error loading schedule data:', error));
+}
+</script>
+
+
 
 
 

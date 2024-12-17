@@ -39,6 +39,7 @@ class VehicleManager extends Controller {
             redirect('');
             exit();
         }
+        
 
         // Initialize models
         $this->vehicleManagerModel = new M_VehicleManager();
@@ -55,27 +56,34 @@ class VehicleManager extends Controller {
         $this->collectionSupplierRecordModel = $this->model('M_CollectionSupplierRecord');
     }
 
+    private function isAjaxRequest() {
+        return isset($_SERVER['HTTP_X_REQUESTED_WITH']) && 
+               strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) === 'xmlhttprequest';
+    }
+
     public function index() {
         // Get dashboard stats from the model
         $stats = $this->vehicleManagerModel->getDashboardStats();
 
         // Fetch all necessary data for the dropdowns
         $routes = $this->routeModel->getAllRoutes();
-        $teams = $this->teamModel->getAllTeams();
+        $drivers = $this->driverModel->getUnassignedDrivers();
         $vehicles = $this->vehicleModel->getAllVehicles();
         $shifts = $this->shiftModel->getAllShifts();
         $schedules = $this->scheduleModel->getAllSchedules();
         $ongoingCollections = $this->collectionModel->getOngoingCollections();
+        $todayRoutes = $this->routeModel->getTodayAssignedRoutes();
 
         // Pass the stats and data for the dropdowns to the view
         $this->view('vehicle_manager/v_collection', [
             'stats' => $stats,
             'routes' => $routes,
-            'teams' => $teams,
+            'drivers' => $drivers,
             'vehicles' => $vehicles,
             'shifts' => $shifts,
             'schedules' => $schedules,
-            'ongoing_collections' => $ongoingCollections
+            'ongoing_collections' => $ongoingCollections,
+            'todayRoutes' => $todayRoutes 
         ]);
     }
 
@@ -135,20 +143,20 @@ class VehicleManager extends Controller {
         $this->view('vehicle_manager/v_vehicle', $data);
     }
 
-    public function team() {
+    public function driver() {
         $teamStats = $this->teamModel->getTeamStatistics();
         $teams = $this->teamModel->getTeamsWithMembers();
         $unassignedDrivers = $this->teamModel->getUnassignedDrivers(); // Fetch unassigned drivers
-        $unassignedPartners = $this->teamModel->getUnassignedPartner(); // Fetch unassigned partners
+        $allDrivers = $this->teamModel->getAllDrivers(); // Fetch all drivers
 
         $data = [
             'teamStats' => $teamStats,
             'teams' => $teams,
-            'unassigned_drivers' => $unassignedDrivers, // Add unassigned drivers to the data array
-            'unassigned_partners' => $unassignedPartners // Add unassigned partners to the data array
+            'unassigned_drivers' => $unassignedDrivers,
+            'all_drivers' => $allDrivers // Include all drivers
         ];
         
-        $this->view('vehicle_manager/v_team', $data);
+        $this->view('vehicle_manager/v_driver', $data);
     }
 
     public function updateTeam() {
@@ -187,7 +195,7 @@ class VehicleManager extends Controller {
         }
     }
 
-    public function createTeam() {
+    public function addDriver() {
         if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             $_POST = filter_input_array(INPUT_POST, FILTER_SANITIZE_STRING);
 
@@ -198,37 +206,39 @@ class VehicleManager extends Controller {
             }
 
             $data = [
-                'team_name' => trim($_POST['team_name']),
-                'driver_id' => !empty($_POST['driver_id']) ? trim($_POST['driver_id']) : null,
-                'partner_id' => !empty($_POST['partner_id']) ? trim($_POST['partner_id']) : null,
+                'first_name' => trim($_POST['first_name']),
+                'last_name' => trim($_POST['last_name']),
+                'license_no' => trim($_POST['license_no']),
+                'experience_years' => !empty($_POST['experience_years']) ? trim($_POST['experience_years']) : null,
+                'contact_number' => trim($_POST['contact_number']),
                 'status' => trim($_POST['status']),
-                'manager_id' => $this->userHelper->getManagerId($_SESSION['user_id'])
+                'manager_id' => $manager_id
             ];
 
-            // Validate team name
-            if (empty($data['team_name'])) {
-                die('Please enter team name');
+            // Validate required fields
+            if (empty($data['first_name']) || empty($data['last_name']) || empty($data['license_no'])) {
+                die('Please fill in all required fields');
             }
 
             // Debug line - remove in production
-            error_log('Creating team with data: ' . print_r($data, true));
+            error_log('Adding driver with data: ' . print_r($data, true));
 
-            if ($this->teamModel->createTeam($data)) {
+            if ($this->driverModel->addDriver($data)) {
                 $_SESSION['flash_messages'] = [
-                    'team_message' => [
-                        'message' => 'Team created successfully',
+                    'driver_message' => [
+                        'message' => 'Driver added successfully',
                         'class' => 'alert alert-success'
                     ]
                 ];
             } else {
                 $_SESSION['flash_messages'] = [
-                    'team_message' => [
-                        'message' => 'Failed to create team',
+                    'driver_message' => [
+                        'message' => 'Failed to add driver',
                         'class' => 'alert alert-danger'
                     ]
                 ];
             }
-            redirect('vehiclemanager/team');
+            redirect('vehiclemanager/drivers'); // Redirect to the drivers page
         }
     }
 
@@ -244,10 +254,14 @@ class VehicleManager extends Controller {
             return [
                 'id' => $supplier->supplier_id,
                 'name' => $supplier->full_name, // Changed from supplier_name to full_name
+                'preferred_day' => $supplier->preferred_day, // Include preferred_day
                 'location' => [
                     'lat' => (float)$supplier->latitude,
                     'lng' => (float)$supplier->longitude
-                ]
+                ],
+                'average_collection' => $supplier->average_collection,
+                'number_of_collections' => $supplier->number_of_collections
+
             ];
         }, $unallocatedSuppliers);
 
@@ -387,32 +401,6 @@ class VehicleManager extends Controller {
             }
             redirect('vehiclemanager/shift');
         }
-    }
-
-    public function staff() {
-        // Get manager_id and add debug logging
-        $manager_id = $this->staffModel->getManagerIdByUserId($_SESSION['user_id']);
-        error_log("Controller got manager_id: " . $manager_id);
-        
-        $data = [
-            'drivers' => $this->staffModel->getAllDrivers(),
-            'partners' => $this->staffModel->getAllPartners(),
-            'managers' => $this->staffModel->getAllManagers(),
-            'totalDrivers' => $this->staffModel->getTotalDrivers(),
-            'totalPartners' => $this->staffModel->getTotalPartners(),
-            'totalUnavailableDriver' => $this->staffModel->getTotalUnavailableDriver(),
-            'totalUnavailablePartner' => $this->staffModel->getTotalUnavailablePartner(),
-            'currentLeaves' => $this->staffModel->getUpcomingLeaves(),
-            'pendingLeaves' => $this->staffModel->getPendingLeaves(),
-            'manager_id' => $manager_id,
-            'leaveTypeStats' => $this->staffModel->getLeaveTypeDistribution(),
-            'monthlyLeaveStats' => $this->staffModel->getMonthlyLeaveDistribution()
-        ];
-        
-        // Add debug logging
-        error_log("Data being sent to view: " . print_r($data, true));
-        
-        $this->view('vehicle_manager/v_staff', $data);
     }
 
     public function settings() {
@@ -556,9 +544,9 @@ class VehicleManager extends Controller {
     public function getVehicleById($id) {
         $vehicle = $this->vehicleModel->getVehicleById($id);
         if ($vehicle) {
-            echo json_encode($vehicle);
+            echo json_encode(['success' => true, 'vehicle' => $vehicle]);
         } else {
-            echo json_encode(['error' => 'Vehicle not found']);
+            echo json_encode(['success' => false]);
         }
     }
 
@@ -893,8 +881,8 @@ class VehicleManager extends Controller {
                 'title' => 'Add New Vehicle'
             ];
             $this->view('vehicle_manager/v_add_vehicle', $data);
-        } else {
-            // Handle POST request
+        } else if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+            // send thru postt
             $this->handleVehicleSubmission();
         }
     }
@@ -905,24 +893,12 @@ class VehicleManager extends Controller {
             $vehicleData = [
                 'license_plate' => $_POST['license_plate'],
                 'vehicle_type' => $_POST['vehicle_type'],
-                'engine_number' => $_POST['engine_number'],
-                'chassis_number' => $_POST['chassis_number'],
                 'status' => $_POST['status'],
-                'condition' => $_POST['condition'],
                 'make' => $_POST['make'],
                 'model' => $_POST['model'],
                 'manufacturing_year' => $_POST['manufacturing_year'],
                 'color' => $_POST['color'],
-                'fuel_type' => $_POST['fuel_type'],
-                'mileage' => $_POST['mileage'],
-                'capacity' => $_POST['capacity'],
-                'seating_capacity' => $_POST['seating_capacity'],
-                'owner_name' => $_POST['owner_name'],
-                'owner_contact' => $_POST['owner_contact'],
-                'registration_date' => $_POST['registration_date'],
-                'last_serviced_date' => $_POST['last_serviced_date'],
-                'last_maintenance' => $_POST['last_maintenance'],
-                'next_maintenance' => $_POST['next_maintenance']
+                'capacity' => $_POST['capacity']
             ];
 
             // Handle vehicle image
@@ -1088,6 +1064,61 @@ class VehicleManager extends Controller {
             }
         }
     }
+
+    public function getAvailableVehicles($day) {
+        // Make sure nothing is output before this
+        ob_clean(); // Clear any previous output
+        
+        try {
+            $vehicles = $this->vehicleModel->getAvailableVehiclesByDay($day);
+            
+            header('Content-Type: application/json');
+            echo json_encode([
+                'status' => 'success',
+                'data' => $vehicles,
+                'message' => 'Vehicles retrieved successfully'
+            ]);
+            exit; // End the script after sending JSON
+        } catch (Exception $e) {
+            header('Content-Type: application/json');
+            echo json_encode([
+                'status' => 'error',
+                'message' => $e->getMessage()
+            ]);
+            exit;
+        }
+    }
+
+    public function getVehicleDetails($id) {
+        ob_clean();
+        
+        try {
+            $vehicle = $this->vehicleModel->getVehicleById($id);
+        
+            
+            header('Content-Type: application/json');
+            echo json_encode([
+                'status' => 'success',
+                'data' => $vehicle,
+                'message' => 'Vehicle details retrieved successfully'
+            ]);
+            exit;
+        } catch (Exception $e) {
+            header('Content-Type: application/json');
+            echo json_encode([
+                'status' => 'error',
+                'message' => $e->getMessage()
+            ]);
+            exit;
+        }
+    }
+
+    public function getRoutesByDay($day) {
+        $routes = $this->routeModel->getRoutesByDay($day);
+        echo json_encode(['routes' => $routes]);
+    }
+
+
 
 }
 ?>
