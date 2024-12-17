@@ -35,21 +35,21 @@
         <i class='bx bxs-group'></i>
         <span class="text">
           <p>Total Drivers</p>
-          <h3><?php echo $data['teamStats']['total']; ?></h3>
+          <h3><?php echo $total_drivers; ?></h3>
         </span>
     </li>
     <li>
         <i class='bx bxs-user-check'></i>
         <span class="text">
           <p>On Duty</p>
-          <h3><?php echo $data['teamStats']['active']; ?></h3>
+          <h3><?php echo $on_duty_drivers; ?></h3>
         </span>
     </li>
     <li>
         <i class='bx bxs-user-x'></i>
         <span class="text">
           <p>Unassigned Drivers</p>
-          <h3><?php echo $data['teamStats']['inactive']; ?></h3>
+          <h3><?php echo $unassigned_drivers_count; ?></h3>
         </span>
     </li>
   </ul>
@@ -64,8 +64,6 @@
                   <tr>
                       <th>Driver ID</th>
                       <th>Name</th>
-                      <th>License No</th>
-                      <th>Experience (Years)</th>
                       <th>Contact</th>
                       <th>Status</th>
                   </tr>
@@ -75,8 +73,6 @@
                       <tr>
                           <td><?php echo htmlspecialchars($driver->driver_id); ?></td>
                           <td><?php echo htmlspecialchars($driver->driver_name); ?></td>
-                          <td><?php echo htmlspecialchars($driver->license_no); ?></td>
-                          <td><?php echo htmlspecialchars($driver->experience_years); ?></td>
                           <td><?php echo htmlspecialchars($driver->contact_number); ?></td>
                           <td>
                               <span class="status completed"><?php echo htmlspecialchars($driver->status); ?></span>
@@ -99,8 +95,6 @@
                   <tr>
                       <th>Driver ID</th>
                       <th>Name</th>
-                      <th>License No</th>
-                      <th>Experience (Years)</th>
                       <th>Contact</th>
                       <th>Status</th>
                   </tr>
@@ -110,8 +104,6 @@
                       <tr>
                           <td><?php echo htmlspecialchars($driver->driver_id); ?></td>
                           <td><?php echo htmlspecialchars($driver->driver_name); ?></td>
-                          <td><?php echo htmlspecialchars($driver->license_no); ?></td>
-                          <td><?php echo htmlspecialchars($driver->experience_years); ?></td>
                           <td><?php echo htmlspecialchars($driver->contact_number); ?></td>
                           <td>
                               <span class="status completed"><?php echo htmlspecialchars($driver->status); ?></span>
