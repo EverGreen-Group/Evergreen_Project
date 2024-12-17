@@ -1092,34 +1092,6 @@ function editMaintenance(event) {
 }
 </style>
 
-<style>
-.action-buttons {
-    margin: 20px 0;
-    display: flex;
-    gap: 15px;
-    justify-content: flex-end;
-}
-
-.btn-primary {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    background-color: var(--main);
-    color: var(--light);
-    padding: 10px 20px;
-    border-radius: 5px;
-    text-decoration: none;
-    transition: background-color 0.3s ease;
-}
-
-.btn-primary:hover {
-    background-color: var(--main-dark);
-}
-
-.btn-primary i {
-    font-size: 1.2em;
-}
-</style>
 
 <style>
     /* Add this to your existing styles */

@@ -147,16 +147,16 @@ class VehicleManager extends Controller {
         $teamStats = $this->teamModel->getTeamStatistics();
         $teams = $this->teamModel->getTeamsWithMembers();
         $unassignedDrivers = $this->teamModel->getUnassignedDrivers(); // Fetch unassigned drivers
-        $unassignedPartners = $this->teamModel->getUnassignedPartner(); // Fetch unassigned partners
+        $allDrivers = $this->teamModel->getAllDrivers(); // Fetch all drivers
 
         $data = [
             'teamStats' => $teamStats,
             'teams' => $teams,
-            'unassigned_drivers' => $unassignedDrivers, // Add unassigned drivers to the data array
-            'unassigned_partners' => $unassignedPartners // Add unassigned partners to the data array
+            'unassigned_drivers' => $unassignedDrivers,
+            'all_drivers' => $allDrivers // Include all drivers
         ];
         
-        $this->view('vehicle_manager/v_team', $data);
+        $this->view('vehicle_manager/v_driver', $data);
     }
 
     public function updateTeam() {
@@ -195,7 +195,7 @@ class VehicleManager extends Controller {
         }
     }
 
-    public function createTeam() {
+    public function addDriver() {
         if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             $_POST = filter_input_array(INPUT_POST, FILTER_SANITIZE_STRING);
 
@@ -206,37 +206,39 @@ class VehicleManager extends Controller {
             }
 
             $data = [
-                'team_name' => trim($_POST['team_name']),
-                'driver_id' => !empty($_POST['driver_id']) ? trim($_POST['driver_id']) : null,
-                'partner_id' => !empty($_POST['partner_id']) ? trim($_POST['partner_id']) : null,
+                'first_name' => trim($_POST['first_name']),
+                'last_name' => trim($_POST['last_name']),
+                'license_no' => trim($_POST['license_no']),
+                'experience_years' => !empty($_POST['experience_years']) ? trim($_POST['experience_years']) : null,
+                'contact_number' => trim($_POST['contact_number']),
                 'status' => trim($_POST['status']),
-                'manager_id' => $this->userHelper->getManagerId($_SESSION['user_id'])
+                'manager_id' => $manager_id
             ];
 
-            // Validate team name
-            if (empty($data['team_name'])) {
-                die('Please enter team name');
+            // Validate required fields
+            if (empty($data['first_name']) || empty($data['last_name']) || empty($data['license_no'])) {
+                die('Please fill in all required fields');
             }
 
             // Debug line - remove in production
-            error_log('Creating team with data: ' . print_r($data, true));
+            error_log('Adding driver with data: ' . print_r($data, true));
 
-            if ($this->teamModel->createTeam($data)) {
+            if ($this->driverModel->addDriver($data)) {
                 $_SESSION['flash_messages'] = [
-                    'team_message' => [
-                        'message' => 'Team created successfully',
+                    'driver_message' => [
+                        'message' => 'Driver added successfully',
                         'class' => 'alert alert-success'
                     ]
                 ];
             } else {
                 $_SESSION['flash_messages'] = [
-                    'team_message' => [
-                        'message' => 'Failed to create team',
+                    'driver_message' => [
+                        'message' => 'Failed to add driver',
                         'class' => 'alert alert-danger'
                     ]
                 ];
             }
-            redirect('vehiclemanager/team');
+            redirect('vehiclemanager/drivers'); // Redirect to the drivers page
         }
     }
 

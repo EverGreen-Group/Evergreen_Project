@@ -17,9 +17,9 @@
       </a>
     </li>
     <li class="<?php echo (basename($_SERVER['REQUEST_URI']) == 'team') ? 'active' : ''; ?>">
-      <a href="<?php echo URLROOT; ?>/vehiclemanager/team">
+      <a href="<?php echo URLROOT; ?>/vehiclemanager/driver">
         <i class="bx bxs-group"></i>
-        <span class="text">Team</span>
+        <span class="text">Driver</span>
       </a>
     </li>
     <li class="<?php echo (basename($_SERVER['REQUEST_URI']) == 'route') ? 'active' : ''; ?>">
