@@ -66,7 +66,8 @@ class M_Driver{
                 d.driver_id,
                 CONCAT(ud.first_name, " ", ud.last_name) AS driver_name,
                 e.contact_number,
-                d.status
+                d.status,
+                ud.user_id
             FROM drivers d
             JOIN employees e ON d.employee_id = e.employee_id
             JOIN users ud ON e.user_id = ud.user_id
@@ -82,7 +83,8 @@ class M_Driver{
             SELECT 
                 d.*,
                 e.contact_number,
-                CONCAT(u.first_name, " ", u.last_name) AS driver_name
+                CONCAT(u.first_name, " ", u.last_name) AS driver_name,
+                u.user_id
             FROM drivers d
             JOIN users u ON d.user_id = u.user_id
             JOIN employees e ON d.employee_id = e.employee_id
@@ -99,6 +101,70 @@ class M_Driver{
         $this->db->query("SELECT * FROM users WHERE user_id IN (SELECT user_id FROM drivers) AND role_id = :role_id");
         $this->db->bind(':role_id', 6);
         return $this->db->resultSet();
+    }
+
+    public function getDriverAndEmployeeDetails($user_id) {
+        $this->db->query('
+            SELECT 
+                d.driver_id,
+                d.status AS driver_status,
+                e.contact_number,
+                e.emergency_contact,
+                e.address_line1,
+                e.address_line2,
+                e.city,
+                u.first_name,
+                u.last_name,
+                u.email,
+                u.nic,
+                u.date_of_birth,
+                u.gender,
+                u.user_id
+            FROM drivers d
+            JOIN employees e ON d.employee_id = e.employee_id
+            JOIN users u ON e.user_id = u.user_id
+            WHERE u.user_id = :user_id AND d.is_deleted = 0
+        ');
+
+        $this->db->bind(':user_id', $user_id);
+        return $this->db->single(); // Return a single record
+    }
+
+    public function removeDriver($user_id) {
+        // Start a transaction
+        $this->db->beginTransaction();
+        
+        try {
+            // Remove the driver from the drivers table
+            $this->db->query('DELETE FROM drivers WHERE user_id = :user_id');
+            $this->db->bind(':user_id', $user_id);
+            $driverRemoved = $this->db->execute();
+            
+            // Remove the employee entry from the employees table
+            $this->db->query('DELETE FROM employees WHERE user_id = :user_id');
+            $this->db->bind(':user_id', $user_id);
+            $employeeRemoved = $this->db->execute();
+            
+            // Update the role_id in the users table to 7
+            $this->db->query('UPDATE users SET role_id = 7 WHERE user_id = :user_id');
+            $this->db->bind(':user_id', $user_id);
+            $roleUpdated = $this->db->execute();
+            
+            // Check if all operations were successful
+            if ($driverRemoved && $employeeRemoved && $roleUpdated) {
+                // Commit the transaction
+                $this->db->commit();
+                return true; // Indicate success
+            } else {
+                // Rollback the transaction if any operation failed
+                $this->db->rollBack();
+                return false; // Indicate failure
+            }
+        } catch (Exception $e) {
+            // Rollback the transaction in case of an exception
+            $this->db->rollBack();
+            throw $e; // Rethrow the exception for handling in the controller
+        }
     }
 
 }
