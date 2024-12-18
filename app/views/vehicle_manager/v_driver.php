@@ -66,6 +66,7 @@
                       <th>Name</th>
                       <th>Contact</th>
                       <th>Status</th>
+                      <th>Action</th>
                   </tr>
               </thead>
               <tbody>
@@ -76,6 +77,9 @@
                           <td><?php echo htmlspecialchars($driver->contact_number); ?></td>
                           <td>
                               <span class="status completed"><?php echo htmlspecialchars($driver->status); ?></span>
+                          </td>
+                          <td>
+                              <a href="<?php echo URLROOT; ?>/profile/driver/<?php echo $driver->user_id; ?>" class="btn btn-view">View Profile</a>
                           </td>
                       </tr>
                   <?php endforeach; ?>
@@ -97,6 +101,7 @@
                       <th>Name</th>
                       <th>Contact</th>
                       <th>Status</th>
+                      <th>Action</th>
                   </tr>
               </thead>
               <tbody>
@@ -107,6 +112,9 @@
                           <td><?php echo htmlspecialchars($driver->contact_number); ?></td>
                           <td>
                               <span class="status completed"><?php echo htmlspecialchars($driver->status); ?></span>
+                          </td>
+                          <td>
+                              <a href="<?php echo URLROOT; ?>/vehiclemanager/viewDriverProfile/<?php echo $driver->user_id; ?>" class="btn btn-view">View Profile</a>
                           </td>
                       </tr>
                   <?php endforeach; ?>
@@ -120,3 +128,21 @@
 
 
 <?php require APPROOT . '/views/inc/components/footer.php'; ?>
+
+<style>
+.btn-view {
+    display: inline-block; /* Make it behave like a button */
+    padding: 2px 5px; /* Add some padding */
+    background-color: var(--main); /* Button background color */
+    color: white; /* Text color */
+    text-align: center; /* Center the text */
+    text-decoration: none; /* Remove underline */
+    border: none; /* Remove border */
+    border-radius: 4px; /* Slightly round the corners */
+    transition: background-color 0.3s; /* Smooth transition for hover effect */
+}
+
+.btn-view:hover {
+    background-color: #0056b3; /* Darker shade on hover */
+}
+</style>
