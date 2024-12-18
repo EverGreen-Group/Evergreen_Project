@@ -1145,5 +1145,25 @@ class VehicleManager extends Controller {
         exit;
     }
 
+    public function removeDriver($user_id) {
+        if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+            try {
+                // Call the model method to remove the driver
+                if ($this->driverModel->removeDriver($user_id)) {
+                    flash('driver_message', 'Driver removed successfully', 'alert alert-success');
+                } else {
+                    flash('driver_message', 'Failed to remove driver', 'alert alert-danger');
+                }
+            } catch (Exception $e) {
+                flash('driver_message', 'Error: ' . $e->getMessage(), 'alert alert-danger');
+            }
+            
+            redirect('vehiclemanager/driver'); // Redirect to the driver management page
+        } else {
+            // If not a POST request, redirect to the driver management page
+            redirect('vehiclemanager/driver');
+        }
+    }
+
 }
 ?>

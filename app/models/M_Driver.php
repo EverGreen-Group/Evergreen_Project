@@ -67,7 +67,7 @@ class M_Driver{
                 CONCAT(ud.first_name, " ", ud.last_name) AS driver_name,
                 e.contact_number,
                 d.status,
-                e.user_id
+                ud.user_id
             FROM drivers d
             JOIN employees e ON d.employee_id = e.employee_id
             JOIN users ud ON e.user_id = ud.user_id
@@ -128,6 +128,43 @@ class M_Driver{
 
         $this->db->bind(':user_id', $user_id);
         return $this->db->single(); // Return a single record
+    }
+
+    public function removeDriver($user_id) {
+        // Start a transaction
+        $this->db->beginTransaction();
+        
+        try {
+            // Remove the driver from the drivers table
+            $this->db->query('DELETE FROM drivers WHERE user_id = :user_id');
+            $this->db->bind(':user_id', $user_id);
+            $driverRemoved = $this->db->execute();
+            
+            // Remove the employee entry from the employees table
+            $this->db->query('DELETE FROM employees WHERE user_id = :user_id');
+            $this->db->bind(':user_id', $user_id);
+            $employeeRemoved = $this->db->execute();
+            
+            // Update the role_id in the users table to 7
+            $this->db->query('UPDATE users SET role_id = 7 WHERE user_id = :user_id');
+            $this->db->bind(':user_id', $user_id);
+            $roleUpdated = $this->db->execute();
+            
+            // Check if all operations were successful
+            if ($driverRemoved && $employeeRemoved && $roleUpdated) {
+                // Commit the transaction
+                $this->db->commit();
+                return true; // Indicate success
+            } else {
+                // Rollback the transaction if any operation failed
+                $this->db->rollBack();
+                return false; // Indicate failure
+            }
+        } catch (Exception $e) {
+            // Rollback the transaction in case of an exception
+            $this->db->rollBack();
+            throw $e; // Rethrow the exception for handling in the controller
+        }
     }
 
 }

@@ -66,7 +66,7 @@
                       <th>Name</th>
                       <th>Contact</th>
                       <th>Status</th>
-                      <th>Action</th>
+                      <th></th>
                   </tr>
               </thead>
               <tbody>
@@ -80,6 +80,7 @@
                           </td>
                           <td>
                               <a href="<?php echo URLROOT; ?>/profile/driver/<?php echo $driver->user_id; ?>" class="btn btn-view">View Profile</a>
+
                           </td>
                       </tr>
                   <?php endforeach; ?>
@@ -101,7 +102,7 @@
                       <th>Name</th>
                       <th>Contact</th>
                       <th>Status</th>
-                      <th>Action</th>
+                      <th></th>
                   </tr>
               </thead>
               <tbody>
@@ -114,7 +115,16 @@
                               <span class="status completed"><?php echo htmlspecialchars($driver->status); ?></span>
                           </td>
                           <td>
-                              <a href="<?php echo URLROOT; ?>/vehiclemanager/viewDriverProfile/<?php echo $driver->user_id; ?>" class="btn btn-view">View Profile</a>
+                              <a href="<?php echo URLROOT; ?>/profile/driver/<?php echo $driver->user_id; ?>" class="btn btn-view">View Profile</a>
+                              
+
+                          </td>
+                          <td>
+                          <form action="<?php echo URLROOT; ?>/vehiclemanager/removeDriver/<?php echo $driver->user_id; ?>" method="POST" style="display:inline;">
+                                  <button type="submit" class="btn btn-remove" onclick="return confirm('Are you sure you want to remove this driver?');">
+                                      <i class='bx bx-trash'></i>
+                                  </button>
+                              </form>
                           </td>
                       </tr>
                   <?php endforeach; ?>
@@ -144,5 +154,23 @@
 
 .btn-view:hover {
     background-color: #0056b3; /* Darker shade on hover */
+}
+
+.btn-remove {
+    display: inline-block; /* Make it behave like a button */
+    padding: 2px 5px; /* Add some padding */
+    background-color: #dc3545; /* Red background color for remove */
+    color: white; /* Text color */
+    text-align: center; /* Center the text */
+    text-decoration: none; /* Remove underline */
+    border: none; /* Remove border */
+    border-radius: 4px; /* Slightly round the corners */
+    transition: background-color 0.3s; /* Smooth transition for hover effect */
+    margin-left: 5px; /* Space between buttons */
+    cursor: pointer; /* Change cursor to pointer */
+}
+
+.btn-remove:hover {
+    background-color: #c82333; /* Darker shade on hover */
 }
 </style>
