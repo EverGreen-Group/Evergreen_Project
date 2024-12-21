@@ -1173,7 +1173,7 @@ class VehicleManager extends Controller {
             // 'vehicleTypeStats' => $this->vehicleModel->getVehicleTypeStats()
         ];
 
-        $this->view('vehicle_manager/v_bag', $data);
+        $this->view('vehicle_manager/collection_bags/index', $data);
     }
 
 }
