@@ -1165,5 +1165,16 @@ class VehicleManager extends Controller {
         }
     }
 
+    public function bag() {
+        $data = [
+            // 'totalVehicles' => $this->vehicleModel->getTotalVehicles(),
+            // 'availableVehicles' => $this->vehicleModel->getAvailableVehicles(),
+            // 'vehicles' => $this->vehicleModel->getVehicleDetails(),
+            // 'vehicleTypeStats' => $this->vehicleModel->getVehicleTypeStats()
+        ];
+
+        $this->view('vehicle_manager/v_bag', $data);
+    }
+
 }
 ?>
