@@ -96,5 +96,46 @@ class M_LandInspection {
         public function getError() {
             return $this->error;
         }
+
+        public function scheduleInspection($request_id, $scheduled_date, $scheduled_time) {
+            try {
+                $sql = "UPDATE land_inspections 
+                        SET status = 'pending', 
+                            scheduled_date = :scheduled_date, 
+                            scheduled_time = :scheduled_time 
+                        WHERE request_id = :request_id";
+        
+                $stmt = $this->db->prepare($sql);
+                
+                $stmt->bindValue(':request_id', $request_id, PDO::PARAM_INT);
+                $stmt->bindValue(':scheduled_date', $scheduled_date, PDO::PARAM_STR);
+                $stmt->bindValue(':scheduled_time', $scheduled_time, PDO::PARAM_STR);
+        
+                return $stmt->execute();
+        
+            } catch (PDOException $e) {
+                $this->error = $e->getMessage();
+                return false;
+            }
+        }
+
+        public function updateInspectionStatus($request_id, $status) {
+            try {
+                $sql = "UPDATE land_inspections 
+                        SET status = :status
+                        WHERE request_id = :request_id";
+        
+                $stmt = $this->db->prepare($sql);
+                
+                $stmt->bindValue(':request_id', $request_id, PDO::PARAM_INT);
+                $stmt->bindValue(':status', $status, PDO::PARAM_STR);
+        
+                return $stmt->execute();
+        
+            } catch (PDOException $e) {
+                $this->error = $e->getMessage();
+                return false;
+            }
+        }
     }
 ?>

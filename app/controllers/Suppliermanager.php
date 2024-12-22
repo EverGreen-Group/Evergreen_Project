@@ -251,6 +251,46 @@ class SupplierManager extends Controller {
         $this->view('supplier_manager/v_settings', $data);
     }
 
+    public function scheduleInspection() {
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            $request_id = $_POST['request_id'];
+            $scheduled_date = $_POST['date'];
+            $scheduled_time = $_POST['time'];
+    
+            $result = $this->landInspectionModel->scheduleInspection(
+                $request_id,
+                $scheduled_date,
+                $scheduled_time
+            );
+    
+            if ($result) {
+                echo json_encode(['status' => 'success']);
+            } else {
+                echo json_encode(['status' => 'error']);
+            }
+            exit;
+        }
+    }
+
+    public function updateInspectionStatus() {
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            $request_id = $_POST['request_id'];
+            $status = $_POST['status'];
+    
+            $result = $this->landInspectionModel->updateInspectionStatus(
+                $request_id,
+                $status
+            );
+    
+            if ($result) {
+                echo json_encode(['status' => 'success']);
+            } else {
+                echo json_encode(['status' => 'error']);
+            }
+            exit;
+        }
+    }
+
 }
 ?>
 
