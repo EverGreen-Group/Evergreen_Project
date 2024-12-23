@@ -12,7 +12,7 @@
                 <h1>Supplier Profile</h1>
                 <ul class="breadcrumb">
                     <li>
-                        <a href="SupplyDashboard.php">Home ></a>
+                        <a href="SupplyDashboard.php">Home</a>
                     </li>
                     <li><i class='bx bx-chevron-right'></i></li>
                     <li>
@@ -141,7 +141,7 @@
     }
 
     .button:hover {
-        background: var(--main-dark);
+        background: #008800;
     }
 
     .qr-section {

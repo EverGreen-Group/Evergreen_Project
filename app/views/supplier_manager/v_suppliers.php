@@ -204,8 +204,138 @@
 </main>
 
 <script async defer src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCdt_khahhXrKdrA8cLgKeQB2CZtde-_Vc&callback=initMap"></script>
+<!--
+<script>
+    let map;
+    let directionsService;
+    let directionsRenderer;
+    const collections = {
+        collection1: {
+            team: "Team A",
+            route: "Evergreen Route",
+            progress: "1/3 suppliers",
+            estimatedTime: "2 hours",
+            stops: [
+                { name: "Evergreen Tea Factory", location: { lat: 6.2173037, lng: 80.2564385 } },
+                { name: "Supplier 1", location: { lat: 6.243808243551064, lng: 80.25967072303547 } },
+                { name: "Supplier 2", location: { lat: 6.282762791987652, lng: 80.26495604611944 } }
+            ],
+            currentStop: 0
+        },
+        collection2: {
+            team: "Team B",
+            route: "Southern Route",
+            progress: "2/4 suppliers",
+            estimatedTime: "1.5 hours",
+            stops: [
+                { name: "Start Point", location: { lat: 6.0535, lng: 80.2210 } },
+                { name: "Supplier A", location: { lat: 6.0825, lng: 80.2510 } },
+                { name: "Supplier B", location: { lat: 6.1125, lng: 80.2810 } },
+                { name: "End Point", location: { lat: 6.1425, lng: 80.3110 } }
+            ],
+            currentStop: 2
+        }
+    };
 
+    function initMap() {
+        const supplierLocation = { lat: 6.2173037, lng: 80.2564385 };
 
+        const map = new google.maps.Map(document.getElementById("map"), {
+            zoom: 15,
+            center: supplierLocation,
+            mapId: "4504f8b37365c3d0",
+            disableDefaultUI: true,
+            zoomControl: true
+        });
+
+        const marker = new google.maps.Marker({
+            position: supplierLocation,
+            map: map,
+            title: "John Doe's Location",
+            icon: {
+                url: "https://maps.google.com/mapfiles/ms/icons/green-dot.png"
+            }
+        });
+
+        const infoWindow = new google.maps.InfoWindow({
+            content: `
+                <div style="padding: 10px;">
+                    <h3 style="margin: 0 0 5px 0;">John Doe</h3>
+                    <p style="margin: 0;">Daily Collection Point</p>
+                </div>`
+        });
+
+        marker.addListener("click", () => {
+            infoWindow.open(map, marker);
+        });
+    }
+
+    function updateMap(collectionId) {
+        const collection = collections[collectionId];
+        if (!collection) return;
+
+        // Clear previous route
+        directionsRenderer.setDirections({routes: []});
+
+        // Remove previous markers
+        if (window.markers) {
+            window.markers.forEach(marker => marker.setMap(null));
+        }
+        window.markers = [];
+
+        // Create route
+        const waypoints = collection.stops.slice(1, -1).map(stop => ({
+            location: stop.location,
+            stopover: true
+        }));
+
+        const request = {
+            origin: collection.stops[0].location,
+            destination: collection.stops[collection.stops.length - 1].location,
+            waypoints: waypoints,
+            travelMode: 'DRIVING'
+        };
+
+        directionsService.route(request, function(result, status) {
+            if (status === 'OK') {
+                directionsRenderer.setDirections(result);
+                
+                // Add markers for each stop
+                collection.stops.forEach((stop, index) => {
+                    const marker = new google.maps.Marker({
+                        position: stop.location,
+                        map: map,
+                        title: stop.name,
+                        label: (index + 1).toString()
+                    });
+                    window.markers.push(marker);
+
+                    // Highlight current stop
+                    if (index === collection.currentStop) {
+                        marker.setIcon('http://maps.google.com/mapfiles/ms/icons/green-dot.png');
+                    }
+                });
+            }
+        });
+
+        // Update collection details
+        document.getElementById("team-name").textContent = collection.team;
+        document.getElementById("route-name").textContent = collection.route;
+        document.getElementById("collection-progress").textContent = collection.progress;
+        document.getElementById("estimated-time").textContent = collection.estimatedTime;
+    }
+
+    document.getElementById("ongoing-collection-select").addEventListener("change", function() {
+        updateMap(this.value);
+    });
+
+    // Initialize the map with the first collection when the page loads
+    window.onload = function() {
+        initMap();
+        updateMap('collection1');
+    };
+</script>
+        -->
 
 <script>
     // Example of handling form submission for assigning collection
