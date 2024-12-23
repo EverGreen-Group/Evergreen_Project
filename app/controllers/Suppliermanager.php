@@ -291,6 +291,37 @@ class SupplierManager extends Controller {
         }
     }
 
+    public function getSupplierDetails() {
+        if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['supplier_id'])) {
+            $supplier = $this->supplierModel->getSupplierById($_POST['supplier_id']);
+            
+            if ($supplier) {
+                // Get additional statistics
+                $totalQuantity = $this->supplierModel->getTotalCollectionQuantity($supplier->supplier_id);
+                $collectionDays = $this->supplierModel->getCollectionDaysCount($supplier->supplier_id);
+                $performanceRate = $this->supplierModel->calculatePerformanceRate($totalQuantity, $collectionDays);
+    
+                echo json_encode([
+                    'status' => 'success',
+                    'data' => [
+                        'supplier' => $supplier,
+                        'stats' => [
+                            'totalQuantity' => number_format($totalQuantity, 2),
+                            'collectionDays' => $collectionDays,
+                            'performanceRate' => $performanceRate
+                        ]
+                    ]
+                ]);
+            } else {
+                echo json_encode([
+                    'status' => 'error',
+                    'message' => 'No supplier found'
+                ]);
+            }
+            exit;
+        }
+    }
+
 }
 ?>
 
