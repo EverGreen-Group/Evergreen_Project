@@ -326,22 +326,6 @@ function openAddBagModal(lastInsertedId) {
                   <div class="detail-group">
                       <h3>Basic Information</h3>
                       <div class="detail-row">
-                          <span class="label">Bag Token:</span>
-                          <span class="value"><strong>${
-                            lastInsertedId + 1
-                          }</strong></span>
-                      </div>
-                      <div class="detail-row">
-                          <span class="label">Bag Type:</span>
-                          <span class="value">
-                              <select id="bagType" name="bagType" required style="width: 100%; padding: 8px; box-sizing: border-box;">
-                                  <option value="" disabled selected>Select Bag Type</option>
-                                  <option value="crate">Crate</option>
-                                  <option value="sack">Sack</option>
-                              </select>
-                          </span>
-                      </div>
-                      <div class="detail-row">
                           <span class="label">Capacity (kg):</span>
                           <span class="value"><input type="number" id="bagCapacity" name="bagCapacity" required style="width: 100%; padding: 8px; box-sizing: border-box;"></span>
                       </div>
@@ -364,16 +348,43 @@ function openAddBagModal(lastInsertedId) {
 }
 
 function addNewBag(event) {
-  event.preventDefault(); // Prevent form submission
+  event.preventDefault(); // Prevent the default form submission
 
-  // Get form values
-  const bagName = document.getElementById("bagName").value;
+  // Gather input values
   const bagCapacity = document.getElementById("bagCapacity").value;
-  const bagType = document.getElementById("bagType").value;
+  const bagWeight = document.getElementById("bagWeight").value;
 
-  // Here you can handle the logic to add the new bag (e.g., send to server)
-  console.log("New Bag Added:", { bagName, bagCapacity, bagType });
+  // Prepare data to send to the server
+  const data = {
+    capacity_kg: bagCapacity,
+    bag_weight_kg: bagWeight,
+  };
 
-  // Close the modal after adding
-  closeModal("collectionBagDetailsModal");
+  // Construct the URL using URLROOT
+  const url = `${URLROOT}/vehiclemanager/createBag`; // Adjust the path as necessary
+
+  // Send the data to the server
+  fetch(url, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(data),
+  })
+    .then((response) => response.json())
+    .then((data) => {
+      if (data.success) {
+        // Handle success (e.g., close modal, show success message)
+        alert("Bag created successfully!");
+        closeModal("collectionBagDetailsModal"); // Close the modal
+        // Optionally, refresh the bag list or update the UI
+      } else {
+        // Handle error
+        alert(data.message || "Failed to create bag.");
+      }
+    })
+    .catch((error) => {
+      console.error("Error:", error);
+      alert("An error occurred while creating the bag.");
+    });
 }

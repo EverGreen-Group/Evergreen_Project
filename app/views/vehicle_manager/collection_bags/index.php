@@ -8,6 +8,9 @@
 <link rel="stylesheet" href="<?php echo URLROOT; ?>/css/vehicle_manager/collection_bags/styles.css">
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script src="<?php echo URLROOT; ?>/public/js/collection_bags.js"></script>
+<script>
+    const URLROOT = '<?php echo URLROOT; ?>';
+</script>
 
 
 <!-- MAIN -->
