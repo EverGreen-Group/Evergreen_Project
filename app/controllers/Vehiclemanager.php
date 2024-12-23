@@ -1207,5 +1207,52 @@ class VehicleManager extends Controller {
         }
     }
 
+    public function getBags() {
+        // Fetch bags from the model
+        $bags = $this->bagModel->getAllBags(); // Assuming this method exists in your model
+
+        // Return the bags as a JSON response
+        echo json_encode(['success' => true, 'bags' => $bags]);
+    }
+
+    public function getBagDetails($bagId) {
+        // Fetch bag details from the model
+        $bag = $this->bagModel->getBagDetails($bagId); // Assuming this method exists in your model
+
+        // Check if bag exists and return as JSON response
+        if ($bag) {
+            echo json_encode(['success' => true, 'bag' => $bag]);
+        } else {
+            echo json_encode(['success' => false, 'message' => 'Bag not found.']);
+        }
+    }
+
+    public function updateBag() {
+        if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+            // Get the raw POST data
+            $input = file_get_contents("php://input");
+            $data = json_decode($input, true); // Decode the JSON payload
+
+            // Validate and sanitize input
+            $bagId = $data['bag_id'] ?? null;
+            $capacityKg = (float)($data['capacity_kg'] ?? 0);
+            $bagWeightKg = (float)($data['bag_weight_kg'] ?? 0);
+            $status = $data['status'] ?? 'inactive'; // Default to inactive if not provided
+
+            // Call the model method to update the collection bag
+            $result = $this->bagModel->updateCollectionBag($bagId, $capacityKg, $bagWeightKg, $status);
+
+            if ($result) {
+                // Return success response
+                echo json_encode(['success' => true]);
+            } else {
+                // Handle error
+                echo json_encode(['success' => false, 'message' => 'Failed to update collection bag.']);
+            }
+        } else {
+            echo json_encode(['success' => false, 'message' => 'Invalid request method.']);
+        }
+    }
+
 }
 ?>

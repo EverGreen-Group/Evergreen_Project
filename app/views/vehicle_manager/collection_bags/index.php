@@ -30,11 +30,6 @@
           <i class='bx bx-plus'></i>
           Add New Bag
       </button>
-
-      <a href="<?php echo URLROOT; ?>/vehiclemanager/updateBag" class="btn btn-primary">
-          <i class='bx bx-plus'></i>
-          Update Bag Details
-      </a>
   </div>
 
   <ul class="box-info">
@@ -130,39 +125,28 @@
                 </div>
         <i class='bx bx-search'></i>
       </div>
-      <table>
+      <table id="bagsTable">
         <thead>
           <tr>
             <th>Bag ID</th>
-            <th>Bag Type</th>
             <th>Capacity</th>
-            <th>View</th>
+            <th>Bag Weight</th>
+            <th></th>
           </tr>
         </thead>
         <tbody>
             <tr>
                 <td>Bag001</td>
-                <td>Type A</td>
                 <td>50 kg</td>
+                <td>2 kg</td>
                 <td>
-                    <button class="btn btn-primary" onclick="showBagDetails('Bag001', 'Type A', 50, 45, 'Normal Leaf', '2023-10-01', 'COL001', 'Driver A', 12, 5, 45, 50, 30)">View</button>
+                    <div style="display: flex; justify-content: flex-end; margin-right: 80px; gap: 30px;">
+                        <button class="btn btn-primary" onclick="showBagDetails('Bag001', 'Type A', 50, 45, 'Normal Leaf', '2023-10-01', 'COL001', 'Driver A', 12, 5, 45, 50, 30)">View</button>
+                        <button class="btn btn-secondary" onclick="openUpdateBagModal('Bag001')">Update</button>
+                        <button class="btn btn-tertiary" onclick="removeBag('Bag001')">Remove</button>
+                    </div>
                 </td>
-            </tr>
-            <tr>
-                <td>Bag002</td>
-                <td>Type B</td>
-                <td>70 kg</td>
-                <td>
-                    <button class="btn btn-primary" onclick="showBagDetails('Bag002', 'Type B', 70)">View</button>
-                </td>
-            </tr>
-            <tr>
-                <td>Bag003</td>
-                <td>Type C</td>
-                <td>60 kg</td>
-                <td>
-                    <button class="btn btn-primary" onclick="showBagDetails('Bag003', 'Type C', 60)">View</button>
-                </td>
+
             </tr>
         </tbody>
       </table>

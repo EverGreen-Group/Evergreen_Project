@@ -36,5 +36,30 @@ class M_CollectionBag{
     }
 
 
+    public function getAllBags() {
+        $this->db->query("SELECT bag_id, capacity_kg, bag_weight_kg FROM collection_bags");
+        return $this->db->resultSet();
+    }
+
+    public function getTotalBags() {
+        $this->db->query("SELECT COUNT(*) as total FROM collection_bags");
+        return $this->db->single()->total; 
+    }
+
+    public function getBagDetails($bagId) {
+        $this->db->query("SELECT * FROM collection_bags WHERE bag_id = :bag_id");
+        $this->db->bind(':bag_id', $bagId);
+        return $this->db->single(); // Fetch the bag details
+    }
+
+    public function updateCollectionBag($bagId, $capacityKg, $bagWeightKg, $status) {
+        $this->db->query("UPDATE collection_bags SET capacity_kg = :capacity_kg, bag_weight_kg = :bag_weight_kg, status = :status WHERE bag_id = :bag_id");
+        $this->db->bind(':capacity_kg', $capacityKg);
+        $this->db->bind(':bag_weight_kg', $bagWeightKg);
+        $this->db->bind(':status', $status);
+        $this->db->bind(':bag_id', $bagId);
+        return $this->db->execute(); // Execute the update
+    }
+
 }
 
