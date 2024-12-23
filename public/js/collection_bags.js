@@ -539,3 +539,39 @@ function updateBag(event, bagId) {
       alert("An error occurred while updating the bag.");
     });
 }
+
+function removeBag(bagId) {
+  if (confirm("Are you sure you want to remove this bag?")) {
+    // Construct the URL using URLROOT
+    const url = `${URLROOT}/vehiclemanager/removeBag`; // Adjust the path as necessary
+
+    // Prepare data to send to the server
+    const data = {
+      bag_id: bagId,
+    };
+
+    // Send the data to the server
+    fetch(url, {
+      method: "DELETE",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(data),
+    })
+      .then((response) => response.json())
+      .then((data) => {
+        if (data.success) {
+          // Handle success (e.g., show success message)
+          alert("Bag removed successfully!");
+          fetchBags(); // Refresh the bags table
+        } else {
+          // Handle error
+          alert(data.message || "Failed to remove bag.");
+        }
+      })
+      .catch((error) => {
+        console.error("Error:", error);
+        alert("An error occurred while removing the bag.");
+      });
+  }
+}

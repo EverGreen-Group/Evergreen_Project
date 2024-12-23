@@ -1254,5 +1254,35 @@ class VehicleManager extends Controller {
         }
     }
 
+    public function removeBag() {
+        if ($_SERVER['REQUEST_METHOD'] == 'DELETE') {
+            // Get the raw POST data
+            $input = file_get_contents("php://input");
+            $data = json_decode($input, true); // Decode the JSON payload
+
+            // Validate and sanitize input
+            $bagId = $data['bag_id'] ?? null;
+
+            // Check if the bag is in use
+            if ($this->bagModel->isBagInUse($bagId)) {
+                echo json_encode(['success' => false, 'message' => 'Cannot remove bag. It is currently in use.']);
+                return;
+            }
+
+            // Call the model method to remove the collection bag
+            $result = $this->bagModel->removeCollectionBag($bagId);
+
+            if ($result) {
+                // Return success response
+                echo json_encode(['success' => true]);
+            } else {
+                // Handle error
+                echo json_encode(['success' => false, 'message' => 'Failed to remove collection bag.']);
+            }
+        } else {
+            echo json_encode(['success' => false, 'message' => 'Invalid request method.']);
+        }
+    }
+
 }
 ?>
