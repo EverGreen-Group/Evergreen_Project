@@ -14,6 +14,7 @@ require_once '../app/models/M_Collection.php';    // Add Collection model
 require_once '../app/models/M_CollectionSupplierRecord.php';
 require_once '../app/models/M_User.php'; // Correctly include the M_User model
 require_once '../app/models/M_Employee.php';
+require_once '../app/models/M_CollectionBag.php';
 
 class VehicleManager extends Controller {
     private $vehicleManagerModel;
@@ -30,6 +31,7 @@ class VehicleManager extends Controller {
     private $collectionSupplierRecordModel;
     private $userModel;
     private $employeeModel;
+    private $bagModel;
     
 
     public function __construct() {
@@ -60,6 +62,7 @@ class VehicleManager extends Controller {
         $this->collectionSupplierRecordModel = $this->model('M_CollectionSupplierRecord');
         $this->userModel = $this->model('M_User');
         $this->employeeModel = $this->model('M_Employee');
+        $this->bagModel = $this->model('M_CollectionBag');
     }
 
     private function isAjaxRequest() {
@@ -1173,7 +1176,35 @@ class VehicleManager extends Controller {
             // 'vehicleTypeStats' => $this->vehicleModel->getVehicleTypeStats()
         ];
 
-        $this->view('vehicle_manager/v_bag', $data);
+        $this->view('vehicle_manager/collection_bags/index', $data);
+    }
+
+    public function createBag() {
+        if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+            // Get the raw POST data
+            $input = file_get_contents("php://input");
+            $data = json_decode($input, true); // Decode the JSON payload
+
+            // Log the received data
+            error_log("Received data: " . print_r($data, true));
+
+            // Convert to appropriate types
+            $data['capacity_kg'] = (float) ($data['capacity_kg'] ?? 50.00); // Default value
+            $data['bag_weight_kg'] = isset($data['bag_weight_kg']) ? (float) $data['bag_weight_kg'] : null; // Convert to float or null
+
+            // Call the model method to create the collection bag
+            $result = $this->bagModel->createCollectionBag($data);
+
+            if ($result) {
+                // Return success response
+                echo json_encode(['success' => true, 'lastInsertedId' => $result]);
+            } else {
+                // Handle error
+                echo json_encode(['success' => false, 'message' => 'Failed to create collection bag.']);
+            }
+        } else {
+            echo json_encode(['success' => false, 'message' => 'Invalid request method.']);
+        }
     }
 
 }
