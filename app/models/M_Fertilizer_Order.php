@@ -191,6 +191,36 @@ class M_Fertilizer_Order {
         return $this->db->execute();
     }
 
+    // In M_Fertilizer_Order.php
+    public function getRequestCounts($supplier_id) {
+        try {
+            // Get total requests
+            $this->db->query("SELECT 
+                COUNT(*) as total_requests,
+                SUM(CASE WHEN status = 'approved' THEN 1 ELSE 0 END) as accepted_requests,
+                SUM(CASE WHEN status = 'rejected' THEN 1 ELSE 0 END) as rejected_requests
+                FROM fertilizer_orders 
+                WHERE supplier_id = :supplier_id");
+                
+            $this->db->bind(':supplier_id', $supplier_id);
+            
+            $result = $this->db->single();
+            
+            return [
+                'total' => $result->total_requests ?? 0,
+                'accepted' => $result->accepted_requests ?? 0,
+                'rejected' => $result->rejected_requests ?? 0
+            ];
+        } catch (Exception $e) {
+            error_log("Error getting request counts: " . $e->getMessage());
+            return [
+                'total' => 0,
+                'accepted' => 0,
+                'rejected' => 0
+            ];
+        }
+    }
+
     
     
 }

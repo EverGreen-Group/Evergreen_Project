@@ -44,6 +44,31 @@
 
     <div class="table-data">
         <div class="order">
+            
+            <ul class="box-info">
+                <li>
+                    <i class='bx bxs-paper-plane'></i>
+                    <span class="text">
+                        <h3><?php echo $data['request_counts']['total']; ?></h3>
+                        <p>Total requests</p>
+                    </span>
+                </li>
+                <li>
+                    <i class='bx bxs-check-circle'></i>
+                    <span class="text">
+                        <h3><?php echo $data['request_counts']['accepted']; ?></h3>
+                        <p>Accepted</p>
+                    </span>
+                </li>
+                <li>
+                    <i class='bx bxs-x-circle'></i>
+                    <span class="text">
+                        <h3><?php echo $data['request_counts']['rejected']; ?></h3>
+                        <p>Rejected</p>
+                    </span>
+                </li>
+            </ul>
+
             <div class="head">
                 <h3>Available Fertilizer Types</h3>
             </div>
@@ -365,7 +390,26 @@
             width: 100%;
         }
     }
+    .box-info .text h3 {
+        color: #012970;
+    }
+    
+    .box-info .text h3.zero-count {
+        color: #999;
+    }
+    
+    .box-info li:nth-child(2) .text h3 { /* Accepted count */
+        color: #2ecc71;
+    }
+    
+    .box-info li:nth-child(3) .text h3 { /* Rejected count */
+        color: #e74c3c;
+    }
 </style>
+<!-- Update the box-info HTML to use the new classes 
+<h3 class="<?php echo $data['request_counts']['total'] === 0 ? 'zero-count' : ''; ?>">
+    <?php echo $data['request_counts']['total']; ?>
+</h3>-->
 
 
 <script>

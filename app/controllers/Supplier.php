@@ -13,6 +13,7 @@ class Supplier extends Controller {
     private $fertilizerOrderModel;
     private $landInspectionModel;
     private $complaintModel;
+    private $collectionSupplierRecordModel;
 
     public function __construct() {
         // Check if the user is logged in
@@ -31,15 +32,24 @@ class Supplier extends Controller {
         $this->complaintModel = new M_Complaint();
         // Initialize land inspection model
         $this->landInspectionModel = new M_LandInspection();
+        $this->collectionSupplierRecordModel = $this->model('M_CollectionSupplierRecord');
     }
 
     
     public function index() {
         // Temporary supplier ID (replace with session after login implementation)
         $supplier_id = 2;
-
+    
+        // Get schedule data
+        $data['schedule'] = $this->collectionSupplierRecordModel->getSupplierSchedule($supplier_id);
+        
+        // Get tea collection data for the current month
+        $collectionData = $this->collectionSupplierRecordModel->getMonthlyCollectionData();
+        $data['total_collections'] = count($collectionData);
+        $data['total_quantity'] = array_sum(array_column($collectionData, 'quantity'));
+        
         $data['previous_inspections'] = $this->landInspectionModel->getPreviousInspectionRequests($supplier_id);
-
+    
         $this->view('supplier/v_supply_dashboard', $data);
     }
 
@@ -73,7 +83,8 @@ class Supplier extends Controller {
 
     public function payments()
     {
-        $data = [];
+        $fertilizerModel = new M_Fertilizer_Order();
+        $data['orders'] = $fertilizerModel->getAllOrders();
 
         $this->view('shared/supplier/v_view_monthly_statement', $data);
     }
@@ -103,8 +114,18 @@ class Supplier extends Controller {
     public function requestFertilizer()
     {
         $fertilizerModel = new M_Fertilizer_Order();
-        $data['fertilizer_types'] = $fertilizerModel->getAllFertilizerTypes();
-        $data['orders'] = $fertilizerModel->getAllOrders();     //switch to getOrderBySupplier() after logging in
+        
+        // Get supplier ID from session (currently using temporary ID)
+        $supplier_id = 2; // Replace with $_SESSION['user_id'] when authentication is implemented
+        
+        // Get request counts
+        $requestCounts = $fertilizerModel->getRequestCounts($supplier_id);
+        
+        $data = [
+            'fertilizer_types' => $fertilizerModel->getAllFertilizerTypes(),
+            'orders' => $fertilizerModel->getAllOrders(),
+            'request_counts' => $requestCounts
+        ];
 
         $this->view('supplier/v_fertilizer_request', $data);
     }
@@ -561,5 +582,37 @@ class Supplier extends Controller {
         // Redirect back to the dashboard or inspection request page
         redirect('supplier/index');
     }
+
+    public function getTeaLeavesCollectionData() {
+        header('Content-Type: application/json');
+        
+        try {
+            // Get the data from the model
+            $data = $this->collectionSupplierRecordModel->getMonthlyCollectionData();
+            
+            // Define all months
+            $months = [
+                'January', 'February', 'March', 'April', 'May', 'June',
+                'July', 'August', 'September', 'October', 'November', 'December'
+            ];
+            
+            // Fill in missing months with zero values
+            $complete_data = [];
+            $data_map = array_column($data, 'quantity', 'month');
+            
+            foreach ($months as $month) {
+                $complete_data[] = [
+                    'month' => $month,
+                    'quantity' => floatval($data_map[$month] ?? 0)
+                ];
+            }
+            
+            echo json_encode($complete_data);
+        } catch (Exception $e) {
+            http_response_code(500);
+            echo json_encode(['error' => 'Failed to fetch collection data']);
+        }
+    }
+    
 }
 ?>
