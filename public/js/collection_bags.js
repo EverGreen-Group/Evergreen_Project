@@ -431,3 +431,111 @@ function populateBagsTable(bags) {
     tbody.appendChild(row);
   });
 }
+
+function openUpdateBagModal(bagId) {
+  // Fetch the bag details from the server
+  fetch(`${URLROOT}/vehiclemanager/getBagDetails/${bagId}`)
+    .then((response) => response.json())
+    .then((data) => {
+      if (data.success) {
+        const bag = data.bag; // Assuming the response contains the bag details
+
+        const content = document.getElementById("collectionBagDetailsContent");
+        content.innerHTML = `
+          <div class="vehicle-modal-content">
+            <div class="vehicle-modal-image">
+              <img src="https://upload.wikimedia.org/wikipedia/commons/d/d0/QR_code_for_mobile_English_Wikipedia.svg" alt="QR Code" />
+            </div>
+            <div class="vehicle-modal-details">
+              <div class="detail-group">
+                <h3>Update Bag Information</h3>
+                <div class="detail-row">
+                  <span class="label">Capacity (kg):</span>
+                  <span class="value"><input type="number" id="updateBagCapacity" value="${
+                    bag.capacity_kg
+                  }" required style="width: 100%; padding: 8px; box-sizing: border-box;"></span>
+                </div>
+                <div class="detail-row">
+                  <span class="label">Bag Weight:</span>
+                  <span class="value"><input type="number" id="updateBagWeight" value="${
+                    bag.bag_weight_kg
+                  }" required style="width: 100%; padding: 8px; box-sizing: border-box;"></span>
+                </div>
+                <div class="detail-row">
+                  <span class="label">Status:</span>
+                  <span class="value">
+                    <select id="updateBagStatus" required style="width: 100%; padding: 8px; box-sizing: border-box;">
+                      <option value="active" ${
+                        bag.status === "active" ? "selected" : ""
+                      }>Active</option>
+                      <option value="inactive" ${
+                        bag.status === "inactive" ? "selected" : ""
+                      }>Inactive</option>
+                    </select>
+                  </span>
+                </div>
+              </div>
+            </div>
+            <div style="text-align: center; margin-top: 20px;">
+              <button class="btn btn-primary full-width" onclick="updateBag(event, '${bagId}')">UPDATE BAG</button>
+            </div>
+          </div>
+        `;
+
+        document.getElementById("collectionBagDetailsModal").style.display =
+          "block";
+      } else {
+        alert(data.message || "Failed to load bag details.");
+      }
+    })
+    .catch((error) => {
+      console.error("Error:", error);
+      alert("An error occurred while loading bag details.");
+    });
+}
+
+function updateBag(event, bagId) {
+  event.preventDefault(); // Prevent the default form submission
+
+  // Gather input values
+  const bagCapacity = document.getElementById("updateBagCapacity").value;
+  const bagWeight = document.getElementById("updateBagWeight").value;
+  const bagStatus = document.getElementById("updateBagStatus").value; // Get the selected status
+
+  // Prepare data to send to the server
+  const data = {
+    bag_id: bagId,
+    capacity_kg: bagCapacity,
+    bag_weight_kg: bagWeight,
+    status: bagStatus, // Include the status in the data
+  };
+
+  // Construct the URL using URLROOT
+  const url = `${URLROOT}/vehiclemanager/updateBag`; // Adjust the path as necessary
+
+  // Send the data to the server
+  fetch(url, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(data),
+  })
+    .then((response) => response.json())
+    .then((data) => {
+      if (data.success) {
+        // Handle success (e.g., close modal, show success message)
+        alert("Bag updated successfully!");
+        closeModal("collectionBagDetailsModal"); // Close the modal
+        // Optionally, refresh the bag list or update the UI
+        fetchBags(); // Refresh the bags table
+      } else {
+        // Handle error
+        alert(data.message || "Failed to update bag.");
+      }
+    })
+    .catch((error) => {
+      console.error("Error:", error);
+      alert("An error occurred while updating the bag.");
+    });
+}
