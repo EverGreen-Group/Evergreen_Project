@@ -1181,3 +1181,27 @@ body.dark .auth-form-group input {
   text-decoration: none;
   transition: background-color 0.3s ease;
 }
+
+.btn-secondary {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background-color: var(--mainn);
+  color: var(--light);
+  padding: 10px 20px;
+  border-radius: 5px;
+  text-decoration: none;
+  transition: background-color 0.3s ease;
+}
+
+.btn-tertiary {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background-color: var(--red);
+  color: var(--light);
+  padding: 10px 20px;
+  border-radius: 5px;
+  text-decoration: none;
+  transition: background-color 0.3s ease;
+}

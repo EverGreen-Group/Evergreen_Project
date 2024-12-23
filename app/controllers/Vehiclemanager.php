@@ -1207,5 +1207,25 @@ class VehicleManager extends Controller {
         }
     }
 
+    public function getBags() {
+        // Fetch bags from the model
+        $bags = $this->bagModel->getAllBags(); // Assuming this method exists in your model
+
+        // Return the bags as a JSON response
+        echo json_encode(['success' => true, 'bags' => $bags]);
+    }
+
+    public function getBagDetails($bagId) {
+        // Fetch bag details from the model
+        $bag = $this->bagModel->getBagDetails($bagId); // Assuming this method exists in your model
+
+        // Check if bag exists and return as JSON response
+        if ($bag) {
+            echo json_encode(['success' => true, 'bag' => $bag]);
+        } else {
+            echo json_encode(['success' => false, 'message' => 'Bag not found.']);
+        }
+    }
+
 }
 ?>

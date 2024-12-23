@@ -388,3 +388,46 @@ function addNewBag(event) {
       alert("An error occurred while creating the bag.");
     });
 }
+
+// TO FILL THE COLLECTION BAG TABLE
+
+document.addEventListener("DOMContentLoaded", function () {
+  fetchBags();
+});
+
+function fetchBags() {
+  fetch(`${URLROOT}/vehiclemanager/getBags`) // Adjust the URL as necessary
+    .then((response) => response.json())
+    .then((data) => {
+      if (data.success) {
+        populateBagsTable(data.bags);
+      } else {
+        console.error("Failed to fetch bags:", data.message);
+      }
+    })
+    .catch((error) => {
+      console.error("Error fetching bags:", error);
+    });
+}
+
+function populateBagsTable(bags) {
+  const tbody = document.querySelector("#bagsTable tbody"); // Target the correct tbody
+  tbody.innerHTML = ""; // Clear existing rows
+
+  bags.forEach((bag) => {
+    const row = document.createElement("tr");
+    row.innerHTML = `
+          <td>${bag.bag_id}</td>
+          <td>${bag.capacity_kg} kg</td>
+          <td>${bag.bag_weight_kg} kg</td>
+          <td>
+              <div style="display: flex; justify-content: flex-end; margin-right: 80px; gap: 30px;">
+                  <button class="btn btn-primary" onclick="showBagDetails('${bag.bag_id}', 'Type A', ${bag.capacity_kg}, ${bag.bag_weight_kg}, 'Normal Leaf', '2023-10-01', 'COL001', 'Driver A', 12, 5, 45, 50, 30)">View</button>
+                  <button class="btn btn-secondary" onclick="openUpdateBagModal('${bag.bag_id}')">Update</button>
+                  <button class="btn btn-tertiary" onclick="removeBag('${bag.bag_id}')">Remove</button>
+              </div>
+          </td>
+      `;
+    tbody.appendChild(row);
+  });
+}
