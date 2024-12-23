@@ -61,5 +61,18 @@ class M_CollectionBag{
         return $this->db->execute(); // Execute the update
     }
 
+    public function removeCollectionBag($bagId) {
+        $this->db->query("DELETE FROM collection_bags WHERE bag_id = :bag_id");
+        $this->db->bind(':bag_id', $bagId);
+        return $this->db->execute(); // Execute the delete
+    }
+
+    public function isBagInUse($bagId) {
+        $this->db->query("SELECT COUNT(*) as count FROM bag_usage_history WHERE bag_id = :bag_id");
+        $this->db->bind(':bag_id', $bagId);
+        $result = $this->db->single(); // Fetch the count
+        return $result->count > 0; // Return true if the bag is in use
+    }
+
 }
 
