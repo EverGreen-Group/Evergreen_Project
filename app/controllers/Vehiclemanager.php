@@ -969,6 +969,9 @@ class VehicleManager extends Controller {
                 // Log the target path
                 error_log("Target path: " . $targetPath);
 
+                // Debugging: Log the full path
+                error_log("Full path to image: " . $targetPath);
+
                 // Check if file is actually uploaded
                 if (is_uploaded_file($file['tmp_name'])) {
                     // Move the uploaded file
@@ -1310,6 +1313,38 @@ class VehicleManager extends Controller {
             echo json_encode(['success' => false, 'message' => 'Invalid request method.']);
         }
     }
+
+    public function deleteBagQR() {
+        // Get the JSON input
+        $input = json_decode(file_get_contents('php://input'), true);
+        
+        // Check if the image path is provided
+        if (isset($input['image_path'])) {
+            $imagePath = $input['image_path'];
+    
+            // Debugging: Log the full path
+            error_log("Full path to image: " . $imagePath);
+    
+            // Check if the file exists
+            if (file_exists($imagePath)) {
+                // Attempt to delete the file
+                if (unlink($imagePath)) {
+                    // File deleted successfully
+                    echo json_encode(['success' => true, 'message' => 'Image deleted successfully.']);
+                } else {
+                    // Failed to delete the file
+                    echo json_encode(['success' => false, 'message' => 'Failed to delete the image.']);
+                }
+            } else {
+                // File does not exist
+                echo json_encode(['success' => false, 'message' => 'Image file not found.']);
+            }
+        } else {
+            // No image path provided
+            echo json_encode(['success' => false, 'message' => 'No image path provided.']);
+        }
+    }
+    
 
 }
 ?>
