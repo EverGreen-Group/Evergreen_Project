@@ -12,6 +12,8 @@ require_once '../app/helpers/auth_middleware.php';
 require_once '../app/helpers/UserHelper.php';
 require_once '../app/models/M_Collection.php';    // Add Collection model
 require_once '../app/models/M_CollectionSupplierRecord.php';
+require_once '../app/models/M_User.php'; // Correctly include the M_User model
+require_once '../app/models/M_Employee.php';
 
 class VehicleManager extends Controller {
     private $vehicleManagerModel;
@@ -26,6 +28,8 @@ class VehicleManager extends Controller {
     private $userHelper;
     private $collectionModel;
     private $collectionSupplierRecordModel;
+    private $userModel;
+    private $employeeModel;
     
 
     public function __construct() {
@@ -39,6 +43,7 @@ class VehicleManager extends Controller {
             redirect('');
             exit();
         }
+        
 
         // Initialize models
         $this->vehicleManagerModel = new M_VehicleManager();
@@ -53,6 +58,13 @@ class VehicleManager extends Controller {
         $this->userHelper = new UserHelper();
         $this->collectionModel = $this->model('M_Collection');
         $this->collectionSupplierRecordModel = $this->model('M_CollectionSupplierRecord');
+        $this->userModel = $this->model('M_User');
+        $this->employeeModel = $this->model('M_Employee');
+    }
+
+    private function isAjaxRequest() {
+        return isset($_SERVER['HTTP_X_REQUESTED_WITH']) && 
+               strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) === 'xmlhttprequest';
     }
 
     public function index() {
@@ -61,21 +73,23 @@ class VehicleManager extends Controller {
 
         // Fetch all necessary data for the dropdowns
         $routes = $this->routeModel->getAllRoutes();
-        $teams = $this->teamModel->getAllTeams();
+        $drivers = $this->driverModel->getUnassignedDrivers();
         $vehicles = $this->vehicleModel->getAllVehicles();
         $shifts = $this->shiftModel->getAllShifts();
         $schedules = $this->scheduleModel->getAllSchedules();
         $ongoingCollections = $this->collectionModel->getOngoingCollections();
+        $todayRoutes = $this->routeModel->getTodayAssignedRoutes();
 
         // Pass the stats and data for the dropdowns to the view
         $this->view('vehicle_manager/v_collection', [
             'stats' => $stats,
             'routes' => $routes,
-            'teams' => $teams,
+            'drivers' => $drivers,
             'vehicles' => $vehicles,
             'shifts' => $shifts,
             'schedules' => $schedules,
-            'ongoing_collections' => $ongoingCollections
+            'ongoing_collections' => $ongoingCollections,
+            'todayRoutes' => $todayRoutes 
         ]);
     }
 
@@ -135,100 +149,145 @@ class VehicleManager extends Controller {
         $this->view('vehicle_manager/v_vehicle', $data);
     }
 
-    public function team() {
-        $teamStats = $this->teamModel->getTeamStatistics();
-        $teams = $this->teamModel->getTeamsWithMembers();
-        $unassignedDrivers = $this->teamModel->getUnassignedDrivers(); // Fetch unassigned drivers
-        $unassignedPartners = $this->teamModel->getUnassignedPartner(); // Fetch unassigned partners
+    public function driver() {
+        $unassignedDrivers = $this->driverModel->getUnassignedDriversList(); 
+        $allDrivers = $this->driverModel->getAllDrivers();
+        $totalDrivers = $this->driverModel->getTotalDrivers();
+        $onDutyDrivers = $this->driverModel->getDriversOnDuty();
+        $unassignedDriversCount = $this->driverModel->getUnassignedDriversCount();
 
         $data = [
-            'teamStats' => $teamStats,
-            'teams' => $teams,
-            'unassigned_drivers' => $unassignedDrivers, // Add unassigned drivers to the data array
-            'unassigned_partners' => $unassignedPartners // Add unassigned partners to the data array
+            'unassigned_drivers' => $unassignedDrivers,
+            'all_drivers' => $allDrivers,
+            'total_drivers' => $totalDrivers,
+            'on_duty_drivers' => $onDutyDrivers,
+            'unassigned_drivers_count' => $unassignedDriversCount
         ];
         
-        $this->view('vehicle_manager/v_team', $data);
+        $this->view('vehicle_manager/v_driver', $data);
     }
 
-    public function updateTeam() {
+
+    public function addDriver() {
         if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             $_POST = filter_input_array(INPUT_POST, FILTER_SANITIZE_STRING);
 
-            $data = [
-                'team_id' => trim($_POST['team_id']),
-                'team_name' => trim($_POST['team_name']),
-                'driver_id' => trim($_POST['driver_id']),
-                'partner_id' => trim($_POST['partner_id']),
-                'status' => trim($_POST['status'])
-            ];
+            // Get the user_id from the form submission
+            $user_id = trim($_POST['user_id']); // Get the user_id from the dropdown
 
-            if (empty($data['team_name'])) {
-                $_SESSION['flash_messages']['team_message'] = [
-                    'message' => 'Please enter team name',
-                    'class' => 'alert alert-danger'
-                ];
-                redirect('vehiclemanager/team');
-                return;
+            // Validate that a user has been selected
+            if (empty($user_id)) {
+                die('Please select a user.');
             }
 
-            if ($this->teamModel->updateTeam($data)) {
-                $_SESSION['flash_messages']['team_message'] = [
-                    'message' => 'Team updated successfully',
-                    'class' => 'alert alert-success'
-                ];
-            } else {
-                $_SESSION['flash_messages']['team_message'] = [
-                    'message' => 'Failed to update team',
-                    'class' => 'alert alert-danger'
-                ];
-            }
-            redirect('vehiclemanager/team');
-        }
-    }
-
-    public function createTeam() {
-        if ($_SERVER['REQUEST_METHOD'] == 'POST') {
-            $_POST = filter_input_array(INPUT_POST, FILTER_SANITIZE_STRING);
-
-            // Get manager_id using helper
-            $manager_id = $this->userHelper->getManagerId($_SESSION['user_id']);
-            if (!$manager_id) {
-                die('Invalid manager access');
-            }
-
-            $data = [
-                'team_name' => trim($_POST['team_name']),
-                'driver_id' => !empty($_POST['driver_id']) ? trim($_POST['driver_id']) : null,
-                'partner_id' => !empty($_POST['partner_id']) ? trim($_POST['partner_id']) : null,
-                'status' => trim($_POST['status']),
-                'manager_id' => $this->userHelper->getManagerId($_SESSION['user_id'])
-            ];
-
-            // Validate team name
-            if (empty($data['team_name'])) {
-                die('Please enter team name');
-            }
-
-            // Debug line - remove in production
-            error_log('Creating team with data: ' . print_r($data, true));
-
-            if ($this->teamModel->createTeam($data)) {
+            // Update the role_id to 6 for the selected user
+            if ($this->userModel->updateUserRole($user_id, 6)) {
                 $_SESSION['flash_messages'] = [
-                    'team_message' => [
-                        'message' => 'Team created successfully',
+                    'driver_message' => [
+                        'message' => 'User role updated to 6 successfully.',
                         'class' => 'alert alert-success'
                     ]
                 ];
+
+                // Prepare data for the employees table
+                $employeeData = [
+                    'user_id' => $user_id,
+                    'hire_date' => date('Y-m-d'), // Set the hire date to today
+                    'contact_number' => trim($_POST['contact_number']),
+                    'emergency_contact' => trim($_POST['emergency_contact']),
+                    'status' => !empty($_POST['status']) ? trim($_POST['status']) : 'Active', // Default to 'Active' if not set
+                    'address_line1' => trim($_POST['address_line1']),
+                    'address_line2' => trim($_POST['address_line2']),
+                    'city' => trim($_POST['city'])
+                ];
+
+                // Insert the employee data into the employees table
+                if ($this->employeeModel->addEmployee($employeeData)) {
+                    $_SESSION['flash_messages']['driver_message']['message'] .= ' Employee added successfully.';
+
+                    // Get the last inserted employee ID
+                    $employee_id = $this->employeeModel->getLastInsertedId(); // Assuming you have this method
+
+                    // Prepare data for the drivers table
+                    $driverData = [
+                        'employee_id' => $employee_id,
+                        'user_id' => $user_id,
+                        'status' => 'Available', // Default status
+                        'is_deleted' => 0 // Default to not deleted
+                    ];
+
+                    // Insert the driver data into the drivers table
+                    if ($this->driverModel->addDriver($driverData)) {
+                        $_SESSION['flash_messages']['driver_message']['message'] .= ' Driver added successfully.';
+                    } else {
+                        $_SESSION['flash_messages']['driver_message']['message'] .= ' Failed to add driver.';
+                        $_SESSION['flash_messages']['driver_message']['class'] = 'alert alert-danger';
+                    }
+                } else {
+                    $_SESSION['flash_messages']['driver_message']['message'] .= ' Failed to add employee.';
+                    $_SESSION['flash_messages']['driver_message']['class'] = 'alert alert-danger';
+                }
             } else {
                 $_SESSION['flash_messages'] = [
-                    'team_message' => [
-                        'message' => 'Failed to create team',
+                    'driver_message' => [
+                        'message' => 'Failed to update user role.',
                         'class' => 'alert alert-danger'
                     ]
                 ];
             }
-            redirect('vehiclemanager/team');
+
+            redirect('vehiclemanager/driver'); // Redirect to the drivers page
+        } else {
+            $data = [
+                'first_name' => '',
+                'last_name' => '',
+                'license_no' => '',
+                'experience_years' => '',
+                'contact_number' => '',
+                'status' => '',
+                'users' => $this->userModel->getAllUnassignedUsers()
+            ];
+
+            // Load the view for adding a driver
+            $this->view('vehicle_manager/v_add_driver', $data);
+        }
+    }
+
+
+    public function updateDriver() {
+        if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+            // Sanitize and retrieve the input data
+            $user_id = trim($_POST['user_id']);
+            $address_line1 = trim($_POST['address_line1']);
+            $address_line2 = trim($_POST['address_line2']);
+            $city = trim($_POST['city']);
+            $contact_number = trim($_POST['contact_number']);
+            $emergency_contact = trim($_POST['emergency_contact']);
+    
+            // Validate the input data as needed
+    
+            // Update the driver information in the database
+            $result = $this->employeeModel->updateDriverInfo($user_id, $address_line1, $address_line2, $city, $contact_number, $emergency_contact);
+    
+            // Check if the update was successful
+            if ($result) {
+                // Redirect or provide feedback
+                flash('driver_update_success', 'Driver information updated successfully.');
+                header('Location: ' . URLROOT . '/vehiclemanager/driver'); // Redirect to a relevant page
+                exit;
+            } else {
+                // Handle the error
+                flash('driver_update_error', 'Failed to update driver information.');
+            }
+        } else {
+
+            // Prepare data to pass to the view
+            $data = [
+                'users' => $this->userModel->getAllUserDrivers() // Ensure you are passing the users as well
+            ];
+
+            // Load the view for updating a driver
+            $this->view('vehicle_manager/v_update_driver', $data);
         }
     }
 
@@ -244,10 +303,14 @@ class VehicleManager extends Controller {
             return [
                 'id' => $supplier->supplier_id,
                 'name' => $supplier->full_name, // Changed from supplier_name to full_name
+                'preferred_day' => $supplier->preferred_day, // Include preferred_day
                 'location' => [
                     'lat' => (float)$supplier->latitude,
                     'lng' => (float)$supplier->longitude
-                ]
+                ],
+                'average_collection' => $supplier->average_collection,
+                'number_of_collections' => $supplier->number_of_collections
+
             ];
         }, $unallocatedSuppliers);
 
@@ -387,32 +450,6 @@ class VehicleManager extends Controller {
             }
             redirect('vehiclemanager/shift');
         }
-    }
-
-    public function staff() {
-        // Get manager_id and add debug logging
-        $manager_id = $this->staffModel->getManagerIdByUserId($_SESSION['user_id']);
-        error_log("Controller got manager_id: " . $manager_id);
-        
-        $data = [
-            'drivers' => $this->staffModel->getAllDrivers(),
-            'partners' => $this->staffModel->getAllPartners(),
-            'managers' => $this->staffModel->getAllManagers(),
-            'totalDrivers' => $this->staffModel->getTotalDrivers(),
-            'totalPartners' => $this->staffModel->getTotalPartners(),
-            'totalUnavailableDriver' => $this->staffModel->getTotalUnavailableDriver(),
-            'totalUnavailablePartner' => $this->staffModel->getTotalUnavailablePartner(),
-            'currentLeaves' => $this->staffModel->getUpcomingLeaves(),
-            'pendingLeaves' => $this->staffModel->getPendingLeaves(),
-            'manager_id' => $manager_id,
-            'leaveTypeStats' => $this->staffModel->getLeaveTypeDistribution(),
-            'monthlyLeaveStats' => $this->staffModel->getMonthlyLeaveDistribution()
-        ];
-        
-        // Add debug logging
-        error_log("Data being sent to view: " . print_r($data, true));
-        
-        $this->view('vehicle_manager/v_staff', $data);
     }
 
     public function settings() {
@@ -556,9 +593,9 @@ class VehicleManager extends Controller {
     public function getVehicleById($id) {
         $vehicle = $this->vehicleModel->getVehicleById($id);
         if ($vehicle) {
-            echo json_encode($vehicle);
+            echo json_encode(['success' => true, 'vehicle' => $vehicle]);
         } else {
-            echo json_encode(['error' => 'Vehicle not found']);
+            echo json_encode(['success' => false]);
         }
     }
 
@@ -703,33 +740,7 @@ class VehicleManager extends Controller {
     }
 
 
-    public function remove_staff() {
-        if ($_SERVER['REQUEST_METHOD'] == 'POST') {
-            // Set JSON header
-            header('Content-Type: application/json');
 
-            $data = json_decode(file_get_contents("php://input"), true);
-            if (isset($data['staffId']) && isset($data['role'])) {
-                $staffId = $data['staffId'];
-                $role = $data['role'];
-
-                $success = false;
-                if ($role === 'driver') {
-                    $success = $this->driverModel->softDeleteDriver($staffId);
-                } elseif ($role === 'partner') {
-                    $success = $this->partnerModel->softDeletePartner($staffId);
-                }
-
-                echo json_encode(['success' => $success]);
-            } else {
-                echo json_encode(['success' => false, 'error' => 'Invalid input']);
-            }
-        } else {
-            // If the request method is not POST, return an error
-            header('Content-Type: application/json');
-            echo json_encode(['success' => false, 'error' => 'Method not allowed']);
-        }
-    }
 
     public function update_leave_status() {
         header('Content-Type: application/json');
@@ -790,24 +801,7 @@ class VehicleManager extends Controller {
         }
     }
 
-    public function deleteTeam($teamId) {
-        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-            die('Invalid request method');
-        }
 
-        if ($this->teamModel->setTeamVisibility($teamId, 0)) {
-            $_SESSION['flash_messages']['team_message'] = [
-                'message' => 'Team deleted successfully',
-                'class' => 'alert alert-success'
-            ];
-        } else {
-            $_SESSION['flash_messages']['team_message'] = [
-                'message' => 'Failed to delete team',
-                'class' => 'alert alert-danger'
-            ];
-        }
-        redirect('vehiclemanager/team');
-    }
 
     public function getCollectionRoute($collectionId) {
         // Get collection details
@@ -893,8 +887,8 @@ class VehicleManager extends Controller {
                 'title' => 'Add New Vehicle'
             ];
             $this->view('vehicle_manager/v_add_vehicle', $data);
-        } else {
-            // Handle POST request
+        } else if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+            // send thru postt
             $this->handleVehicleSubmission();
         }
     }
@@ -905,24 +899,12 @@ class VehicleManager extends Controller {
             $vehicleData = [
                 'license_plate' => $_POST['license_plate'],
                 'vehicle_type' => $_POST['vehicle_type'],
-                'engine_number' => $_POST['engine_number'],
-                'chassis_number' => $_POST['chassis_number'],
                 'status' => $_POST['status'],
-                'condition' => $_POST['condition'],
                 'make' => $_POST['make'],
                 'model' => $_POST['model'],
                 'manufacturing_year' => $_POST['manufacturing_year'],
                 'color' => $_POST['color'],
-                'fuel_type' => $_POST['fuel_type'],
-                'mileage' => $_POST['mileage'],
-                'capacity' => $_POST['capacity'],
-                'seating_capacity' => $_POST['seating_capacity'],
-                'owner_name' => $_POST['owner_name'],
-                'owner_contact' => $_POST['owner_contact'],
-                'registration_date' => $_POST['registration_date'],
-                'last_serviced_date' => $_POST['last_serviced_date'],
-                'last_maintenance' => $_POST['last_maintenance'],
-                'next_maintenance' => $_POST['next_maintenance']
+                'capacity' => $_POST['capacity']
             ];
 
             // Handle vehicle image
@@ -1086,6 +1068,100 @@ class VehicleManager extends Controller {
                 flash('route_message', 'Failed to delete route', 'error');
                 redirect('vehiclemanager/route');
             }
+        }
+    }
+
+    public function getAvailableVehicles($day) {
+        // Make sure nothing is output before this
+        ob_clean(); // Clear any previous output
+        
+        try {
+            $vehicles = $this->vehicleModel->getAvailableVehiclesByDay($day);
+            
+            header('Content-Type: application/json');
+            echo json_encode([
+                'status' => 'success',
+                'data' => $vehicles,
+                'message' => 'Vehicles retrieved successfully'
+            ]);
+            exit; // End the script after sending JSON
+        } catch (Exception $e) {
+            header('Content-Type: application/json');
+            echo json_encode([
+                'status' => 'error',
+                'message' => $e->getMessage()
+            ]);
+            exit;
+        }
+    }
+
+    public function getVehicleDetails($id) {
+        ob_clean();
+        
+        try {
+            $vehicle = $this->vehicleModel->getVehicleById($id);
+        
+            
+            header('Content-Type: application/json');
+            echo json_encode([
+                'status' => 'success',
+                'data' => $vehicle,
+                'message' => 'Vehicle details retrieved successfully'
+            ]);
+            exit;
+        } catch (Exception $e) {
+            header('Content-Type: application/json');
+            echo json_encode([
+                'status' => 'error',
+                'message' => $e->getMessage()
+            ]);
+            exit;
+        }
+    }
+
+    public function getRoutesByDay($day) {
+        $routes = $this->routeModel->getRoutesByDay($day);
+        echo json_encode(['routes' => $routes]);
+    }
+
+    public function getEmployeeByUserId($user_id) {
+        // Fetch employee data
+        $employeeData = $this->employeeModel->getEmployeeByUserId($user_id);
+        
+        // Ensure all expected keys exist
+        $response = [
+            'employee_id' => $employeeData->employee_id ?? null,
+            'user_id' => $employeeData->user_id ?? null,
+            'hire_date' => $employeeData->hire_date ?? null,
+            'contact_number' => $employeeData->contact_number ?? '',
+            'emergency_contact' => $employeeData->emergency_contact ?? '',
+            'status' => $employeeData->status ?? 'Active',
+            'address_line1' => $employeeData->address_line1 ?? '',
+            'address_line2' => $employeeData->address_line2 ?? '',
+            'city' => $employeeData->city ?? ''
+        ];
+        
+        echo json_encode($response);
+        exit;
+    }
+
+    public function removeDriver($user_id) {
+        if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+            try {
+                // Call the model method to remove the driver
+                if ($this->driverModel->removeDriver($user_id)) {
+                    flash('driver_message', 'Driver removed successfully', 'alert alert-success');
+                } else {
+                    flash('driver_message', 'Failed to remove driver', 'alert alert-danger');
+                }
+            } catch (Exception $e) {
+                flash('driver_message', 'Error: ' . $e->getMessage(), 'alert alert-danger');
+            }
+            
+            redirect('vehiclemanager/driver'); // Redirect to the driver management page
+        } else {
+            // If not a POST request, redirect to the driver management page
+            redirect('vehiclemanager/driver');
         }
     }
 

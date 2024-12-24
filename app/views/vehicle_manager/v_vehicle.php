@@ -44,13 +44,6 @@
           <h3><?php echo isset($data['availableVehicles']) ? $data['availableVehicles'] : '0'; ?></h3>
         </span>
     </li>
-    <li>
-        <i class='bx bxs-group'></i>
-        <span class="text">
-          <p>Under Maintainance</p>
-          <h3>-</h3>
-        </span>
-    </li>
   </ul>
 
 
@@ -87,6 +80,19 @@
     <div class="order">
       <div class="head">
         <h3>Vehicle Availability</h3>
+        <div class="filter-container">
+                    <label for="dayFilter">Filter by Day:</label>
+                    <select id="dayFilter">
+                        <option value="all">All Days</option>
+                        <option value="Monday">Monday</option>
+                        <option value="Tuesday">Tuesday</option>
+                        <option value="Wednesday">Wednesday</option>
+                        <option value="Thursday">Thursday</option>
+                        <option value="Friday">Friday</option>
+                        <option value="Saturday">Saturday</option>
+                        <option value="Sunday">Sunday</option>
+                    </select>
+                </div>
         <i class='bx bx-search'></i>
       </div>
       <table>
@@ -96,11 +102,6 @@
             <th>Plate Number</th>
             <th>Type</th>
             <th>Capacity</th>
-            
-            <th>Owner</th>
-            <th>Last Maintenance</th>
-            <th>Next Maintenance</th>
-            <th>Fuel Type</th>
             <th>Status</th>
           </tr>
         </thead>
@@ -113,10 +114,6 @@
                     <td><?php echo $vehicle->vehicle_type; ?></td>
                     <td><?php echo $vehicle->capacity; ?> Tons</td>
                     
-                    <td><?php echo property_exists($vehicle, 'owner_name') ? $vehicle->owner_name : 'N/A'; ?></td>
-                    <td><?php echo property_exists($vehicle, 'last_maintenance') ? date('Y-m-d', strtotime($vehicle->last_maintenance)) : 'N/A'; ?></td>
-                    <td><?php echo property_exists($vehicle, 'next_maintenance') ? date('Y-m-d', strtotime($vehicle->next_maintenance)) : 'N/A'; ?></td>
-                    <td><?php echo property_exists($vehicle, 'fuel_type') ? $vehicle->fuel_type : 'N/A'; ?></td>
                     <td>
                         <span class="status <?php 
                             echo $vehicle->status === 'Available' ? 'pending' : 
@@ -145,10 +142,12 @@
       <div class="vehicle-status">
           <label for="vehicleSelect">Select Vehicle:</label>
           <select id="vehicleSelect">
-              <option value="">-- Select a Vehicle --</option>
-              <option value="1">Vehicle 1 - Active</option>
-              <option value="2">Vehicle 2 - Inactive</option>
-              <option value="3">Vehicle 3 - Active</option>
+              <option value="">Select vehicle</option>
+              <?php if (isset($data['vehicles']) && !empty($data['vehicles'])): ?>
+                  <?php foreach ($data['vehicles'] as $vehicle): ?>
+                      <option value="<?php echo $vehicle->vehicle_id; ?>"> <?php echo $vehicle->license_plate; ?></option>
+                  <?php endforeach; ?>
+              <?php endif; ?>
           </select>
           <div id="vehicleInfo" style="margin-top: 10px;"></div>
       </div>
@@ -251,6 +250,8 @@
     }
   </style>
 
+
+
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <script>
     document.addEventListener('DOMContentLoaded', function() {
@@ -306,141 +307,6 @@
       <div id="vehicleDetailsContent"></div>
     </div>
   </div>
-
-
-
-<script>
-document.getElementById('editVehicleForm').addEventListener('submit', function(e) {
-    e.preventDefault();
-    
-    const vehicleId = document.getElementById('edit_vehicle_select').value;
-    if (!vehicleId) {
-        alert('Please select a vehicle');
-        return;
-    }
-
-    // Create data object
-    const data = {
-        vehicle_id: vehicleId,
-        license_plate: document.getElementById('edit_license_plate').value,
-        status: document.getElementById('edit_status').value,
-        vehicle_type: document.getElementById('edit_vehicle_type').value,
-        owner_name: document.getElementById('edit_owner_name').value,
-        owner_contact: document.getElementById('edit_owner_contact').value,
-        capacity: document.getElementById('edit_capacity').value,
-        seating_capacity: document.getElementById('edit_seating_capacity').value,
-        insurance_expiry_date: document.getElementById('edit_insurance_expiry_date').value,
-        road_tax_expiry_date: document.getElementById('edit_road_tax_expiry_date').value,
-        color: document.getElementById('edit_color').value,
-        engine_number: document.getElementById('edit_engine_number').value,
-        chassis_number: document.getElementById('edit_chassis_number').value,
-        condition: document.getElementById('edit_condition').value,
-        last_serviced_date: document.getElementById('edit_last_serviced_date').value,
-        last_maintenance: document.getElementById('edit_last_maintenance').value,
-        next_maintenance: document.getElementById('edit_next_maintenance').value,
-        mileage: document.getElementById('edit_mileage').value,
-        fuel_type: document.getElementById('edit_fuel_type').value,
-        registration_date: document.getElementById('edit_registration_date').value
-    };
-
-    // Log the data being sent
-    console.log('Sending data:', data);
-
-    // Send AJAX request
-    fetch('<?php echo URLROOT; ?>/vehiclemanager/updateVehicle', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-            'X-Requested-With': 'XMLHttpRequest'
-        },
-        body: JSON.stringify(data)
-    })
-    .then(response => {
-        // First check if the response is ok
-        if (!response.ok) {
-            return response.text().then(text => {
-                throw new Error('Server response: ' + text);
-            });
-        }
-        return response.json();
-    })
-    .then(responseData => {
-        console.log('Server response:', responseData);
-        if (responseData.success) {
-            alert('Vehicle updated successfully');
-            location.reload();
-        } else {
-            alert(responseData.message || 'Failed to update vehicle');
-        }
-    })
-    .catch(error => {
-        console.error('Error:', error);
-        alert('An error occurred while updating the vehicle: ' + error.message);
-    });
-});
-
-// Add this code to handle the edit form population
-document.getElementById('edit_vehicle_select').addEventListener('change', function() {
-    const vehicleId = this.value;
-    const form = document.getElementById('editVehicleForm');
-    
-    // Get all form inputs except the vehicle select dropdown
-    const formInputs = form.querySelectorAll('input, select:not(#edit_vehicle_select)');
-    
-    if (!vehicleId) {
-        // If no vehicle selected, disable and clear all fields
-        formInputs.forEach(input => {
-            input.disabled = true;
-            if (input.tagName === 'SELECT') {
-                input.selectedIndex = 0;
-            } else {
-                input.value = '';
-            }
-        });
-        return;
-    }
-
-    // Enable all fields if a vehicle is selected
-    formInputs.forEach(input => {
-        input.disabled = false;
-    });
-
-    // Find the selected vehicle data
-    const vehicle = vehicles.find(v => v.vehicle_id == vehicleId);
-    if (vehicle) {
-        // Populate form fields
-        document.getElementById('edit_license_plate').value = vehicle.license_plate || '';
-        document.getElementById('edit_status').value = vehicle.status || '';
-        document.getElementById('edit_vehicle_type').value = vehicle.vehicle_type || '';
-        document.getElementById('edit_owner_name').value = vehicle.owner_name || '';
-        document.getElementById('edit_owner_contact').value = vehicle.owner_contact || '';
-        document.getElementById('edit_capacity').value = vehicle.capacity || '';
-        document.getElementById('edit_seating_capacity').value = vehicle.seating_capacity || '';
-        document.getElementById('edit_insurance_expiry_date').value = vehicle.insurance_expiry_date ? vehicle.insurance_expiry_date.split(' ')[0] : '';
-        document.getElementById('edit_road_tax_expiry_date').value = vehicle.road_tax_expiry_date ? vehicle.road_tax_expiry_date.split(' ')[0] : '';
-        document.getElementById('edit_color').value = vehicle.color || '';
-        document.getElementById('edit_engine_number').value = vehicle.engine_number || '';
-        document.getElementById('edit_chassis_number').value = vehicle.chassis_number || '';
-        document.getElementById('edit_condition').value = vehicle.condition || '';
-        document.getElementById('edit_last_serviced_date').value = vehicle.last_serviced_date ? vehicle.last_serviced_date.split(' ')[0] : '';
-        document.getElementById('edit_last_maintenance').value = vehicle.last_maintenance ? vehicle.last_maintenance.split(' ')[0] : '';
-        document.getElementById('edit_next_maintenance').value = vehicle.next_maintenance ? vehicle.next_maintenance.split(' ')[0] : '';
-        document.getElementById('edit_mileage').value = vehicle.mileage || '';
-        document.getElementById('edit_fuel_type').value = vehicle.fuel_type || '';
-        document.getElementById('edit_registration_date').value = vehicle.registration_date ? vehicle.registration_date.split(' ')[0] : '';
-    }
-});
-
-// Initially disable all form fields except the vehicle select dropdown
-document.addEventListener('DOMContentLoaded', function() {
-    const form = document.getElementById('editVehicleForm');
-    const formInputs = form.querySelectorAll('input, select:not(#edit_vehicle_select)');
-    
-    formInputs.forEach(input => {
-        input.disabled = true;
-    });
-});
-</script>
 
 <style>
 .form-group {
@@ -512,38 +378,35 @@ function loadVehicleData(vehicleId) { ... }
 </script>
 
 
+<script>
+document.getElementById('vehicleSelect').addEventListener('change', function() {
+    const vehicleId = this.value;
+    const vehicleInfoDiv = document.getElementById('vehicleInfo');
 
-<!-- Add/Edit Maintenance Form Modal -->
-<div id="maintenanceFormModal" class="modal">
-  <div class="modal-content">
-    <span class="close">&times;</span>
-    <h2 id="maintenanceFormTitle">Add New Maintenance</h2>
-    <form id="maintenanceForm">
-      <input type="hidden" id="maintenanceId" name="maintenanceId">
-      <div class="form-group">
-        <label for="vno">VNO:</label>
-        <input type="text" id="vno" name="vno" required>
-      </div>
-      <div class="form-group">
-        <label for="regDate">Reg Date:</label>
-        <input type="date" id="regDate" name="regDate" required>
-      </div>
-      <div class="form-group">
-        <label for="maintenanceType">Maintenance Type:</label>
-        <input type="text" id="maintenanceType" name="maintenanceType" required>
-      </div>
-      <div class="form-group">
-        <label for="lastMaintenance">Last Maintenance:</label>
-        <input type="date" id="lastMaintenance" name="lastMaintenance" required>
-      </div>
-      <div class="form-group">
-        <label for="nextMaintenance">Next Maintenance:</label>
-        <input type="date" id="nextMaintenance" name="nextMaintenance" required>
-      </div>
-      <button type="submit" class="btn btn-primary">Save Maintenance</button>
-    </form>
-  </div>
-</div>
+    if (vehicleId) {
+        // Send AJAX request to fetch vehicle details
+        fetch(`<?php echo URLROOT; ?>/vehiclemanager/getVehicleById/${vehicleId}`)
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+
+                  const latitude =parseFloat(data.vehicle.latitude);
+                  const longitude = parseFloat(data.vehicle.longitude);
+                  updateMap(latitude, longitude);
+                } else {
+                    vehicleInfoDiv.innerHTML = '<p>Coordinates are not set for the vehicle.</p>';
+                }
+            })
+            .catch(error => {
+                console.error('Error fetching vehicle details:', error);
+                vehicleInfoDiv.innerHTML = '<p>Error fetching vehicle details.</p>';
+            });
+    } else {
+        vehicleInfoDiv.innerHTML = ''; // Clear vehicle info if no vehicle is selected
+    }
+});
+</script>
+
 
 
 
@@ -608,7 +471,7 @@ function loadVehicleData(vehicleId) { ... }
     .modal {
       display: none;
       position: fixed;
-      z-index: 1000;
+      z-index: 3000;
       left: 0;
       top: 0;
       width: 100%;
@@ -726,7 +589,6 @@ function loadVehicleData(vehicleId) { ... }
 
   <script>
 
-    // Pass PHP data to JavaScript
     const vehicles = <?php echo json_encode($data['vehicles']); ?>;
     console.log('Vehicle Data:', vehicles);
 
@@ -758,7 +620,6 @@ function loadVehicleData(vehicleId) { ... }
               </div>
               <p><strong>Type:</strong> ${vehicle.vehicle_type || 'N/A'}</p>
               <p><strong>Capacity:</strong> ${vehicle.capacity || 'N/A'} Kg</p>
-              <p><strong>Owner:</strong> ${vehicle.owner_name || 'N/A'}</p>
           </div>
         `;
         card.onclick = () => showVehicleDetails(vehicle);
@@ -778,8 +639,7 @@ function loadVehicleData(vehicleId) { ... }
       content.innerHTML = `
           <div class="vehicle-modal-content">
               <div class="vehicle-modal-image">
-                  <img src="https://i.ikman-st.com/isuzu-elf-freezer-105-feet-2014-for-sale-kalutara/e1f96b60-f1f5-488a-9cbc-620cba3f5f77/620/466/fitted.jpg" 
-                       alt="Vehicle Image">
+                <img src="<?php echo URLROOT; ?>/public/uploads/vehicle_photos/<?php echo $vehicle->license_plate; ?>.jpg" />
               </div>
               <div class="vehicle-modal-details">
                   <div class="detail-group">
@@ -805,21 +665,22 @@ function loadVehicleData(vehicleId) { ... }
                           <span class="value">${vehicle.capacity} kg</span>
                       </div>
                       <div class="detail-row">
-                          <span class="label">Fuel Type:</span>
-                          <span class="value">${vehicle.fuel_type}</span>
+                          <span class="label">Make:</span>
+                          <span class="value">${vehicle.make}</span>
                       </div>
-                  </div>
+                      <div class="detail-row">
+                          <span class="label">Model:</span>
+                          <span class="value">${vehicle.model}</span>
+                      </div>
+                      <div class="detail-row">
+                          <span class="label">Manufacturing Year:</span>
+                          <span class="value">${vehicle.manufacturing_year}</span>
+                      </div>
+                      <div class="detail-row">
+                          <span class="label">Color:</span>
+                          <span class="value">${vehicle.color}</span>
+                      </div>
 
-                  <div class="detail-group">
-                      <h3>Maintenance</h3>
-                      <div class="detail-row">
-                          <span class="label">Last Maintenance:</span>
-                          <span class="value">${vehicle.last_maintenance || 'N/A'}</span>
-                      </div>
-                      <div class="detail-row">
-                          <span class="label">Next Maintenance:</span>
-                          <span class="value">${vehicle.next_maintenance || 'N/A'}</span>
-                      </div>
                   </div>
               </div>
           </div>
@@ -916,11 +777,6 @@ function loadVehicleData(vehicleId) { ... }
       closeModal('vehicleFormModal');
     }
 
-    // Function to edit a vehicle
-    function editVehicle(vehicle) {
-      closeModal('vehicleDetailsModal');
-      showVehicleForm(vehicle);
-    }
 
     // Function to delete a vehicle
     function deleteVehicle(id) {
@@ -1236,34 +1092,6 @@ function editMaintenance(event) {
 }
 </style>
 
-<style>
-.action-buttons {
-    margin: 20px 0;
-    display: flex;
-    gap: 15px;
-    justify-content: flex-end;
-}
-
-.btn-primary {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    background-color: var(--main);
-    color: var(--light);
-    padding: 10px 20px;
-    border-radius: 5px;
-    text-decoration: none;
-    transition: background-color 0.3s ease;
-}
-
-.btn-primary:hover {
-    background-color: var(--main-dark);
-}
-
-.btn-primary i {
-    font-size: 1.2em;
-}
-</style>
 
 <style>
     /* Add this to your existing styles */
@@ -1357,6 +1185,24 @@ async function confirmDelete(vehicleId) {
 }
 </script>
 
+<script>
+function updateMap(lat, lng) {
+    const vehicleLocation = { lat: lat, lng: lng };
+    
+    const map = new google.maps.Map(document.getElementById('map-container'), {
+        center: vehicleLocation,
+        zoom: 13,
+    });
+
+    // Add a marker for the vehicle location
+    new google.maps.Marker({
+        position: vehicleLocation,
+        map: map,
+        title: 'Vehicle Location'
+    });
+}
+</script>
+
 <!-- Include Google Maps API -->
 <script async defer src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCdt_khahhXrKdrA8cLgKeQB2CZtde-_Vc&callback=initMap"></script>
 <script>
@@ -1364,7 +1210,7 @@ async function confirmDelete(vehicleId) {
 
     function initMap() {
         // Hardcoded vehicle location (example coordinates)
-        const vehicleLocation = { lat: 6.2202197, lng: 80.2448223 }; // Example coordinates for Sri Lanka
+        const vehicleLocation = { lat: 6.2202197, lng: 80.2448223 }; 
 
         // Initialize the map
         map = new google.maps.Map(document.getElementById('map-container'), {
