@@ -176,36 +176,34 @@ if (RoleHelper::hasRole(RoleHelper::SUPPLIER_MANAGER)) {
                     <!-- Add after the collection-records div -->
                     <div class="fertilizer-records">
                         <h3 class="section-title">Fertilizer Orders</h3>
-                        <table class="records-table fertilizer-table">
-                            <thead>
-                                <tr>
-                                    <th>Date</th>
-                                    <th>Order No.</th>
-                                    <th>Fertilizer Type</th>
-                                    <th>Quantity (kg)</th>
-                                    <th>Unit Price (Rs.)</th>
-                                    <th>Amount (Rs.)</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <tr>
-                                    <td>2024-03-02</td>
-                                    <td>F001</td>
-                                    <td>NPK 15-15-15</td>
-                                    <td>50</td>
-                                    <td>180.00</td>
-                                    <td>9,000</td>
-                                </tr>
-                                <tr>
-                                    <td>2024-03-08</td>
-                                    <td>F002</td>
-                                    <td>Urea</td>
-                                    <td>25</td>
-                                    <td>160.00</td>
-                                    <td>4,000</td>
-                                </tr>
-                            </tbody>
-                        </table>
+                        <?php if (!empty($data['orders'])): ?>
+                            <table class="records-table fertilizer-table">
+                                <thead>
+                                    <tr>
+                                        <th>Date</th>
+                                        <th>Order No.</th>
+                                        <th>Fertilizer Type</th>
+                                        <th>Quantity (kg)</th>
+                                        <th>Unit Price (Rs.)</th>
+                                        <th>Amount (Rs.)</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <?php foreach ($data['orders'] as $order): ?>
+                                        <tr>
+                                            <td><?php echo date('Y-m-d', strtotime($order->order_date)); ?></td>
+                                            <td><?php echo htmlspecialchars($order->order_id); ?></td>
+                                            <td><?php echo htmlspecialchars($order->fertilizer_name); ?></td>
+                                            <td><?php echo htmlspecialchars($order->total_amount); ?></td>
+                                            <td><?php echo number_format($order->price_per_unit, 2); ?></td>
+                                            <td><?php echo number_format($order->total_price, 2); ?></td>
+                                        </tr>
+                                    <?php endforeach; ?>
+                                </tbody>
+                            </table>
+                        <?php else: ?>
+                            <p>No fertilizer orders found for this period.</p>
+                        <?php endif; ?>
                     </div>
 
                     <!-- Add Summary Section -->
