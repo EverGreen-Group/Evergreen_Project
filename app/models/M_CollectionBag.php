@@ -11,7 +11,6 @@ class M_CollectionBag{
         try {
             $this->db->beginTransaction(); // Start transaction
 
-
             $this->db->query("INSERT INTO collection_bags (
                 capacity_kg, 
                 bag_weight_kg
@@ -20,14 +19,15 @@ class M_CollectionBag{
                 :bag_weight_kg
             )");
 
-
             $this->db->bind(':capacity_kg', (float)$data['capacity_kg']);
             $this->db->bind(':bag_weight_kg', (float)$data['bag_weight_kg'] ?? null);
 
             $this->db->execute();
 
+            $lastInsertId = $this->db->lastInsertId(); // Get the last inserted ID
+
             $this->db->commit(); 
-            return true;
+            return $lastInsertId; // Return the last inserted ID
         } catch (PDOException $e) {
             $this->db->rollBack(); 
             error_log("Error creating collection bag: " . $e->getMessage()); 
@@ -73,6 +73,13 @@ class M_CollectionBag{
         $result = $this->db->single(); // Fetch the count
         return $result->count > 0; // Return true if the bag is in use
     }
+
+    // public function saveQRCodePath($bagId, $qrCodePath) {
+    //     $this->db->query("UPDATE collection_bags SET qr_code_path = :qr_code_path WHERE bag_id = :bag_id");
+    //     $this->db->bind(':qr_code_path', $qrCodePath);
+    //     $this->db->bind(':bag_id', $bagId);
+    //     return $this->db->execute(); // Execute the update
+    // }
 
 }
 

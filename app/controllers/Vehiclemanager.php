@@ -1,4 +1,7 @@
 <?php
+use Endroid\QrCode\QrCode;
+use Endroid\QrCode\Builder\Builder;
+use Endroid\QrCode\Writer\PngWriter;
 require_once '../app/models/M_VehicleManager.php';
 require_once '../app/models/M_Route.php';      // Add Route model
 require_once '../app/models/M_Team.php';       // Add Team model
@@ -966,6 +969,9 @@ class VehicleManager extends Controller {
                 // Log the target path
                 error_log("Target path: " . $targetPath);
 
+                // Debugging: Log the full path
+                error_log("Full path to image: " . $targetPath);
+
                 // Check if file is actually uploaded
                 if (is_uploaded_file($file['tmp_name'])) {
                     // Move the uploaded file
@@ -1184,20 +1190,23 @@ class VehicleManager extends Controller {
             // Get the raw POST data
             $input = file_get_contents("php://input");
             $data = json_decode($input, true); // Decode the JSON payload
-
+    
             // Log the received data
             error_log("Received data: " . print_r($data, true));
-
+    
             // Convert to appropriate types
             $data['capacity_kg'] = (float) ($data['capacity_kg'] ?? 50.00); // Default value
             $data['bag_weight_kg'] = isset($data['bag_weight_kg']) ? (float) $data['bag_weight_kg'] : null; // Convert to float or null
-
+    
             // Call the model method to create the collection bag
-            $result = $this->bagModel->createCollectionBag($data);
-
-            if ($result) {
+            $bagId = $this->bagModel->createCollectionBag($data);
+    
+            if ($bagId) {
+                // Generate QR Code
+                $this->generateQRCode($bagId); 
+    
                 // Return success response
-                echo json_encode(['success' => true, 'lastInsertedId' => $result]);
+                echo json_encode(['success' => true, 'lastInsertedId' => $bagId]);
             } else {
                 // Handle error
                 echo json_encode(['success' => false, 'message' => 'Failed to create collection bag.']);
@@ -1206,6 +1215,27 @@ class VehicleManager extends Controller {
             echo json_encode(['success' => false, 'message' => 'Invalid request method.']);
         }
     }
+
+    private function generateQRCode($bagId) {
+        try {
+            $qrCode = new QrCode($bagId);
+            $qrCode->setSize(300); // Set the size
+            $qrCode->setMargin(10); // Set the margin
+    
+
+            $writer = new PngWriter();
+        
+            // Define the path to save the QR code image
+            $filePath = UPLOADROOT . '/qr_codes/' . $bagId . '.png';
+        
+            // Save the generated QR code to a file
+            $writer->writeFile($qrCode, $filePath); // Directly write to file
+        
+        } catch (\Exception $e) {
+            error_log('QR Code generation failed: ' . $e->getMessage());
+        }
+    }
+    
 
     public function getBags() {
         // Fetch bags from the model
@@ -1283,6 +1313,38 @@ class VehicleManager extends Controller {
             echo json_encode(['success' => false, 'message' => 'Invalid request method.']);
         }
     }
+
+    public function deleteBagQR() {
+        // Get the JSON input
+        $input = json_decode(file_get_contents('php://input'), true);
+        
+        // Check if the image path is provided
+        if (isset($input['image_path'])) {
+            $imagePath = $input['image_path'];
+    
+            // Debugging: Log the full path
+            error_log("Full path to image: " . $imagePath);
+    
+            // Check if the file exists
+            if (file_exists($imagePath)) {
+                // Attempt to delete the file
+                if (unlink($imagePath)) {
+                    // File deleted successfully
+                    echo json_encode(['success' => true, 'message' => 'Image deleted successfully.']);
+                } else {
+                    // Failed to delete the file
+                    echo json_encode(['success' => false, 'message' => 'Failed to delete the image.']);
+                }
+            } else {
+                // File does not exist
+                echo json_encode(['success' => false, 'message' => 'Image file not found.']);
+            }
+        } else {
+            // No image path provided
+            echo json_encode(['success' => false, 'message' => 'No image path provided.']);
+        }
+    }
+    
 
 }
 ?>
