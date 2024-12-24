@@ -290,13 +290,14 @@
 					</tr>
 				</thead>
 				<tbody>
+					<php foreach($data['stock'] as $stock) : ?>
 					<tr>
 					    <td>Michael Chen</td>
 						<td style="text-align: center;"> 12</td>
 						<td>325 units</td>
 						<td>2024-03-20 08:15 PM</td>
 						<td class="actions">
-							<button style="padding: 8px 12px;
+							<button onclick="" style="padding: 8px 12px;
 	                                background-color: #28a745;
 	                                color: white;
 	                                border: none;
@@ -311,90 +312,7 @@
 	                                cursor: pointer;">Reject</button>
 						</td>
 					</tr>
-					<tr>
-						<td>Sarah Williams</td>
-						<td style="text-align: center;"> 8</td>
-						<td>680 units</td>
-						<td>2024-03-20 09:45 PM</td>
-						<td class="actions">
-							<button style="padding: 8px 12px;
-	                                background-color: #28a745;
-	                                color: white;
-	                                border: none;
-	                                border-radius: 4px;
-	                                cursor: pointer;">Approve</button>
-							<button style="padding: 8px 12px;
-	                                background-color: #2345;
-	                                color: white;	
-	                                border: none;
-									margin-left: 10px;
-	                                border-radius: 4px;
-	                                cursor: pointer;">Reject</button>
-						</td>
-					</tr>
-					<tr>
-						<td>Raj Patel</td>
-						<td style="text-align: center;"> 2</td>
-						<td>450 units</td>
-						<td>2024-03-20 10:20 PM</td>
-						<td class="actions">
-							<button onclick="reportModel()" style="padding: 8px 12px;
-	                                background-color: #28a745;
-	                                color: white;
-	                                border: none;
-	                                border-radius: 4px;
-	                                cursor: pointer;">Approve</button>
-							<button onclick="reportModel()" style="padding: 8px 12px;
-	                                background-color: #2345;
-	                                color: white;
-	                                border: none;
-									margin-left: 10px;
-	                                border-radius: 4px;
-	                                cursor: pointer;">Reject</button>
-						</td>
-					</tr>
-					<tr>
-						<td>Emma Rodriguez</td>
-						<td style="text-align: center;"> 24</td>
-						<td>275 units</td>
-						<td>2024-03-20 08:50 PM</td>
-						<td class="actions">
-							<button onclick="reportModel()" style="padding: 8px 12px;
-	                                background-color: #28a745;
-	                                color: white;
-	                                border: none;
-	                                border-radius: 4px;
-	                                cursor: pointer;">Approve</button>
-							<button onclick="reportModel()" style="padding: 8px 12px; 
-	                                background-color: #2345;
-	                                color: white;
-									margin-left: 10px;
-	                                border: none;
-	                                border-radius: 4px;
-	                                cursor: pointer;">Reject</button>
-						</td>
-					</tr>
-					<tr>
-						<td>David Kim</td>
-						<td style="text-align: center;"> 17</td>
-						<td>590 units</td>
-						<td>2024-03-20 10:55 PM</td>
-						<td class="actions">
-							<button onclick="reportModel()" style="padding: 8px 12px;
-	                                background-color: #28a745;
-	                                color: white;
-	                                border: none;
-	                                border-radius: 4px;
-	                                cursor: pointer;">Approve</button>
-							<button onclick="reportModel()" style="padding: 8px 12px; 
-	                                background-color: #2345;
-	                                color: white;
-									margin-left: 10px;
-	                                border: none;
-	                                border-radius: 4px;
-	                                cursor: pointer;">Reject</button>
-						</td>
-					</tr>
+					<php endforeach; ?>
 					<!-- Add more rows as needed -->
 				</tbody>
 			</table>
