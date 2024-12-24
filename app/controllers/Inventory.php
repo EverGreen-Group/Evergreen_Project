@@ -317,7 +317,16 @@ class Inventory extends controller
 
     public function export()
     {
-        $data = [];
+        if ($_SERVER['REQUEST_METHOD']=='POST'){
+
+            $_POST = filter_input_array(INPUT_POST);
+
+        }
+        $data = [
+            'stock-name' => '',
+            'company-name' => '',
+            co
+        ];
 
         $this->view('inventory/v_export', $data);
     }
