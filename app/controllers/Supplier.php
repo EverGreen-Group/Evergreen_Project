@@ -37,21 +37,32 @@ class Supplier extends Controller {
 
     
     public function index() {
-        // Temporary supplier ID (replace with session after login implementation)
-        $supplier_id = 2;
+        // Fetch the supplier ID from the session
+        /*if (isset($_SESSION['supplier_id'])) {
+            $supplier_id = $_SESSION['supplier_id'];
+        } else {
+            // Handle the case where the supplier ID is not set in the session
+            die('Supplier ID not found in session. Please log in.');
+        }*/
+
+        $supplier_id = 2; 
     
         // Get schedule data
         $data['schedule'] = $this->collectionSupplierRecordModel->getSupplierSchedule($supplier_id);
+        error_log('Schedule data: ' . print_r($data['schedule'], true));
         
         // Get tea collection data for the current month
         $collectionData = $this->collectionSupplierRecordModel->getMonthlyCollectionData();
         $data['total_collections'] = count($collectionData);
         $data['total_quantity'] = array_sum(array_column($collectionData, 'quantity'));
         
+        // Get previous and next inspection data
         $data['previous_inspections'] = $this->landInspectionModel->getPreviousInspectionRequests($supplier_id);
-    
+        $data['next_inspection'] = $this->collectionSupplierRecordModel->getNextLandInspection($supplier_id);
+
         $this->view('supplier/v_supply_dashboard', $data);
     }
+    
 
     public function notifications()
     {
