@@ -27,13 +27,13 @@
             <form action="<?php echo URLROOT; ?>/supplier/submitComplaint" method="post" enctype="multipart/form-data">
                 <div class="form-group">
                     <label for="complaint-type">Complaint Type</label>
-                    <select id="complaint-type" name="complaint_type" required>
-                        <option value="">Select type</option>
-                        <option value="quality">Quality Issues</option>
-                        <option value="delivery">Delivery Problems</option>
-                        <option value="payment">Payment Issues</option>
-                        <option value="service">Customer Service</option>
-                        <option value="other">Other</option>
+                    <select name="complaint_type" id="complaint_type" required>
+                        <option value="">Select Complaint Type</option>
+                        <option value="Quality Issues">Quality Issues</option>
+                        <option value="Delivery Problems">Delivery Problems</option>
+                        <option value="Payment Issues">Payment Issues</option>
+                        <option value="Customer Service">Customer Service</option>
+                        <option value="Other">Other</option>
                     </select>
                 </div>
 
