@@ -76,8 +76,6 @@
                        id="statementBtn">
                         <i class='bx bx-file'></i> Monthly Statement
                     </a>
-
-
                 </div>
             </div>
             <div class="graph-container">
@@ -121,6 +119,18 @@
                         </div>
                     </div>
                 </div>
+            </div>
+            <div class="head-actions">
+                <a href="<?php echo URLROOT; ?>/suppliermanager/updateSupplier/<?php echo isset($_GET['id']) ? $_GET['id'] : ''; ?>" 
+                    class="btn-download" 
+                    id="statementBtn">
+                    Update Details
+                </a>
+                <a href="<?php echo URLROOT; ?>/suppliermanager/deleteSupplier/<?php echo isset($_GET['id']) ? $_GET['id'] : ''; ?>" 
+                    class="btn-download" 
+                    id="statementBtn">
+                    Delete Supplier
+                </a>
             </div>
         </div>
 
