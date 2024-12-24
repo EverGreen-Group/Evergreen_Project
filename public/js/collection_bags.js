@@ -318,10 +318,7 @@ function openAddBagModal(lastInsertedId) {
   const content = document.getElementById("collectionBagDetailsContent");
 
   content.innerHTML = `
-          <div class="vehicle-modal-content">
-              <div class="vehicle-modal-image">
-                <img src="https://upload.wikimedia.org/wikipedia/commons/d/d0/QR_code_for_mobile_English_Wikipedia.svg" alt="QR Code" />
-              </div>
+          <div class="vehicle-modal-content"">
               <div class="vehicle-modal-details">
                   <div class="detail-group">
                       <h3>Basic Information</h3>
@@ -334,9 +331,6 @@ function openAddBagModal(lastInsertedId) {
                           <span class="value"><input type="number" id="bagWeight" name="bagWeight" required style="width: 100%; padding: 8px; box-sizing: border-box;"></span>
                       </div>
                   </div>
-              </div>
-              <div style="text-align: center; margin-top: 20px;">
-                  <button class="btn btn-secondary full-width" onclick="generateQRCode()" style="background-color: var(--mainn); color: white;">Generate QR Code</button>
               </div>
               <div style="text-align: center; margin-top: 20px;">
                   <button class="btn btn-primary full-width" onclick="addNewBag(event)">ADD BAG</button>

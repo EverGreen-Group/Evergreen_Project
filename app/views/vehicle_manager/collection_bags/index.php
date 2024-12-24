@@ -8,6 +8,8 @@
 <link rel="stylesheet" href="<?php echo URLROOT; ?>/css/vehicle_manager/collection_bags/styles.css">
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script src="<?php echo URLROOT; ?>/public/js/collection_bags.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery.qrcode/1.0/jquery.qrcode.min.js"></script>
 <script>
     const URLROOT = '<?php echo URLROOT; ?>';
 </script>
