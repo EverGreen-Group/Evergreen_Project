@@ -202,16 +202,42 @@ class SupplierManager extends Controller {
         $this->view('supplier_manager/v_all_complaints', $data);
     }
 
-    public function complaints()
-    {
-        // Fetch complaints using the model method
+    public function complaints() {
+        // Get unviewed complaints count
+        $unviewedCount = $this->complaintModel->getUnviewedComplaintsCount();
+        
+        // Get new complaints from last week
+        $newLastWeek = $this->complaintModel->getNewComplaintsLastWeek();
+        
+        // Get viewed complaints count
+        $viewedCount = $this->complaintModel->getViewedComplaintsCount();
+        
+        // Get all complaints
         $complaints = $this->complaintModel->getAllComplaints();
-
-        // Pass complaints to the view
-        $data['complaints'] = $complaints;
-
-        // Load the view with data
+        
+        // Get complaint type statistics for the chart
+        $complaintTypes = $this->complaintModel->getComplaintTypeStats();
+        
+        // Pass all data to the view
+        $data = [
+            'unviewed_count' => $unviewedCount,
+            'new_last_week' => $newLastWeek,
+            'viewed_count' => $viewedCount,
+            'complaints' => $complaints,
+            'complaint_types' => $complaintTypes
+        ];
+        
         $this->view('supplier_manager/v_complaints', $data);
+    }
+    
+    public function markComplaintViewed() {
+        if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['complaint_id'])) {
+            $complaintId = $_POST['complaint_id'];
+            $success = $this->complaintModel->markComplaintAsViewed($complaintId);
+            
+            echo json_encode(['success' => $success]);
+            exit;
+        }
     }
 
     public function requests()
