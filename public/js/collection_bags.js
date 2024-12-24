@@ -437,12 +437,16 @@ function openUpdateBagModal(bagId) {
         const content = document.getElementById("collectionBagDetailsContent");
         content.innerHTML = `
           <div class="vehicle-modal-content">
-            <div class="vehicle-modal-image">
-              <img src="https://upload.wikimedia.org/wikipedia/commons/d/d0/QR_code_for_mobile_English_Wikipedia.svg" alt="QR Code" />
-            </div>
+              <div class="vehicle-modal-image">
+                <img src="/Evergreen_Project/uploads/qr_codes/${bagId}.png" alt="QR Code BAGG" />
+              </div>
             <div class="vehicle-modal-details">
               <div class="detail-group">
-                <h3>Update Bag Information</h3>
+                <h3>Bag Information</h3>
+                <div class="detail-row">
+                  <span class="label">Bag ID:</span>
+                  <span class="value">${bagId}</span>
+                </div>
                 <div class="detail-row">
                   <span class="label">Capacity (kg):</span>
                   <span class="value"><input type="number" id="updateBagCapacity" value="${
@@ -478,6 +482,10 @@ function openUpdateBagModal(bagId) {
 
         document.getElementById("collectionBagDetailsModal").style.display =
           "block";
+
+        // document.querySelector(
+        //   "#collectionBagDetailsModal h2"
+        // ).innerText = `Bag Details for #${bagId}`;
       } else {
         alert(data.message || "Failed to load bag details.");
       }

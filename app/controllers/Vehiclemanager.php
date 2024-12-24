@@ -1,4 +1,7 @@
 <?php
+use Endroid\QrCode\QrCode;
+use Endroid\QrCode\Builder\Builder;
+use Endroid\QrCode\Writer\PngWriter;
 require_once '../app/models/M_VehicleManager.php';
 require_once '../app/models/M_Route.php';      // Add Route model
 require_once '../app/models/M_Team.php';       // Add Team model
@@ -1184,20 +1187,23 @@ class VehicleManager extends Controller {
             // Get the raw POST data
             $input = file_get_contents("php://input");
             $data = json_decode($input, true); // Decode the JSON payload
-
+    
             // Log the received data
             error_log("Received data: " . print_r($data, true));
-
+    
             // Convert to appropriate types
             $data['capacity_kg'] = (float) ($data['capacity_kg'] ?? 50.00); // Default value
             $data['bag_weight_kg'] = isset($data['bag_weight_kg']) ? (float) $data['bag_weight_kg'] : null; // Convert to float or null
-
+    
             // Call the model method to create the collection bag
-            $result = $this->bagModel->createCollectionBag($data);
-
-            if ($result) {
+            $bagId = $this->bagModel->createCollectionBag($data);
+    
+            if ($bagId) {
+                // Generate QR Code
+                $this->generateQRCode($bagId); 
+    
                 // Return success response
-                echo json_encode(['success' => true, 'lastInsertedId' => $result]);
+                echo json_encode(['success' => true, 'lastInsertedId' => $bagId]);
             } else {
                 // Handle error
                 echo json_encode(['success' => false, 'message' => 'Failed to create collection bag.']);
@@ -1206,6 +1212,27 @@ class VehicleManager extends Controller {
             echo json_encode(['success' => false, 'message' => 'Invalid request method.']);
         }
     }
+
+    private function generateQRCode($bagId) {
+        try {
+            $qrCode = new QrCode($bagId);
+            $qrCode->setSize(300); // Set the size
+            $qrCode->setMargin(10); // Set the margin
+    
+
+            $writer = new PngWriter();
+        
+            // Define the path to save the QR code image
+            $filePath = UPLOADROOT . '/qr_codes/' . $bagId . '.png';
+        
+            // Save the generated QR code to a file
+            $writer->writeFile($qrCode, $filePath); // Directly write to file
+        
+        } catch (\Exception $e) {
+            error_log('QR Code generation failed: ' . $e->getMessage());
+        }
+    }
+    
 
     public function getBags() {
         // Fetch bags from the model
