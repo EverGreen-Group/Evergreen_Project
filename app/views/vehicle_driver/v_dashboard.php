@@ -6,6 +6,7 @@ require APPROOT . '/views/inc/components/topnavbar.php';
 ?>
 
 <main>
+    <?php print_r($_SESSION); ?>
     <div class="head-title">
         <div class="left">
             <h1>Vehicle Driver Dashboard</h1>
@@ -44,6 +45,7 @@ require APPROOT . '/views/inc/components/topnavbar.php';
         </li>
     </ul>
 
+
     <!-- Shift Management Section -->
     <div class="shift-content">
         <section class="upcoming-shifts">
@@ -52,88 +54,96 @@ require APPROOT . '/views/inc/components/topnavbar.php';
                 <div class="alert alert-warning"><?php echo $data['error']; ?></div>
             <?php else: ?>
                 <!-- Table view (shows above 600px) -->
+                <?php
+            echo "<pre style='background: #f5f5f5; padding: 10px; margin: 10px 0;'>";
+            echo "Current Time: " . date('Y-m-d H:i:s', time()) . "\n\n";
+            
+            if (!empty($data['upcomingShifts'])) {
+                foreach ($data['upcomingShifts'] as $shift) {
+                    $currentTime = time();
+                    $todayDate = date('Y-m-d');
+                    $shiftDateTime = $todayDate . ' ' . $shift->start_time;
+                    $shiftEndDateTime = $todayDate . ' ' . $shift->end_time;
+                    $shiftTimestamp = strtotime($shiftDateTime);
+                    $shiftEndTimestamp = strtotime($shiftEndDateTime);
+                    $timeUntilShift = $shiftTimestamp - $currentTime;
+                    $hoursUntilShift = $timeUntilShift / 3600; // Convert seconds to hours
+
+                    $isWithinTimeframe = ($hoursUntilShift <= 5 && $hoursUntilShift > 0) || 
+                    ($currentTime >= $shiftTimestamp && $currentTime <= $shiftEndTimestamp);
+                    
+                    echo "Shift Details:\n";
+                    echo "Day: " . $shift->day . "\n";
+                    echo "Start Time: " . $shiftDateTime . " (timestamp: $shiftTimestamp)\n";
+                    echo "End Time: " . $shiftEndDateTime . " (timestamp: $shiftEndTimestamp)\n";
+                    echo "Current Time Timestamp: $currentTime\n";
+                    echo "Hours until shift: " . number_format($hoursUntilShift, 2) . "\n";
+                    echo "Is within 5 hours: " . ($isWithinTimeframe ? "Yes" : "No") . "\n";
+                    echo "Is Future Shift: " . ($hoursUntilShift > 0 ? "Yes" : "No") . "\n\n";
+                }
+            }
+            echo "</pre>";
+            ?>
+
                 <table class="shift-table">
                     <thead>
                         <tr>
                             <th>Day</th>
                             <th>Time</th>
-                            <th class="hide-mobile">Team</th>
                             <th class="hide-mobile">Countdown</th>
-                            <th class="hide-mobile">Status</th>
                             <th><i class='bx bx-dots-vertical-rounded'></i></th>
                         </tr>
                     </thead>
-                    <tbody>
                         <?php 
                         if (!empty($data['upcomingShifts'])):
-                            // Prepare sorted shifts array
                             $sortedShifts = [];
                             foreach ($data['upcomingShifts'] as $shift) {
-                                $days = explode(',', $shift->days_of_week);
-                                foreach ($days as $day) {
-                                    $currentTime = time();
-                                    
-                                    // Get timestamp for this week's occurrence of the day
-                                    $thisWeekDate = date('Y-m-d', strtotime($day . ' this week'));
-                                    $thisWeekDateTime = $thisWeekDate . ' ' . $shift->start_time;
-                                    $thisWeekEndDateTime = $thisWeekDate . ' ' . $shift->end_time;
-                                    $thisWeekTimestamp = strtotime($thisWeekDateTime);
-                                    $thisWeekEndTimestamp = strtotime($thisWeekEndDateTime);
-                                    
-                                    // Get timestamp for next week's occurrence
-                                    $nextWeekDate = date('Y-m-d', strtotime($day . ' next week'));
-                                    $nextWeekDateTime = $nextWeekDate . ' ' . $shift->start_time;
-                                    $nextWeekEndDateTime = $nextWeekDate . ' ' . $shift->end_time;
-                                    $nextWeekTimestamp = strtotime($nextWeekDateTime);
-                                    $nextWeekEndTimestamp = strtotime($nextWeekEndDateTime);
-                                    
-                                    // Check if the shift is currently ongoing
-                                    $isOngoing = ($currentTime >= $thisWeekTimestamp && $currentTime <= $thisWeekEndTimestamp);
-                                    
-                                    // If this week's shift hasn't ended yet, use this week's times
-                                    if ($currentTime <= $thisWeekEndTimestamp) {
-                                        $sortedShifts[] = [
-                                            'day' => ucfirst($day),
-                                            'startDateTime' => $thisWeekDateTime,
-                                            'endDateTime' => $thisWeekEndDateTime,
-                                            'timestamp' => $thisWeekTimestamp,
-                                            'isOngoing' => $isOngoing,
-                                            'shift' => $shift
-                                        ];
-                                    } else {
-                                        // If this week's shift has ended, use next week's times
-                                        $sortedShifts[] = [
-                                            'day' => ucfirst($day),
-                                            'startDateTime' => $nextWeekDateTime,
-                                            'endDateTime' => $nextWeekEndDateTime,
-                                            'timestamp' => $nextWeekTimestamp,
-                                            'isOngoing' => false,
-                                            'shift' => $shift
-                                        ];
-                                    }
+                                $currentTime = time();
+                                $todayDate = date('Y-m-d');
+                                $shiftDateTime = $todayDate . ' ' . $shift->start_time;
+                                $shiftEndDateTime = $todayDate . ' ' . $shift->end_time;
+                                $shiftTimestamp = strtotime($shiftDateTime);
+                                $shiftEndTimestamp = strtotime($shiftEndDateTime);
+                                
+                                // Calculate hours until shift
+                                $timeUntilShift = $shiftTimestamp - $currentTime;
+                                $hoursUntilShift = $timeUntilShift / 3600;
+                                
+                                // Check if shift is within 5 hours or ongoing
+                                $isWithinTimeframe = ($hoursUntilShift <= 5 && $hoursUntilShift > 0) || 
+                                ($currentTime >= $shiftTimestamp && $currentTime <= $shiftEndTimestamp);
+                                
+                                if ($hoursUntilShift > 0 || ($currentTime >= $shiftTimestamp && $currentTime <= $shiftEndTimestamp)) {
+                                    $sortedShifts[] = [
+                                        'day' => $shift->day,
+                                        'startDateTime' => $shiftDateTime,
+                                        'endDateTime' => $shiftEndDateTime,
+                                        'timestamp' => $shiftTimestamp,
+                                        'isWithinTimeframe' => $isWithinTimeframe,
+                                        'shift' => $shift,
+                                        'hoursUntilShift' => $hoursUntilShift
+                                    ];
                                 }
                             }
-
+                            
                             usort($sortedShifts, function($a, $b) {
                                 return $a['timestamp'] - $b['timestamp'];
                             });
-
+                            
                             foreach ($sortedShifts as $sortedShift):
                                 $shift = $sortedShift['shift'];
                         ?>
                             <tr>
-                                <td><?php echo $sortedShift['day']; ?></td>
+                                <td><?php echo ucfirst($sortedShift['day']); ?></td>
                                 <td><?php echo $shift->start_time; ?></td>
-                                <td class="hide-mobile"><?php echo $shift->team_name; ?></td>
                                 <td class="hide-mobile">
                                     <span class="countdown" data-start="<?php echo $sortedShift['startDateTime']; ?>">
                                         Calculating...
                                     </span>
                                 </td>
-                                <td class="hide-mobile"><span class="status-active">Active</span></td>
                                 <td>
                                     <a href="<?php echo URLROOT; ?>/vehicledriver/scheduleDetails/<?php echo $shift->schedule_id; ?>" 
-                                       class="btn-icon">
+                                    class="btn-icon">
                                         <i class='bx bx-right-arrow-alt'></i>
                                     </a>
                                 </td>
@@ -143,7 +153,7 @@ require APPROOT . '/views/inc/components/topnavbar.php';
                         else: 
                         ?>
                             <tr>
-                                <td colspan="6" class="text-center">No shifts available</td>
+                                <td colspan="4" class="text-center">No shifts available</td>
                             </tr>
                         <?php endif; ?>
                     </tbody>
@@ -158,14 +168,10 @@ require APPROOT . '/views/inc/components/topnavbar.php';
                     ?>
                         <div class="shift-card">
                             <div class="shift-card-header">
-                                <span class="shift-card-day"><?php echo $sortedShift['day']; ?></span>
+                                <span class="shift-card-day"><?php echo ucfirst($sortedShift['day']); ?></span>
                                 <span class="shift-card-time"><?php echo $shift->start_time; ?></span>
                             </div>
                             <div class="shift-card-details">
-                                <div class="shift-card-team">
-                                    <i class='bx bxs-group'></i>
-                                    <span><?php echo $shift->team_name; ?></span>
-                                </div>
                                 <div class="shift-card-countdown">
                                     <span class="countdown" data-start="<?php echo $sortedShift['startDateTime']; ?>">
                                         Calculating...
@@ -173,9 +179,9 @@ require APPROOT . '/views/inc/components/topnavbar.php';
                                 </div>
                             </div>
                             <div class="shift-card-footer">
-                                <span class="shift-card-status">Active</span>
+                                <span class="shift-card-status"><?php echo $sortedShift['isOngoing'] ? 'Active' : 'Upcoming'; ?></span>
                                 <a href="<?php echo URLROOT; ?>/vehicledriver/scheduleDetails/<?php echo $shift->schedule_id; ?>" 
-                                   class="btn-icon">
+                                class="btn-icon">
                                     <i class='bx bx-right-arrow-alt'></i>
                                 </a>
                             </div>
@@ -190,38 +196,6 @@ require APPROOT . '/views/inc/components/topnavbar.php';
                     <?php endif; ?>
                 </div>
             <?php endif; ?>
-        </section>
-
-
-        <?php
-        // Format shifts for the calendar
-        $calendarShifts = [];
-        if (!empty($data['upcomingShifts'])) {
-            foreach ($data['upcomingShifts'] as $shift) {
-                $days = explode(',', $shift->days_of_week);
-                foreach ($days as $day) {
-                    $nextDate = date('Y-m-d', strtotime("next $day"));
-                    if (!isset($calendarShifts[$nextDate])) {
-                        $calendarShifts[$nextDate] = [];
-                    }
-                    $calendarShifts[$nextDate][] = [
-                        'start_time' => $shift->start_time,
-                        'end_time' => $shift->end_time,
-                        'location' => $shift->team_name,
-                    ];
-                }
-            }
-        }
-        ?>
-
-        <section class="shift-calendar">
-            <h2>Shift Calendar</h2>
-            <div id="shift-calendar">
-                <?php 
-                $data['shifts'] = $calendarShifts;
-                require APPROOT . '/views/inc/components/calendar.php'; 
-                ?>
-            </div>
         </section>
     </div>
 </main>

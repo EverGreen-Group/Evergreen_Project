@@ -18,12 +18,6 @@
                 <span class="text">Dashboard</span>
             </a>
         </li>
-        <li class="<?php echo (basename($_SERVER['REQUEST_URI']) == 'leave') ? 'active' : ''; ?>">
-            <a href="<?php echo URLROOT; ?>/vehicledriver/leave">
-                <i class='bx bxs-calendar'></i>
-                <span class="text">Leave</span>
-            </a>
-        </li>
     </ul>
     <ul class="side-menu">
         <li class="<?php echo (basename($_SERVER['REQUEST_URI']) == 'settings') ? 'active' : ''; ?>">

@@ -89,14 +89,13 @@ class M_CollectionSchedule {
         }
     }
 
-    public function getUpcomingSchedules($teamId) {
+    public function getUpcomingSchedules($driverId) {
         $this->db->query("
             SELECT 
                 cs.schedule_id,
                 cs.week_number,
-                cs.days_of_week,
+                cs.day,
                 r.route_name,
-                t.team_name,
                 v.vehicle_type,
                 v.license_plate,
                 cs_shift.shift_name,
@@ -104,19 +103,17 @@ class M_CollectionSchedule {
                 cs_shift.end_time
             FROM collection_schedules cs
             JOIN routes r ON cs.route_id = r.route_id
-            JOIN teams t ON cs.team_id = t.team_id
-            JOIN vehicles v ON cs.vehicle_id = v.vehicle_id
+            JOIN vehicles v ON r.vehicle_id = v.vehicle_id
             JOIN collection_shifts cs_shift ON cs.shift_id = cs_shift.shift_id
-            WHERE cs.team_id = :team_id
+            WHERE cs.driver_id = :driver_id
             AND cs.is_active = 1
             AND cs.is_deleted = 0
             ORDER BY 
                 cs.week_number,
-                FIELD(SUBSTRING_INDEX(cs.days_of_week, ',', 1), 
-                    'mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun')
+                FIELD(cs.day, 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday')
         ");
 
-        $this->db->bind(':team_id', $teamId);
+        $this->db->bind(':driver_id', $driverId);
         return $this->db->resultSet();
     }
 

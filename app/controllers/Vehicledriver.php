@@ -30,27 +30,35 @@ class VehicleDriver extends controller {
     }
 
     public function index() {
-        $driverModel = $this->model('M_Driver');
-        $scheduleModel = $this->model('M_CollectionSchedule');
-        
-        // Get driver's team ID
-        $driverDetails = $driverModel->getDriverDetails($_SESSION['user_id']);
-        $teamId = $driverDetails->team_id ?? null;
-    
-        if (!$teamId) {
+        // Assuming you have a way to get the driverId, e.g., from session or request
+        $driverId = $_SESSION['driver_id']; // Assuming the driver ID is stored in the session
+
+        // Check if the driver ID is set
+        if (empty($driverId)) {
             $data = [
                 'upcomingShifts' => [],
-                'message' => 'No team assigned'
+                'message' => 'Driver ID not found in session.'
+            ];
+            $this->view('vehicle_driver/v_dashboard', $data);
+            return;
+        }
+
+        // Get upcoming schedules for the driver
+        $upcomingShifts = $this->scheduleModel->getUpcomingSchedules($driverId);
+
+        // Prepare data for the view
+        if (empty($upcomingShifts)) {
+            $data = [
+                'upcomingShifts' => [],
+                'message' => 'No schedules assigned.'
             ];
         } else {
-            // Get upcoming schedules for the team
-            $upcomingShifts = $scheduleModel->getUpcomingSchedules($teamId);
             $data = [
-                'upcomingShifts' => $upcomingShifts,
-                'currentTeam' => $driverDetails->current_team
+                'upcomingShifts' => $upcomingShifts
             ];
         }
-    
+
+        // Load the view with the data
         $this->view('vehicle_driver/v_dashboard', $data);
     }
 

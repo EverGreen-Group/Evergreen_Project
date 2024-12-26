@@ -101,5 +101,29 @@ class M_User {
         $this->db->bind(':role_id', 6);
         return $this->db->resultSet();
     }
+
+    public function getDriverId($userId) {
+        $this->db->query("SELECT driver_id FROM drivers WHERE user_id = :user_id AND is_deleted = 0");
+        $this->db->bind(':user_id', $userId);
+        return $this->db->single();
+    }
+
+    public function getEmployeeId($userId) {
+        $this->db->query("SELECT employee_id FROM employees WHERE user_id = :user_id");
+        $this->db->bind(':user_id', $userId);
+        return $this->db->single();
+    }
+
+    public function getManagerId($userId) {
+        $this->db->query("SELECT manager_id FROM managers WHERE employee_id = (SELECT employee_id FROM employees WHERE user_id = :user_id)");
+        $this->db->bind(':user_id', $userId);
+        return $this->db->single();
+    }
+
+    public function getSupplierId($userId) {
+        $this->db->query("SELECT supplier_id FROM suppliers WHERE user_id = :user_id");
+        $this->db->bind(':user_id', $userId);
+        return $this->db->single();
+    }
 }
 ?>
