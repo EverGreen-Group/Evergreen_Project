@@ -367,6 +367,257 @@
         });
     });
 </script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="<?php echo URLROOT; ?>/css/components/script.js"></script>
+
+<script>
+    // Add this function to handle supplier search
+    document.getElementById('supplierSearch').addEventListener('input', function(e) {
+        const searchTerm = e.target.value.toLowerCase();
+        const select = document.getElementById('currentSupplier');
+        const options = select.options;
+
+        for (let i = 0; i < options.length; i++) {
+            const text = options[i].text.toLowerCase();
+            if (text.includes(searchTerm) || options[i].value.includes(searchTerm)) {
+                options[i].style.display = '';
+            } else {
+                options[i].style.display = 'none';
+            }
+        }
+    });
+
+    // Add this function to update the dashboard when a supplier is selected
+    function updateDashboard(supplierId) {
+        if (!supplierId) return;
+
+        // Fetch supplier data from backend
+        fetch(`/api/supplier/${supplierId}`)
+            .then(response => response.json())
+            .then(data => {
+                // Update profile info
+                document.querySelector('.profile-info .detail-value').textContent = data.firstName;
+                document.querySelector('.profile-info .detail-value:nth-child(2)').textContent = data.lastName;
+                // ... update other profile fields
+
+                // Update collection stats
+                document.querySelector('.box-info li:nth-child(1) h3').textContent = data.todayCollection;
+                document.querySelector('.box-info li:nth-child(2) h3').textContent = data.collectionDays;
+                document.querySelector('.box-info li:nth-child(3) h3').textContent = data.performanceRate;
+
+                // Update map
+                updateMap(data.location);
+
+                // Update collection history
+                updateCollectionHistory(data.recentCollections);
+
+                // Update graph
+                updateCollectionGraph(data.collectionData);
+            })
+            .catch(error => console.error('Error:', error));
+    }
+    
+    // Sample data for the line graph
+    const collectionDates = ['2023-10-01', '2023-10-02', '2023-10-03', '2023-10-04', '2023-10-05'];
+    const teaLeavesCollected = [45, 43, 41, 39, 44]; // Sample values for tea leaves collected
+
+    const ctx = document.getElementById('teaLeavesGraph').getContext('2d');
+    const teaLeavesGraph = new Chart(ctx, {
+        type: 'line', // Specify the type of chart
+        data: {
+            labels: collectionDates, // X-axis labels
+            datasets: [{
+                label: 'Tea Leaves Collected (kg)', // Label for the dataset
+                data: teaLeavesCollected, // Data for the Y-axis
+                borderColor: 'rgba(75, 192, 192, 1)', // Line color
+                backgroundColor: 'rgba(75, 192, 192, 0.2)', // Area color
+                borderWidth: 2,
+                fill: false // Fill the area under the line
+            }]
+        },
+        options: {
+            responsive: true,
+            scales: {
+                x: {
+                    title: {
+                        display: true,
+                        text: 'Collection Dates' // X-axis title
+                    }
+                },
+                y: {
+                    title: {
+                        display: true,
+                        text: 'Amount (kg)' // Y-axis title
+                    },
+                    beginAtZero: true, // Start Y-axis at zero
+                    max: 50, // Set a custom maximum value for the Y-axis
+                    min: 30
+                }
+            }
+        }
+    });
+
+    // Initialize the map with a default center
+    let map;
+    let marker;
+
+    function initMap() {
+        // Default center (can be your factory location)
+        const defaultCenter = { lat: 6.2173037, lng: 80.2564385 };
+
+        map = new google.maps.Map(document.getElementById("map"), {
+            zoom: 15,
+            center: defaultCenter,
+            mapId: "4504f8b37365c3d0",
+            disableDefaultUI: true,
+            zoomControl: true
+        });
+
+        // Create a marker but don't set its position yet
+        marker = new google.maps.Marker({
+            map: map,
+            icon: {
+                url: "https://maps.google.com/mapfiles/ms/icons/green-dot.png"
+            }
+        });
+    }
+
+    document.addEventListener('DOMContentLoaded', function() {
+        const searchInput = document.getElementById('supplierSearch');
+        const supplierSelect = document.getElementById('currentSupplier');
+        const boxInfo = document.querySelector('.box-info');
+        
+        searchInput.addEventListener('input', function(e) {
+            const searchTerm = e.target.value.toLowerCase();
+            const options = supplierSelect.options;
+            let found = false;
+
+            // Reset the no results message
+            if (document.querySelector('.no-results')) {
+                document.querySelector('.no-results').remove();
+            }
+
+            for (let i = 1; i < options.length; i++) {
+                const text = options[i].text.toLowerCase();
+                const value = options[i].value;
+                if (text.includes(searchTerm) || value.includes(searchTerm)) {
+                    options[i].style.display = '';
+                    found = true;
+                    if (searchTerm.length > 2) {
+                        supplierSelect.value = options[i].value;
+                        updateSupplierDetails(options[i].value);
+                    }
+                } else {
+                    options[i].style.display = 'none';
+                }
+            }
+
+            // Show "No supplier found" message only if no matches and search term exists
+            if (!found && searchTerm.length > 0) {
+                if (!document.querySelector('.no-results')) {
+                    boxInfo.insertAdjacentHTML('beforeend', '<p class="no-results">No supplier found</p>');
+                }
+            } else {
+                // Remove the no results message if there are matches
+                const noResults = document.querySelector('.no-results');
+                if (noResults) {
+                    noResults.remove();
+                }
+            }
+        });
+    });
+
+    function updateSupplierDetails(supplierId) {
+        if (!supplierId) return;
+
+        fetch('<?php echo URLROOT; ?>/suppliermanager/getSupplierDetails', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+            },
+            body: 'supplier_id=' + supplierId
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.status === 'success') {
+                const supplier = data.data.supplier;
+                const stats = data.data.stats;
+                
+                // Update box-info statistics
+                document.querySelector('.box-info li:nth-child(1) h3').textContent = 
+                    stats.totalQuantity + ' kg';
+                document.querySelector('.box-info li:nth-child(2) h3').textContent = 
+                    stats.collectionDays + ' days';
+                document.querySelector('.box-info li:nth-child(3) h3').textContent = 
+                    stats.performanceRate + '%';
+
+                // Update profile info
+                document.querySelector('.detail-grid').innerHTML = `
+                    <div class="detail-item">
+                        <span class="detail-label">First Name</span>
+                        <span class="detail-value">${supplier.first_name}</span>
+                    </div>
+                    <div class="detail-item">
+                        <span class="detail-label">Last Name</span>
+                        <span class="detail-value">${supplier.last_name}</span>
+                    </div>
+                    <div class="detail-item">
+                        <span class="detail-label">Email</span>
+                        <span class="detail-value">${supplier.email}</span>
+                    </div>
+                    <div class="detail-item">
+                        <span class="detail-label">NIC</span>
+                        <span class="detail-value">${supplier.nic}</span>
+                    </div>
+                    <div class="detail-item">
+                        <span class="detail-label">Gender</span>
+                        <span class="detail-value">${supplier.gender}</span>
+                    </div>
+                    <div class="detail-item">
+                        <span class="detail-label">Date of Birth</span>
+                        <span class="detail-value">${supplier.date_of_birth}</span>
+                    </div>
+                `;
+
+                // Update map marker position
+                if (supplier.latitude && supplier.longitude) {
+                    const supplierLocation = {
+                        lat: parseFloat(supplier.latitude),
+                        lng: parseFloat(supplier.longitude)
+                    };
+                    
+                    marker.setPosition(supplierLocation);
+                    map.setCenter(supplierLocation);
+                    
+                    // Update marker info window
+                    const infoWindow = new google.maps.InfoWindow({
+                        content: `
+                            <div style="padding: 10px;">
+                                <h3 style="margin: 0 0 5px 0;">${supplier.first_name} ${supplier.last_name}</h3>
+                                <p style="margin: 0;">Collection Point</p>
+                            </div>`
+                    });
+
+                    marker.addListener('click', () => {
+                        infoWindow.open(map, marker);
+                    });
+                }
+
+                // Remove any existing error messages
+                const noResults = document.querySelector('.no-results');
+                if (noResults) {
+                    noResults.remove();
+                }
+            } else {
+                // Show error message
+                document.querySelector('.box-info').innerHTML = 
+                    `<p class="error-message">${data.message}</p>`;
+            }
+        })
+        .catch(error => console.error('Error:', error));
+    }
+</script>
+
 
 <style>
     /* Box Layout */
@@ -583,13 +834,7 @@
         color: #666;
         margin-top: 0.2rem;
     }
-</style>
-
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-<script src="<?php echo URLROOT; ?>/css/components/script.js"></script>
-
-
-<style>
+    
     .collection-stats {
         display: flex;
         flex-direction: column;
@@ -680,12 +925,7 @@
     .btn-download i {
         font-size: 1.1rem;
     }
-    </style>
-
-
-    >
-
-    <style>
+    
     .supplier-card {
         background: var(--light);
         border-radius: 10px;
@@ -838,11 +1078,7 @@
         font-size: 0.9rem;
         font-weight: 500;
     }
-    </style>
-
-
-
-    <style>
+    
     .profile-main {
         padding: 2rem;
         font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
@@ -1441,256 +1677,6 @@
         margin: 10px 0;
     }
 </style>
-
-<script>
-// Add this function to handle supplier search
-document.getElementById('supplierSearch').addEventListener('input', function(e) {
-    const searchTerm = e.target.value.toLowerCase();
-    const select = document.getElementById('currentSupplier');
-    const options = select.options;
-
-    for (let i = 0; i < options.length; i++) {
-        const text = options[i].text.toLowerCase();
-        if (text.includes(searchTerm) || options[i].value.includes(searchTerm)) {
-            options[i].style.display = '';
-        } else {
-            options[i].style.display = 'none';
-        }
-    }
-});
-
-// Add this function to update the dashboard when a supplier is selected
-function updateDashboard(supplierId) {
-    if (!supplierId) return;
-
-    // Fetch supplier data from backend
-    fetch(`/api/supplier/${supplierId}`)
-        .then(response => response.json())
-        .then(data => {
-            // Update profile info
-            document.querySelector('.profile-info .detail-value').textContent = data.firstName;
-            document.querySelector('.profile-info .detail-value:nth-child(2)').textContent = data.lastName;
-            // ... update other profile fields
-
-            // Update collection stats
-            document.querySelector('.box-info li:nth-child(1) h3').textContent = data.todayCollection;
-            document.querySelector('.box-info li:nth-child(2) h3').textContent = data.collectionDays;
-            document.querySelector('.box-info li:nth-child(3) h3').textContent = data.performanceRate;
-
-            // Update map
-            updateMap(data.location);
-
-            // Update collection history
-            updateCollectionHistory(data.recentCollections);
-
-            // Update graph
-            updateCollectionGraph(data.collectionData);
-        })
-        .catch(error => console.error('Error:', error));
-}
-</script>
-
-<script>
-    // Sample data for the line graph
-    const collectionDates = ['2023-10-01', '2023-10-02', '2023-10-03', '2023-10-04', '2023-10-05'];
-    const teaLeavesCollected = [45, 43, 41, 39, 44]; // Sample values for tea leaves collected
-
-    const ctx = document.getElementById('teaLeavesGraph').getContext('2d');
-    const teaLeavesGraph = new Chart(ctx, {
-        type: 'line', // Specify the type of chart
-        data: {
-            labels: collectionDates, // X-axis labels
-            datasets: [{
-                label: 'Tea Leaves Collected (kg)', // Label for the dataset
-                data: teaLeavesCollected, // Data for the Y-axis
-                borderColor: 'rgba(75, 192, 192, 1)', // Line color
-                backgroundColor: 'rgba(75, 192, 192, 0.2)', // Area color
-                borderWidth: 2,
-                fill: false // Fill the area under the line
-            }]
-        },
-        options: {
-            responsive: true,
-            scales: {
-                x: {
-                    title: {
-                        display: true,
-                        text: 'Collection Dates' // X-axis title
-                    }
-                },
-                y: {
-                    title: {
-                        display: true,
-                        text: 'Amount (kg)' // Y-axis title
-                    },
-                    beginAtZero: true, // Start Y-axis at zero
-                    max: 50, // Set a custom maximum value for the Y-axis
-                    min: 30
-                }
-            }
-        }
-    });
-
-    // Initialize the map with a default center
-    let map;
-    let marker;
-
-    function initMap() {
-        // Default center (can be your factory location)
-        const defaultCenter = { lat: 6.2173037, lng: 80.2564385 };
-
-        map = new google.maps.Map(document.getElementById("map"), {
-            zoom: 15,
-            center: defaultCenter,
-            mapId: "4504f8b37365c3d0",
-            disableDefaultUI: true,
-            zoomControl: true
-        });
-
-        // Create a marker but don't set its position yet
-        marker = new google.maps.Marker({
-            map: map,
-            icon: {
-                url: "https://maps.google.com/mapfiles/ms/icons/green-dot.png"
-            }
-        });
-    }
-
-    document.addEventListener('DOMContentLoaded', function() {
-        const searchInput = document.getElementById('supplierSearch');
-        const supplierSelect = document.getElementById('currentSupplier');
-        const boxInfo = document.querySelector('.box-info');
-        
-        searchInput.addEventListener('input', function(e) {
-            const searchTerm = e.target.value.toLowerCase();
-            const options = supplierSelect.options;
-            let found = false;
-
-            // Reset the no results message
-            if (document.querySelector('.no-results')) {
-                document.querySelector('.no-results').remove();
-            }
-
-            for (let i = 1; i < options.length; i++) {
-                const text = options[i].text.toLowerCase();
-                const value = options[i].value;
-                if (text.includes(searchTerm) || value.includes(searchTerm)) {
-                    options[i].style.display = '';
-                    found = true;
-                    if (searchTerm.length > 2) {
-                        supplierSelect.value = options[i].value;
-                        updateSupplierDetails(options[i].value);
-                    }
-                } else {
-                    options[i].style.display = 'none';
-                }
-            }
-
-            // Show "No supplier found" message only if no matches and search term exists
-            if (!found && searchTerm.length > 0) {
-                if (!document.querySelector('.no-results')) {
-                    boxInfo.insertAdjacentHTML('beforeend', '<p class="no-results">No supplier found</p>');
-                }
-            } else {
-                // Remove the no results message if there are matches
-                const noResults = document.querySelector('.no-results');
-                if (noResults) {
-                    noResults.remove();
-                }
-            }
-        });
-    });
-
-    function updateSupplierDetails(supplierId) {
-        if (!supplierId) return;
-
-        fetch('<?php echo URLROOT; ?>/suppliermanager/getSupplierDetails', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/x-www-form-urlencoded',
-            },
-            body: 'supplier_id=' + supplierId
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.status === 'success') {
-                const supplier = data.data.supplier;
-                const stats = data.data.stats;
-                
-                // Update box-info statistics
-                document.querySelector('.box-info li:nth-child(1) h3').textContent = 
-                    stats.totalQuantity + ' kg';
-                document.querySelector('.box-info li:nth-child(2) h3').textContent = 
-                    stats.collectionDays + ' days';
-                document.querySelector('.box-info li:nth-child(3) h3').textContent = 
-                    stats.performanceRate + '%';
-
-                // Update profile info
-                document.querySelector('.detail-grid').innerHTML = `
-                    <div class="detail-item">
-                        <span class="detail-label">First Name</span>
-                        <span class="detail-value">${supplier.first_name}</span>
-                    </div>
-                    <div class="detail-item">
-                        <span class="detail-label">Last Name</span>
-                        <span class="detail-value">${supplier.last_name}</span>
-                    </div>
-                    <div class="detail-item">
-                        <span class="detail-label">Email</span>
-                        <span class="detail-value">${supplier.email}</span>
-                    </div>
-                    <div class="detail-item">
-                        <span class="detail-label">NIC</span>
-                        <span class="detail-value">${supplier.nic}</span>
-                    </div>
-                    <div class="detail-item">
-                        <span class="detail-label">Gender</span>
-                        <span class="detail-value">${supplier.gender}</span>
-                    </div>
-                    <div class="detail-item">
-                        <span class="detail-label">Date of Birth</span>
-                        <span class="detail-value">${supplier.date_of_birth}</span>
-                    </div>
-                `;
-
-                // Update map marker position
-                if (supplier.latitude && supplier.longitude) {
-                    const supplierLocation = {
-                        lat: parseFloat(supplier.latitude),
-                        lng: parseFloat(supplier.longitude)
-                    };
-                    
-                    marker.setPosition(supplierLocation);
-                    map.setCenter(supplierLocation);
-                    
-                    // Update marker info window
-                    const infoWindow = new google.maps.InfoWindow({
-                        content: `
-                            <div style="padding: 10px;">
-                                <h3 style="margin: 0 0 5px 0;">${supplier.first_name} ${supplier.last_name}</h3>
-                                <p style="margin: 0;">Collection Point</p>
-                            </div>`
-                    });
-
-                    marker.addListener('click', () => {
-                        infoWindow.open(map, marker);
-                    });
-                }
-
-                // Remove any existing error messages
-                const noResults = document.querySelector('.no-results');
-                if (noResults) {
-                    noResults.remove();
-                }
-            } else {
-                // Show error message
-                document.querySelector('.box-info').innerHTML = 
-                    `<p class="error-message">${data.message}</p>`;
-            }
-        })
-        .catch(error => console.error('Error:', error));
-    }
-</script>
 
 
 <?php require APPROOT . '/views/inc/components/footer.php'; ?>

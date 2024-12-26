@@ -192,24 +192,6 @@ class M_CollectionSupplierRecord {
             return null;
         }
     }
-
-    public function getNextLandInspection($supplier_id) {
-        try {
-            $this->db->query("
-                SELECT scheduled_date 
-                FROM land_inspections 
-                WHERE supplier_id = :supplier_id 
-                AND scheduled_date >= CURDATE()
-                AND status != 'cancelled'
-                ORDER BY scheduled_date ASC 
-                LIMIT 1");
-            $this->db->bind(':supplier_id', $supplier_id);
-            return $this->db->single();
-        } catch (Exception $e) {
-            error_log("Error fetching next land inspection: " . $e->getMessage());
-            return null;
-        }
-    }
     
     
 } 

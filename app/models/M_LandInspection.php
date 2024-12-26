@@ -1,5 +1,5 @@
 <?php
-class M_LandInspection {
+    class M_LandInspection {
         private $db;
         private $error = '';
     
@@ -137,5 +137,35 @@ class M_LandInspection {
                 return false;
             }
         }
+
+        
+        public function getNextLandInspection($supplier_id) {
+            try {
+                $sql = "SELECT 
+                            li.scheduled_date,
+                            li.scheduled_time,
+                            li.status
+                        FROM land_inspection_requests lr
+                        JOIN land_inspections li ON lr.request_id = li.request_id
+                        WHERE lr.supplier_id = :supplier_id 
+                        AND li.scheduled_date >= CURDATE()
+                        AND li.status = 'pending'
+                        ORDER BY li.scheduled_date ASC 
+                        LIMIT 1";
+        
+                $stmt = $this->db->prepare($sql);
+                $stmt->bindValue(':supplier_id', $supplier_id, PDO::PARAM_INT);
+                $stmt->execute();
+        
+                return $stmt->fetch(PDO::FETCH_OBJ);
+        
+            } catch (PDOException $e) {
+                $this->error = $e->getMessage();
+                error_log("Error fetching next land inspection: " . $e->getMessage());
+                return null;
+            }
+        }
+
+
     }
 ?>
