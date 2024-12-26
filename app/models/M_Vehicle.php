@@ -149,7 +149,13 @@ class M_Vehicle {
         }
     }
 
-    public function getVehicleById($id) {
+    public function getVehicleByRouteId($id) {
+        $this->db->query('SELECT * FROM vehicles v JOIN routes r ON r.vehicle_id = v.vehicle_id WHERE route_id = :id');
+        $this->db->bind(':id', $id);
+        return $this->db->single();
+    }
+
+    public function getVehicleByVehicleId($id) {
         $this->db->query('SELECT * FROM vehicles WHERE vehicle_id = :id');
         $this->db->bind(':id', $id);
         return $this->db->single();

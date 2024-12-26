@@ -103,52 +103,49 @@ class VehicleDriver extends controller {
     }
     
     public function scheduleDetails($id) {
+        // Get schedule details by ID
         $schedule = $this->model('M_CollectionSchedule')->getScheduleById($id);
         if (!$schedule) {
             redirect('vehicledriver/shift');
         }
-
+    
+        // Get related route and vehicle information
         $route = $this->model('M_Route')->getRouteById($schedule->route_id);
-        $team = $this->model('M_Team')->getTeamById($schedule->team_id);
-        $vehicle = $this->model('M_Vehicle')->getVehicleById($schedule->vehicle_id);
+        $vehicle = $this->model('M_Vehicle')->getVehicleByRouteId($schedule->vehicle_id);
+    
+        // Get collection details for the schedule
+        $collectionId = $this->collectionModel->getUpcomingCollectionIdByScheduleId($id);
+        $collections = $collectionId ? $this->collectionModel->getUpcomingCollectionDetailsByScheduleId($id) : [];
+        $collection = isset($collections[0]) ? $collections[0] : null;
+    
+        // Get route suppliers for the route
+        $routeSuppliers = $this->routeModel->getRouteSuppliersByRouteId($route->route_id);
+    
+        // Prepare default values for collection-related data
+        $collectionBags = $collection ? $this->collectionModel->getCollectionBagsByCollectionId($collectionId) : [];
+        $bagsAdded = $collection->bags_added ?? 0;
+        $fertilizerDistributed = $collection->fertilizer_distributed ?? 0;
+        $collectionCompleted = (is_object($collection) && isset($collection->end_time) && $collection->end_time !== null) ? true : false;
 
-        $currentUserId = $_SESSION['user_id'];
-        $userRole = RoleHelper::hasRole(RoleHelper::DRIVER) ? 'driver' : 
-                   (RoleHelper::hasRole(RoleHelper::DRIVING_PARTNER) ? 'driving_partner' : null);
-
-        $collectionId = $this->collectionModel->getCollectionIdByScheduleId($id);
-
-        $collectionBags = $this->collectionModel->getCollectionBags($collectionId);
-        if (!$collectionBags) {
-            $collectionBags = [];
-        }
-
+    
+        // Prepare data to pass to the view
         $data = [
             'schedule' => $schedule,
             'route' => $route,
-            'team' => $team,
             'vehicle' => $vehicle,
-            'userRole' => $userRole,
-            'isReady' => $this->model('M_CollectionSchedule')->isUserReady($id, $currentUserId),
-            'collectionBags' => $collectionBags
+            'collectionBags' => $collectionBags,
+            'collection' => $collection,
+            'routeSuppliers' => $routeSuppliers,
+            'bagsAdded' => $bagsAdded,
+            'fertilizerDistributed' => $fertilizerDistributed,
+            'collectionCompleted' => $collectionCompleted
         ];
-
-        // Add this to get route suppliers
-        $routeSuppliers = $this->routeModel->getRouteSuppliers($data['route']->route_id);
-        $data['routeSuppliers'] = $routeSuppliers;
-
-        $data['collection'] = $this->collectionScheduleModel->getCollectionByScheduleId($id);
-
-        // Check ready status for both team members
-        $driverReady = $this->collectionModel->isDriverReady($id);
-        $partnerReady = $this->collectionModel->isPartnerReady($id);
-
-        $data['driverReady'] = $driverReady;
-        $data['partnerReady'] = $partnerReady;
-
-        $data['viewPath'] = 'shared/collection/schedule_details';
-        $this->view($data['viewPath'], $data);
+    
+        // Render the view with the data
+        $this->view('vehicle_driver/v_schedule_details', $data);
     }
+    
+    
 
     private function checkShiftTime($scheduleTime, $windowMinutes = 10) {
         try {
@@ -562,6 +559,42 @@ class VehicleDriver extends controller {
             // Handle the error (e.g., set an error message)
             redirect('vehicledriver/shift'); // Redirect to a suitable page on failure
         }
+    }
+
+    public function assignBags() {
+        error_log('assignBags method called');
+        error_log('Request Method: ' . $_SERVER['REQUEST_METHOD']);
+        if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+            // Get schedule_id and bags from POST data
+            $scheduleId = $_POST['schedule_id'] ?? null;
+            $bags = $_POST['bags'] ?? [];
+            
+            // Debug: Log the incoming data
+            error_log('POST data received: ' . print_r($_POST, true));
+            
+            if (!$scheduleId || empty($bags)) {
+                flash('schedule_message', 'Missing schedule ID or no bags were selected', 'alert alert-danger');
+                redirect('vehicledriver/scheduleDetails/' . $scheduleId);
+                return;
+            }
+
+            // Attempt to create collection with bags
+            if ($this->collectionModel->createCollectionWithBags($scheduleId, $bags)) {
+                flash('schedule_message', 'Bags assigned successfully', 'alert alert-success');
+            } else {
+                flash('schedule_message', 'Failed to assign bags', 'alert alert-danger');
+            }
+            
+            redirect('vehicledriver/scheduleDetails/' . $scheduleId);
+        } else {
+            redirect('vehicledriver');
+        }
+    }
+
+    public function checkBag($bagId) {
+        $result = $this->collectionModel->checkBag($bagId);
+        header('Content-Type: application/json');
+        echo json_encode($result);
     }
 }
 

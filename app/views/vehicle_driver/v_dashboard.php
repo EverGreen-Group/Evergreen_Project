@@ -6,7 +6,7 @@ require APPROOT . '/views/inc/components/topnavbar.php';
 ?>
 
 <main>
-    <?php print_r($_SESSION); ?>
+    <!-- <?php print_r($_SESSION); ?> -->
     <div class="head-title">
         <div class="left">
             <h1>Vehicle Driver Dashboard</h1>
@@ -17,33 +17,95 @@ require APPROOT . '/views/inc/components/topnavbar.php';
         </div>
     </div>
 
-    <!-- Quick Stats -->
-    <ul class="route-box-info">
-        <li>
-            <i class='bx bxs-time'></i>
-            <span class="text">
-                <p>Current Time</p>
-                <h3 id="current-time">--:--</h3>
-                <span>Local Time</span>
-            </span>
-        </li>
-        <li>
-            <i class='bx bxs-timer'></i>
-            <span class="text">
-                <p>Next Collection</p>
-                <h3>2:30 PM</h3>
-                <span>Hatton Central</span>
-            </span>
-        </li>
-        <li>
-            <i class='bx bxs-calendar'></i>
-            <span class="text">
-                <p>Today's Progress</p>
-                <h3>4/6</h3>
-                <span>Collections</span>
-            </span>
-        </li>
-    </ul>
+<!-- Quick Stats -->
+<?php
+    // Get current date and time
+    $currentTime = time();
+    $today = date('Y-m-d');
+    
+    // Initialize variables for next collection
+    $nextCollectionTime = "No upcoming collections";
+    $nextCollectionLocation = "N/A";
+    
+    // Variables for today's progress
+    $totalTodayShifts = 0;
+    $completedTodayShifts = 0;
+    
+    if (!empty($data['upcomingShifts'])) {
+        $nextShift = null;
+        
+        foreach ($data['upcomingShifts'] as $shift) {
+            // Check if shift is for today
+            if ($shift->day === strtolower(date('l'))) {
+                $totalTodayShifts++;
+                
+                $shiftDateTime = $today . ' ' . $shift->start_time;
+                $shiftTimestamp = strtotime($shiftDateTime);
+                $shiftEndDateTime = $today . ' ' . $shift->end_time;
+                $shiftEndTimestamp = strtotime($shiftEndDateTime);
+                
+                // Count completed shifts
+                if ($currentTime > $shiftEndTimestamp) {
+                    $completedTodayShifts++;
+                }
+                
+                // Find next upcoming shift
+                if ($currentTime < $shiftTimestamp && ($nextShift === null || $shiftTimestamp < strtotime($today . ' ' . $nextShift->start_time))) {
+                    $nextShift = $shift;
+                }
+            }
+        }
+        
+        // Format next collection time and location if found
+        if ($nextShift !== null) {
+            $nextCollectionTime = date('g:i A', strtotime($today . ' ' . $nextShift->start_time));
+            $nextCollectionLocation = $nextShift->route_name ?? 'Route Location';
+        }
+    }
+?>
+
+<ul class="route-box-info">
+    <li>
+        <i class='bx bxs-time'></i>
+        <span class="text">
+            <p>Current Time</p>
+            <h3 id="current-time">--:--</h3>
+            <span>Local Time</span>
+        </span>
+    </li>
+    <li>
+        <i class='bx bxs-timer'></i>
+        <span class="text">
+            <p>Next Collection</p>
+            <h3><?php echo $nextCollectionTime; ?></h3>
+            <span><?php echo $nextCollectionLocation; ?></span>
+        </span>
+    </li>
+    <!-- <li>
+        <i class='bx bxs-calendar'></i>
+        <span class="text">
+            <p>Today's Progress</p>
+            <h3><?php echo $completedTodayShifts . '/' . $totalTodayShifts; ?></h3>
+            <span>Collections</span>
+        </span>
+    </li> -->
+</ul>
+
+<script>
+function updateCurrentTime() {
+    const currentTimeElement = document.getElementById('current-time');
+    const now = new Date();
+    currentTimeElement.textContent = now.toLocaleTimeString('en-US', {
+        hour: 'numeric',
+        minute: '2-digit',
+        hour12: true
+    });
+}
+
+// Update immediately and then every second
+updateCurrentTime();
+setInterval(updateCurrentTime, 1000);
+</script>
 
 
     <!-- Shift Management Section -->
@@ -55,8 +117,8 @@ require APPROOT . '/views/inc/components/topnavbar.php';
             <?php else: ?>
                 <!-- Table view (shows above 600px) -->
                 <?php
-            echo "<pre style='background: #f5f5f5; padding: 10px; margin: 10px 0;'>";
-            echo "Current Time: " . date('Y-m-d H:i:s', time()) . "\n\n";
+            // echo "<pre style='background: #f5f5f5; padding: 10px; margin: 10px 0;'>";
+            // echo "Current Time: " . date('Y-m-d H:i:s', time()) . "\n\n";
             
             if (!empty($data['upcomingShifts'])) {
                 foreach ($data['upcomingShifts'] as $shift) {
@@ -72,14 +134,14 @@ require APPROOT . '/views/inc/components/topnavbar.php';
                     $isWithinTimeframe = ($hoursUntilShift <= 5 && $hoursUntilShift > 0) || 
                     ($currentTime >= $shiftTimestamp && $currentTime <= $shiftEndTimestamp);
                     
-                    echo "Shift Details:\n";
-                    echo "Day: " . $shift->day . "\n";
-                    echo "Start Time: " . $shiftDateTime . " (timestamp: $shiftTimestamp)\n";
-                    echo "End Time: " . $shiftEndDateTime . " (timestamp: $shiftEndTimestamp)\n";
-                    echo "Current Time Timestamp: $currentTime\n";
-                    echo "Hours until shift: " . number_format($hoursUntilShift, 2) . "\n";
-                    echo "Is within 5 hours: " . ($isWithinTimeframe ? "Yes" : "No") . "\n";
-                    echo "Is Future Shift: " . ($hoursUntilShift > 0 ? "Yes" : "No") . "\n\n";
+                    // echo "Shift Details:\n";
+                    // echo "Day: " . $shift->day . "\n";
+                    // echo "Start Time: " . $shiftDateTime . " (timestamp: $shiftTimestamp)\n";
+                    // echo "End Time: " . $shiftEndDateTime . " (timestamp: $shiftEndTimestamp)\n";
+                    // echo "Current Time Timestamp: $currentTime\n";
+                    // echo "Hours until shift: " . number_format($hoursUntilShift, 2) . "\n";
+                    // echo "Is within 5 hours: " . ($isWithinTimeframe ? "Yes" : "No") . "\n";
+                    // echo "Is Future Shift: " . ($hoursUntilShift > 0 ? "Yes" : "No") . "\n\n";
                 }
             }
             echo "</pre>";
