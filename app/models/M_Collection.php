@@ -296,14 +296,13 @@ class M_Collection {
         }
     }
 
-    public function createCollectionWithBags($scheduleId, $bags) {
+    public function createCollectionWithBags($scheduleId, $bagIds) {
         $this->db->beginTransaction();
         try {
-            // 1. Create collection entry first
-            $this->db->query('INSERT INTO collections (schedule_id, partner_approved, bags) 
-                             VALUES (:schedule_id, 1, :bags)');
+            // Create collection entry
+            $this->db->query('INSERT INTO collections (schedule_id, status) 
+                             VALUES (:schedule_id, "Pending")');
             $this->db->bind(':schedule_id', $scheduleId);
-            $this->db->bind(':bags', count($bags));
             
             if (!$this->db->execute()) {
                 throw new Exception('Failed to create collection');
@@ -311,38 +310,35 @@ class M_Collection {
 
             $collectionId = $this->db->lastInsertId();
 
-            // 2. For each bag token
-            foreach ($bags as $bagToken) {
-                // First, check if bag exists, if not create it
-                $this->db->query('INSERT IGNORE INTO bags (token, status) 
-                                 VALUES (:token, "In Use")');
-                $this->db->bind(':token', $bagToken);
-                $this->db->execute();
+            foreach ($bagIds as $bagId) {
+                // First verify the bag exists in collection_bags
+                $this->db->query('SELECT * FROM collection_bags WHERE bag_id = :bag_id');
+                $this->db->bind(':bag_id', $bagId);
+                $bagDetails = $this->db->single();
 
-                // Get the bag_id (whether it was just inserted or already existed)
-                $this->db->query('SELECT bag_id FROM bags WHERE token = :token');
-                $this->db->bind(':token', $bagToken);
-                $bagResult = $this->db->single();
-                
-                if (!$bagResult) {
-                    throw new Exception('Failed to get bag ID');
+                if (!$bagDetails) {
+                    throw new Exception('Bag not found in collection_bags: ' . $bagId);
                 }
 
-                // Create collection_bags record
-                $this->db->query('INSERT INTO collection_bags 
-                                 (collection_id, bag_id) 
-                                 VALUES (:collection_id, :bag_id)');
+                // Create usage history with the bag's actual details
+                $this->db->query('INSERT INTO bag_usage_history 
+                                 (bag_id, collection_id, action, capacity_kg, bag_weight_kg) 
+                                 VALUES (:bag_id, :collection_id, "added", :capacity_kg, :bag_weight_kg)');
+                
+                $this->db->bind(':bag_id', $bagId);
                 $this->db->bind(':collection_id', $collectionId);
-                $this->db->bind(':bag_id', $bagResult->bag_id);
+                $this->db->bind(':capacity_kg', $bagDetails->capacity_kg);
+                $this->db->bind(':bag_weight_kg', $bagDetails->bag_weight_kg);
                 
                 if (!$this->db->execute()) {
-                    throw new Exception('Failed to assign bag');
+                    throw new Exception('Failed to create bag usage history');
                 }
             }
 
             $this->db->commit();
             return true;
         } catch (Exception $e) {
+            error_log('Error in createCollectionWithBags: ' . $e->getMessage());
             $this->db->rollBack();
             return false;
         }
@@ -362,15 +358,39 @@ class M_Collection {
         return $result ? $result->partner_approved : false;
     }
 
-    public function getCollectionIdByScheduleId($scheduleId) {
-        $this->db->query('SELECT collection_id FROM collections WHERE schedule_id = :schedule_id');
+    public function getUpcomingCollectionIdByScheduleId($scheduleId) {
+        $this->db->query('SELECT collection_id 
+                          FROM collections 
+                          WHERE schedule_id = :schedule_id 
+                          AND status NOT IN ("Cancelled", "Completed")');
         $this->db->bind(':schedule_id', $scheduleId);
         $result = $this->db->single();
         return $result ? $result->collection_id : false;
     }
 
-    public function getCollectionBags($collectionId) {
-        $this->db->query('SELECT bag_token FROM collection_bags WHERE collection_id = :collection_id');
+    public function getUpcomingCollectionDetailsByScheduleId($scheduleId) {
+        $this->db->query('SELECT *
+                          FROM collections 
+                          WHERE schedule_id = :schedule_id 
+                          AND status != "Completed"'
+                          );
+        $this->db->bind(':schedule_id', $scheduleId);
+        $result = $this->db->single();
+        return $result ? $result->collection_id : false;
+    }
+
+
+
+    public function getCollectionBagsByCollectionId($collectionId) {
+        $this->db->query('SELECT 
+                            buh.*,
+                            cb.status as bag_status
+                          FROM bag_usage_history buh
+                          JOIN collection_bags cb ON buh.bag_id = cb.bag_id
+                          WHERE buh.collection_id = :collection_id
+                          AND buh.action = "added"
+                          ORDER BY buh.timestamp ASC');
+        
         $this->db->bind(':collection_id', $collectionId);
         return $this->db->resultSet();
     }
@@ -395,6 +415,64 @@ class M_Collection {
         $this->db->bind(':collection_id', $data['collection_id']);
 
         return $this->db->execute(); // Execute the prepared statement
+    }
+
+    public function checkBag($bagId) {
+        // First check if bag exists and get its status from collection_bags
+        $this->db->query('SELECT cb.*, 
+                          (SELECT buh.collection_id 
+                           FROM bag_usage_history buh 
+                           WHERE buh.bag_id = cb.bag_id 
+                           AND buh.action = "added" 
+                           AND NOT EXISTS (
+                               SELECT 1 
+                               FROM bag_usage_history buh2 
+                               WHERE buh2.bag_id = cb.bag_id 
+                               AND buh2.collection_id = buh.collection_id 
+                               AND buh2.action IN ("emptied", "reused")
+                           )
+                           LIMIT 1) as active_collection_id
+                         FROM collection_bags cb 
+                         WHERE cb.bag_id = :bag_id');
+        
+        $this->db->bind(':bag_id', $bagId);
+        $bag = $this->db->single();
+
+        // If bag doesn't exist
+        if (!$bag) {
+            return [
+                'success' => false,
+                'message' => 'Bag not found'
+            ];
+        }
+
+        // If bag is marked as inactive
+        if ($bag->status === 'inactive') {
+            return [
+                'success' => false,
+                'message' => 'This bag is marked as inactive'
+            ];
+        }
+
+        // If bag is currently in use in another collection
+        if ($bag->active_collection_id) {
+            return [
+                'success' => false,
+                'message' => 'This bag is currently in use in collection #' . $bag->active_collection_id
+            ];
+        }
+
+        // If all checks pass, bag is available
+        return [
+            'success' => true,
+            'message' => 'Bag is available for use',
+            'data' => [
+                'bag_id' => $bag->bag_id,
+                'capacity_kg' => $bag->capacity_kg,
+                'bag_weight_kg' => $bag->bag_weight_kg,
+                'status' => $bag->status
+            ]
+        ];
     }
 
 } 

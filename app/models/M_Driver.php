@@ -167,4 +167,9 @@ class M_Driver{
         }
     }
 
+
+    public function getDriverDetails($user_id) {
+        
+    }
+
 }

@@ -157,7 +157,7 @@ class M_Route {
         return $this->db->resultSet();
     }
 
-    public function getRouteSuppliers($routeId) {
+    public function getRouteSuppliersByRouteId($routeId) {
         $this->db->query("
             SELECT 
                 s.*,
@@ -165,15 +165,13 @@ class M_Route {
                 u.last_name,
                 CONCAT(u.first_name, ' ', u.last_name) as full_name,
                 CONCAT(s.latitude, ', ', s.longitude) as coordinates,
-                rs.stop_order,
-                rs.supplier_order
+                rs.*
             FROM route_suppliers rs
             JOIN suppliers s ON rs.supplier_id = s.supplier_id
             JOIN users u ON s.user_id = u.user_id
             WHERE rs.route_id = :route_id
             AND rs.is_deleted = 0
             AND s.is_deleted = 0
-            ORDER BY rs.stop_order ASC, rs.supplier_order ASC
         ");
         
         $this->db->bind(':route_id', $routeId);
@@ -182,14 +180,7 @@ class M_Route {
 
     public function getRouteById($routeId) {
         $this->db->query("
-            SELECT 
-                r.*,
-                COUNT(rs.supplier_id) as supplier_count
-            FROM routes r
-            LEFT JOIN route_suppliers rs ON r.route_id = rs.route_id
-            WHERE r.route_id = :route_id
-            AND r.is_deleted = 0
-            GROUP BY r.route_id
+            SELECT * FROM routes WHERE route_id = :route_id;
         ");
         
         $this->db->bind(':route_id', $routeId);
