@@ -419,7 +419,7 @@
 
       <section class="Last-export">
         <h2>Relese Exports</h2>
-        <form action="<?php echo URLROOT; ?>/Inventory/export" method="POST" >
+        <form action="<?php echo URLROOT; ?>/Export/release" method="POST" >
           <div class="form-grid">
             <div class="form-group">
               <label>Export Stock Name*</label>
