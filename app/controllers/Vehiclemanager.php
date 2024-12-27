@@ -847,23 +847,6 @@ class VehicleManager extends Controller {
         return 0; // Return 0 if no collections yet
     }
 
-    public function getCollectionDetails($collectionId) {
-        // Get collection basic info
-        $collection = $this->collectionModel->getCollectionById($collectionId);
-        
-        // Get supplier records for this collection
-        $suppliers = $this->collectionSupplierRecordModel->getSupplierRecords($collectionId);
-        
-        $data = [
-            'team_name' => $collection->team_name,
-            'route_name' => $collection->route_name,
-            'suppliers' => $suppliers
-        ];
-
-        header('Content-Type: application/json');
-        echo json_encode($data);
-    }
-
     public function updateSupplierStatus($recordId) {
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $data = json_decode(file_get_contents('php://input'));
@@ -1345,6 +1328,102 @@ class VehicleManager extends Controller {
         }
     }
     
+
+    public function getCollectionRequests() {
+        $collections = $this->collectionModel->getPendingCollections();
+        header('Content-Type: application/json');
+        echo json_encode($collections);
+    }
+
+    public function getCollectionDetails($id = null) {
+        // Check if it's an AJAX request
+        if (!$this->isAjaxRequest()) {
+            redirect('pages/error');
+            return;
+        }
+
+        // Validate ID
+        if (!$id || !is_numeric($id)) {
+            http_response_code(400);
+            echo json_encode(['error' => 'Invalid collection ID']);
+            return;
+        }
+
+        // Get collection details
+        $collection = $this->collectionModel->getCollectionDetails($id);
+        
+        if (!$collection) {
+            http_response_code(404);
+            echo json_encode(['error' => 'Collection not found']);
+            return;
+        }
+
+        // Get bags associated with the collection
+        $bags = $this->collectionModel->getBagsByCollectionId($id);
+
+        // Format the response
+        $response = [
+            'collection_id' => $collection->collection_id,
+            'collection_status' => $collection->collection_status,
+            'created_at' => $collection->created_at,
+            'start_time' => $collection->start_time,
+            'end_time' => $collection->end_time,
+            'total_quantity' => $collection->total_quantity,
+            'fertilizer_distributed' => $collection->fertilizer_distributed,
+            'schedule_id' => $collection->schedule_id,
+            'day' => $collection->day,
+            'route_id' => $collection->route_id,
+            'route_name' => $collection->route_name,
+            'number_of_suppliers' => $collection->number_of_suppliers,
+            'driver_id' => $collection->driver_id,
+            'driver_status' => $collection->driver_status,
+            'first_name' => $collection->first_name,
+            'last_name' => $collection->last_name,
+            'shift_id' => $collection->shift_id,
+            'shift_start' => $collection->shift_start,
+            'shift_end' => $collection->shift_end,
+            'shift_name' => $collection->shift_name,
+            'bags' => $bags  // Include the bags in the response
+        ];
+
+        header('Content-Type: application/json');
+        echo json_encode($response);
+    }
+
+    public function approveCollection() {
+        // Check if it's an AJAX request
+        if (!$this->isAjaxRequest()) {
+            redirect('pages/error');
+            return;
+        }
+
+        // Get the input data
+        $data = json_decode(file_get_contents("php://input"), true);
+
+        // Validate input
+        if (!isset($data['collection_id']) || !is_numeric($data['collection_id'])) {
+            http_response_code(400);
+            echo json_encode(['success' => false, 'message' => 'Invalid collection ID']);
+            return;
+        }
+
+        // Prepare the data for updating
+        $collectionId = $data['collection_id'];
+        $startTime = $data['start_time'];
+        $vehicleManagerId = $_SESSION['user_id'];
+        $vehicleManagerApprovedAt = $data['vehicle_manager_approved_at'];
+        $bags = $data['bags']; // This should be the number of bags or details
+        $bagsAdded = $data['bags_added'];
+
+        // Update the collection in the model
+        $result = $this->collectionModel->approveCollection($collectionId, $startTime, $vehicleManagerId, $vehicleManagerApprovedAt, $bags, $bagsAdded);
+
+        if ($result) {
+            echo json_encode(['success' => true]);
+        } else {
+            echo json_encode(['success' => false, 'message' => 'Failed to approve collection']);
+        }
+    }
 
 }
 ?>
