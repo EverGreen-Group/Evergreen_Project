@@ -351,13 +351,6 @@ class M_Collection {
         return $result ? $result->driver_approved : false;
     }
 
-    public function isPartnerReady($scheduleId) {
-        $this->db->query('SELECT partner_approved FROM collections WHERE schedule_id = :schedule_id');
-        $this->db->bind(':schedule_id', $scheduleId);
-        $result = $this->db->single();
-        return $result ? $result->partner_approved : false;
-    }
-
     public function getUpcomingCollectionIdByScheduleId($scheduleId) {
         $this->db->query('SELECT collection_id 
                           FROM collections 
@@ -473,6 +466,133 @@ class M_Collection {
                 'status' => $bag->status
             ]
         ];
+    }
+
+    public function getPendingCollections() {
+        $this->db->query('
+            SELECT 
+                c.collection_id,
+                r.route_name,
+                CONCAT(u.first_name, " ", u.last_name) as driver_name,
+                c.status,
+                c.created_at,
+                c.bags,
+                c.vehicle_manager_approved,
+                cs.route_id,
+                cs.driver_id,
+                cs.day
+            FROM collections c
+            JOIN collection_schedules cs ON c.schedule_id = cs.schedule_id
+            JOIN routes r ON cs.route_id = r.route_id
+            JOIN users u ON cs.driver_id = u.user_id
+            WHERE c.status = "Pending" 
+            AND c.vehicle_manager_approved = 0
+            ORDER BY c.created_at DESC
+        ');
+        
+        return $this->db->resultSet();
+    }
+
+    public function getPendingCollectionRequests() {
+        $this->db->query('
+            SELECT 
+                c.collection_id,
+                r.route_name,
+                CONCAT(u.first_name, " ", u.last_name) as driver_name,
+                c.fertilizer_distributed,  -- This will be used for "Deliveries" column
+                c.status,
+                c.created_at,
+                c.vehicle_manager_approved
+            FROM collections c
+            JOIN collection_schedules cs ON c.schedule_id = cs.schedule_id
+            JOIN routes r ON cs.route_id = r.route_id
+            JOIN users u ON cs.driver_id = u.user_id
+            WHERE c.status = "Pending" 
+            AND c.vehicle_manager_approved = 0
+            AND c.bags_added = 1  -- Only show collections where bags have been added
+            ORDER BY c.created_at DESC
+        ');
+        
+        return $this->db->resultSet();
+    }
+
+    public function getCollectionDetails($id) {
+        $this->db->query('
+            SELECT 
+                c.collection_id,
+                c.status as collection_status,
+                c.created_at,
+                c.start_time,
+                c.end_time,
+                c.total_quantity,
+                c.bags,
+                c.fertilizer_distributed,
+                
+                cs.schedule_id,
+                cs.day,
+                cs.week_number,
+                
+                r.route_id,
+                r.route_name,
+                r.number_of_suppliers,
+                
+                d.driver_id,
+                d.status as driver_status,
+                
+                u.first_name,
+                u.last_name,
+                
+                s.shift_id,
+                s.start_time as shift_start,
+                s.end_time as shift_end,
+                s.shift_name
+            FROM collections c
+            JOIN collection_schedules cs ON c.schedule_id = cs.schedule_id
+            JOIN routes r ON cs.route_id = r.route_id
+            JOIN drivers d ON cs.driver_id = d.driver_id
+            JOIN users u ON d.user_id = u.user_id
+            JOIN collection_shifts s ON cs.shift_id = s.shift_id
+            WHERE c.collection_id = :id
+            AND c.status = "Pending"
+            AND c.vehicle_manager_approved = 0
+            AND cs.is_deleted = 0
+            AND cs.is_active = 1
+        ');
+        
+        $this->db->bind(':id', $id);
+        return $this->db->single();
+    }
+
+    public function approveCollection($collectionId, $vehicleManagerId) {
+        $this->db->query('
+            UPDATE collections 
+            SET 
+                status = "In Progress",
+                start_time = CURRENT_TIMESTAMP(),
+                vehicle_manager_id = :vehicle_manager_id,
+                vehicle_manager_approved = 1,
+                vehicle_manager_approved_at = CURRENT_TIMESTAMP(),
+                bags_added = 1
+            WHERE collection_id = :collection_id
+        ');
+
+        // Bind parameters
+        $this->db->bind(':vehicle_manager_id', $vehicleManagerId);
+        $this->db->bind(':collection_id', $collectionId);
+
+        // Execute the update
+        return $this->db->execute();
+    }
+
+    public function getBagsByCollectionId($collectionId) {
+        $this->db->query('
+            SELECT *
+            FROM bag_usage_history
+            WHERE collection_id = :collection_id
+        ');
+
+        $this->db->bind(':collection_id', $collectionId);
+        return $this->db->resultSet();  // This will return an array of bags
     }
 
 } 

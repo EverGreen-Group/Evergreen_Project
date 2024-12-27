@@ -4,10 +4,15 @@
 <?php require APPROOT . '/views/inc/components/sidebar_vehicle_manager.php'; ?>
 <!-- Top nav bar -->
 <?php require APPROOT . '/views/inc/components/topnavbar.php'; ?>
-
+<link rel="stylesheet" href="<?php echo URLROOT; ?>/css/vehicle_manager/collection/collection.css">
+<!-- <script async defer src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCdt_khahhXrKdrA8cLgKeQB2CZtde-_Vc&callback=initMap"></script> -->
 <script>
     const URLROOT = '<?php echo URLROOT; ?>';
+    const UPLOADROOT = '<?php echo UPLOADROOT; ?>';
 </script>
+<script src="<?php echo URLROOT; ?>/public/js/vehicle_manager/collection.js"></script>
+<script src="<?php echo URLROOT; ?>/public/js/vehicle_manager/collection_request_populate.js"></script>
+
 
 
 <!-- MAIN -->
@@ -31,52 +36,7 @@
             </div>
         </div>
 
-        <style>
-        .datetime-display {
-            display: flex;
-            gap: 2rem;
-            background: var(--light);
-            padding: 1rem;
-            border-radius: 10px;
-            margin-bottom: 1.5rem;
-        }
-
-        .datetime-display .date,
-        .datetime-display .time {
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-            font-size: 1.1rem;
-            color: var(--dark);
-        }
-
-        .datetime-display i {
-            font-size: 1.2rem;
-            color: var(--main);
-        }
-    </style>
-
-    <script>
-        function updateTime() {
-            const timeElement = document.querySelector('#live-time span');
-            const now = new Date();
-            timeElement.textContent = now.toLocaleTimeString('en-US', { 
-                hour: '2-digit', 
-                minute: '2-digit', 
-                second: '2-digit',
-                hour12: true 
-            });
-        }
-
-        // Update time immediately and then every second
-        updateTime();
-        setInterval(updateTime, 1000);
-    </script>
     </div>
-
-
-
-
 
 
     <!-- Box Info -->
@@ -126,14 +86,14 @@
                         <td>Route A</td>
                         <td>Team 1</td>
                         <td><span class="status pending">In Progress</span></td>
-                        <td><a href="#">VIEW</a></td>
+                        <td><button class="btn btn-primary">VIEW</button></td>
                     </tr>
                     <tr>
                         <td>COL002</td>
                         <td>Route B</td>
                         <td>Team 2</td>
                         <td><span class="status completed">Completed</span></td>
-                        <td><a href="#">VIEW</a></td>
+                        <td><button class="btn btn-primary">VIEW</button></td>
                     </tr>
                 </tbody>
             </table>
@@ -141,37 +101,42 @@
 
         <div class="order">
             <div class="head">
-                <h3>Today's Routes</h3>
-                <i class='bx bx-map'></i>
+                <h3>Collection Confirmation Request</h3>
+                <i class='bx bx-leaf'></i>
             </div>
-            <table>
+            <table id="collection-confirmation-table">
                 <thead>
                     <tr>
-                        <th>Route ID</th>
-                        <th>Route Name</th>
-                        <th>Suppliers</th>
-                        <th>Vehicle Number</th>
+                        <th>Collection ID</th>
+                        <th>Route</th>
+                        <th>Driver</th>
+                        <th>Deliveries</th>
+                        <th>Details</th>
                     </tr>
                 </thead>
                 <tbody>
-                    <?php if (!empty($todayRoutes)): ?>
-                        <?php foreach ($todayRoutes as $route): ?>
-                            <tr>
-                                <td><?= htmlspecialchars($route->route_id); ?></td>
-                                <td><?= htmlspecialchars($route->route_name); ?></td>
-                                <td><?= htmlspecialchars($route->number_of_suppliers); ?></td>
-                                <td><?= htmlspecialchars($route->license_plate); ?></td>
-                            </tr>
-                        <?php endforeach; ?>
-                    <?php else: ?>
-                        <tr>
-                            <td colspan="4" class="text-center">No routes available for today.</td>
-                        </tr>
-                    <?php endif; ?>
+                    <tr>
+                        <td>COL001</td>
+                        <td>Route A</td>
+                        <td>Driver 1</td>
+                        <td><span class="status cancelled">NO</span></td>
+                        <td><button class="btn btn-primary" onclick="openCollectionRequestDetailModal()">VIEW</button></td>
+                    </tr>
+                    <tr>
+                        <td>COL002</td>
+                        <td>Route B</td>
+                        <td>Driver 2</td>
+                        <td><span class="status completed">YES</span></td>
+                        <td><button class="btn btn-primary" onclick="openCollectionRequestDetailModal()">VIEW</button></td>
+                    </tr>
                 </tbody>
             </table>
         </div>
     </div>
+
+    <script>
+        
+    </script>
 
     <!-- Collection Schedules Section -->
     <div class="table-data">
@@ -301,29 +266,6 @@
     </div>
 </div>
 
-<script>
-    document.getElementById('day').addEventListener('change', function() {
-        const selectedDay = this.value;
-        const routeSelect = document.getElementById('route');
-
-        // Clear existing options
-        routeSelect.innerHTML = '<option value="" disabled selected>Select a route</option>';
-
-        // Fetch routes based on the selected day
-        fetch(`<?php echo URLROOT; ?>/routes/getRoutesByDay/${selectedDay}`)
-            .then(response => response.json())
-            .then(data => {
-                data.routes.forEach(route => {
-                    const option = document.createElement('option');
-                    option.value = route.route_id;
-                    option.textContent = route.route_name;
-                    routeSelect.appendChild(option);
-                });
-            })
-            .catch(error => console.error('Error fetching routes:', error));
-    });
-</script>
-
 <!-- Edit Schedule Section -->
 <div class="table-data">
     <div class="order">
@@ -386,608 +328,21 @@
     </div>
 </div>
 
-<script>
-function loadScheduleData(scheduleId) {
-    fetch(`<?php echo URLROOT; ?>/collectionschedules/getSchedule/${scheduleId}`)
-        .then(response => response.json())
-        .then(data => {
-            if (data) {
-                console.log(data); // Log the fetched data
 
-                // Select the driver dropdown
-                const driverElement = document.getElementById('edit_driver');
-                
-                if (driverElement) {
-                    // Check if the driver option exists, if not, create it
-                    let driverOption = driverElement.querySelector(`option[value="${data.driver_id}"]`);
-                    
-                    if (!driverOption) {
-                        driverOption = document.createElement('option');
-                        driverOption.value = data.driver_id;
-                        driverOption.text = data.driver_name;
-                        driverElement.appendChild(driverOption);
-                    }
-                    
-                    driverElement.value = data.driver_id;
-                }
+<!-- PART FOR MODAL -->
 
-                // Set other form fields
-                document.getElementById('edit_route').value = data.route_id;
-                document.getElementById('edit_shift').value = data.shift_id;
-                document.getElementById('edit_week_number').value = data.week_number;
-            }
-        })
-        .catch(error => console.error('Error loading schedule data:', error));
-}
-</script>
-
-
-
-
+<div id="collectionRequestDetailsModal" class="modal" onclick="closeModal('collectionRequestDetailsModal')">
+    <div class="modal-content" onclick="event.stopPropagation();">
+        <span class="close" onclick="closeModal('collectionRequestDetailsModal')">&times;</span>
+        <h2>Collection Confirmation Request</h2>
+        <div id="collectionRequestDetailsContent">
+            <!-- Bag details will be populated here -->
+        </div>
+    </div>
+</div>
 
 
 </main>
-
-<script async defer src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCdt_khahhXrKdrA8cLgKeQB2CZtde-_Vc&callback=initMap"></script>
-
-<script>
-let map;
-let directionsService;
-let directionsRenderer;
-
-function initMap() {
-    map = new google.maps.Map(document.getElementById("map-container"), {
-        center: { lat: 6.2173037, lng: 80.2564385 }, // Default center
-        zoom: 11
-    });
-
-    directionsService = new google.maps.DirectionsService();
-    directionsRenderer = new google.maps.DirectionsRenderer({
-        map: map,
-        suppressMarkers: true
-    });
-}
-
-function updateMap(collectionId) {
-    if (!collectionId) return;
-
-    // Fetch collection route data from controller
-    fetch(`${URLROOT}/vehiclemanager/getCollectionRoute/${collectionId}`)
-        .then(response => response.json())
-        .then(data => {
-            // Clear previous route
-            directionsRenderer.setDirections({routes: []});
-            if (window.markers) {
-                window.markers.forEach(marker => marker.setMap(null));
-            }
-            window.markers = [];
-
-            // Create waypoints from supplier locations
-            const waypoints = data.suppliers.slice(1, -1).map(stop => ({
-                location: { lat: parseFloat(stop.latitude), lng: parseFloat(stop.longitude) },
-                stopover: true
-            }));
-
-            // Create route
-            const request = {
-                origin: { lat: parseFloat(data.start_location.latitude), lng: parseFloat(data.start_location.longitude) },
-                destination: { lat: parseFloat(data.end_location.latitude), lng: parseFloat(data.end_location.longitude) },
-                waypoints: waypoints,
-                travelMode: 'DRIVING'
-            };
-
-            directionsService.route(request, function(result, status) {
-                if (status === 'OK') {
-                    directionsRenderer.setDirections(result);
-                    
-                    // Add markers for each stop
-                    data.suppliers.forEach((stop, index) => {
-                        const marker = new google.maps.Marker({
-                            position: { 
-                                lat: parseFloat(stop.latitude), 
-                                lng: parseFloat(stop.longitude) 
-                            },
-                            map: map,
-                            title: stop.name,
-                            label: (index + 1).toString()
-                        });
-                        window.markers.push(marker);
-
-                        // Highlight current stop if exists
-                        if (index === data.current_stop) {
-                            marker.setIcon('http://maps.google.com/mapfiles/ms/icons/green-dot.png');
-                        }
-                    });
-                }
-            });
-            // Update collection details
-            document.getElementById("team-name").textContent = data.team_name;
-            document.getElementById("route-name").textContent = data.route_name;
-        })
-        .catch(error => console.error('Error updating map:', error));
-}
-
-// Initialize the map when the page loads
-document.addEventListener('DOMContentLoaded', function() {
-    // Initialize map
-    if (typeof google !== 'undefined') {
-        initMap();
-    }
-
-    // Remove reference to non-existent form
-    // const assignCollectionForm = document.getElementById('assignCollectionForm');
-    // if (assignCollectionForm) {
-    //     assignCollectionForm.addEventListener('submit', function(e) {
-    //         // ... form handling code ...
-    //     });
-    // }
-
-    // Select first collection by default if exists
-    const selectElement = document.getElementById('ongoing-collection-select');
-    if (selectElement && selectElement.options.length > 1) {
-        selectElement.selectedIndex = 1;
-        updateCollectionDetails(selectElement.value);
-    }
-});
-
-// Update when collection is selected? 
-document.getElementById("ongoing-collection-select").addEventListener("change", function() {
-    updateMap(this.value);
-});
-</script>
-
-<script>
-    // Example of handling form submission for assigning collection
-    document.getElementById('assignCollectionForm').addEventListener('submit', function(e) {
-        e.preventDefault();
-        const route = document.getElementById('route').value;
-        const team = document.getElementById('team').value;
-        const shift = document.getElementById('shift').value;
-
-        // Log or handle the assigned collection details
-        console.log(`Collection Assigned: Route - ${route}, Team - ${team}, Shift - ${shift}`);
-        alert('Collection assigned successfully!');
-    });
-
-    // Example logic for adding late suppliers to ongoing collections
-    document.querySelectorAll('.assign-btn').forEach(button => {
-        button.addEventListener('click', function() {
-            alert('Supplier added to collection!');
-        });
-    });
-</script>
-
-<style>
-    .form-group {
-        margin-bottom: 15px;
-    }
-    
-    .form-group label {
-        display: block;
-        margin-bottom: 0.5rem;
-    }
-    
-    .form-group select {
-        width: 100%;
-        padding: 8px;
-        border-radius: 4px;
-        border: 1px solid #ddd;
-    }
-    
-    .btn-submit {
-        padding: 0.5rem 1rem;
-        background-color: var(--main);
-        color: white;
-        border: none;
-        border-radius: 5px;
-        cursor: pointer;
-    }
-    
-    .btn-submit:hover {
-        background-color: var(--main-dark);
-    }
-</style>
-
-<style>
-#map-container {
-    margin-bottom: 1rem;
-    border-radius: 5px;
-    overflow: hidden;
-}
-
-#collection-details {
-    background-color: #f8f9fa;
-    padding: 1rem;
-    border-radius: 5px;
-    margin-bottom: 1rem;
-}
-
-#collection-details h4 {
-    margin-top: 0;
-    margin-bottom: 0.5rem;
-}
-
-#ongoing-collection-select {
-    margin-left: 1rem;
-    padding: 0.25rem 0.5rem;
-    border-radius: 5px;
-    border: 1px solid #ddd;
-}
-</style>
-
-<style>
-.status-btn {
-    padding: 5px 10px;
-    border: none;
-    border-radius: 4px;
-    cursor: pointer;
-    transition: all 0.3s ease;
-}
-
-.status-btn.active {
-    background-color: #4CAF50;
-    color: white;
-}
-
-.status-btn.inactive {
-    background-color: #f44336;
-    color: white;
-}
-
-.status-btn:hover {
-    opacity: 0.8;
-}
-
-.delete-btn {
-    padding: 5px 10px;
-    border: none;
-    border-radius: 4px;
-    background-color: #f44336;
-    color: white;
-    cursor: pointer;
-}
-
-.delete-btn:hover {
-    background-color: #da190b;
-}
-</style>
-
-<style>
-.status-badge {
-    padding: 5px 10px;
-    border-radius: 15px;
-    font-size: 0.9em;
-    font-weight: 500;
-}
-
-.status-badge.ongoing {
-    background-color: #ffd700;
-    color: #000;
-}
-
-.status-badge.completed {
-    background-color: #4CAF50;
-    color: white;
-}
-
-.status-badge.delayed {
-    background-color: #ff6b6b;
-    color: white;
-}
-
-.progress-bar {
-    width: 100%;
-    height: 10px;
-    background-color: #f0f0f0;
-    border-radius: 5px;
-    position: relative;
-    overflow: hidden;
-}
-
-.progress-bar .progress {
-    height: 100%;
-    background-color: #4CAF50;
-    border-radius: 5px;
-    transition: width 0.3s ease;
-}
-
-.progress-bar span {
-    position: absolute;
-    right: 5px;
-    top: -15px;
-    font-size: 0.8em;
-    color: #666;
-}
-
-/* Adjust the grid layout for smaller screens */
-@media screen and (max-width: 1200px) {
-    .table-data {
-        grid-template-columns: 1fr;
-    }
-}
-</style>
-
-<style>
-.table-data {
-    transition: all 0.3s ease-in-out;
-    opacity: 1;
-}
-
-@keyframes fadeIn {
-    from { opacity: 0; transform: translateY(-20px); }
-    to { opacity: 1; transform: translateY(0); }
-}
-
-/* Apply animation when the section appears */
-.table-data {
-    animation: fadeIn 0.3s ease-in-out;
-}
-</style>
-
-<style>
-.status-badge {
-    padding: 5px 10px;
-    border-radius: 15px;
-    font-size: 0.9em;
-    font-weight: 500;
-}
-
-.status-badge.pending {
-    background-color: #ffa500;
-    color: white;
-}
-
-.status-badge.in-progress {
-    background-color: #007bff;
-    color: white;
-}
-
-.start-btn {
-    padding: 5px 10px;
-    border: none;
-    border-radius: 4px;
-    background-color: #4CAF50;
-    color: white;
-    cursor: pointer;
-    display: inline-flex;
-    align-items: center;
-    gap: 5px;
-    font-size: 0.9em;
-}
-
-.start-btn:hover {
-    background-color: #45a049;
-}
-
-.start-btn i {
-    font-size: 1.2em;
-}
-</style>
-
-<style>
-/* Add this to your existing styles */
-.status {
-    padding: 5px 10px;
-    border-radius: 15px;
-    font-size: 0.9em;
-    font-weight: 500;
-}
-
-.status.pending {
-    background-color: #ffd700;
-    color: #000;
-}
-
-.status.in-progress {
-    background-color: #007bff;
-    color: white;
-}
-
-.status.completed {
-    background-color: #4CAF50;
-    color: white;
-}
-
-.status.cancelled {
-    background-color: #f44336;
-    color: white;
-}
-</style>
-
-<script>
-function markNoShow(recordId) {
-    if (confirm('Are you sure you want to mark this supplier as No Show?')) {
-        fetch(`${URLROOT}/vehiclemanager/updateSupplierStatus/${recordId}`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({ status: 'No Show' })
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                // Refresh the collection details
-                updateCollectionDetails(document.getElementById('ongoing-collection-select').value);
-            } else {
-                alert('Failed to update status');
-            }
-        })
-        .catch(error => {
-            console.error('Error:', error);
-            alert('An error occurred while updating the status');
-        });
-    }
-}
-
-function removeSupplier(recordId) {
-    if (confirm('Are you sure you want to remove this supplier from the collection?')) {
-        fetch(`${URLROOT}/vehiclemanager/removeCollectionSupplier/${recordId}`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({ status: 'Removed' })
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                // Refresh the collection details
-                updateCollectionDetails(document.getElementById('ongoing-collection-select').value);
-            } else {
-                alert('Can only remove suppliers that were added to the collection prior to collection');
-            }
-        })
-        .catch(error => {
-            console.error('Error:', error);
-            alert('An error occurred while removing the supplier');
-        });
-    }
-}
-
-// Update the collection details function
-function updateCollectionDetails(collectionId) {
-    if (!collectionId) return;
-    console.log('Updating collection details for:', collectionId);
-
-    // Update map
-    updateMap(collectionId);
-
-    // Fetch collection details and supplier records
-    fetch(`${URLROOT}/vehiclemanager/getCollectionDetails/${collectionId}`)
-        .then(response => response.json())
-        .then(data => {
-            // Update basic details
-            console.log('Received data:', data);
-            document.getElementById("team-name").textContent = data.team_name;
-            document.getElementById("route-name").textContent = data.route_name;
-
-            // Update supplier status table
-            const tbody = document.getElementById('supplier-status-body');
-            tbody.innerHTML = '';
-
-            data.suppliers.forEach(supplier => {
-                const row = `
-                    <tr>
-                        <td>${supplier.supplier_name}</td>
-                        <td>${supplier.status}</td>
-                        <td>${supplier.quantity || '0'}</td>
-                        <td>${supplier.collection_time || '-'}</td>
-                        <td>
-                            <div class="action-buttons">
-                                ${supplier.status !== 'No Show' ? 
-                                    `<button onclick="markNoShow(${supplier.record_id})" class="btn-small btn-warning">
-                                        <i class='bx bx-x'></i> No Show
-                                    </button>` : ''
-                                }
-                                ${supplier.status !== 'Removed' ? 
-                                    `<button onclick="removeSupplier(${supplier.record_id})" class="btn-small btn-danger">
-                                        <i class='bx bx-trash'></i> Remove
-                                    </button>` : ''
-                                }
-                            </div>
-                        </td>
-                    </tr>
-                `;
-                tbody.innerHTML += row;
-            });
-        })
-        .catch(error => {
-            console.error('Error:', error);
-            alert('An error occurred while fetching collection details');
-        });
-}
-
-// Add event listener for dropdown change
-document.addEventListener('DOMContentLoaded', function() {
-    const selectElement = document.getElementById('ongoing-collection-select');
-    if (selectElement) {
-        selectElement.addEventListener('change', function() {
-            updateCollectionDetails(this.value);
-        });
-
-        // Select first collection by default if exists
-        if (selectElement.options.length > 1) {
-            selectElement.selectedIndex = 1;
-            updateCollectionDetails(selectElement.value);
-        }
-    }
-});
-</script>
-
-<style>
-.action-buttons {
-    display: flex;
-    gap: 5px;
-}
-
-.btn-small {
-    padding: 3px 8px;
-    border: none;
-    border-radius: 4px;
-    cursor: pointer;
-    display: inline-flex;
-    align-items: center;
-    gap: 3px;
-    font-size: 0.8em;
-}
-
-.btn-warning {
-    background-color: #ffa500;
-    color: white;
-}
-
-.btn-danger {
-    background-color: #f44336;
-    color: white;
-}
-
-.btn-small:hover {
-    opacity: 0.8;
-}
-</style>
-
-<script>
-function updateCountdown() {
-    const countdownElement = document.querySelector('.countdown');
-    if (!countdownElement) return;
-
-    const startTime = new Date(countdownElement.dataset.startTime).getTime();
-    const endTime = new Date(countdownElement.dataset.endTime).getTime();
-    const windowTime = startTime - (10 * 60 * 1000); // 10 minutes before
-    let hasReloaded = false; // Flag to prevent multiple reloads
-
-    function update() {
-        const now = new Date().getTime();
-        const distanceToStart = windowTime - now;
-        const distanceToEnd = endTime - now;
-
-        if (distanceToStart < 0 && distanceToEnd > 0 && !hasReloaded) {
-            countdownElement.innerHTML = "You can now mark yourself as ready!";
-            // Optionally, you can enable the "Mark as Ready" button here
-            // document.querySelector('.btn-primary').disabled = false;
-            hasReloaded = true; // Set the flag to true to prevent further reloads
-            // location.reload(); // Uncomment if you still want to reload once
-            return;
-        }
-
-        if (distanceToStart > 0) {
-            const hours = Math.floor(distanceToStart / (1000 * 60 * 60));
-            const minutes = Math.floor((distanceToStart % (1000 * 60 * 60)) / (1000 * 60));
-            const seconds = Math.floor((distanceToStart % (1000 * 60)) / 1000);
-
-            countdownElement.innerHTML = `Time until ready: ${hours}h ${minutes}m ${seconds}s`;
-        } else {
-            countdownElement.innerHTML = "Shift has started, you can still mark yourself as ready!";
-        }
-    }
-
-    update();
-    setInterval(update, 1000);
-}
-
-document.addEventListener('DOMContentLoaded', updateCountdown);
-
 
 
 
