@@ -461,6 +461,7 @@ class M_CollectionSchedule {
                 s.latitude,
                 s.longitude,
                 s.contact_number,
+                s.average_collection,
                 CONCAT(u.first_name, ' ', u.last_name) as supplier_name,
                 COALESCE(sp.profile_image, 'default.jpg') as profile_image,
                 csr.arrival_time,

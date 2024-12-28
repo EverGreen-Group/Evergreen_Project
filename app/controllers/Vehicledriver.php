@@ -244,7 +244,7 @@ class VehicleDriver extends controller {
                 'image' => $supplier->profile_image ? 
                     URLROOT . '/public/uploads/supplier_photos/' . $supplier->profile_image : 
                     URLROOT . '/public/img/default-user.png',
-                'estimatedCollection' => 500,
+                'estimatedCollection' => $supplier->average_collection,
                 'status' => $supplier->status,
                 'contact' => $supplier->contact_number,
                 'arrival_time' => $supplier->arrival_time,
