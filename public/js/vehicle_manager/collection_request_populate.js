@@ -207,10 +207,6 @@ function approveCollection(collectionId) {
     },
     body: JSON.stringify({
       collection_id: collectionId,
-      start_time: currentTime,
-      vehicle_manager_id: vehicleManagerId,
-      vehicle_manager_approved_at: currentTime,
-      bags: 7,
       bags_added: 1, // Assuming bags are added
     }),
   })
@@ -220,6 +216,7 @@ function approveCollection(collectionId) {
         alert("Collection approved successfully!");
         // Optionally refresh the collection requests or update the UI
         loadCollectionRequests(); // Refresh the list
+        // redirect('/');
       } else {
         alert("Error approving collection: " + data.message);
       }

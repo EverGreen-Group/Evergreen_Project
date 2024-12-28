@@ -368,8 +368,7 @@ class M_Collection {
                           AND status != "Completed"'
                           );
         $this->db->bind(':schedule_id', $scheduleId);
-        $result = $this->db->single();
-        return $result ? $result->collection_id : false;
+        return $this->db->single();
     }
 
 
@@ -532,9 +531,7 @@ class M_Collection {
                 cs.day,
                 cs.week_number,
                 
-                r.route_id,
-                r.route_name,
-                r.number_of_suppliers,
+                r.*,
                 
                 d.driver_id,
                 d.status as driver_status,
@@ -553,8 +550,6 @@ class M_Collection {
             JOIN users u ON d.user_id = u.user_id
             JOIN collection_shifts s ON cs.shift_id = s.shift_id
             WHERE c.collection_id = :id
-            AND c.status = "Pending"
-            AND c.vehicle_manager_approved = 0
             AND cs.is_deleted = 0
             AND cs.is_active = 1
         ');
@@ -563,25 +558,83 @@ class M_Collection {
         return $this->db->single();
     }
 
-    public function approveCollection($collectionId, $vehicleManagerId) {
-        $this->db->query('
-            UPDATE collections 
-            SET 
-                status = "In Progress",
-                start_time = CURRENT_TIMESTAMP(),
-                vehicle_manager_id = :vehicle_manager_id,
-                vehicle_manager_approved = 1,
-                vehicle_manager_approved_at = CURRENT_TIMESTAMP(),
-                bags_added = 1
-            WHERE collection_id = :collection_id
-        ');
+    public function approveCollection($collectionId) {
+        try {
+            $this->db->beginTransaction();
 
-        // Bind parameters
-        $this->db->bind(':vehicle_manager_id', $vehicleManagerId);
-        $this->db->bind(':collection_id', $collectionId);
+            // 1. Update the collection status
+            $this->db->query('
+                UPDATE collections 
+                SET 
+                    status = "In Progress",
+                    start_time = CURRENT_TIMESTAMP(),
+                    vehicle_manager_id = :vehicle_manager_id,
+                    vehicle_manager_approved = 1,
+                    vehicle_manager_approved_at = CURRENT_TIMESTAMP(),
+                    bags_added = 1
+                WHERE collection_id = :collection_id
+            ');
 
-        // Execute the update
-        return $this->db->execute();
+            $this->db->bind(':vehicle_manager_id', $_SESSION['user_id']);
+            $this->db->bind(':collection_id', $collectionId);
+            $this->db->execute();
+
+            // 2. Get the route ID and its suppliers with stop order
+            $this->db->query('
+                SELECT 
+                    rs.supplier_id,
+                    rs.stop_order,
+                    s.latitude,
+                    s.longitude
+                FROM collections c
+                JOIN collection_schedules cs ON c.schedule_id = cs.schedule_id
+                JOIN route_suppliers rs ON cs.route_id = rs.route_id
+                JOIN suppliers s ON rs.supplier_id = s.supplier_id
+                WHERE c.collection_id = :collection_id
+                AND rs.is_active = 1
+                AND rs.is_deleted = 0
+                AND s.is_active = 1
+                AND s.is_deleted = 0
+                ORDER BY rs.stop_order ASC
+            ');
+            
+            $this->db->bind(':collection_id', $collectionId);
+            $suppliers = $this->db->resultSet();
+
+            // 3. Insert records for each supplier
+            $this->db->query('
+                INSERT INTO collection_supplier_records 
+                (
+                    collection_id, 
+                    supplier_id, 
+                    status, 
+                    quantity,
+                    is_scheduled
+                ) 
+                VALUES 
+                (
+                    :collection_id, 
+                    :supplier_id, 
+                    "Added",
+                    0.00,
+                    1
+                )
+            ');
+
+            foreach ($suppliers as $supplier) {
+                $this->db->bind(':collection_id', $collectionId);
+                $this->db->bind(':supplier_id', $supplier->supplier_id);
+                $this->db->execute();
+            }
+
+            $this->db->commit();
+            return true;
+
+        } catch (Exception $e) {
+            $this->db->rollBack();
+            error_log("Error in approveCollection: " . $e->getMessage());
+            return false;
+        }
     }
 
     public function getBagsByCollectionId($collectionId) {
@@ -593,6 +646,22 @@ class M_Collection {
 
         $this->db->bind(':collection_id', $collectionId);
         return $this->db->resultSet();  // This will return an array of bags
+    }
+
+    public function getVehicleIdFromCollection($collectionId) {
+        $this->db->query('
+            SELECT v.vehicle_id
+            FROM collections c
+            JOIN collection_schedules cs ON c.schedule_id = cs.schedule_id
+            JOIN routes r ON cs.route_id = r.route_id
+            JOIN vehicles v ON r.vehicle_id = v.vehicle_id
+            WHERE c.collection_id = :collection_id
+        ');
+        
+        $this->db->bind(':collection_id', $collectionId);
+        $result = $this->db->single();
+        
+        return $result ? $result->vehicle_id : null;
     }
 
 } 

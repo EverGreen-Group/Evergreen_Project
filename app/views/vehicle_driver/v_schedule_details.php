@@ -162,6 +162,8 @@ if (isset($data['collection']) && $data['collection']) {
                         // Debug the collection data
                         error_log('Collection data type: ' . gettype($data['collection']));
                         error_log('Collection data: ' . print_r($data['collection'], true));
+
+                        // print_r($data['collection']);
                         
                         // Safe check for both existence and property
                         if (!isset($data['collection']) || 
@@ -194,8 +196,8 @@ if (isset($data['collection']) && $data['collection']) {
                             </div>
                             
                             <div class="collection-actions">
-                                <a href="<?php echo URLROOT; ?>/vehicledriver/startCollection/<?php echo $data['schedule']->schedule_id; ?>" 
-                                   class="btn btn-primary">Start Collection</a>
+                                <a href="<?php echo URLROOT; ?>/vehicledriver/collection/<?php echo $data['collection']->collection_id; ?>" 
+                                   class="btn-primary">Start Collection</a>
                             </div>
                         <?php endif; ?>
                     </div>

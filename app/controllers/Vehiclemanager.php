@@ -68,10 +68,10 @@ class VehicleManager extends Controller {
         $this->bagModel = $this->model('M_CollectionBag');
     }
 
-    private function isAjaxRequest() {
-        return isset($_SERVER['HTTP_X_REQUESTED_WITH']) && 
-               strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) === 'xmlhttprequest';
-    }
+    // private function isAjaxRequest() { I added this in the controllr class
+    //     return isset($_SERVER['HTTP_X_REQUESTED_WITH']) && 
+    //            strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) === 'xmlhttprequest';
+    // }
 
     public function index() {
         // Get dashboard stats from the model
@@ -1338,7 +1338,7 @@ class VehicleManager extends Controller {
     public function getCollectionDetails($id = null) {
         // Check if it's an AJAX request
         if (!$this->isAjaxRequest()) {
-            redirect('pages/error');
+            redirect(page: 'pages/error');
             return;
         }
 
@@ -1409,14 +1409,14 @@ class VehicleManager extends Controller {
 
         // Prepare the data for updating
         $collectionId = $data['collection_id'];
-        $startTime = $data['start_time'];
-        $vehicleManagerId = $_SESSION['user_id'];
-        $vehicleManagerApprovedAt = $data['vehicle_manager_approved_at'];
-        $bags = $data['bags']; // This should be the number of bags or details
-        $bagsAdded = $data['bags_added'];
+        // $startTime = $data['start_time'];
+        // $vehicleManagerId = $_SESSION['user_id'];
+        // $vehicleManagerApprovedAt = $data['vehicle_manager_approved_at'];
+        // $bags = $data['bags']; 
+        // $bagsAdded = $data['bags_added'];
 
         // Update the collection in the model
-        $result = $this->collectionModel->approveCollection($collectionId, $startTime, $vehicleManagerId, $vehicleManagerApprovedAt, $bags, $bagsAdded);
+        $result = $this->collectionModel->approveCollection($collectionId);
 
         if ($result) {
             echo json_encode(['success' => true]);
