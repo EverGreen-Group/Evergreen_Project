@@ -471,7 +471,22 @@
     </div>
     <!-- Add this after your existing container2 div -->
     <div class='cardrelese'>
-      <?php require APPROOT .'/views/inventory/components/export_card.php';?>
+
+    <?php foreach ($data['exports'] as $export) : ?>
+      <?php
+      //   $export = [
+      //     "id" => 1,
+      //     "stock_name" => "Green Tea",
+      //     "export_company" => "Dilmah",
+      //     "export_date" => "2024-12-26",
+      //     "manager_name" => "Ishan",
+      //     "export_price" => "123456.00",
+      //     "export_quantity" => 1234,
+      //     "reg_no" => "WE-230"
+      // ];
+        
+        require APPROOT .'/views/inventory/components/export_card.php';?>
+    <?php endforeach; ?>
     </div>
 
 
