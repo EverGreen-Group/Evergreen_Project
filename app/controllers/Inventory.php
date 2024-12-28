@@ -1,6 +1,7 @@
 <?php
 require_once APPROOT . '/models/M_Products.php';
 require_once APPROOT . '/models/M_Fertilizer.php';
+require_once APPROOT . '/models/M_Dashbord.php';
 
 require_once '../app/models/M_Products.php';
 class Inventory extends controller
@@ -8,22 +9,32 @@ class Inventory extends controller
     private $productModel;
     private $fertilizerModel;
 
+    private $stockvalidate;
+
     public function __construct()
     {
 
         $this->productModel = new M_Products();
         $this->fertilizerModel = new M_Fertilizer();
+        $this->stockvalidate = new M_stockvalidate();
     }
 
     public function index()
     {
         $products = $this->productModel->getAllProducts();
+        $fertilizer = $this->fertilizerModel->getfertilizer();
+        $stockvalidate = $this->stockvalidate->getvalidateStocks();
 
         $data = [
-            'products' => $products
+            'products' => $products,
+            'fertilizer' => $fertilizer,
+            'stockvalidate' => $stockvalidate
+
         ];
 
-        $this->view('inventory/v_dashboard', $data);
+        
+        $this->view('inventory/v_dashboard', $data['stockvalidate']);
+        var_dump($data['stockvalidate']);
     }
 
     public function product()
@@ -36,10 +47,9 @@ class Inventory extends controller
         $this->view('inventory/v_product', $data);
     }
 
-    public function getfertilizer(){
-        
-    }
-    public function order(){
+
+    public function order()
+    {
         $data = [];
 
         $this->view('inventory/v_order', $data);
@@ -169,7 +179,7 @@ class Inventory extends controller
             'fertilizer' => $fertilizer
         ];
 
-        
+
 
         $this->view('inventory/v_fertilizer_dashboard', $data);
 
@@ -206,7 +216,7 @@ class Inventory extends controller
                 'unit_err' => '',
 
             ];
-            
+
 
             //validation
             if (empty($data['fertilizer_name'])) {
@@ -239,7 +249,7 @@ class Inventory extends controller
 
                 if ($this->fertilizerModel->createFertilizer($data)) {
                     flash('fertilizer_message', 'Fertilizer Added');
-                    
+
                     redirect('inventory/fertilizerdashboard');
 
                 } else {
@@ -261,18 +271,19 @@ class Inventory extends controller
                 'unit' => '',
 
             ];
-            
+
 
             $this->view('inventory/v_create_fertilizer', $data);
         }
 
     }
 
-    public function updatefertilizer($id){
+    public function updatefertilizer($id)
+    {
 
-        if($_SERVER['REQUEST_METHOD']=='POST'){
+        if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             $data = [
-                 'id' => $id,
+                'id' => $id,
                 'fertilizer_name' => $_POST['fertilizer_name'],
                 'company_name' => $_POST['company_name'],
                 'details' => $_POST['details'],
@@ -293,16 +304,16 @@ class Inventory extends controller
             if (
                 !empty($data['fertilizer_name']) && !empty($data['company_name']) && !empty($data['details'])
                 && !empty($data['code']) && !empty($data['price']) && !empty($data['quantity']) && !empty($data['unit'])
-            ){
+            ) {
 
             }
 
-        }else{
+        } else {
             $fertilizer = $this->fertilizerModel->getFertilizerById($id);
             $data = [
                 'id' => $id,
                 'fertilizer' => $fertilizer
-            ];  
+            ];
             $this->view('inventory/v_update_fertilizer', $data);
         }
     }
@@ -454,17 +465,19 @@ class Inventory extends controller
         redirect('inventory/product');
     }
 
-    public function recodes(){
+    public function recodes()
+    {
         $data = [];
 
         $this->view('inventory/v_recodes', $data);
     }
 
-    public function deletefertilizer($id){
-        if($_SERVER['REQUEST_METHOD']=='GET'){
-            if($this->fertilizerModel->deleteFertilizer($id)){
+    public function deletefertilizer($id)
+    {
+        if ($_SERVER['REQUEST_METHOD'] == 'GET') {
+            if ($this->fertilizerModel->deleteFertilizer($id)) {
                 flash('fertilizer_message', 'Fertilizer Removed');
-            }else{
+            } else {
                 flash('fertilizer_message', 'Something went wrong', 'alert alert-danger');
             }
         }
@@ -477,6 +490,6 @@ class Inventory extends controller
         $this->view('inventory/v_payments', $data);
     }
 
- 
+
 
 }

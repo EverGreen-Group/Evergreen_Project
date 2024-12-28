@@ -15,3 +15,4 @@ class Order {
         return $query->fetchAll(PDO::FETCH_ASSOC);
     }
 }
+

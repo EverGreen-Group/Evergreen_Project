@@ -306,22 +306,29 @@
 						<th>Collection No</th>
 						<th>Quantity</th>
 						<th>Time</th>
+						<th>Status</th>
 						<th>Actions</th>
 					</tr>
 				</thead>
 				<tbody>
-					<php foreach($data['stock'] as $stock) : ?>
-						<tr>
-							<td>Michael Chen</td>
-							<td style="text-align: center;"> 12</td>
-							<td>325 units</td>
-							<td>2024-03-20 08:15 PM</td>
-							<td class="actions">
-								<button class="ap-button" onclick="">Approve</button>
-								<button class="rp-button" onclick=reportModel() style="">Reject</button>
-							</td>
-						</tr>
-						<php endforeach; ?>
+				<?php foreach($data as $stock) : ?>
+            <tr>
+                <!-- Replace 'Michael Chen' with a dynamic driver name if available -->
+                <td>Driver ID: <?= $stock->driver_id; ?></td>
+                <!-- Collection ID -->
+                <td style="text-align: center;"><?= $stock->collection_id; ?></td>
+                <!-- Quantity -->
+                <td><?= $stock->total_quantity; ?> units</td>
+                <!-- Time -->
+                <td><?= $stock->created_at; ?></td>
+				<td><?= $stock->status; ?></td>
+                <!-- Actions -->
+                <td class="actions">
+                    <button class="ap-button" onclick="approveAction(<?= $stock->collection_id; ?>)">Approve</button>
+                    <button class="rp-button" onclick="reportModel(<?= $stock->collection_id; ?>)" style="">Reject</button>
+                </td>
+            </tr>
+        <?php endforeach; ?>
 							<!-- Add more rows as needed -->
 				</tbody>
 			</table>
