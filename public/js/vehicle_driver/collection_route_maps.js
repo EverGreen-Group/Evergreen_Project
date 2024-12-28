@@ -104,8 +104,3 @@ function markArrived() {
   // Handle mark arrived action
   console.log("Marked as arrived");
 }
-
-function viewCollection() {
-  // Handle view collection action
-  window.location.href = `${URLROOT}/vehicledriver/viewCollection/<?php echo $data['collection']->collection_id; ?>`;
-}
