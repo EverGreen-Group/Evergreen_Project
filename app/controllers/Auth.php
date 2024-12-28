@@ -106,11 +106,6 @@ class Auth extends Controller
             } else {
                 $user = $this->userModel->findUserByEmail($data['username']);
 
-                // Add these debug lines
-                // var_dump($user); // Check if user is found
-                // var_dump($data['password']); // Check the submitted password
-                // var_dump($user->password); // Check the stored hashed password
-
                 if ($user && password_verify($data['password'], $user->password)) {
                     $_SESSION['user_id'] = $user->user_id;
                     $_SESSION['first_name'] = $user->first_name;
