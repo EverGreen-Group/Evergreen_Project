@@ -419,47 +419,47 @@
 
       <section class="Last-export">
         <h2>Relese Exports</h2>
-        <form>
+        <form action="<?php echo URLROOT; ?>/Export/release" method="POST" >
           <div class="form-grid">
             <div class="form-group">
               <label>Export Stock Name*</label>
-              <input type="text" class="form-control" placeholder="Enter Stock Name" required>
+              <input type="text" name="stock-name" class="form-control" placeholder="Enter Stock Name" required>
               <span class="error-text">Please enter stock name</span>
             </div>
             <div class="form-group">
               <label>Company for Export*</label>
-              <input type="text" class="form-control" placeholder="Enter Company Name">
-              <span class="error-text">Please enter last name</span>
+              <input type="text" name="company-name" class="form-control" placeholder="Enter Company Name">
+              <span class="error-text">Please enter company name</span>
             </div>
 
 
             <div class="form-group">
               <label>Export Confirmation Date*</label>
-              <input type="date" class="form-control" required>
-              <span class="error-text">Please enter confirmation date</span>
+              <input type="date" name="confirm-date" class="form-control" required>
+              <span class="error-text">Please enter date</span>
             </div>
             <div class="form-group">
               <label>Export Manager name*</label>
-              <input type="text" class="form-control" placeholder="Enter Manager Name" required>
+              <input type="text" name="manager-name" class="form-control" placeholder="Enter First Name" def required>
               <span class="error-text">Please enter manager name</span>
             </div>
             <div class="form-group">
               <label>Export Price(per kg)</label>
-              <input type="text" class="form-control" placeholder="Enter Price" required>
-              <span class="error-text">Please enter price</span>
+              <input type="number" name="price" class="form-control" placeholder="Enter Price">
+              <span class="error-text">Please enter Price</span>
             </div>
             <div class="form-group">
               <label>Export Quantity*</label>
-              <input type="text" class="form-control" placeholder="Enter Quantity" required>
+              <input type="number" name="quantity" class="form-control" placeholder="Enter Quantity" required>
               <span class="error-text">Please enter quantity</span>
             </div>
             <div class="form-group">
               <label>Export Reg No</label>
-              <input type="text" class="form-control" placeholder="Enter Reg No" required>
+              <input type="text" name="reg-no" class="form-control" placeholder="Enter your reg no" required>
             </div>
 
           </div>
-            <button type="submit" class="btn">Next</button>
+          <button type="submit" class="btn">Confirm</button>
         </form>
       </section>
     </div>

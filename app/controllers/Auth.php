@@ -118,6 +118,32 @@ class Auth extends Controller
                     $_SESSION['email'] = $user->email;
                     $_SESSION['role_id'] = $user->role_id;
 
+                    // Retrieve additional IDs based on role
+                    if ($user->role_id == RoleHelper::DRIVER) {
+                        $driverId = $this->userModel->getDriverId($user->user_id);
+                        $employeeId = $this->userModel->getEmployeeId($user->user_id);
+                        if ($driverId) {
+                            $_SESSION['driver_id'] = $driverId->driver_id;
+                        }
+                        if ($employeeId) {
+                            $_SESSION['employee_id'] = $employeeId->employee_id;
+                        }
+                    } elseif (in_array($user->role_id, [RoleHelper::VEHICLE_MANAGER, RoleHelper::INVENTORY_MANAGER, RoleHelper::SUPPLIER_MANAGER])) {
+                        $managerId = $this->userModel->getManagerId($user->user_id);
+                        $employeeId = $this->userModel->getEmployeeId($user->user_id);
+                        if ($managerId) {
+                            $_SESSION['manager_id'] = $managerId->manager_id;
+                        }
+                        if ($employeeId) {
+                            $_SESSION['employee_id'] = $employeeId->employee_id;
+                        }
+                    } elseif ($user->role_id == RoleHelper::SUPPLIER) {
+                        $supplierId = $this->userModel->getSupplierId($user->user_id);
+                        if ($supplierId) {
+                            $_SESSION['supplier_id'] = $supplierId->supplier_id;
+                        }
+                    }
+
                     // After successful login, redirect based on role
                     switch (RoleHelper::getRole()) {
                         case RoleHelper::DRIVER:
@@ -131,9 +157,6 @@ class Auth extends Controller
                             break;
                         case RoleHelper::ADMIN:
                             header('Location: ' . URLROOT . '/vehiclemanager/');
-                            break;
-                        case RoleHelper::DRIVING_PARTNER:
-                            header('Location: ' . URLROOT . '/drivingpartner/');
                             break;
                         case RoleHelper::INVENTORY_MANAGER:
                             header('Location: ' . URLROOT . '/inventory/');

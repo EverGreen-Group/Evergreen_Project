@@ -107,4 +107,12 @@ class Routes extends Controller {
         
         redirect('routes');
     }
+
+    public function getRoutesByDay($day) {
+        // Fetch routes based on the selected day
+        $routes = $this->routeModel->getRoutesByDay($day);
+        echo json_encode(['routes' => $routes]);
+    }
+
+
 }

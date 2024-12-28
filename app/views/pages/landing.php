@@ -5,8 +5,8 @@
     <div class="hero-section">
         <div class="hero-content">
             <div class="hero-text">
-                <h1>Connecting Tea Leaves Suppliers with Excellence</h1>
-                <p>A modern platform designed for tea leaf suppliers to manage collections, track deliveries, and grow their business.</p>
+                <h1>Connecting <span class="highlight">Tea Leaves</span> Suppliers with Excellence</h1>
+                <p>A modern platform designed for tea leaf suppliers to manage collections, track deliveries, and ensure quick communication with the factory for assistance.</p>
                 <div class="hero-cta">
                     <a href="<?php echo URLROOT; ?>/auth/supplier_register/" class="cta-button">Become a Supplier</a>
                     <a href="<?php echo URLROOT; ?>/auth/login" class="login-link">
@@ -15,17 +15,7 @@
                 </div>
             </div>
             <div class="hero-image">
-                <img src="https://media.assettype.com/sentinelassam-english%2F2024-05%2Fba6fe76e-9f2f-4535-a183-f9d1817453d0%2Ftea_la.jpg" alt="Tea Image">
-            </div>
-        </div>
-        <div class="hero-stats">
-            <div class="stat-card">
-                <span class="stat-number">400+</span>
-                <span class="stat-label">Active Suppliers</span>
-            </div>
-            <div class="stat-card">
-                <span class="stat-number">98%</span>
-                <span class="stat-label">Collection Rate</span>
+                <img src="<?php echo URLROOT; ?>/public/uploads/hero-image2.png" alt="Tea Image">
             </div>
         </div>
     </div>
@@ -67,14 +57,14 @@
 
 <style>
     .landing-main {
-        background: linear-gradient(135deg, #1b5e20 0%, #388e3c 100%);
+        background: none;
         min-height: 100vh;
         padding: 0 5%;
-        color: #fff;
+        color: #000;
+        margin-top: 100px;
     }
 
     .hero-section {
-
         padding: 120px 0 80px;
         max-width: 1200px;
         margin: 0 auto;
@@ -98,14 +88,18 @@
     }
 
     .hero-image img {
+        transform: translateY(-15px);
         max-width: 100%;
         height: auto;
         border-radius: 8px;
     }
 
     .hero-text h1 {
-        font-size: 3rem;
-        margin-bottom: 1rem;
+        color: #000;
+        font-size: 3.5rem;
+        font-weight: 700;
+        line-height: 1.2;
+        margin-bottom: 1.5rem;
     }
 
     .hero-cta {
@@ -125,17 +119,10 @@
         justify-content: center;
     }
 
-    .hero-text h1 {
-        font-size: 3.5rem;
-        font-weight: 700;
-        line-height: 1.2;
-        margin-bottom: 1.5rem;
-    }
-
     .hero-text p {
+        color: rgba(0, 0, 0, 0.9);
         font-size: 1.2rem;
         line-height: 1.6;
-        color: rgba(255, 255, 255, 0.9);
         margin-bottom: 2rem;
     }
 
@@ -146,26 +133,31 @@
     }
 
     .cta-button {
-        background: #fff;
-        color: #1b5e20;
-        padding: 1rem 2rem;
+        background-color: #22a45d;
+        color: #fff;
+        padding: 10px 20px;
         border-radius: 8px;
-        font-weight: 600;
         text-decoration: none;
-        transition: all 0.3s ease;
+        transition: background-color 0.3s ease;
     }
 
     .cta-button:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+        background-color: #1b8e4a;
     }
 
     .login-link {
-        color: #fff;
+        background-color: transparent;
+        color: #22a45d;
+        padding: 10px 20px;
+        border: 2px solid #22a45d;
+        border-radius: 8px;
         text-decoration: none;
-        display: flex;
-        align-items: center;
-        gap: 0.5rem;
+        transition: background-color 0.3s ease, color 0.3s ease;
+    }
+
+    .login-link:hover {
+        background-color: #22a45d;
+        color: #fff;
     }
 
     .hero-stats {
@@ -180,6 +172,7 @@
         border-radius: 12px;
         backdrop-filter: blur(10px);
         flex: 1;
+        border: 2px solid #22a45d;
     }
 
     .stat-number {
@@ -190,7 +183,7 @@
     }
 
     .stat-label {
-        color: rgba(255, 255, 255, 0.9);
+        color: #000;
         font-size: 1rem;
     }
 
@@ -198,7 +191,7 @@
         background: #fff;
         padding: 80px 0;
         border-radius: 30px 30px 0 0;
-        margin-top: -30px;
+        margin-top: 40px;
     }
 
     .features-section h2 {
@@ -279,6 +272,40 @@
 
         .cta-button, .login-link {
             text-align: center;
+        }
+    }
+
+    .highlight {
+        color: #22a45d; /* Green color for "Tea Leaves" */
+    }
+
+    @media (max-width: 1222px) {
+        .hero-image {
+            display: none; /* Hide the hero image */
+        }
+
+        .hero-content {
+            display: flex; /* Use flexbox for alignment */
+            flex-direction: column; /* Stack items vertically */
+            align-items: center; /* Center items horizontally */
+            text-align: center; /* Center text */
+        }
+
+        .hero-text {
+            margin: 0; /* Remove any margin if needed */
+        }
+
+        /* Responsive font sizes */
+        .hero-text h1 {
+            font-size: 2rem; /* Adjust as needed for smaller screens */
+        }
+
+        .hero-text p {
+            font-size: 1rem; /* Adjust as needed for smaller screens */
+        }
+
+        h2 {
+            font-size: 1.5rem; /* Adjust as needed for smaller screens */
         }
     }
 </style>

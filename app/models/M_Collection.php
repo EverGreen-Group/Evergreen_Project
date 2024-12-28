@@ -296,14 +296,13 @@ class M_Collection {
         }
     }
 
-    public function createCollectionWithBags($scheduleId, $bags) {
+    public function createCollectionWithBags($scheduleId, $bagIds) {
         $this->db->beginTransaction();
         try {
-            // 1. Create collection entry first
-            $this->db->query('INSERT INTO collections (schedule_id, partner_approved, bags) 
-                             VALUES (:schedule_id, 1, :bags)');
+            // Create collection entry
+            $this->db->query('INSERT INTO collections (schedule_id, status) 
+                             VALUES (:schedule_id, "Pending")');
             $this->db->bind(':schedule_id', $scheduleId);
-            $this->db->bind(':bags', count($bags));
             
             if (!$this->db->execute()) {
                 throw new Exception('Failed to create collection');
@@ -311,38 +310,35 @@ class M_Collection {
 
             $collectionId = $this->db->lastInsertId();
 
-            // 2. For each bag token
-            foreach ($bags as $bagToken) {
-                // First, check if bag exists, if not create it
-                $this->db->query('INSERT IGNORE INTO bags (token, status) 
-                                 VALUES (:token, "In Use")');
-                $this->db->bind(':token', $bagToken);
-                $this->db->execute();
+            foreach ($bagIds as $bagId) {
+                // First verify the bag exists in collection_bags
+                $this->db->query('SELECT * FROM collection_bags WHERE bag_id = :bag_id');
+                $this->db->bind(':bag_id', $bagId);
+                $bagDetails = $this->db->single();
 
-                // Get the bag_id (whether it was just inserted or already existed)
-                $this->db->query('SELECT bag_id FROM bags WHERE token = :token');
-                $this->db->bind(':token', $bagToken);
-                $bagResult = $this->db->single();
-                
-                if (!$bagResult) {
-                    throw new Exception('Failed to get bag ID');
+                if (!$bagDetails) {
+                    throw new Exception('Bag not found in collection_bags: ' . $bagId);
                 }
 
-                // Create collection_bags record
-                $this->db->query('INSERT INTO collection_bags 
-                                 (collection_id, bag_id) 
-                                 VALUES (:collection_id, :bag_id)');
+                // Create usage history with the bag's actual details
+                $this->db->query('INSERT INTO bag_usage_history 
+                                 (bag_id, collection_id, action, capacity_kg, bag_weight_kg) 
+                                 VALUES (:bag_id, :collection_id, "added", :capacity_kg, :bag_weight_kg)');
+                
+                $this->db->bind(':bag_id', $bagId);
                 $this->db->bind(':collection_id', $collectionId);
-                $this->db->bind(':bag_id', $bagResult->bag_id);
+                $this->db->bind(':capacity_kg', $bagDetails->capacity_kg);
+                $this->db->bind(':bag_weight_kg', $bagDetails->bag_weight_kg);
                 
                 if (!$this->db->execute()) {
-                    throw new Exception('Failed to assign bag');
+                    throw new Exception('Failed to create bag usage history');
                 }
             }
 
             $this->db->commit();
             return true;
         } catch (Exception $e) {
+            error_log('Error in createCollectionWithBags: ' . $e->getMessage());
             $this->db->rollBack();
             return false;
         }
@@ -355,22 +351,38 @@ class M_Collection {
         return $result ? $result->driver_approved : false;
     }
 
-    public function isPartnerReady($scheduleId) {
-        $this->db->query('SELECT partner_approved FROM collections WHERE schedule_id = :schedule_id');
-        $this->db->bind(':schedule_id', $scheduleId);
-        $result = $this->db->single();
-        return $result ? $result->partner_approved : false;
-    }
-
-    public function getCollectionIdByScheduleId($scheduleId) {
-        $this->db->query('SELECT collection_id FROM collections WHERE schedule_id = :schedule_id');
+    public function getUpcomingCollectionIdByScheduleId($scheduleId) {
+        $this->db->query('SELECT collection_id 
+                          FROM collections 
+                          WHERE schedule_id = :schedule_id 
+                          AND status NOT IN ("Cancelled", "Completed")');
         $this->db->bind(':schedule_id', $scheduleId);
         $result = $this->db->single();
         return $result ? $result->collection_id : false;
     }
 
-    public function getCollectionBags($collectionId) {
-        $this->db->query('SELECT bag_token FROM collection_bags WHERE collection_id = :collection_id');
+    public function getUpcomingCollectionDetailsByScheduleId($scheduleId) {
+        $this->db->query('SELECT *
+                          FROM collections 
+                          WHERE schedule_id = :schedule_id 
+                          AND status != "Completed"'
+                          );
+        $this->db->bind(':schedule_id', $scheduleId);
+        return $this->db->single();
+    }
+
+
+
+    public function getCollectionBagsByCollectionId($collectionId) {
+        $this->db->query('SELECT 
+                            buh.*,
+                            cb.status as bag_status
+                          FROM bag_usage_history buh
+                          JOIN collection_bags cb ON buh.bag_id = cb.bag_id
+                          WHERE buh.collection_id = :collection_id
+                          AND buh.action = "added"
+                          ORDER BY buh.timestamp ASC');
+        
         $this->db->bind(':collection_id', $collectionId);
         return $this->db->resultSet();
     }
@@ -395,6 +407,261 @@ class M_Collection {
         $this->db->bind(':collection_id', $data['collection_id']);
 
         return $this->db->execute(); // Execute the prepared statement
+    }
+
+    public function checkBag($bagId) {
+        // First check if bag exists and get its status from collection_bags
+        $this->db->query('SELECT cb.*, 
+                          (SELECT buh.collection_id 
+                           FROM bag_usage_history buh 
+                           WHERE buh.bag_id = cb.bag_id 
+                           AND buh.action = "added" 
+                           AND NOT EXISTS (
+                               SELECT 1 
+                               FROM bag_usage_history buh2 
+                               WHERE buh2.bag_id = cb.bag_id 
+                               AND buh2.collection_id = buh.collection_id 
+                               AND buh2.action IN ("emptied", "reused")
+                           )
+                           LIMIT 1) as active_collection_id
+                         FROM collection_bags cb 
+                         WHERE cb.bag_id = :bag_id');
+        
+        $this->db->bind(':bag_id', $bagId);
+        $bag = $this->db->single();
+
+        // If bag doesn't exist
+        if (!$bag) {
+            return [
+                'success' => false,
+                'message' => 'Bag not found'
+            ];
+        }
+
+        // If bag is marked as inactive
+        if ($bag->status === 'inactive') {
+            return [
+                'success' => false,
+                'message' => 'This bag is marked as inactive'
+            ];
+        }
+
+        // If bag is currently in use in another collection
+        if ($bag->active_collection_id) {
+            return [
+                'success' => false,
+                'message' => 'This bag is currently in use in collection #' . $bag->active_collection_id
+            ];
+        }
+
+        // If all checks pass, bag is available
+        return [
+            'success' => true,
+            'message' => 'Bag is available for use',
+            'data' => [
+                'bag_id' => $bag->bag_id,
+                'capacity_kg' => $bag->capacity_kg,
+                'bag_weight_kg' => $bag->bag_weight_kg,
+                'status' => $bag->status
+            ]
+        ];
+    }
+
+    public function getPendingCollections() {
+        $this->db->query('
+            SELECT 
+                c.collection_id,
+                r.route_name,
+                CONCAT(u.first_name, " ", u.last_name) as driver_name,
+                c.status,
+                c.created_at,
+                c.bags,
+                c.vehicle_manager_approved,
+                cs.route_id,
+                cs.driver_id,
+                cs.day
+            FROM collections c
+            JOIN collection_schedules cs ON c.schedule_id = cs.schedule_id
+            JOIN routes r ON cs.route_id = r.route_id
+            JOIN users u ON cs.driver_id = u.user_id
+            WHERE c.status = "Pending" 
+            AND c.vehicle_manager_approved = 0
+            ORDER BY c.created_at DESC
+        ');
+        
+        return $this->db->resultSet();
+    }
+
+    public function getPendingCollectionRequests() {
+        $this->db->query('
+            SELECT 
+                c.collection_id,
+                r.route_name,
+                CONCAT(u.first_name, " ", u.last_name) as driver_name,
+                c.fertilizer_distributed,  -- This will be used for "Deliveries" column
+                c.status,
+                c.created_at,
+                c.vehicle_manager_approved
+            FROM collections c
+            JOIN collection_schedules cs ON c.schedule_id = cs.schedule_id
+            JOIN routes r ON cs.route_id = r.route_id
+            JOIN users u ON cs.driver_id = u.user_id
+            WHERE c.status = "Pending" 
+            AND c.vehicle_manager_approved = 0
+            AND c.bags_added = 1  -- Only show collections where bags have been added
+            ORDER BY c.created_at DESC
+        ');
+        
+        return $this->db->resultSet();
+    }
+
+    public function getCollectionDetails($id) {
+        $this->db->query('
+            SELECT 
+                c.collection_id,
+                c.status as collection_status,
+                c.created_at,
+                c.start_time,
+                c.end_time,
+                c.total_quantity,
+                c.bags,
+                c.fertilizer_distributed,
+                
+                cs.schedule_id,
+                cs.day,
+                cs.week_number,
+                
+                r.*,
+                
+                d.driver_id,
+                d.status as driver_status,
+                
+                u.first_name,
+                u.last_name,
+                
+                s.shift_id,
+                s.start_time as shift_start,
+                s.end_time as shift_end,
+                s.shift_name
+            FROM collections c
+            JOIN collection_schedules cs ON c.schedule_id = cs.schedule_id
+            JOIN routes r ON cs.route_id = r.route_id
+            JOIN drivers d ON cs.driver_id = d.driver_id
+            JOIN users u ON d.user_id = u.user_id
+            JOIN collection_shifts s ON cs.shift_id = s.shift_id
+            WHERE c.collection_id = :id
+            AND cs.is_deleted = 0
+            AND cs.is_active = 1
+        ');
+        
+        $this->db->bind(':id', $id);
+        return $this->db->single();
+    }
+
+    public function approveCollection($collectionId) {
+        try {
+            $this->db->beginTransaction();
+
+            // 1. Update the collection status
+            $this->db->query('
+                UPDATE collections 
+                SET 
+                    status = "In Progress",
+                    start_time = CURRENT_TIMESTAMP(),
+                    vehicle_manager_id = :vehicle_manager_id,
+                    vehicle_manager_approved = 1,
+                    vehicle_manager_approved_at = CURRENT_TIMESTAMP(),
+                    bags_added = 1
+                WHERE collection_id = :collection_id
+            ');
+
+            $this->db->bind(':vehicle_manager_id', $_SESSION['user_id']);
+            $this->db->bind(':collection_id', $collectionId);
+            $this->db->execute();
+
+            // 2. Get the route ID and its suppliers with stop order
+            $this->db->query('
+                SELECT 
+                    rs.supplier_id,
+                    rs.stop_order,
+                    s.latitude,
+                    s.longitude
+                FROM collections c
+                JOIN collection_schedules cs ON c.schedule_id = cs.schedule_id
+                JOIN route_suppliers rs ON cs.route_id = rs.route_id
+                JOIN suppliers s ON rs.supplier_id = s.supplier_id
+                WHERE c.collection_id = :collection_id
+                AND rs.is_active = 1
+                AND rs.is_deleted = 0
+                AND s.is_active = 1
+                AND s.is_deleted = 0
+                ORDER BY rs.stop_order ASC
+            ');
+            
+            $this->db->bind(':collection_id', $collectionId);
+            $suppliers = $this->db->resultSet();
+
+            // 3. Insert records for each supplier
+            $this->db->query('
+                INSERT INTO collection_supplier_records 
+                (
+                    collection_id, 
+                    supplier_id, 
+                    status, 
+                    quantity,
+                    is_scheduled
+                ) 
+                VALUES 
+                (
+                    :collection_id, 
+                    :supplier_id, 
+                    "Added",
+                    0.00,
+                    1
+                )
+            ');
+
+            foreach ($suppliers as $supplier) {
+                $this->db->bind(':collection_id', $collectionId);
+                $this->db->bind(':supplier_id', $supplier->supplier_id);
+                $this->db->execute();
+            }
+
+            $this->db->commit();
+            return true;
+
+        } catch (Exception $e) {
+            $this->db->rollBack();
+            error_log("Error in approveCollection: " . $e->getMessage());
+            return false;
+        }
+    }
+
+    public function getBagsByCollectionId($collectionId) {
+        $this->db->query('
+            SELECT *
+            FROM bag_usage_history
+            WHERE collection_id = :collection_id
+        ');
+
+        $this->db->bind(':collection_id', $collectionId);
+        return $this->db->resultSet();  // This will return an array of bags
+    }
+
+    public function getVehicleIdFromCollection($collectionId) {
+        $this->db->query('
+            SELECT v.vehicle_id
+            FROM collections c
+            JOIN collection_schedules cs ON c.schedule_id = cs.schedule_id
+            JOIN routes r ON cs.route_id = r.route_id
+            JOIN vehicles v ON r.vehicle_id = v.vehicle_id
+            WHERE c.collection_id = :collection_id
+        ');
+        
+        $this->db->bind(':collection_id', $collectionId);
+        $result = $this->db->single();
+        
+        return $result ? $result->vehicle_id : null;
     }
 
 } 

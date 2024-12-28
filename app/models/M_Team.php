@@ -100,19 +100,18 @@ class M_Team {
     public function getUnassignedDrivers() {
         $this->db->query('
             SELECT 
-                d.driver_id,
-                CONCAT(ud.first_name, " ", ud.last_name) AS driver_name,
-                doc.file_path AS driver_image_url
+                d.*,
+                e.contact_number,
+                CONCAT(u.first_name, " ", u.last_name) AS driver_name
             FROM drivers d
-            LEFT JOIN teams t ON d.driver_id = t.driver_id
+            JOIN users u ON d.user_id = u.user_id
             JOIN employees e ON d.employee_id = e.employee_id
-            JOIN users ud ON e.user_id = ud.user_id
-            LEFT JOIN documents doc ON e.user_id = doc.user_id AND doc.document_type = "Photo"
-            WHERE t.driver_id IS NULL  -- This ensures we only get drivers not in any team
+            LEFT JOIN collection_schedules cs ON d.driver_id = cs.driver_id
+            WHERE cs.driver_id IS NULL  -- This ensures we only get drivers not in any collection schedule
             ORDER BY d.driver_id ASC
             LIMIT 0, 25
         ');
-
+    
         return $this->db->resultSet();
     }
 
@@ -242,6 +241,23 @@ class M_Team {
 
         $this->db->bind(':team_id', $teamId);
         return $this->db->single();
+    }
+
+    public function getAllDrivers() {
+        $this->db->query('
+            SELECT 
+                d.driver_id,
+                CONCAT(ud.first_name, " ", ud.last_name) AS driver_name,
+                e.contact_number,
+                d.status
+            FROM drivers d
+            JOIN employees e ON d.employee_id = e.employee_id
+            JOIN users ud ON e.user_id = ud.user_id
+            WHERE d.is_deleted = 0
+            ORDER BY d.driver_id ASC
+        ');
+
+        return $this->db->resultSet();
     }
 }
 ?>

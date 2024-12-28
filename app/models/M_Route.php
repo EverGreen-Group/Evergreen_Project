@@ -66,7 +66,9 @@ class M_Route {
                 end_location_long,
                 date,
                 number_of_suppliers,
-                status
+                status,
+                vehicle_id,
+                day
             ) VALUES (
                 :name,
                 :factory_lat,
@@ -75,7 +77,9 @@ class M_Route {
                 :factory_long,
                 CURRENT_DATE(),
                 :num_suppliers,
-                :status
+                :status,
+                :vehicle_id,
+                :day
             )");
             
             $this->db->bind(':name', $routeData->name);
@@ -83,6 +87,8 @@ class M_Route {
             $this->db->bind(':factory_long', self::FACTORY_LONG);
             $this->db->bind(':num_suppliers', count($routeData->stops));
             $this->db->bind(':status', $routeData->status);
+            $this->db->bind(':vehicle_id', $routeData->vehicle_id);
+            $this->db->bind(':day', $routeData->day);
             
             $this->db->execute();
             $routeId = $this->db->lastInsertId();
@@ -114,10 +120,7 @@ class M_Route {
     public function getUnallocatedSuppliers() {
         $this->db->query("
             SELECT 
-                s.supplier_id,
-                s.contact_number,
-                s.latitude,
-                s.longitude,
+                s.*,
                 u.first_name,
                 u.last_name,
                 CONCAT(u.first_name, ' ', u.last_name) as full_name,
@@ -154,7 +157,7 @@ class M_Route {
         return $this->db->resultSet();
     }
 
-    public function getRouteSuppliers($routeId) {
+    public function getRouteSuppliersByRouteId($routeId) {
         $this->db->query("
             SELECT 
                 s.*,
@@ -162,15 +165,13 @@ class M_Route {
                 u.last_name,
                 CONCAT(u.first_name, ' ', u.last_name) as full_name,
                 CONCAT(s.latitude, ', ', s.longitude) as coordinates,
-                rs.stop_order,
-                rs.supplier_order
+                rs.*
             FROM route_suppliers rs
             JOIN suppliers s ON rs.supplier_id = s.supplier_id
             JOIN users u ON s.user_id = u.user_id
             WHERE rs.route_id = :route_id
             AND rs.is_deleted = 0
             AND s.is_deleted = 0
-            ORDER BY rs.stop_order ASC, rs.supplier_order ASC
         ");
         
         $this->db->bind(':route_id', $routeId);
@@ -179,14 +180,7 @@ class M_Route {
 
     public function getRouteById($routeId) {
         $this->db->query("
-            SELECT 
-                r.*,
-                COUNT(rs.supplier_id) as supplier_count
-            FROM routes r
-            LEFT JOIN route_suppliers rs ON r.route_id = rs.route_id
-            WHERE r.route_id = :route_id
-            AND r.is_deleted = 0
-            GROUP BY r.route_id
+            SELECT * FROM routes WHERE route_id = :route_id;
         ");
         
         $this->db->bind(':route_id', $routeId);
@@ -230,6 +224,39 @@ class M_Route {
             $this->db->rollBack();
             return false;
         }
+    }
+
+    public function getRoutesByDay($day) {
+        $this->db->query("
+            SELECT r.* 
+            FROM routes r
+            LEFT JOIN collection_schedules cs ON r.route_id = cs.route_id 
+                AND cs.day = :day 
+                AND cs.is_active = 1
+            WHERE r.day = :day 
+            AND r.is_deleted = 0 
+            AND cs.route_id IS NULL
+        ");
+        
+        $this->db->bind(':day', $day);
+        return $this->db->resultset();
+    }
+
+    public function getTodayAssignedRoutes() {
+        $currentDay = date('l'); // Get the current day (e.g., 'Tuesday')
+    
+        $this->db->query("
+            SELECT r.*, v.license_plate 
+            FROM routes r
+            JOIN collection_schedules cs ON r.route_id = cs.route_id 
+            JOIN vehicles v ON r.vehicle_id = v.vehicle_id 
+            WHERE cs.day = :day 
+            AND cs.is_active = 1 
+            AND r.is_deleted = 0
+        ");
+        
+        $this->db->bind(':day', $currentDay);
+        return $this->db->resultSet(); // Use resultSet() to fetch the results
     }
 }
 ?>
