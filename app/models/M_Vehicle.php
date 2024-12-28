@@ -224,5 +224,37 @@ class M_Vehicle {
         return $this->db->resultSet();
     }
 
+    public function updateLocation($vehicleId, $latitude, $longitude) {
+        $this->db->query('
+            UPDATE vehicles 
+            SET 
+                latitude = :latitude,
+                longitude = :longitude
+            WHERE vehicle_id = :vehicle_id
+        ');
+        
+        $this->db->bind(':vehicle_id', $vehicleId);
+        $this->db->bind(':latitude', $latitude);
+        $this->db->bind(':longitude', $longitude);
+        
+        return $this->db->execute();
+    }
+
+    public function getVehicleLocation($vehicleId) {
+        $this->db->query('
+            SELECT latitude, longitude 
+            FROM vehicles 
+            WHERE vehicle_id = :vehicle_id
+        ');
+        
+        $this->db->bind(':vehicle_id', $vehicleId);
+        $result = $this->db->single();
+        
+        return $result ? [
+            'lat' => (float)$result->latitude,
+            'lng' => (float)$result->longitude
+        ] : null;
+    }
+
 }
 ?>
