@@ -203,31 +203,41 @@ class SupplierManager extends Controller {
     }
 
     public function complaints() {
-        // Get unviewed complaints count
-        $unviewedCount = $this->complaintModel->getUnviewedComplaintsCount();
-        
-        // Get new complaints from last week
-        $newLastWeek = $this->complaintModel->getNewComplaintsLastWeek();
-        
-        // Get viewed complaints count
-        $viewedCount = $this->complaintModel->getViewedComplaintsCount();
-        
-        // Get all complaints
-        $complaints = $this->complaintModel->getAllComplaints();
-        
-        // Get complaint type statistics for the chart
-        $complaintTypes = $this->complaintModel->getComplaintTypeStats();
-        
-        // Pass all data to the view
-        $data = [
-            'unviewed_count' => $unviewedCount,
-            'new_last_week' => $newLastWeek,
-            'viewed_count' => $viewedCount,
-            'complaints' => $complaints,
-            'complaint_types' => $complaintTypes
-        ];
-        
-        $this->view('supplier_manager/v_complaints', $data);
+        try {
+            // Verify model initialization
+            if (!$this->complaintModel) {
+                error_log("ComplaintModel not initialized!");
+                throw new Exception("Complaint model not initialized");
+            }
+    
+            // Get all complaints with error checking
+            $complaints = $this->complaintModel->getAllComplaints();
+            error_log("Complaints fetched in controller: " . count($complaints));
+    
+            // Get other data with error checking
+            $unviewedCount = $this->complaintModel->getUnviewedComplaintsCount();
+            $newLastWeek = $this->complaintModel->getNewComplaintsLastWeek();
+            $viewedCount = $this->complaintModel->getViewedComplaintsCount();
+            $complaintTypes = $this->complaintModel->getComplaintTypeStats();
+    
+            $data = [
+                'unviewed_count' => $unviewedCount,
+                'new_last_week' => $newLastWeek,
+                'viewed_count' => $viewedCount,
+                'complaints' => $complaints,
+                'complaint_types' => $complaintTypes
+            ];
+    
+            // Log the data being passed to view
+            error_log("Data being passed to view: " . print_r($data, true));
+    
+            $this->view('supplier_manager/v_complaints', $data);
+        } catch (Exception $e) {
+            error_log("Error in complaints controller: " . $e->getMessage());
+            // Pass error to view
+            $data = ['error' => 'An error occurred while loading complaints'];
+            $this->view('supplier_manager/v_complaints', $data);
+        }
     }
     
     public function markComplaintViewed() {

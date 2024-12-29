@@ -129,9 +129,13 @@
                             </tr>
                         </thead>
                         <tbody>
-                            <?php if (!empty($data['complaints'])): 
-                                foreach ($data['complaints'] as $complaint): ?>
-                                <tr class="complaint-row" id="row-<?php echo $complaint->complaint_id; ?>">
+                            <?php 
+                            if (!empty($data['complaints'])): 
+                                foreach ($data['complaints'] as $complaint): 
+                                    // Debug output (remove in production)
+                                    error_log("Processing complaint: " . print_r($complaint, true));
+                            ?>
+                                <tr class="complaint-row" id="row-<?php echo htmlspecialchars($complaint->complaint_id); ?>">
                                     <td><?php echo htmlspecialchars($complaint->complaint_id); ?></td>
                                     <td><?php echo htmlspecialchars($complaint->supplier_id); ?></td>
                                     <td><?php echo htmlspecialchars($complaint->complaint_type); ?></td>
@@ -146,13 +150,12 @@
                                         </button>
                                     </td>
                                 </tr>
-                                <tr id="description-<?php echo $complaint->complaint_id; ?>" style="display: none;">
-                                    <td colspan="7" class="complaint-description">
-                                        <?php echo htmlspecialchars($complaint->description); ?>
-                                    </td>
-                                </tr>
-                            <?php endforeach; 
-                            else: ?>
+                            <?php 
+                                endforeach; 
+                            else: 
+                                // Debug output (remove in production)
+                                error_log("No complaints found in view data");
+                            ?>
                                 <tr>
                                     <td colspan="7" class="text-center">No complaints found</td>
                                 </tr>
@@ -166,40 +169,40 @@
         <script src="<?php echo URLROOT; ?>/css/components/script.js"></script>
         <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
         <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            // Initialize complaint types chart
-            const ctx = document.getElementById('complaintTypesChart').getContext('2d');
-            new Chart(ctx, {
-                type: 'pie',
-                data: {
-                    labels: <?php echo json_encode(array_column($data['complaint_types'], 'complaint_type')); ?>,
-                    datasets: [{
-                        data: <?php echo json_encode(array_column($data['complaint_types'], 'count')); ?>,
-                        backgroundColor: [
-                            '#86E211',
-                            '#FF6B6B',
-                            '#4ECDC4',
-                            '#45B7D1',
-                            '#96A5C8'
-                        ],
-                        borderWidth: 0
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: {
-                        legend: {
-                            position: 'right',
-                            labels: {
-                                boxWidth: 12,
-                                padding: 20,
-                                font: { size: 12 }
+            document.addEventListener('DOMContentLoaded', function() {
+                // Initialize complaint types chart
+                const ctx = document.getElementById('complaintTypesChart').getContext('2d');
+                new Chart(ctx, {
+                    type: 'pie',
+                    data: {
+                        labels: <?php echo json_encode(array_column($data['complaint_types'], 'complaint_type')); ?>,
+                        datasets: [{
+                            data: <?php echo json_encode(array_column($data['complaint_types'], 'count')); ?>,
+                            backgroundColor: [
+                                '#86E211',
+                                '#FF6B6B',
+                                '#4ECDC4',
+                                '#45B7D1',
+                                '#96A5C8'
+                            ],
+                            borderWidth: 0
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                position: 'right',
+                                labels: {
+                                    boxWidth: 12,
+                                    padding: 20,
+                                    font: { size: 12 }
+                                }
                             }
                         }
                     }
-                }
-            });
+                });
 
             // Handle view button clicks
             document.querySelectorAll('.view-complaint').forEach(button => {

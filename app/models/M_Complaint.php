@@ -69,6 +69,9 @@ class M_Complaint {
 
     public function getAllComplaints() {
         try {
+            // Log the query execution
+            error_log("Fetching all complaints...");
+            
             $this->db->query("SELECT 
                 complaint_id, 
                 supplier_id, 
@@ -82,12 +85,21 @@ class M_Complaint {
                 ORDER BY submitted_date DESC, submitted_time DESC");
             
             $result = $this->db->resultset();
+            
+            // Log the result
+            error_log("Complaints query result: " . ($result ? count($result) : 0) . " complaints found");
+            
+            if (!$result) {
+                error_log("No complaints found or query returned false");
+            }
+            
             return $result ? $result : [];
         } catch (Exception $e) {
             error_log("Exception in getAllComplaints: " . $e->getMessage());
+            error_log("Stack trace: " . $e->getTraceAsString());
             return [];
         }
-    }  
+    }
 
     public function getUnviewedComplaintsCount() {
         try {
