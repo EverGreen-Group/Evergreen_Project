@@ -332,12 +332,7 @@ class Inventory extends controller
     }
 
 
-    public function export()
-    {
-        $data = [];
 
-        $this->view('inventory/v_export', $data);
-    }
 
     public function item()
     {

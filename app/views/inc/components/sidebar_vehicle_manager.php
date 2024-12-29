@@ -22,6 +22,12 @@
         <span class="text">Driver</span>
       </a>
     </li>
+    <li class="<?php echo (basename($_SERVER['REQUEST_URI']) == 'team') ? 'active' : ''; ?>">
+      <a href="<?php echo URLROOT; ?>/vehiclemanager/bag">
+        <i class="bx bxs-shopping-bags"></i>
+        <span class="text">Bags</span>
+      </a>
+    </li>
     <li class="<?php echo (basename($_SERVER['REQUEST_URI']) == 'route') ? 'active' : ''; ?>">
       <a href="<?php echo URLROOT; ?>/vehiclemanager/route">
         <i class="bx bx-trip"></i>

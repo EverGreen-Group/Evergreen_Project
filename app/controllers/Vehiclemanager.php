@@ -1,4 +1,7 @@
 <?php
+use Endroid\QrCode\QrCode;
+use Endroid\QrCode\Builder\Builder;
+use Endroid\QrCode\Writer\PngWriter;
 require_once '../app/models/M_VehicleManager.php';
 require_once '../app/models/M_Route.php';      // Add Route model
 require_once '../app/models/M_Team.php';       // Add Team model
@@ -14,6 +17,7 @@ require_once '../app/models/M_Collection.php';    // Add Collection model
 require_once '../app/models/M_CollectionSupplierRecord.php';
 require_once '../app/models/M_User.php'; // Correctly include the M_User model
 require_once '../app/models/M_Employee.php';
+require_once '../app/models/M_CollectionBag.php';
 
 class VehicleManager extends Controller {
     private $vehicleManagerModel;
@@ -30,6 +34,7 @@ class VehicleManager extends Controller {
     private $collectionSupplierRecordModel;
     private $userModel;
     private $employeeModel;
+    private $bagModel;
     
 
     public function __construct() {
@@ -60,12 +65,13 @@ class VehicleManager extends Controller {
         $this->collectionSupplierRecordModel = $this->model('M_CollectionSupplierRecord');
         $this->userModel = $this->model('M_User');
         $this->employeeModel = $this->model('M_Employee');
+        $this->bagModel = $this->model('M_CollectionBag');
     }
 
-    private function isAjaxRequest() {
-        return isset($_SERVER['HTTP_X_REQUESTED_WITH']) && 
-               strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) === 'xmlhttprequest';
-    }
+    // private function isAjaxRequest() { I added this in the controllr class
+    //     return isset($_SERVER['HTTP_X_REQUESTED_WITH']) && 
+    //            strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) === 'xmlhttprequest';
+    // }
 
     public function index() {
         // Get dashboard stats from the model
@@ -841,23 +847,6 @@ class VehicleManager extends Controller {
         return 0; // Return 0 if no collections yet
     }
 
-    public function getCollectionDetails($collectionId) {
-        // Get collection basic info
-        $collection = $this->collectionModel->getCollectionById($collectionId);
-        
-        // Get supplier records for this collection
-        $suppliers = $this->collectionSupplierRecordModel->getSupplierRecords($collectionId);
-        
-        $data = [
-            'team_name' => $collection->team_name,
-            'route_name' => $collection->route_name,
-            'suppliers' => $suppliers
-        ];
-
-        header('Content-Type: application/json');
-        echo json_encode($data);
-    }
-
     public function updateSupplierStatus($recordId) {
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $data = json_decode(file_get_contents('php://input'));
@@ -962,6 +951,9 @@ class VehicleManager extends Controller {
                 
                 // Log the target path
                 error_log("Target path: " . $targetPath);
+
+                // Debugging: Log the full path
+                error_log("Full path to image: " . $targetPath);
 
                 // Check if file is actually uploaded
                 if (is_uploaded_file($file['tmp_name'])) {
@@ -1162,6 +1154,274 @@ class VehicleManager extends Controller {
         } else {
             // If not a POST request, redirect to the driver management page
             redirect('vehiclemanager/driver');
+        }
+    }
+
+    public function bag() {
+        $data = [
+            // 'totalVehicles' => $this->vehicleModel->getTotalVehicles(),
+            // 'availableVehicles' => $this->vehicleModel->getAvailableVehicles(),
+            // 'vehicles' => $this->vehicleModel->getVehicleDetails(),
+            // 'vehicleTypeStats' => $this->vehicleModel->getVehicleTypeStats()
+        ];
+
+        $this->view('vehicle_manager/collection_bags/index', $data);
+    }
+
+    public function createBag() {
+        if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+            // Get the raw POST data
+            $input = file_get_contents("php://input");
+            $data = json_decode($input, true); // Decode the JSON payload
+    
+            // Log the received data
+            error_log("Received data: " . print_r($data, true));
+    
+            // Convert to appropriate types
+            $data['capacity_kg'] = (float) ($data['capacity_kg'] ?? 50.00); // Default value
+            $data['bag_weight_kg'] = isset($data['bag_weight_kg']) ? (float) $data['bag_weight_kg'] : null; // Convert to float or null
+    
+            // Call the model method to create the collection bag
+            $bagId = $this->bagModel->createCollectionBag($data);
+    
+            if ($bagId) {
+                // Generate QR Code
+                $this->generateQRCode($bagId); 
+    
+                // Return success response
+                echo json_encode(['success' => true, 'lastInsertedId' => $bagId]);
+            } else {
+                // Handle error
+                echo json_encode(['success' => false, 'message' => 'Failed to create collection bag.']);
+            }
+        } else {
+            echo json_encode(['success' => false, 'message' => 'Invalid request method.']);
+        }
+    }
+
+    private function generateQRCode($bagId) {
+        try {
+            $qrCode = new QrCode($bagId);
+            $qrCode->setSize(300); // Set the size
+            $qrCode->setMargin(10); // Set the margin
+    
+
+            $writer = new PngWriter();
+        
+            // Define the path to save the QR code image
+            $filePath = UPLOADROOT . '/qr_codes/' . $bagId . '.png';
+        
+            // Save the generated QR code to a file
+            $writer->writeFile($qrCode, $filePath); // Directly write to file
+        
+        } catch (\Exception $e) {
+            error_log('QR Code generation failed: ' . $e->getMessage());
+        }
+    }
+    
+
+    public function getBags() {
+        // Fetch bags from the model
+        $bags = $this->bagModel->getAllBags(); // Assuming this method exists in your model
+
+        // Return the bags as a JSON response
+        echo json_encode(['success' => true, 'bags' => $bags]);
+    }
+
+    public function getBagDetails($bagId) {
+        // Fetch bag details from the model
+        $bag = $this->bagModel->getBagDetails($bagId); // Assuming this method exists in your model
+
+        // Check if bag exists and return as JSON response
+        if ($bag) {
+            echo json_encode(['success' => true, 'bag' => $bag]);
+        } else {
+            echo json_encode(['success' => false, 'message' => 'Bag not found.']);
+        }
+    }
+
+    public function updateBag() {
+        if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+            // Get the raw POST data
+            $input = file_get_contents("php://input");
+            $data = json_decode($input, true); // Decode the JSON payload
+
+            // Validate and sanitize input
+            $bagId = $data['bag_id'] ?? null;
+            $capacityKg = (float)($data['capacity_kg'] ?? 0);
+            $bagWeightKg = (float)($data['bag_weight_kg'] ?? 0);
+            $status = $data['status'] ?? 'inactive'; // Default to inactive if not provided
+
+            // Call the model method to update the collection bag
+            $result = $this->bagModel->updateCollectionBag($bagId, $capacityKg, $bagWeightKg, $status);
+
+            if ($result) {
+                // Return success response
+                echo json_encode(['success' => true]);
+            } else {
+                // Handle error
+                echo json_encode(['success' => false, 'message' => 'Failed to update collection bag.']);
+            }
+        } else {
+            echo json_encode(['success' => false, 'message' => 'Invalid request method.']);
+        }
+    }
+
+    public function removeBag() {
+        if ($_SERVER['REQUEST_METHOD'] == 'DELETE') {
+            // Get the raw POST data
+            $input = file_get_contents("php://input");
+            $data = json_decode($input, true); // Decode the JSON payload
+
+            // Validate and sanitize input
+            $bagId = $data['bag_id'] ?? null;
+
+            // Check if the bag is in use
+            if ($this->bagModel->isBagInUse($bagId)) {
+                echo json_encode(['success' => false, 'message' => 'Cannot remove bag. It is currently in use.']);
+                return;
+            }
+
+            // Call the model method to remove the collection bag
+            $result = $this->bagModel->removeCollectionBag($bagId);
+
+            if ($result) {
+                // Return success response
+                echo json_encode(['success' => true]);
+            } else {
+                // Handle error
+                echo json_encode(['success' => false, 'message' => 'Failed to remove collection bag.']);
+            }
+        } else {
+            echo json_encode(['success' => false, 'message' => 'Invalid request method.']);
+        }
+    }
+
+    public function deleteBagQR() {
+        // Get the JSON input
+        $input = json_decode(file_get_contents('php://input'), true);
+        
+        // Check if the image path is provided
+        if (isset($input['image_path'])) {
+            $imagePath = $input['image_path'];
+    
+            // Debugging: Log the full path
+            error_log("Full path to image: " . $imagePath);
+    
+            // Check if the file exists
+            if (file_exists($imagePath)) {
+                // Attempt to delete the file
+                if (unlink($imagePath)) {
+                    // File deleted successfully
+                    echo json_encode(['success' => true, 'message' => 'Image deleted successfully.']);
+                } else {
+                    // Failed to delete the file
+                    echo json_encode(['success' => false, 'message' => 'Failed to delete the image.']);
+                }
+            } else {
+                // File does not exist
+                echo json_encode(['success' => false, 'message' => 'Image file not found.']);
+            }
+        } else {
+            // No image path provided
+            echo json_encode(['success' => false, 'message' => 'No image path provided.']);
+        }
+    }
+    
+
+    public function getCollectionRequests() {
+        $collections = $this->collectionModel->getPendingCollections();
+        header('Content-Type: application/json');
+        echo json_encode($collections);
+    }
+
+    public function getCollectionDetails($id = null) {
+        // Check if it's an AJAX request
+        if (!$this->isAjaxRequest()) {
+            redirect(page: 'pages/error');
+            return;
+        }
+
+        // Validate ID
+        if (!$id || !is_numeric($id)) {
+            http_response_code(400);
+            echo json_encode(['error' => 'Invalid collection ID']);
+            return;
+        }
+
+        // Get collection details
+        $collection = $this->collectionModel->getCollectionDetails($id);
+        
+        if (!$collection) {
+            http_response_code(404);
+            echo json_encode(['error' => 'Collection not found']);
+            return;
+        }
+
+        // Get bags associated with the collection
+        $bags = $this->collectionModel->getBagsByCollectionId($id);
+
+        // Format the response
+        $response = [
+            'collection_id' => $collection->collection_id,
+            'collection_status' => $collection->collection_status,
+            'created_at' => $collection->created_at,
+            'start_time' => $collection->start_time,
+            'end_time' => $collection->end_time,
+            'total_quantity' => $collection->total_quantity,
+            'fertilizer_distributed' => $collection->fertilizer_distributed,
+            'schedule_id' => $collection->schedule_id,
+            'day' => $collection->day,
+            'route_id' => $collection->route_id,
+            'route_name' => $collection->route_name,
+            'number_of_suppliers' => $collection->number_of_suppliers,
+            'driver_id' => $collection->driver_id,
+            'driver_status' => $collection->driver_status,
+            'first_name' => $collection->first_name,
+            'last_name' => $collection->last_name,
+            'shift_id' => $collection->shift_id,
+            'shift_start' => $collection->shift_start,
+            'shift_end' => $collection->shift_end,
+            'shift_name' => $collection->shift_name,
+            'bags' => $bags  // Include the bags in the response
+        ];
+
+        header('Content-Type: application/json');
+        echo json_encode($response);
+    }
+
+    public function approveCollection() {
+        // Check if it's an AJAX request
+        if (!$this->isAjaxRequest()) {
+            redirect('pages/error');
+            return;
+        }
+
+        // Get the input data
+        $data = json_decode(file_get_contents("php://input"), true);
+
+        // Validate input
+        if (!isset($data['collection_id']) || !is_numeric($data['collection_id'])) {
+            http_response_code(400);
+            echo json_encode(['success' => false, 'message' => 'Invalid collection ID']);
+            return;
+        }
+
+        // Prepare the data for updating
+        $collectionId = $data['collection_id'];
+        // $startTime = $data['start_time'];
+        // $vehicleManagerId = $_SESSION['user_id'];
+        // $vehicleManagerApprovedAt = $data['vehicle_manager_approved_at'];
+        // $bags = $data['bags']; 
+        // $bagsAdded = $data['bags_added'];
+
+        // Update the collection in the model
+        $result = $this->collectionModel->approveCollection($collectionId);
+
+        if ($result) {
+            echo json_encode(['success' => true]);
+        } else {
+            echo json_encode(['success' => false, 'message' => 'Failed to approve collection']);
         }
     }
 

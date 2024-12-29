@@ -35,7 +35,7 @@
       </a>
     </li>
     <li class="<?php echo (basename($_SERVER['REQUEST_URI']) == 'export') ? 'active' : ''; ?>">
-      <a href="../inventory/export">
+      <a href="../export/release">
         <i class="bx bxs-group"></i>
         <span class="text">Export</span>
       </a>
