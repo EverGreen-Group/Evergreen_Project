@@ -21,7 +21,7 @@
         <div class="stats-container">
             <!-- Your existing stats content -->
             <ul class="box-info">
-                <li>
+                <li class="box-collection">
                     <i class='bx bx-box'></i>
                     <span class="text">
                         <h3><?php echo isset($data['total_collections']) ? $data['total_collections'] : '3'; ?></h3>
@@ -29,7 +29,7 @@
                         <small>this month</small>
                     </span>
                 </li>
-                <li>
+                <li class="box-collection">
                     <i class='bx bxs-leaf'></i>
                     <span class="text">
                         <h3><?php echo isset($data['total_quantity']) ? $data['total_quantity'] : '120'; ?></h3>
@@ -115,9 +115,14 @@
             <?php endif; ?>
         </div>
         
-        <div class="stats-chart-container">
-            <canvas id="teaCollectionChart"></canvas>
-        </div> 
+        <div class="order stats-chart-container">
+            <div class="head">
+                <h4>Tea Collection History</h4>
+            </div>
+            <div style="height: 400px; position: relative;">
+                <canvas id="teaCollectionChart"></canvas>
+            </div>
+        </div>  
 
         <!-- Land Inspection Request Section -->
         <div class="order">
@@ -319,119 +324,120 @@
         document.getElementById('preferred_date').setAttribute('min', today);
 
         document.addEventListener('DOMContentLoaded', function() {
-            const ctx = document.getElementById('teaCollectionChart').getContext('2d');
-            let teaChart;
+            // Utility function to safely initialize charts
+            const initializeChart = (chartId, config) => {
+                const canvas = document.getElementById(chartId);
+                if (canvas) {
+                    try {
+                        const ctx = canvas.getContext('2d');
+                        return new Chart(ctx, config);
+                    } catch (error) {
+                        console.warn(`Failed to initialize ${chartId}:`, error);
+                        return null;
+                    }
+                }
+                return null;
+            };
 
-            // Function to format months
-            function formatMonth(monthStr) {
-                return monthStr.substring(0, 3);
-            }
+            // Tea Collection Chart Configuration
+            const teaCollectionConfig = {
+                type: 'line',
+                data: {
+                    labels: [], // Will be populated by API
+                    datasets: [{
+                        label: 'Monthly Tea Collections',
+                        data: [], // Will be populated by API
+                        borderColor: '#2eb85c',
+                        backgroundColor: 'rgba(46, 184, 92, 0.1)',
+                        borderWidth: 2,
+                        tension: 0.4,
+                        fill: true,
+                        pointBackgroundColor: '#2eb85c',
+                        pointRadius: 4,
+                        pointHoverRadius: 6
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        title: {
+                            display: true,
+                            text: 'Tea Collections - Last 6 Months',
+                            padding: {
+                                top: 10,
+                                bottom: 30
+                            }
+                        },
+                        legend: {
+                            display: true,
+                            position: 'top'
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            title: {
+                                display: true,
+                                text: 'Quantity (kg)'
+                            },
+                            ticks: {
+                                callback: function(value) {
+                                    return value + ' kg';
+                                }
+                            }
+                        },
+                        x: {
+                            title: {
+                                display: true,
+                                text: 'Month'
+                            }
+                        }
+                    }
+                }
+            };
+
+            // Function to format months to short form
+            const formatMonth = (monthStr) => monthStr.substring(0, 3);
 
             // Function to show error message
-            function showChartError(message) {
-                const container = document.querySelector('.stats-chart-container');
-                container.innerHTML = `
-                    <div style="text-align: center; color: #666; padding: 20px;">
-                        ${message}
-                    </div>`;
-            }
+            const showChartError = (containerId, message) => {
+                const container = document.querySelector(containerId);
+                if (container) {
+                    container.innerHTML = `
+                        <div style="text-align: center; color: #666; padding: 20px;">
+                            <p>${message}</p>
+                        </div>`;
+                }
+            };
 
-            // Fetch the data
-            fetch(`${URLROOT}/Supplier/getTeaLeavesCollectionData`)
-                .then(response => {
-                    if (!response.ok) {
-                        throw new Error('Network response was not ok');
-                    }
-                    return response.json();
-                })
-                .then(data => {
+            // Initialize Tea Collection Chart with data
+            const initializeTeaCollectionChart = async () => {
+                try {
+                    const response = await fetch(`${URLROOT}/Supplier/getTeaLeavesCollectionData`);
+                    if (!response.ok) throw new Error('Network response was not ok');
+                    
+                    const data = await response.json();
                     if (!data || data.length === 0) {
-                        showChartError('No collection data available');
+                        showChartError('.stats-chart-container', 'No collection data available');
                         return;
                     }
 
-                    // Create the chart
-                    teaChart = new Chart(ctx, {
-                        type: 'line',
-                        data: {
-                            labels: data.map(item => formatMonth(item.month)),
-                            datasets: [{
-                                label: 'Tea Collection',
-                                data: data.map(item => parseFloat(item.quantity) || 0), // Ensure numeric values
-                                borderColor: '#008000',
-                                backgroundColor: 'rgba(0, 128, 0, 0.1)',
-                                borderWidth: 2,
-                                tension: 0.3,
-                                fill: true,
-                                pointBackgroundColor: '#008000',
-                                pointRadius: 4,
-                                pointHoverRadius: 6
-                            }]
-                        },
-                        options: {
-                            responsive: true,
-                            maintainAspectRatio: false,
-                            plugins: {
-                                legend: {
-                                    display: false
-                                },
-                                tooltip: {
-                                    backgroundColor: 'rgba(255, 255, 255, 0.9)',
-                                    titleColor: '#333',
-                                    bodyColor: '#666',
-                                    borderColor: '#ddd',
-                                    borderWidth: 1,
-                                    padding: 10,
-                                    displayColors: false,
-                                    callbacks: {
-                                        label: function(context) {
-                                            return `${context.parsed.y}kg collected`;
-                                        }
-                                    }
-                                }
-                            },
-                            scales: {
-                                y: {
-                                    beginAtZero: true,
-                                    ticks: {
-                                        callback: function(value) {
-                                            return value + 'kg';
-                                        },
-                                        color: '#666',
-                                        font: {
-                                            size: 11
-                                        }
-                                    },
-                                    grid: {
-                                        color: '#f0f0f0'
-                                    }
-                                },
-                                x: {
-                                    ticks: {
-                                        color: '#666',
-                                        font: {
-                                            size: 11
-                                        }
-                                    },
-                                    grid: {
-                                        display: false
-                                    }
-                                }
-                            }
-                        }
-                    });
-                })
-                .catch(error => {
-                    console.error('Error loading chart data:', error);
-                    showChartError('Failed to load chart data');
-                });
+                    // Update chart configuration with fetched data
+                    teaCollectionConfig.data.labels = data.map(item => formatMonth(item.month));
+                    teaCollectionConfig.data.datasets[0].data = data.map(item => parseFloat(item.quantity) || 0);
 
-            // Handle window resize
-            window.addEventListener('resize', function() {
-                if (teaChart) {
-                    teaChart.resize();
+                    // Initialize the chart
+                    initializeChart('teaCollectionChart', teaCollectionConfig);
+
+                } catch (error) {
+                    console.error('Error loading chart data:', error);
+                    showChartError('.stats-chart-container', 'Failed to load chart data. Please try again later.');
                 }
-            });
+            };
+
+            // Initialize only the charts that exist in the current page
+            initializeTeaCollectionChart();
         });
 
         document.addEventListener('DOMContentLoaded', function() {
@@ -464,12 +470,48 @@
             console.log('Calendar Events:', events);
         });
 
+        document.addEventListener('DOMContentLoaded', function() {
+            const scheduleSelect = document.querySelector('.schedule-select');
+            const changeScheduleBtn = document.querySelector('.change-schedule-btn');
+
+            if (changeScheduleBtn && scheduleSelect) {
+                changeScheduleBtn.addEventListener('click', function() {
+                    const selectedDay = scheduleSelect.value;
+                    if (!selectedDay) {
+                        alert('Please select a day first');
+                        return;
+                    }
+
+                    if (confirm('Are you sure you want to change your collection schedule?')) {
+                        const form = document.createElement('form');
+                        form.method = 'POST';
+                        form.action = `${URLROOT}/supplier/updateSchedule`;
+
+                        const input = document.createElement('input');
+                        input.type = 'hidden';
+                        input.name = 'new_day';
+                        input.value = selectedDay;
+
+                        form.appendChild(input);
+                        document.body.appendChild(form);
+                        form.submit();
+                    }
+                });
+            }
+        });
+
     </script>
 
 
     <style>
         .box-info {
             margin-left: 100px;
+        }
+
+        .box-collection {
+            background-color: #e9ecef;
+            border: none;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
         }
 
         .schedule-action {
@@ -647,7 +689,7 @@
         .calendar-wrapper {
             margin-top: 20px;
             margin-right: 100px;
-            width: 400px;
+            width: 450px;
         }
 
         .calendar-container {
@@ -821,12 +863,12 @@
         }
 
         .fc .fc-daygrid-day-number, .fc .fc-daygrid-day-number {
-            color: #696969 !important; /* Change this to your desired color */
+            color: #696969 !important; /* Change this to desired color */
             font-size: 0.8em !important; /* Smaller font size for day numbers */
-            padding: 2px 4px !important; /* Reduced padding around numbers */
+            padding: 2px 2px !important; /* Reduced padding around numbers */
         }
 
         .fc td, .fc th {
-            height: 25px !important; /* Force consistent height */
+            height: 20px !important; /* Force consistent height */
         }
     </style>

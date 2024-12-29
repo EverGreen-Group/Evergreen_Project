@@ -45,16 +45,17 @@ class Supplier extends Controller {
             die('Supplier ID not found in session. Please log in.');
         }*/
 
-        $supplier_id = 2; 
+        $supplier_id = 2; // Replace with $_SESSION['supplier_id'] when authentication is implemented
     
-        // Get schedule data
-        $data['schedule'] = $this->collectionSupplierRecordModel->getSupplierSchedule($supplier_id);
-        error_log('Schedule data: ' . print_r($data['schedule'], true));
+        // Get collection count for current month
+        $data['total_collections'] = $this->collectionSupplierRecordModel->getCurrentMonthCollectionCount($supplier_id);
         
         // Get tea collection data for the current month
         $collectionData = $this->collectionSupplierRecordModel->getMonthlyCollectionData();
-        $data['total_collections'] = count($collectionData);
         $data['total_quantity'] = array_sum(array_column($collectionData, 'quantity'));
+        
+        // Get schedule data
+        $data['schedule'] = $this->collectionSupplierRecordModel->getSupplierSchedule($supplier_id);
         
         // Get previous and next inspection data
         $data['previous_inspections'] = $this->landInspectionModel->getPreviousInspectionRequests($supplier_id);
@@ -623,6 +624,35 @@ class Supplier extends Controller {
             http_response_code(500);
             echo json_encode(['error' => 'Failed to fetch collection data']);
         }
+    }
+
+    // Add new method to handle schedule changes
+    public function updateSchedule() {
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            redirect('supplier/index');
+            return;
+        }
+
+        $supplier_id = 2; // Replace with $_SESSION['supplier_id'] when authentication is implemented
+        $new_day = $_POST['new_day'] ?? '';
+
+        // Convert day name to number (0-6)
+        $dayMap = array_flip(['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday']);
+        $dayNumber = $dayMap[strtolower($new_day)] ?? -1;
+
+        if ($dayNumber === -1) {
+            flash('message', 'Invalid day selected', 'alert alert-danger');
+            redirect('supplier/index');
+            return;
+        }
+
+        if ($this->collectionSupplierRecordModel->updateSupplierSchedule($supplier_id, $dayNumber)) {
+            flash('message', 'Schedule updated successfully', 'alert alert-success');
+        } else {
+            flash('message', 'Failed to update schedule', 'alert alert-danger');
+        }
+
+        redirect('supplier/index');
     }
     
 }

@@ -93,103 +93,172 @@ class M_CollectionSupplierRecord {
                         MONTHNAME(csr.collection_time) AS month,
                         ROUND(SUM(csr.quantity), 1) AS quantity
                     FROM collection_supplier_records csr
-                    JOIN suppliers s ON csr.supplier_id = s.supplier_id
-                    JOIN users u ON s.user_id = u.user_id
                     WHERE 
-                        YEAR(csr.collection_time) = YEAR(CURDATE())
-                        AND csr.status = 'Collected'
-                        AND s.supplier_id = :supplier_id
+                        csr.supplier_id = :supplier_id
+                        AND csr.status = 'Collected' OR csr.status = 'Added'
+                        AND csr.collection_time >= DATE_SUB(CURDATE(), INTERVAL 6 MONTH)
+                        AND csr.collection_time <= CURDATE()
                     GROUP BY 
                         MONTH(csr.collection_time),
                         MONTHNAME(csr.collection_time)
                     ORDER BY 
-                        MONTH(csr.collection_time)";
+                        csr.collection_time DESC
+                    LIMIT 6";
             
             $this->db->query($sql);
-            
-            // Get supplier_id from session or use default for testing
-            $supplier_id = isset($_SESSION['supplier_id']) ? $_SESSION['supplier_id'] : 2;
-            $this->db->bind(':supplier_id', $supplier_id);
+            $this->db->bind(':supplier_id', 2); // Hardcoded for now, should use session
             
             $result = $this->db->resultSet();
             
-            // Log the query result for debugging
-            error_log("Collection data query result: " . print_r($result, true));
+            // Create an array of the last 6 months
+            $months = [];
+            for ($i = 5; $i >= 0; $i--) {
+                $date = new DateTime();
+                $date->modify("-$i months");
+                $months[$date->format('F')] = 0;
+            }
             
-            return $result;
+            // Fill in actual data
+            foreach ($result as $row) {
+                if (isset($months[$row->month])) {
+                    $months[$row->month] = floatval($row->quantity);
+                }
+            }
+            
+            // Convert to array of objects for consistency
+            $formattedData = [];
+            foreach ($months as $month => $quantity) {
+                $formattedData[] = [
+                    'month' => $month,
+                    'quantity' => $quantity
+                ];
+            }
+            
+            return array_values($formattedData);
         } catch (Exception $e) {
             error_log("Error fetching collection data: " . $e->getMessage());
             return [];
         }
     }
 
+    // Modified getSupplierSchedule method
     public function getSupplierSchedule($supplier_id) {
         try {
-            // First, check if the supplier exists in route_suppliers
-            $this->db->query("
-                SELECT 
-                    rs.route_id,
-                    rs.supplier_id,
-                    r.route_name,
-                    CAST(r.day AS UNSIGNED) as route_day,  -- Explicitly cast to integer in the query
-                    cs.shift_id,
-                    cs.schedule_id
-                FROM route_suppliers rs
-                JOIN routes r ON rs.route_id = r.route_id
-                LEFT JOIN collection_schedules cs ON cs.route_id = r.route_id
-                WHERE rs.supplier_id = :supplier_id 
-                AND rs.is_active = 1 
-                AND rs.is_deleted = 0
-                AND r.is_deleted = 0
-                AND (cs.is_active = 1 OR cs.is_active IS NULL)
-                AND (cs.is_deleted = 0 OR cs.is_deleted IS NULL)
-                LIMIT 1
-            ");
-            
+            $sql = "SELECT 
+                        cs.schedule_id,
+                        cs.shift_id,
+                        r.route_id,
+                        r.route_name,
+                        r.day as route_day,
+                        cs.day as schedule_day
+                    FROM routes r
+                    JOIN route_suppliers rs ON r.route_id = rs.route_id
+                    LEFT JOIN collection_schedules cs ON r.route_id = cs.route_id
+                    WHERE rs.supplier_id = :supplier_id
+                    AND rs.is_active = 1
+                    AND rs.is_deleted = 0
+                    AND (cs.is_active = 1 OR cs.is_active IS NULL)
+                    ORDER BY cs.created_at DESC
+                    LIMIT 1";
+
+            $this->db->query($sql);
             $this->db->bind(':supplier_id', $supplier_id);
             $result = $this->db->single();
-    
+
             if (!$result) {
-                error_log("No route found for supplier_id: " . $supplier_id);
                 return null;
             }
-    
-            // Convert day number to name and calculate next collection date
+
+            // Ensure route_day is an integer
+            $routeDay = intval($result->route_day);
+            
+            // Convert numeric day to name and calculate next collection date
             $dayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
-            $routeDay = intval($result->route_day); // Ensure integer type
             $currentDay = $dayNames[$routeDay % 7];
             
             // Calculate next collection date
             $today = new DateTime();
-            $todayDayNum = (int)$today->format('w'); // 0 (Sunday) to 6 (Saturday)
+            $todayDayNum = (int)$today->format('w');
             $scheduleDayNum = $routeDay % 7;
             
             $daysUntilNext = ($scheduleDayNum - $todayDayNum + 7) % 7;
-            if ($daysUntilNext === 0 && $today->format('H') >= 17) { // After 5 PM
+            if ($daysUntilNext === 0 && $today->format('H') >= 17) {
                 $daysUntilNext = 7;
             }
-    
+
             $nextDate = clone $today;
             $nextDate->modify("+{$daysUntilNext} days");
-    
-            // Determine time slot based on shift_id
-            $timeSlot = $result->shift_id == 1 ? 
-                'Morning (8:00 AM - 12:00 PM)' : 
-                'Afternoon (1:00 PM - 5:00 PM)';
-    
+
             return [
                 'schedule_id' => $result->schedule_id,
-                'next_collection_day' => $currentDay,
-                'next_collection_date' => $nextDate->format('Y-m-d'),
-                'route_name' => $result->route_name,
-                'time_slot' => $timeSlot,
                 'route_id' => $result->route_id,
-                'all_collection_days' => [$currentDay]
+                'route_name' => $result->route_name,
+                'current_day' => $currentDay,
+                'next_collection_date' => $nextDate->format('Y-m-d'),
+                'time_slot' => $result->shift_id == 1 ? 'Morning (8:00 AM - 12:00 PM)' : 'Afternoon (1:00 PM - 5:00 PM)',
+                'all_collection_days' => $dayNames
             ];
-    
         } catch (Exception $e) {
-            error_log("Error fetching supplier schedule: " . $e->getMessage());
+            error_log("Error getting supplier schedule: " . $e->getMessage());
             return null;
+        }
+    }
+
+    // Add new method to get current month's collection count
+    public function getCurrentMonthCollectionCount($supplier_id) {
+        $sql = "SELECT COUNT(*) as count 
+                FROM collection_supplier_records 
+                WHERE supplier_id = :supplier_id 
+                AND MONTH(collection_time) = MONTH(CURRENT_DATE())
+                AND YEAR(collection_time) = YEAR(CURRENT_DATE())
+                AND (status = 'Collected' OR status = 'Added')";
+        
+        $this->db->query($sql);
+        $this->db->bind(':supplier_id', $supplier_id);
+        $result = $this->db->single();
+        return $result->count;
+    }
+
+
+    // Add method to update supplier schedule
+    public function updateSupplierSchedule($supplier_id, $new_day) {
+        try {
+            $this->db->beginTransaction();
+
+            // First, update the route day
+            $sql = "UPDATE routes r
+                    JOIN route_suppliers rs ON r.route_id = rs.route_id
+                    SET r.day = :new_day
+                    WHERE rs.supplier_id = :supplier_id
+                    AND rs.is_active = 1
+                    AND rs.is_deleted = 0";
+            
+            $this->db->query($sql);
+            $this->db->bind(':new_day', $new_day);
+            $this->db->bind(':supplier_id', $supplier_id);
+            $this->db->execute();
+
+            // Then, update collection schedules
+            $sql = "UPDATE collection_schedules cs
+                    JOIN routes r ON cs.route_id = r.route_id
+                    JOIN route_suppliers rs ON r.route_id = rs.route_id
+                    SET cs.day = :new_day
+                    WHERE rs.supplier_id = :supplier_id
+                    AND rs.is_active = 1
+                    AND rs.is_deleted = 0
+                    AND cs.is_active = 1";
+            
+            $this->db->query($sql);
+            $this->db->bind(':new_day', $new_day);
+            $this->db->bind(':supplier_id', $supplier_id);
+            $this->db->execute();
+
+            $this->db->commit();
+            return true;
+        } catch (Exception $e) {
+            $this->db->rollBack();
+            error_log("Error updating supplier schedule: " . $e->getMessage());
+            return false;
         }
     }
     
