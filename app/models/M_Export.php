@@ -26,4 +26,10 @@ class M_Export{
         }
         
     }
+
+    public function get_export_data(){
+        $this->db->query('SELECT id,stock_name,export_company,export_date,
+        manager_name,export_price,export_quantity,reg_no FROM export_data');
+        return $this->db->resultSet();
+    }
 }
