@@ -29,4 +29,21 @@ class M_stockvalidate
     users u ON d.user_id = u.user_id;");
         return $this->db->resultSet();
     }
+
+    public function addreport($data)
+    {
+       $sql= "UPDATE stockvalidate SET collection_id = :collection_id, status = :status, report = :report";
+
+        $this->db->query($sql);
+        $this->db->bind(':collection_id', $data['collection_id']);
+        $this->db->bind(':status', $data['status']);
+        $this->db->bind(':report', $data['report']);
+        try {
+            return $this->db->execute();
+        } catch (PDOException $e) {
+            // Log the error for debugging
+            error_log("Database Error: " . $e->getMessage());
+            return false;
+        }
+    }
 }

@@ -311,25 +311,27 @@
 					</tr>
 				</thead>
 				<tbody>
-				<?php foreach($data as $stock) : ?>
-            <tr>
-                <!-- Replace 'Michael Chen' with a dynamic driver name if available -->
-                <td>Driver ID: <?= $stock->driver_id; ?></td>
-                <!-- Collection ID -->
-                <td style="text-align: center;"><?= $stock->collection_id; ?></td>
-                <!-- Quantity -->
-                <td><?= $stock->total_quantity; ?> units</td>
-                <!-- Time -->
-                <td><?= $stock->created_at; ?></td>
-				<td><?= $stock->status; ?></td>
-                <!-- Actions -->
-                <td class="actions">
-                    <button class="ap-button" onclick="approveAction(<?= $stock->collection_id; ?>)">Approve</button>
-                    <button class="rp-button" onclick="reportModel(<?= $stock->collection_id; ?>)" style="">Reject</button>
-                </td>
-            </tr>
-        <?php endforeach; ?>
-							<!-- Add more rows as needed -->
+					<?php foreach ($data as $stock): ?>
+						<tr>
+							<!-- Replace 'Michael Chen' with a dynamic driver name if available -->
+							<td><?= $stock->full_name; ?></td>
+							<!-- Collection ID -->
+							<td style="text-align: center;"><?= $stock->collection_id; ?></td>
+							<!-- Quantity -->
+							<td><?= $stock->total_quantity; ?> units</td>
+							<!-- Time -->
+							<td><?= $stock->created_at; ?></td>
+							<td><?= $stock->status; ?></td>
+							<!-- Actions -->
+							<td class="actions">
+								<button class="ap-button"
+									onclick="approveAction(<?= $stock->collection_id; ?>)">Approve</button>
+								<button class="rp-button" onclick="reportModel(<?= $stock->collection_id; ?>)"
+									style="">Reject</button>
+							</td>
+						</tr>
+					<?php endforeach; ?>
+					<!-- Add more rows as needed -->
 				</tbody>
 			</table>
 		</div>
@@ -338,12 +340,16 @@
 			<div class="modal-content" id="reportModalContent">
 				<span class="close" onclick="closeModal()">&times;</span>
 				<h2>Report</h2>
+				<form action="<?php echo URLROOT; ?>/Inventory/" method="POST">
 				<div class="modal-body">
-					<textarea type="text" placeholder="Enter your report"></textarea>
+					<textarea type="text" name="report" placeholder="Enter your report">
+					
+					</textarea>
 				</div>
 				<div class="modal-footer">
-					<button class="btn btn-primary">Submit</button>
+					<button type="submit" class="btn btn-primary">Submit</button>
 				</div>
+				</form>
 			</div>
 
 

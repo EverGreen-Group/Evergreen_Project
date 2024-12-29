@@ -21,6 +21,12 @@ class Inventory extends controller
 
     public function index()
     {
+        if ($_SERVER ['REQUEST_METHOD'] =='POST'){
+            $report = ['report' => $_POST['report']];
+
+            
+            
+        }
         $products = $this->productModel->getAllProducts();
         $fertilizer = $this->fertilizerModel->getfertilizer();
         $stockvalidate = $this->stockvalidate->getvalidateStocks();
@@ -34,7 +40,7 @@ class Inventory extends controller
 
         
         $this->view('inventory/v_dashboard', $data['stockvalidate']);
-        var_dump($data['stockvalidate']);
+        var_dump($report);
     }
 
     public function product()
@@ -489,6 +495,8 @@ class Inventory extends controller
         $data = [];
         $this->view('inventory/v_payments', $data);
     }
+
+    
 
 
 
