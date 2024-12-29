@@ -62,6 +62,10 @@ class VehicleDriver extends controller {
         $this->view('vehicle_driver/v_dashboard', $data);
     }
 
+    // protected function isAjaxRequest() {
+    //     return !empty($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) === 'xmlhttprequest';
+    // }
+
     public function profile() {
         $data = [];
         $this->view('pages/profile', $data);
@@ -134,7 +138,7 @@ class VehicleDriver extends controller {
             'route' => $route,
             'vehicle' => $vehicle,
             'collectionBags' => $collectionBags,
-            'collection' => $collections,
+            'collection' => (object) $collections,
             'routeSuppliers' => $routeSuppliers,
             'bagsAdded' => $bagsAdded,
             'fertilizerDistributed' => $fertilizerDistributed,
@@ -369,62 +373,6 @@ class VehicleDriver extends controller {
         return 0;
     }
 
-    public function startCollection($collectionId) {
-        if ($_SERVER['REQUEST_METHOD'] == 'POST') {
-            try {
-                $collection = $this->collectionModel->getCollectionById($collectionId);
-                if (!$collection) {
-                    error_log("Collection not found: " . $collectionId);
-                    redirect('vehicledriver/a');
-                    return;
-                }
-
-                // Check if all conditions are met
-                if (!$collection->vehicle_manager_approved || 
-                    !$collection->partner_approved || 
-                    !$collection->initial_weight_bridge || 
-                    !$collection->bags) {
-                    error_log("Conditions not met for collection: " . $collectionId);
-                    redirect('vehicledriver/scheduleDetails/' . $collection->schedule_id);
-                    return;
-                }
-
-                // Get route suppliers first
-                $schedule = $this->collectionScheduleModel->getScheduleById($collection->schedule_id);
-                if (!$schedule) {
-                    error_log("Schedule not found for collection: " . $collectionId);
-                    redirect('vehicledriver/');
-                    return;
-                }
-
-                $routeSuppliers = $this->routeModel->getRouteSuppliers($schedule->route_id);
-                if (empty($routeSuppliers)) {
-                    error_log("No route suppliers found for route: " . $schedule->route_id);
-                    redirect('vehicledriver/scheduleDetails/' . $collection->schedule_id);
-                    return;
-                }
-
-                // Debug output
-                error_log("Starting collection: " . $collectionId);
-                error_log("Route suppliers count: " . count($routeSuppliers));
-
-                // Start collection and create supplier records
-                if ($this->collectionModel->startCollectionAndCreateRecords($collectionId, $routeSuppliers)) {
-                    error_log("Collection started successfully: " . $collectionId);
-                    redirect('vehicledriver/collection/' . $collectionId);
-                } else {
-                    error_log("Failed to start collection: " . $collectionId);
-                    redirect('vehicledriver/scheduleDetails/' . $collection->schedule_id);
-                }
-
-            } catch (Exception $e) {
-                error_log("Error in startCollection: " . $e->getMessage());
-                redirect('vehicledriver/scheduleDetails/' . $collection->schedule_id);
-            }
-        } else {
-            redirect('vehicledriver/shift');
-        }
-    }
 
     public function collectionRoute($collectionId) {
         if ($_SERVER['REQUEST_METHOD'] == 'POST') {
@@ -553,7 +501,7 @@ class VehicleDriver extends controller {
             $bags = $_POST['bags'] ?? [];
             
             // Debug: Log the incoming data
-            error_log('POST data received: ' . print_r($_POST, true));
+            error_log(print_r($_POST, true));
             
             if (!$scheduleId || empty($bags)) {
                 flash('schedule_message', 'Missing schedule ID or no bags were selected', 'alert alert-danger');
@@ -615,6 +563,81 @@ class VehicleDriver extends controller {
 
         } catch (Exception $e) {
             echo json_encode(['success' => false, 'message' => $e->getMessage()]);
+        }
+    }
+
+    public function submitCollection() {
+        if (!$this->isAjaxRequest()) {
+            redirect('pages/error');
+            return;
+        }
+
+        $data = json_decode(file_get_contents('php://input'));
+        
+        $result = $this->collectionModel->addCollection($data);
+        
+        header('Content-Type: application/json');
+        echo json_encode($result);
+    }
+
+    public function addBagToCollection() {
+        error_log(print_r($_POST, true));
+        if (!$this->isAjaxRequest()) {
+            redirect('pages/error');
+            return;
+        }
+
+        $data = json_decode(file_get_contents('php://input'));
+        
+        // Add to bag_usage_history
+        $result = $this->collectionModel->addBagUsageHistory($data);
+        
+        header('Content-Type: application/json');
+        echo json_encode($result);
+    }
+
+    public function finalizeCollection() {
+        // if (!$this->isAjaxRequest()) {
+        //     redirect('pages/error');
+        //     return;
+        // }
+
+        $data = json_decode(file_get_contents('php://input'));
+        
+        // Update collection_supplier_records
+        $result = $this->collectionModel->finalizeSupplierCollection($data);
+        
+        header('Content-Type: application/json');
+        echo json_encode($result);
+    }
+
+    public function getAssignedBags($supplierId) {
+        // if (!$this->isAjaxRequest()) {
+        //     redirect('pages/error');
+        //     return;
+        // }
+
+        $result = $this->collectionModel->getAssignedBags($supplierId);
+        
+        header('Content-Type: application/json');
+        echo json_encode($result);
+    }
+
+    public function createCollection($scheduleId) {
+        if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+            // Logic to create a collection
+            $collectionId = $this->collectionModel->createCollection($scheduleId);
+
+            if ($collectionId) {
+                flash('schedule_message', 'Collection created successfully. Awaiting vehicle manager approval.', 'alert alert-success');
+                redirect('vehicledriver/scheduleDetails/' . $scheduleId);
+            } else {
+                flash('schedule_message', 'Failed to create collection', 'alert alert-danger');
+                redirect('vehicledriver/scheduleDetails/' . $scheduleId);
+            }
+        } else {
+            // If not a POST request, show the form or redirect
+            redirect('vehicledriver/scheduleDetails/' . $scheduleId);
         }
     }
 }
