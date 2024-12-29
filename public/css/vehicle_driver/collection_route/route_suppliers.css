@@ -481,3 +481,98 @@
 .supplier-details h4 {
   margin: 0 0 4px 0;
 }
+
+/* OH SHOOT */
+
+.collection-step {
+  margin-bottom: 20px;
+}
+
+.input-group {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 15px;
+}
+
+.input-group input {
+  flex: 1;
+}
+
+.form-group {
+  margin-bottom: 15px;
+}
+
+.form-group label {
+  display: block;
+  margin-bottom: 5px;
+  font-weight: 500;
+}
+
+.form-group input,
+.form-group select,
+.form-group textarea {
+  width: 100%;
+  padding: 8px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-family: inherit;
+}
+
+.form-actions {
+  margin-top: 20px;
+  text-align: right;
+}
+
+.input-with-button {
+  display: flex;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.input-with-button input {
+  flex: 1;
+  padding: 8px;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  font-family: "Poppins", sans-serif;
+}
+
+.collection-step input,
+.collection-step select,
+.collection-step textarea {
+  width: 100%;
+  padding: 8px;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  font-family: "Poppins", sans-serif;
+  margin-top: 8px;
+}
+
+.collection-step textarea {
+  min-height: 80px;
+  resize: vertical;
+}
+
+.quality-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+  margin-top: 8px;
+}
+
+#assignedBagsList {
+  margin-top: 8px;
+}
+
+.assigned-bag {
+  display: flex;
+  justify-content: space-between;
+  padding: 8px;
+  background: #f8f9fa;
+  border-radius: 4px;
+  margin-bottom: 4px;
+}
+
+.assigned-bag-info {
+  color: #666;
+}
