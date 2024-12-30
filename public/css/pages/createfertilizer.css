@@ -1,0 +1,129 @@
+@import url("https://fonts.googleapis.com/css2?family=Lato:wght@400;700&family=Poppins:wght@400;500;600;700&display=swap");
+
+.fc-body{
+    font-family: Arial, sans-serif;
+    display: flex;
+    justify-content: center;
+    margin: 20px;
+}
+.form-container {
+    width: 900px;
+    background-color: white;
+    padding: 20px;
+    border-radius: 10px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    justify-content: center;
+}
+
+.form-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+}
+
+.form-header h2 {
+    font-size: 24px;
+    color: #333;
+}
+
+.close-btn {
+    background-color: transparent;
+    border: none;
+    font-size: 24px;
+    cursor: pointer;
+}
+
+.form-section {
+    margin-bottom: 20px;
+}
+
+.form-section h3 {
+    font-size: 16px;
+    color: #28a745;
+    margin-bottom: 10px;
+}
+
+.form-section span {
+    font-size: 12px;
+    color: #666;
+}
+
+.form-group {
+    display: flex;
+    justify-content: space-between;
+}
+
+.form-control {
+    display: flex;
+    flex-direction: column;
+    width: 48%;
+}
+
+.form-control label {
+    font-size: 14px;
+    color: #555;
+    margin-bottom: 5px;
+}
+
+.form-control input, 
+.form-control select {
+    padding: 10px;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    font-size: 14px;
+    color: #333;
+    background-color: #f9f9f9;
+}
+
+.media-upload {
+    display: flex;
+    gap: 10px;
+}
+
+.media-box {
+    width: 100px;
+    height: 100px;
+    border: 2px dashed #ddd;
+    border-radius: 5px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 32px;
+    color: #ccc;
+    cursor: pointer;
+}
+
+.price-input {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.price-input input {
+    flex: 1;
+}
+
+.price-input span {
+    font-size: 16px;
+    color: #333;
+}
+
+.form-footer {
+    text-align: right;
+    margin-top: 20px;
+}
+
+.save-btn {
+    padding: 10px 20px;
+    background-color: #28a745;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 14px;
+}
+
+.save-btn:hover {
+    background-color: #218838;
+}
