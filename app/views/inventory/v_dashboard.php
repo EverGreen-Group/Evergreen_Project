@@ -178,7 +178,7 @@
 			animation: modalPop 0.3s ease-out;
 		}
 
-		
+
 		.modal-content h2 {
 			margin: 0;
 			padding: 15px 20px;
@@ -273,6 +273,7 @@
 			box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
 			/* Optional: add shadow for depth */
 		}
+
 		@keyframes modalPop {
 			0% {
 				transform: scale(0.8);
@@ -287,105 +288,104 @@
 
 		/*simak modal part */
 		.vehicle-modal-content {
-    padding: 20px;
-}
+			padding: 20px;
+		}
 
-.vehicle-modal-image {
-    width: 100%;
-    height: 250px;
-    overflow: hidden;
-    border-radius: 8px;
-    margin-bottom: 20px;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    background-color: #f5f5f5;
-}
+		.vehicle-modal-image {
+			width: 100%;
+			height: 250px;
+			overflow: hidden;
+			border-radius: 8px;
+			margin-bottom: 20px;
+			display: flex;
+			justify-content: center;
+			align-items: center;
+			background-color: #f5f5f5;
+		}
 
-.vehicle-modal-image img {
-    width: 100%;
-    height: 100%;
-    object-fit: contain;
-    object-position: center;
-}
+		.vehicle-modal-image img {
+			width: 100%;
+			height: 100%;
+			object-fit: contain;
+			object-position: center;
+		}
 
-.vehicle-modal-details {
-    display: flex;
-    flex-direction: column;
-    gap: 20px;
-}
+		.vehicle-modal-details {
+			display: flex;
+			flex-direction: column;
+			gap: 20px;
+		}
 
-.detail-group {
-    border-bottom: 1px solid #eee;
-    padding-bottom: 15px;
-}
+		.detail-group {
+			border-bottom: 1px solid #eee;
+			padding-bottom: 15px;
+		}
 
-.detail-group h3 {
-    color: var(--main);
-    margin-bottom: 10px;
-    font-size: 1.2em;
-}
+		.detail-group h3 {
+			color: var(--main);
+			margin-bottom: 10px;
+			font-size: 1.2em;
+		}
 
-.detail-row {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 8px 0;
-}
+		.detail-row {
+			display: flex;
+			justify-content: space-between;
+			align-items: center;
+			padding: 8px 0;
+		}
 
-.detail-row .label {
-    color: #666;
-    font-weight: 500;
-    flex: 1;
-}
+		.detail-row .label {
+			color: #666;
+			font-weight: 500;
+			flex: 1;
+		}
 
-.detail-row .value {
-    flex: 2;
-    color: #333;
-}
+		.detail-row .value {
+			flex: 2;
+			color: #333;
+		}
 
-.status-badge {
-    padding: 5px 12px;
-    border-radius: 15px;
-    font-size: 0.9em;
-    display: inline-block;
-    flex-grow: 0;
-}
+		.status-badge {
+			padding: 5px 12px;
+			border-radius: 15px;
+			font-size: 0.9em;
+			display: inline-block;
+			flex-grow: 0;
+		}
 
-.status-badge.available {
-    background: #e8f5e9;
-    color: #2e7d32;
-    max-width: 200px;
-}
+		.status-badge.available {
+			background: #e8f5e9;
+			color: #2e7d32;
+			max-width: 200px;
+		}
 
-.status-badge.in-use {
-    background: #e3f2fd;
-    color: #1565c0;
-}
+		.status-badge.in-use {
+			background: #e3f2fd;
+			color: #1565c0;
+		}
 
-.status-badge.maintenance {
-    background: #fff3e0;
-    color: #ef6c00;
-}
+		.status-badge.maintenance {
+			background: #fff3e0;
+			color: #ef6c00;
+		}
 
-/* Responsive adjustments */
-@media screen and (max-width: 768px) {
-    .vehicle-modal-details {
-        gap: 15px;
-    }
-    
-    .detail-row {
-        flex-direction: column;
-        align-items: flex-start;
-        gap: 5px;
-    }
-    
-    .detail-row .label,
-    .detail-row .value {
-        flex: none;
-    }
-}
+		/* Responsive adjustments */
+		@media screen and (max-width: 768px) {
+			.vehicle-modal-details {
+				gap: 15px;
+			}
 
+			.detail-row {
+				flex-direction: column;
+				align-items: flex-start;
+				gap: 5px;
+			}
+
+			.detail-row .label,
+			.detail-row .value {
+				flex: none;
+			}
+		}
 	</style>
 </head>
 
@@ -453,7 +453,7 @@
 					</tr>
 				</thead>
 				<tbody>
-					<?php foreach ($data as $stock): ?>
+					<?php foreach ($data['stockvalidate'] as $stock): ?>
 						<tr>
 							<!-- Replace 'Michael Chen' with a dynamic driver name if available -->
 							<td><?= $stock->full_name; ?></td>
@@ -477,7 +477,7 @@
 			</table>
 		</div>
 
-		<div id="collectionBagDetailsModal" class="modal" >
+		<div id="collectionBagDetailsModal" class="modal">
 			<div class="modal-content">
 				<span class="close" onclick="closeModal('collectionBagDetailsModal')">&times;</span>
 				<h2>Colllection Details</h2>
@@ -512,6 +512,27 @@
 				<i class='bx bx-plus'></i>
 				<i class='bx bx-filter'></i>
 			</div>
+			<?php
+			$machines = $data['machines'];
+			// Example PHP array
+			// $machines = [
+			// 	(object) ["id" => 2, "machine_name" => "Machine A", "total_working_hours" => "200 items"],
+			// 	(object) ["id" => 3, "machine_name" => "Machine B", "total_working_hours" => "300 items"],
+			// 	(object) ["id" => 4, "machine_name" => "Machine C", "total_working_hours" => "150 hours"],
+			// 	(object) ["id" => 5, "machine_name" => "Machine D", "total_working_hours" => "500 hours"],
+			// ];
+
+			// Extract machine names and working hours
+			$chartdata = [
+				'labels' => array_map(fn($machine) => $machine->machine_name, $machines),
+				'hours' => array_map(fn($machine) => (int) preg_replace('/\D/', '', $machine->total_working_hours), $machines),
+			];
+
+			// Encode data to JSON
+			$jsonData = json_encode($chartdata);
+			?>
+
+			<!-- Machine Allocation Chart -->
 			<canvas id="machineAllocationChart"></canvas>
 		</div>
 	</div>
@@ -565,17 +586,21 @@
 </section>
 <!-- CONTENT -->
 
+
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script> const chartData = <?php echo $jsonData; ?>;</script>
 <script>
 	document.addEventListener('DOMContentLoaded', function () {
-		var ctx = document.getElementById('machineAllocationChart').getContext('2d');
-		var machineAllocationChart = new Chart(ctx, {
+		const ctx = document.getElementById('machineAllocationChart').getContext('2d');
+
+		// Use chartData from PHP
+		const machineAllocationChart = new Chart(ctx, {
 			type: 'bar',
 			data: {
-				labels: ['Machine A', 'Machine B', 'Machine C', 'Machine D'],
+				labels: chartData.labels,
 				datasets: [{
 					label: 'Working Hours',
-					data: [8, 6, 7, 5],
+					data: chartData.hours,
 					backgroundColor: [
 						'rgba(255, 99, 132, 0.8)',
 						'rgba(54, 162, 235, 0.8)',
@@ -600,9 +625,8 @@
 							display: true,
 							text: 'Working Hours'
 						},
-						max: 12,
 						ticks: {
-							stepSize: 2
+							stepSize: 50
 						}
 					},
 					x: {
@@ -618,12 +642,13 @@
 					},
 					title: {
 						display: true,
-						text: 'Daily Machine Working Hours'
+						text: 'Machine Working Hours'
 					}
 				}
 			}
 		});
 	});
+
 
 
 	function reportModel() {
@@ -654,7 +679,7 @@
 
 	function showCollectionBagDetails() {
 		const content = document.getElementById("collectionBagDetailsContent");
-		const modal =document.getElementById('collectionBagDetailsModal')
+		const modal = document.getElementById('collectionBagDetailsModal')
 		modal.style.backgroundColor = 'rgba(0, 0, 0, 0.5)';
 		modal.style.backdropFilter = 'blur(1px)';
 

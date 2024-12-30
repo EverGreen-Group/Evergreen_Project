@@ -34,17 +34,19 @@ class Inventory extends controller
         $products = $this->productModel->getAllProducts();
         $fertilizer = $this->fertilizerModel->getfertilizer();
         $stockvalidate = $this->stockvalidate->getvalidateStocks();
+        $machines = $this->machineModel->gettimesofmachine();
 
         $data = [
             'products' => $products,
             'fertilizer' => $fertilizer,
-            'stockvalidate' => $stockvalidate
+            'stockvalidate' => $stockvalidate,
+            'machines' => $machines
 
         ];
 
         
-        $this->view('inventory/v_dashboard', $data['stockvalidate']);
-        var_dump($report);
+        $this->view('inventory/v_dashboard', $data);
+        var_dump($data);
     }
 
     public function product()

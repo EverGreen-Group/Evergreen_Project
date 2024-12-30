@@ -32,4 +32,10 @@ class M_Machine
         $this->db->query('SELECT * FROM machines');
         return $this->db->resultSet();
     }
+
+    public function gettimesofmachine()
+    {
+        $this->db->query('SELECT id,machine_name,total_working_hours FROM machines');
+        return $this->db->resultSet();
+    }
 }
