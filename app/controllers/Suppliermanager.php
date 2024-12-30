@@ -204,7 +204,6 @@ class SupplierManager extends Controller {
 
     public function complaints() {
         try {
-            // Verify model initialization
             if (!$this->complaintModel) {
                 error_log("ComplaintModel not initialized!");
                 throw new Exception("Complaint model not initialized");
@@ -219,22 +218,22 @@ class SupplierManager extends Controller {
             $newLastWeek = $this->complaintModel->getNewComplaintsLastWeek();
             $viewedCount = $this->complaintModel->getViewedComplaintsCount();
             $complaintTypes = $this->complaintModel->getComplaintTypeStats();
+            
+            // Get missed collections
+            $missedCollections = $this->collectionSupplierRecordModel->getMissedCollections();
     
             $data = [
                 'unviewed_count' => $unviewedCount,
                 'new_last_week' => $newLastWeek,
                 'viewed_count' => $viewedCount,
                 'complaints' => $complaints,
-                'complaint_types' => $complaintTypes
+                'complaint_types' => $complaintTypes,
+                'missed_collections' => $missedCollections
             ];
-    
-            // Log the data being passed to view
-            error_log("Data being passed to view: " . print_r($data, true));
     
             $this->view('supplier_manager/v_complaints', $data);
         } catch (Exception $e) {
             error_log("Error in complaints controller: " . $e->getMessage());
-            // Pass error to view
             $data = ['error' => 'An error occurred while loading complaints'];
             $this->view('supplier_manager/v_complaints', $data);
         }

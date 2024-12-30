@@ -80,34 +80,30 @@
                                     <th>Supplier ID</th>
                                     <th>Supplier Name</th>
                                     <th>Missed Date</th>
+                                    <th>Status</th>
                                     <th>Reason</th>
                                 </tr>
                             </thead>
                             <tbody>
-                                <tr>
-                                    <td>SUP27429</td>
-                                    <td>John Doe</td>
-                                    <td>2024-03-01</td>
-                                    <td>Late Arrival</td>
-                                </tr>
-                                <tr>
-                                    <td>SUP13445</td>
-                                    <td>Sarah Smith</td>
-                                    <td>2024-03-02</td>
-                                    <td>Vehicle Breakdown</td>
-                                </tr>
-                                <tr>
-                                    <td>SUP98765</td>
-                                    <td>Michael Brown</td>
-                                    <td>2024-03-03</td>
-                                    <td>Weather Conditions</td>
-                                </tr>
-                                <!-- Add more rows as needed -->
+                                <?php if (!empty($data['missed_collections'])): ?>
+                                    <?php foreach ($data['missed_collections'] as $missed): ?>
+                                        <tr>
+                                            <td><?php echo htmlspecialchars($missed->supplier_id); ?></td>
+                                            <td><?php echo htmlspecialchars($missed->supplier_name); ?></td>
+                                            <td><?php echo date('Y-m-d', strtotime($missed->collection_time)); ?></td>
+                                            <td><?php echo htmlspecialchars($missed->status); ?></td>
+                                            <td><?php echo htmlspecialchars($missed->notes ?? 'Not specified'); ?></td>
+                                        </tr>
+                                    <?php endforeach; ?>
+                                <?php else: ?>
+                                    <tr>
+                                        <td colspan="5" class="text-center">No missed collections found</td>
+                                    </tr>
+                                <?php endif; ?>
                             </tbody>
                         </table>
                     </div>
                 </div>
-            </div>
 
             <!-- Complaints Table -->
             <div class="table-data">
@@ -129,33 +125,33 @@
                             </tr>
                         </thead>
                         <tbody>
-                            <?php 
-                            if (!empty($data['complaints'])): 
-                                foreach ($data['complaints'] as $complaint): 
-                                    // Debug output (remove in production)
-                                    error_log("Processing complaint: " . print_r($complaint, true));
-                            ?>
-                                <tr class="complaint-row" id="row-<?php echo htmlspecialchars($complaint->complaint_id); ?>">
-                                    <td><?php echo htmlspecialchars($complaint->complaint_id); ?></td>
-                                    <td><?php echo htmlspecialchars($complaint->supplier_id); ?></td>
-                                    <td><?php echo htmlspecialchars($complaint->complaint_type); ?></td>
-                                    <td><?php echo htmlspecialchars($complaint->subject); ?></td>
-                                    <td><?php echo htmlspecialchars($complaint->submitted_date); ?></td>
-                                    <td><?php echo htmlspecialchars($complaint->submitted_time); ?></td>
-                                    <td>
-                                        <button class="btn-action view-complaint" 
-                                                data-complaint-id="<?php echo $complaint->complaint_id; ?>"
-                                                data-viewed="<?php echo $complaint->viewed; ?>">
-                                            View
-                                        </button>
-                                    </td>
-                                </tr>
-                            <?php 
-                                endforeach; 
-                            else: 
-                                // Debug output (remove in production)
-                                error_log("No complaints found in view data");
-                            ?>
+                            <?php if (!empty($data['complaints'])): ?>
+                                <?php foreach ($data['complaints'] as $complaint): ?>
+                                    <tr class="complaint-row">
+                                        <td><?php echo htmlspecialchars($complaint->complaint_id); ?></td>
+                                        <td><?php echo htmlspecialchars($complaint->supplier_id); ?></td>
+                                        <td><?php echo htmlspecialchars($complaint->complaint_type); ?></td>
+                                        <td><?php echo htmlspecialchars($complaint->subject); ?></td>
+                                        <td><?php echo htmlspecialchars($complaint->submitted_date); ?></td>
+                                        <td><?php echo htmlspecialchars($complaint->submitted_time); ?></td>
+                                        <td>
+                                            <button class="btn-action view-complaint" 
+                                                    data-complaint-id="<?php echo $complaint->complaint_id; ?>"
+                                                    data-viewed="<?php echo $complaint->viewed; ?>">
+                                                View
+                                            </button>
+                                        </td>
+                                    </tr>
+                                    <tr id="description-<?php echo $complaint->complaint_id; ?>" style="display: none;">
+                                        <td colspan="7">
+                                            <div class="complaint-details">
+                                                <strong>Description:</strong><br>
+                                                <?php echo htmlspecialchars($complaint->description ?? 'No description available'); ?>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                <?php endforeach; ?>
+                            <?php else: ?>
                                 <tr>
                                     <td colspan="7" class="text-center">No complaints found</td>
                                 </tr>

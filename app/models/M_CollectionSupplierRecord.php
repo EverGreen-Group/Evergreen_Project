@@ -261,6 +261,30 @@ class M_CollectionSupplierRecord {
             return false;
         }
     }
+
+    public function getMissedCollections() {
+        try {
+            $sql = "SELECT 
+                        csr.record_id,
+                        csr.supplier_id,
+                        CONCAT(u.first_name, ' ', u.last_name) as supplier_name,
+                        csr.collection_time,
+                        csr.status,
+                        csr.notes
+                    FROM collection_supplier_records csr
+                    JOIN suppliers s ON csr.supplier_id = s.supplier_id
+                    JOIN users u ON s.user_id = u.user_id
+                    WHERE csr.status IN ('No Show', 'Skipped')
+                    ORDER BY csr.collection_time DESC
+                    LIMIT 5";  // Limiting to 5 most recent missed collections
+                    
+            $this->db->query($sql);
+            return $this->db->resultSet();
+        } catch (Exception $e) {
+            error_log("Error fetching missed collections: " . $e->getMessage());
+            return [];
+        }
+    }
     
     
 } 
