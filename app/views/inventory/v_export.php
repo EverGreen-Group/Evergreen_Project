@@ -409,7 +409,7 @@
             <span class="event-method">197</span>
           </li>
           <li>
-            <span class="event-type">August</span>
+            <span class="event-type">December</span>
             <span class="event-location">2150</span>
             <span class="event-method">218</span>
           </li>
