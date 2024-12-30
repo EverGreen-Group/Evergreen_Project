@@ -275,7 +275,7 @@
 		}
 		@keyframes modalPop {
 			0% {
-				transform: scale(0.7);
+				transform: scale(0.8);
 				opacity: 0;
 			}
 
