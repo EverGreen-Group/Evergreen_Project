@@ -20,7 +20,7 @@
 
     <main>
         <h1 style="margin-top:20px; margin-left:30px;">MACHINE ALLOCATION</h1>
-        
+
         <div class="container" style="margin-left:20px; border-radius: 20px;">
 
             <table>
@@ -89,11 +89,63 @@
                     </tr>
                 </tbody>
             </table>
-            <button class="btn allocate" style="margin: 10px;">+ New Machine</button>
 
-            <div class="chart-container" style="margin: 20px; padding: 20px; background: white; border-radius: 10px; width: 90%;">
+
+            <div id="openAddMachineModal" class="modal">
+                <div class="modal-content">
+                    <span class="close" onclick="closeModal('openAddMachineModal')">&times;</span>
+                    <h2>Add New Machine</h2>
+                    <div id="addMachineContent">
+                        <!-- Machine details will be populated here -->
+                    </div>
+                </div>
+            </div>
+
+            <div class="chart-container"
+                style="margin: 20px; padding: 20px; background: white; border-radius: 10px; width: 90%;">
                 <h2>Weekly Machine Allocation Statistics</h2>
                 <canvas id="machineAllocationChart"></canvas>
+            </div>
+
+            <div class="form-container">
+                <h1>Add New Machine Form</h1>
+                <form action="" method="POST">
+                    <div class="form-group">
+                        <label for="machine-name">Machine Name</label>
+                        <input type="text" id="machine-name" name="machine_name" placeholder="Enter Machine Name"
+                            required>
+                    </div>
+                    <div class="form-group">
+                        <label for="brand">Brand</label>
+                        <input type="text" id="brand" name="brand" placeholder="Enter Brand" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="started-date">Started Date</label>
+                        <input type="date" id="started-date" name="started_date" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="last-maintenance">Last Maintenance (in days)</label>
+                        <input type="number" id="last-maintenance" name="last_maintenance"
+                            placeholder="Enter days since last maintenance" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="next-maintenance">Next Maintenance Details</label>
+                        <input type="text" id="next-maintenance" name="next_maintenance"
+                            placeholder="Enter next maintenance details" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="total-working-hours">Total Working Hours</label>
+                        <input type="text" id="total-working-hours" name="total_working_hours"
+                            placeholder="Enter total working hours" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="specialnote">Special Notes</label>
+                        <textarea id="specialnotes" name="specialnotes"style="height: 100px; width: 100%;"
+                            placeholder="Enter Any Special Details" required></textarea>
+                    </div>
+                    
+                    <button type="submit" class="btn-submit">Submit</button>
+                </form>
             </div>
         </div>
     </main>
@@ -166,7 +218,7 @@
                     },
                     tooltip: {
                         callbacks: {
-                            label: function(context) {
+                            label: function (context) {
                                 return `${context.dataset.label}: ${context.raw} hours`;
                             }
                         }
@@ -219,93 +271,92 @@
 
     <!-- Add this CSS in your machineallo.css file -->
     <style>
-    .modal {
-        display: none;
-        position: fixed;
-        z-index: 1000;
-        left: 0;
-        top: 0;
-        width: 100%;
-        height: 100%;
-        background-color: rgba(0,0,0,0.5);
-    }
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 6000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+        }
 
-    .modal-content {
-        background-color: #fefefe;
-        margin: 15% auto;
-        padding: 20px;
-        border-radius: 10px;
-        width: 80%;
-        max-width: 500px;
-    }
+        .modal-content {
+            background-color: #fefefe;
+            margin: 15% auto;
+            padding: 20px;
+            border-radius: 10px;
+            width: 80%;
+            max-width: 500px;
+        }
 
-    .close {
-        color: #aaa;
-        float: right;
-        font-size: 28px;
-        font-weight: bold;
-        cursor: pointer;
-    }
+        .close {
+            color: #aaa;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+        }
 
-    .modal-header {
-        text-align: center;
-        margin-bottom: 20px;
-    }
+        .modal-header {
+            text-align: center;
+            margin-bottom: 20px;
+        }
 
-    .modal-header img {
-        width: 100px;
-        margin-bottom: 10px;
-    }
+        .modal-header img {
+            width: 100px;
+            margin-bottom: 10px;
+        }
 
-    .report-container {
-        background-color: #f8f9fa;
-        padding: 20px;
-        border-radius: 8px;
-        margin: 20px 0;
-    }
+        .report-container {
+            background-color: #f8f9fa;
+            padding: 20px;
+            border-radius: 8px;
+            margin: 20px 0;
+        }
 
-    .report-row {
-        display: flex;
-        justify-content: space-between;
-        padding: 10px 0;
-        border-bottom: 1px solid #eee;
-    }
+        .report-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 10px 0;
+            border-bottom: 1px solid #eee;
+        }
 
-    .remove-machine {
-        background-color: #00b300;
-        color: white;
-        width: 100%;
-        padding: 10px;
-        border: none;
-        border-radius: 5px;
-        cursor: pointer;
-    }
+        .remove-machine {
+            background-color: #00b300;
+            color: white;
+            width: 100%;
+            padding: 10px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
     </style>
 
     <!-- Add this JavaScript before the closing </body> tag -->
     <script>
-    const modal = document.getElementById("machineModal");
-    const detailButtons = document.querySelectorAll(".btn.detail");
-    const closeBtn = document.querySelector(".close");
+        const modal = document.getElementById("machineModal");
+        const detailButtons = document.querySelectorAll(".btn.detail");
+        const closeBtn = document.querySelector(".close");
 
-    detailButtons.forEach(button => {
-        button.addEventListener("click", function() {
-            const machineName = this.closest("tr").querySelector(".machine-info span:last-child").textContent;
-            document.getElementById("machineName").textContent = machineName;
-            modal.style.display = "block";
+        detailButtons.forEach(button => {
+            button.addEventListener("click", function () {
+                const machineName = this.closest("tr").querySelector(".machine-info span:last-child").textContent;
+                document.getElementById("machineName").textContent = machineName;
+                modal.style.display = "block";
+            });
         });
-    });
 
-    closeBtn.addEventListener("click", function() {
-        modal.style.display = "none";
-    });
-
-    window.addEventListener("click", function(event) {
-        if (event.target == modal) {
+        closeBtn.addEventListener("click", function () {
             modal.style.display = "none";
-        }
-    });
-    </script>
-</body>
+        });
 
-</html>
+        window.addEventListener("click", function (event) {
+            if (event.target == modal) {
+                modal.style.display = "none";
+            }
+        });
+</body >
+
+</html >
