@@ -157,7 +157,7 @@
 		.report-modal {
 			display: none;
 			position: fixed;
-			z-index: 1000;
+			z-index: 6000;
 			left: 0;
 			top: 0;
 			width: 100%;
@@ -178,18 +178,7 @@
 			animation: modalPop 0.3s ease-out;
 		}
 
-		@keyframes modalPop {
-			0% {
-				transform: scale(0.7);
-				opacity: 0;
-			}
-
-			100% {
-				transform: scale(1);
-				opacity: 1;
-			}
-		}
-
+		
 		.modal-content h2 {
 			margin: 0;
 			padding: 15px 20px;
@@ -244,6 +233,159 @@
 		#content main .table-data {
 			display: flex;
 		}
+
+		/*get simaak models */
+		.modal {
+			display: none;
+			/* Hidden by default */
+			position: fixed;
+			/* Stay in place */
+			z-index: 6000;
+			/* Sit on top */
+			left: 0;
+			top: 0;
+			width: 100%;
+			/* Full width */
+			height: 100%;
+			/* Full height */
+			overflow: auto;
+			/* Enable scroll if needed */
+			/*background-color: rgb(0, 0, 0);*/
+			/* Fallback color */
+			background-color: rgba(0, 0, 0, 0.6);
+			/* Black w/ opacity */
+			align-items: center;
+			justify-content: center;
+		}
+
+		.modal-content {
+			background-color: #fefefe;
+			margin: 5% auto;
+			/* Reduced top margin to 5% */
+			padding: 20px;
+			border: 1px solid #888;
+			width: 85%;
+			/* Increased width to 85% of the viewport */
+			max-width: 1000px;
+			/* Set a maximum width for larger screens */
+			border-radius: 8px;
+			/* Optional: round the corners */
+			box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+			/* Optional: add shadow for depth */
+		}
+		@keyframes modalPop {
+			0% {
+				transform: scale(0.7);
+				opacity: 0;
+			}
+
+			100% {
+				transform: scale(1);
+				opacity: 1;
+			}
+		}
+
+		/*simak modal part */
+		.vehicle-modal-content {
+    padding: 20px;
+}
+
+.vehicle-modal-image {
+    width: 100%;
+    height: 250px;
+    overflow: hidden;
+    border-radius: 8px;
+    margin-bottom: 20px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background-color: #f5f5f5;
+}
+
+.vehicle-modal-image img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    object-position: center;
+}
+
+.vehicle-modal-details {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.detail-group {
+    border-bottom: 1px solid #eee;
+    padding-bottom: 15px;
+}
+
+.detail-group h3 {
+    color: var(--main);
+    margin-bottom: 10px;
+    font-size: 1.2em;
+}
+
+.detail-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 0;
+}
+
+.detail-row .label {
+    color: #666;
+    font-weight: 500;
+    flex: 1;
+}
+
+.detail-row .value {
+    flex: 2;
+    color: #333;
+}
+
+.status-badge {
+    padding: 5px 12px;
+    border-radius: 15px;
+    font-size: 0.9em;
+    display: inline-block;
+    flex-grow: 0;
+}
+
+.status-badge.available {
+    background: #e8f5e9;
+    color: #2e7d32;
+    max-width: 200px;
+}
+
+.status-badge.in-use {
+    background: #e3f2fd;
+    color: #1565c0;
+}
+
+.status-badge.maintenance {
+    background: #fff3e0;
+    color: #ef6c00;
+}
+
+/* Responsive adjustments */
+@media screen and (max-width: 768px) {
+    .vehicle-modal-details {
+        gap: 15px;
+    }
+    
+    .detail-row {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 5px;
+    }
+    
+    .detail-row .label,
+    .detail-row .value {
+        flex: none;
+    }
+}
+
 	</style>
 </head>
 
@@ -324,8 +466,7 @@
 							<td><?= $stock->status; ?></td>
 							<!-- Actions -->
 							<td class="actions">
-								<button class="ap-button"
-									onclick="approveAction(<?= $stock->collection_id; ?>)">Approve</button>
+								<button class="ap-button" onclick="showCollectionBagDetails()">Approve</button>
 								<button class="rp-button" onclick="reportModel(<?= $stock->collection_id; ?>)"
 									style="">Reject</button>
 							</td>
@@ -336,24 +477,35 @@
 			</table>
 		</div>
 
+		<div id="collectionBagDetailsModal" class="modal" >
+			<div class="modal-content">
+				<span class="close" onclick="closeModal('collectionBagDetailsModal')">&times;</span>
+				<h2>Colllection Details</h2>
+				<div id="collectionBagDetailsContent">
+					<!-- Bag details will be populated here -->
+				</div>
+			</div>
+		</div>
+
 		<div id="reportModal" class="report-modal" style="display: none;">
 			<div class="modal-content" id="reportModalContent">
-				<span class="close" onclick="closeModal()">&times;</span>
+				<span class="close" onclick="closeModal('reportModal')">&times;</span>
 				<h2>Report</h2>
 				<form action="<?php echo URLROOT; ?>/Inventory/" method="POST">
-				<div class="modal-body">
-					<textarea type="text" name="report" placeholder="Enter your report">
-					
+					<div class="modal-body">
+						<textarea type="text" name="report" placeholder="Enter your report">
+
 					</textarea>
-				</div>
-				<div class="modal-footer">
-					<button type="submit" class="btn btn-primary">Submit</button>
-				</div>
+					</div>
+					<div class="modal-footer">
+						<button type="submit" class="btn btn-primary">Submit</button>
+					</div>
 				</form>
 			</div>
 
 
 		</div>
+
 		<div class="todo">
 			<div class="head">
 				<h3>Machine Allocation Statics</h3>
@@ -487,18 +639,162 @@
 		modalContent.style.animation = 'modalPop 0.3s ease-out';
 	}
 
-	function closeModal() {
-		const modal = document.getElementById('reportModal');
+	function closeModal(modalId) {
+		const modal = document.getElementById(modalId);
 		modal.style.display = 'none';
 	}
 
-	// Improved click outside listener
-	window.addEventListener('click', function (event) {
-		const modal = document.getElementById('reportModal');
-		if (event.target === modal) {
-			closeModal();
-		}
-	});
+	// // Improved click outside listener
+	// window.addEventListener('click', function (event) {
+	// 	const modal = document.getElementById('reportModal');
+	// 	if (event.target === modal) {
+	// 		closeModal();
+	// 	}
+	// });
+
+	function showCollectionBagDetails() {
+		const content = document.getElementById("collectionBagDetailsContent");
+		const modal =document.getElementById('collectionBagDetailsModal')
+		modal.style.backgroundColor = 'rgba(0, 0, 0, 0.5)';
+		modal.style.backdropFilter = 'blur(1px)';
+
+
+		// Hardcoded values for demonstration
+		const collectionBag = {
+			collection_id: "COL001",
+			route: "Route A",
+			driver: "Driver 1",
+			suppliers: [
+				{
+					name: "Supplier A",
+					bags: [
+						{
+							name: "Bag 1",
+							capacity: 50,
+							filledAmount: 30,
+							detailsUrl: "bag_details.php?id=1",
+						},
+						{
+							name: "Bag 2",
+							capacity: 70,
+							filledAmount: 50,
+							detailsUrl: "bag_details.php?id=2",
+						},
+					],
+				},
+				{
+					name: "Supplier B",
+					bags: [
+						{
+							name: "Bag 3",
+							capacity: 60,
+							filledAmount: 20,
+							detailsUrl: "bag_details.php?id=3",
+						},
+					],
+				},
+			],
+			unassignedSuppliers: ["Supplier C", "Supplier D"],
+			unassignedBags: [
+				{ name: "Bag 4", capacity: 40, detailsUrl: "bag_details.php?id=4" },
+				{ name: "Bag 5", capacity: 30, detailsUrl: "bag_details.php?id=5" },
+			],
+		};
+
+		// Create tags for unassigned bags
+		const unassignedBagTags = collectionBag.unassignedBags
+			.map(
+				(bag) => `
+		<button class="tag-button" onclick="window.location.href='${bag.detailsUrl}'">
+			${bag.name} (Capacity: ${bag.capacity} kg)
+		</button>
+	`
+			)
+			.join(" ");
+
+		// Create table rows for assigned suppliers and their bags
+		const supplierRows = collectionBag.suppliers
+			.map(
+				(supplier) => `
+		<tr>
+			<td>${supplier.name}</td>
+			<td>${supplier.bags
+						.map(
+							(bag) => `
+				<button class="tag-button" onclick="window.location.href='${bag.detailsUrl}'">
+					${bag.name} (Capacity: ${bag.capacity} kg, Filled: ${bag.filledAmount} kg)
+				</button>
+			`
+						)
+						.join(" ")}</td>
+		</tr>
+	`
+			)
+			.join("");
+
+		content.innerHTML = `
+		  <div class="vehicle-modal-content">
+			  <div class="vehicle-modal-details">
+				  <div class="detail-group">
+					  <h3>Collection Information</h3>
+					  <div class="detail-row">
+						  <span class="label">Collection ID:</span>
+						  <span class="value">${collectionBag.collection_id
+			}</span>
+					  </div>
+					  <div class="detail-row">
+						  <span class="label">Route:</span>
+						  <span class="value">${collectionBag.route}</span>
+					  </div>
+					  <div class="detail-row">
+						  <span class="label">Driver:</span>
+						  <span class="value">${collectionBag.driver}</span>
+					  </div>
+					  <div class="detail-row">
+						  <span class="label">Number of Suppliers:</span>
+						  <span class="value">${collectionBag.suppliers.length
+			}</span>
+					  </div>
+				  </div>
+
+				  <div class="detail-group">
+					  <h3>Unassigned Suppliers</h3>
+					  <div class="detail-row">
+						  <span class="label">Suppliers:</span>
+						  <span class="value">${collectionBag.unassignedSuppliers.join(
+				", "
+			)}</span>
+					  </div>
+				  </div>
+
+				  <div class="detail-group">
+					  <h3>Unassigned Bags</h3>
+					  <div class="detail-row">
+						  <span class="label">Bags:</span>
+						  <span class="value">${unassignedBagTags}</span>
+					  </div>
+				  </div>
+
+				  <div class="detail-group">
+					  <h3>Assigned Suppliers and Their Bags</h3>
+					  <table>
+						  <thead>
+							  <tr>
+								  <th>Supplier</th>
+								  <th>Assigned Bags</th>
+							  </tr>
+						  </thead>
+						  <tbody>
+							  ${supplierRows}
+						  </tbody>
+					  </table>
+				  </div>
+			  </div>
+			  <button type="submit" class="btn btn-primary">confirm</button>
+		  </div>
+	`;
+		document.getElementById("collectionBagDetailsModal").style.display = "block";
+	}
 </script>
 
 <?php require APPROOT . '/views/inc/components/footer.php' ?>
