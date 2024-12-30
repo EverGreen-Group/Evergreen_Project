@@ -372,11 +372,18 @@ class Inventory extends controller
                 $this->view('inventory/v_machineallocation', $data);
             }
         } else {
+            // GET request
+            $machines= $this->machineModel->getmachines();
+            $data = [
+                'machines' => $machines
+            ];
             // Load the form view for GET requests
-            $this->view('inventory/v_machineallocation');
+            $this->view('inventory/v_machineallocation',$data);
+            var_dump($data);
         }
 
         $this->view('inventory/v_machineallocation', $data);
+        var_dump($data);
     }
 
 

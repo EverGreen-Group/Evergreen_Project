@@ -26,4 +26,10 @@ class M_Machine
         // Execute and return result
         return $this->db->execute();
     }
+
+    public function getmachines()
+    {
+        $this->db->query('SELECT * FROM machines');
+        return $this->db->resultSet();
+    }
 }

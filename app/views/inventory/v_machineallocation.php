@@ -35,7 +35,24 @@
                     </tr>
                 </thead>
                 <tbody>
-                    <tr>
+                    <pre><?php print_r($data); ?></pre>
+                    <?php foreach ($data['machines'] as $machine): ?>
+                        <tr>
+                            <td><input type="checkbox"></td>
+                            <td>
+                                <div class="machine-info">
+                                    <span class="machine-icon"></span>
+                                    <span><?php echo $machine->machine_name; ?></span>
+                                </div>
+                            </td>
+                            <td><span class="status-ready"><?php echo $machine->status; ?></span></td>
+                            <td><button class="btn allocate">Allocate</button></td>
+                            <td><button class="btn deallocate">Deallocate</button></td>
+                            <td><button class="btn detail">details</button></td>
+                        </tr>
+                    <?php endforeach; ?>
+
+                    <!-- <tr>
                         <td><input type="checkbox"></td>
                         <td>
                             <div class="machine-info">
@@ -86,7 +103,7 @@
                         <td><button class="btn allocate">Allocate</button></td>
                         <td><button class="btn deallocate">Deallocate</button></td>
                         <td><button class="btn detail">details</button></td>
-                    </tr>
+                    </tr> -->
                 </tbody>
             </table>
 
@@ -109,7 +126,7 @@
 
             <div class="form-container">
                 <h1>Add New Machine Form</h1>
-                <form action="<?php echo URLROOT?>/Inventory/machine" method="POST">
+                <form action="<?php echo URLROOT ?>/Inventory/machine" method="POST">
                     <div class="form-group">
                         <label for="machine-name">Machine Name</label>
                         <input type="text" id="machine-name" name="machine_name" placeholder="Enter Machine Name"
@@ -140,10 +157,10 @@
                     </div>
                     <div class="form-group">
                         <label for="specialnote">Special Notes</label>
-                        <textarea id="specialnotes" name="specialnotes"style="height: 100px; width: 100%;"
+                        <textarea id="specialnotes" name="specialnotes" style="height: 100px; width: 100%;"
                             placeholder="Enter Any Special Details" required></textarea>
                     </div>
-                    
+
                     <button type="submit" class="btn-submit">Submit</button>
                 </form>
             </div>
