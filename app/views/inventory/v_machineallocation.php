@@ -109,7 +109,7 @@
 
             <div class="form-container">
                 <h1>Add New Machine Form</h1>
-                <form action="" method="POST">
+                <form action="<?php echo URLROOT?>/Inventory/machine" method="POST">
                     <div class="form-group">
                         <label for="machine-name">Machine Name</label>
                         <input type="text" id="machine-name" name="machine_name" placeholder="Enter Machine Name"
