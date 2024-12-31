@@ -221,6 +221,189 @@ function scheduleInspection(requestId) {
 
 <?php require APPROOT . '/views/inc/components/footer.php'; ?>
 
+
+<script>
+    function scheduleInspection(requestId) {
+        // Set the request ID in the modal
+        document.getElementById('requestId').value = requestId;
+        
+        // Show the modal
+        document.getElementById('scheduleInspectionModal').style.display = 'block';
+    }
+
+    function closeModal() {
+        // Hide the modal
+        document.getElementById('scheduleInspectionModal').style.display = 'none';
+    }
+
+    document.getElementById('inspectionForm').addEventListener('submit', function(event) {
+        event.preventDefault(); // Prevent the default form submission
+
+        const requestId = document.getElementById('requestId').value;
+        const inspectionDate = document.getElementById('inspectionDate').value;
+        const inspectionTime = document.getElementById('inspectionTime').value;
+
+        // Add your scheduling logic here
+        console.log('Scheduling inspection for:', requestId, 'on', inspectionDate, 'at', inspectionTime);
+
+        // Close the modal after scheduling
+        closeModal();
+    });
+
+    // Close modal when clicking outside of it
+    window.onclick = function(event) {
+        const modal = document.getElementById('scheduleInspectionModal');
+        if (event.target == modal) {
+            closeModal();
+        }
+    };
+
+    // Existing functions
+    function markComplete(requestId) {
+        console.log('Marking inspection as complete:', requestId);
+    }
+
+    function viewDetails(requestId) {
+        console.log('Viewing details for:', requestId);
+    }
+
+    document.querySelector('.filter-select').addEventListener('change', function() {
+        const status = this.value;
+        console.log('Filtering by status:', status);
+    });
+
+    function showScheduleInputs(requestId) {
+        const actionDiv = document.getElementById(`action-${requestId}`);
+        
+        // Create date and time input fields
+        const html = `
+            <input type="date" class="inline-date-input" id="date-${requestId}" 
+                min="${new Date().toISOString().split('T')[0]}" required>
+            <input type="time" class="inline-time-input" id="time-${requestId}" required>
+            <button class="btn-approve" onclick="submitSchedule('${requestId}')">
+                <i class='bx bx-check'></i> Confirm
+            </button>
+            <button class="btn-reject" onclick="cancelSchedule('${requestId}')">
+                <i class='bx bx-x'></i> Cancel
+            </button>
+        `;
+        
+        actionDiv.innerHTML = html;
+    }
+
+    function cancelSchedule(requestId) {
+        const actionDiv = document.getElementById(`action-${requestId}`);
+        actionDiv.innerHTML = `
+            <button class="btn-approve schedule-btn" onclick="showScheduleInputs('${requestId}')">
+                <i class='bx bx-calendar'></i> Schedule
+            </button>
+        `;
+    }
+
+    function submitSchedule(requestId) {
+        const date = document.getElementById(`date-${requestId}`).value;
+        const time = document.getElementById(`time-${requestId}`).value;
+        
+        if (!date || !time) {
+            alert('Please select both date and time');
+            return;
+        }
+
+        const formData = new FormData();
+        formData.append('request_id', requestId);
+        formData.append('date', date);
+        formData.append('time', time);
+
+        fetch(`${URLROOT}/suppliermanager/scheduleInspection`, {
+            method: 'POST',
+            body: formData
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.status === 'success') {
+                location.reload(); // Reload to show updated data
+            } else {
+                alert('Failed to schedule inspection');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('An error occurred while scheduling the inspection');
+        });
+    }
+
+    function updateStatus(requestId, status) {
+        const formData = new FormData();
+        formData.append('request_id', requestId);
+        formData.append('status', status);
+
+        fetch(`${URLROOT}/suppliermanager/updateInspectionStatus`, {
+            method: 'POST',
+            body: formData
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.status === 'success') {
+                // Update the row's appearance based on the new status
+                const row = document.querySelector(`select[onchange*="${requestId}"]`).closest('tr');
+                updateRowAppearance(row, status);
+            } else {
+                alert('Failed to update status');
+                // Revert the select to its previous value
+                location.reload();
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('An error occurred while updating the status');
+            location.reload();
+        });
+    }
+
+    function updateRowAppearance(row, status) {
+        // Remove any existing status-related classes
+        row.classList.remove('status-pending', 'status-cancelled', 'status-completed');
+        
+        // Add the new status class
+        row.classList.add(`status-${status}`);
+        
+        // You can add additional visual updates here if needed
+    }
+
+    // Modify the existing submitSchedule function
+    function submitSchedule(requestId) {
+        const date = document.getElementById(`date-${requestId}`).value;
+        const time = document.getElementById(`time-${requestId}`).value;
+        
+        if (!date || !time) {
+            alert('Please select both date and time');
+            return;
+        }
+
+        const formData = new FormData();
+        formData.append('request_id', requestId);
+        formData.append('date', date);
+        formData.append('time', time);
+
+        fetch(`${URLROOT}/suppliermanager/scheduleInspection`, {
+            method: 'POST',
+            body: formData
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.status === 'success') {
+                location.reload(); // Reload to show updated data
+            } else {
+                alert('Failed to schedule inspection');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('An error occurred while scheduling the inspection');
+        });
+    }
+</script>
+
 <style>
     .status-badge {
         padding: 6px 12px;
@@ -416,184 +599,3 @@ function scheduleInspection(requestId) {
     }
 </style>
 
-<script>
-    function scheduleInspection(requestId) {
-        // Set the request ID in the modal
-        document.getElementById('requestId').value = requestId;
-        
-        // Show the modal
-        document.getElementById('scheduleInspectionModal').style.display = 'block';
-    }
-
-    function closeModal() {
-        // Hide the modal
-        document.getElementById('scheduleInspectionModal').style.display = 'none';
-    }
-
-    document.getElementById('inspectionForm').addEventListener('submit', function(event) {
-        event.preventDefault(); // Prevent the default form submission
-
-        const requestId = document.getElementById('requestId').value;
-        const inspectionDate = document.getElementById('inspectionDate').value;
-        const inspectionTime = document.getElementById('inspectionTime').value;
-
-        // Add your scheduling logic here
-        console.log('Scheduling inspection for:', requestId, 'on', inspectionDate, 'at', inspectionTime);
-
-        // Close the modal after scheduling
-        closeModal();
-    });
-
-    // Close modal when clicking outside of it
-    window.onclick = function(event) {
-        const modal = document.getElementById('scheduleInspectionModal');
-        if (event.target == modal) {
-            closeModal();
-        }
-    };
-
-    // Existing functions
-    function markComplete(requestId) {
-        console.log('Marking inspection as complete:', requestId);
-    }
-
-    function viewDetails(requestId) {
-        console.log('Viewing details for:', requestId);
-    }
-
-    document.querySelector('.filter-select').addEventListener('change', function() {
-        const status = this.value;
-        console.log('Filtering by status:', status);
-    });
-
-    function showScheduleInputs(requestId) {
-        const actionDiv = document.getElementById(`action-${requestId}`);
-        
-        // Create date and time input fields
-        const html = `
-            <input type="date" class="inline-date-input" id="date-${requestId}" 
-                min="${new Date().toISOString().split('T')[0]}" required>
-            <input type="time" class="inline-time-input" id="time-${requestId}" required>
-            <button class="btn-approve" onclick="submitSchedule('${requestId}')">
-                <i class='bx bx-check'></i> Confirm
-            </button>
-            <button class="btn-reject" onclick="cancelSchedule('${requestId}')">
-                <i class='bx bx-x'></i> Cancel
-            </button>
-        `;
-        
-        actionDiv.innerHTML = html;
-    }
-
-    function cancelSchedule(requestId) {
-        const actionDiv = document.getElementById(`action-${requestId}`);
-        actionDiv.innerHTML = `
-            <button class="btn-approve schedule-btn" onclick="showScheduleInputs('${requestId}')">
-                <i class='bx bx-calendar'></i> Schedule
-            </button>
-        `;
-    }
-
-    function submitSchedule(requestId) {
-        const date = document.getElementById(`date-${requestId}`).value;
-        const time = document.getElementById(`time-${requestId}`).value;
-        
-        if (!date || !time) {
-            alert('Please select both date and time');
-            return;
-        }
-
-        const formData = new FormData();
-        formData.append('request_id', requestId);
-        formData.append('date', date);
-        formData.append('time', time);
-
-        fetch(`${URLROOT}/suppliermanager/scheduleInspection`, {
-            method: 'POST',
-            body: formData
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.status === 'success') {
-                location.reload(); // Reload to show updated data
-            } else {
-                alert('Failed to schedule inspection');
-            }
-        })
-        .catch(error => {
-            console.error('Error:', error);
-            alert('An error occurred while scheduling the inspection');
-        });
-    }
-
-    function updateStatus(requestId, status) {
-        const formData = new FormData();
-        formData.append('request_id', requestId);
-        formData.append('status', status);
-
-        fetch(`${URLROOT}/suppliermanager/updateInspectionStatus`, {
-            method: 'POST',
-            body: formData
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.status === 'success') {
-                // Update the row's appearance based on the new status
-                const row = document.querySelector(`select[onchange*="${requestId}"]`).closest('tr');
-                updateRowAppearance(row, status);
-            } else {
-                alert('Failed to update status');
-                // Revert the select to its previous value
-                location.reload();
-            }
-        })
-        .catch(error => {
-            console.error('Error:', error);
-            alert('An error occurred while updating the status');
-            location.reload();
-        });
-    }
-
-    function updateRowAppearance(row, status) {
-        // Remove any existing status-related classes
-        row.classList.remove('status-pending', 'status-cancelled', 'status-completed');
-        
-        // Add the new status class
-        row.classList.add(`status-${status}`);
-        
-        // You can add additional visual updates here if needed
-    }
-
-    // Modify the existing submitSchedule function
-    function submitSchedule(requestId) {
-        const date = document.getElementById(`date-${requestId}`).value;
-        const time = document.getElementById(`time-${requestId}`).value;
-        
-        if (!date || !time) {
-            alert('Please select both date and time');
-            return;
-        }
-
-        const formData = new FormData();
-        formData.append('request_id', requestId);
-        formData.append('date', date);
-        formData.append('time', time);
-
-        fetch(`${URLROOT}/suppliermanager/scheduleInspection`, {
-            method: 'POST',
-            body: formData
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.status === 'success') {
-                location.reload(); // Reload to show updated data
-            } else {
-                alert('Failed to schedule inspection');
-            }
-        })
-        .catch(error => {
-            console.error('Error:', error);
-            alert('An error occurred while scheduling the inspection');
-        });
-    }
-</script>
