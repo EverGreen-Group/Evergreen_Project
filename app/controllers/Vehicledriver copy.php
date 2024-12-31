@@ -261,63 +261,43 @@ class VehicleDriver extends controller {
         // if (!$collection) {
         //     redirect('vehicledriver/shift');
         // }
-
+    
         // Replace hardcoded location with actual driver location
         $driverLocation = $this->getCurrentDriverLocation();
         $vehicleLocation = $this->vehicleModel->getVehicleLocation($collection->vehicle_id);
-
+    
         // Get all suppliers for this collection
         $collectionSuppliers = $this->collectionScheduleModel->getCollectionSupplierRecords($collectionId);
 
-        $currentSupplier = null;
-        foreach ($collectionSuppliers as $record) {
-            if (!$record->arrival_time && $record->status != 'Collected') {
-                // Convert the object to an associative array
-                $currentSupplier = [
-                    'id' => $record->supplier_id,
-                    'supplierName' => $record->supplier_name,
-                    'remarks' => 'Call upon arrival',
-                    'location' => [
-                        'lat' => (float)$record->latitude,
-                        'lng' => (float)$record->longitude
-                    ],
-                    'address' => $record->address ?? 'No address provided',
-                    'image' => $record->profile_image ? 
-                        URLROOT . '/public/uploads/supplier_photos/' . $record->profile_image : 
-                        URLROOT . '/public/img/default-user.png',
-                    'estimatedCollection' => $record->average_collection,
-                    'status' => $record->status,
-                    'contact' => $record->contact_number,
-                    'arrival_time' => $record->arrival_time,
-                ];
-                break;
-            }
-        }
+        // Filter out collected suppliers
+        $filteredSuppliers = array_filter($collectionSuppliers, function($supplier) {
+            return $supplier->status != 'Collected';
+        });
 
-        // ADDED ARRAY_VALLUES AND IT WORKEEEEEEEEEED!!!!
+        // Set the current supplier to the first uncollected supplier
+        $currentSupplier = !empty($filteredSuppliers) ? $filteredSuppliers[0] : null;
 
-            $formattedSuppliers = array_values(array_filter(array_map(function($supplier) {
-                return [
-                    'id' => $supplier->supplier_id,
-                    'supplierName' => $supplier->supplier_name,
-                    'remarks' => 'Call upon arrival',
-                    'location' => [
-                        'lat' => (float)$supplier->latitude,
-                        'lng' => (float)$supplier->longitude
-                    ],
-                    'address' => $supplier->address ?? 'No address provided',
-                    'image' => $supplier->profile_image ? 
-                        URLROOT . '/public/uploads/supplier_photos/' . $supplier->profile_image : 
-                        URLROOT . '/public/img/default-user.png',
-                    'estimatedCollection' => $supplier->average_collection,
-                    'status' => $supplier->status,
-                    'contact' => $supplier->contact_number,
-                    'arrival_time' => $supplier->arrival_time,
-                ];
-            }, $collectionSuppliers), function($supplier) {
-                return $supplier['status'] !== 'Collected';
-            }));
-
+        // Format suppliers for the view
+        $formattedSuppliers = array_map(function($supplier) {
+            return [
+                'id' => $supplier->supplier_id,
+                'supplierName' => $supplier->supplier_name,
+                'remarks' => 'Call upon arrival',
+                'location' => [
+                    'lat' => (float)$supplier->latitude,
+                    'lng' => (float)$supplier->longitude
+                ],
+                'address' => $supplier->address ?? 'No address provided',
+                'image' => $supplier->profile_image ? 
+                    URLROOT . '/public/uploads/supplier_photos/' . $supplier->profile_image : 
+                    URLROOT . '/public/img/default-user.png',
+                'estimatedCollection' => $supplier->average_collection,
+                'status' => $supplier->status,
+                'contact' => $supplier->contact_number,
+                'arrival_time' => $supplier->arrival_time,
+            ];
+        }, $filteredSuppliers);
+    
         $data = [
             'pageTitle' => 'Collection Route',
             'driverName' => $collection->first_name,
@@ -325,10 +305,9 @@ class VehicleDriver extends controller {
             'driverLocation' => $driverLocation,
             'collections' => $formattedSuppliers,
             'collection' => $collection,
-            'vehicleLocation' => $vehicleLocation,
-            'currentSupplier' => $currentSupplier
+            'vehicleLocation' => $vehicleLocation  
         ];
-
+    
         $this->view('vehicle_driver/v_collection_route', $data);
     }
 

@@ -43,45 +43,53 @@ function initMap() {
     zIndex: 999, // Keep driver marker on top
   });
 
-  // Add supplier markers
+  // Add supplier markers only for those not collected
   if (collections && collections.length > 0) {
     collections.forEach((supplier) => {
-      const marker = new google.maps.Marker({
-        position: supplier.location,
-        map: map,
-        icon: {
-          path: google.maps.SymbolPath.CIRCLE,
-          scale: 8,
-          fillColor: "#4CAF50",
-          fillOpacity: 1,
-          strokeWeight: 2,
-          strokeColor: "#FFFFFF",
-        },
-      });
+      // Log the supplier's status for debugging
+      console.log(
+        `Supplier: ${supplier.supplierName}, Status: ${supplier.status}`
+      );
 
-      const infowindow = new google.maps.InfoWindow({
-        content: `
-                    <div style="
-                        padding: 3px 6px;
-                        font-size: 12px;
-                        line-height: 1.3;
-                        max-width: 150px;
-                    ">
-                        <div style="font-weight: 600;">${supplier.supplierName}</div>
-                        <div style="color: #666;">${supplier.estimatedCollection}kg</div>
-                    </div>
-                `,
-        pixelOffset: new google.maps.Size(0, -10),
-        disableAutoPan: true,
-      });
+      // Check if the supplier's status is not "Collected"
+      if (supplier.status !== "Collected") {
+        const marker = new google.maps.Marker({
+          position: supplier.location,
+          map: map,
+          icon: {
+            path: google.maps.SymbolPath.CIRCLE,
+            scale: 8,
+            fillColor: "#4CAF50",
+            fillOpacity: 1,
+            strokeWeight: 2,
+            strokeColor: "#FFFFFF",
+          },
+        });
 
-      marker.addListener("click", () => {
-        if (currentInfoWindow) {
-          currentInfoWindow.close();
-        }
-        infowindow.open(map, marker);
-        currentInfoWindow = infowindow;
-      });
+        const infowindow = new google.maps.InfoWindow({
+          content: `
+                      <div style="
+                          padding: 3px 6px;
+                          font-size: 12px;
+                          line-height: 1.3;
+                          max-width: 150px;
+                      ">
+                          <div style="font-weight: 600;">${supplier.supplierName}</div>
+                          <div style="color: #666;">${supplier.estimatedCollection}kg</div>
+                      </div>
+                  `,
+          pixelOffset: new google.maps.Size(0, -10),
+          disableAutoPan: true,
+        });
+
+        marker.addListener("click", () => {
+          if (currentInfoWindow) {
+            currentInfoWindow.close();
+          }
+          infowindow.open(map, marker);
+          currentInfoWindow = infowindow;
+        });
+      }
     });
   }
 }

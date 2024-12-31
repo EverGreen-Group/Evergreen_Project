@@ -60,17 +60,43 @@ let collectedBags = [];
 let isAddingNewBag = true;
 
 function addCollection(supplierId) {
+  // Add debugging
+  console.log("Current collections:", collections);
+  console.log("Supplier ID:", supplierId);
+
+  // Ensure collections is an array
+  let collectionsArray = Array.isArray(collections)
+    ? collections
+    : Object.values(collections);
+
+  if (!Array.isArray(collectionsArray)) {
+    console.error("Unable to process collections as array:", collections);
+    return;
+  }
+
   currentSupplierId = supplierId;
-  currentSupplierData = collections.find((s) => s.id === supplierId);
+  currentSupplierData = collectionsArray.find((s) => s.id === supplierId);
+
+  // Debug if supplier was found
+  if (!currentSupplierData) {
+    console.error("Supplier not found:", supplierId);
+    return;
+  }
+
   collectedBags = []; // Reset local collected bags for this session
   isAddingNewBag = true;
 
   // Update modal header with supplier info
-  document.getElementById("modalSupplierName").textContent =
-    currentSupplierData.supplierName;
-  document.getElementById(
-    "modalExpectedAmount"
-  ).textContent = `${currentSupplierData.estimatedCollection}kg expected`;
+  const supplierNameEl = document.getElementById("modalSupplierName");
+  const expectedAmountEl = document.getElementById("modalExpectedAmount");
+
+  if (supplierNameEl && currentSupplierData.supplierName) {
+    supplierNameEl.textContent = currentSupplierData.supplierName;
+  }
+
+  if (expectedAmountEl && currentSupplierData.estimatedCollection) {
+    expectedAmountEl.textContent = `${currentSupplierData.estimatedCollection}kg expected`;
+  }
 
   // Reset and show initial form
   resetBagForm();
@@ -80,7 +106,10 @@ function addCollection(supplierId) {
   updateAssignedBagsList();
 
   // Show modal
-  document.getElementById("addCollectionModal").style.display = "block";
+  const modal = document.getElementById("addCollectionModal");
+  if (modal) {
+    modal.style.display = "block";
+  }
 }
 
 function resetBagForm() {
@@ -287,6 +316,17 @@ async function finalizeSupplierCollection() {
   //   return;
   // }
 
+  const collectionData = {
+    supplier_id: currentSupplierId,
+    collection_id: collectionId,
+    collection_time: new Date().toISOString(),
+    status: "Added",
+    bags: collectedBags,
+  };
+
+  console.log("Finalizing collection with data:", collectionData); // Debugging output
+  console.log("Collected bags:", collectedBags);
+
   try {
     const response = await fetch(
       `${URLROOT}/vehicledriver/finalizeCollection`,
@@ -319,5 +359,41 @@ async function finalizeSupplierCollection() {
   } catch (error) {
     console.error("Error finalizing collection:", error);
     alert("Failed to finalize collection");
+  }
+}
+
+// to end collection (have to implement location check later but for now I have just implemented a direct method)
+
+async function endCollection(collectionId) {
+  if (!collectionId) {
+    alert("Invalid collection ID.");
+    return;
+  }
+
+  try {
+    const response = await fetch(`${URLROOT}/vehicledriver/endCollection`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "X-Requested-With": "XMLHttpRequest",
+      },
+      body: JSON.stringify({
+        collection_id: collectionId,
+      }),
+    });
+
+    const data = await response.json();
+
+    if (data.success) {
+      alert("Collection ended successfully.");
+      // Redirect to the main page
+      window.location.href =
+        "http://localhost/Evergreen_Project/vehicledriver/";
+    } else {
+      alert(data.message || "Failed to end collection.");
+    }
+  } catch (error) {
+    console.error("Error ending collection:", error);
+    alert("Failed to end collection.");
   }
 }
