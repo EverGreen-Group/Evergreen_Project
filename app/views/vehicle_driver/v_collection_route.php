@@ -19,19 +19,20 @@
     <button class="btn-arrive" onclick="markArrived()">
         <i class='bx bx-map-pin'></i> Mark Arrived
     </button>
+
     <button class="btn-view" onclick="viewCollection()">
         <i class='bx bx-collection'></i> View Collection
     </button>
 </div>
 
 <div id="collectionBagDetailsModal" class="modal" onclick="closeModal('collectionBagDetailsModal')">
+    <?php print_r($data); ?>
     <div class="modal-content" onclick="event.stopPropagation();">
         <span class="close" onclick="closeModal('collectionBagDetailsModal')">&times;</span>
         <h2>Collection Route</h2>
+        <p>Remaining Collections: <?php echo count(array_filter($data['collections'], function($supplier) { return $supplier['status'] != 'Collected'; })); ?></p>
         <div id="collectionBagDetailsContent">
-            <!-- Current Supplier (First in the list) -->
             <?php if (!empty($data['collections'])): ?>
-                <?php $currentSupplier = $data['collections'][0]; ?>
                 <div class="current-supplier-card">
                     <div class="card-header">
                         <h3>Current Stop</h3>
@@ -73,8 +74,8 @@
                 <?php if (count($data['collections']) > 1): ?>
                     <div class="remaining-suppliers">
                         <?php foreach (array_slice($data['collections'], 1) as $supplier): ?>
-                            <div class="supplier-item">
-                                <div class="supplier-info">
+                            <div class="supplier-item border-supplier">
+                                <div class="supplier-info border-info">
                                     <span class="supplier-name"><?php echo $supplier['supplierName']; ?></span>
                                     <span class="collection-amount"><?php echo $supplier['estimatedCollection']; ?>kg expected</span>
                                 </div>
@@ -82,6 +83,22 @@
                         <?php endforeach; ?>
                     </div>
                 <?php endif; ?>
+            <?php else: ?>
+                <!-- Collection Summary -->
+                <div class="supplier-details">
+                    <h3>Collection Summary</h3>
+                    <p><strong>Collection ID:</strong> <?php echo $data['collection']->collection_id; ?></p>
+                    <p><strong>Driver Name:</strong> <?php echo $data['driverName']; ?></p>
+                    <p><strong>Total Quantity:</strong> <?php echo $data['collection']->total_quantity; ?> kg</p>
+                </div>
+
+                <!-- Button to End Collection -->
+                <div class="supplier-actions">
+                    <button class="action-btn primary" onclick="endCollection('<?php echo $data['collection']->collection_id; ?>')">
+                        <i class='bx bx-check-circle'></i>
+                        End Collection
+                    </button>
+                </div>
             <?php endif; ?>
         </div>
     </div>
@@ -135,7 +152,7 @@
 
             <div class="supplier-item">
                 <div class="supplier-info">
-                    <label class="supplier-name">Actual Weight (kg)</label>
+                    <label class="supplier-name">Weight (kg)</label>
                     <input type="number" id="actualWeight" step="0.01" required>
                 </div>
             </div>
@@ -145,7 +162,7 @@
                     <label class="supplier-name">Leaf Quality Details</label>
                     <div class="quality-grid">
                         <select id="leafType" required>
-                            <option value="S">Soft</option>
+                            <option value="S">Super</option>
                             <option value="B">Broad</option>
                             <option value="N">Normal</option>
                         </select>
