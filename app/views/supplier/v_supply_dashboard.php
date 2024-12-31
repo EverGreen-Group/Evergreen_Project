@@ -115,14 +115,14 @@
             <?php endif; ?>
         </div>
         
-        <div class="order stats-chart-container">
+        <!--<div class="order stats-chart-container">
             <div class="head">
                 <h4>Tea Collection History</h4>
             </div>
             <div style="height: 400px; position: relative;">
                 <canvas id="teaCollectionChart"></canvas>
             </div>
-        </div>  
+        </div> --> 
 
         <!-- Land Inspection Request Section -->
         <div class="order">

@@ -290,6 +290,50 @@
 <script>
     window.FERTILIZER_TYPES = <?php echo json_encode($data['fertilizer_types']); ?>;
 </script>
+<script>
+
+    /* FERTILIZER REQUESTS */
+    /* ORDER POPUP */
+    document.getElementById('fertilizerForm').addEventListener('submit', function (e) {
+        e.preventDefault();
+
+        const formData = new FormData(this);
+
+        fetch('<?php echo URLROOT; ?>/supplier/createFertilizerOrder', {
+            method: 'POST',
+            body: formData
+        })
+            .then(response => response.json())
+            .then(data => {
+                showNotification(data.message, data.success);
+                if (data.success) {
+                    setTimeout(() => {
+                        window.location.reload();
+                    }, 3000);
+                }
+            })
+            .catch(error => {
+                showNotification('An error occurred. Please try again.', false);
+            });
+    });
+
+    function showNotification(message, isSuccess) {
+        const notification = document.getElementById('notification');
+        notification.textContent = message;
+        notification.className = 'notification ' + (isSuccess ? 'success' : 'error');
+        notification.style.display = 'block';
+
+        // Fade out after 3 seconds
+        setTimeout(() => {
+            notification.style.animation = 'fadeOut 0.5s ease-out';
+            setTimeout(() => {
+                notification.style.display = 'none';
+                notification.style.animation = '';
+            }, 500);
+        }, 3000);
+    }
+
+</script>
 
 
 <style>
@@ -405,59 +449,23 @@
     .box-info li:nth-child(3) .text h3 { /* Rejected count */
         color: #e74c3c;
     }
+
+    .table tbody td {
+        text-align: center; /* Center-align text in table cells */
+        vertical-align: middle; /* Center-align content vertically */
+    }
+
+    .table tbody td button {
+        margin: auto; /* Ensure buttons are centered within their cells */
+        display: block; /* Ensure they are treated as block elements for alignment */
+    }
+
 </style>
 <!-- Update the box-info HTML to use the new classes 
 <h3 class="<?php echo $data['request_counts']['total'] === 0 ? 'zero-count' : ''; ?>">
     <?php echo $data['request_counts']['total']; ?>
 </h3>-->
 
-
-<script>
-
-    /* FERTILIZER REQUESTS */
-    /* ORDER POPUP */
-    document.getElementById('fertilizerForm').addEventListener('submit', function (e) {
-        e.preventDefault();
-
-        const formData = new FormData(this);
-
-        fetch('<?php echo URLROOT; ?>/supplier/createFertilizerOrder', {
-            method: 'POST',
-            body: formData
-        })
-            .then(response => response.json())
-            .then(data => {
-                showNotification(data.message, data.success);
-                if (data.success) {
-                    setTimeout(() => {
-                        window.location.reload();
-                    }, 3000);
-                }
-            })
-            .catch(error => {
-                showNotification('An error occurred. Please try again.', false);
-            });
-    });
-
-    function showNotification(message, isSuccess) {
-        const notification = document.getElementById('notification');
-        notification.textContent = message;
-        notification.className = 'notification ' + (isSuccess ? 'success' : 'error');
-        notification.style.display = 'block';
-
-        // Fade out after 3 seconds
-        setTimeout(() => {
-            notification.style.animation = 'fadeOut 0.5s ease-out';
-            setTimeout(() => {
-                notification.style.display = 'none';
-                notification.style.animation = '';
-            }, 500);
-        }, 3000);
-    }
-
-</script>
-
-<!-- DELETE MODAL -->
 
 </body>
 
