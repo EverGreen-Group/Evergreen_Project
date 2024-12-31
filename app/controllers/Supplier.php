@@ -3,6 +3,7 @@ require_once APPROOT . '/models/M_Fertilizer_Order.php';
 require_once '../app/helpers/auth_middleware.php';
 require_once APPROOT . '/models/M_Complaint.php';
 require_once APPROOT . '/models/M_LandInspection.php';
+require_once APPROOT . '/models/M_Payment.php';
 
 if (session_status() == PHP_SESSION_NONE) {
     session_start();
@@ -14,6 +15,7 @@ class Supplier extends Controller {
     private $landInspectionModel;
     private $complaintModel;
     private $collectionSupplierRecordModel;
+    private $paymentModel;
 
     public function __construct() {
         // Check if the user is logged in
@@ -32,7 +34,10 @@ class Supplier extends Controller {
         $this->complaintModel = new M_Complaint();
         // Initialize land inspection model
         $this->landInspectionModel = new M_LandInspection();
+        // Initialize collection supplier record model
         $this->collectionSupplierRecordModel = $this->model('M_CollectionSupplierRecord');
+        // Initialize payment model
+        $this->paymentModel = $this->model('M_Payment');
     }
 
     
@@ -85,13 +90,6 @@ class Supplier extends Controller {
 
         $this->view('supplier/v_confirmation_history', $data);
     }
-
-    // public function teaorders()
-    // {
-    //     $data = [];
-
-    //     $this->view('supplier/v_new_order', $data);
-    // }
 
     public function payments()
     {
@@ -176,6 +174,7 @@ class Supplier extends Controller {
     }
 
     public function fertilizerOrders() {
+        
         if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             // Collect form data
             $data = [
@@ -302,14 +301,14 @@ class Supplier extends Controller {
         header("Refresh:1; url=" . $_SERVER['HTTP_REFERER']);
         exit;
     }
-
+/*
     public function viewMonthlyIncome() {
         $data = [
             'title' => 'Schedule Details'
         ];
 
         $this->view('shared/supplier/v_view_monthly_statement', $data);
-    }
+    } */
 
     // form validation function 
     private function validateRequest($data) {
@@ -654,6 +653,83 @@ class Supplier extends Controller {
 
         redirect('supplier/index');
     }
+
+    
+    public function viewMonthlyStatement($month = null) {
+        // Hardcoded supplier_id for now
+        $supplier_id = 2; // Replace with $_SESSION['supplier_id'] later
+        
+        // If no month specified, use current month
+        if (!$month) {
+            $month = date('Y-m');
+        }
+        
+        // Initialize payment model
+        $paymentModel = $this->model('M_Payment');
+        
+        // Get supplier details
+        $supplier = $paymentModel->getSupplierDetails($supplier_id);
+        
+        // Initialize data array
+        $data = [
+            'supplier' => $supplier,
+            'collections' => [],
+            'orders' => [],
+            'total_tea_income' => 0,
+            'total_fertilizer' => 0,
+            'net_amount' => 0,
+            'current_month' => date('F Y', strtotime($month))
+        ];
+        
+        // Get collections for the specified month
+        $collections = $paymentModel->getSupplierCollections($supplier_id, $month);
+        
+        if ($collections) {
+            // Process collections data
+            $processed_collections = array_map(function($collection) {
+                // Calculate true weight (capacity minus deductions)
+                $true_weight = floatval($collection->capacity_kg) - floatval($collection->deductions);
+                
+                // Determine rate based on leaf type and age
+                $rate = ($collection->leaf_type === 'S') ? 120 : 95;
+                // Add age-based bonus
+                if ($collection->leaf_age === 'Young') {
+                    $rate += 10;
+                }
+                
+                // Calculate amount
+                $amount = $true_weight * $rate;
+                
+                return [
+                    'date' => date('Y-m-d', strtotime($collection->assigned_at)),
+                    'leaf_type' => ($collection->leaf_type === 'S') ? 'Super Leaf' : 'Normal Leaf',
+                    'leaf_age' => $collection->leaf_age,
+                    'quantity' => floatval($collection->capacity_kg),
+                    'moisture' => $collection->moisture_level,
+                    'deductions' => floatval($collection->deductions),
+                    'true_weight' => $true_weight,
+                    'rate' => $rate,
+                    'amount' => $amount
+                ];
+            }, $collections);
+            
+            $data['collections'] = $processed_collections;
+            $data['total_tea_income'] = array_sum(array_column($processed_collections, 'amount'));
+        }
+        
+        // Get fertilizer orders
+        $fertilizer_orders = $paymentModel->getFertilizerOrders($supplier_id, $month);
+        if ($fertilizer_orders) {
+            $data['orders'] = $fertilizer_orders;
+            $data['total_fertilizer'] = array_sum(array_column($fertilizer_orders, 'total_price'));
+        }
+        
+        // Calculate net amount
+        $data['net_amount'] = $data['total_tea_income'] - $data['total_fertilizer'];
+    
+        $this->view('shared/supplier/v_view_monthly_statement', $data);
+    }
+
     
 }
 ?>

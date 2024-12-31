@@ -15,7 +15,7 @@ if (RoleHelper::hasRole(RoleHelper::SUPPLIER_MANAGER)) {
 <?php require APPROOT . '/views/inc/components/topnavbar.php'; ?>
 
 <!-- MAIN -->
-        <main>
+    <main>
         <div class="head-title">
                 <div class="left">
                     <h1>Supplier Payment History</h1>
@@ -76,8 +76,8 @@ if (RoleHelper::hasRole(RoleHelper::SUPPLIER_MANAGER)) {
                                         <td class="label">Supplier Number</td>
                                     </tr>
                                     <tr>
-                                        <td class="value">01 Mar 2024 - 31 Mar 2024</td>
-                                        <td class="value">SUP001</td>
+                                        <td class="value">01 Dec 2024 - 31 Dec 2024</td>
+                                        <td class="value">SUP002</td>
                                     </tr>
                                 </table>
                             </div>
@@ -86,89 +86,47 @@ if (RoleHelper::hasRole(RoleHelper::SUPPLIER_MANAGER)) {
 
                     <!-- Collection Records -->
                     <div class="collection-records">
-                    <h3 class="section-title">Collection Records</h3>
+                        <h3 class="section-title">Collection Records</h3>
                         <table class="records-table">
                             <thead>
                                 <tr>
                                     <th>Date</th>
-                                    <th>Receipt No.</th>
-                                    <th>Normal Leaf (kg)</th>
-                                    <th>Super Leaf (kg)</th>
-                                    <th>Transport</th>
-                                    <th>Bags</th>
+                                    <th>Leaf Type</th>
+                                    <th>Leaf Age</th>
+                                    <th>Quantity (kg)</th>
                                     <th>Moisture</th>
-                                    <th>Other Deductions</th>
-                                    <th>True Weight</th>
+                                    <th>Deductions (kg)</th>
+                                    <th>True Weight (kg)</th>
                                     <th>Rate (Rs.)</th>
                                     <th>Amount (Rs.)</th>
                                 </tr>
                             </thead>
                             <tbody>
-                                <tr>
-                                    <td>2024-03-01</td>
-                                    <td>R001</td>
-                                    <td>50</td>
-                                    <td>30</td>
-                                    <td>200</td>
-                                    <td>5</td>
-                                    <td>2%</td>
-                                    <td>1.5</td>
-                                    <td>76.5</td>
-                                    <td>95/120</td>
-                                    <td>8,550</td>
-                                </tr>
-                                <tr>
-                                    <td>2024-03-03</td>
-                                    <td>R002</td>
-                                    <td>45</td>
-                                    <td>35</td>
-                                    <td>180</td>
-                                    <td>4</td>
-                                    <td>1.5%</td>
-                                    <td>1.2</td>
-                                    <td>77.3</td>
-                                    <td>95/120</td>
-                                    <td>8,740</td>
-                                </tr>
-                                <tr>
-                                    <td>2024-03-05</td>
-                                    <td>R003</td>
-                                    <td>55</td>
-                                    <td>25</td>
-                                    <td>220</td>
-                                    <td>6</td>
-                                    <td>2.5%</td>
-                                    <td>1.8</td>
-                                    <td>75.7</td>
-                                    <td>95/120</td>
-                                    <td>8,320</td>
-                                </tr>
-                                <tr>
-                                    <td>2024-03-07</td>
-                                    <td>R004</td>
-                                    <td>48</td>
-                                    <td>32</td>
-                                    <td>190</td>
-                                    <td>5</td>
-                                    <td>1.8%</td>
-                                    <td>1.4</td>
-                                    <td>76.8</td>
-                                    <td>95/120</td>
-                                    <td>8,680</td>
-                                </tr>
-                                <tr>
-                                    <td>2024-03-09</td>
-                                    <td>R005</td>
-                                    <td>52</td>
-                                    <td>28</td>
-                                    <td>210</td>
-                                    <td>5</td>
-                                    <td>2.2%</td>
-                                    <td>1.6</td>
-                                    <td>76.2</td>
-                                    <td>95/120</td>
-                                    <td>8,450</td>
-                                </tr>
+                                <?php 
+                                $total_tea_income = 0;
+                                if (!empty($data['collections'])): 
+                                    foreach ($data['collections'] as $collection): 
+                                        $total_tea_income += $collection['amount'];
+                                ?>
+                                    <tr>
+                                        <td><?php echo htmlspecialchars($collection['date']); ?></td>
+                                        <td><?php echo htmlspecialchars($collection['leaf_type']); ?></td>
+                                        <td><?php echo htmlspecialchars($collection['leaf_age']); ?></td>
+                                        <td><?php echo number_format($collection['quantity'], 1); ?></td>
+                                        <td><?php echo htmlspecialchars($collection['moisture']); ?></td>
+                                        <td><?php echo number_format($collection['deductions'], 1); ?></td>
+                                        <td><?php echo number_format($collection['true_weight'], 1); ?></td>
+                                        <td><?php echo number_format($collection['rate'], 2); ?></td>
+                                        <td><?php echo number_format($collection['amount'], 2); ?></td>
+                                    </tr>
+                                <?php 
+                                    endforeach; 
+                                else: 
+                                ?>
+                                    <tr>
+                                        <td colspan="9" class="text-center">No collection records found for this period.</td>
+                                    </tr>
+                                <?php endif; ?>
                             </tbody>
                         </table>
                     </div>
@@ -176,7 +134,10 @@ if (RoleHelper::hasRole(RoleHelper::SUPPLIER_MANAGER)) {
                     <!-- Add after the collection-records div -->
                     <div class="fertilizer-records">
                         <h3 class="section-title">Fertilizer Orders</h3>
-                        <?php if (!empty($data['orders'])): ?>
+                        <?php 
+                        $total_fertilizer = 0;
+                        if (!empty($data['orders'])): 
+                        ?>
                             <table class="records-table fertilizer-table">
                                 <thead>
                                     <tr>
@@ -189,7 +150,9 @@ if (RoleHelper::hasRole(RoleHelper::SUPPLIER_MANAGER)) {
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    <?php foreach ($data['orders'] as $order): ?>
+                                    <?php foreach ($data['orders'] as $order): 
+                                        $total_fertilizer += $order->total_price;
+                                    ?>
                                         <tr>
                                             <td><?php echo date('Y-m-d', strtotime($order->order_date)); ?></td>
                                             <td><?php echo htmlspecialchars($order->order_id); ?></td>
@@ -211,15 +174,15 @@ if (RoleHelper::hasRole(RoleHelper::SUPPLIER_MANAGER)) {
                         <table class="summary-table">
                             <tr>
                                 <td class="summary-label">Total Tea Leaf Income</td>
-                                <td class="summary-value">Rs. 42,740.00</td>
+                                <td class="summary-value">Rs. <?php echo number_format($total_tea_income, 2); ?></td>
                             </tr>
                             <tr>
                                 <td class="summary-label">Total Fertilizer Deductions</td>
-                                <td class="summary-value">Rs. 13,000.00</td>
+                                <td class="summary-value">Rs. <?php echo number_format($total_fertilizer, 2); ?></td>
                             </tr>
                             <tr class="total-row">
                                 <td class="summary-label">Net Amount</td>
-                                <td class="summary-value">Rs. 29,740.00</td>
+                                <td class="summary-value">Rs. <?php echo number_format($total_tea_income - $total_fertilizer, 2); ?></td>
                             </tr>
                         </table>
                     </div>
@@ -649,8 +612,14 @@ if (RoleHelper::hasRole(RoleHelper::SUPPLIER_MANAGER)) {
     .statement-select option {
         padding: 0.5rem;
     }
-    </style>
-    <script>
+
+    .text-center {
+        column-span: 9;
+        text-align: center;
+
+    }
+</style>
+<script>
     document.getElementById('monthlyStatementSelect').addEventListener('change', function() {
         const selectedPeriod = this.value;
         if (selectedPeriod) {
@@ -659,7 +628,7 @@ if (RoleHelper::hasRole(RoleHelper::SUPPLIER_MANAGER)) {
             window.location.href = `<?php echo URLROOT; ?>/supplier/viewMonthlyStatement/${selectedPeriod}`;
         }
     });
-    </script>
-    </body>
+</script>
+</body>
 </html>
     
