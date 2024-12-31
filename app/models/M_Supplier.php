@@ -88,5 +88,28 @@ class M_Supplier {
         return $this->db->resultSet();
     }
 
+    public function getRecentCollections($supplierId, $limit = 5) {
+        $this->db->query('
+            SELECT 
+                csr.collection_time,
+                csr.quantity as initial_weight,
+                csr.collection_id,
+                cb.deductions,
+                cb.capacity_kg,
+                COALESCE(cb.capacity_kg - cb.deductions, csr.quantity) as final_weight
+            FROM collection_supplier_records csr
+            LEFT JOIN collection_bags cb ON csr.collection_id = cb.collection_id
+            WHERE csr.supplier_id = :supplier_id 
+            AND csr.status IN ("Added", "Collected")
+            ORDER BY csr.collection_time DESC
+            LIMIT :limit
+        ');
+    
+        $this->db->bind(':supplier_id', $supplierId);
+        $this->db->bind(':limit', $limit);
+        
+        return $this->db->resultSet();
+    }
+
 
 } 

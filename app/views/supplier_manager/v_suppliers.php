@@ -149,47 +149,8 @@
                 <h3>Recent Collections</h3>
             </div>
             <table class="collection-history">
-                <tbody>
-                    <tr class="collection-entry">
-                        <td class="collection-header">
-                            04/03/2024 Type: S 1628 / 9005
-                        </td>
-                    </tr>
-                    <tr class="collection-details">
-                        <td>
-                            <span class="weight">84.00</span>
-                            <span class="deduction">3.50</span>
-                            <span class="final-weight">80.50</span>
-                            <span class="unit">kg</span>
-                        </td>
-                    </tr>
-                    <tr class="collection-entry">
-                        <td class="collection-header">
-                            03/03/2024 Type: S 1627 / 9004
-                        </td>
-                    </tr>
-                    <tr class="collection-details">
-                        <td>
-                            <span class="weight">92.00</span>
-                            <span class="deduction">4.00</span>
-                            <span class="final-weight">88.00</span>
-                            <span class="unit">kg</span>
-                        </td>
-                    </tr>
-                    <tr class="collection-entry">
-                        <td class="collection-header">
-                            04/03/2024 Type: B 1627 / 9004
-                        </td>
-                    </tr>
-                    <tr class="collection-details">
-                        <td>
-                            <span class="weight">92.00</span>
-                            <span class="deduction">4.00</span>
-                            <span class="final-weight">88.00</span>
-                            <span class="unit">kg</span>
-                        </td>
-                    </tr>
-                    <!-- Add more entries as needed -->
+                <tbody id="recentCollectionsBody">
+                    <!-- Data will be populated via JavaScript -->
                 </tbody>
             </table>
         </div>
@@ -608,6 +569,34 @@
                 if (noResults) {
                     noResults.remove();
                 }
+
+                // Update recent collections
+            const collectionsBody = document.getElementById('recentCollectionsBody');
+            collectionsBody.innerHTML = ''; // Clear existing entries
+
+            data.data.recentCollections.forEach(collection => {
+                const date = new Date(collection.collection_time);
+                const formattedDate = date.toLocaleDateString();
+                const formattedTime = date.toLocaleTimeString();
+
+                const entryHtml = `
+                    <tr class="collection-entry">
+                        <td class="collection-header">
+                            ${formattedDate} ${formattedTime}
+                        </td>
+                    </tr>
+                    <tr class="collection-details">
+                        <td>
+                            <span class="weight">${parseFloat(collection.initial_weight).toFixed(2)}</span>
+                            <span class="deduction">${collection.deductions ? parseFloat(collection.deductions).toFixed(2) : '0.00'}</span>
+                            <span class="final-weight">${parseFloat(collection.final_weight).toFixed(2)}</span>
+                            <span class="unit">kg</span>
+                        </td>
+                    </tr>
+                `;
+                collectionsBody.innerHTML += entryHtml;
+            });
+            
             } else {
                 // Show error message
                 document.querySelector('.box-info').innerHTML = 

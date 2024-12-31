@@ -202,6 +202,23 @@ class SupplierManager extends Controller {
         $this->view('supplier_manager/v_all_complaints', $data);
     }
 
+    public function updateSupplier() {
+        $data = [
+            
+        ];
+
+        $this->view('supplier_manager/v_update_supplier', $data);
+    }
+
+    public function deleteSupplier() {
+
+        $data = [
+            
+        ];
+
+        $this->view('supplier_manager/v_delete_supplier', $data);
+    }
+
     public function complaints() {
         try {
             if (!$this->complaintModel) {
@@ -335,6 +352,9 @@ class SupplierManager extends Controller {
                 $totalQuantity = $this->supplierModel->getTotalCollectionQuantity($supplier->supplier_id);
                 $collectionDays = $this->supplierModel->getCollectionDaysCount($supplier->supplier_id);
                 $performanceRate = $this->supplierModel->calculatePerformanceRate($totalQuantity, $collectionDays);
+                
+                // Get recent collections
+                $recentCollections = $this->supplierModel->getRecentCollections($supplier->supplier_id);
     
                 echo json_encode([
                     'status' => 'success',
@@ -344,7 +364,8 @@ class SupplierManager extends Controller {
                             'totalQuantity' => number_format($totalQuantity, 2),
                             'collectionDays' => $collectionDays,
                             'performanceRate' => $performanceRate
-                        ]
+                        ],
+                        'recentCollections' => $recentCollections
                     ]
                 ]);
             } else {
