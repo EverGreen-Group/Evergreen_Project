@@ -332,7 +332,7 @@ class Inventory extends controller
 
     public function machine()
     {
-        if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+        if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['form'])) {
             // Sanitize POST data
             $_POST = filter_input_array(INPUT_POST);
           // Collect form data
@@ -373,7 +373,16 @@ class Inventory extends controller
                 // Load the form view with errors
                 $this->view('inventory/v_machineallocation', $data);
             }
-        } else {
+        }
+        elseif (isset($_GET['id']) && isset($_POST['allocate_btn'])) {
+            $us=$_GET['id'];
+
+            $machineModel = $this->model('M_Machine');
+            $machineModel->updateMachineByStatus($us, 'Allocated');
+            redirect('Inventory/machine');
+            
+        }
+        else {
             // GET request
             $machines= $this->machineModel->getmachines();
             $data = [
@@ -381,11 +390,12 @@ class Inventory extends controller
             ];
             // Load the form view for GET requests
             $this->view('inventory/v_machineallocation',$data);
-            var_dump($data);
+            //var_dump($data);
         }
 
+        
         $this->view('inventory/v_machineallocation', $data);
-        var_dump($data);
+        //var_dump($data);
     }
 
 

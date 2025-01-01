@@ -38,4 +38,16 @@ class M_Machine
         $this->db->query('SELECT id,machine_name,total_working_hours FROM machines');
         return $this->db->resultSet();
     }
+
+    public function updateMachineByStatus($id, $status)
+    {
+        $this->db->query('UPDATE machines SET status = :status WHERE id = :id');
+    
+        // Bind the values
+        $this->db->bind(':status', $status);
+        $this->db->bind(':id', $id);
+
+        return $this->db->execute();
+        
+    }
 }
