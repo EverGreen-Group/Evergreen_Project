@@ -374,11 +374,19 @@ class Inventory extends controller
                 $this->view('inventory/v_machineallocation', $data);
             }
         }
-        elseif (isset($_GET['id']) && isset($_POST['allocate_btn'])) {
+        elseif (isset($_GET['id']) && isset($_POST['status_allocate'])) {
             $us=$_GET['id'];
 
             $machineModel = $this->model('M_Machine');
             $machineModel->updateMachineByStatus($us, 'Allocated');
+            redirect('Inventory/machine');
+            
+        }
+        elseif (isset($_GET['id']) && isset($_POST['status_deallocate'])) {
+            $us=$_GET['id'];
+
+            $machineModel = $this->model('M_Machine');
+            $machineModel->updateMachineByStatus($us, 'Repair');
             redirect('Inventory/machine');
             
         }

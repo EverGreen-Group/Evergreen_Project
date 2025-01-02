@@ -35,7 +35,7 @@
                     </tr>
                 </thead>
                 <tbody>
-                    <!-- <pre><?=print_r($data) ?></pre> -->
+                    <!-- <pre><?= print_r($data) ?></pre> -->
                     <?php foreach ($data['machines'] as $machine): ?>
                         <tr>
                             <td><input type="checkbox"></td>
@@ -46,8 +46,18 @@
                                 </div>
                             </td>
                             <td><span class="status-ready"><?php echo $machine->status; ?></span></td>
-                          <td ><div method="POST" name="allocate_btn"><a href="<?php echo URLROOT; ?>/Inventory/machine?id=<?php echo $machine->id ?>"> <button name="status_allocate" class="btn allocate">Allocate</button></a></div></td>
-                            <td><button class="btn deallocate">Deallocate</button></td>
+                            <td>
+                                <form method="POST"
+                                    action="<?php echo URLROOT; ?>/Inventory/machine?id=<?php echo $machine->id; ?>">
+                                    <button type="submit" name="status_allocate" class="btn allocate">Allocate</button>
+                                </form>
+                            </td>
+                            <td>
+                            <form method="POST"
+                                    action="<?php echo URLROOT; ?>/Inventory/machine?id=<?php echo $machine->id; ?>">
+                                    <button type="submit" name="status_deallocate" class="btn deallocate">Deallocate</button>
+                                </form>
+                            </td>
                             <td><button class="btn detail">details</button></td>
                         </tr>
                     <?php endforeach; ?>
