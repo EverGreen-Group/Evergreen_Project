@@ -13,6 +13,10 @@ class Inventory extends controller
     private $stockvalidate;
     private $machineModel;
 
+
+
+
+
     public function __construct()
     {
 
@@ -31,6 +35,7 @@ class Inventory extends controller
             
             
         }
+        $totalstock = $this->stockvalidate->gettodaytotalstock();
         $products = $this->productModel->getAllProducts();
         $fertilizer = $this->fertilizerModel->getfertilizer();
         $stockvalidate = $this->stockvalidate->getvalidateStocks();
@@ -40,7 +45,8 @@ class Inventory extends controller
             'products' => $products,
             'fertilizer' => $fertilizer,
             'stockvalidate' => $stockvalidate,
-            'machines' => $machines
+            'machines' => $machines,
+            'totalstock' => $totalstock
 
         ];
 
