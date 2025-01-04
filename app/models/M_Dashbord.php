@@ -32,7 +32,7 @@ class M_stockvalidate
 
     public function addreport($data)
     {
-       $sql= "UPDATE stockvalidate SET collection_id = :collection_id, status = :status, report = :report";
+        $sql = "UPDATE stockvalidate SET collection_id = :collection_id, status = :status, report = :report";
 
         $this->db->query($sql);
         $this->db->bind(':collection_id', $data['collection_id']);
@@ -45,5 +45,33 @@ class M_stockvalidate
             error_log("Database Error: " . $e->getMessage());
             return false;
         }
+    }
+
+    public function gettodaytotalstock()
+    {
+        $sql = "SELECT SUM(total_quantity) AS total_sum
+               FROM collections
+               WHERE created_at = CURDATE();";
+
+        return $this->db->query($sql);
+
+        
+
+    }
+
+    public function getvalidatestockdetails()
+    {
+        $sql = "SELECT 
+               c.collection_id,
+               sh.route_id,
+               sh.driver_id,
+               COUNT(csr.supplier_id) AS total_suppliers
+               FROM collections c
+               JOIN collection_schedules sh ON c.schedule_id = sh.schedule_id
+               JOIN collection_supplier_records csr ON c.collection_id = csr.collection_id;";
+
+        return $this->db->query($sql);
+
+        
     }
 }

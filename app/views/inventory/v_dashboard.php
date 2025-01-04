@@ -403,7 +403,12 @@
 		<li>
 			<i class='bx bxs-calendar-check'></i>
 			<span class="text">
-				<h3>1020</h3>
+				<h3>
+					<?= isset($data['totalstock']->total_sum) 
+						? $data['totalstock']->total_sum
+						: "0"; ?>
+				</h3>
+
 				<p>Today Stock</p>
 			</span>
 		</li>
@@ -521,7 +526,7 @@
 			// 	(object) ["id" => 4, "machine_name" => "Machine C", "total_working_hours" => "150 hours"],
 			// 	(object) ["id" => 5, "machine_name" => "Machine D", "total_working_hours" => "500 hours"],
 			// ];
-
+			
 			// Extract machine names and working hours
 			$chartdata = [
 				'labels' => array_map(fn($machine) => $machine->machine_name, $machines),
@@ -782,23 +787,9 @@
 					  </div>
 				  </div>
 
-				  <div class="detail-group">
-					  <h3>Unassigned Suppliers</h3>
-					  <div class="detail-row">
-						  <span class="label">Suppliers:</span>
-						  <span class="value">${collectionBag.unassignedSuppliers.join(
-				", "
-			)}</span>
-					  </div>
-				  </div>
+				 
 
-				  <div class="detail-group">
-					  <h3>Unassigned Bags</h3>
-					  <div class="detail-row">
-						  <span class="label">Bags:</span>
-						  <span class="value">${unassignedBagTags}</span>
-					  </div>
-				  </div>
+				
 
 				  <div class="detail-group">
 					  <h3>Assigned Suppliers and Their Bags</h3>
