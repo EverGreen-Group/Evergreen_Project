@@ -31,15 +31,29 @@ if (RoleHelper::hasRole(RoleHelper::SUPPLIER_MANAGER)) {
                         </li>
                     </ul>
                 </div>
+                <?php
+                    // Compute the last 3 months dynamically
+                    $currentDate = new DateTime();
+                    $monthOptions = [];
+                    for ($i = 0; $i < 3; $i++) {
+                        $month = $currentDate->format('Y-m'); // Format: YYYY-MM
+                        $label = $currentDate->format('F Y'); // Format: Month YYYY
+                        $monthOptions[$month] = $label;
+                        $currentDate->modify('-1 month');
+                    }
+                    $currentMonth = $data['current_month'] ?? date('Y-m');
+                ?>
+
+                <!-- Month selector -->
                 <div class="right">
                     <div class="statement-selector">
                         <select id="monthlyStatementSelect" class="statement-select">
-                            <option value="">Select Previous Statement</option>
-                            <option value="2024-02">February 2024</option>
-                            <option value="2024-01">January 2024</option>
-                            <option value="2023-12">December 2023</option>
-                            <option value="2023-11">November 2023</option>
-                            <option value="2023-10">October 2023</option>
+                            <?php foreach ($monthOptions as $value => $label): ?>
+                                <option value="<?php echo htmlspecialchars($value); ?>" 
+                                        <?php echo ($value === $currentMonth) ? 'selected' : ''; ?>>
+                                    <?php echo htmlspecialchars($label); ?>
+                                </option>
+                            <?php endforeach; ?>
                         </select>
                     </div>
                 </div>
@@ -65,9 +79,9 @@ if (RoleHelper::hasRole(RoleHelper::SUPPLIER_MANAGER)) {
                         <!-- Info Row -->
                         <div class="info-row">
                             <div class="supplier-details">
-                                <h3>John Doe</h3>
-                                <p>456 Tea Gardens,</p>
-                                <p>Galle, Sri Lanka</p>
+                                <h3><?php echo isset($data['supplier']) ? htmlspecialchars($data['supplier']->first_name . ' ' . $data['supplier']->last_name) : ' '; ?></h3>
+                                <p><?php echo isset($data['supplier']) ? htmlspecialchars($data['supplier']->email) : ' '; ?></p>
+                                <p>Supplier ID: <?php echo isset($data['supplier']) ? htmlspecialchars($data['supplier']->supplier_number) : ' '; ?></p>
                             </div>
                             <div class="statement-details">
                                 <table>
@@ -76,8 +90,17 @@ if (RoleHelper::hasRole(RoleHelper::SUPPLIER_MANAGER)) {
                                         <td class="label">Supplier Number</td>
                                     </tr>
                                     <tr>
-                                        <td class="value">01 Dec 2024 - 31 Dec 2024</td>
-                                        <td class="value">SUP002</td>
+                                        <td class="value">
+                                            <?php
+                                            $current_month = $data['current_month'] ?? date('Y-m');
+                                            $monthStart = date('01 M Y', strtotime($current_month));
+                                            $monthEnd = date('t M Y', strtotime($current_month));
+                                            echo $monthStart . ' - ' . $monthEnd;
+                                            ?>
+                                        </td>
+                                        <td class="value">
+                                            <?php echo isset($data['supplier']) ? htmlspecialchars($data['supplier']->supplier_number) : ' '; ?>
+                                        </td>
                                     </tr>
                                 </table>
                             </div>
@@ -192,9 +215,10 @@ if (RoleHelper::hasRole(RoleHelper::SUPPLIER_MANAGER)) {
 
         </main>
     </div>
-    </section>
-    <script src="<?php echo URLROOT; ?>/css/components/script.js"></script>
-    <style>
+</section>
+<script src="<?php echo URLROOT; ?>/css/components/script.js"></script>
+
+<style>
     /* Stats Grid */
     .stats-grid {
         display: grid;
@@ -619,6 +643,7 @@ if (RoleHelper::hasRole(RoleHelper::SUPPLIER_MANAGER)) {
 
     }
 </style>
+
 <script>
     document.getElementById('monthlyStatementSelect').addEventListener('change', function() {
         const selectedPeriod = this.value;

@@ -286,5 +286,53 @@ class M_CollectionSupplierRecord {
         }
     }
     
+
+    public function getMonthlyCollectionsByPeriod($supplier_id, $period) {
+        try {
+            $sql = "SELECT 
+                        csr.collection_time as date,
+                        c.leaf_type,
+                        c.leaf_age,
+                        csr.quantity,
+                        c.moisture,
+                        c.deductions,
+                        (csr.quantity - c.deductions) as true_weight,
+                        c.rate_per_kg as rate,
+                        ((csr.quantity - c.deductions) * c.rate_per_kg) as amount
+                    FROM collection_supplier_records csr
+                    JOIN collections c ON csr.collection_id = c.collection_id
+                    WHERE csr.supplier_id = :supplier_id 
+                    AND DATE_FORMAT(csr.collection_time, '%Y-%m') = :period
+                    AND (csr.status = 'Collected' OR csr.status = 'Added')
+                    ORDER BY csr.collection_time ASC";
+            
+            $this->db->query($sql);
+            $this->db->bind(':supplier_id', $supplier_id);
+            $this->db->bind(':period', $period);
+            
+            $results = $this->db->resultSet();
+            
+            // Format the results
+            $formatted_results = [];
+            foreach ($results as $row) {
+                $formatted_results[] = [
+                    'date' => date('Y-m-d', strtotime($row->date)),
+                    'leaf_type' => $row->leaf_type,
+                    'leaf_age' => $row->leaf_age,
+                    'quantity' => floatval($row->quantity),
+                    'moisture' => $row->moisture,
+                    'deductions' => floatval($row->deductions),
+                    'true_weight' => floatval($row->true_weight),
+                    'rate' => floatval($row->rate),
+                    'amount' => floatval($row->amount)
+                ];
+            }
+            
+            return $formatted_results;
+        } catch (Exception $e) {
+            error_log("Error fetching monthly collections: " . $e->getMessage());
+            return [];
+        }
+    }
     
 } 

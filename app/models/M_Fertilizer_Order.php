@@ -221,6 +221,31 @@ class M_Fertilizer_Order {
         }
     }
 
+    public function getOrdersByMonth($supplier_id, $month) {
+        try {
+            $start_date = date('Y-m-01', strtotime($month));
+            $end_date = date('Y-m-t', strtotime($month));
+            
+            $this->db->query(
+                "SELECT fo.*, ft.name as fertilizer_name 
+                 FROM fertilizer_orders fo 
+                 LEFT JOIN fertilizer_types ft ON fo.type_id = ft.type_id 
+                 WHERE fo.supplier_id = :supplier_id 
+                 AND fo.order_date BETWEEN :start_date AND :end_date 
+                 ORDER BY fo.order_date DESC"
+            );
+            
+            $this->db->bind(':supplier_id', $supplier_id);
+            $this->db->bind(':start_date', $start_date);
+            $this->db->bind(':end_date', $end_date);
+            
+            return $this->db->resultset();
+        } catch (Exception $e) {
+            error_log("Error fetching orders by month: " . $e->getMessage());
+            return [];
+        }
+    }
+
     
     
 }
