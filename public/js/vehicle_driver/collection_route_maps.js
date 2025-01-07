@@ -11,21 +11,6 @@ function initMap() {
     mapTypeId: google.maps.MapTypeId.ROADMAP,
   });
 
-  // Add factory marker
-  new google.maps.Marker({
-    position: factoryLocation,
-    map: map,
-    icon: {
-      path: google.maps.SymbolPath.CIRCLE,
-      scale: 10,
-      fillColor: "#FF0000",
-      fillOpacity: 1,
-      strokeWeight: 2,
-      strokeColor: "#FFFFFF",
-    },
-    title: "Factory Location",
-  });
-
   // Add driver marker with distinct icon
   driverMarker = new google.maps.Marker({
     position: factoryLocation, // Will be updated with real GPS
@@ -45,7 +30,20 @@ function initMap() {
 
   // Add supplier markers only for those not collected
   if (collections && collections.length > 0) {
-    collections.forEach((supplier) => {
+    const directionsService = new google.maps.DirectionsService();
+    const directionsRenderer = new google.maps.DirectionsRenderer({
+      polylineOptions: {
+        strokeColor: "#FF0000", // Color of the route line
+        strokeOpacity: 1.0,
+        strokeWeight: 4,
+      },
+      map: map,
+      suppressMarkers: true, // Suppress default markers (A and B)
+    });
+
+    let previousLocation = factoryLocation; // Start from the driver's location
+
+    collections.forEach((supplier, index) => {
       // Log the supplier's status for debugging
       console.log(
         `Supplier: ${supplier.supplierName}, Status: ${supplier.status}`
@@ -89,6 +87,25 @@ function initMap() {
           infowindow.open(map, marker);
           currentInfoWindow = infowindow;
         });
+
+        // Draw a route from the previous location to the current supplier location
+        const request = {
+          origin: previousLocation,
+          destination: supplier.location,
+          travelMode: google.maps.TravelMode.DRIVING,
+        };
+
+        // Calculate and display the route
+        directionsService.route(request, (result, status) => {
+          if (status === google.maps.DirectionsStatus.OK) {
+            directionsRenderer.setDirections(result);
+          } else {
+            console.error("Directions request failed due to " + status);
+          }
+        });
+
+        // Update the previous location to the current supplier's location
+        previousLocation = supplier.location; // Update for the next iteration
       }
     });
   }
