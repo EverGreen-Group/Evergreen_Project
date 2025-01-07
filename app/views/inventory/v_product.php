@@ -29,9 +29,16 @@
 
             </div>
             <div class="header-actions">
-                <!-- <input type="text" placeholder="Search">
-                <button class="filter-btn">Filter</button> -->
-                
+                <form method="GET" action="<?php echo URLROOT; ?>/inventory/product">
+                    <input type="text" name="search" placeholder="Search">
+                   
+
+                    <button class="filter-btn">
+                       <i class='bx bx-search-alt-2'></i>
+                    </button>
+
+                </form>
+
                 <a href="<?php echo URLROOT; ?>/inventory/createproduct">
                     <button class="create-product">+ Create New Product</button>
                 </a>
@@ -40,7 +47,8 @@
 
         <!-- Warehouse Section -->
         <div class="warehouse-section">
-            <h2 ><img src="<?php echo URLROOT; ?>/img/warehouse-svgrepo-com.svg" alt="Warehouse Icon" style="width: 24px; heignt:24px"> Total Products</h2>
+            <h2><img src="<?php echo URLROOT; ?>/img/warehouse-svgrepo-com.svg" alt="Warehouse Icon"
+                    style="width: 24px; heignt:24px"> Total Products</h2>
             <span class="product-info">(<?php echo count($data['products']); ?> products)</span>
             <div class="product-grid">
                 <?php foreach ($data['products'] as $product): ?>

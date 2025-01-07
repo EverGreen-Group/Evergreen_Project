@@ -115,4 +115,17 @@ class M_Products{
             return false;
         }
     }
+
+    public function searchProducts($search) {
+        $sql = "SELECT * FROM product WHERE product_name LIKE :search OR code LIKE :search";
+        $this->db->query($sql);
+        $this->db->bind(':search', "%$search%");
+        
+        try {
+            return $this->db->resultSet();
+        } catch (PDOException $e) {
+            error_log("Database Error: " . $e->getMessage());
+            return false;
+        }
+    }
 }

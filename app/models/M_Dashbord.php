@@ -53,9 +53,9 @@ class M_stockvalidate
                FROM collections
                WHERE created_at = CURDATE();";
 
-        return $this->db->query($sql);
+        $this->db->query($sql);
 
-        
+        return $this->db->single();
 
     }
 
@@ -70,7 +70,11 @@ class M_stockvalidate
                JOIN collection_schedules sh ON c.schedule_id = sh.schedule_id
                JOIN collection_supplier_records csr ON c.collection_id = csr.collection_id;";
 
-        return $this->db->query($sql);
+        $this->db->query($sql);
+
+        return $this->db->single();
+
+
 
         
     }

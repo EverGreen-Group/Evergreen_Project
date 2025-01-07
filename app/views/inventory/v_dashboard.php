@@ -404,7 +404,7 @@
 			<i class='bx bxs-calendar-check'></i>
 			<span class="text">
 				<h3>
-					<?= isset($data['totalstock']->total_sum) 
+					<?= isset($data['totalstock']->total_sum)
 						? $data['totalstock']->total_sum
 						: "0"; ?>
 				</h3>
@@ -438,49 +438,49 @@
 
 
 	<div class="table-data">
-		<div class="order">
-			<div class="head">
-				<h3>Validate Stock</h3>
-				<i class='bx bx-search'></i>
-				<i class='bx bx-filter'></i>
-			</div>
+	<div class="order">
+    <div class="head">
+        <h3>Validate Stock</h3>
 
-			<!-- Added table for validate stock -->
-			<table>
-				<thead>
-					<tr>
-						<th>Driver Name</th>
-						<th>Collection No</th>
-						<th>Quantity</th>
-						<th>Time</th>
-						<th>Status</th>
-						<th>Actions</th>
-					</tr>
-				</thead>
-				<tbody>
-					<?php foreach ($data['stockvalidate'] as $stock): ?>
-						<tr>
-							<!-- Replace 'Michael Chen' with a dynamic driver name if available -->
-							<td><?= $stock->full_name; ?></td>
-							<!-- Collection ID -->
-							<td style="text-align: center;"><?= $stock->collection_id; ?></td>
-							<!-- Quantity -->
-							<td><?= $stock->total_quantity; ?> units</td>
-							<!-- Time -->
-							<td><?= $stock->created_at; ?></td>
-							<td><?= $stock->status; ?></td>
-							<!-- Actions -->
-							<td class="actions">
-								<button class="ap-button" onclick="showCollectionBagDetails()">Approve</button>
-								<button class="rp-button" onclick="reportModel(<?= $stock->collection_id; ?>)"
-									style="">Reject</button>
-							</td>
-						</tr>
-					<?php endforeach; ?>
-					<!-- Add more rows as needed -->
-				</tbody>
-			</table>
-		</div>
+        <i class='bx bx-filter'></i>
+        <select name="" id="statusFilter" onchange="filterTable()">
+            <option value="All">All</option>
+            <option value="Approved">Approved</option>
+            <option value="Rejected">Rejected</option>
+            <option value="Not_Validate">Not Checked</option>
+        </select>
+    </div>
+
+    <!-- Added table for validate stock -->
+    <table>
+        <thead>
+            <tr>
+                <th>Driver Name</th>
+                <th>Collection No</th>
+                <th>Quantity</th>
+                <th>Time</th>
+                <th>Status</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody id="stockTable">
+            <?php foreach ($data['stockvalidate'] as $stock): ?>
+                <tr>
+                    <td><?= $stock->full_name; ?></td>
+                    <td style="text-align: center;"><?= $stock->collection_id; ?></td>
+                    <td><?= $stock->total_quantity; ?> units</td>
+                    <td><?= $stock->created_at; ?></td>
+                    <td class="status-cell"><?= $stock->status; ?></td>
+                    <td class="actions">
+                        <button class="ap-button" onclick="showCollectionBagDetails()">Approve</button>
+                        <button class="rp-button" onclick="reportModel(<?= $stock->collection_id; ?>)"
+                            style="">Reject</button>
+                    </td>
+                </tr>
+            <?php endforeach; ?>
+        </tbody>
+    </table>
+</div>
 
 		<div id="collectionBagDetailsModal" class="modal">
 			<div class="modal-content">
@@ -810,6 +810,30 @@
 		  </div>
 	`;
 		document.getElementById("collectionBagDetailsModal").style.display = "block";
+	}
+</script>
+
+
+<script>
+	function filterTable() {
+		// Get the selected filter value
+		const filter = document.getElementById('statusFilter').value;
+		const table = document.getElementById('stockTable');
+		const rows = table.getElementsByTagName('tr');
+
+		// Loop through all rows in the table
+		for (let i = 0; i < rows.length; i++) {
+			const statusCell = rows[i].getElementsByClassName('status-cell')[0];
+			if (statusCell) {
+				const status = statusCell.textContent || statusCell.innerText;
+				// Show the row if it matches the filter or if "All" is selected
+				if (filter === 'All' || status === filter) {
+					rows[i].style.display = '';
+				} else {
+					rows[i].style.display = 'none';
+				}
+			}
+		}
 	}
 </script>
 

@@ -40,13 +40,15 @@ class Inventory extends controller
         $fertilizer = $this->fertilizerModel->getfertilizer();
         $stockvalidate = $this->stockvalidate->getvalidateStocks();
         $machines = $this->machineModel->gettimesofmachine();
+        $validatedetails = $this->stockvalidate->getvalidatestockdetails();
 
         $data = [
             'products' => $products,
             'fertilizer' => $fertilizer,
             'stockvalidate' => $stockvalidate,
             'machines' => $machines,
-            'totalstock' => $totalstock
+            'totalstock' => $totalstock,
+            'validatedetails' => $validatedetails
 
         ];
 
@@ -61,6 +63,14 @@ class Inventory extends controller
         $data = [
             'products' => $products
         ];
+
+        if (isset($_GET['search'])) {
+            $search = $_GET['search'];
+            $products = $this->productModel->searchProducts($search);
+            $data = [
+                'products' => $products
+            ];
+        }
 
         $this->view('inventory/v_product', $data);
     }
