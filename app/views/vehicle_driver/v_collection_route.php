@@ -11,6 +11,8 @@
 <script src="<?php echo URLROOT; ?>/public/js/vehicle_driver/collection_route_maps.js"></script>
 <script src="<?php echo URLROOT; ?>/public/js/vehicle_driver/collection_route_suppliers.js"></script>
 
+<?php print_r($data); ?>
+
 
 <div class="map-container" id="map"></div>
 
@@ -205,7 +207,7 @@
     </div>
 </div>
 
-<script async defer src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCdt_khahhXrKdrA8cLgKeQB2CZtde-_Vc&callback=initMap"></script>
+<script async defer src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAC8AYYCYuMkIUAjQWsAwQDiqbMmLa-7eo&callback=initMap"></script>
 
 
 <?php require APPROOT . '/views/inc/components/footer.php'; ?>

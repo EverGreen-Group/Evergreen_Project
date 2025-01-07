@@ -313,6 +313,7 @@ class VehicleDriver extends controller {
                     'status' => $supplier->status,
                     'contact' => $supplier->contact_number,
                     'arrival_time' => $supplier->arrival_time,
+                    'stop_order' => $supplier->stop_order
                 ];
             }, $collectionSuppliers), function($supplier) {
                 return $supplier['status'] !== 'Collected';

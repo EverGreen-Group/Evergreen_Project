@@ -343,7 +343,7 @@ echo '<link rel="stylesheet" href="' . URLROOT . '/public/css/route-management.c
 
 // Add script links
 echo '<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>';
-echo '<script async defer src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCdt_khahhXrKdrA8cLgKeQB2CZtde-_Vc&callback=initMap"></script>';
+echo '<script async defer src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAC8AYYCYuMkIUAjQWsAwQDiqbMmLa-7eo&callback=initMap"></script>';
 
 require APPROOT . '/views/inc/components/footer.php'; 
 ?>
