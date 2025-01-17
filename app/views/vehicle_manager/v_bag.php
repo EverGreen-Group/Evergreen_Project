@@ -73,7 +73,7 @@
               </div>
           <?php endforeach; ?>
       </div>
-  </div> -->
+  </div> 
 
 
   <div class="table-data">
