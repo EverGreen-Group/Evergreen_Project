@@ -1170,6 +1170,19 @@ body.dark .auth-form-group input {
   justify-content: flex-end;
 }
 
+.btn {
+  padding: 5px 10px; /* Adjust padding for better fit */
+  border: none; /* Remove border */
+  border-radius: 4px; /* Slightly round the corners */
+  color: white; /* Text color */
+  cursor: pointer; /* Change cursor to pointer */
+  display: inline-flex; /* Use flexbox for alignment */
+  align-items: center; /* Center items vertically */
+  justify-content: center; /* Center items horizontally */
+  margin-right: 5px; /* Space between buttons */
+  transition: background-color 0.3s; /* Smooth transition for hover effect */
+}
+
 .btn-primary {
   display: flex;
   align-items: center;

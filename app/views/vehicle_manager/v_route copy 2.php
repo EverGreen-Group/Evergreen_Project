@@ -4,10 +4,6 @@
 <?php require APPROOT.'/views/inc/components/sidebar_vehicle_manager.php'; ?>
 <!-- Top nav bar -->
 <?php require APPROOT . '/views/inc/components/topnavbar.php'; ?>
-<script>
-    const UPLOADROOT = '<?php echo UPLOADROOT; ?>';
-</script>
-<script src="<?php echo URLROOT; ?>/public/js/route-page.js"></script>
 
 <!-- MAIN -->
 <main>
@@ -22,13 +18,6 @@
           </ul>
       </div>
   </div>
-
-  <div class="action-buttons">
-        <a id="createRouteButton" class="btn btn-primary">
-            <i class='bx bx-plus'></i>
-            Create a Route
-        </a>
-    </div>
 
 
 
@@ -177,140 +166,49 @@
         </div>
       </form>
 
-      
-
     </div>
   </div>
 
-<!-- Modal Form for Updating a Route -->
-<div id="updateRouteModal" class="modal">
-    <div class="modal-content">
-        <span class="close" onclick="closeUpdateModal()">&times;</span>
-        <h2 id="updateModalTitle">Update Route</h2>
-        
-        <form id="updateRouteForm">
-            <div class="modal-two-columns">
-                <!-- Left Column - Form Controls -->
-                <div class="left-column">
-                    <input type="hidden" id="updateRouteId" name="routeId">
-
-                    <div class="form-group">
-                        <label for="updateRouteName">Route Name:</label>
-                        <input type="text" id="updateRouteName" name="routeName" required>
-                    </div>
-
-                    <div class="form-row">
-                        <div class="form-group">
-                            <label for="updateDaySelect">Day:</label>
-                            <select id="updateDaySelect" name="day">
-                                <option value="Monday">Monday</option>
-                                <option value="Tuesday">Tuesday</option>
-                                <option value="Wednesday">Wednesday</option>
-                                <option value="Thursday">Thursday</option>
-                                <option value="Friday">Friday</option>
-                                <option value="Saturday">Saturday</option>
-                                <option value="Sunday">Sunday</option>
-                            </select>
-                        </div>
-
-                        <div class="form-group">
-                            <label for="updateVehicleSelect">Vehicle:</label>
-                            <select id="updateVehicleSelect" name="vehicle" required>
-                                <option value="" disabled selected>Select a vehicle</option>
-                                <?php foreach ($data['vehicles'] as $vehicle): ?>
-                                    <option value="<?php echo $vehicle->vehicle_id; ?>" 
-                                            data-capacity="<?php echo $vehicle->capacity; ?>">
-                                        <?php echo $vehicle->vehicle_number; ?> (<?php echo $vehicle->capacity; ?>kg)
-                                    </option>
-                                <?php endforeach; ?>
-                            </select>
-                        </div>
-
-                        <div class="form-group">
-                            <label for="updateStatus">Status:</label>
-                            <select id="updateStatus" name="status" required>
-                                <option value="Active">Active</option>
-                                <option value="Inactive">Inactive</option>
-                            </select>
-                        </div>
-                    </div>
-
-                    <div class="capacity-info">
-                        <div class="capacity-item">
-                            <span>Used Capacity:</span>
-                            <span id="updateUsedCapacity">0 kg</span>
-                        </div>
-                        <div class="capacity-item">
-                            <span>Remaining Capacity:</span>
-                            <span id="updateRemainingCapacity">0 kg</span>
-                        </div>
-                    </div>
-
-                    <div class="form-row">
-                        <div class="form-group supplier-select">
-                            <label for="updateSupplierSelect">Select Supplier:</label>
-                            <select id="updateSupplierSelect">
-                                <option value="" disabled selected>Select a supplier</option>
-                            </select>
-                        </div>
-                        <button type="button" id="AddSupplierButton">Add Stop</button>
-                    </div>
-
-                    <h3>Route Stops:</h3>
-                    <ul id="updateStopList"></ul>
-                </div>
-
-                <!-- Right Column - Vehicle Info and Map -->
-                <div class="right-column">
-                    <!-- Vehicle Info Section -->
-                    <div class="vehicle-info">
-                        <div class="vehicle-image">
-                            <img src="<?php echo URLROOT; ?>/public/uploads/vehicle_photos/default-vehicle.jpg" alt="Vehicle" id="vehicleImage">
-                        </div>
-                        <div class="vehicle-details">
-                            <h3>Vehicle Details</h3>
-                            <div class="detail-item">
-                                <span class="label">Vehicle Number:</span>
-                                <span class="value" id="vehicleNumberDisplay">-</span>
-                            </div>
-                            <div class="detail-item">
-                                <span class="label">Capacity:</span>
-                                <span class="value" id="vehicleCapacityDisplay">-</span>
-                            </div>
-                            <div class="detail-item">
-                                <span class="label">Type:</span>
-                                <span class="value" id="vehicleTypeDisplay">-</span>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Map -->
-                    <div id="map"></div>
-                </div>
-            </div>
-
-            <!-- Button at the bottom of modal -->
-            <div class="modal-footer">
-                <button type="submit" class="submit-btn">Update Route</button>
-            </div>
-        </form>
-    </div>
-</div>
-
 
 <script>
+  document.addEventListener("DOMContentLoaded", function () {
+    const dayFilter = document.getElementById("day-filter");
+    const suppliersTable = document.getElementById("suppliers-table");
 
+    dayFilter.addEventListener("change", function () {
+      const selectedDay = this.value;
+
+      const tbody = suppliersTable.getElementsByTagName("tbody")[0];
+      const rows = tbody.getElementsByTagName("tr");
+
+      for (let row of rows) {
+        const preferredDayElement = row.querySelector(".preferred-day");
+
+        const preferredDay = preferredDayElement.textContent.trim();
+
+        if (selectedDay === "" || preferredDay === selectedDay) {
+          row.style.display = "";
+        } else {
+          row.style.display = "none";
+        }
+      }
+    });
+  });
 
 </script>
 
-
+<div class="routes-section">
+    <h2>All Routes</h2>
+    <button id="createRouteButton" class="create-route-btn">Create Route</button>
+    <div id="routesContainer" class="routes-container"></div>
+  </div>
 
 
 
   <!-- First row with two tables -->
   <div class="table-data table-container">
     <!-- Left table: Unallocated Suppliers -->
-    <div class="order">
+<div class="order">
     <div class="head">
         <h3>Unallocated Suppliers</h3>
         <div class="filter-container">
@@ -344,13 +242,13 @@
                     <td><?php echo htmlspecialchars($supplier->first_name); ?></td>
                     <td>
                         <a href="#" class="location-link" 
-                            data-coordinates="<?php echo htmlspecialchars($supplier->coordinates); ?>"
-                            data-name="<?php echo htmlspecialchars($supplier->supplier_name); ?>">
+                           data-coordinates="<?php echo htmlspecialchars($supplier->coordinates); ?>"
+                           data-name="<?php echo htmlspecialchars($supplier->supplier_name); ?>">
                             <?php echo htmlspecialchars($supplier->coordinates); ?>
                         </a>
                     </td>
                     <td>
-                        <span class="status completed">
+                        <span class="preferred-day">
                             <?php echo $supplier->preferred_day; ?>
                         </span>
                     </td>
@@ -358,44 +256,25 @@
             <?php endforeach; ?>
         </tbody>
     </table>
-    </div>
-
-    <!-- Right table: Routes - NO SUPPLIER DETAILS HERE -->
-    <div class="order">
-        <div class="head">
-            <h3>Supplier Allocation</h3>
-            <div class="filter-container">
-                <!-- Filter options can go here -->
-            </div>
-            <i class='bx bx-search'></i>
-        </div>
-
-        <!-- Canvas for Chart.js -->
-        <canvas id="supplierChart" style="max-width: 600px; max-height: 300px; margin: 20px auto;"></canvas>
-    </div>
-  </div>
-
-  <!-- First row with two tables -->
-  <div class="table-data">
-
+</div>
 
     <!-- Right table: Routes - NO SUPPLIER DETAILS HERE -->
     <div class="order">
         <div class="head">
             <h3>Routes</h3>
             <div class="filter-container">
-                <label for="routes-day-filter">Filter by Day:</label>
-                <select id="routes-day-filter">
-                    <option value="">All Days</option>
-                    <option value="Monday">Monday</option>
-                    <option value="Tuesday">Tuesday</option>
-                    <option value="Wednesday">Wednesday</option>
-                    <option value="Thursday">Thursday</option>
-                    <option value="Friday">Friday</option>
-                    <option value="Saturday">Saturday</option>
-                    <option value="Sunday">Sunday</option>
-                </select>
-            </div>
+            <label for="routes-day-filter">Filter by Day:</label>
+            <select id="routes-day-filter">
+                <option value="">All Days</option>
+                <option value="Monday">Monday</option>
+                <option value="Tuesday">Tuesday</option>
+                <option value="Wednesday">Wednesday</option>
+                <option value="Thursday">Thursday</option>
+                <option value="Friday">Friday</option>
+                <option value="Saturday">Saturday</option>
+                <option value="Sunday">Sunday</option>
+            </select>
+        </div>
             <i class='bx bx-search'></i>
         </div>
         <table>
@@ -405,8 +284,6 @@
                     <th>Name</th>
                     <th>Suppliers</th>
                     <th>Day</th>
-                    <th>Expected Collection</th>
-                    <th>Vehicle Assigned</th>
                     <th>Status</th>
                     <th>Actions</th>
                 </tr>
@@ -418,30 +295,17 @@
                         <td><?php echo htmlspecialchars($route->route_name); ?></td>
                         <td><?php echo htmlspecialchars($route->number_of_suppliers); ?></td>
                         <td><?php echo htmlspecialchars($route->day); ?></td>
-                        <td>0</td>
-                        <td>0</td>
                         <td>
                             <span class="status <?php echo htmlspecialchars($route->status === 'Active' ? 'completed' : 'error'); ?>">
                                 <?php echo htmlspecialchars($route->status); ?>
                             </span>
                         </td>
                         <td>
-                            <div style="display: flex; gap: 5px;">
-                                <!-- Change the form to a button that triggers our JavaScript -->
-                                <button 
-                                    class="btn btn-secondary update-route-btn" 
-                                    data-route-id="<?php echo $route->route_id; ?>"
-                                >
-                                    Update
-                                </button>
-                                
-                                <!-- Keep the delete form as is -->
-                                <form action="<?php echo URLROOT; ?>/vehiclemanager/deleteRoute/" method="POST" style="margin: 0;" 
-                                    onsubmit="return confirm('Are you sure you want to delete this route?');">
-                                    <input type="hidden" name="route_id" value="<?php echo $route->route_id; ?>">
-                                    <button type="submit" class="btn btn-tertiary">Delete</button>
-                                </form>
-                            </div>
+                            <form action="<?php echo URLROOT; ?>/vehiclemanager/deleteRoute/" method="POST" style="display: inline;" 
+                                  onsubmit="return confirm('Are you sure you want to delete this route?');">
+                                <input type="hidden" name="route_id" value="<?php echo $route->route_id; ?>">
+                                <button type="submit" class="delete-btn">Delete</button>
+                            </form>
                         </td>
                     </tr>
                 <?php endforeach; ?>
@@ -449,8 +313,6 @@
         </table>
     </div>
   </div>
-
-
 
 
 
@@ -515,62 +377,3 @@ require APPROOT . '/views/inc/components/footer.php';
         });
     });
 </script>
-
-<script>
-    // Hardcoded data for the number of suppliers allocated for each day
-    const days = ['MON', 'TUE', 'WED', 'THUR', 'FRI', 'SAT', 'SUN'];
-    const supplier = [5, 7, 3, 9, 6, 4, 8]; // Example data
-
-    const ctx = document.getElementById('supplierChart').getContext('2d');
-    const supplierChart = new Chart(ctx, {
-        type: 'bar',
-        data: {
-            labels: days,
-            datasets: [{
-                data: supplier,
-                backgroundColor: 'rgba(75, 192, 192, 0.6)',
-                borderColor: 'rgba(75, 192, 192, 1)',
-                borderWidth: 0.5
-            }]
-        },
-        options: {
-            scales: {
-                y: {
-                    beginAtZero: true,
-                    title: {
-                        display: true,
-                        color: '#333',
-                        font: {
-                            size: 10,
-                        }
-                    },
-                    ticks: {
-                        color: '#333', // Color for y-axis ticks
-                    }
-                },
-                x: {
-                    title: {
-                        display: true,
-                        color: '#333',
-                        font: {
-                            size: 14,
-                        }
-                    },
-                    ticks: {
-                        color: '#333', // Color for x-axis ticks
-                    }
-                }
-            },
-            responsive: true,
-            plugins: {
-                legend: {
-                    display: false // Hide the legend
-                },
-                title: {
-                    display: false // Hide the title
-                }
-            }
-        }
-    });
-</script>
-

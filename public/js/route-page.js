@@ -1,3 +1,27 @@
+document.addEventListener("DOMContentLoaded", function () {
+  const dayFilter = document.getElementById("day-filter");
+  const suppliersTable = document.getElementById("suppliers-table");
+
+  dayFilter.addEventListener("change", function () {
+    const selectedDay = this.value;
+
+    const tbody = suppliersTable.getElementsByTagName("tbody")[0];
+    const rows = tbody.getElementsByTagName("tr");
+
+    for (let row of rows) {
+      const preferredDayElement = row.querySelector(".preferred-day");
+
+      const preferredDay = preferredDayElement.textContent.trim();
+
+      if (selectedDay === "" || preferredDay === selectedDay) {
+        row.style.display = "";
+      } else {
+        row.style.display = "none";
+      }
+    }
+  });
+});
+
 document.addEventListener("DOMContentLoaded", () => {
   // Get modal elements
   const modal = document.getElementById("routeModal");
@@ -196,21 +220,6 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   }
 
-  function displayRouteCards() {
-    routesContainer.innerHTML = "";
-    routes.forEach((route) => {
-      const card = document.createElement("div");
-      card.className = "route-card";
-      card.innerHTML = `
-                <h3>${route.route_name}</h3>
-                <p>Status: ${route.status}</p>
-                <p>Stops: ${route.number_of_suppliers}</p>
-            `;
-      card.addEventListener("click", () => openRouteModal(route));
-      routesContainer.appendChild(card);
-    });
-  }
-
   function openRouteModal(route = null) {
     currentRoute = route
       ? JSON.parse(JSON.stringify(route))
@@ -310,10 +319,6 @@ document.addEventListener("DOMContentLoaded", () => {
       alert("Error creating route: " + error.message);
     }
   });
-
-  // Initialize
-  // populateSupplierDropdown();
-  displayRouteCards();
 });
 
 // FOR THE VEHICLE PART
@@ -406,8 +411,188 @@ document
         })
         .catch((error) => console.error("Error:", error));
     } else {
-      supplierSelect.disabled = true; // Disable supplier select if no vehicle is selected
       document.getElementById("usedCapacity").textContent = "0 kg"; // Reset used capacity
       document.getElementById("remainingCapacity").textContent = "0 kg"; // Reset remaining capacity
     }
   });
+
+///////////////////////////////////////////////////////////////////////
+///// UPDATE SECTION NEEDS SOME CORRECTION
+////////////////////////////////////////////////////////////////////////
+
+// Add update route functionality to existing route-page.js
+document.addEventListener("DOMContentLoaded", function () {
+  // Get update modal elements
+  const updateModal = document.getElementById("updateRouteModal");
+  const updateForm = document.getElementById("updateRouteForm");
+  const updateStopList = document.getElementById("updateStopList");
+
+  // Global variable to store current route being updated
+  let currentUpdateRoute = null;
+
+  // Add click handler to all update buttons
+  document.querySelectorAll(".route-row").forEach((row) => {
+    const updateBtn = row.querySelector(".btn-secondary");
+    updateBtn.addEventListener("click", async (e) => {
+      e.preventDefault();
+      const routeId = row.getAttribute("data-route-id");
+      await loadRouteDetails(routeId);
+    });
+  });
+
+  // Function to load route details
+  async function loadRouteDetails(routeId) {
+    try {
+      const response = await fetch(
+        `${URLROOT}/vehiclemanager/getRouteDetails/${routeId}`
+      );
+      const result = await response.json();
+
+      console.log("Route details response:", result); // Debug logging
+
+      if (result.success) {
+        // Changed from result.status === "success"
+        currentUpdateRoute = {
+          route_id: result.route.id,
+          route_name: result.route.name,
+          status: result.route.status,
+          stops: result.route.suppliers.map((supplier) => ({
+            supplier_id: supplier.id,
+            supplier_name: supplier.name,
+            coordinates: supplier.coordinates,
+            // If average_collection isn't available in your response, you might want to add a default value
+            average_collection: supplier.average_collection || 0,
+          })),
+        };
+
+        populateUpdateForm(currentUpdateRoute);
+        updateModal.style.display = "block";
+      } else {
+        throw new Error(result.message || "Failed to load route details");
+      }
+    } catch (error) {
+      console.error("Error loading route details:", error);
+      alert("Error loading route details: " + error.message);
+    }
+  }
+
+  // Function to populate update form
+  function populateUpdateForm(route) {
+    console.log("Populating form with route:", route); // Debug logging
+
+    document.getElementById("updateRouteId").value = route.route_id;
+    document.getElementById("updateRouteName").value = route.route_name;
+    // Only set these values if they exist in your route data
+    if (route.day) document.getElementById("updateDaySelect").value = route.day;
+    if (route.vehicle_id)
+      document.getElementById("updateVehicleSelect").value = route.vehicle_id;
+    document.getElementById("updateStatus").value = route.status;
+
+    // Load vehicle details if vehicle_id exists
+    if (route.vehicle_id) {
+      loadVehicleDetails(route.vehicle_id);
+    }
+
+    // Populate stops
+    updateStopList.innerHTML = "";
+    if (route.stops && route.stops.length > 0) {
+      route.stops.forEach((stop) => {
+        const li = document.createElement("li");
+        li.innerHTML = `
+                ${stop.supplier_name} - ${stop.average_collection || "0"} kg 
+                <span class="remove-stop" data-id="${
+                  stop.supplier_id
+                }">Remove</span>
+            `;
+        updateStopList.appendChild(li);
+      });
+    }
+  }
+
+  // Function to load vehicle details
+  async function loadVehicleDetails(vehicleId) {
+    try {
+      const response = await fetch(
+        `${URLROOT}/vehiclemanager/getVehicleDetails/${vehicleId}`
+      );
+      const result = await response.json();
+
+      if (result.status === "success" && result.data) {
+        const vehicle = result.data;
+
+        // Update vehicle details display
+        document.getElementById("updateVehicleNumberDisplay").textContent =
+          vehicle.license_plate;
+        document.getElementById(
+          "updateVehicleCapacityDisplay"
+        ).textContent = `${vehicle.capacity}kg`;
+        document.getElementById("updateVehicleTypeDisplay").textContent =
+          vehicle.vehicle_type;
+
+        // Update vehicle image
+        const imagePath = vehicle.license_plate
+          ? `${URLROOT}/public/uploads/vehicle_photos/${vehicle.license_plate}.jpg`
+          : `${URLROOT}/public/uploads/vehicle_photos/default-vehicle.jpg`;
+        document.getElementById("updateVehicleImage").src = imagePath;
+      }
+    } catch (error) {
+      console.error("Error loading vehicle details:", error);
+    }
+  }
+
+  // Handle form submission
+  updateForm.addEventListener("submit", async (e) => {
+    e.preventDefault();
+
+    try {
+      const routeData = {
+        route_id: document.getElementById("updateRouteId").value,
+        route_name: document.getElementById("updateRouteName").value,
+        day: document.getElementById("updateDaySelect").value,
+        vehicle_id: document.getElementById("updateVehicleSelect").value,
+        status: document.getElementById("updateStatus").value,
+        stops: Array.from(updateStopList.children).map((li) => ({
+          supplier_id: li.querySelector(".remove-stop").dataset.id,
+        })),
+      };
+
+      const response = await fetch(`${URLROOT}/vehiclemanager/updateRoute`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Accept: "application/json",
+        },
+        body: JSON.stringify(routeData),
+      });
+
+      const result = await response.json();
+
+      if (result.success) {
+        alert(result.message);
+        updateModal.style.display = "none";
+        window.location.reload();
+      } else {
+        throw new Error(result.message || "Failed to update route");
+      }
+    } catch (error) {
+      console.error("Error:", error);
+      alert("Error updating route: " + error.message);
+    }
+  });
+
+  // Close modal handlers
+  document
+    .querySelector("#updateRouteModal .close")
+    .addEventListener("click", () => {
+      updateModal.style.display = "none";
+    });
+
+  window.addEventListener("click", (event) => {
+    if (event.target === updateModal) {
+      updateModal.style.display = "none";
+    }
+  });
+});
+
+//////////////////////////////////////////////////
+////// UPDATE MAP SECTION
