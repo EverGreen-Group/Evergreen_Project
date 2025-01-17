@@ -167,7 +167,9 @@ class VehicleManager extends Controller {
             'all_drivers' => $allDrivers,
             'total_drivers' => $totalDrivers,
             'on_duty_drivers' => $onDutyDrivers,
-            'unassigned_drivers_count' => $unassignedDriversCount
+            'unassigned_drivers_count' => $unassignedDriversCount,
+            'users' => $this->userModel->getAllUnassignedUsers(),
+            'update_users' => $this->userModel->getAllUserDrivers()
         ];
         
         $this->view('vehicle_manager/v_driver', $data);

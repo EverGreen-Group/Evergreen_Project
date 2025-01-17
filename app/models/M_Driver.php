@@ -67,7 +67,7 @@ class M_Driver{
                 CONCAT(ud.first_name, " ", ud.last_name) AS driver_name,
                 e.contact_number,
                 d.status,
-                ud.user_id
+                ud.*
             FROM drivers d
             JOIN employees e ON d.employee_id = e.employee_id
             JOIN users ud ON e.user_id = ud.user_id

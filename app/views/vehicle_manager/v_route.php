@@ -378,8 +378,6 @@
   <!-- First row with two tables -->
   <div class="table-data">
 
-
-    <!-- Right table: Routes - NO SUPPLIER DETAILS HERE -->
     <div class="order">
         <div class="head">
             <h3>Routes</h3>
