@@ -9,24 +9,37 @@ class M_stockvalidate
         $this->db = new Database();
     }
 
-    public function getvalidateStocks()
+    public function getvalidateStocks($status = 'All')
     {
-        $this->db->query("SELECT 
-    CONCAT(u.first_name, ' ', u.last_name) AS full_name,
-    s.collection_id,
-    s.status,
-    s.created_at,
-    c.total_quantity
-    FROM 
-    stockvalidate s
-    JOIN 
-    collections c ON s.collection_id = c.collection_id
-    JOIN 
-    collection_schedules cs ON c.schedule_id = cs.schedule_id
-    JOIN 
-    drivers d ON cs.driver_id = d.driver_id
-    JOIN 
-    users u ON d.user_id = u.user_id;");
+        $sql = "SELECT 
+            CONCAT(u.first_name, ' ', u.last_name) AS full_name,
+            s.collection_id,
+            s.status,
+            s.created_at,
+            c.total_quantity
+        FROM 
+            stockvalidate s
+        JOIN 
+            collections c ON s.collection_id = c.collection_id
+        JOIN 
+            collection_schedules cs ON c.schedule_id = cs.schedule_id
+        JOIN 
+            drivers d ON cs.driver_id = d.driver_id
+        JOIN 
+            users u ON d.user_id = u.user_id";
+        
+        if ($status !== 'All') {
+            $sql .= " WHERE s.status = :status";
+        }
+        
+        $sql .= " ORDER BY s.created_at DESC";
+        
+        $this->db->query($sql);
+        
+        if ($status !== 'All') {
+            $this->db->bind(':status', $status);
+        }
+        
         return $this->db->resultSet();
     }
 
