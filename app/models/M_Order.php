@@ -1,13 +1,8 @@
+
+
 <?php
 
-class M_Order {
-
-    private $db;
-
-    public function __construct()
-    {
-        $this ->db =new Database();
-    }
+class Order {
     // Function to create an order
     public function create($product, $quantity) {
         $db = Database::connect();
