@@ -2,7 +2,7 @@
 <?php require APPROOT . '/views/inc/components/sidebar_shop.php'; ?>
 <?php require APPROOT . '/views/inc/components/topnavbar.php'; ?>
 
-<link rel="stylesheet" href="<?php echo URLROOT; ?>/css/style.css">
+<link rel="stylesheet" href="<?php echo URLROOT; ?>/css/main.css">
 
 <main>
     <div class="head-title">
