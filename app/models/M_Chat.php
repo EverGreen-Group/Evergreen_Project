@@ -41,17 +41,22 @@ class M_Chat {
 
     // Get messages between two users
     public function getMessages($userId1, $userId2) {
-        $sql = "SELECT m.*, u.first_name, u.last_name 
-                FROM messages m 
-                JOIN users u ON m.outgoing_msg_id = u.user_id 
-                WHERE (outgoing_msg_id = :user1 AND incoming_msg_id = :user2) 
-                OR (outgoing_msg_id = :user2 AND incoming_msg_id = :user1) 
-                ORDER BY msg_id";
-        
-        $this->db->query($sql);
-        $this->db->bind(':user1', $userId1);
-        $this->db->bind(':user2', $userId2);
-        return $this->db->resultSet();
+        try {
+            $sql = "SELECT * FROM messages 
+                    WHERE (sender_id = :user1 AND receiver_id = :user2)
+                    OR (sender_id = :user2 AND receiver_id = :user1)
+                    ORDER BY created_at ASC";
+            
+            $this->db->query($sql);
+            $this->db->bind(':user1', $userId1);
+            $this->db->bind(':user2', $userId2);
+            
+            return $this->db->resultSet();
+            
+        } catch (PDOException $e) {
+            error_log("Database Error in getMessages: " . $e->getMessage());
+            return [];
+        }
     }
 
     // Save new message
@@ -96,23 +101,28 @@ class M_Chat {
 
     public function sendMessage($outgoingId, $incomingId, $message) {
         try {
-            // Log the attempt
-            error_log("Attempting to send message - From: $outgoingId, To: $incomingId");
+            // Log attempt
+            error_log("Attempting to save message - From: $outgoingId, To: $incomingId");
             
-            $sql = "INSERT INTO messages (outgoing_msg_id, incoming_msg_id, msg) 
-                    VALUES (:outgoing_id, :incoming_id, :message)";
+            // SQL query to insert message
+            $sql = "INSERT INTO messages (sender_id, receiver_id, message, created_at) 
+                    VALUES (:sender_id, :receiver_id, :message, NOW())";
             
+            // Prepare and execute query
             $this->db->query($sql);
-            $this->db->bind(':outgoing_id', $outgoingId);
-            $this->db->bind(':incoming_id', $incomingId);
+            $this->db->bind(':sender_id', $outgoingId);
+            $this->db->bind(':receiver_id', $incomingId);
             $this->db->bind(':message', $message);
             
             $result = $this->db->execute();
-            error_log("Message send result: " . ($result ? "success" : "failed"));
+            
+            // Log result
+            error_log("Message save result: " . ($result ? "success" : "failed"));
             
             return $result;
+            
         } catch (PDOException $e) {
-            error_log("Database Error: " . $e->getMessage());
+            error_log("Database Error in sendMessage: " . $e->getMessage());
             return false;
         }
     }
