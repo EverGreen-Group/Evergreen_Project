@@ -14,6 +14,7 @@ require_once '../app/models/M_Collection.php';    // Add Collection model
 require_once '../app/models/M_CollectionSupplierRecord.php';
 require_once '../app/models/M_SupplierApplication.php';
 require_once '../app/models/M_Supplier.php';
+require_once '../app/models/M_Chat.php';
 
 class SupplierManager extends Controller {
     private $vehicleManagerModel;
@@ -30,6 +31,7 @@ class SupplierManager extends Controller {
     private $collectionSupplierRecordModel;
     private $supplierApplicationModel;
     private $supplierModel;
+    private $chatModel; // Add this line
     
 
     public function __construct() {
@@ -52,6 +54,7 @@ class SupplierManager extends Controller {
         $this->collectionSupplierRecordModel = $this->model('M_CollectionSupplierRecord');
         $this->supplierApplicationModel = $this->model('M_SupplierApplication');
         $this->supplierModel = new M_Supplier();
+        $this->chatModel = $this->model('M_Chat');
     }
 
     public function index() {
@@ -236,13 +239,77 @@ class SupplierManager extends Controller {
 
         $this->view('supplier_manager/v_profile', $data);
     }
+//Added by theekshana
 
-
-    public function chat()
-    {
-        $data = [];
+    public function chat() {
+        $data = [
+            'chat_requests' => $this->chatModel->getChatRequests(),
+            'active_suppliers' => $this->chatModel->getActiveSuppliers()
+        ];
 
         $this->view('supplier_manager/v_chat', $data);
+    }
+
+    public function acceptChatRequest() {
+        if($_SERVER['REQUEST_METHOD'] == 'POST') {
+            $data = json_decode(file_get_contents("php://input"));
+            
+            if($this->chatModel->acceptChatRequest($data->request_id)) {
+                echo json_encode(['success' => true]);
+            } else {
+                echo json_encode(['success' => false]);
+            }
+        }
+    }
+
+    public function sendMessage() {
+        if($_SERVER['REQUEST_METHOD'] == 'POST') {
+            try {
+                // Get POST data
+                $data = json_decode(file_get_contents("php://input"));
+                
+                // Check session
+                if (!isset($_SESSION['user_id'])) {
+                    echo json_encode(['success' => false, 'message' => 'Not logged in']);
+                    return;
+                }
+                
+                // Validate input
+                if(!isset($data->receiver_id) || !isset($data->message) || empty(trim($data->message))) {
+                    echo json_encode(['success' => false, 'message' => 'Invalid input']);
+                    return;
+                }
+
+                // Get chat model instance
+                $chatModel = $this->model('M_Chat');
+                
+                // Send message using the model's method
+                $result = $chatModel->sendMessage(
+                    $_SESSION['user_id'],      // outgoing_id (current user)
+                    $data->receiver_id,        // incoming_id (receiver)
+                    trim($data->message)       // message content
+                );
+                
+                if($result) {
+                    echo json_encode(['success' => true]);
+                } else {
+                    echo json_encode(['success' => false, 'message' => 'Failed to send message']);
+                }
+                
+            } catch (Exception $e) {
+                error_log("Error in sendMessage controller: " . $e->getMessage());
+                echo json_encode(['success' => false, 'message' => 'Server error']);
+            }
+        }
+    }
+
+    public function getMessages() {
+        if($_SERVER['REQUEST_METHOD'] == 'POST') {
+            $data = json_decode(file_get_contents("php://input"));
+            
+            $messages = $this->chatModel->getMessages($_SESSION['user_id'], $data->other_user_id);
+            echo json_encode($messages);
+        }
     }
 
     public function settings()
@@ -250,6 +317,30 @@ class SupplierManager extends Controller {
         $data = [];
 
         $this->view('supplier_manager/v_settings', $data);
+    }
+
+    public function editMessage() {
+        if($_SERVER['REQUEST_METHOD'] == 'POST') {
+            $data = json_decode(file_get_contents("php://input"));
+            
+            if($this->chatModel->editMessage($data->msg_id, $data->new_message, $_SESSION['user_id'])) {
+                echo json_encode(['success' => true]);
+            } else {
+                echo json_encode(['success' => false]);
+            }
+        }
+    }
+
+    public function deleteMessage() {
+        if($_SERVER['REQUEST_METHOD'] == 'POST') {
+            $data = json_decode(file_get_contents("php://input"));
+            
+            if($this->chatModel->deleteMessage($data->msg_id, $_SESSION['user_id'])) {
+                echo json_encode(['success' => true]);
+            } else {
+                echo json_encode(['success' => false]);
+            }
+        }
     }
 
 }
