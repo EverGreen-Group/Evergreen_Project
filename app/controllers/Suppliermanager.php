@@ -265,41 +265,58 @@ class SupplierManager extends Controller {
     public function sendMessage() {
         if($_SERVER['REQUEST_METHOD'] == 'POST') {
             try {
-                // Get POST data
-                $data = json_decode(file_get_contents("php://input"));
+                // Get raw POST data and log it
+                $rawData = file_get_contents("php://input");
+                error_log("Raw POST data: " . $rawData);
                 
-                // Check session
+                $data = json_decode($rawData);
+                
+                // Log decoded data
+                error_log("Decoded data: " . print_r($data, true));
+                error_log("Current user ID: " . $_SESSION['user_id']);
+                
+                // Check if session exists
                 if (!isset($_SESSION['user_id'])) {
-                    echo json_encode(['success' => false, 'message' => 'Not logged in']);
+                    error_log("No user session found");
+                    echo json_encode(['success' => false, 'message' => 'User not logged in']);
                     return;
                 }
                 
                 // Validate input
-                if(!isset($data->receiver_id) || !isset($data->message) || empty(trim($data->message))) {
-                    echo json_encode(['success' => false, 'message' => 'Invalid input']);
+                if(!isset($data->receiver_id) || !isset($data->message)) {
+                    error_log("Missing required fields");
+                    echo json_encode(['success' => false, 'message' => 'Missing required fields']);
+                    return;
+                }
+                
+                // Validate message content
+                if(empty(trim($data->message))) {
+                    error_log("Empty message");
+                    echo json_encode(['success' => false, 'message' => 'Message cannot be empty']);
                     return;
                 }
 
-                // Get chat model instance
-                $chatModel = $this->model('M_Chat');
-                
-                // Send message using the model's method
-                $result = $chatModel->sendMessage(
-                    $_SESSION['user_id'],      // outgoing_id (current user)
-                    $data->receiver_id,        // incoming_id (receiver)
-                    trim($data->message)       // message content
+                // Try to send message
+                $result = $this->chatModel->sendMessage(
+                    $_SESSION['user_id'], 
+                    $data->receiver_id, 
+                    trim($data->message)
                 );
                 
                 if($result) {
                     echo json_encode(['success' => true]);
                 } else {
-                    echo json_encode(['success' => false, 'message' => 'Failed to send message']);
+                    error_log("Database insert failed");
+                    echo json_encode(['success' => false, 'message' => 'Database error']);
                 }
                 
             } catch (Exception $e) {
-                error_log("Error in sendMessage controller: " . $e->getMessage());
+                error_log("Error in sendMessage: " . $e->getMessage());
                 echo json_encode(['success' => false, 'message' => 'Server error']);
             }
+        } else {
+            error_log("Invalid request method: " . $_SERVER['REQUEST_METHOD']);
+            echo json_encode(['success' => false, 'message' => 'Invalid request method']);
         }
     }
 

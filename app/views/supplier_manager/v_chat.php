@@ -30,6 +30,7 @@
         <!-- Middle: Chat Area -->
         <div class="chat-area">
             <!-- Initial State -->
+             
             <div class="no-chat-selected">
                 <i class='bx bx-message-square-dots'></i>
                 <p>Select a supplier to start messaging</p>
@@ -37,7 +38,6 @@
 
             <!-- Chat Interface (Hidden initially) -->
             <div class="chat-interface" style="display: none;">
-                <!-- Header -->
                 <div class="chat-header">
                     <div class="chat-user-info">
                         <h3 id="current-chat-name"></h3>
@@ -45,19 +45,12 @@
                     </div>
                 </div>
 
-                <!-- Messages Container -->
-                <div class="chat-content">
-                    <div class="messages" id="chat-messages"></div>
-                </div>
-
-                <!-- Input Box (Fixed at Bottom) -->
-                <div class="chat-footer">
-                    <div class="chat-input">
-                        <input type="text" id="message-input" placeholder="Type a message...">
-                        <button id="send-message-btn">
-                            <i class='bx bx-send'></i>
-                        </button>
-                    </div>
+                <div class="messages" id="chat-messages"></div>
+                <div class="chat-input">
+                    <input type="text" id="message-input" placeholder="Type a message...">
+                    <button id="send-message-btn">
+                        <i class='bx bx-send'></i>
+                    </button>
                 </div>
             </div>
         </div>
@@ -80,10 +73,12 @@
                 <?php endforeach; ?>
             <?php else: ?>
                 <p class="no-requests">No pending requests</p>
+                
             <?php endif; ?>
         </div>
     </div>
 </main>
+
 
 <script>
 let currentChatUserId = null;
@@ -95,63 +90,38 @@ function loadMessages() {
     
     fetch('<?php echo URLROOT; ?>/suppliermanager/getMessages', {
         method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-            other_user_id: currentChatUserId
-        })
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ receiver_id: currentChatUserId })
     })
     .then(response => response.json())
-    .then(messages => {
-        const messagesDiv = document.getElementById('chat-messages');
-        messagesDiv.innerHTML = '';
-        
-        messages.forEach(msg => {
-            const messageDiv = document.createElement('div');
-            messageDiv.className = `message ${msg.outgoing_msg_id == <?php echo $_SESSION['user_id']; ?> ? 'sent' : 'received'}`;
-            messageDiv.dataset.msgId = msg.msg_id;
-            
-            let messageContent = `
-                <div class="message-content">
-                    <p>${msg.msg}</p>
-                    ${msg.edited_at ? '<small class="edited-tag">(edited)</small>' : ''}
-                </div>
-            `;
-            
-            // Add edit/delete buttons only for user's own messages
-            if (msg.outgoing_msg_id == <?php echo $_SESSION['user_id']; ?>) {
-                messageContent += `
-                    <div class="message-actions">
-                        <button class="edit-msg-btn"><i class='bx bx-edit'></i></button>
-                        <button class="delete-msg-btn"><i class='bx bx-trash'></i></button>
-                    </div>
-                `;
-            }
-            
-            messageDiv.innerHTML = messageContent;
-            messagesDiv.appendChild(messageDiv);
-        });
-        
-        // Scroll to bottom
-        messagesDiv.scrollTop = messagesDiv.scrollHeight;
+    .then(data => {
+        if (data.success && Array.isArray(data.messages)) {
+            displayMessages(data.messages);
+            // Smooth scroll to bottom after loading messages
+            const messagesDiv = document.getElementById('chat-messages');
+            messagesDiv.scrollTo({
+                top: messagesDiv.scrollHeight,
+                behavior: 'smooth'
+            });
+        }
     });
 }
 
 // Send message function
 function sendMessage() {
     const messageInput = document.getElementById('message-input');
+    const sendButton = document.getElementById('send-message-btn');
     const message = messageInput.value.trim();
     
     if (!message || !currentChatUserId) return;
     
-    setLoadingState(true);
+    // Add loading state
+    sendButton.classList.add('loading');
+    sendButton.innerHTML = '<div class="loading-indicator"></div>';
     
     fetch('<?php echo URLROOT; ?>/suppliermanager/sendMessage', {
         method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
             receiver_id: currentChatUserId,
             message: message
@@ -159,61 +129,31 @@ function sendMessage() {
     })
     .then(response => response.json())
     .then(data => {
-        setLoadingState(false);
         if (data.success) {
             messageInput.value = '';
             loadMessages();
-            const messagesDiv = document.getElementById('chat-messages');
-            messagesDiv.scrollTop = messagesDiv.scrollHeight;
-        } else {
-            alert('Failed to send message. Please try again.');
         }
     })
-    .catch(error => {
-        setLoadingState(false);
-        console.error('Error:', error);
-        alert('An error occurred while sending the message.');
+    .finally(() => {
+        // Remove loading state
+        sendButton.classList.remove('loading');
+        sendButton.innerHTML = '<i class="bx bx-send"></i>';
+        
+        // Scroll to bottom after new message
+        const messagesDiv = document.getElementById('chat-messages');
+        messagesDiv.scrollTop = messagesDiv.scrollHeight;
     });
 }
 
 // Send button click handler
-document.getElementById('send-message-btn').addEventListener('click', function(e) {
-    e.preventDefault(); // Prevent form submission if within a form
-    sendMessage();
-});
+document.getElementById('send-message-btn').addEventListener('click', sendMessage);
 
 // Enter key press handler
 document.getElementById('message-input').addEventListener('keypress', function(e) {
-    if (e.key === 'Enter' && !e.shiftKey) { // Allow Shift+Enter for new line
-        e.preventDefault(); // Prevent default enter behavior
+    if (e.key === 'Enter') {
         sendMessage();
     }
 });
-
-// Add visual feedback for send button
-document.getElementById('send-message-btn').addEventListener('mousedown', function() {
-    this.style.transform = 'scale(0.95)';
-});
-
-document.getElementById('send-message-btn').addEventListener('mouseup', function() {
-    this.style.transform = 'scale(1)';
-});
-
-// Add loading state
-function setLoadingState(isLoading) {
-    const sendButton = document.getElementById('send-message-btn');
-    const messageInput = document.getElementById('message-input');
-    
-    if (isLoading) {
-        sendButton.disabled = true;
-        messageInput.disabled = true;
-        sendButton.innerHTML = '<i class="bx bx-loader-alt bx-spin"></i>';
-    } else {
-        sendButton.disabled = false;
-        messageInput.disabled = false;
-        sendButton.innerHTML = '<i class="bx bx-send"></i>';
-    }
-}
 
 // Click handler for supplier items
 document.querySelectorAll('.supplier-item').forEach(item => {
