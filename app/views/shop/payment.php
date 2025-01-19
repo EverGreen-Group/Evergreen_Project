@@ -1,5 +1,7 @@
 <?php require APPROOT . '/views/inc/components/header.php'; ?>
 
+<link rel="stylesheet" href="<?php echo URLROOT; ?>/css/main.css">
+
 <main class="checkout-main">
     <div class="checkout-header">
         <div class="logo">
