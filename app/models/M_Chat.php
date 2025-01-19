@@ -22,10 +22,11 @@ class M_Chat {
 
     // Get chat requests from suppliers
     public function getChatRequests() {
-        $sql = "SELECT cr.request_id, u.user_id, u.first_name, u.last_name, u.role_id, cr.status, cr.created_at 
+        $sql = "SELECT cr.request_id, u.user_id, u.first_name, u.last_name, 
+                       u.role_id, cr.status, cr.created_at 
                 FROM chat_requests cr 
                 JOIN users u ON cr.user_id = u.user_id 
-                WHERE u.role_id = 5 AND cr.status = 'pending'"; // role_id 5 for suppliers
+                WHERE u.role_id = 5 AND cr.status = 'pending'";
         
         $this->db->query($sql);
         return $this->db->resultSet();
@@ -63,5 +64,56 @@ class M_Chat {
         $this->db->bind(':incoming_id', $incomingId);
         $this->db->bind(':message', $message);
         return $this->db->execute();
+    }
+
+    // Edit message
+    public function editMessage($msgId, $newMessage, $userId) {
+        // Only allow editing if user owns the message
+        $sql = "UPDATE messages 
+                SET msg = :message, edited_at = NOW() 
+                WHERE msg_id = :msg_id 
+                AND outgoing_msg_id = :user_id";
+        
+        $this->db->query($sql);
+        $this->db->bind(':message', $newMessage);
+        $this->db->bind(':msg_id', $msgId);
+        $this->db->bind(':user_id', $userId);
+        return $this->db->execute();
+    }
+
+    // Delete message
+    public function deleteMessage($msgId, $userId) {
+        // Only allow deletion if user owns the message
+        $sql = "DELETE FROM messages 
+                WHERE msg_id = :msg_id 
+                AND outgoing_msg_id = :user_id";
+        
+        $this->db->query($sql);
+        $this->db->bind(':msg_id', $msgId);
+        $this->db->bind(':user_id', $userId);
+        return $this->db->execute();
+    }
+
+    public function sendMessage($outgoingId, $incomingId, $message) {
+        try {
+            // Log the attempt
+            error_log("Attempting to send message - From: $outgoingId, To: $incomingId");
+            
+            $sql = "INSERT INTO messages (outgoing_msg_id, incoming_msg_id, msg) 
+                    VALUES (:outgoing_id, :incoming_id, :message)";
+            
+            $this->db->query($sql);
+            $this->db->bind(':outgoing_id', $outgoingId);
+            $this->db->bind(':incoming_id', $incomingId);
+            $this->db->bind(':message', $message);
+            
+            $result = $this->db->execute();
+            error_log("Message send result: " . ($result ? "success" : "failed"));
+            
+            return $result;
+        } catch (PDOException $e) {
+            error_log("Database Error: " . $e->getMessage());
+            return false;
+        }
     }
 }
