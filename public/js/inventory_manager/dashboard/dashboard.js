@@ -96,15 +96,12 @@ function showCollectionBagDetails(collectionId) {
   modal.style.backgroundColor = "rgba(0, 0, 0, 0.5)";
   modal.style.backdropFilter = "blur(1px)";
 
-
   // Show loading state
   showDummyData();
 
   // Fetch data from existing endpoint
-  fetch(`${URLROOT}/Vehiclemanager/getCollectionDetails/${collectionId}`)
+  fetch(`${URLROOT}/vehiclemanager/getCollectionDetails/${collectionId}`)
     .then((response) => {
-      console.log(response);
-
       if (!response.ok) {
         throw new Error("Network response was not ok");
       }
@@ -129,14 +126,14 @@ function showCollectionBagDetails(collectionId) {
                 <tr>
                     <td>${supplier}</td>
                     <td>${bags
-              .map(
-                (bag) => `
+                      .map(
+                        (bag) => `
                         <button class="tag-button">
                             Bag ${bag.bag_id} (Capacity: ${bag.capacity} kg, Filled: ${bag.filled_amount} kg)
                         </button>
                     `
-              )
-              .join(" ")}</td>
+                      )
+                      .join(" ")}</td>
                 </tr>
             `
         )
@@ -193,7 +190,6 @@ function showCollectionBagDetails(collectionId) {
             `;
     })
     .catch((error) => {
-
       console.error("Error fetching collection details:", error);
       content.innerHTML = `
         <div class="vehicle-modal-content">
