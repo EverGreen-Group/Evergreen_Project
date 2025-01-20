@@ -156,9 +156,6 @@ class Auth extends Controller
                         case RoleHelper::INVENTORY_MANAGER:
                             header('Location: ' . URLROOT . '/inventory/');
                             break;
-                        case RoleHelper::SUPPLIER_MANAGER:
-                            header('Location: ' . URLROOT . '/suppliermanager/applications/');
-                            break;
                         default:
                             header('Location: ' . URLROOT . '/');
                     }

@@ -187,7 +187,7 @@ class Inventory extends controller
     public function createfertilizer()
     {
         if ($_SERVER['REQUEST_METHOD'] == 'POST') {
-            // $_POST = filter_input_array(INPUT_POST);
+             $_POST = filter_input_array(INPUT_POST);
 
             $data = [
                 'fertilizer_name' => $_POST['fertilizer_name'],
@@ -197,6 +197,7 @@ class Inventory extends controller
                 'price' => $_POST['price'],
                 'quantity' => $_POST['quantity'],
                 'unit' => $_POST['unit'],
+                'image_path' => '',
                 'fertilizer_name_err' => '',
                 'company_name_err' => '',
                 'details_err' => '',
@@ -206,6 +207,31 @@ class Inventory extends controller
                 'unit_err' => '',
 
             ];
+
+            // Handle image upload
+            if (isset($_FILES['fertilizer_image']) && $_FILES['fertilizer_image']['error'] === UPLOAD_ERR_OK) {
+                $uploadDir = 'uploads/fertilizers/';
+
+                // Create upload directory if it doesn't exist
+                if (!file_exists($uploadDir)) {
+                   // mkdir($uploadDir, 0777, true);
+                }
+
+                // Generate unique filename
+                $fileExtension = pathinfo($_FILES['fertilizer_image']['name'], PATHINFO_EXTENSION);
+                $uniqueFilename = uniqid() . '.' . $fileExtension;
+                $uploadPath = $uploadDir . $uniqueFilename;
+
+                // Move uploaded file
+                if (move_uploaded_file($_FILES['fertilizer_image']['tmp_name'], $uploadPath)) {
+                    $data['image_path'] = $uniqueFilename;
+                }
+            }
+            else {
+                print_r("no file found");
+            }
+
+           
             
 
             //validation
@@ -234,7 +260,7 @@ class Inventory extends controller
 
             if (
                 !empty($data['fertilizer_name']) && !empty($data['company_name']) && !empty($data['details'])
-                && !empty($data['code']) && !empty($data['price']) && !empty($data['quantity']) && !empty($data['unit'])
+                && !empty($data['code']) && !empty($data['price']) && !empty($data['quantity']) && !empty($data['unit'] && !empty($data['image_path']))
             ) {
 
                 if ($this->fertilizerModel->createFertilizer($data)) {
@@ -243,6 +269,9 @@ class Inventory extends controller
                     redirect('inventory/fertilizerdashboard');
 
                 } else {
+                    echo "<pre>";
+                    print_r($data);
+                    echo "</pre>";
                     die('Something went wrong');
                 }
 

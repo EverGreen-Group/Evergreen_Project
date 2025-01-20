@@ -292,7 +292,7 @@
 				<tbody>
 					<php foreach($data['stock'] as $stock) : ?>
 					<tr>
-					    <td>Michael Chen</td>
+					    <td>Tharusha</td>
 						<td style="text-align: center;"> 12</td>
 						<td>325 units</td>
 						<td>2024-03-20 08:15 PM</td>
