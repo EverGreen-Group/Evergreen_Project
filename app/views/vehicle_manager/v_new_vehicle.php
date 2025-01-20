@@ -7,11 +7,12 @@
 <?php require APPROOT . '/views/inc/components/topnavbar.php'; ?>
 
 <link rel="stylesheet" href="<?php echo URLROOT; ?>/css/vehicle_manager/driver/driver.css">
+<link rel="stylesheet" href="<?php echo URLROOT; ?>/css/vehicle_manager/vehicle/vehicle_card.css">
 <script>
     const URLROOT = '<?php echo URLROOT; ?>';
     const UPLOADROOT = '<?php echo UPLOADROOT; ?>';
 </script>
-<script src="<?php echo URLROOT; ?>/public/js/vehicle_manager/driver.js"></script>
+<script src="<?php echo URLROOT; ?>/public/js/vehicle_manager/vehicle.js"></script>
 
 <!-- MAIN -->
 <main>
@@ -28,7 +29,7 @@
   <div class="action-buttons">
       <button class="btn btn-primary" onclick="document.getElementById('addDriverModal').style.display='block'">
           <i class='bx bx-plus'></i>
-          Add New Driver
+          Add New Vehicle
       </button>
 
       <button class="btn btn-primary"
@@ -36,7 +37,7 @@
           class="btn btn-secondary"
           style="padding: 6px 12px; border: none;"
       >
-          Update Existing Driver
+          Update Existing Vehicle
       </button>
   </div>
 
@@ -45,22 +46,15 @@
     <li>
         <i class='bx bxs-group'></i>
         <span class="text">
-          <p>Total Drivers</p>
-          <h3><?php echo $total_drivers; ?></h3>
-        </span>
-    </li>
-    <li>
-        <i class='bx bxs-user-check'></i>
-        <span class="text">
-          <p>On Duty</p>
-          <h3><?php echo $on_duty_drivers; ?></h3>
+          <p>Total Vehicles</p>
+          <h3><?php echo $totalVehicles; ?></h3>
         </span>
     </li>
     <li>
         <i class='bx bxs-user-x'></i>
         <span class="text">
-          <p>Unassigned Drivers</p>
-          <h3><?php echo $unassigned_drivers_count; ?></h3>
+          <p>Available Vehicles</p>
+          <h3><?php echo $availableVehicles; ?></h3>
         </span>
     </li>
   </ul>
@@ -71,7 +65,7 @@
     <!-- Report Types Chart -->
     <div class="order">
         <div class="head">
-            <h3>Monthly Driver Report Types</h3>
+            <h3>Vehicle Usage</h3>
         </div>
         <div class="chart-container-wrapper" style="height: 250px;">
             <canvas id="reportTypesChart"></canvas>
@@ -87,7 +81,7 @@
     <!-- Driver Status Chart -->
     <div class="order">
         <div class="head">
-            <h3>Driver Status Distribution</h3>
+            <h3>Vehicle Allocation</h3>
         </div>
         <div class="chart-container-wrapper" style="height: 250px;">
             <canvas id="driverStatusChart"></canvas>
@@ -101,155 +95,164 @@
     </div>
   </div>
 
-  <!-- Second Row: Reports Table -->
-  <div class="table-data">
-    <div class="order" style="width: 100%;"> <!-- Added full width -->
-        <div class="head">
-            <h3>Driver Reports</h3>
-            <i class='bx bx-file'></i>
-        </div>
-        <table>
-            <thead>
-                <tr>
-                    <th>Report ID</th>
-                    <th>Type</th>
-                    <th>Reporter</th>
-                    <th>Date</th>
-                    <th>Status</th>
-                    <th>Actions</th>
-                </tr>
-            </thead>
-            <tbody>
-                <!-- Sample Reports -->
-                <tr>
-                    <td>REP001</td>
-                    <td>
-                        <span class="report-type collection">Collection Mismatch</span>
-                    </td>
-                    <td>John (Inventory Manager)</td>
-                    <td><?php echo date('Y-m-d'); ?></td>
-                    <td><span class="status pending">Pending</span></td>
-                    <td>
-                        <button class="btn btn-primary" onclick="viewReportDetails(1)">
-                            <i class='bx bx-show'></i>
-                        </button>
-                    </td>
-                </tr>
-                <tr>
-                    <td>REP002</td>
-                    <td>
-                        <span class="report-type delivery">Delivery Delay</span>
-                    </td>
-                    <td>Factory Manager</td>
-                    <td><?php echo date('Y-m-d', strtotime('-2 days')); ?></td>
-                    <td><span class="status completed">Resolved</span></td>
-                    <td>
-                        <button class="btn btn-primary" onclick="viewReportDetails(2)">
-                            <i class='bx bx-show'></i>
-                        </button>
-                    </td>
-                </tr>
-                <tr>
-                    <td>REP003</td>
-                    <td>
-                        <span class="report-type supplier">Supplier Complaint</span>
-                    </td>
-                    <td>Sarah (Supplier)</td>
-                    <td><?php echo date('Y-m-d', strtotime('-1 day')); ?></td>
-                    <td><span class="status error">Urgent</span></td>
-                    <td>
-                        <button class="btn btn-primary" onclick="viewReportDetails(3)">
-                            <i class='bx bx-show'></i>
-                        </button>
-                    </td>
-                </tr>
-                <tr>
-                    <td>REP004</td>
-                    <td>
-                        <span class="report-type driver">Driver Report</span>
-                    </td>
-                    <td>Pam (Driver)</td>
-                    <td><?php echo date('Y-m-d', strtotime('-3 days')); ?></td>
-                    <td><span class="status process">In Progress</span></td>
-                    <td>
-                        <button class="btn btn-primary" onclick="viewReportDetails(4)">
-                            <i class='bx bx-show'></i>
-                        </button>
-                    </td>
-                </tr>
-            </tbody>
-        </table>
-    </div>
-  </div>
 
-  <!-- Section for All Drivers -->
   <div class="table-data">
     <div class="order">
         <div class="head">
-            <h3>All Drivers</h3>
-            <div class="filter-container">
-                <label for="drivers-status-filter">Filter by Status:</label>
-                <select id="drivers-status-filter">
-                    <option value="">All Status</option>
-                    <option value="Active">Active</option>
-                    <option value="Inactive">Inactive</option>
-                    <option value="On Leave">On Leave</option>
-                </select>
-            </div>
-            <i class='bx bx-search'></i>
+            <h3>Vehicles Currently In Use</h3>
+            <i class='bx bx-shopping-bag'></i>
         </div>
-        <table>
-            <thead>
+        <div class="bags-grid">
+            <!-- Vehicle Card 1 -->
+            <div class="bag-card" onclick="showVehicleDetails()">
+                <div class="bag-icon">
+                    <img src="https://winwin.lk/images/f60f70/16753901752224530.jpg" alt="Vehicle Image" class="vehicle-image">
+                </div>
+                <div class="bag-info">
+                    <h4>WP-1234</h4>
+                    <span class="status processing">Delivery</span>
+                </div>
+            </div>
+
+            <!-- Vehicle Card 2 -->
+            <div class="bag-card" onclick="showVehicleDetails()">
+                <div class="bag-icon">
+                    <img src="https://i.ikman-st.com/tata-dimo-batta-2010-for-sale-kurunegala-558/de991e55-8b07-4820-bd8d-0e6c6f21d356/620/466/fitted.jpg" alt="Vehicle Image" class="vehicle-image">
+                </div>
+                <div class="bag-info">
+                    <h4>WP-2345</h4>
+                    <span class="status used">Collection</span>
+                </div>
+            </div>
+
+            <!-- Vehicle Card 3 -->
+            <div class="bag-card" onclick="showVehicleDetails()">
+                <div class="bag-icon">
+                    <img src="https://i.ikman-st.com/tata-dimo-batta-2011-for-sale-kurunegala-620/4d26812b-bd57-4a63-b66d-5cd3bec804f4/620/466/fitted.jpg" alt="Vehicle Image" class="vehicle-image">
+                </div>
+                <div class="bag-info">
+                    <h4>WP-2134</h4>
+                    <span class="status used">Collection</span>
+                </div>
+            </div>
+
+            <!-- Add more vehicle cards as needed -->
+        </div>
+    </div>
+</div>
+
+
+  <!-- Vehicle Information Table -->
+  <div class="table-data">
+    <div class="order">
+      <div class="head">
+        <h3>Vehicle Availability</h3>
+        <div class="filter-container">
+                    <label for="dayFilter">Filter by Day:</label>
+                    <select id="dayFilter">
+                        <option value="all">All Days</option>
+                        <option value="Monday">Monday</option>
+                        <option value="Tuesday">Tuesday</option>
+                        <option value="Wednesday">Wednesday</option>
+                        <option value="Thursday">Thursday</option>
+                        <option value="Friday">Friday</option>
+                        <option value="Saturday">Saturday</option>
+                        <option value="Sunday">Sunday</option>
+                    </select>
+                </div>
+        <i class='bx bx-search'></i>
+      </div>
+      <table>
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>Plate Number</th>
+            <th>Type</th>
+            <th>Capacity</th>
+            <th>Status</th>
+          </tr>
+        </thead>
+        <tbody>
+          <?php if(isset($data['vehicles']) && !empty($data['vehicles'])): ?>
+            <?php foreach($data['vehicles'] as $vehicle): ?>
                 <tr>
-                    <th>Driver ID</th>
-                    <th>Name</th>
-                    <th>Contact</th>
-                    <th>License</th>
-                    <th>Experience</th>
-                    <th>Status</th>
-                    <th>Actions</th>
+                    <td><?php echo $vehicle->vehicle_id; ?></td>
+                    <td><?php echo $vehicle->license_plate; ?></td>
+                    <td><?php echo $vehicle->vehicle_type; ?></td>
+                    <td><?php echo $vehicle->capacity; ?> Tons</td>
+                    
+                    <td>
+                        <span class="status <?php 
+                            echo $vehicle->status === 'Available' ? 'pending' : 
+                                ($vehicle->status === 'In Use' ? 'process' : 'completed'); 
+                        ?>">
+                            <?php echo $vehicle->status; ?>
+                        </span>
+                    </td>
                 </tr>
-            </thead>
-            <tbody>
-                <?php foreach ($data['all_drivers'] as $driver): ?>
-                    <tr class="driver-row" data-driver-id="<?php echo htmlspecialchars($driver->driver_id); ?>">
-                        <td>DR<?php echo str_pad($driver->driver_id, 3, '0', STR_PAD_LEFT); ?></td>
-                        <td><?php echo htmlspecialchars($driver->driver_name); ?></td>
-                        <td><?php echo htmlspecialchars($driver->contact_number); ?></td>
-                        <td><?php echo htmlspecialchars($driver->license_number ?? 'N/A'); ?></td>
-                        <td><?php echo htmlspecialchars($driver->experience ?? '0'); ?> years</td>
-                        <td>
-                            <span class="status <?php echo strtolower($driver->status) === 'active' ? 'error' : 'completed'; ?>">
-                                <?php echo htmlspecialchars($driver->status); ?>
-                            </span>
-                        </td>
-                        <td>
-                            <div style="display: flex; gap: 5px;">
-                                <!-- View Profile Button - Changed to button style -->
-                                <button 
-                                    onclick="showDriverProfile()" 
-                                    class="btn btn-secondary"
-                                    style="padding: 6px 12px; border: none;"
-                                >
-                                    Profile
-                                </button>
-                                
-                                
-                                <!-- Remove Driver Form -->
-                                <form action="<?php echo URLROOT; ?>/vehiclemanager/removeDriver/<?php echo $driver->user_id; ?>" 
-                                      method="POST" 
-                                      style="margin: 0;" 
-                                      onsubmit="return confirm('Are you sure you want to remove this driver?');">
-                                    <button type="submit" class="btn btn-tertiary" style="padding: 6px 12px;">Remove</button>
-                                </form>
-                            </div>
-                        </td>
-                    </tr>
-                <?php endforeach; ?>
-            </tbody>
-        </table>
+            <?php endforeach; ?>
+          <?php else: ?>
+              <tr>
+                  <td colspan="9" class="text-center">No vehicles found</td>
+              </tr>
+          <?php endif; ?>
+        </tbody>
+      </table>
     </div>
   </div>
+
+<!-- View Vehicle Modal -->
+<div id="viewVehicleModal" class="modal">
+    <div class="modal-content">
+        <span class="close" onclick="closeModal('viewVehicleModal')">&times;</span>
+        <h2>View Vehicle Details</h2>
+        <div class="vehicle-modal-content">
+            <div class="vehicle-modal-image">
+                <img src="https://winwin.lk/images/f60f70/16753901752224530.jpg" alt="Vehicle Image" class="vehicle-image" />
+            </div>
+            <div class="vehicle-modal-details">
+                <div class="detail-group">
+                    <h3>Basic Information</h3>
+                    <div class="detail-row">
+                        <span class="label">License Plate:</span>
+                        <span class="value">WP-1234</span> <!-- Ensure this element exists -->
+                    </div>
+                    <div class="detail-row">
+                        <span class="label">Vehicle Type:</span>
+                        <span class="value">TRUCK</span> <!-- Ensure this element exists -->
+                    </div>
+                    <div class="detail-row">
+                        <span class="label">Status:</span>
+                        <span class="value status-badge">AVAILABLE</span> <!-- Ensure this element exists -->
+                    </div>
+                </div>
+                <div class="detail-group">
+                    <h3>Specifications</h3>
+                    <div class="detail-row">
+                        <span class="label">Capacity:</span>
+                        <span class="value">2500 kg</span> <!-- Ensure this element exists -->
+                    </div>
+                    <div class="detail-row">
+                        <span class="label">Make:</span>
+                        <span class="value">Toyota</span> <!-- Ensure this element exists -->
+                    </div>
+                    <div class="detail-row">
+                        <span class="label">Model:</span>
+                        <span class="value">Dyna</span> <!-- Ensure this element exists -->
+                    </div>
+                    <div class="detail-row">
+                        <span class="label">Manufacturing Year:</span>
+                        <span class="value">2018</span> <!-- Ensure this element exists -->
+                    </div>
+                    <div class="detail-row">
+                        <span class="label">Color:</span>
+                        <span class="value">Blue</span> <!-- Ensure this element exists -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
 
   <!-- Add Driver Modal -->
 <div id="addDriverModal" class="modal">
@@ -376,15 +379,6 @@
     </div>
 </div>
 
-
-<script>
-
-function showDriverProfile() {
-  // Show the modal
-  document.getElementById("viewDriverProfileModal").style.display = "block";
-}
-</script>
-
 <!-- Update Driver Modal -->
 <div id="updateDriverModal" class="modal">
     <div class="modal-content">
@@ -500,173 +494,6 @@ function showDriverProfile() {
                         <button type="submit" class="btn btn-primary full-width">UPDATE DRIVER</button>
                     </div>
                 </form>
-            </div>
-        </div>
-    </div>
-</div>
-
-<!-- View Driver Profile Modal -->
-<div id="viewDriverProfileModal" class="modal">
-    <div class="modal-content">
-        <span class="close" onclick="closeModal('viewDriverProfileModal')">&times;</span>
-        <h2>Driver Profile</h2>
-        <div class="vehicle-modal-content">
-            <div class="vehicle-modal-details">
-                <div class="detail-group">
-                    <h3>Personal Information</h3>
-                    <div class="profile-header">
-                        <div class="profile-image">
-                            <img src="https://randomuser.me/api/portraits/men/1.jpg" alt="Driver Profile Image">
-                        </div>
-                        <div class="profile-info">
-                            <div class="name-row">
-                            <span id="driverFirstName">John</span>
-                            <span id="driverLastName">Doe</span>
-                            </div>
-                            <div class="detail-row">
-                            <span class="label">Email:</span>
-                            <span class="value" id="driverEmail">john.doe@example.com</span>
-                            </div>
-                            <div class="detail-row">
-                            <span class="label">Phone:</span>
-                            <span class="value" id="driverPhone">123-456-7890</span>
-                            </div>
-                        </div>
-                        </div>
-                </div>
-
-                <div class="detail-group">
-                    <h3>Driver Address</h3>
-                    <div class="detail-row">
-                        <span class="label">Address Line 1:</span>
-                        <span class="value" id="driverAddressLine1">123 Main St</span> <!-- Hardcoded -->
-                    </div>
-                    <div class="detail-row">
-                        <span class="label">Address Line 2:</span>
-                        <span class="value" id="driverAddressLine2">Apt 4B</span> <!-- Hardcoded -->
-                    </div>
-                    <div class="detail-row">
-                        <span class="label">City:</span>
-                        <span class="value" id="driverCity">New York</span> <!-- Hardcoded -->
-                    </div>
-                </div>
-
-                <div class="detail-group">
-                    <h3>Past Collections</h3>
-                    <table>
-                        <thead>
-                            <tr>
-                                <th>Collection ID</th>
-                                <th>Vehicle</th>
-                                <th>Shift Start</th>
-                                <th>Shift End</th>
-                                <th>Status</th>
-                                <th>Duration</th>
-                            </tr>
-                        </thead>
-                        <tbody id="pastCollections">
-                            <tr>
-                                <td>COL001</td>
-                                <td>Vehicle 1</td>
-                                <td>08:00 AM</td>
-                                <td>10:00 AM</td>
-                                <td>Completed</td>
-                                <td>2 hours</td>
-                            </tr>
-                            <tr>
-                                <td>COL002</td>
-                                <td>Vehicle 2</td>
-                                <td>09:00 AM</td>
-                                <td>11:00 AM</td>
-                                <td>Completed</td>
-                                <td>2 hours</td>
-                            </tr>
-                            <tr>
-                                <td>COL003</td>
-                                <td>Vehicle 3</td>
-                                <td>10:00 AM</td>
-                                <td>12:00 PM</td>
-                                <td>Pending</td>
-                                <td>2 hours</td>
-                            </tr>
-                        </tbody>
-                    </table>
-                </div>
-
-                <div class="detail-group">
-                    <h3>Driver Statistics</h3>
-                    <div class="driver-stats">
-                        <!-- <div class="stat-item">
-                            <span class="label">Date Joined:</span>
-                            <span class="value">January 1, 2020</span> 
-                        </div> -->
-                        <div class="stat-item">
-                            <span class="label">Collections Completed:</span>
-                            <span class="value">50</span> <!-- Hardcoded -->
-                        </div>
-                        <div class="stat-item">
-                            <span class="label">Reports Received:</span>
-                            <span class="value">2</span> <!-- Hardcoded -->
-                        </div>
-                        <div class="stat-item">
-                            <span class="label">Deliveries Completed:</span>
-                            <span class="value">45</span> <!-- Hardcoded -->
-                        </div>
-                    </div>
-                </div>
-
-                <div class="detail-group">
-                    <h3>Past Deliveries</h3>
-                    <table>
-                        <thead>
-                            <tr>
-                                <th>Delivery ID</th>
-                                <th>Vehicle</th>
-                                <th>Delivery Time</th>
-                                <th>Status</th>
-                            </tr>
-                        </thead>
-                        <tbody id="pastDeliveries">
-                            <tr>
-                                <td>DEL001</td>
-                                <td>Vehicle 1</td>
-                                <td>12:00 PM</td>
-                                <td>Delivered</td>
-                            </tr>
-                            <tr>
-                                <td>DEL002</td>
-                                <td>Vehicle 2</td>
-                                <td>01:00 PM</td>
-                                <td>Delivered</td>
-                            </tr>
-                        </tbody>
-                    </table>
-                </div>
-
-                <div class="detail-group">
-                    <h3>Reports</h3>
-                    <table>
-                        <thead>
-                            <tr>
-                                <th>Report ID</th>
-                                <th>Date</th>
-                                <th>Details</th>
-                            </tr>
-                        </thead>
-                        <tbody id="driverReports">
-                            <tr>
-                                <td>REP001</td>
-                                <td>March 1, 2021</td>
-                                <td>No issues reported</td>
-                            </tr>
-                            <tr>
-                                <td>REP002</td>
-                                <td>April 15, 2021</td>
-                                <td>Minor issues reported</td>
-                            </tr>
-                        </tbody>
-                    </table>
-                </div>
             </div>
         </div>
     </div>

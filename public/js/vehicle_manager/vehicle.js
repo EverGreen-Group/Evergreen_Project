@@ -7,10 +7,10 @@ document.addEventListener("DOMContentLoaded", function () {
     type: "doughnut",
     data: {
       labels: [
-        "Collection Mismatches",
-        "Delivery Issues",
-        "Supplier Complaints",
-        "Driver Reports",
+        "Unallocated",
+        "Assigned for Collections",
+        "Assigned for Deliveries",
+        "Maintainance",
       ],
       datasets: [
         {
@@ -43,11 +43,27 @@ document.addEventListener("DOMContentLoaded", function () {
   new Chart(driverCtx, {
     type: "doughnut",
     data: {
-      labels: ["Unassigned", "Available", "On Delivery", "On Collection"],
+      labels: [
+        "Monday",
+        "Tuesday",
+        "Wednesday",
+        "Thursday",
+        "Friday",
+        "Saturday",
+        "Sunday",
+      ],
       datasets: [
         {
-          data: [2, 5, 3, 4],
-          backgroundColor: ["#FF9F40", "#4BC0C0", "#36A2EB", "#9966FF"],
+          data: [2, 5, 3, 4, 6, 3, 2],
+          backgroundColor: [
+            "#FF9F40", // Orange
+            "#4BC0C0", // Teal
+            "#36A2EB", // Blue
+            "#9966FF", // Purple
+            "#FF6384", // Pink
+            "#FFCD56", // Yellow
+            "#4CAF50", // Green
+          ],
           borderColor: "#fff",
           borderWidth: 2,
         },
@@ -168,7 +184,63 @@ function handleUserSelection(selectElement, elements) {
   }
 }
 
-function showDriverProfile() {
+function showVehicleDetails() {
+  // Hardcoded values for the modal
+  const licensePlate = "V001";
+  const vehicleType = "Sedan";
+  const status = "In Use";
+  const capacity = "50";
+  const make = "Toyota";
+  const model = "Corolla";
+  const manufacturingYear = "2020";
+  const color = "Red";
+
+  // Populate the modal with hardcoded vehicle details
+  // document
+  //   .getElementById("viewVehicleModal")
+  //   .querySelector(".vehicle-modal-image img").src =
+  //   "https://i.ikman-st.com/tata-dimo-batta-2010-for-sale-kurunegala-558/de991e55-8b07-4820-bd8d-0e6c6f21d356/620/466/fitted.jpg";
+  // document
+  //   .getElementById("viewVehicleModal")
+  //   .querySelector(
+  //     ".vehicle-modal-details .detail-row:nth-child(1) .value"
+  //   ).textContent = licensePlate;
+  // document
+  //   .getElementById("viewVehicleModal")
+  //   .querySelector(
+  //     ".vehicle-modal-details .detail-row:nth-child(2) .value"
+  //   ).textContent = vehicleType;
+  // document
+  //   .getElementById("viewVehicleModal")
+  //   .querySelector(
+  //     ".vehicle-modal-details .detail-row:nth-child(3) .value"
+  //   ).textContent = status;
+  // document
+  //   .getElementById("viewVehicleModal")
+  //   .querySelector(
+  //     ".vehicle-modal-details .detail-row:nth-child(4) .value"
+  //   ).textContent = capacity + " kg";
+  // document
+  //   .getElementById("viewVehicleModal")
+  //   .querySelector(
+  //     ".vehicle-modal-details .detail-row:nth-child(5) .value"
+  //   ).textContent = make;
+  // document
+  //   .getElementById("viewVehicleModal")
+  //   .querySelector(
+  //     ".vehicle-modal-details .detail-row:nth-child(6) .value"
+  //   ).textContent = model;
+  // document
+  //   .getElementById("viewVehicleModal")
+  //   .querySelector(
+  //     ".vehicle-modal-details .detail-row:nth-child(7) .value"
+  //   ).textContent = manufacturingYear;
+  // document
+  //   .getElementById("viewVehicleModal")
+  //   .querySelector(
+  //     ".vehicle-modal-details .detail-row:nth-child(8) .value"
+  //   ).textContent = color;
+
   // Show the modal
-  document.getElementById("viewDriverProfileModal").style.display = "block";
+  document.getElementById("viewVehicleModal").style.display = "block";
 }
