@@ -5,6 +5,13 @@
 <!-- Top nav bar -->
 <?php require APPROOT . '/views/inc/components/topnavbar.php'; ?>
 
+<!-- Include Leaflet CSS -->
+<link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+
+
+<!-- Include Google Maps API -->
+
+
 <!-- MAIN -->
 <main>
   <!-- Vehicle Management Section -->
@@ -1186,31 +1193,11 @@ async function confirmDelete(vehicleId) {
 </script>
 
 <script>
-function updateMap(lat, lng) {
-    const vehicleLocation = { lat: lat, lng: lng };
-    
-    const map = new google.maps.Map(document.getElementById('map-container'), {
-        center: vehicleLocation,
-        zoom: 13,
-    });
-
-    // Add a marker for the vehicle location
-    new google.maps.Marker({
-        position: vehicleLocation,
-        map: map,
-        title: 'Vehicle Location'
-    });
-}
-</script>
-
-<!-- Include Google Maps API -->
-<script async defer src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCdt_khahhXrKdrA8cLgKeQB2CZtde-_Vc&callback=initMap"></script>
-<script>
     let map;
 
     function initMap() {
         // Hardcoded vehicle location (example coordinates)
-        const vehicleLocation = { lat: 6.2202197, lng: 80.2448223 }; 
+        const vehicleLocation = { lat: 6.2202197, lng: 80.2448223 };
 
         // Initialize the map
         map = new google.maps.Map(document.getElementById('map-container'), {
@@ -1226,10 +1213,24 @@ function updateMap(lat, lng) {
         });
     }
 
+    function updateMap(lat, lng) {
+        const vehicleLocation = { lat: lat, lng: lng };
+
+        // Set the view to the new location
+        map.setCenter(vehicleLocation);
+
+        // Add a marker for the vehicle location
+        new google.maps.Marker({
+            position: vehicleLocation,
+            map: map,
+            title: 'Vehicle Location'
+        });
+    }
 </script>
 
 </main>
 
+<script async defer src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAC8AYYCYuMkIUAjQWsAwQDiqbMmLa-7eo&callback=initMap"></script>
 
 </section>
 

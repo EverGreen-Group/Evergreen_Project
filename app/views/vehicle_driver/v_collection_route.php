@@ -11,6 +11,8 @@
 <script src="<?php echo URLROOT; ?>/public/js/vehicle_driver/collection_route_maps.js"></script>
 <script src="<?php echo URLROOT; ?>/public/js/vehicle_driver/collection_route_suppliers.js"></script>
 
+<?php print_r($data); ?>
+
 
 <div class="map-container" id="map"></div>
 
@@ -19,19 +21,20 @@
     <button class="btn-arrive" onclick="markArrived()">
         <i class='bx bx-map-pin'></i> Mark Arrived
     </button>
+
     <button class="btn-view" onclick="viewCollection()">
         <i class='bx bx-collection'></i> View Collection
     </button>
 </div>
 
 <div id="collectionBagDetailsModal" class="modal" onclick="closeModal('collectionBagDetailsModal')">
+    <?php print_r($data); ?>
     <div class="modal-content" onclick="event.stopPropagation();">
         <span class="close" onclick="closeModal('collectionBagDetailsModal')">&times;</span>
         <h2>Collection Route</h2>
+        <p>Remaining Collections: <?php echo count(array_filter($data['collections'], function($supplier) { return $supplier['status'] != 'Collected'; })); ?></p>
         <div id="collectionBagDetailsContent">
-            <!-- Current Supplier (First in the list) -->
             <?php if (!empty($data['collections'])): ?>
-                <?php $currentSupplier = $data['collections'][0]; ?>
                 <div class="current-supplier-card">
                     <div class="card-header">
                         <h3>Current Stop</h3>
@@ -73,8 +76,8 @@
                 <?php if (count($data['collections']) > 1): ?>
                     <div class="remaining-suppliers">
                         <?php foreach (array_slice($data['collections'], 1) as $supplier): ?>
-                            <div class="supplier-item">
-                                <div class="supplier-info">
+                            <div class="supplier-item border-supplier">
+                                <div class="supplier-info border-info">
                                     <span class="supplier-name"><?php echo $supplier['supplierName']; ?></span>
                                     <span class="collection-amount"><?php echo $supplier['estimatedCollection']; ?>kg expected</span>
                                 </div>
@@ -82,13 +85,129 @@
                         <?php endforeach; ?>
                     </div>
                 <?php endif; ?>
+            <?php else: ?>
+                <!-- Collection Summary -->
+                <div class="supplier-details">
+                    <h3>Collection Summary</h3>
+                    <p><strong>Collection ID:</strong> <?php echo $data['collection']->collection_id; ?></p>
+                    <p><strong>Driver Name:</strong> <?php echo $data['driverName']; ?></p>
+                    <p><strong>Total Quantity:</strong> <?php echo $data['collection']->total_quantity; ?> kg</p>
+                </div>
+
+                <!-- Button to End Collection -->
+                <div class="supplier-actions">
+                    <button class="action-btn primary" onclick="endCollection('<?php echo $data['collection']->collection_id; ?>')">
+                        <i class='bx bx-check-circle'></i>
+                        End Collection
+                    </button>
+                </div>
             <?php endif; ?>
         </div>
     </div>
 </div>
 
+<!-- Add Collection Modal -->
+<div id="addCollectionModal" class="modal" onclick="closeModal('addCollectionModal')">
+    <div class="modal-content" onclick="event.stopPropagation();">
+        <span class="close" onclick="closeModal('addCollectionModal')">&times;</span>
+        
+        <!-- Supplier Info Header -->
+        <div class="current-supplier-card">
+            <div class="supplier-profile">
+                <div class="supplier-avatar">
+                    <img src="<?php echo $currentSupplier['image']; ?>" alt="Supplier">
+                </div>
+                <div class="supplier-details">
+                    <h3 id="modalSupplierName"></h3>
+                    <p class="expected-amount" id="modalExpectedAmount"></p>
+                </div>
+            </div>
+        </div>
 
-<script async defer src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCdt_khahhXrKdrA8cLgKeQB2CZtde-_Vc&callback=initMap"></script>
+        <!-- Assigned Bags Section -->
+        <div id="assignedBagsSection" class="supplier-item">
+            <div class="supplier-info">
+                <span class="supplier-name">Added Bags</span>
+                <div id="assignedBagsList"></div>
+            </div>
+        </div>
+
+        <!-- Step 1: Bag ID Input -->
+        <div id="bagIdStep" class="collection-step supplier-item">
+            <div class="supplier-info">
+                <label for="bagId" class="supplier-name">Scan Bag QR Code</label>
+                <div class="input-with-button">
+                    <input type="text" id="bagId" placeholder="Scan or enter bag ID">
+                    <button onclick="checkBag()" class="action-btn primary">Verify Bag</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Step 2: Collection Details -->
+        <div id="bagDetailsStep" class="collection-step" style="display: none;">
+            <div class="supplier-item">
+                <div class="supplier-info">
+                    <span class="supplier-name">Bag Currently Selected: #<span id="selectedBagId"></span></span>
+                    <span class="collection-amount">Capacity: <span id="bagCapacity"></span>kg</span>
+                </div>
+            </div>
+
+            <div class="supplier-item">
+                <div class="supplier-info">
+                    <label class="supplier-name">Weight (kg)</label>
+                    <input type="number" id="actualWeight" step="0.01" required>
+                </div>
+            </div>
+
+            <div class="supplier-item">
+                <div class="supplier-info">
+                    <label class="supplier-name">Leaf Quality Details</label>
+                    <div class="quality-grid">
+                        <select id="leafType" required>
+                            <option value="S">Super</option>
+                            <option value="B">Broad</option>
+                            <option value="N">Normal</option>
+                        </select>
+                        <select id="leafAge" required>
+                            <option value="Young">Young</option>
+                            <option value="Medium">Medium</option>
+                            <option value="Mature">Mature</option>
+                        </select>
+                        <select id="moistureLevel" required>
+                            <option value="Wet">Wet</option>
+                            <option value="Semi Wet">Semi Wet</option>
+                            <option value="Dry">Dry</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <div class="supplier-item">
+                <div class="supplier-info">
+                    <label class="supplier-name">Notes</label>
+                    <textarea id="deductionNotes" placeholder="Add any deduction notes or remarks"></textarea>
+                </div>
+            </div>
+
+            <div class="supplier-actions">
+                <button type="button" onclick="addBagToCollection()" class="action-btn primary">
+                    <i class='bx bx-plus-circle'></i>
+                    <span>Add Bag</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- Finalize Button -->
+        <div class="supplier-actions" id="finalizeActions">
+            <button type="button" id="confirmCollectionButton" onclick="finalizeSupplierCollection()" class="action-btn primary" style="display: none;">
+                <i class='bx bx-check'></i>
+                <span>Finalize Collection</span>
+            </button>
+        </div>
+    </div>
+</div>
+
+<script async defer src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAC8AYYCYuMkIUAjQWsAwQDiqbMmLa-7eo&callback=initMap"></script>
 
 
 <?php require APPROOT . '/views/inc/components/footer.php'; ?>

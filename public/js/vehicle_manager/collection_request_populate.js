@@ -236,3 +236,31 @@ document.addEventListener("DOMContentLoaded", function () {
 function refreshCollectionRequests() {
   loadCollectionRequests();
 }
+
+document.addEventListener("DOMContentLoaded", () => {
+  const createScheduleModal = document.getElementById("createScheduleModal");
+  const openCreateScheduleModal = document.getElementById(
+    "openCreateScheduleModal"
+  );
+  const closeButtons = document.querySelectorAll(".close");
+
+  // Open the Create Schedule modal
+  openCreateScheduleModal.addEventListener("click", (event) => {
+    event.preventDefault(); // Prevent default anchor behavior
+    createScheduleModal.style.display = "block"; // Show the modal
+  });
+
+  // Close the modal when the close button is clicked
+  closeButtons.forEach((button) => {
+    button.addEventListener("click", () => {
+      createScheduleModal.style.display = "none"; // Hide the modal
+    });
+  });
+
+  // Close the modal when clicking outside of the modal content
+  window.addEventListener("click", (event) => {
+    if (event.target === createScheduleModal) {
+      createScheduleModal.style.display = "none"; // Hide the modal
+    }
+  });
+});

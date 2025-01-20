@@ -36,6 +36,26 @@ if (isset($data['collection']) && $data['collection']) {
                     strtolower($data['collection']->status) === 'completed');
 }
 
+
+// A TEST
+$currentDateTime = new DateTime();
+$currentDay = $currentDateTime->format('l'); // Get the current day (e.g., 'Monday')
+$currentTime = $currentDateTime->format('H:i'); // Get the current time (e.g., '14:00')
+
+// Assuming $data['schedule']->start_time is a datetime string
+$scheduleStartTime = new DateTime($data['schedule']->start_time);
+$scheduleDay = $scheduleStartTime->format('l'); // Get the scheduled day
+$scheduleStartHour = $scheduleStartTime->format('H:i'); // Get the scheduled start time
+$scheduleEndHour = (new DateTime($data['schedule']->end_time))->format('H:i'); // Get the scheduled end time
+
+// Check if a collection exists and its status
+$collectionExists = isset($data['collection']) && is_object($data['collection']) && !empty((array)$data['collection']);
+$collectionStatus = $collectionExists ? $data['collection']->status : null;
+
+
+
+//
+
 // Print conditions
 // echo "<div class='conditions'>";
 // echo "<p>Schedule day: " . htmlspecialchars($data['schedule']->day) . "</p>";
@@ -48,6 +68,7 @@ if (isset($data['collection']) && $data['collection']) {
 ?>
 
 <main class="schedule-details-main">
+    <!-- <?php print_r($data); ?> -->
     <div class="content-header">
         <div class="header-text">
             <h1>Collection Details</h1>
@@ -118,78 +139,41 @@ if (isset($data['collection']) && $data['collection']) {
             
             <section class="collection-status">
                 <h2>Collection Status</h2>
+
+                <?php if ($collectionCompleted): ?>
+                    <div class="collection-stage">
+                        <div class="collection-actions">
+                            <h4>Collection is complete for the day! Come back next week.</h4>
+                        </div>
+                    </div>
                 
-                <?php if (empty($data['collectionBags'])): ?>
-                    <!-- Initial state - Driver assigns bags -->
-                    <div class="collection-stage bag-assignment">
-                        <h3>Assign Collection Bags</h3>
-                        <div class="bag-assignment-container">
-                            <form action="<?php echo URLROOT; ?>/vehicledriver/assignBags" method="POST" class="bag-assignment-form">
-                                <input type="hidden" name="schedule_id" value="<?php echo htmlspecialchars($data['schedule']->schedule_id); ?>">
-                                
-                                <div class="form-group">
-                                    <label for="bag-id">Add Bags for Collection</label>
-                                    <div class="bag-input-container">
-                                        <input type="text" 
-                                            id="bag-id"
-                                            class="bag-id-input" 
-                                            placeholder="Enter bag ID..."
-                                            pattern="[0-9]+"
-                                            autocomplete="off">
-                                        <button type="button" class="btn-primary add-bag-btn">Add Bag</button>
-                                    </div>
-                                </div>
-
-                                <div class="assigned-bags-section">
-                                    <h4>Assigned Bags</h4>
-                                    <div class="assigned-bags-list">
-                                        <p class="no-bags-message">No bags assigned yet</p>
-                                    </div>
-                                </div>
-
-                                <div class="form-actions">
-                                    <button type="submit" class="btn-primary">Confirm Bag Assignment</button>
-                                </div>
+                <?php elseif (!isset($data['collection']) || (is_object($data['collection']) && empty((array)$data['collection']))): ?>
+                    <!-- No collection exists for this schedule - Show button to create collection -->
+                    <div class="collection-stage">
+                        <h3>Create Collection</h3>
+                        <div class="collection-actions">
+                            <form action="<?php echo URLROOT; ?>/vehicledriver/createCollection/<?php echo $data['schedule']->schedule_id; ?>" method="POST">
+                                <button type="submit" class="btn-primary">Start Collection</button>
                             </form>
                         </div>
                     </div>
                 <?php else: ?>
-                    <!-- After bags are assigned - Show approval status -->
+                    <!-- Collection exists - Show approval status -->
                     <div class="collection-stage approval-status">
                         <h3>Collection Approval Status</h3>
                         
                         <?php 
-                        // Debug the collection data
-                        error_log('Collection data type: ' . gettype($data['collection']));
-                        error_log('Collection data: ' . print_r($data['collection'], true));
-
-                        // print_r($data['collection']);
-                        
-                        // Safe check for both existence and property
-                        if (!isset($data['collection']) || 
-                            !is_object($data['collection']) || 
-                            !property_exists($data['collection'], 'vehicle_manager_approved') || 
+                        // Safe check for vehicle manager approval
+                        if (!property_exists($data['collection'], 'vehicle_manager_approved') || 
                             !$data['collection']->vehicle_manager_approved): 
                         ?>
                             <div class="status-message warning">
                                 <i class='bx bx-time'></i>
                                 <p>Awaiting Vehicle Manager's Approval</p>
                             </div>
-                            
-                            <!-- Show assigned bags list -->
-                            <div class="assigned-bags">
-                                <h4>Assigned Bags</h4>
-                                <ul class="bags-list">
-                                    <?php foreach ($data['collectionBags'] as $bag): ?>
-                                        <li>
-                                            <span class="bag-id">Bag #<?php echo $bag->bag_id; ?></span>
-                                            <span class="bag-capacity"><?php echo $bag->capacity_kg; ?> kg</span>
-                                        </li>
-                                    <?php endforeach; ?>
-                                </ul>
-                            </div>
+
                         <?php else: ?>
-                            <!-- Show start collection button only after approval -->
+                            <!-- Show Go to Collections button only after approval -->
                             <div class="status-message success">
                                 <i class='bx bx-check-circle'></i>
                                 <p>Approved by Vehicle Manager - Ready to Start Collection</p>
@@ -197,11 +181,11 @@ if (isset($data['collection']) && $data['collection']) {
                             
                             <div class="collection-actions">
                                 <a href="<?php echo URLROOT; ?>/vehicledriver/collection/<?php echo $data['collection']->collection_id; ?>" 
-                                   class="btn-primary">Start Collection</a>
+                                   class="btn-primary">Go to Collections</a>
                             </div>
-                        <?php endif; ?>
+                        <?php endif; // End of vehicle manager approval check ?>
                     </div>
-                <?php endif; ?>
+                <?php endif; // End of collection existence check ?>
             </section>
         <?php endif; ?>
 

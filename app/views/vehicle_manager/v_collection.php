@@ -38,6 +38,13 @@
 
     </div>
 
+    <div class="action-buttons">
+        <a href="#" id="openCreateScheduleModal" class="btn btn-primary">
+            <i class='bx bx-plus'></i>
+            Create a Schedule
+        </a>
+    </div>
+
 
     <!-- Box Info -->
     <ul class="box-info">
@@ -202,70 +209,6 @@
     <?php flash('schedule_create_error'); ?>
     <?php flash('schedule_create_success'); ?>
 
-<!-- Create New Schedule Section -->
-<div class="table-data">
-    <div class="order">
-        <div class="head">
-            <h3>Create New Schedule</h3>
-        </div>
-        <form id="createScheduleForm" method="POST" action="<?php echo URLROOT; ?>/collectionschedules/create">
-            <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px;">
-
-                <div class="form-group">
-                    <label for="day">Select Day:</label>
-                    <select id="day" name="day" required>
-                        <option value="" disabled selected>Select a day</option>
-                        <option value="Monday">Monday</option>
-                        <option value="Tuesday">Tuesday</option>
-                        <option value="Wednesday">Wednesday</option>
-                        <option value="Thursday">Thursday</option>
-                        <option value="Friday">Friday</option>
-                        <option value="Saturday">Saturday</option>
-                        <option value="Sunday">Sunday</option>
-                    </select>
-                </div>
-            
-                <div class="form-group">
-                    <label for="route">Route:</label>
-                    <select id="route" name="route_id" required>
-                        <option value="" disabled selected>Select a day first</option>
-                    </select>
-                </div>
-
-                <div class="form-group">
-                    <label for="driver">Driver:</label>
-                    <select id="driver" name="driver_id" required>
-                        <?php foreach ($data['drivers'] as $driver): ?>
-                            <option value="<?= $driver->driver_id; ?>"><?= $driver->first_name; ?></option>
-                        <?php endforeach; ?>
-                    </select>
-                </div>
-
-                <div class="form-group">
-                    <label for="shift">Shift:</label>
-                    <select id="shift" name="shift_id" required>
-                        <?php foreach ($data['shifts'] as $shift): ?>
-                            <option value="<?= $shift->shift_id; ?>"><?= $shift->shift_name; ?></option>
-                        <?php endforeach; ?>
-                    </select>
-                </div>
-
-                <div class="form-group">
-                    <label for="week_number">Week:</label>
-                    <select id="week_number" name="week_number" required>
-                        <option value="1">Week 1</option>
-                        <option value="2">Week 2</option>
-                    </select>
-                </div>
-
-
-            </div>
-
-            <button type="submit" class="btn-submit">Create Schedule</button>
-        </form>
-    </div>
-</div>
-
 <!-- Edit Schedule Section -->
 <div class="table-data">
     <div class="order">
@@ -338,6 +281,64 @@
         <div id="collectionRequestDetailsContent">
             <!-- Bag details will be populated here -->
         </div>
+    </div>
+</div>
+
+<!-- Create Schedule Modal -->
+<div id="createScheduleModal" class="modal" onclick="event.stopPropagation(); closeModal('createScheduleModal')">
+    <div class="modal-content" style="width: 80%; max-width: 600px;" onclick="event.stopPropagation();">
+        <span class="close" onclick="closeModal('createScheduleModal')">&times;</span>
+        <h2 style="margin-bottom: 30px;">Create New Schedule</h2>
+
+        <!-- <img src="<?php echo URLROOT; ?>/public/img/schedule_banner.jpg" alt="Banner" style="width: 100%; height: auto; margin-bottom: 20px;"> -->
+
+        <form id="createScheduleForm" method="POST" action="<?php echo URLROOT; ?>/collectionschedules/create">
+            <div style="display: flex; flex-direction: column; gap: 20px;">
+                <div class="form-group">
+                    <label for="day">Select Day:</label>
+                    <select id="day" name="day" required>
+                        <option value="" disabled selected>Select a day</option>
+                        <option value="Monday">Monday</option>
+                        <option value="Tuesday">Tuesday</option>
+                        <option value="Wednesday">Wednesday</option>
+                        <option value="Thursday">Thursday</option>
+                        <option value="Friday">Friday</option>
+                        <option value="Saturday">Saturday</option>
+                        <option value="Sunday">Sunday</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="route">Route:</label>
+                    <select id="route" name="route_id" required>
+                        <option value="" disabled selected>Select a day first</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="driver">Driver:</label>
+                    <select id="driver" name="driver_id" required>
+                        <?php foreach ($data['drivers'] as $driver): ?>
+                            <option value="<?= $driver->driver_id; ?>"><?= $driver->first_name; ?></option>
+                        <?php endforeach; ?>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="shift">Shift:</label>
+                    <select id="shift" name="shift_id" required>
+                        <?php foreach ($data['shifts'] as $shift): ?>
+                            <option value="<?= $shift->shift_id; ?>"><?= $shift->shift_name; ?></option>
+                        <?php endforeach; ?>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="week_number">Week:</label>
+                    <select style="margin-bottom: 30px;" id="week_number" name="week_number" required>
+                        <option value="1">Week 1</option>
+                        <option value="2">Week 2</option>
+                    </select>
+                </div>
+            </div>
+            <button type="submit" class="btn-secondary">Create Schedule</button>
+        </form>
     </div>
 </div>
 
