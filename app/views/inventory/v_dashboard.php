@@ -518,6 +518,7 @@
 				<i class='bx bx-filter'></i>
 			</div>
 			<?php
+			$validatedetails = $data['validatedetails'];
 			$machines = $data['machines'];
 			// Example PHP array
 			// $machines = [
@@ -532,6 +533,8 @@
 				'labels' => array_map(fn($machine) => $machine->machine_name, $machines),
 				'hours' => array_map(fn($machine) => (int) preg_replace('/\D/', '', $machine->total_working_hours), $machines),
 			];
+
+$collectionData = json_encode($validatedetails);
 
 			// Encode data to JSON
 			$jsonData = json_encode($chartdata);
@@ -594,6 +597,7 @@
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script> const chartData = <?php echo $jsonData; ?>;</script>
+<script>const collectionData = <?php echo $collectionData; ?>;</script>
 <script>
 	document.addEventListener('DOMContentLoaded', function () {
 		const ctx = document.getElementById('machineAllocationChart').getContext('2d');
