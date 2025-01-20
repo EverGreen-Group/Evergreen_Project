@@ -1,0 +1,124 @@
+.chart-container-wrapper {
+  height: 250px;
+}
+
+.legend-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 10px;
+  margin-top: 10px;
+}
+
+.legend-wrapper {
+  display: flex;
+  gap: 15px;
+}
+
+.legend-item {
+  display: flex;
+  align-items: center;
+}
+
+.legend-dot {
+  width: 12px;
+  height: 12px;
+  margin-right: 5px;
+  border-radius: 2px;
+}
+
+.legend-text {
+  font-size: 0.9em;
+}
+
+.bg-blue {
+  background-color: rgba(54, 162, 235, 0.6);
+}
+
+.bg-red {
+  background-color: rgba(255, 99, 132, 0.6);
+}
+
+.bg-yellow {
+  background-color: rgba(255, 206, 86, 0.6);
+}
+
+.bg-purple {
+  background-color: rgba(153, 102, 255, 0.6);
+}
+
+.bags-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 20px;
+  padding: 20px;
+}
+
+.bag-card {
+  background: #fff;
+  border-radius: 10px;
+  padding: 15px;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+  cursor: pointer;
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.bag-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+}
+
+.bag-icon {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 150px;
+  width: 150px;
+  margin: 0 auto;
+}
+
+.vehicle-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 10px;
+}
+
+.bag-info {
+  text-align: center;
+}
+
+.bag-info h4 {
+  margin: 0;
+  color: #342e37;
+  font-size: 1.1em;
+}
+
+.bag-info p {
+  margin: 5px 0;
+  color: #666;
+  font-size: 0.9em;
+}
+
+.status {
+  display: inline-block;
+  padding: 5px 10px;
+  border-radius: 20px;
+  font-size: 0.8em;
+  font-weight: 500;
+}
+
+.status.processing {
+  background-color: #ff9020;
+  color: white;
+}
+
+.status.transit {
+  background-color: var(--green);
+  color: white;
+}
+
+.status.used {
+  background-color: var(--mainn);
+  color: white;
+}

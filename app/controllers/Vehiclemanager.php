@@ -152,6 +152,17 @@ class VehicleManager extends Controller {
             'vehicleTypeStats' => $this->vehicleModel->getVehicleTypeStats()
         ];
 
+        $this->view('vehicle_manager/v_new_vehicle', $data);
+    }
+
+    public function vehiclez() {
+        $data = [
+            'totalVehicles' => $this->vehicleModel->getTotalVehicles(),
+            'availableVehicles' => $this->vehicleModel->getAvailableVehicles(),
+            'vehicles' => $this->vehicleModel->getVehicleDetails(),
+            'vehicleTypeStats' => $this->vehicleModel->getVehicleTypeStats()
+        ];
+
         $this->view('vehicle_manager/v_vehicle', $data);
     }
 
