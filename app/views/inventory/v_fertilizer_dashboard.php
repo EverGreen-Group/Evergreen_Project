@@ -15,7 +15,7 @@
             padding: 20px;
             background-color: #fff;
             border-radius: 8px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
         }
 
         .constraints-order {
@@ -153,68 +153,7 @@
                 </div>
             </section>
 
-            <section style="display: flex; justify-content: center; align-items: center; padding: 20px; margin: 20px;">
-                <div style="width: 80%; text-align: center;">
-                    <h2>Monthly Fertilizer Usage</h2>
-                    <canvas id="fertilizerChart"></canvas>
-                </div>
-            </section>
-
-            <section class="fertilizer-stock">
-                <h2>Fertilizer Stock</h2>
-                <p>This month (3)</p>
-                <a href="#" class="details-link">View detail ></a>
-
-                <table>
-                    <thead>
-                    <td>Fertilizer name</td>
-                        <td>code</td>
-                        <td>Quantity</td>
-                        <td>update</td>
-                        <td>delete</td>
-                    </thead>
-                    <tbody>
-                        <?php foreach ($data['fertilizer'] as $fertilizer) : ?>
-                        <tr>
-                            <td><?php echo $fertilizer->fertilizer_name; ?></td>
-                            <td><?php echo $fertilizer->code; ?></td>
-                            <td><?php echo $fertilizer->quantity; ?></td>
-                            <td><a href="<?php echo URLROOT; ?>/inventory/updatefertilizer/<?php echo $fertilizer->id; ?>"><button class="update-btn">Update</button></a></td>
-                            <td><a href="<?php echo URLROOT; ?>/inventory/deletefertilizer/<?php echo $fertilizer->id; ?>"><button class="delete-btn">Delete</button></a></td>
-                        </tr>
-                        <?php endforeach; ?>
-                        <!-- <tr>
-
-                            <td>B 589</td>
-                            <td>50kg</td>
-                            <td><button class="update-btn">Update</button></td>
-                            <td><button class="delete-btn">Delete</button></td>
-                        </tr>
-                        <tr>
-
-                            <td>C 450</td>
-                            <td>50kg</td>
-                            <td><button class="update-btn">Update</button></td>
-                            <td><button class="delete-btn">Delete</button></td>
-                        </tr>
-                        <tr>
-
-                            <td>C 345</td>
-                            <td>Content</td>
-                            <td><button class="update-btn">Update</button></td>
-                            <td><button class="delete-btn">Delete</button></td>
-                        </tr>
-                        <tr>
-
-                            <td>B 110</td>
-                            <td>123Kg</td>
-                            <td><button class="update-btn">Update</button></td>
-                            <td><button class="delete-btn">Delete</button></td>
-                        </tr> -->
-                    </tbody>
-                </table>
-
-                <!-- Fertilizer Constraints Section -->
+            <!-- Fertilizer Constraints Section -->
             <div class="table-data fertilizer-constraints">
                 <div class="constraints-order">
                     <div class="constraints-head">
@@ -301,6 +240,69 @@
                     </div>
                 </div>
             </div>
+
+
+            <section style="display: flex; justify-content: center; align-items: center; padding: 20px; margin: 20px;">
+                <div style="width: 80%; text-align: center;">
+                    <h2>Monthly Fertilizer Usage</h2>
+                    <canvas id="fertilizerChart"></canvas>
+                </div>
+            </section>
+
+            <section class="fertilizer-stock">
+                <h2>Fertilizer Stock</h2>
+                <p>This month (3)</p>
+                <a href="#" class="details-link">View detail ></a>
+
+                <table>
+                    <thead>
+                        <td>Fertilizer name</td>
+                        <td>code</td>
+                        <td>Quantity</td>
+                        <td>update</td>
+                        <td>delete</td>
+                    </thead>
+                    <tbody>
+                        <?php foreach ($data['fertilizer'] as $fertilizer) : ?>
+                            <tr>
+                                <td><?php echo $fertilizer->fertilizer_name; ?></td>
+                                <td><?php echo $fertilizer->code; ?></td>
+                                <td><?php echo $fertilizer->quantity; ?></td>
+                                <td><a href="<?php echo URLROOT; ?>/inventory/updatefertilizer/<?php echo $fertilizer->id; ?>"><button class="update-btn">Update</button></a></td>
+                                <td><a href="<?php echo URLROOT; ?>/inventory/deletefertilizer/<?php echo $fertilizer->id; ?>"><button class="delete-btn">Delete</button></a></td>
+                            </tr>
+                        <?php endforeach; ?>
+                        <!-- <tr>
+
+                            <td>B 589</td>
+                            <td>50kg</td>
+                            <td><button class="update-btn">Update</button></td>
+                            <td><button class="delete-btn">Delete</button></td>
+                        </tr>
+                        <tr>
+
+                            <td>C 450</td>
+                            <td>50kg</td>
+                            <td><button class="update-btn">Update</button></td>
+                            <td><button class="delete-btn">Delete</button></td>
+                        </tr>
+                        <tr>
+
+                            <td>C 345</td>
+                            <td>Content</td>
+                            <td><button class="update-btn">Update</button></td>
+                            <td><button class="delete-btn">Delete</button></td>
+                        </tr>
+                        <tr>
+
+                            <td>B 110</td>
+                            <td>123Kg</td>
+                            <td><button class="update-btn">Update</button></td>
+                            <td><button class="delete-btn">Delete</button></td>
+                        </tr> -->
+                    </tbody>
+                </table>
+
 
             </section>
 

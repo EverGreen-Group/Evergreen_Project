@@ -258,5 +258,27 @@ class M_Route {
         $this->db->bind(':day', $currentDay);
         return $this->db->resultSet(); // Use resultSet() to fetch the results
     }
+
+    public function getRouteSuppliers($routeId) {
+        $this->db->query("
+            SELECT 
+                s.supplier_id, 
+                CONCAT(u.first_name, ' ', u.last_name) AS full_name, 
+                s.latitude, 
+                s.longitude 
+            FROM 
+                route_suppliers rs 
+            JOIN 
+                suppliers s ON rs.supplier_id = s.supplier_id 
+            JOIN 
+                users u ON s.user_id = u.user_id 
+            WHERE 
+                rs.route_id = :route_id 
+                AND rs.is_active = 1 
+                AND rs.is_deleted = 0
+        ");
+        $this->db->bind(':route_id', $routeId);
+        return $this->db->resultSet(); // Assuming this method fetches the results as an array of objects
+    }
 }
 ?>

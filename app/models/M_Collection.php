@@ -78,25 +78,18 @@ class M_Collection {
     }
 
     public function getCollectionSuppliers($collectionId) {
-        $this->db->query("SELECT 
-            s.supplier_id,
-            s.first_name,
-            s.last_name,
-            s.contact_number,
-            s.coordinates,
-            csr.status,
-            csr.arrival_time,
-            csr.quantity,
-            csr.collection_time,
-            csr.notes
-        FROM suppliers s
-        INNER JOIN collection_supplier_records csr ON s.supplier_id = csr.supplier_id
-        INNER JOIN collections c ON csr.collection_id = c.collection_id
-        WHERE c.collection_id = :collection_id
-        ORDER BY csr.arrival_time ASC");
-
+        $this->db->query("
+            SELECT 
+                csr.*,
+                s.*,
+                CONCAT(u.first_name, ' ', u.last_name) as supplier_name
+            FROM collection_supplier_records csr
+            JOIN suppliers s ON csr.supplier_id = s.supplier_id
+            JOIN users u ON s.user_id = u.user_id
+            WHERE csr.collection_id = :collection_id
+            ORDER BY csr.record_id
+        ");
         $this->db->bind(':collection_id', $collectionId);
-
         return $this->db->resultSet();
     }
 
@@ -396,8 +389,7 @@ class M_Collection {
     public function getUpcomingCollectionDetailsByScheduleId($scheduleId) {
         $this->db->query('SELECT *
                           FROM collections 
-                          WHERE schedule_id = :schedule_id 
-                          AND status != "Completed"'
+                          WHERE schedule_id = :schedule_id'
                           );
         $this->db->bind(':schedule_id', $scheduleId);
         return $this->db->single();
@@ -792,31 +784,38 @@ class M_Collection {
             $result = $this->db->single();
             $totalWeight = $result->total_weight;
 
-            // Update or insert collection_supplier_records
-            $this->db->query('INSERT INTO collection_supplier_records (
-                supplier_id,
-                status,
-                quantity,
-                collection_time,
-                notes,
-                collection_id
-            ) VALUES (
-                :supplier_id,
-                :status,
-                :quantity,
-                :collection_time,
-                :notes,
-                :collection_id
-            )');
+            // Update collection_supplier_records
+            $this->db->query('UPDATE collection_supplier_records SET
+                status = :status,
+                quantity = :quantity,
+                collection_time = :collection_time,
+                notes = :notes
+            WHERE supplier_id = :supplier_id AND collection_id = :collection_id');
 
             $this->db->bind(':supplier_id', $data->supplier_id);
-            $this->db->bind(':status', $data->status);
+            $this->db->bind(':status', 'Collected');
             $this->db->bind(':quantity', $totalWeight);
             $this->db->bind(':collection_time', date('Y-m-d H:i:s', strtotime($data->collection_time)));
             $this->db->bind(':notes', $data->notes ?? null);
             $this->db->bind(':collection_id', $data->collection_id);
 
-            $this->db->execute();
+            if (!$this->db->execute()) {
+                error_log('Failed to update collection supplier record: ' . implode(', ', $this->db->errorInfo()));
+                throw new Exception('Failed to update collection supplier record');
+            }
+
+            // Update total_quantity in collections table
+            $this->db->query('UPDATE collections SET
+                total_quantity = total_quantity + :totalWeight
+            WHERE collection_id = :collection_id');
+
+            $this->db->bind(':totalWeight', $totalWeight);
+            $this->db->bind(':collection_id', $data->collection_id);
+
+            if (!$this->db->execute()) {
+                error_log('Failed to update total quantity in collections: ' . implode(', ', $this->db->errorInfo()));
+                throw new Exception('Failed to update total quantity in collections');
+            }
 
             // Commit transaction
             $this->db->commit();
@@ -866,6 +865,37 @@ class M_Collection {
             return [
                 'success' => false,
                 'message' => 'Failed to fetch assigned bags: ' . $e->getMessage()
+            ];
+        }
+    }
+
+    public function finalizeCollection($collectionId) {
+        try {
+            // Get the number of bags used for the given collection_id
+            $this->db->query('SELECT COUNT(*) as bags_used FROM bag_usage_history WHERE collection_id = :collection_id AND action = "added"');
+            $this->db->bind(':collection_id', $collectionId);
+            $result = $this->db->single();
+            $bagsUsed = $result->bags_used;
+
+            // Update the collection status, end_time, and bags used
+            $this->db->query('UPDATE collections SET 
+                status = "Completed", 
+                end_time = NOW(), 
+                bags = :bags_used 
+                WHERE collection_id = :collection_id');
+            
+            $this->db->bind(':bags_used', $bagsUsed);
+            $this->db->bind(':collection_id', $collectionId);
+
+            if ($this->db->execute()) {
+                return ['success' => true];
+            } else {
+                return ['success' => false];
+            }
+        } catch (Exception $e) {
+            return [
+                'success' => false,
+                'message' => 'Failed to finalize collection: ' . $e->getMessage()
             ];
         }
     }
