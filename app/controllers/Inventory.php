@@ -582,6 +582,19 @@ class Inventory extends controller
         $this->view('inventory/v_payments', $data);
     }
 
+    public function getStockValidations() {
+        // Get status filter if provided
+        $status = isset($_GET['status']) ? $_GET['status'] : 'All';
+        
+        // Get the data from model
+        $stocks = $this->stockvalidate->getvalidateStocks($status);
+        
+        // Return JSON response
+        header('Content-Type: application/json');
+        echo json_encode($stocks);
+        exit();
+    }
+
 
     
 
