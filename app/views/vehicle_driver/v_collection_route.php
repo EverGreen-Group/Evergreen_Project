@@ -11,7 +11,6 @@
 <script src="<?php echo URLROOT; ?>/public/js/vehicle_driver/collection_route_maps.js"></script>
 <script src="<?php echo URLROOT; ?>/public/js/vehicle_driver/collection_route_suppliers.js"></script>
 
-<?php print_r($data); ?>
 
 
 <div class="map-container" id="map"></div>
@@ -28,7 +27,6 @@
 </div>
 
 <div id="collectionBagDetailsModal" class="modal" onclick="closeModal('collectionBagDetailsModal')">
-    <?php print_r($data); ?>
     <div class="modal-content" onclick="event.stopPropagation();">
         <span class="close" onclick="closeModal('collectionBagDetailsModal')">&times;</span>
         <h2>Collection Route</h2>
