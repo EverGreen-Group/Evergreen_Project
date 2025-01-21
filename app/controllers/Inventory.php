@@ -363,6 +363,7 @@ class Inventory extends controller
                 && !empty($data['code']) && !empty($data['price']) && !empty($data['quantity']) && !empty($data['unit'])
             ) {
 
+                
             }
 
         } else {
@@ -371,6 +372,7 @@ class Inventory extends controller
                 'id' => $id,
                 'fertilizer' => $fertilizer
             ];
+            // print_r($data);
             $this->view('inventory/v_update_fertilizer', $data);
         }
     }
