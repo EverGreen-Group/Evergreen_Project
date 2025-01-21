@@ -223,7 +223,7 @@
                     </div>
                     <div class="detail-row">
                         <span class="label">Status:</span>
-                        <span class="value status-badge">AVAILABLE</span> <!-- Ensure this element exists -->
+                        <span class="value">AVAILABLE</span> <!-- Ensure this element exists -->
                     </div>
                 </div>
                 <div class="detail-group">
