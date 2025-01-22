@@ -237,6 +237,9 @@ async function fetchProductCards() {
       let statusClass = "completed";
       let statusText = "In Stock";
 
+      console.log(product.current_stock);
+      console.log(product.low_stock_threshold);
+
       if (product.current_stock <= product.low_stock_threshold) {
         statusClass = "pending";
         statusText = "Low Stock";
@@ -298,6 +301,8 @@ async function showProductDetails(productId) {
     );
     const product = await response.json();
 
+    console.log("Fetched product details:", product); // Log the fetched product
+
     if (product) {
       document.getElementById("modalProductImage").src = product.image_path
         ? `${URLROOT}/public/uploads/products/${product.image_path}`
@@ -308,14 +313,21 @@ async function showProductDetails(productId) {
       ).innerText = `Grade: ${product.grade}`;
       document.getElementById(
         "modalProductPrice"
-      ).innerText = `Rs. ${parseFloat(product.price_per_kg).toFixed(2)}/kg`;
+      ).innerText = `Rs. ${parseFloat(product.price_per_kg).toFixed(2)}`;
       document.getElementById(
         "modalProductStock"
       ).innerText = `Available Stock: ${product.current_stock} kg`;
       document.getElementById("modalProductDescription").innerText =
         product.description;
 
-      document.getElementById("productDetailsModal").style.display = "block";
+      // Set the current status
+      const statusText =
+        product.is_available === "1" ? "Available" : "Not Available"; // Ensure this logic is correct
+      document.getElementById(
+        "modalProductStatus"
+      ).innerText = `Status: ${statusText}`; // Update the status display
+
+      document.getElementById("productDetailsModal").style.display = "block"; // Show the modal
     }
   } catch (error) {
     console.error("Error fetching product details:", error);
@@ -374,9 +386,17 @@ async function saveProductChanges() {
       "modalProductDescriptionEdit"
     ).value;
   }
+  if (editedFields.has("modalProductStatus")) {
+    updateData.is_available = document.getElementById(
+      "modalProductStatusEdit"
+    ).value;
+  }
+
+  console.log("Update Data:", updateData); // Log the data being sent
 
   // If nothing was edited, return
   if (Object.keys(updateData).length === 0) {
+    console.log("No changes to save."); // Log if no changes were made
     return;
   }
 
@@ -393,6 +413,7 @@ async function saveProductChanges() {
     );
 
     const data = await response.json();
+    console.log("Update response:", data); // Log the response from the update request
     if (data.success) {
       // Update only the edited fields in the display
       if (updateData.name) {
@@ -408,6 +429,10 @@ async function saveProductChanges() {
       if (updateData.description) {
         document.getElementById("modalProductDescription").innerText =
           updateData.description;
+      }
+      if (updateData.is_available) {
+        document.getElementById("modalProductStatus").innerText =
+          updateData.is_available === "1" ? "Available" : "Not Available";
       }
 
       // Hide all edit inputs and show all display elements
@@ -449,3 +474,58 @@ async function deleteProduct() {
     }
   }
 }
+
+async function fetchBestSellingProducts() {
+  try {
+    const response = await fetch(`${URLROOT}/products/getBestSellingProducts`);
+    const products = await response.json();
+
+    const bestSellingTable = document.getElementById("bestSellingProducts");
+    if (!bestSellingTable) return;
+    bestSellingTable.innerHTML = "";
+
+    products.forEach((product) => {
+      const row = document.createElement("tr");
+      row.innerHTML = `
+                <td>${product.name}</td>
+                <td>${product.grade}</td>
+                <td>${product.weight} kg</td>
+                <td>Rs. ${parseFloat(product.price_per_kg).toFixed(2)}</td>
+                <td><button onclick="showProductDetails(${
+                  product.product_id
+                })">View Details</button></td>
+            `;
+      bestSellingTable.appendChild(row);
+    });
+  } catch (error) {
+    console.error("Error fetching best selling products:", error);
+  }
+}
+
+async function getLowStockProducts() {
+  try {
+    const response = await fetch(`${URLROOT}/products/getLowStockProducts`);
+    const products = await response.json();
+
+    const lowStockTable = document.getElementById("lowStockProducts");
+    if (!lowStockTable) return;
+    lowStockTable.innerHTML = "";
+
+    products.forEach((product) => {
+      const row = document.createElement("tr");
+      row.innerHTML = `
+                <td>${product.name}</td>
+                <td>${product.current_stock} kg</td>
+                <td><button class="btn-action view" onclick="showProductDetails(${product.product_id})"><i class='bx bx-show'></i></button></td>
+            `;
+      lowStockTable.appendChild(row);
+    });
+  } catch (error) {
+    console.error("Error fetching best selling products:", error);
+  }
+}
+
+document.addEventListener("DOMContentLoaded", function () {
+  fetchBestSellingProducts(); // Fetch best selling products
+  getLowStockProducts(); // Fetch low stock products
+});

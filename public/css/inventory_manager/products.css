@@ -84,7 +84,7 @@
 }
 
 .product-price {
-  color: var(--blue);
+  color: var(--main);
   font-weight: 600;
   font-size: 1.1rem;
   margin-bottom: 10px;
@@ -347,6 +347,11 @@ textarea.form-control {
   border: 1px solid #ddd;
   border-radius: 4px;
   font-size: inherit;
+}
+
+.product-name {
+  color: var(--main);
+  font-size: 27px;
 }
 
 .edit-input.product-name {

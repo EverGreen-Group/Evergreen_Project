@@ -56,74 +56,13 @@
     <li>
         <i class='bx bx-trending-up'></i>
         <span class="text">
-          <p>Best Selling</p>
-          <h3><?php echo isset($data['bestSelling']) ? $data['bestSelling'] : 'Black Tea'; ?></h3>
+          <p>Total Inactive</p>
+          <h3><?php echo isset($data['totalInactive']) ? $data['totalInactive'] : 0; ?></h3>
         </span>
     </li>
   </ul>
 
   <div class="table-data">
-  <div class="order">
-        <div class="head">
-            <h3>Recent Orders Overview</h3>
-            <button class="btn-view-all" onclick="viewAllOrders()">
-                <i class='bx bx-list-ul'></i>
-                View All Orders
-            </button>
-        </div>
-        <table id="ordersOverviewTable">
-            <thead>
-                <tr>
-                    <th>Order ID</th>
-                    <th>User</th>
-                    <th>Total Revenue</th>
-                    <th>Order Date</th>
-                    <th>Action</th>
-                </tr>
-            </thead>
-            <tbody>
-                <tr>
-                    <td>#ORD-2024-001</td>
-                    <td>Simaak</td>
-                    <td>Rs. 3370.00</td>
-                    <td>2024-03-15</td>
-                    <td>
-                        <div class="action-center">
-                        <button class="btn-action view" onclick="viewProduct('P001-3')">
-                            <i class='bx bx-show'></i>
-                        </button>
-                        </div>
-                    </td>
-                </tr>
-                <tr>
-                    <td>#ORD-2024-002</td>
-                    <td>John</td>
-                    <td>Rs. 4250.00</td>
-                    <td>2024-03-14</td>
-                    <td>
-                        <div class="action-center">
-                        <button class="btn-action view" onclick="viewProduct('P001-3')">
-                            <i class='bx bx-show'></i>
-                        </button>
-                        </div>
-                    </td>
-                </tr>
-                <tr>
-                    <td>#ORD-2024-003</td>
-                    <td>Jane</td>
-                    <td>Rs. 3850.00</td>
-                    <td>2024-03-13</td>
-                    <td>
-                        <div class="action-center">
-                        <button class="btn-action view" onclick="viewProduct('P001-3')">
-                            <i class='bx bx-show'></i>
-                        </button>
-                        </div>
-                    </td>
-                </tr>
-            </tbody>
-        </table>
-    </div>
 
     <div class="order">
         <div class="head">
@@ -142,10 +81,30 @@
             <canvas id="weeklyRevenueChart"></canvas>
         </div>
     </div>
+
+    <div class="order" style="max-width:510px;">
+        <div class="head">
+            <h3>Products Low On Stock</h3>
+        </div>
+        <table class="product-table">
+            <thead>
+                <tr>
+                    <th>Product</th>
+                    <th>Stock (kg)</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <tbody id="lowStockProducts">
+                <!-- Low stock products will be populated here -->
+            </tbody>
+        </table>
+    </div>
 </div>
 
 
-  <div class="table-data">
+
+
+<div class="table-data">
     <div class="order">
         <div class="head">
             <h3>Active Products</h3>
@@ -166,10 +125,11 @@
                     </div>
                 </div>
             </div>
-
         </div>
     </div>
 </div>
+
+
 
 
   <div id="productTable" class="table-data">
@@ -208,72 +168,6 @@
           </tr>
         </thead>
         <tbody>
-            <tr>
-                <td>P001</td>
-                <td>Black Tea</td>
-                <td>BOPF</td>
-                <td>Rs. 1,250.00</td>
-                <td>5,000 kg</td>
-                <td>2024-03-15 09:30</td>
-                <td>
-                    <span class="status completed">In Stock</span>
-                </td>
-                <td class="actions">
-                    <button class="btn-action view" onclick="viewProduct('P001')">
-                        <i class='bx bx-show'></i>
-                    </button>
-                    <button class="btn-action edit" onclick="editProduct('P001')">
-                        <i class='bx bx-edit'></i>
-                    </button>
-                    <button class="btn-action export" onclick="exportProduct('P001')">
-                        <i class='bx bx-export'></i>
-                    </button>
-                </td>
-            </tr>
-            <tr>
-                <td>P002</td>
-                <td>Black Tea</td>
-                <td>BOP</td>
-                <td>Rs. 1,150.00</td>
-                <td>3,200 kg</td>
-                <td>2024-03-15 10:15</td>
-                <td>
-                    <span class="status process">Medium Stock</span>
-                </td>
-                <td class="actions">
-                    <button class="btn-action view" onclick="viewProduct('P002')">
-                        <i class='bx bx-show'></i>
-                    </button>
-                    <button class="btn-action edit" onclick="editProduct('P002')">
-                        <i class='bx bx-edit'></i>
-                    </button>
-                    <button class="btn-action export" onclick="exportProduct('P002')">
-                        <i class='bx bx-export'></i>
-                    </button>
-                </td>
-            </tr>
-            <tr>
-                <td>P003</td>
-                <td>Green Tea</td>
-                <td>FBOP</td>
-                <td>Rs. 1,425.00</td>
-                <td>800 kg</td>
-                <td>2024-03-15 11:45</td>
-                <td>
-                    <span class="status pending">Low Stock</span>
-                </td>
-                <td class="actions">
-                    <button class="btn-action view" onclick="viewProduct('P003')">
-                        <i class='bx bx-show'></i>
-                    </button>
-                    <button class="btn-action edit" onclick="editProduct('P003')">
-                        <i class='bx bx-edit'></i>
-                    </button>
-                    <button class="btn-action export" onclick="exportProduct('P003')">
-                        <i class='bx bx-export'></i>
-                    </button>
-                </td>
-            </tr>
         </tbody>
       </table>
     </div>
@@ -397,6 +291,10 @@
 
                     <p id="modalProductGrade" class="product-grade"></p>
 
+                    <!-- New field for product status display -->
+                    <p id="modalProductStatus" class="product-grade">test</p>
+
+
                     <div class="editable-field">
                         <input type="number" id="modalProductPriceEdit" class="edit-input product-price" style="display: none;" step="0.01">
                         <p id="modalProductPrice" class="product-price"></p>
@@ -410,6 +308,7 @@
                         <p id="modalProductDescription" class="product-description"></p>
                         <i class='bx bx-edit edit-icon' onclick="toggleEdit('modalProductDescription')"></i>
                     </div>
+
 
                     <div class="modal-actions" style="margin-top: 20px;">
                         <button id="saveChangesBtn" class="btn-action" onclick="saveProductChanges()" style="display: none;">
@@ -425,15 +324,14 @@
     </div>
 </div>
 
-<style>
-
-</style>
-
-<script>
-
-</script>
 
 <script src="<?php echo URLROOT; ?>/public/js/inventory_manager/products.js"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        fetchBestSellingProducts(); // Fetch best selling products
+        fetchLowStockProducts();     // Fetch low stock products
+    });
+</script>
 
 
 

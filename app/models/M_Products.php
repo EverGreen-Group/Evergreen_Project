@@ -201,4 +201,37 @@ class M_Products{
         }
     }
 
+    public function getLowStockProducts() {
+        $this->db->query("SELECT p.*, 
+                             ts.current_stock,
+                             lt.name as tea_type,
+                             lg.name as grade
+                      FROM Products p
+                      JOIN TeaLeafStock ts ON p.stock_id = ts.stock_id
+                      JOIN LeafTypes lt ON ts.leaf_type_id = lt.leaf_type_id
+                      JOIN LeafGradings lg ON ts.grading_id = lg.grading_id
+                      WHERE ts.current_stock <= p.low_stock_threshold
+                      ORDER BY ts.current_stock ASC");
+                      
+        return $this->db->resultSet();
+    }
+
+    public function getTotalProducts() {
+        $this->db->query("SELECT COUNT(*) as total FROM Products");
+        return $this->db->single()->total; // Assuming single() returns an object with a total property
+    }
+
+    public function getLowStockItems() {
+        $this->db->query("SELECT COUNT(*) as total 
+                          FROM Products p
+                          JOIN TeaLeafStock ts ON p.stock_id = ts.stock_id
+                          WHERE ts.current_stock <= p.low_stock_threshold AND p.is_available = 1"); // Check for available products
+        return $this->db->single()->total; // Assuming single() returns an object with a total property
+    }
+
+    public function getTotalInactive() {
+        $this->db->query("SELECT COUNT(*) as total FROM Products WHERE is_available = 0");
+        return $this->db->single()->total; // Assuming single() returns an object with a total property
+    }
+
 }

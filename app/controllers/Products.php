@@ -10,9 +10,17 @@ class Products extends Controller {
         $leafTypes = $this->productModel->getLeafTypes();
         $leafGradings = $this->productModel->getLeafGradings();
         
+        // Fetch additional data
+        $totalProducts = $this->productModel->getTotalProducts(); // Method to get total products
+        $lowStockItems = $this->productModel->getLowStockItems(); // Method to get low stock items
+        $totalInactive = $this->productModel->getTotalInactive(); // Method to get total inactive items
+
         $data = [
             'leafTypes' => $leafTypes,
-            'leafGradings' => $leafGradings
+            'leafGradings' => $leafGradings,
+            'totalProducts' => $totalProducts,
+            'lowStockItems' => $lowStockItems,
+            'totalInactive' => $totalInactive // Add total inactive items to data
         ];
         
         $this->view('inventory/v_products', $data);
@@ -119,6 +127,11 @@ class Products extends Controller {
                 echo json_encode(['success' => false]);
             }
         }
+    }
+
+    public function getLowStockProducts() {
+        $products = $this->productModel->getLowStockProducts();
+        echo json_encode($products);
     }
 
 }
