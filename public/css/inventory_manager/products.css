@@ -1,0 +1,384 @@
+.modal-select {
+  width: 100%;
+  padding: 8px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  background-color: white;
+  font-size: 14px;
+}
+
+.modal-select:focus {
+  outline: none;
+  border-color: #3c91e6;
+  box-shadow: 0 0 0 2px rgba(60, 145, 230, 0.1);
+}
+
+.filter-container {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+
+.filter-select {
+  padding: 5px;
+  border-radius: 5px;
+  border: 1px solid #ddd;
+}
+
+.actions {
+  display: flex;
+  gap: 5px;
+  justify-content: center;
+}
+
+.btn-action {
+  padding: 5px;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.btn-action.view {
+  background-color: var(--main);
+  color: white;
+}
+
+.btn-action.edit {
+  background-color: #ffce56;
+  color: white;
+}
+
+.btn-action.export {
+  background-color: #4bc0c0;
+  color: white;
+}
+
+.btn-action:hover {
+  opacity: 0.8;
+}
+
+.product-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 8px;
+}
+
+.bag-info {
+  padding: 10px 0;
+}
+
+.bag-info h4 {
+  font-size: 1.2rem;
+  margin-bottom: 8px;
+  color: var(--dark);
+}
+
+.product-grade {
+  color: var(--dark-grey);
+  font-size: 0.9rem;
+  margin-bottom: 5px;
+}
+
+.product-price {
+  color: var(--blue);
+  font-weight: 600;
+  font-size: 1.1rem;
+  margin-bottom: 10px;
+}
+
+.stock-info {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 10px;
+}
+
+.quantity {
+  font-size: 0.9rem;
+  color: var(--dark-grey);
+}
+
+.status {
+  padding: 5px 10px;
+  border-radius: 20px;
+  font-size: 0.8rem;
+  font-weight: 500;
+}
+
+.status.completed {
+  background: #e6f4ea;
+  color: #1e8449;
+}
+
+.status.pending {
+  background: #fdecea;
+  color: #c0392b;
+}
+
+.status.process {
+  background: #fff3e0;
+  color: #f39c12;
+}
+
+.action-center {
+  display: flex;
+  justify-content: center;
+}
+
+#ordersOverviewTable {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+#ordersOverviewTable td {
+  padding: 12px;
+  text-align: center;
+}
+
+#ordersOverviewTable th {
+  padding: 12px;
+  background-color: var(--light);
+}
+/* 
+#ordersOverviewTable td:nth-child(2) {
+    text-align: left;
+}
+
+#ordersOverviewTable td:nth-child(3) {
+    text-align: right;
+} */
+
+.chart-container-wrapper {
+  background: var(--light);
+  padding: 20px;
+  border-radius: 10px;
+  margin: 20px 0;
+  height: 400px;
+}
+
+.chart-header {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: 20px;
+}
+
+.chart-filters {
+  display: flex;
+  gap: 10px;
+}
+
+.filter-select {
+  padding: 5px 10px;
+  border-radius: 5px;
+  border: 1px solid #ddd;
+  font-size: 0.9rem;
+  background-color: white;
+}
+
+#weeklyRevenueChart {
+  height: 100%;
+  width: 100%;
+}
+
+.head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+
+.btn-view-all {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 16px;
+  background-color: var(--main);
+  color: white;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  font-size: 0.9rem;
+  transition: opacity 0.2s;
+}
+
+.btn-view-all i {
+  font-size: 1.2rem;
+}
+
+.btn-view-all:hover {
+  opacity: 0.8;
+}
+
+.image-upload-container {
+  width: 200px;
+  height: 200px;
+  margin: 20px auto;
+  position: relative;
+}
+
+.image-preview {
+  width: 100%;
+  height: 100%;
+  border: 2px dashed #ccc;
+  border-radius: 10px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  overflow: hidden;
+}
+
+.image-preview i {
+  font-size: 3em;
+  color: #ccc;
+  margin-bottom: 10px;
+}
+
+.image-preview img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+#productImage {
+  display: none;
+}
+
+.form-actions {
+  margin-top: 20px;
+  padding: 0 20px;
+}
+
+.btn.full-width {
+  width: 100%;
+  padding: 12px;
+  font-size: 1rem;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  font-weight: 600;
+  transition: all 0.3s ease;
+}
+
+textarea.form-control {
+  width: 100%;
+  padding: 10px;
+  border: 1px solid #ddd;
+  border-radius: 5px;
+  resize: vertical;
+}
+
+#productDetailsModal {
+  display: none; /* Hide by default */
+}
+
+#productDetailsModal.show {
+  /* Add a show class for when we want to display it */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.product-details-content {
+  width: 800px;
+  margin: 280px auto;
+  max-height: 90vh;
+  overflow-y: auto;
+}
+
+.product-details-modal {
+  display: flex;
+  align-items: flex-start;
+  gap: 20px;
+}
+
+.product-image-container-modal {
+  flex: 1;
+  margin-right: 20px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 300px;
+  height: 300px;
+}
+
+.product-image-modal {
+  width: 300px;
+  height: 300px;
+  object-fit: cover;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.product-info-modal {
+  flex: 2;
+  position: relative;
+  padding-right: 30px;
+}
+
+/* Update edit icon positioning */
+.editable-field {
+  position: relative;
+  margin-bottom: 15px;
+  padding-right: 30px;
+}
+
+.edit-icon {
+  position: absolute;
+  right: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  cursor: pointer;
+  color: #666;
+  font-size: 20px;
+}
+
+.edit-icon:hover {
+  color: #333;
+}
+
+.edit-input {
+  width: 100%;
+  padding: 8px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-size: inherit;
+}
+
+.edit-input.product-name {
+  font-size: 24px;
+  font-weight: bold;
+}
+
+.edit-input.product-description {
+  min-height: 100px;
+  resize: vertical;
+}
+
+.modal-actions {
+  display: flex;
+  gap: 10px;
+  justify-content: flex-end;
+}
+
+.btn-action {
+  padding: 8px 16px;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-weight: bold;
+}
+
+.btn-action.delete {
+  background-color: #ff4444;
+  color: white;
+}
+
+#saveChangesBtn {
+  background-color: #4caf50;
+  color: white;
+}

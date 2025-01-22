@@ -36,6 +36,32 @@ class Inventory extends controller
         $this->view('inventory/v_product', $data);
     }
 
+    public function products(){
+
+
+        $this->view('inventory/v_products');
+    }
+
+    public function stock()
+    {
+        // $products = $this->productModel->getAllProducts();
+        $data = [
+            // 'products' => $products
+        ];
+
+        $this->view('inventory/v_stocks', $data);
+    }
+
+    public function export()
+    {
+        // $products = $this->productModel->getAllProducts();
+        $data = [
+            // 'products' => $products
+        ];
+
+        $this->view('inventory/v_exports_2', $data);
+    }
+
     public function getfertilizer(){
         
     }

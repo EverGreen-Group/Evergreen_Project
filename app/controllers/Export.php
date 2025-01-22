@@ -44,7 +44,7 @@ class Export extends controller{
                 'exports' => $export
             ];
             
-            $this->view('inventory/v_export', $data);
+            $this->view('inventory/v_export_2', $data);
              //var_dump($data['exports']);
         }
         

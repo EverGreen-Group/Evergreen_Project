@@ -10,10 +10,17 @@
         <span class="text">Dashboard</span>
       </a>
     </li>
+
     <li class="<?php echo (basename($_SERVER['REQUEST_URI']) == 'product') ? 'active' : ''; ?>">
-      <a href="<?php echo URLROOT; ?>/inventory/product">
+      <a href="<?php echo URLROOT; ?>/Products/">
         <i class="bx bxs-car"></i>
-        <span class="text">Product</span>
+        <span class="text">Products</span>
+      </a>
+    </li>
+    <li class="<?php echo (basename($_SERVER['REQUEST_URI']) == 'stock') ? 'active' : ''; ?>">
+      <a href="<?php echo URLROOT; ?>/inventory/stock">
+        <i class="bx bxs-shopping-bag"></i>
+        <span class="text">Inventory</span>
       </a>
     </li>
     <li class="<?php echo (basename($_SERVER['REQUEST_URI']) == 'fertilizer') ? 'active' : ''; ?>">
@@ -22,12 +29,12 @@
         <span class="text">Fertilizer</span>
       </a>
     </li>
-    <li class="<?php echo (basename($_SERVER['REQUEST_URI']) == 'order') ? 'active' : ''; ?>">
+    <!-- <li class="<?php echo (basename($_SERVER['REQUEST_URI']) == 'order') ? 'active' : ''; ?>">
       <a href="../inventory/order">
         <i class="bx bx-trip"></i>
         <span class="text">Order</span>
       </a>
-    </li>
+    </li> -->
     <li class="<?php echo (basename($_SERVER['REQUEST_URI']) == 'machine') ? 'active' : ''; ?>">
       <a href="<?php echo URLROOT; ?>/inventory/machine">
         <i class="bx bxs-time-five"></i>
