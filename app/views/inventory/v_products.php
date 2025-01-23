@@ -64,7 +64,7 @@
 
   <div class="table-data">
 
-    <div class="order">
+    <!-- <div class="order">
         <div class="head">
             <h3>Weekly Revenue Overview</h3>
             <i class='bx bx-line-chart'></i>
@@ -79,6 +79,30 @@
                 </div>
             </div>
             <canvas id="weeklyRevenueChart"></canvas>
+        </div>
+    </div> -->
+
+
+    <div class="order">
+        <div class="head">
+            <h3>Available Products</h3>
+            <i class='bx bx-package'></i>
+        </div>
+        <div class="bags-grid">
+            <!-- Black Tea - BOPF -->
+            <div class="bag-card" onclick="showProductDetails('P001')">
+                <div class="bag-icon">
+                    <img src="http://localhost/Evergreen_Project/uploads/products/6749498b5dc06.png" alt="Black Tea" class="product-image">
+                </div>
+                <div class="bag-info">
+                    <h4>Black Tea</h4>
+                    <p class="product-grade">Grade: BOPF</p>
+                    <div class="stock-info">
+                        <span class="quantity">5,000 kg</span>
+                        <span class="status completed">In Stock</span>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 
@@ -104,30 +128,7 @@
 
 
 
-<div class="table-data">
-    <div class="order">
-        <div class="head">
-            <h3>Active Products</h3>
-            <i class='bx bx-package'></i>
-        </div>
-        <div class="bags-grid">
-            <!-- Black Tea - BOPF -->
-            <div class="bag-card" onclick="showProductDetails('P001')">
-                <div class="bag-icon">
-                    <img src="http://localhost/Evergreen_Project/uploads/products/6749498b5dc06.png" alt="Black Tea" class="product-image">
-                </div>
-                <div class="bag-info">
-                    <h4>Black Tea</h4>
-                    <p class="product-grade">Grade: BOPF</p>
-                    <div class="stock-info">
-                        <span class="quantity">5,000 kg</span>
-                        <span class="status completed">In Stock</span>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
+
 
 
 

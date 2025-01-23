@@ -151,7 +151,7 @@
 
 /* Ensure the parent container has proper dimensions */
 .order {
-    min-height: 600px;
+    min-height: 400px;
 }
 </style>
 

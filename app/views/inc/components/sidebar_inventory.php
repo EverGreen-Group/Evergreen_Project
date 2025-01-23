@@ -11,6 +11,13 @@
       </a>
     </li>
 
+    <li class="<?php echo (basename($_SERVER['REQUEST_URI']) == 'leaves') ? 'active' : ''; ?>">
+      <a href="<?php echo URLROOT; ?>/process/index">
+        <i class="bx bxs-shopping-bag"></i>
+        <span class="text">Process</span>
+      </a>
+    </li>
+
     <li class="<?php echo (basename($_SERVER['REQUEST_URI']) == 'product') ? 'active' : ''; ?>">
       <a href="<?php echo URLROOT; ?>/Products/">
         <i class="bx bxs-car"></i>

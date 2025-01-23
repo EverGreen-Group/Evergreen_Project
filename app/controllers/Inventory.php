@@ -1,18 +1,21 @@
 <?php
 require_once APPROOT . '/models/M_Products.php';
 require_once APPROOT . '/models/M_Fertilizer.php';
+require_once APPROOT . '/models/M_Stock.php';
 
 require_once '../app/models/M_Products.php';
 class Inventory extends controller
 {
     private $productModel;
     private $fertilizerModel;
+    private $stockModel;
 
     public function __construct()
     {
 
         $this->productModel = new M_Products();
         $this->fertilizerModel = new M_Fertilizer();
+        $this->stockModel = new M_Stock();
     }
 
     public function index()
@@ -527,6 +530,76 @@ class Inventory extends controller
         $this->view('inventory/v_payments', $data);
     }
 
- 
+    public function getTeaStock() {
+        // Fetch tea stock data from the model
+        $teaStockData = $this->stockModel->getTotalStockByTeaLeafType();
+
+        // Return the data as JSON
+        header('Content-Type: application/json');
+        echo json_encode($teaStockData);
+    }
+
+    public function getAvailableTeaStock() {
+        // Fetch available tea stock data from the model
+        $availableTeaStock = $this->stockModel->getTotalStockByTeaLeafType(); // Assuming you have this method in M_Stock
+
+        // Prepare data for the chart
+        $data = [];
+        foreach ($availableTeaStock as $stock) {
+            $data[] = [
+                'leaf_type' => $stock->leaf_type,
+                'total_stock' => $stock->total_stock,
+            ];
+        }
+
+        // Return the data as JSON
+        header('Content-Type: application/json');
+        echo json_encode($data);
+    }
+
+    public function addStock() {
+        // Get the data from the AJAX request
+        $data = json_decode(file_get_contents("php://input"), true);
+
+        // Validate and sanitize the data as needed
+        $teaTypeId = $data['tea_type']; // This should be the ID
+        $gradingId = $data['grading'];   // This should be the ID
+        $quantity = $data['quantity'];
+        $notes = $data['notes'];
+
+        // Call the model method to add the stock
+        $result = $this->stockModel->addStock($teaTypeId, $gradingId, $quantity, $notes);
+
+        // Return a JSON response
+        header('Content-Type: application/json');
+        echo json_encode(['success' => $result]);
+    }
+
+    public function getTeaTypes() {
+        // Fetch tea types from the model
+        $teaTypes = $this->stockModel->getTeaTypes();
+
+        // Return the data as JSON
+        header('Content-Type: application/json');
+        echo json_encode($teaTypes);
+    }
+
+    public function getGradings($teaTypeId) {
+        // Fetch gradings from the model based on the tea type ID
+        $gradings = $this->stockModel->getGradingsByTeaType($teaTypeId); 
+
+        // Return the data as JSON
+        header('Content-Type: application/json');
+        echo json_encode($gradings);
+    }
+
+    public function getStockDetails($teaTypeId) {
+        // Fetch stock details from the model
+        $stockDetails = $this->stockModel->getStockDetailsByTeaType($teaTypeId);
+
+        // Return the data as JSON
+        header('Content-Type: application/json');
+        echo json_encode($stockDetails);
+    }
 
 }

@@ -15,13 +15,13 @@
     const URLROOT = '<?php echo URLROOT; ?>';
     const UPLOADROOT = '<?php echo UPLOADROOT; ?>';
 </script>
-<script src="<?php echo URLROOT; ?>/public/js/inventory_manager/stocks.js"></script>
+<script src="<?php echo URLROOT; ?>/public/js/inventory_manager/process.js"></script>
 
 <!-- MAIN -->
 <main>
     <div class="head-title">
         <div class="left">
-            <h1>Tea Leaf Inventory</h1>
+            <h1>Raw Tea Leaves</h1>
             <ul class="breadcrumb">
                 <li><a href="#">Dashboard</a></li>
             </ul>
@@ -63,40 +63,22 @@
     <div class="table-data">
         <div class="order">
             <div class="head">
-                <h3>Tea Stock Overview</h3>
+                <h3>Raw Tea Leaves Supply</h3>
+                <i class='bx bx-shopping-bag'></i>
             </div>
-            <table id="teaStockTable">
-                <thead>
-                    <tr>
-                        <th>Tea Type</th>
-                        <th>Types of Grading</th>
-                        <th>Total Quantity</th>
-                        <th></th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <tr>
-                        <td>Black Tea</td>
-                        <td>5000 kg</td>
-                        <td>2023-10-01</td>
-                        <td>
-                            <div style="display: flex; justify-content: center; margin-right: 80px; gap: 30px;">
-                                <button class="btn btn-primary" onclick="viewStockModal()">View</button>
-                            </div>
-                        </td>
-                    </tr>
-                </tbody>
-            </table>
+            <div class="chart-container-wrapper" style="position:relative; width:100%; height:300px; padding:20px;">
+                <canvas id="reportTypesChart"></canvas>
+            </div>
         </div>
 
-        <!-- Driver Status Chart -->
+
         <div class="order">
             <div class="head">
-                <h3>Available Tea Leaf Stock</h3>
+                <h3>Raw Tea Leaves</h3>
                 <i class='bx bx-shopping-bag'></i>
             </div>
             <div class="chart-container-wrapper">
-                <canvas id="reportTypesChart"></canvas>
+                <canvas id="reportTypesChart2"></canvas>
             </div>
             <div class="legend-container">
                 <div class="legend-wrapper">
@@ -107,47 +89,11 @@
     </div>
 
 
-    <div id="viewStockModal" class="modal">
-        <div class="modal-content">
-            <span class="close" onclick="closeModal('viewStockModal')">&times;</span>
-            <h2>Stock Details</h2>
-            <div class="stock-modal-content">
-                <div class="stock-modal-details">
-                    <form id="stockDetailsForm">
-                        <div class="detail-group">
-                            <h3>Grading Breakdown</h3>
-                            <table>
-                                <thead>
-                                    <tr>
-                                        <th>Grade</th>
-                                        <th>Stock</th>
-                                        <th>Last Added</th>
-                                        <th>Last Deducted</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    <!-- Dynamic rows will be populated here -->
-                                </tbody>
-                                <tfoot>
-                                    <tr>
-                                        <td><strong>Total</strong></td>
-                                        <td><strong>0 kg</strong></td> <!-- Placeholder for total -->
-                                        <td colspan="2"></td> <!-- Empty cells for last added and deducted -->
-                                    </tr>
-                                </tfoot>
-                            </table>
-                        </div>
-                    </form>
-                </div>
-            </div>
-        </div>
-    </div>
-
 
     <div class="table-data">
         <div class="order">
             <div class="head">
-                <h3>Stock Change Logs</h3>
+                <h3>Batch Log</h3>
             </div>
             <table id="stockChangeLogsTable">
                 <thead>
@@ -233,35 +179,6 @@
 
 </main>
 
-<script>
-function updateGradingOptions() {
-    const teaType = document.getElementById('teaType').value;
-    const gradingSelect = document.getElementById('grading');
-
-    // Clear existing options
-    gradingSelect.innerHTML = '<option value="">Select a Grading</option>';
-
-    // Define grading options based on tea type
-    let gradingOptions = [];
-    if (teaType === 'Black Tea') {
-        gradingOptions = ['BOPF', 'FBOP', 'Dust', 'OP (Orange Pekoe)', 'FOP (Flowery Orange Pekoe)'];
-    } else if (teaType === 'Green Tea') {
-        gradingOptions = ['Sencha', 'Matcha', 'Gyokuro'];
-    } else if (teaType === 'Herbal Tea') {
-        gradingOptions = ['Chamomile', 'Peppermint', 'Rooibos'];
-    } else if (teaType === 'Oolong Tea') {
-        gradingOptions = ['Tieguanyin', 'Da Hong Pao'];
-    }
-
-    // Populate grading select options
-    gradingOptions.forEach(function(grading) {
-        const option = document.createElement('option');
-        option.value = grading;
-        option.textContent = grading;
-        gradingSelect.appendChild(option);
-    });
-}
-</script>
 
 
 <style>
