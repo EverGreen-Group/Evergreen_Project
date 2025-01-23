@@ -1,478 +1,224 @@
-<?php require APPROOT . '/views/inc/components/header.php' ?>
+<?php require APPROOT . '/views/inc/components/header.php'; ?>
 
 <!-- Side bar -->
 <?php require APPROOT . '/views/inc/components/sidebar_inventory.php' ?>
 <!-- Top nav bar -->
-<?php require APPROOT . '/views/inc/components/topnavbar.php' ?>
-<head>
-	<style>
-		
-/*inventory dashboard topselling ection*/
+<?php require APPROOT . '/views/inc/components/topnavbar.php'; ?>
 
-.top-selling-section {
-  margin: 40px auto;
-  padding: 20px;
-  background-color: #fff;
-  border-radius: 8px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-}
-
-/* Section header */
-.section-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 20px;
-}
-
-.section-header h2 {
-  font-size: 24px;
-  color: #333;
-}
-
-.section-header .view-all {
-  font-size: 16px;
-  color: #27ae60;
-  text-decoration: none;
-}
-
-.section-header .view-all:hover {
-  text-decoration: underline;
-}
-
-/* Product grid */
-.product-grid {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 20px;
-}
-
-.product-card {
-  background-color: #fff;
-  border: 1px solid #e0e0e0;
-  border-radius: 8px;
-  padding: 20px;
-  text-align: center;
-  transition: box-shadow 0.3s ease;
-}
-
-.product-card:hover {
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-}
-
-.product-card h3 {
-  font-size: 18px;
-  color: #333;
-  margin-bottom: 10px;
-}
-
-.product-card .sold {
-  font-size: 16px;
-  color: #27ae60;
-  font-weight: bold;
-}
-
-/* Pagination */
-.pagination {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  margin-top: 20px;
-}
-
-.pagination button {
-  background-color: #fff;
-  border: 1px solid #e0e0e0;
-  padding: 8px 12px;
-  font-size: 16px;
-  color: #333;
-  margin: 0 5px;
-  border-radius: 5px;
-  cursor: pointer;
-  transition: background-color 0.3s ease;
-}
-
-.pagination button:hover {
-  background-color: #27ae60;
-  color: #fff;
-}
-
-.pagination button.active {
-  background-color: #27ae60;
-  color: #fff;
-}
-
-.pagination span {
-  font-size: 16px;
-  margin: 0 5px;
-}
-
-.order table {
-  width: 100%;
-  border-collapse: collapse;
-  margin-top: 20px;
-}
-
-.order th,
-.order td {
-  border: 1px solid #ddd;
-  padding: 8px;
-  text-align: left;
-}
-
-.order th {
-  background-color: #f2f2f2;
-  font-weight: bold;
-}
-
-.order tr:nth-child(even) {
-  background-color: #f9f9f9;
-}
-
-.order tr:hover {
-  background-color: #f5f5f5;
-}
-
-
-/* Report Modal */
-.report-modal {
-  display: none;
-  position: fixed;
-  z-index: 1000;
-  left: 0;
-  top: 0;
-  width: 100%;
-  height: 100%;
-  background-color: rgba(0, 0, 0, 0.6);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.modal-content {
-  background-color: #fff;
-  border-radius: 8px;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-  width: 90%;
-  max-width: 400px;
-  position: relative;
-  animation: modalPop 0.3s ease-out;
-}
-
-@keyframes modalPop {
-  0% {
-      transform: scale(0.7);
-      opacity: 0;
-  }
-  100% {
-      transform: scale(1);
-      opacity: 1;
-  }
-}
-
-.modal-content h2 {
-  margin: 0;
-  padding: 15px 20px;
-  border-bottom: 1px solid #eee;
-}
-
-.modal-body {
-  padding: 20px;
-}
-
-.modal-body textarea {
-  width: 100%;
-  min-height: 100px;
-  padding: 10px;
-  border: 1px solid #ddd;
-  border-radius: 4px;
-  resize: vertical;
-}
-
-.modal-footer {
-  padding: 15px 20px;
-  border-top: 1px solid #eee;
-  text-align: right;
-}
-
-.modal-footer button {
-  padding: 8px 16px;
-  background-color: #007bff;
-  color: white;
-  border: none;
-  border-radius: 4px;
-  cursor: pointer;
-}
-
-.modal-footer button:hover {
-  background-color: #0056b3;
-}
-
-.close {
-  position: absolute;
-  right: 10px;
-  top: 10px;
-  font-size: 24px;
-  cursor: pointer;
-  color: #666;
-}
-
-.close:hover {
-  color: #333;
-}
-
-#content main .table-data {
-	display: flex;
-}
-	</style>
-</head>
+<link rel="stylesheet" href="<?php echo URLROOT; ?>/css/vehicle_manager/collection_bags/styles.css">
+<link rel="stylesheet" href="<?php echo URLROOT; ?>/css/inventory_manager/stocks.css">
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery.qrcode/1.0/jquery.qrcode.min.js"></script>
+<script>
+    const URLROOT = '<?php echo URLROOT; ?>';
+    const UPLOADROOT = '<?php echo UPLOADROOT; ?>';
+</script>
+<script src="<?php echo URLROOT; ?>/public/js/inventory_manager/dashboard.js"></script>
 
 <!-- MAIN -->
 <main>
-	<div class="head-title">
-		<div class="left">
-			<h1>Dashboard</h1>
+    <div class="head-title">
+        <div class="left">
+            <h1>Collection Approval</h1>
+            <ul class="breadcrumb">
+                <li><a href="#">Dashboard</a></li>
+            </ul>
+        </div>
+    </div>
 
-		</div>
+    <div class="action-buttons">
+        <button class="btn btn-primary" onclick="openAddStockModal()">
+            <i class='bx bx-plus'></i>
+            Add Stocks
+        </button>
+    </div>
 
+    <ul class="box-info">
+    <li>
+        <i class='bx bxs-shopping-bag'></i>
+        <span class="text">
+            <p>Total Stocks</p>
+            <h3><?php echo isset($data['totalVehicles']) ? $data['totalVehicles'] : '0'; ?></h3>
+        </span>
+    </li>
+    <li>
+        <i class='bx bxs-user'></i>
+        <span class="text">
+            <p>Total Received Last Month</p>
+            <h3><?php echo isset($data['availableVehicles']) ? $data['availableVehicles'] : '0'; ?></h3>
+        </span>
+    </li>
+    <li>
+        <i class='bx bxs-shopping-bag'></i>
+        <span class="text">
+            <p>Total In Processing</p>
+            <h3><?php echo isset($data['totalVehicles']) ? $data['totalVehicles'] : '0'; ?></h3>
+        </span>
+    </li>
+    </ul>
+
+
+
+
+
+    <div class="table-data">
+        <div class="order">
+            <div class="head">
+                <h3>Collection Approval</h3>
+                <i class='bx bx-filter'></i>
+                <select name="" id="statusFilter" onchange="filterStocks()">
+                    <option value="All">All</option>
+                    <option value="Approved">Approved</option>
+                </select>
+            </div>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Driver ID</th>
+                        <th>Collection No</th>
+                        <th>Quantity</th>
+                        <th>Time</th>
+                        <th>Status</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody id="collectionApprovalTable">
+                    <!-- Data will be populated via JavaScript -->
+                </tbody>
+            </table>
+        </div>
 	</div>
 
-	<ul class="box-info">
-		<li>
-			<i class='bx bxs-calendar-check'></i>
-			<span class="text">
-				<h3>1020</h3>
-				<p>Today Stock</p>
-			</span>
-		</li>
-		<li>
-			<i class='bx bxs-group'></i>
-			<span class="text">
-				<h3>2834</h3>
-				<p>Export Stock</p>
 
-			</span>
-		</li>
-		<li>
-			<i class='bx bxs-dollar-circle'></i>
-			<span class="text">
-				<h3>2543</h3>
-				<p>Sales Orders</p>
-			</span>
-		</li>
-		<li>
-			<i class='bx bxs-dollar-circle'></i>
-			<span class="text">
-				<h3>2543</h3>
-				<p>Fertilizer Orders</p>
-			</span>
-		</li>
-	</ul>
-
-
-	<div class="table-data">
-		<div class="order">
-			<div class="head">
-				<h3>Validate Stock</h3>
-				<i class='bx bx-search'></i>
-				<i class='bx bx-filter'></i>
-			</div>
-
-			<!-- Added table for validate stock -->
-			<table>
-				<thead>
-					<tr>
-						<th>Driver Name</th>
-						<th>Collection No</th>
-						<th>Quantity</th>
-						<th>Time</th>
-						<th>Actions</th>
-					</tr>
-				</thead>
-				<tbody>
-					<php foreach($data['stock'] as $stock) : ?>
-					<tr>
-					    <td>Tharusha</td>
-						<td style="text-align: center;"> 12</td>
-						<td>325 units</td>
-						<td>2024-03-20 08:15 PM</td>
-						<td class="actions">
-							<button onclick="" style="padding: 8px 12px;
-	                                background-color: #28a745;
-	                                color: white;
-	                                border: none;
-	                                border-radius: 4px;
-	                                cursor: pointer;">Approve</button>
-							<button style="padding: 8px 12px;
-	                                background-color: #2345;
-	                                color: white;	
-	                                border: none;
-									margin-left: 10px;
-	                                border-radius: 4px;
-	                                cursor: pointer;">Reject</button>
-						</td>
-					</tr>
-					<php endforeach; ?>
-					<!-- Add more rows as needed -->
-				</tbody>
-			</table>
-		</div>
-
-		<div id="reportModal" class="report-modal" style="display: none;">
-			<div class="modal-content" id="reportModalContent">
-				<span class="close" onclick="closeModal()">&times;</span>
-				<h2>Report</h2>
-				<div class="modal-body">
-					<textarea type="text" placeholder="Enter your report"></textarea>
+	<div id="viewCollectionModal" class="modal">
+		<div class="modal-content">
+			<span class="close" onclick="closeModal('viewCollectionModal')">&times;</span>
+			<h2>Collection Details</h2>
+			<div class="collection-modal-content">
+				<div class="collection-modal-details">
+					<form id="collectionDetailsForm">
+						<div class="detail-group">
+							<h3>Collection Information</h3>
+							<p id="collectionInfo"> <!-- Collection info will be populated here --> </p>
+						</div>
+						<div class="detail-group">
+							<h3>Suppliers</h3>
+							<table>
+								<thead>
+									<tr>
+										<th>Supplier Name</th>
+										<th>Quantity</th>
+										<th>Notes</th>
+										<th>Action</th>
+									</tr>
+								</thead>
+								<tbody id="supplierDetailsTable">
+									<!-- Dynamic rows will be populated here -->
+								</tbody>
+							</table>
+						</div>
+					</form>
 				</div>
-				<div class="modal-footer">
-					<button class="btn btn-primary">Submit</button>
+			</div>
+		</div>
+	</div>
+
+	<div id="viewBagModal" class="modal" style="display: none;">
+		<div class="modal-content">
+			<span class="close" onclick="closeModal('viewBagModal')">&times;</span>
+			<h2>Bag Details</h2>
+			<div class="bag-modal-content collection-modal-content">
+				<div class="bag-modal-details collection-modal-details">
+					<form id="bagDetailsForm">
+						<div class="detail-group">
+							<h3>Bags for Supplier: <span id="supplierName"></span></h3>
+							<table>
+								<thead>
+									<tr>
+										<th>Bag ID</th>
+										<th>Capacity (kg)</th>
+										<th>Actual Weight (kg)</th>
+										<th>Leaf Age</th>
+										<th>Leaf Type</th>
+										<th>Moisture Level</th>
+										<th>Action</th>
+									</tr>
+								</thead>
+								<tbody id="bagDetailsTable">
+									<!-- Dynamic rows will be populated here -->
+								</tbody>
+							</table>
+						</div>
+					</form>
 				</div>
 			</div>
-
-
-		</div>
-		<div class="todo">
-			<div class="head">
-				<h3>Machine Allocation Statics</h3>
-				<i class='bx bx-plus'></i>
-				<i class='bx bx-filter'></i>
-			</div>
-			<canvas id="machineAllocationChart"></canvas>
 		</div>
 	</div>
-	<div class="top-selling-section">
-		<div class="section-header">
-			<h2>Top Selling Products</h2>
-			<a href="<?php echo URLROOT; ?>/inventory/product" class="view-all">View all &gt;</a>
-		</div>
 
-		<div class="product-grid">
-			<div class="product-card">
-				<img src="<?php echo URLROOT; ?>/public/img//green tea1.webp" alt="Green Tea" class="product-image" style="height:300px; width: 300px;">
-				<h3>Green Tea</h3>
-				<p class="sold">120 items sold</p>
+	<div id="inspectBagModal" class="modal">
+		<div class="modal-content">
+			<span class="close" onclick="closeModal('inspectBagModal')">&times;</span>
+			<h2>Bag Details</h2>
+			<div class="collection-modal-content" style="display: flex;">
+				<div class="qr-image-container" style="flex: 1; padding: 10px;">
+					<img id="inspectQrImage" src="/Evergreen_Project/uploads/qr_codes/73.png" alt="QR Code" style="width: 370px; height: 370px;" />
+				</div>
+				<div class="collection-modal-details" style="flex: 2; padding: 10px;">
+					<form id="inspectBagForm">
+						<div class="detail-group">
+							<h3>Bag Information</h3>
+							<div class="detail-row">
+								<span class="label">Bag ID:</span>
+								<span class="value" id="inspectBagId"></span>
+							</div>
+							<div class="detail-row">
+								<span class="label">Capacity:</span>
+								<span class="value" id="inspectCapacity"></span>
+							</div>
+							<div class="detail-row">
+								<span class="label">Bag Weight:</span>
+								<span class="value" id="inspectBagWeight"></span>
+							</div>
+							<div class="detail-row">
+								<span class="label">Status:</span>
+								<span class="value" id="inspectStatus"></span>
+							</div>
+							<div class="detail-row">
+								<span class="label">Supplier Assigned:</span>
+								<span class="value" id="inspectSupplier"></span>
+							</div>
+							<div class="detail-row">
+								<span class="label">Moisture Level:</span>
+								<span class="value" id="inspectMoisture"></span>
+							</div>
+							<div class="detail-row">
+								<span class="label">Leaf Age:</span>
+								<span class="value" id="inspectLeafAge"></span>
+							</div>
+							<div class="detail-row">
+								<span class="label">Deduction Notes:</span>
+								<span class="value" id="inspectDeductionNotes"></span>
+							</div>
+						</div>
+						<!-- Buttons for Approve and Update -->
+
+					</form>
+
+				</div>
+
 			</div>
-
-			<div class="product-card">
-				<img src="<?php echo URLROOT; ?>/public/img/black tea.jpg" alt="Black Tea" class="product-image" style="height:300px; width: 300px;">
-				<h3>Black Tea</h3>
-				<p class="sold">100 items sold</p>
+			<div class="button-group" style="margin-top: 20px; display: flex; gap: 20px;">
+				<button type="button" class="btn btn-primary" style="width: 100%; height: 40px;" onclick="approveBag()">Approve</button>
+				<button type="button" class="btn btn-secondary" style="width: 100%; height: 40px;" onclick="updateBag()">Update</button>
 			</div>
-
-			<div class="product-card">
-				<img src="<?php echo URLROOT; ?>/public/img/white tea.webp" alt="White Tea" class="product-image" style="height:300px; width: 300px;">
-				<h3>White Tea</h3>
-				<p class="sold">90 items sold</p>
-			</div>
-
-			<div class="product-card">
-				<img src="<?php echo URLROOT; ?>/public/img/oolong tea.webp" alt="oolong Tea" class="product-image" style="height:300px; width: 300px;">
-				<h3>Oolong Tea</h3>
-				<p class="sold">80 items sold</p>
-			</div>
-		</div>
-
-		<!-- Pagination -->
-		<div class="pagination">
-			<button class="prev">&lt;</button>
-			<button class="page-number active">1</button>
-			<button class="page-number">2</button>
-			<button class="page-number">3</button>
-			<button class="next">&gt;</button>
 		</div>
 	</div>
+
 </main>
-<!-- MAIN -->
-</section>
-<!-- CONTENT -->
-
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-<script>
-	document.addEventListener('DOMContentLoaded', function() {
-		var ctx = document.getElementById('machineAllocationChart').getContext('2d');
-		var machineAllocationChart = new Chart(ctx, {
-			type: 'bar',
-			data: {
-				labels: ['Machine A', 'Machine B', 'Machine C', 'Machine D'],
-				datasets: [{
-					label: 'Working Hours',
-					data: [8, 6, 7, 5],
-					backgroundColor: [
-						'rgba(255, 99, 132, 0.8)',
-						'rgba(54, 162, 235, 0.8)',
-						'rgba(255, 206, 86, 0.8)',
-						'rgba(75, 192, 192, 0.8)'
-					],
-					borderColor: [
-						'rgba(255, 99, 132, 1)',
-						'rgba(54, 162, 235, 1)',
-						'rgba(255, 206, 86, 1)',
-						'rgba(75, 192, 192, 1)'
-					],
-					borderWidth: 1
-				}]
-			},
-			options: {
-				responsive: true,
-				scales: {
-					y: {
-						beginAtZero: true,
-						title: {
-							display: true,
-							text: 'Working Hours'
-						},
-						max: 12,
-						ticks: {
-							stepSize: 2
-						}
-					},
-					x: {
-						title: {
-							display: true,
-							text: 'Machines'
-						}
-					}
-				},
-				plugins: {
-					legend: {
-						display: false
-					},
-					title: {
-						display: true,
-						text: 'Daily Machine Working Hours'
-					}
-				}
-			}
-		});
-	});
 
 
-	function reportModel() {
-		const modal = document.getElementById('reportModal');
-		const model2 = document.getElementById('reportModalContent');
-		modal.style.display = 'flex';
-		modal.style.backgroundColor = 'rgba(0, 0, 0, 0.5)';
-		modal.style.backdropFilter = 'blur(1px)';
-		//model2.style.opacity = '1';
 
-		// Add animation class
-		const modalContent = modal.querySelector('.modal-content');
-		modalContent.style.animation = 'modalPop 0.3s ease-out';
-	}
 
-	function closeModal() {
-		const modal = document.getElementById('reportModal');
-		modal.style.display = 'none';
-	}
+<?php require APPROOT . '/views/inc/components/footer.php'; ?>
 
-	// Improved click outside listener
-	window.addEventListener('click', function(event) {
-		const modal = document.getElementById('reportModal');
-		if (event.target === modal) {
-			closeModal();
-		}
-	});
-</script>
-
-<?php require APPROOT . '/views/inc/components/footer.php' ?>

@@ -2,6 +2,7 @@
 require_once APPROOT . '/models/M_Products.php';
 require_once APPROOT . '/models/M_Fertilizer.php';
 require_once APPROOT . '/models/M_Stock.php';
+require_once APPROOT . '/models/M_CollectionApproval.php';
 
 require_once '../app/models/M_Products.php';
 class Inventory extends controller
@@ -9,6 +10,7 @@ class Inventory extends controller
     private $productModel;
     private $fertilizerModel;
     private $stockModel;
+    private $collectionApprovalModel;
 
     public function __construct()
     {
@@ -16,6 +18,7 @@ class Inventory extends controller
         $this->productModel = new M_Products();
         $this->fertilizerModel = new M_Fertilizer();
         $this->stockModel = new M_Stock();
+        $this->collectionApprovalModel = new M_CollectionApproval();
     }
 
     public function index()
@@ -602,4 +605,54 @@ class Inventory extends controller
         echo json_encode($stockDetails);
     }
 
+    public function getAwaitingInventoryCollections() {
+        // Fetch collections from the model
+        $collections = $this->collectionApprovalModel->getAwaitingInventoryCollections();
+    
+        // Return the data as JSON
+        header('Content-Type: application/json');
+        echo json_encode($collections);
+    }
+
+    public function getCollectionDetails($collectionId) {
+        // Fetch collection details from the model
+        $collectionDetails = $this->collectionApprovalModel->getCollectionDetails($collectionId);
+    
+        // Return the data as JSON
+        header('Content-Type: application/json');
+        echo json_encode($collectionDetails);
+    }
+
+    public function getBagsBySupplier() {
+        // Get the raw POST data
+        $data = json_decode(file_get_contents("php://input"));
+    
+        // Extract supplierId and collectionId
+        $supplierId = $data->supplierId;
+        $collectionId = $data->collectionId;
+    
+        // Fetch bag details from the model
+        $bags = $this->collectionApprovalModel->getBagsBySupplier($supplierId, $collectionId);
+    
+        // Return the data as JSON
+        header('Content-Type: application/json');
+        echo json_encode($bags);
+    }
+
+    public function getBagDetails($bagId) {
+        // Fetch bag details from the model
+        $bagDetails = $this->collectionApprovalModel->getBagDetails($bagId);
+
+        // Check if bag details were found
+        if (!$bagDetails) {
+            // Optionally handle the case where no bag details are found
+            http_response_code(404); // Set a 404 response code
+            echo json_encode(['error' => 'Bag not found']);
+            return;
+        }
+
+        // Return the data as JSON
+        header('Content-Type: application/json');
+        echo json_encode($bagDetails);
+    }
 }
