@@ -120,8 +120,9 @@ function viewSupplierBags(supplierId, collectionId) {
         <td>${bag.capacity_kg} kg</td>
         <td>${bag.actual_weight_kg || "N/A"}</td>
         <td>${bag.leaf_age || "N/A"}</td>
-        <td>${bag.leaf_type_id || "N/A"}</td>
+        <td>${bag.name || "N/A"}</td>
         <td>${bag.moisture_level || "N/A"}</td>
+        <td>${bag.action || "N/A"}</td>
         <td><button class="btn btn-primary" onclick="inspectBagDetails(${
           bag.bag_id
         })">Inspect</button></td>
@@ -156,6 +157,7 @@ function inspectBagDetails(bagId) {
     })
     .then((data) => {
       // Populate the inspectBagModal with the fetched data
+      document.getElementById("bagCollectionId").innerText = data.collection_id;
       document.getElementById("inspectBagId").innerText = data.bag_id;
       document.getElementById("inspectCapacity").innerText =
         data.actual_weight_kg;
@@ -173,10 +175,61 @@ function inspectBagDetails(bagId) {
         "inspectQrImage"
       ).src = `/Evergreen_Project/uploads/qr_codes/${data.bag_id}.png`; // Assuming the QR code filename is based on bag_id
 
+      if (data.action === "approved") {
+        // Disable or hide the buttons if the action is approved
+        document.querySelector(".button-group").style.display = "none"; // Hide the button group
+        // Alternatively, you can disable the buttons instead of hiding
+        // document.querySelector('.btn.btn-primary').disabled = true;
+        // document.querySelector('.btn.btn-secondary').disabled = true;
+      } else {
+        // Show the button group if the action is not approved
+        document.querySelector(".button-group").style.display = "flex"; // Show the button group
+      }
+
       // Show the inspectBagModal
       document.getElementById("inspectBagModal").style.display = "block";
     })
     .catch((error) => {
       console.error("Error fetching bag details:", error);
+    });
+}
+
+/////////////////////////////////////////////////////////////////////////////////////
+
+// BAG APPROVING PART
+
+function approveBag() {
+  const bagId = document.getElementById("inspectBagId").innerText;
+  const collectionId = document.getElementById("bagCollectionId").innerText; // Assuming you have this element in the modal
+  const supplierId = document.getElementById("inspectSupplier").innerText; // Assuming you have this element in the modal
+
+  // Prepare the data to be sent in the request body
+  const inspectionData = {
+    bag_id: bagId,
+    collection_id: collectionId,
+    supplier_id: supplierId,
+  };
+
+  // AJAX request to approve the bag
+  fetch(`${URLROOT}/inventory/approveBag`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(inspectionData),
+  })
+    .then((response) => {
+      if (!response.ok) {
+        throw new Error("Network response was not ok: " + response.statusText);
+      }
+      return response.json();
+    })
+    .then((data) => {
+      console.log("Bag approved successfully:", data);
+      // Optionally, you can close the modal or refresh the data
+      closeModal("inspectBagModal");
+    })
+    .catch((error) => {
+      console.error("Error approving bag:", error);
     });
 }

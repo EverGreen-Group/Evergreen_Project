@@ -142,6 +142,7 @@
 										<th>Leaf Age</th>
 										<th>Leaf Type</th>
 										<th>Moisture Level</th>
+										<th>Status</th>
 										<th>Action</th>
 									</tr>
 								</thead>
@@ -169,6 +170,10 @@
 						<div class="detail-group">
 							<h3>Bag Information</h3>
 							<div class="detail-row">
+							<div class="detail-row">
+								<span class="label">Collection ID:</span>
+								<span class="value" id="bagCollectionId"></span>
+							</div>
 								<span class="label">Bag ID:</span>
 								<span class="value" id="inspectBagId"></span>
 							</div>

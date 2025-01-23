@@ -655,4 +655,35 @@ class Inventory extends controller
         header('Content-Type: application/json');
         echo json_encode($bagDetails);
     }
+
+    public function approveBag() {
+        // Get the JSON input
+        $data = json_decode(file_get_contents("php://input"), true);
+
+        // Extract data
+        $bagId = $data['bag_id'];
+        $supplierId = $data['supplier_id'];
+        $collectionId = $data['collection_id'];
+
+        // Update the action in bag_usage_history to 'approved'
+        $this->collectionApprovalModel->updateBagUsageHistory($bagId, 'approved');
+
+        // Check if there are any more bags for the supplier in the collection
+        $hasMoreBags = $this->collectionApprovalModel->checkSupplierBagsInCollection($supplierId, $collectionId);
+
+        // If no more bags, update the collection_supplier_records
+        if (!$hasMoreBags) {
+            $this->collectionApprovalModel->updateCollectionSupplierApprovalStatus($supplierId, 'APPROVED');
+        }
+
+        // Check if all suppliers for the collection are approved
+        $allSuppliersApproved = $this->collectionApprovalModel->checkAllSuppliersApproved($collectionId);
+
+        // If all suppliers are approved, update the collection status
+        if ($allSuppliersApproved) {
+            $this->collectionApprovalModel->updateCollectionStatus($collectionId, 'Completed');
+        }
+
+        echo json_encode(['status' => 'success']);
+    }
 }
