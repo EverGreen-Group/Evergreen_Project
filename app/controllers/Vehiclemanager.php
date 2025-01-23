@@ -1390,13 +1390,9 @@ class VehicleManager extends Controller
         echo json_encode($collections);
     }
 
-    public function getCollectionDetails($id = null)
+    public function getCollectionDetails($id)
     {
-        // Check if it's an AJAX request
-        if (!$this->isAjaxRequest()) {
-            redirect(page: 'pages/error');
-            return;
-        }
+
 
         // Validate ID
         if (!$id || !is_numeric($id)) {

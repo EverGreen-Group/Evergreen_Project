@@ -105,6 +105,7 @@ function showCollectionBagDetails(collectionId) {
       if (!response.ok) {
         throw new Error("Network response was not ok");
       }
+      console.log(response);
       return response.json();
     })
     .then((data) => {
@@ -126,14 +127,14 @@ function showCollectionBagDetails(collectionId) {
                 <tr>
                     <td>${supplier}</td>
                     <td>${bags
-                      .map(
-                        (bag) => `
+              .map(
+                (bag) => `
                         <button class="tag-button">
                             Bag ${bag.bag_id} (Capacity: ${bag.capacity} kg, Filled: ${bag.filled_amount} kg)
                         </button>
                     `
-                      )
-                      .join(" ")}</td>
+              )
+              .join(" ")}</td>
                 </tr>
             `
         )

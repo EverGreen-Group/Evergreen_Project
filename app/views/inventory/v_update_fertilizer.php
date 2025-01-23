@@ -61,10 +61,16 @@
 
                     <!-- Media Section -->
                     <section class="form-section">
-                        <h3>Media <span>(Images, video or 3D models)</span></h3>
-                        <div class="media-upload">
-                            <div class="media-box">+</div>
-                            <div class="media-box">+</div>
+                        <h3>Media <span>Update image</span></h3>
+                        <div class="media-upload-area">
+                            <input type="file" id="product_image" name="product_image" accept="image/*"
+                                onchange="previewImage(this)">
+                            <div class="image-preview" id="imagePreview">
+                                <img src="" alt="Image Preview" id="preview" style="display: none;">
+                                <div class="upload-placeholder" id="placeholder">
+                                    <span>+</span>
+                                </div>
+                            </div>
                         </div>
                     </section>
 
