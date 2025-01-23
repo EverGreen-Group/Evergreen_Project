@@ -96,32 +96,6 @@
   margin: 0 5px;
 }
 
-.order table {
-  width: 100%;
-  border-collapse: collapse;
-  margin-top: 20px;
-}
-
-.order th,
-.order td {
-  border: 1px solid #ddd;
-  padding: 8px;
-  text-align: left;
-}
-
-.order th {
-  background-color: #f2f2f2;
-  font-weight: bold;
-}
-
-.order tr:nth-child(even) {
-  background-color: #f9f9f9;
-}
-
-.order tr:hover {
-  background-color: #f5f5f5;
-}
-
 .ap-button {
   padding: 8px 12px;
   background-color: #28a745;
@@ -215,10 +189,6 @@
 
 .close:hover {
   color: #333;
-}
-
-#content main .table-data {
-  display: flex;
 }
 
 /*get simaak models */

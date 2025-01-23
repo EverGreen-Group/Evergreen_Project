@@ -1,8 +1,9 @@
 <?php
 require_once APPROOT . '/models/M_Products.php';
 require_once APPROOT . '/models/M_Fertilizer.php';
-require_once APPROOT . '/models/M_Dashbord.php';
 require_once APPROOT . '/models/M_Machine.php';
+require_once APPROOT . '/models/M_CollectionApproval.php';
+
 
 require_once '../app/models/M_Products.php';
 class Inventory extends controller
@@ -12,6 +13,7 @@ class Inventory extends controller
 
     private $stockvalidate;
     private $machineModel;
+    private $collectionApprovalModel;
 
 
 
@@ -22,8 +24,8 @@ class Inventory extends controller
 
         $this->productModel = new M_Products();
         $this->fertilizerModel = new M_Fertilizer();
-        $this->stockvalidate = new M_stockvalidate();
         $this->machineModel = new M_Machine();
+        $this->collectionApprovalModel = new M_CollectionApproval();
 
     }
 
@@ -35,26 +37,21 @@ class Inventory extends controller
             
             
         }
-        $totalstock = $this->stockvalidate->gettodaytotalstock();
+        $totalstock = 0;
         $products = $this->productModel->getAllProducts();
         $fertilizer = $this->fertilizerModel->getfertilizer();
-        $stockvalidate = $this->stockvalidate->getvalidateStocks();
         $machines = $this->machineModel->gettimesofmachine();
-        $validatedetails = $this->stockvalidate->getvalidatestockdetails();
 
         $data = [
             'products' => $products,
             'fertilizer' => $fertilizer,
-            'stockvalidate' => $stockvalidate,
             'machines' => $machines,
             'totalstock' => $totalstock,
-            'validatedetails' => $validatedetails
 
         ];
 
         
         $this->view('inventory/v_dashboard', $data);
-        var_dump($data);
     }
 
     public function product()
@@ -624,6 +621,16 @@ class Inventory extends controller
         header('Content-Type: application/json');
         echo json_encode($stocks);
         exit();
+    }
+
+
+    public function getAwaitingInventoryCollections() {
+        // Fetch collections from the model
+        $collections = $this->collectionApprovalModel->getAwaitingInventoryCollections();
+    
+        // Return the data as JSON
+        header('Content-Type: application/json');
+        echo json_encode($collections);
     }
 
 
