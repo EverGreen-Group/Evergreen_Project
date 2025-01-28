@@ -712,7 +712,7 @@ class M_Collection {
                 bag_id,
                 supplier_id,
                 actual_weight_kg,
-                leaf_type,
+                leaf_type_id,
                 leaf_age,
                 moisture_level,
                 deduction_notes,
@@ -723,7 +723,7 @@ class M_Collection {
                 :bag_id,
                 :supplier_id,
                 :actual_weight_kg,
-                :leaf_type,
+                :leaf_type_id,
                 :leaf_age,
                 :moisture_level,
                 :notes,
@@ -735,7 +735,7 @@ class M_Collection {
             $this->db->bind(':bag_id', $data->bag_id);
             $this->db->bind(':supplier_id', $data->supplier_id);
             $this->db->bind(':actual_weight_kg', $data->actual_weight_kg);
-            $this->db->bind(':leaf_type', $data->leaf_type);
+            $this->db->bind(':leaf_type_id', $data->leaf_type_id);
             $this->db->bind(':leaf_age', $data->leaf_age);
             $this->db->bind(':moisture_level', $data->moisture_level);
             $this->db->bind(':notes', $data->notes);
@@ -899,5 +899,27 @@ class M_Collection {
             ];
         }
     }
+
+    public function getCollectionTeaLeafTypes() {
+        try {
+            // Query to fetch all active leaf types
+            $this->db->query('SELECT leaf_type_id, name FROM leaf_types WHERE is_active = 1');
+            
+            $leafTypes = $this->db->resultSet(); // Fetch the results
+
+            return [
+                'success' => true,
+                'leafTypes' => $leafTypes // Return the leaf types
+            ];
+
+        } catch (Exception $e) {
+            return [
+                'success' => false,
+                'message' => 'Failed to fetch leaf types: ' . $e->getMessage()
+            ];
+        }
+    }
+
+
 
 } 

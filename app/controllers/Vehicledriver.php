@@ -269,6 +269,9 @@ class VehicleDriver extends controller {
         // Get all suppliers for this collection
         $collectionSuppliers = $this->collectionScheduleModel->getCollectionSupplierRecords($collectionId);
 
+        $leafTypesResult = $this->collectionModel->getCollectionTeaLeafTypes();
+        $leafTypes = $leafTypesResult['success'] ? $leafTypesResult['leafTypes'] : [];
+
         $currentSupplier = null;
         foreach ($collectionSuppliers as $record) {
             if (!$record->arrival_time && $record->status != 'Collected') {
@@ -327,7 +330,8 @@ class VehicleDriver extends controller {
             'collections' => $formattedSuppliers,
             'collection' => $collection,
             'vehicleLocation' => $vehicleLocation,
-            'currentSupplier' => $currentSupplier
+            'currentSupplier' => $currentSupplier,
+            'leafTypes' => $leafTypes
         ];
 
         $this->view('vehicle_driver/v_collection_route', $data);
@@ -646,18 +650,14 @@ class VehicleDriver extends controller {
     }
 
     public function addBagToCollection() {
-        error_log(print_r($_POST, true));
-        if (!$this->isAjaxRequest()) {
-            redirect('pages/error');
-            return;
-        }
+        $data = json_decode(file_get_contents("php://input"));
 
-        $data = json_decode(file_get_contents('php://input'));
-        
-        // Add to bag_usage_history
+        // Validate input data
+        // ...
+
+        // Call the model to add bag usage history
         $result = $this->collectionModel->addBagUsageHistory($data);
-        
-        header('Content-Type: application/json');
+
         echo json_encode($result);
     }
 
