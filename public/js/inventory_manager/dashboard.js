@@ -267,7 +267,7 @@ function approveBag() {
     })
     .then((data) => {
       console.log("Bag approved successfully:", data);
-      // Optionally, you can close the modal or refresh the data
+      // Optionally, you can close the modal or refresh the dataapproved
       closeModal("inspectBagModal");
     })
     .catch((error) => {

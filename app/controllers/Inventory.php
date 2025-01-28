@@ -3,6 +3,7 @@ require_once APPROOT . '/models/M_Products.php';
 require_once APPROOT . '/models/M_Fertilizer.php';
 require_once APPROOT . '/models/M_Stock.php';
 require_once APPROOT . '/models/M_CollectionApproval.php';
+require_once APPROOT . '/models/M_Batch.php';
 
 require_once '../app/models/M_Products.php';
 class Inventory extends controller
@@ -11,6 +12,7 @@ class Inventory extends controller
     private $fertilizerModel;
     private $stockModel;
     private $collectionApprovalModel;
+    private $batchModel;
 
     public function __construct()
     {
@@ -19,14 +21,17 @@ class Inventory extends controller
         $this->fertilizerModel = new M_Fertilizer();
         $this->stockModel = new M_Stock();
         $this->collectionApprovalModel = new M_CollectionApproval();
+        $this->batchModel = new M_Batch();
     }
 
     public function index()
     {
         $products = $this->productModel->getAllProducts();
+        $logs = $this->collectionApprovalModel->getLeafActionLogs();
 
         $data = [
-            'products' => $products
+            'products' => $products,
+            'logs' => $logs
         ];
 
         $this->view('inventory/v_dashboard', $data);
@@ -50,9 +55,11 @@ class Inventory extends controller
 
     public function stock()
     {
-        // $products = $this->productModel->getAllProducts();
+        // Fetch batches without end_time
+        $batches = $this->batchModel->getBatchesWithoutEndTime();
+
         $data = [
-            // 'products' => $products
+            'batches' => $batches
         ];
 
         $this->view('inventory/v_stocks', $data);

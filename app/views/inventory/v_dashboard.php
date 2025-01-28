@@ -15,12 +15,13 @@
     const UPLOADROOT = '<?php echo UPLOADROOT; ?>';
 </script>
 <script src="<?php echo URLROOT; ?>/public/js/inventory_manager/dashboard.js"></script>
+<script src="<?php echo URLROOT; ?>/public/js/inventory_manager/process.js"></script>
 
 <!-- MAIN -->
 <main>
     <div class="head-title">
         <div class="left">
-            <h1>Collection Approval</h1>
+            <h1>Inventory Management</h1>
             <ul class="breadcrumb">
                 <li><a href="#">Dashboard</a></li>
             </ul>
@@ -28,9 +29,13 @@
     </div>
 
     <div class="action-buttons">
-        <button class="btn btn-primary" onclick="openAddStockModal()">
+        <button class="btn btn-primary" onclick="openAddRawLeafModal()">
             <i class='bx bx-plus'></i>
-            Add Stocks
+            Add Raw Leaf
+        </button>
+		<button class="btn btn-primary" onclick="removeRawLeafModal()">
+            <i class='bx bx-minus'></i>
+            Deduct Raw Leaf
         </button>
     </div>
 
@@ -57,6 +62,36 @@
         </span>
     </li>
     </ul>
+
+
+
+    <div class="table-data">
+        <div class="order">
+            <div class="head">
+                <h3>Raw Tea Leaves Supply</h3>
+                <i class='bx bx-shopping-bag'></i>
+            </div>
+            <div class="chart-container-wrapper" style="position:relative; width:100%; height:300px; padding:20px;">
+                <canvas id="reportTypesChart"></canvas>
+            </div>
+        </div>
+
+
+        <div class="order">
+            <div class="head">
+                <h3>Raw Tea Leaves</h3>
+                <i class='bx bx-shopping-bag'></i>
+            </div>
+            <div class="chart-container-wrapper">
+                <canvas id="reportTypesChart2"></canvas>
+            </div>
+            <div class="legend-container">
+                <div class="legend-wrapper">
+                    <!-- Legend items will be populated here dynamically -->
+                </div>
+            </div>
+        </div>
+    </div>
 
 
 
@@ -88,6 +123,37 @@
                 </tbody>
             </table>
         </div>
+	</div>
+
+
+	<div class="table-data">
+		<div class="order">
+			<div class="head">
+				<h3>Leaf Action Logs</h3>
+			</div>
+			<table>
+				<thead>
+					<tr>
+						<th>Log ID</th>
+						<th>Action</th>
+						<th>Quantity (kg)</th>
+						<th>Notes</th>
+						<th>Created At</th>
+					</tr>
+				</thead>
+				<tbody>
+					<?php foreach ($data['logs'] as $log): ?>
+						<tr>
+							<td><?php echo $log->log_id; ?></td>
+							<td><?php echo $log->action; ?></td>
+							<td><?php echo $log->quantity_kg; ?></td>
+							<td><?php echo $log->notes; ?></td>
+							<td><?php echo $log->created_at; ?></td>
+						</tr>
+					<?php endforeach; ?>
+				</tbody>
+			</table>
+		</div>
 	</div>
 
 

@@ -245,3 +245,225 @@ function populateStockDetails(stockDetails) {
     "td:nth-child(2)"
   ).innerHTML = `<strong>${totalStock} kg</strong>`;
 }
+
+function addBatch() {
+  const batchData = {
+    start_time: new Date().toISOString().slice(0, 19).replace("T", " "), // Current date and time
+    total_output: 0, // Default value
+    total_wastage: 0, // Default value
+  };
+
+  fetch(`${URLROOT}/batches/add`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(batchData),
+  })
+    .then((response) => {
+      if (!response.ok) {
+        throw new Error("Network response was not ok: " + response.statusText);
+      }
+      return response.json();
+    })
+    .then((data) => {
+      console.log("Batch added successfully:", data);
+      // Optionally refresh the batch logs or update the UI
+      refreshBatchLogs(); // Call a function to refresh the batch logs
+    })
+    .catch((error) => {
+      console.error("Error adding batch:", error);
+    });
+}
+
+// Function to refresh the batch logs
+function refreshBatchLogs() {
+  // Fetch the updated batch logs and update the UI accordingly
+  fetch(`${URLROOT}/batches/getBatchesWithoutEndTime`) // Adjust the URL as needed
+    .then((response) => response.json())
+    .then((batches) => {
+      const tableBody = document
+        .getElementById("batchLogsTable")
+        .getElementsByTagName("tbody")[0];
+      tableBody.innerHTML = ""; // Clear existing rows
+
+      batches.forEach((batch) => {
+        const row = document.createElement("tr");
+        row.innerHTML = `
+          <td>${batch.batch_id}</td>
+          <td>${batch.start_time}</td>
+          <td>${batch.end_time ? batch.end_time : "N/A"}</td>
+          <td>${batch.total_output_kg} kg</td>
+          <td>${batch.total_wastage_kg} kg</td>
+          <td>${batch.created_at}</td>
+          <td><button class="btn btn-primary">Manage</button></td>
+        `;
+        tableBody.appendChild(row);
+      });
+    })
+    .catch((error) => {
+      console.error("Error fetching batch logs:", error);
+    });
+}
+
+function openBatchDetailModal(batchId) {
+  // Fetch batch details from the server
+  fetch(`${URLROOT}/batches/getBatchDetails/${batchId}`)
+    .then((response) => response.json())
+    .then((data) => {
+      if (data.batch) {
+        // Populate batch information
+        document.getElementById("batchIdDetail").innerText =
+          data.batch.batch_id;
+        document.getElementById("startTimeDetail").innerText =
+          data.batch.start_time;
+        document.getElementById("totalOutputDetail").innerText =
+          data.batch.total_output_kg + " kg";
+        document.getElementById("totalWastageDetail").innerText =
+          data.batch.total_wastage_kg + " kg";
+
+        // Populate ingredients
+        const ingredientDetails = document.getElementById("ingredientDetails");
+        ingredientDetails.innerHTML = ""; // Clear existing rows
+        data.ingredients.forEach((ingredient) => {
+          ingredientDetails.innerHTML += `
+            <tr>
+              <td>${ingredient.ingredient_id}</td>
+              <td>${ingredient.leaf_type_id}</td>
+              <td>${ingredient.quantity_used_kg}</td>
+              <td>${ingredient.added_at}</td>
+            </tr>
+          `;
+        });
+
+        // Populate outputs
+        const outputDetails = document.getElementById("outputDetails");
+        outputDetails.innerHTML = ""; // Clear existing rows
+        data.outputs.forEach((output) => {
+          outputDetails.innerHTML += `
+            <tr>
+              <td>${output.processed_id}</td>
+              <td>${output.leaf_type_id}</td>
+              <td>${output.grading_id}</td>
+              <td>${output.output_kg}</td>
+              <td>${output.processed_at}</td>
+            </tr>
+          `;
+        });
+
+        // Populate machine usage
+        const machineUsageDetails = document.getElementById(
+          "machineUsageDetails"
+        );
+        machineUsageDetails.innerHTML = ""; // Clear existing rows
+        data.machineUsage.forEach((usage) => {
+          machineUsageDetails.innerHTML += `
+            <tr>
+              <td>${usage.usage_id}</td>
+              <td>${usage.machine_id}</td>
+              <td>${usage.operator_id}</td>
+              <td>${usage.start_time}</td>
+              <td>${usage.end_time ? usage.end_time : "N/A"}</td>
+              <td>${usage.notes}</td>
+            </tr>
+          `;
+        });
+
+        // Show the modal
+        document.getElementById("openBatchDetailModal").style.display = "block";
+      } else {
+        console.error("Batch not found");
+      }
+    })
+    .catch((error) => {
+      console.error("Error fetching batch details:", error);
+    });
+}
+
+function addIngredient() {
+  const batchId = document.getElementById("batchIdDetail").innerText; // Get the batch ID
+  const leafTypeId = prompt("Enter Leaf Type ID:"); // Prompt for Leaf Type ID
+  const quantityUsedKg = prompt("Enter Quantity Used (kg):"); // Prompt for Quantity Used
+
+  const ingredientData = {
+    batch_id: batchId,
+    leaf_type_id: leafTypeId,
+    quantity_used_kg: quantityUsedKg,
+  };
+
+  fetch(`${URLROOT}/batches/addIngredient`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(ingredientData),
+  })
+    .then((response) => response.json())
+    .then((data) => {
+      console.log(data.message);
+      // Optionally refresh the ingredient details in the modal
+    })
+    .catch((error) => {
+      console.error("Error adding ingredient:", error);
+    });
+}
+
+function addOutput() {
+  const batchId = document.getElementById("batchIdDetail").innerText; // Get the batch ID
+  const leafTypeId = prompt("Enter Leaf Type ID:"); // Prompt for Leaf Type ID
+  const gradingId = prompt("Enter Grading ID:"); // Prompt for Grading ID
+  const outputKg = prompt("Enter Output (kg):"); // Prompt for Output
+
+  const outputData = {
+    batch_id: batchId,
+    leaf_type_id: leafTypeId,
+    grading_id: gradingId,
+    output_kg: outputKg,
+  };
+
+  fetch(`${URLROOT}/batches/addOutput`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(outputData),
+  })
+    .then((response) => response.json())
+    .then((data) => {
+      console.log(data.message);
+      // Optionally refresh the output details in the modal
+    })
+    .catch((error) => {
+      console.error("Error adding output:", error);
+    });
+}
+
+function addMachineUsage() {
+  const batchId = document.getElementById("batchIdDetail").innerText; // Get the batch ID
+  const machineId = prompt("Enter Machine ID:"); // Prompt for Machine ID
+  const operatorId = prompt("Enter Operator ID:"); // Prompt for Operator ID
+  const notes = prompt("Enter Notes:"); // Prompt for Notes
+
+  const machineUsageData = {
+    batch_id: batchId,
+    machine_id: machineId,
+    operator_id: operatorId,
+    notes: notes,
+  };
+
+  fetch(`${URLROOT}/batches/addMachineUsage`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(machineUsageData),
+  })
+    .then((response) => response.json())
+    .then((data) => {
+      console.log(data.message);
+      // Optionally refresh the machine usage details in the modal
+    })
+    .catch((error) => {
+      console.error("Error adding machine usage:", error);
+    });
+}

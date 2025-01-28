@@ -144,6 +144,50 @@
     </div>
 
 
+    <div style="text-align: right; margin-bottom: 10px;">
+        <button class="btn btn-primary" onclick="addBatch()">Add Batch</button>
+    </div>
+
+    <div class="table-data">
+        <div class="order">
+            <div class="head">
+                <h3>Batch Process</h3>
+            </div>
+            <table id="batchLogsTable">
+                <thead>
+                    <tr>
+                        <th>Batch ID</th>
+                        <th>Start Time</th>
+                        <th>End Time</th>
+                        <th>Total Output</th>
+                        <th>Total Wastage</th>
+                        <th>Created At</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <?php if (!empty($data['batches'])): ?>
+                        <?php foreach ($data['batches'] as $batch): ?>
+                            <tr>
+                                <td><?php echo $batch->batch_id; ?></td>
+                                <td><?php echo $batch->start_time; ?></td>
+                                <td><?php echo $batch->end_time ? $batch->end_time : 'N/A'; ?></td>
+                                <td><?php echo $batch->total_output_kg . ' kg'; ?></td>
+                                <td><?php echo $batch->total_wastage_kg . ' kg'; ?></td>
+                                <td><?php echo $batch->created_at; ?></td>
+                                <td><button class="btn btn-primary" onclick="openBatchDetailModal(<?php echo $batch->batch_id; ?>)">Manage</button></td>
+                            </tr>
+                        <?php endforeach; ?>
+                    <?php else: ?>
+                        <tr>
+                            <td colspan="7">No batches found.</td>
+                        </tr>
+                    <?php endif; ?>
+                </tbody>
+            </table>
+        </div>  
+    </div>
+
     <div class="table-data">
         <div class="order">
             <div class="head">
@@ -226,6 +270,89 @@
                     <div style="text-align: center; margin-top: 20px;">
                         <button type="submit" class="btn btn-primary full-width" onclick="addStock(event)">ADD STOCK</button>
                     </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="openBatchDetailModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeModal('openBatchDetailModal')">&times;</span>
+            <h2>Batch Details</h2>
+            <div class="stock-modal-content">
+                <div class="stock-modal-details">
+                    <h3>Batch Information</h3>
+                    <p><strong>Batch ID:</strong> <span id="batchIdDetail">1</span></p>
+                    <p><strong>Start Time:</strong> <span id="startTimeDetail">2023-10-05 15:00</span></p>
+                    <p><strong>Total Output:</strong> <span id="totalOutputDetail">1000 kg</span></p>
+                    <p><strong>Total Wastage:</strong> <span id="totalWastageDetail">47 kg</span></p>
+                    
+                    <h3 style="margin-top:10px;">Ingredients Used</h3>
+                    <button class="btn btn-primary" onclick="addIngredient()" style="margin-top:10px;margin-bottom:20px;">Add Ingredient</button>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Ingredient ID</th>
+                                <th>Leaf Type ID</th>
+                                <th>Quantity Used (kg)</th>
+                                <th>Added At</th>
+                            </tr>
+                        </thead>
+                        <tbody id="ingredientDetails">
+
+                            <!-- More rows can be added here -->
+                        </tbody>
+                    </table>
+
+                    <h3 style="margin-top:10px;">Outputs</h3>
+                    <button class="btn btn-primary" onclick="addOutput()" style="margin-top:10px;margin-bottom:20px;">Add Output</button>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Processed ID</th>
+                                <th>Leaf Type ID</th>
+                                <th>Grading ID</th>
+                                <th>Output (kg)</th>
+                                <th>Processed At</th>
+                            </tr>
+                        </thead>
+                        <tbody id="outputDetails">
+                            <tr>
+                                <td>1</td>
+                                <td>101</td>
+                                <td>201</td>
+                                <td>800.00</td>
+                                <td>2023-10-05 18:00</td>
+                            </tr>
+                            <!-- More rows can be added here -->
+                        </tbody>
+                    </table>
+
+                    <h3 style="margin-top:10px;">Machine Usage</h3>
+                    <button class="btn btn-primary" onclick="addMachineUsage()" style="margin-top:10px;margin-bottom:20px;">Add Machine Usage</button>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Usage ID</th>
+                                <th>Machine ID</th>
+                                <th>Operator ID</th>
+                                <th>Start Time</th>
+                                <th>End Time</th>
+                                <th>Notes</th>
+                            </tr>
+                        </thead>
+                        <tbody id="machineUsageDetails">
+                            <tr>
+                                <td>1</td>
+                                <td>301</td>
+                                <td>401</td>
+                                <td>2023-10-05 15:00</td>
+                                <td>2023-10-05 17:00</td>
+                                <td>Initial processing</td>
+                            </tr>
+                            <!-- More rows can be added here -->
+                        </tbody>
+                    </table>
                 </div>
             </div>
         </div>

@@ -204,5 +204,10 @@ class M_CollectionApproval
         return $this->db->execute(); // Execute the insert
     }
 
+    function getLeafActionLogs() {
+        $this->db->query("SELECT * FROM leaf_action_logs");
+        return $this->db->resultSet();
+    }
+
 
 }

@@ -11,12 +11,13 @@
       </a>
     </li>
 
-    <li class="<?php echo (basename($_SERVER['REQUEST_URI']) == 'leaves') ? 'active' : ''; ?>">
-      <a href="<?php echo URLROOT; ?>/process/index">
+    <li class="<?php echo (basename($_SERVER['REQUEST_URI']) == 'stock') ? 'active' : ''; ?>">
+      <a href="<?php echo URLROOT; ?>/inventory/stock">
         <i class="bx bxs-shopping-bag"></i>
-        <span class="text">Process</span>
+        <span class="text">Inventory</span>
       </a>
     </li>
+
 
     <li class="<?php echo (basename($_SERVER['REQUEST_URI']) == 'product') ? 'active' : ''; ?>">
       <a href="<?php echo URLROOT; ?>/Products/">
@@ -24,12 +25,7 @@
         <span class="text">Products</span>
       </a>
     </li>
-    <li class="<?php echo (basename($_SERVER['REQUEST_URI']) == 'stock') ? 'active' : ''; ?>">
-      <a href="<?php echo URLROOT; ?>/inventory/stock">
-        <i class="bx bxs-shopping-bag"></i>
-        <span class="text">Inventory</span>
-      </a>
-    </li>
+
     <li class="<?php echo (basename($_SERVER['REQUEST_URI']) == 'fertilizer') ? 'active' : ''; ?>">
       <a href="<?php echo URLROOT; ?>/inventory/fertilizer">
         <i class="bx bxs-group"></i>
