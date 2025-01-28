@@ -657,33 +657,77 @@ class Inventory extends controller
     }
 
     public function approveBag() {
-        // Get the JSON input
-        $data = json_decode(file_get_contents("php://input"), true);
+        // Get the raw POST data
+        $data = json_decode(file_get_contents("php://input"));
 
-        // Extract data
-        $bagId = $data['bag_id'];
-        $supplierId = $data['supplier_id'];
-        $collectionId = $data['collection_id'];
+        // Extract bagId, collectionId, and supplierId
+        $bagId = $data->bag_id;
+        $collectionId = $data->collection_id;
+        $supplierId = $data->supplier_id;
 
-        // Update the action in bag_usage_history to 'approved'
+        // Fetch the bag details to get the leaf type and quantity
+        $bagDetails = $this->collectionApprovalModel->getBagDetails($bagId);
+        $leafTypeId = $bagDetails->leaf_type_id; // Assuming this field exists in the bag details
+        $quantity = $bagDetails->actual_weight_kg; // Assuming this field exists in the bag details
+
+        // Update the bag status to approved
         $this->collectionApprovalModel->updateBagUsageHistory($bagId, 'approved');
 
-        // Check if there are any more bags for the supplier in the collection
-        $hasMoreBags = $this->collectionApprovalModel->checkSupplierBagsInCollection($supplierId, $collectionId);
+        // Update the leaf_types quantity
+        $this->collectionApprovalModel->updateLeafQuantity($leafTypeId, $quantity);
 
-        // If no more bags, update the collection_supplier_records
-        if (!$hasMoreBags) {
-            $this->collectionApprovalModel->updateCollectionSupplierApprovalStatus($supplierId, 'APPROVED');
-        }
+        // Log the action in leaf_action_logs
+        $this->collectionApprovalModel->logLeafAction('Added', $quantity, 'Approved bag ID: ' . $bagId);
 
-        // Check if all suppliers for the collection are approved
-        $allSuppliersApproved = $this->collectionApprovalModel->checkAllSuppliersApproved($collectionId);
+        // Return success response
+        echo json_encode(['success' => true]);
+    }
 
-        // If all suppliers are approved, update the collection status
-        if ($allSuppliersApproved) {
-            $this->collectionApprovalModel->updateCollectionStatus($collectionId, 'Completed');
-        }
+    public function getBagsCountBySupplier() {
+        // Get the raw POST data
+        $data = json_decode(file_get_contents("php://input"));
 
-        echo json_encode(['status' => 'success']);
+        // Extract supplierId and collectionId
+        $supplierId = $data->supplierId;
+        $collectionId = $data->collectionId;
+
+        // Fetch bags count from the model
+        $bagsCount = $this->collectionApprovalModel->getBagsCountBySupplier($supplierId, $collectionId);
+
+        // Return the data as JSON
+        header('Content-Type: application/json');
+        echo json_encode($bagsCount);
+    }
+
+    public function checkAllBagsApproved() {
+        // Get the raw POST data
+        $data = json_decode(file_get_contents("php://input"));
+
+        // Extract collectionId
+        $collectionId = $data->collectionId;
+
+        // Check if all bags are approved
+        $result = $this->collectionApprovalModel->checkAllBagsApproved($collectionId);
+
+        // Determine if all bags are approved
+        $allApproved = $result->total_bags === $result->approved_bags;
+
+        // Return the result as JSON
+        header('Content-Type: application/json');
+        echo json_encode(['allApproved' => $allApproved]);
+    }
+
+    public function finalizeCollection() {
+        // Get the raw POST data
+        $data = json_decode(file_get_contents("php://input"));
+
+        // Extract collectionId
+        $collectionId = $data->collectionId;
+
+        // Update the collection status to 'Completed' and set the completion timestamp
+        $this->collectionApprovalModel->updateCollectionStatus($collectionId, 'Completed');
+
+        // Return success response
+        echo json_encode(['success' => true]);
     }
 }

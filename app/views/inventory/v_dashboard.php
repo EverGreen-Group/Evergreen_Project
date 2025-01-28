@@ -110,6 +110,8 @@
 										<th>Supplier Name</th>
 										<th>Quantity</th>
 										<th>Notes</th>
+										<th>Total</th>
+										<th>Approved</th>
 										<th>Action</th>
 									</tr>
 								</thead>
@@ -117,6 +119,9 @@
 									<!-- Dynamic rows will be populated here -->
 								</tbody>
 							</table>
+						</div>
+						<div class="detail-group">
+							<button type="button" id="finalizeButton" class="btn btn-primary" style="margin-top:20px; height:40px;">Finalize Collection</button>
 						</div>
 					</form>
 				</div>

@@ -137,13 +137,72 @@ class M_CollectionApproval
     }
 
     public function updateCollectionStatus($collectionId, $status) {
-        $this->db->query("UPDATE collections SET status = :status WHERE collection_id = :collection_id");
+        $this->db->query('
+            UPDATE collections
+            SET status = :status, collection_completed_at = NOW()
+            WHERE collection_id = :collection_id
+        ');
         $this->db->bind(':status', $status);
         $this->db->bind(':collection_id', $collectionId);
-        return $this->db->execute();
+        return $this->db->execute(); // Execute the update
     }
 
+    public function getApprovedBagsBySupplier($supplierId, $collectionId) {
+        $this->db->query('
+            SELECT COUNT(*) AS approved_bags
+            FROM bag_usage_history
+            WHERE supplier_id = :supplier_id AND collection_id = :collection_id AND action = "approved"
+        ');
+        $this->db->bind(':supplier_id', $supplierId);
+        $this->db->bind(':collection_id', $collectionId);
+        return $this->db->single(); // Assuming single() returns a single object
+    }
 
+    public function getBagsCountBySupplier($supplierId, $collectionId) {
+        $this->db->query('
+            SELECT 
+                COUNT(*) AS total_bags,
+                SUM(CASE WHEN action = "approved" THEN 1 ELSE 0 END) AS approved_bags
+            FROM bag_usage_history
+            WHERE supplier_id = :supplier_id AND collection_id = :collection_id
+        ');
+        $this->db->bind(':supplier_id', $supplierId);
+        $this->db->bind(':collection_id', $collectionId);
+        return $this->db->single(); // Assuming single() returns a single object
+    }
+
+    public function checkAllBagsApproved($collectionId) {
+        $this->db->query('
+            SELECT COUNT(*) AS total_bags,
+                   SUM(CASE WHEN action = "approved" THEN 1 ELSE 0 END) AS approved_bags
+            FROM bag_usage_history
+            WHERE collection_id = :collection_id
+        ');
+        $this->db->bind(':collection_id', $collectionId);
+        return $this->db->single(); // Assuming single() returns a single object
+    }
+
+    public function updateLeafQuantity($leafTypeId, $quantity) {
+        $this->db->query('
+            UPDATE leaf_types
+            SET quantity_kg = quantity_kg + :quantity
+            WHERE leaf_type_id = :leaf_type_id
+        ');
+        $this->db->bind(':quantity', $quantity);
+        $this->db->bind(':leaf_type_id', $leafTypeId);
+        return $this->db->execute(); // Execute the update
+    }
+    
+    public function logLeafAction($action, $quantity, $notes) {
+        $this->db->query('
+            INSERT INTO leaf_action_logs (action, quantity_kg, notes, created_at)
+            VALUES (:action, :quantity_kg, :notes, NOW())
+        ');
+        $this->db->bind(':action', $action);
+        $this->db->bind(':quantity_kg', $quantity);
+        $this->db->bind(':notes', $notes);
+        return $this->db->execute(); // Execute the insert
+    }
 
 
 }
