@@ -2,7 +2,8 @@
     "name": "simaak/evergreen_project",
     "description": "A tea factory collection management system",
     "require": {
-        "endroid/qr-code": "^2.0"
+        "endroid/qr-code": "^2.0",
+        "phpmailer/phpmailer": "^6.9"
     },
     "autoload": {
         "psr-4": {
