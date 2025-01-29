@@ -57,10 +57,6 @@
 </ul>
 
 
-
-
-
-
   <!-- Modal Form for Creating or Editing a Route -->
   <div id="routeModal" class="modal">
     <div class="modal-content">
@@ -97,12 +93,9 @@
                         <label for="vehicleSelect">Vehicle:</label>
                         <select id="vehicleSelect" name="vehicle" required>
                             <option value="" disabled selected>Select a vehicle</option>
-                            <?php foreach ($data['vehicles'] as $vehicle): ?>
-                                <option value="<?php echo $vehicle->vehicle_id; ?>" 
-                                        data-capacity="<?php echo $vehicle->capacity; ?>">
-                                    <?php echo $vehicle->vehicle_number; ?> (<?php echo $vehicle->capacity; ?>kg)
+                                <option value="" 
+                                        data-capacity="">
                                 </option>
-                            <?php endforeach; ?>
                         </select>
                     </div>
 
@@ -220,7 +213,7 @@
                                 <?php foreach ($data['vehicles'] as $vehicle): ?>
                                     <option value="<?php echo $vehicle->vehicle_id; ?>" 
                                             data-capacity="<?php echo $vehicle->capacity; ?>">
-                                        <?php echo $vehicle->vehicle_number; ?> (<?php echo $vehicle->capacity; ?>kg)
+                                        <?php echo $vehicle->license_plate; ?> (<?php echo $vehicle->capacity; ?>kg)
                                     </option>
                                 <?php endforeach; ?>
                             </select>
@@ -651,6 +644,35 @@ function populateSupplierDropdown(selectedDay) {
     option.textContent = `${supplier.name} - ${supplier.average_collection} kg`;
     supplierSelect.appendChild(option);
   });
+
+
+
+// Fetch vehicles based on the selected day
+fetch(`${URLROOT}/vehiclemanager/getAvailableVehicles/${selectedDay}`)
+    .then(response => response.json())
+    .then(data => {
+        const vehicleSelect = document.getElementById("vehicleSelect");
+        vehicleSelect.innerHTML = '<option value="" disabled selected>Select a vehicle</option>'; // Reset options
+
+        // Check if the response status is success and if there are vehicles available
+        if (data.status === 'success' && data.data.length > 0) {
+            data.data.forEach(vehicle => {
+                const option = document.createElement("option");
+                option.value = vehicle.vehicle_id;
+                option.setAttribute("data-capacity", vehicle.capacity);
+                option.textContent = `${vehicle.license_plate} (${vehicle.capacity}kg)`;
+                vehicleSelect.appendChild(option);
+            });
+        } else {
+            const option = document.createElement("option");
+            option.value = "";
+            option.textContent = "No vehicles available";
+            vehicleSelect.appendChild(option);
+        }
+    })
+    .catch(error => {
+        console.error("Error fetching vehicles:", error);
+    });
 }
 
 function updateStopList() {
