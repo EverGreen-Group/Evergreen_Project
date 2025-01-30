@@ -74,11 +74,12 @@
 
     <?php flash('schedule_error'); ?>
     <?php flash('schedule_success'); ?>
+    
 
     <div class="table-data">
-        <div class="order" style="max-width:400px;">
+        <div class="order" style="max-width:500px;">
             <div class="head">
-                <h3>Browse Collections</h3>
+                <h3>Collections for July</h3>
             </div>
             <div id="calendar-container"></div>   
         </div>
@@ -106,6 +107,15 @@
         </div>
 
     </div>
+
+
+    <!-- <div class="head-title" style="margin-top:60px;">
+        <div class="left">
+            <h1>Current Schedule</h1>
+        </div>
+
+    </div> -->
+
     <div class="table-data">
 
         <div class="order">
@@ -168,26 +178,130 @@
     </div>
 
 
-    <style>
-    #calendar-container {
-        margin: 20px 0;
-        border: 1px solid #ccc;
-        border-radius: 5px;
-        padding: 10px;
-        width: 100%;
-    }
+    <div class="head-title" style="margin-top:60px;">
+        <div class="left">
+            <h1>Collection History</h1>
+        </div>
 
-    .collection-item {
-        border: 1px solid #ddd;
-        padding: 10px;
-        margin: 5px 0;
-        border-radius: 5px;
-        background-color: #f9f9f9;
-    }
+    </div>
 
-    .collection-item p {
-        margin: 5px 0;
-    }
+
+    <div class="table-data">
+
+        <div class="order">
+            <div class="head">
+                <h3>Collections</h3>
+            </div>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Schedule ID</th>
+                        <th>Route</th>
+                        <th>Driver</th>
+                        <th>Vehicle</th>
+                        <th>Shift</th>
+                        <th>Week</th>
+                        <th>Day</th>
+                        <th>Created At</th>
+                        <th>Status</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+
+<style>
+
+
+#calendar-container table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+/* Calendar Header */
+.calendar-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 20px;
+    padding: 0 10px;
+}
+
+.calendar-header h3 {
+    font-size: 1.1rem;
+    font-weight: 600;
+    margin: 0;
+}
+
+.calendar-nav {
+    display: flex;
+    gap: 15px;
+}
+
+.calendar-nav button {
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 5px;
+    color: #666;
+}
+
+/* Calendar Days */
+#calendar-container th {
+    padding: 10px;
+    font-size: 0.85rem;
+    color: #666;
+    font-weight: 500;
+    text-align: center;
+}
+
+#calendar-container td {
+    padding: 8px;
+    text-align: center;
+    font-size: 0.9rem;
+    color: #333;
+    cursor: pointer;
+    border-radius: 50%;
+    width: 40px;
+    height: 40px;
+    position: relative;
+}
+
+#calendar-container td:hover {
+    background-color: #f0f0f0;
+}
+
+#calendar-container .prev-month,
+#calendar-container .next-month {
+    color: #ccc;
+}
+
+#calendar-container .current-day {
+    background-color: var(--main);
+    color: white;
+    font-weight: 500;
+}
+
+#calendar-container .selected-day {
+    border: 2px solid #6c5ce7;
+}
+
+#calendar-container table {
+    width: 100%;
+    border-collapse: collapse;
+    table-layout: fixed; /* Ensures equal column widths */
+}
+
+#calendar-container th, #calendar-container td {
+    width: 14.28%; /* 100% divided by 7 days */
+    text-align: center;
+}
+
 </style>
 
 <script>
@@ -201,7 +315,7 @@
         const date = new Date();
         const month = date.getMonth();
         const year = date.getFullYear();
-
+        const currentDay = date.getDate(); // Get the current day
 
         // Create table for the calendar
         const table = document.createElement('table');
@@ -231,6 +345,12 @@
         for (let day = 1; day <= daysInMonth; day++) {
             const td = document.createElement('td');
             td.innerText = day;
+
+            // Highlight the current day
+            if (day === currentDay) {
+                td.classList.add('current-day');
+            }
+
             td.style.cursor = 'pointer'; // Change cursor to pointer
             td.onclick = function() {
                 fetchCollections(year, month + 1, day); // Fetch collections for the clicked date
@@ -246,7 +366,6 @@
         table.appendChild(row); // Append the last row
         calendarContainer.appendChild(table);
     }
-
     // Function to fetch collections for a specific date
     function fetchCollections(year, month, day) {
         const date = `${year}-${month.toString().padStart(2, '0')}-${day.toString().padStart(2, '0')}`;

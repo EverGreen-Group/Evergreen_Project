@@ -1002,4 +1002,25 @@ class M_CollectionSchedule {
             throw $e;
         }
     }
+
+    public function getSchedulesForNextWeek() {
+        $schedules = [];
+        $today = date('Y-m-d');
+        
+        // Get the next 7 days
+        for ($i = 0; $i < 7; $i++) {
+            $date = date('Y-m-d', strtotime("+$i days"));
+            $dayOfWeek = date('l', strtotime($date)); // Get the full name of the day (e.g., "Monday")
+
+            // Fetch schedules for the specific day
+            $sql = "SELECT * FROM collection_schedules
+            INNER JOIN routes on collection_schedules.route_id = routes.route_id
+            WHERE collection_schedules.day = :day AND collection_schedules.is_active = 1 AND collection_schedules.is_deleted = 0";
+            $this->db->query($sql);
+            $this->db->bind(':day', $dayOfWeek);
+            $schedules[$date] = $this->db->resultSet(); // Store schedules by date
+        }
+
+        return $schedules;
+    }
 } 
