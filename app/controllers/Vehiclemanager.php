@@ -1438,5 +1438,23 @@ class VehicleManager extends Controller {
         }
     }
 
+    public function getCollectionsByDate() {
+        // Get the date from the request
+        $date = $_GET['date'] ?? null;
+    
+        if ($date) {
+            // Fetch collections for the specified date
+            $collections = $this->collectionModel->getCollectionsByDate($date);
+            
+            // Return the collections as JSON
+            header('Content-Type: application/json');
+            echo json_encode($collections);
+        } else {
+            // Handle the case where no date is provided
+            header('Content-Type: application/json');
+            echo json_encode([]);
+        }
+    }
+
 }
 ?>
