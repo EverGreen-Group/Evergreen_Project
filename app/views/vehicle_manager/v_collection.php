@@ -76,7 +76,7 @@
     <?php flash('schedule_success'); ?>
 
     <div class="table-data">
-        <div class="order">
+        <div class="order" style="max-width:400px;">
             <div class="head">
                 <!-- <h3>Past Collections</h3> -->
                 <div id="calendar-container"></div>
@@ -104,6 +104,68 @@
                 </tbody>
             </table>
         </div>
+
+    </div>
+    <div class="table-data">
+
+        <div class="order">
+            <div class="head">
+                <h3>Collection Schedules</h3>
+            </div>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Schedule ID</th>
+                        <th>Route</th>
+                        <th>Driver</th>
+                        <th>Vehicle</th>
+                        <th>Shift</th>
+                        <th>Week</th>
+                        <th>Day</th>
+                        <th>Created At</th>
+                        <th>Status</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <?php if(isset($data['schedules']) && !empty($data['schedules'])): ?>
+                        <?php foreach($data['schedules'] as $schedule): ?>
+                            <tr>
+                                <td>CS<?php echo str_pad($schedule->schedule_id, 3, '0', STR_PAD_LEFT); ?></td>
+                                <td><?php echo $schedule->route_name; ?></td>
+                                <td><?php echo $schedule->driver_name; ?></td>
+                                <td><?php echo $schedule->license_plate; ?></td>
+                                <td><?php echo $schedule->shift_name; ?> (<?php echo $schedule->start_time; ?> - <?php echo $schedule->end_time; ?>)</td>
+                                <td>Week <?php echo $schedule->week_number; ?></td>
+                                <td><?php echo $schedule->day; ?></td>
+                                <td><?php echo date('Y-m-d H:i', strtotime($schedule->created_at)); ?></td>
+                                <td>
+                                    <form action="<?php echo URLROOT; ?>/collectionschedules/toggleActive" method="POST" style="display: inline;">
+                                        <button type="submit" class="status-btn <?php echo $schedule->is_active ? 'active' : 'inactive'; ?>" style="background-color: var(--main)"> 
+                                            <?php echo $schedule->is_active ? 'Active' : 'Inactive'; ?>
+                                        </button>
+                                    </form>
+                                </td>
+                                <td>
+                                    <form action="<?php echo URLROOT; ?>/collectionschedules/delete" method="POST" style="display: inline;" 
+                                        onsubmit="return confirm('Are you sure you want to delete this schedule?');">
+                                        <input type="hidden" name="schedule_id" value="<?php echo $schedule->schedule_id; ?>">
+                                        <button type="submit" class="delete-btn">
+                                            <i class='bx bx-trash'></i>
+                                        </button>
+                                    </form>
+                                </td>
+                            </tr>
+                        <?php endforeach; ?>
+                    <?php else: ?>
+                        <tr>
+                            <td colspan="10" class="text-center">No schedules found</td>
+                        </tr>
+                    <?php endif; ?>
+                </tbody>
+            </table>
+        </div>
+    </div>
 
 
     <style>
@@ -237,63 +299,7 @@
 </script>
     <!-- Collection Schedules Section -->
     <div class="table-data">
-        <div class="order">
-            <div class="head">
-                <h3>Collection Schedules</h3>
-            </div>
-            <table>
-                <thead>
-                    <tr>
-                        <th>Schedule ID</th>
-                        <th>Route</th>
-                        <th>Driver</th>
-                        <th>Vehicle</th>
-                        <th>Shift</th>
-                        <th>Week</th>
-                        <th>Day</th>
-                        <th>Created At</th>
-                        <th>Status</th>
-                        <th>Actions</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <?php if(isset($data['schedules']) && !empty($data['schedules'])): ?>
-                        <?php foreach($data['schedules'] as $schedule): ?>
-                            <tr>
-                                <td>CS<?php echo str_pad($schedule->schedule_id, 3, '0', STR_PAD_LEFT); ?></td>
-                                <td><?php echo $schedule->route_name; ?></td>
-                                <td><?php echo $schedule->driver_name; ?></td>
-                                <td><?php echo $schedule->license_plate; ?></td>
-                                <td><?php echo $schedule->shift_name; ?> (<?php echo $schedule->start_time; ?> - <?php echo $schedule->end_time; ?>)</td>
-                                <td>Week <?php echo $schedule->week_number; ?></td>
-                                <td><?php echo $schedule->day; ?></td>
-                                <td><?php echo date('Y-m-d H:i', strtotime($schedule->created_at)); ?></td>
-                                <td>
-                                    <form action="<?php echo URLROOT; ?>/collectionschedules/toggleActive" method="POST" style="display: inline;">
-                                        <button type="submit" class="status-btn <?php echo $schedule->is_active ? 'active' : 'inactive'; ?>" style="background-color: var(--main)"> 
-                                            <?php echo $schedule->is_active ? 'Active' : 'Inactive'; ?>
-                                        </button>
-                                    </form>
-                                </td>
-                                <td>
-                                    <form action="<?php echo URLROOT; ?>/collectionschedules/delete" method="POST" style="display: inline;" 
-                                        onsubmit="return confirm('Are you sure you want to delete this schedule?');">
-                                        <input type="hidden" name="schedule_id" value="<?php echo $schedule->schedule_id; ?>">
-                                        <button type="submit" class="delete-btn">
-                                            <i class='bx bx-trash'></i>
-                                        </button>
-                                    </form>
-                                </td>
-                            </tr>
-                        <?php endforeach; ?>
-                    <?php else: ?>
-                        <tr>
-                            <td colspan="10" class="text-center">No schedules found</td>
-                        </tr>
-                    <?php endif; ?>
-                </tbody>
-            </table>
-        </div>
+
     </div>
 
     <?php flash('schedule_create_error'); ?>
