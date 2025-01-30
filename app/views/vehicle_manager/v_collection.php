@@ -43,6 +43,10 @@
             <i class='bx bx-plus'></i>
             Create a Schedule
         </a>
+        <a href="#" id="openUpdateScheduleModal" class="btn btn-primary">
+            <i class='bx bx-plus'></i>
+            Update Schedule
+        </a>
     </div>
 
 
@@ -74,77 +78,163 @@
     <div class="table-data">
         <div class="order">
             <div class="head">
-                <h3>Active Collections</h3>
-                <i class='bx bx-leaf'></i>
-            </div>
-            <table>
-                <thead>
-                    <tr>
-                        <th>Collection ID</th>
-                        <th>Route</th>
-                        <th>Team</th>
-                        <th>Status</th>
-                        <th>Detals</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <tr>
-                        <td>COL001</td>
-                        <td>Route A</td>
-                        <td>Team 1</td>
-                        <td><span class="status pending">In Progress</span></td>
-                        <td><button class="btn btn-primary" onclick="openActiveCollections()">VIEW</button></td>
-                    </tr>
-                    <tr>
-                        <td>COL002</td>
-                        <td>Route B</td>
-                        <td>Team 2</td>
-                        <td><span class="status completed">Completed</span></td>
-                        <td><button class="btn btn-primary" onclick="openActiveCollections()">VIEW</button></td>
-                    </tr>
-                </tbody>
-            </table>
+                <!-- <h3>Past Collections</h3> -->
+                <div id="calendar-container"></div>
+            </div>        
         </div>
-
         <div class="order">
             <div class="head">
-                <h3>Collection Confirmation Request</h3>
-                <i class='bx bx-leaf'></i>
+                <h3>Collection List</h3>
             </div>
-            <table id="collection-confirmation-table">
+            <table id="collection-table">
                 <thead>
                     <tr>
                         <th>Collection ID</th>
                         <th>Route</th>
+                        <th>Shift Times</th>
                         <th>Driver</th>
-                        <th>Deliveries</th>
+                        <th>Status</th>
                         <th>Details</th>
                     </tr>
                 </thead>
                 <tbody>
                     <tr>
-                        <td>COL001</td>
-                        <td>Route A</td>
-                        <td>Driver 1</td>
-                        <td><span class="status cancelled">NO</span></td>
-                        <td><button class="btn btn-primary" onclick="openCollectionRequestDetailModal()">VIEW</button></td>
-                    </tr>
-                    <tr>
-                        <td>COL002</td>
-                        <td>Route B</td>
-                        <td>Driver 2</td>
-                        <td><span class="status completed">YES</span></td>
-                        <td><button class="btn btn-primary" onclick="openCollectionRequestDetailModal()">VIEW</button></td>
+                        <td colspan="6">No collections found. Please select a date.</td>
                     </tr>
                 </tbody>
             </table>
         </div>
-    </div>
 
-    <script>
+
+    <style>
+    #calendar-container {
+        margin: 20px 0;
+        border: 1px solid #ccc;
+        border-radius: 5px;
+        padding: 10px;
+        width: 100%;
+    }
+
+    .collection-item {
+        border: 1px solid #ddd;
+        padding: 10px;
+        margin: 5px 0;
+        border-radius: 5px;
+        background-color: #f9f9f9;
+    }
+
+    .collection-item p {
+        margin: 5px 0;
+    }
+</style>
+
+<script>
+    // JavaScript to create a simple calendar
+    document.addEventListener('DOMContentLoaded', function() {
+        createCalendar();
+    });
+
+    function createCalendar() {
+        const calendarContainer = document.getElementById('calendar-container');
+        const date = new Date();
+        const month = date.getMonth();
+        const year = date.getFullYear();
+
+        // Create calendar header
+        const header = document.createElement('div');
+        header.innerHTML = `<h2>${date.toLocaleString('default', { month: 'long' })} ${year}</h2>`;
+        calendarContainer.appendChild(header);
+
+        // Create table for the calendar
+        const table = document.createElement('table');
+        const daysOfWeek = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+        const headerRow = document.createElement('tr');
+
+        // Add days of the week to the header
+        daysOfWeek.forEach(day => {
+            const th = document.createElement('th');
+            th.innerText = day;
+            headerRow.appendChild(th);
+        });
+        table.appendChild(headerRow);
+
+        // Get the first day of the month and the number of days in the month
+        const firstDay = new Date(year, month, 1).getDay();
+        const daysInMonth = new Date(year, month + 1, 0).getDate();
+
+        // Create rows for the calendar
+        let row = document.createElement('tr');
+        for (let i = 0; i < firstDay; i++) {
+            const td = document.createElement('td');
+            row.appendChild(td); // Empty cells for days before the first day
+        }
+
+        // Fill in the days of the month
+        for (let day = 1; day <= daysInMonth; day++) {
+            const td = document.createElement('td');
+            td.innerText = day;
+            td.style.cursor = 'pointer'; // Change cursor to pointer
+            td.onclick = function() {
+                fetchCollections(year, month + 1, day); // Fetch collections for the clicked date
+            };
+            row.appendChild(td);
+
+            // Start a new row after Saturday
+            if ((day + firstDay) % 7 === 0) {
+                table.appendChild(row);
+                row = document.createElement('tr');
+            }
+        }
+        table.appendChild(row); // Append the last row
+        calendarContainer.appendChild(table);
+    }
+
+    // Function to fetch collections for a specific date
+    function fetchCollections(year, month, day) {
+        const date = `${year}-${month.toString().padStart(2, '0')}-${day.toString().padStart(2, '0')}`;
         
-    </script>
+        // Make an AJAX call to fetch collections for the selected date
+        fetch(`<?php echo URLROOT; ?>/vehiclemanager/getCollectionsByDate?date=${date}`)
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+                return response.json();
+            })
+            .then(data => {
+                populateCollectionList(data);
+            })
+            .catch(error => {
+                console.error('Error fetching collections:', error);
+                const collectionListDiv = document.getElementById('collection-list');
+                collectionListDiv.innerHTML = '<p>Error fetching collections. Please try again later.</p>';
+            });
+    }
+    // Function to populate the collection list in table format
+    function populateCollectionList(collections) {
+        const tbody = document.querySelector('#collection-table tbody');
+        tbody.innerHTML = ''; // Clear previous data
 
+        if (collections.length === 0) {
+            const noDataRow = document.createElement('tr');
+            noDataRow.innerHTML = '<td colspan="6">No collections found for this date.</td>';
+            tbody.appendChild(noDataRow);
+        } else {
+            collections.forEach(collection => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${collection.collection_id}</td>
+                    <td>${collection.route_id || 'N/A'}</td>
+                    <td>${new Date(collection.start_time).toLocaleTimeString()} - ${new Date(collection.end_time).toLocaleTimeString()}</td>
+                    <td>${collection.driver_id || 'N/A'}</td>
+                    <td><span class="status ${collection.status.toLowerCase().replace(' ', '-')}">${collection.status}</span></td>
+                    <td><button class="btn btn-primary" onclick="openActiveCollections(${collection.collection_id})">VIEW</button></td>
+                `;
+                tbody.appendChild(row);
+            });
+        }
+    }
+</script>
     <!-- Collection Schedules Section -->
     <div class="table-data">
         <div class="order">
@@ -209,67 +299,6 @@
     <?php flash('schedule_create_error'); ?>
     <?php flash('schedule_create_success'); ?>
 
-<!-- Edit Schedule Section -->
-<div class="table-data">
-    <div class="order">
-        <div class="head">
-            <h3>Edit Schedule</h3>
-        </div>
-        <form id="editScheduleForm" method="POST" action="<?php echo URLROOT; ?>/collectionschedules/update">
-            <div class="form-group">
-                <label for="schedule_id">Select Schedule:</label>
-                <select id="schedule_id" name="schedule_id" required onchange="loadScheduleData(this.value)">
-                    <option value="">Select a schedule</option>
-                    <?php foreach ($data['schedules'] as $schedule): ?>
-                        <option value="<?= $schedule->schedule_id; ?>">
-                            Schedule <?= str_pad($schedule->schedule_id, 3, '0', STR_PAD_LEFT); ?>
-                        </option>
-                    <?php endforeach; ?>
-                </select>
-            </div>
-
-            <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px;">
-                <div class="form-group">
-                    <label for="edit_route">Route:</label>
-                    <select id="edit_route" name="route_id" required>
-                        <?php foreach ($data['routes'] as $route): ?>
-                            <option value="<?= $route->route_id; ?>"><?= htmlspecialchars($route->route_name); ?></option>
-                        <?php endforeach; ?>
-                    </select>
-                </div>
-
-                <div class="form-group">
-                    <label for="edit_driver">Driver:</label>
-                    <select id="edit_driver" name="driver_id" required>
-                        <?php foreach ($data['drivers'] as $driver): ?>
-                            <option value="<?= $driver->driver_id; ?>"><?= htmlspecialchars($driver->first_name); ?></option>
-                        <?php endforeach; ?>
-                    </select>
-                </div>
-
-                <div class="form-group">
-                    <label for="edit_shift">Shift:</label>
-                    <select id="edit_shift" name="shift_id" required>
-                        <?php foreach ($data['shifts'] as $shift): ?>
-                            <option value="<?= $shift->shift_id; ?>"><?= $shift->shift_name; ?></option>
-                        <?php endforeach; ?>
-                    </select>
-                </div>
-
-                <div class="form-group">
-                    <label for="edit_week_number">Week:</label>
-                    <select id="edit_week_number" name="week_number" required>
-                        <option value="1">Week 1</option>
-                        <option value="2">Week 2</option>
-                    </select>
-                </div>
-
-            </div>
-
-            <button type="submit" class="btn-submit">Update Schedule</button>
-        </form>
-    </div>
-</div>
 
 
 <!-- PART FOR MODAL -->
@@ -342,6 +371,65 @@
     </div>
 </div>
 
+<!-- Update Schedule Modal -->
+<div id="updateScheduleModal" class="modal" onclick="event.stopPropagation(); closeModal('updateScheduleModal')">
+    <div class="modal-content" style="width: 80%; max-width: 600px;" onclick="event.stopPropagation();">
+        <span class="close" onclick="closeModal('updateScheduleModal')">&times;</span>
+        <h2 style="margin-bottom: 30px;">Update Schedule</h2>
+
+        <form id="editScheduleForm" method="POST" action="<?php echo URLROOT; ?>/collectionschedules/update">
+            <div style="display: flex; flex-direction: column; gap: 20px;">
+                <div class="form-group">
+                    <label for="schedule_id">Select Schedule:</label>
+                    <select id="schedule_id" name="schedule_id" required onchange="loadScheduleData(this.value)">
+                        <option value="">Select a schedule</option>
+                        <?php foreach ($data['schedules'] as $schedule): ?>
+                            <option value="<?= $schedule->schedule_id; ?>">
+                                Schedule <?= str_pad($schedule->schedule_id, 3, '0', STR_PAD_LEFT); ?>
+                            </option>
+                        <?php endforeach; ?>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="edit_route">Route:</label>
+                    <select id="edit_route" name="route_id" required>
+                        <?php foreach ($data['routes'] as $route): ?>
+                            <option value="<?= $route->route_id; ?>"><?= htmlspecialchars($route->route_name); ?></option>
+                        <?php endforeach; ?>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="edit_driver">Driver:</label>
+                    <select id="edit_driver" name="driver_id" required>
+                        <?php foreach ($data['drivers'] as $driver): ?>
+                            <option value="<?= $driver->driver_id; ?>"><?= htmlspecialchars($driver->first_name); ?></option>
+                        <?php endforeach; ?>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="edit_shift">Shift:</label>
+                    <select id="edit_shift" name="shift_id" required>
+                        <?php foreach ($data['shifts'] as $shift): ?>
+                            <option value="<?= $shift->shift_id; ?>"><?= $shift->shift_name; ?></option>
+                        <?php endforeach; ?>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="edit_week_number">Week:</label>
+                    <select id="edit_week_number" name="week_number" required>
+                        <option value="1">Week 1</option>
+                        <option value="2">Week 2</option>
+                    </select>
+                </div>
+            </div>
+            <button type="submit" class="btn-secondary">Update Schedule</button>
+        </form>
+    </div>
+</div>
 
 <div id="viewActiveCollectionModal" class="modal">
     <div class="modal-content">
@@ -670,4 +758,34 @@ function openActiveCollections() {
 .add-button:hover {
     background-color: #218838; /* Darker green on hover */
 }
+</style>
+
+<style>
+    .status {
+        padding: 5px 10px;
+        border-radius: 5px;
+        color: white; /* Default text color */
+        font-weight: bold;
+    }
+
+    .status.pending {
+        background-color: orange; /* Color for pending status */
+    }
+
+    .status.in-progress {
+        background-color: blue; /* Color for in-progress status */
+    }
+
+    .status.completed {
+        background-color: green; /* Color for completed status */
+    }
+
+    .status.awaiting-inventory {
+        background-color: var(--main); /* Color for awaiting inventory addition */
+        color: black; /* Change text color for better contrast */
+    }
+
+    .status.cancelled {
+        background-color: red; /* Color for cancelled status */
+    }
 </style>

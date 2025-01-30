@@ -920,6 +920,15 @@ class M_Collection {
         }
     }
 
-
+    public function getCollectionsByDate($date) {
+        // Ensure the date is formatted correctly (YYYY-MM-DD)
+        $sql = "
+        SELECT * FROM collections c
+        INNER JOIN collection_schedules cs ON c.schedule_id = cs.schedule_id
+        WHERE DATE(c.created_at) = :date"; // Check against created_at
+        $this->db->query($sql);
+        $this->db->bind(':date', $date);
+        return $this->db->resultSet();
+    }
 
 } 
