@@ -168,6 +168,11 @@ class M_Vehicle {
         return $row->count > 0;
     }
 
+    public function getVehicleById($id) {
+        $this->db->query('SELECT * FROM vehicles WHERE vehicle_id = :vehicle_id');
+        $this->db->bind(':vehicle_id', $id);
+        return $this->db->single();
+    }    
     public function deleteVehicle($id) {
         try {
             $this->db->beginTransaction();
@@ -196,6 +201,8 @@ class M_Vehicle {
         }
     }
 
+
+
     public function isVehicleInUse($vehicle_id) {
         // Check if vehicle is assigned to any active collection schedules
         $this->db->query('SELECT COUNT(*) as count FROM collection_schedules WHERE vehicle_id = :vehicle_id AND status = "active"');
@@ -218,8 +225,13 @@ class M_Vehicle {
     }
 
     public function getAvailableVehiclesByDay($day) {
-        $this->db->query('SELECT v.* FROM vehicles v');
-        
+        $this->db->query('
+            SELECT v.* 
+            FROM vehicles v
+            LEFT JOIN routes r ON v.vehicle_id = r.vehicle_id AND r.day = :day
+            WHERE r.vehicle_id IS NULL
+        ');
+        $this->db->bind(':day', $day);
         
         return $this->db->resultSet();
     }
