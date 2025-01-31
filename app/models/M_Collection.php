@@ -38,18 +38,7 @@ class M_Collection {
 
     public function getCollectionById($collectionId) {
         $sql = "SELECT 
-                    c.*,
-                    cs.schedule_id,
-                    r.route_name,
-                    t.team_name,
-                    v.license_plate,
-                    s.shift_name
-                FROM collections c
-                JOIN collection_schedules cs ON c.schedule_id = cs.schedule_id
-                JOIN routes r ON cs.route_id = r.route_id
-                JOIN teams t ON cs.team_id = t.team_id
-                JOIN vehicles v ON cs.vehicle_id = v.vehicle_id
-                JOIN collection_shifts s ON cs.shift_id = s.shift_id
+                    c.* FROM collections c
                 WHERE c.collection_id = :collection_id";
         
         $this->db->query($sql);
@@ -92,6 +81,21 @@ class M_Collection {
         $this->db->bind(':collection_id', $collectionId);
         return $this->db->resultSet();
     }
+
+    public function getCollectionSuppliersCount($collectionId) {
+        $this->db->query("
+            SELECT 
+                COUNT(*) as total_suppliers,
+                SUM(CASE WHEN approval_status = 'APPROVED' THEN 1 ELSE 0 END) as collected_count,
+                SUM(CASE WHEN approval_status = 'PENDING' THEN 1 ELSE 0 END) as remaining_count
+            FROM collection_supplier_records csr
+            JOIN suppliers s ON csr.supplier_id = s.supplier_id
+            WHERE csr.collection_id = :collection_id
+        ");
+        $this->db->bind(':collection_id', $collectionId);
+        return $this->db->single();
+    }
+
 
     public function updateSupplierCollectionStatus($collectionId, $supplierId, $status) {
         $this->db->query("UPDATE collection_supplier_records 

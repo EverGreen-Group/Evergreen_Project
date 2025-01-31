@@ -138,6 +138,30 @@ class M_Route {
         return $result;
     }
 
+
+    public function getSuppliersInCollection($collectionId) {
+        $this->db->query("
+            SELECT 
+                s.*,
+                u.first_name,
+                u.last_name,
+                CONCAT(u.first_name, ' ', u.last_name) as full_name,
+                CONCAT(s.latitude, ', ', s.longitude) as coordinates,
+                csr.approval_status
+            FROM suppliers s
+            JOIN users u ON s.user_id = u.user_id
+            LEFT JOIN collection_supplier_records csr ON s.supplier_id = csr.supplier_id
+            JOIN collections c ON c.collection_id = csr.collection_id
+            WHERE c.collection_id = :collection_id
+            AND s.is_active = 1
+            AND s.is_deleted = 0
+        ");
+        $this->db->bind(':collection_id', $collectionId);
+        $result = $this->db->resultSet();
+        error_log('Unallocated suppliers query result: ' . print_r($result, true));
+        return $result;
+    }
+
     public function getUnallocatedSuppliersByDay($preferredDay) {
         $this->db->query("
             SELECT 
@@ -262,6 +286,18 @@ class M_Route {
         
         $this->db->bind(':day', $day);
         return $this->db->resultset();
+    }
+
+    public function getRouteDetailsByCollection($collectionId){
+        $sql = "
+        SELECT r.* FROM collection_schedules cs
+        JOIN collections c ON c.schedule_id = cs.schedule_id
+        JOIN routes r on cs.route_id = r.route_id
+        WHERE c.collection_id = :collection_id;
+        ";
+        $this->db->query($sql);
+        $this->db->bind(':collection_id', $collectionId);
+        return $this->db->single();
     }
 
     public function getTodayAssignedRoutes() {

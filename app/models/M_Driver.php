@@ -168,7 +168,19 @@ class M_Driver{
     }
 
 
-    public function getDriverDetails($user_id) {
+    public function getDriverDetails($driverId) {
+        $this->db->query('
+            SELECT * FROM drivers d
+            JOIN users u ON
+            d.user_id = u.user_id
+            JOIN employees e ON
+            e.user_id = u.user_id
+            WHERE d.driver_id = :driver_id
+        ');
+
+        $this->db->bind(':driver_id', $driverId);
+        return $this->db->single();
+
         
     }
 
