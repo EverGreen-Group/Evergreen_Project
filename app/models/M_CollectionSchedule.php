@@ -1023,4 +1023,5 @@ class M_CollectionSchedule {
 
         return $schedules;
     }
+
 } 

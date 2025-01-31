@@ -172,7 +172,18 @@ class M_Vehicle {
         $this->db->query('SELECT * FROM vehicles WHERE vehicle_id = :vehicle_id');
         $this->db->bind(':vehicle_id', $id);
         return $this->db->single();
-    }    
+    }  
+    
+    public function getVehicleIdByScheduleId($id) {
+        $this->db->query('
+        SELECT v.* FROM collection_schedules cs 
+        JOIN routes r ON cs.route_id = r.route_id
+        JOIN vehicles v ON r.vehicle_id = v.vehicle_id
+        WHERE cs.schedule_id = :schedule_id
+        ');
+        $this->db->bind(':schedule_id', $id);
+        return $this->db->single();
+    }  
     public function deleteVehicle($id) {
         try {
             $this->db->beginTransaction();
