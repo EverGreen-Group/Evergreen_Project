@@ -129,13 +129,35 @@ class M_Route {
             JOIN users u ON s.user_id = u.user_id
             LEFT JOIN route_suppliers rs ON s.supplier_id = rs.supplier_id
             WHERE rs.supplier_id IS NULL 
-            AND u.approval_status = 'Approved'
             AND s.is_active = 1
             AND s.is_deleted = 0
         ");
         
         $result = $this->db->resultSet();
         error_log('Unallocated suppliers query result: ' . print_r($result, true));
+        return $result;
+    }
+
+    public function getUnallocatedSuppliersByDay($preferredDay) {
+        $this->db->query("
+            SELECT 
+                s.*,
+                u.first_name,
+                u.last_name,
+                CONCAT(u.first_name, ' ', u.last_name) as full_name,
+                CONCAT(s.latitude, ', ', s.longitude) as coordinates
+            FROM suppliers s
+            JOIN users u ON s.user_id = u.user_id
+            LEFT JOIN route_suppliers rs ON s.supplier_id = rs.supplier_id
+            WHERE rs.supplier_id IS NULL 
+            AND s.is_active = 1
+            AND s.is_deleted = 0
+            AND s.preferred_day = :preferred_day
+        ");
+        
+        $this->db->bind(':preferred_day', $preferredDay);
+        $result = $this->db->resultSet();
+        error_log('Unallocated suppliers query result for day ' . $preferredDay . ': ' . print_r($result, true));
         return $result;
     }
 
