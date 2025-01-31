@@ -5,6 +5,7 @@
 <!-- Top nav bar -->
 <?php require APPROOT . '/views/inc/components/topnavbar.php'; ?>
 <link rel="stylesheet" href="<?php echo URLROOT; ?>/css/vehicle_manager/collection/collection.css">
+<link rel="stylesheet" href="<?php echo URLROOT; ?>/css/vehicle_manager/collection/calendar.css">
 <!-- <script async defer src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCdt_khahhXrKdrA8cLgKeQB2CZtde-_Vc&callback=initMap"></script> -->
 <script>
     const URLROOT = '<?php echo URLROOT; ?>';
@@ -47,6 +48,10 @@
             <i class='bx bx-plus'></i>
             Update Schedule
         </a>
+        <a href="#" class="btn btn-primary">
+            <i class='bx bx-show'></i>
+            View Collection History
+        </a>
     </div>
 
 
@@ -78,14 +83,12 @@
 
     <div class="table-data">
         <div class="order" style="max-width:500px;">
-            <div class="head">
-                <h3>Collections for July</h3>
-            </div>
-            <div id="calendar-container"></div>   
+            <div id="calendar"></div>  
         </div>
         <div class="order">
             <div class="head">
                 <h3>Collection List</h3>
+                <script src="<?php echo URLROOT; ?>/public/js/vehicle_manager/calendar.js"></script>
             </div>
             <table id="collection-table">
                 <thead>
@@ -108,13 +111,20 @@
 
     </div>
 
+    <script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const calendar = new Calendar('calendar', function(date) {
+            // Your date selection handler
+            fetchCollections(
+                date.getFullYear(),
+                date.getMonth() + 1,
+                date.getDate()
+            );
+        });
+    });
+</script>
 
-    <!-- <div class="head-title" style="margin-top:60px;">
-        <div class="left">
-            <h1>Current Schedule</h1>
-        </div>
 
-    </div> -->
 
     <div class="table-data">
 
@@ -178,195 +188,11 @@
     </div>
 
 
-    <div class="head-title" style="margin-top:60px;">
-        <div class="left">
-            <h1>Collection History</h1>
-        </div>
 
-    </div>
-
-
-    <div class="table-data">
-
-        <div class="order">
-            <div class="head">
-                <h3>Collections</h3>
-            </div>
-            <table>
-                <thead>
-                    <tr>
-                        <th>Schedule ID</th>
-                        <th>Route</th>
-                        <th>Driver</th>
-                        <th>Vehicle</th>
-                        <th>Shift</th>
-                        <th>Week</th>
-                        <th>Day</th>
-                        <th>Created At</th>
-                        <th>Status</th>
-                        <th>Actions</th>
-                    </tr>
-                </thead>
-                <tbody>
-
-                </tbody>
-            </table>
-        </div>
-    </div>
-
-
-<style>
-
-
-#calendar-container table {
-    width: 100%;
-    border-collapse: collapse;
-}
-
-/* Calendar Header */
-.calendar-header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    margin-bottom: 20px;
-    padding: 0 10px;
-}
-
-.calendar-header h3 {
-    font-size: 1.1rem;
-    font-weight: 600;
-    margin: 0;
-}
-
-.calendar-nav {
-    display: flex;
-    gap: 15px;
-}
-
-.calendar-nav button {
-    background: none;
-    border: none;
-    cursor: pointer;
-    padding: 5px;
-    color: #666;
-}
-
-/* Calendar Days */
-#calendar-container th {
-    padding: 10px;
-    font-size: 0.85rem;
-    color: #666;
-    font-weight: 500;
-    text-align: center;
-}
-
-#calendar-container td {
-    padding: 8px;
-    text-align: center;
-    font-size: 0.9rem;
-    color: #333;
-    cursor: pointer;
-    border-radius: 50%;
-    width: 40px;
-    height: 40px;
-    position: relative;
-}
-
-#calendar-container td:hover {
-    background-color: #f0f0f0;
-}
-
-#calendar-container .prev-month,
-#calendar-container .next-month {
-    color: #ccc;
-}
-
-#calendar-container .current-day {
-    background-color: var(--main);
-    color: white;
-    font-weight: 500;
-}
-
-#calendar-container .selected-day {
-    border: 2px solid #6c5ce7;
-}
-
-#calendar-container table {
-    width: 100%;
-    border-collapse: collapse;
-    table-layout: fixed; /* Ensures equal column widths */
-}
-
-#calendar-container th, #calendar-container td {
-    width: 14.28%; /* 100% divided by 7 days */
-    text-align: center;
-}
-
-</style>
 
 <script>
-    // JavaScript to create a simple calendar
-    document.addEventListener('DOMContentLoaded', function() {
-        createCalendar();
-    });
 
-    function createCalendar() {
-        const calendarContainer = document.getElementById('calendar-container');
-        const date = new Date();
-        const month = date.getMonth();
-        const year = date.getFullYear();
-        const currentDay = date.getDate(); // Get the current day
-
-        // Create table for the calendar
-        const table = document.createElement('table');
-        const daysOfWeek = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
-        const headerRow = document.createElement('tr');
-
-        // Add days of the week to the header
-        daysOfWeek.forEach(day => {
-            const th = document.createElement('th');
-            th.innerText = day;
-            headerRow.appendChild(th);
-        });
-        table.appendChild(headerRow);
-
-        // Get the first day of the month and the number of days in the month
-        const firstDay = new Date(year, month, 1).getDay();
-        const daysInMonth = new Date(year, month + 1, 0).getDate();
-
-        // Create rows for the calendar
-        let row = document.createElement('tr');
-        for (let i = 0; i < firstDay; i++) {
-            const td = document.createElement('td');
-            row.appendChild(td); // Empty cells for days before the first day
-        }
-
-        // Fill in the days of the month
-        for (let day = 1; day <= daysInMonth; day++) {
-            const td = document.createElement('td');
-            td.innerText = day;
-
-            // Highlight the current day
-            if (day === currentDay) {
-                td.classList.add('current-day');
-            }
-
-            td.style.cursor = 'pointer'; // Change cursor to pointer
-            td.onclick = function() {
-                fetchCollections(year, month + 1, day); // Fetch collections for the clicked date
-            };
-            row.appendChild(td);
-
-            // Start a new row after Saturday
-            if ((day + firstDay) % 7 === 0) {
-                table.appendChild(row);
-                row = document.createElement('tr');
-            }
-        }
-        table.appendChild(row); // Append the last row
-        calendarContainer.appendChild(table);
-    }
-    // Function to fetch collections for a specific date
+    
     function fetchCollections(year, month, day) {
         const date = `${year}-${month.toString().padStart(2, '0')}-${day.toString().padStart(2, '0')}`;
         
@@ -420,19 +246,6 @@
     <?php flash('schedule_create_error'); ?>
     <?php flash('schedule_create_success'); ?>
 
-
-
-<!-- PART FOR MODAL -->
-
-<div id="collectionRequestDetailsModal" class="modal" onclick="closeModal('collectionRequestDetailsModal')">
-    <div class="modal-content" onclick="event.stopPropagation();">
-        <span class="close" onclick="closeModal('collectionRequestDetailsModal')">&times;</span>
-        <h2>Collection Confirmation Request</h2>
-        <div id="collectionRequestDetailsContent">
-            <!-- Bag details will be populated here -->
-        </div>
-    </div>
-</div>
 
 <!-- Create Schedule Modal -->
 <div id="createScheduleModal" class="modal" onclick="event.stopPropagation(); closeModal('createScheduleModal')">
@@ -552,238 +365,6 @@
     </div>
 </div>
 
-<div id="viewActiveCollectionModal" class="modal">
-    <div class="modal-content">
-        <span class="close" onclick="closeModal('viewActiveCollectionModal')">&times;</span>
-        <h2>Collection #23</h2>
-        <div class="vehicle-modal-content">
-            <div class="vehicle-modal-details">
-
-                <div class="detail-group">
-                    <h3>Statistics</h3>
-                    <div class="stats-container">
-                        <div class="stat-item">
-                            <span class="label">Collections</span>
-                            <div class="value" id="numberOfSuppliers">5</div> <!-- Hardcoded -->
-                        </div>
-                        <div class="stat-item">
-                            <span class="label">Collected</span>
-                            <div class="value" id="numberCollected">3</div> <!-- Hardcoded -->
-                        </div>
-                        <div class="stat-item">
-                            <span class="label">Remaining</span>
-                            <div class="value" id="numberRemaining">2</div> <!-- Hardcoded -->
-                        </div>
-                    </div>
-                </div>
-
-                <div class="detail-group">
-                    <h3>Map Location</h3>
-                    <div id="map" style="height: 300px; width: 100%;"></div>
-                    <script async defer src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAC8AYYCYuMkIUAjQWsAwQDiqbMmLa-7eo&callback=initMap"></script>
-                    <script>
-                        function initMap() {
-                            var driverLocation = {lat: 6.2173037, lng: 80.2538636}; // Hardcoded location
-                            var map = new google.maps.Map(document.getElementById('map'), {
-                                zoom: 14,
-                                center: driverLocation
-                            });
-                            var marker = new google.maps.Marker({
-                                position: driverLocation,
-                                map: map,
-                                title: 'Driver Location'
-                            });
-                        }
-                    </script>
-                </div>
-
-                <div class="detail-group">
-                    <h3>Driver & Vehicle Information</h3>
-                    <div class="info-container">
-                        <div class="profile-info">
-                            <div class="detail-row">
-                                <span class="label">Full Name:</span>
-                                <span class="value" id="driverEmail">John Doe</span>
-                            </div>
-                            <div class="detail-row">
-                                <span class="label">Email:</span>
-                                <span class="value" id="driverEmail">john.doe@example.com</span>
-                            </div>
-                            <div class="detail-row">
-                                <span class="label">Phone:</span>
-                                <span class="value" id="driverPhone">123-456-7890</span>
-                            </div>
-                            <div class="detail-row">
-                                <span class="label">Location:</span>
-                                <span class="value" id="driverLocation">Galle</span> <!-- Hardcoded -->
-                            </div>
-                        </div>
-
-                        <div class="vehicle-info">
-                            <div class="detail-row">
-                                <span class="label">Vehicle ID:</span>
-                                <span class="value" id="vehicleID">V001</span> <!-- Hardcoded -->
-                            </div>
-                            <div class="detail-row">
-                                <span class="label">Vehicle Type:</span>
-                                <span class="value" id="vehicleType">Truck</span> <!-- Hardcoded -->
-                            </div>
-                            <div class="detail-row">
-                                <span class="label">Shift Start:</span>
-                                <span class="value" id="shiftStart">08:00 AM</span> <!-- Hardcoded -->
-                            </div>
-                            <div class="detail-row">
-                                <span class="label">Shift End:</span>
-                                <span class="value" id="shiftEnd">05:00 PM</span> <!-- Hardcoded -->
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="detail-group">
-                    <h3>Collections</h3>
-                    <table>
-                        <thead>
-                            <tr>
-                                <th>Collection ID</th>
-                                <th>Supplier</th>
-                                <th>Status</th>
-                                <th>Status Badge</th>
-                                <th>Visited Time</th>
-                                <th>Collected Time</th>
-                                <th>Total Weight</th>
-                            </tr>
-                        </thead>
-                        <tbody id="activeCollections">
-                            <tr>
-                                <td>COL001</td>
-                                <td>Supplier 1</td>
-                                <td>Completed</td>
-                                <td><span class="badge completed">Completed</span></td>
-                                <td>08:30 AM</td>
-                                <td>09:00 AM</td>
-                                <td>50 kg</td>
-                            </tr>
-                            <tr>
-                                <td>COL002</td>
-                                <td>Supplier 2</td>
-                                <td>Pending</td>
-                                <td><span class="badge pending">Pending</span></td>
-                                <td>-</td>
-                                <td>-</td>
-                                <td>-</td>
-                            </tr>
-                            <tr>
-                                <td>COL003</td>
-                                <td>Supplier 3</td>
-                                <td>Completed</td>
-                                <td><span class="badge completed">Completed</span></td>
-                                <td>09:15 AM</td>
-                                <td>09:45 AM</td>
-                                <td>30 kg</td>
-                            </tr>
-                        </tbody>
-                    </table>
-                </div>
-
-                <div class="detail-group">
-                    <button class="add-button" onclick="addUnallocatedSupplier()">
-                        + Add Unallocated Supplier
-                    </button> <!-- Button to add unallocated supplier -->
-                </div>
-
-                <div class="detail-group">
-                    <h3>Fertilizer Delivery</h3>
-                    <table>
-                        <thead>
-                            <tr>
-                                <th>Supplier</th>
-                                <th>Requested Fertilizer</th>
-                                <th>Status</th>
-                            </tr>
-                        </thead>
-                        <tbody id="fertilizerDelivery">
-                            <tr>
-                                <td>Supplier 1</td>
-                                <td>Type A</td>
-                                <td>Pending</td>
-                            </tr>
-                            <tr>
-                                <td>Supplier 2</td>
-                                <td>Type B</td>
-                                <td>Completed</td>
-                            </tr>
-                        </tbody>
-                    </table>
-                </div>
-
-                <div class="detail-group">
-                    <h3>Leaf Types in Collection</h3>
-                    <table>
-                        <thead>
-                            <tr>
-                                <th>Leaf Type</th>
-                                <th>Current Weight</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <tr>
-                                <td>Normal Leaf</td>
-                                <td>50 kg</td>
-                            </tr>
-                            <tr>
-                                <td>Super Leaf</td>
-                                <td>20 kg</td>
-                            </tr>
-                        </tbody>
-                    </table>
-                </div>
-
-                <div class="detail-group">
-                    <h3>Bags Allocation</h3>
-                    <table>
-                        <thead>
-                            <tr>
-                                <th>Supplier</th>
-                                <th>Number of Bags</th>
-                                <th>Bags Details</th>
-                            </tr>
-                        </thead>
-                        <tbody id="bagsAllocation">
-                            <tr>
-                                <td>Supplier 1</td>
-                                <td>3</td>
-                                <td>
-                                    <span class="badge" style="background-color: #F4F4F4;">Bag 1</span>, 
-                                    <span class="badge" style="background-color: #F4F4F4;">Bag 2</span>, 
-                                    <span class="badge" style="background-color: #F4F4F4;">Bag 3</span>
-                                </td>
-                            </tr>
-                            <tr>
-                                <td>Supplier 2</td>
-                                <td>2</td>
-                                <td>
-                                    <span class="badge" style="background-color: #F4F4F4;">Bag 4</span>, 
-                                    <span class="badge" style="background-color: #F4F4F4;">Bag 5</span>
-                                </td>
-                            </tr>
-                        </tbody>
-                    </table>
-                </div>
-
-            </div>
-        </div>
-    </div>
-</div>
-
-<script>
-
-function openActiveCollections() {
-  // Show the modal
-  document.getElementById("viewActiveCollectionModal").style.display = "block";
-}
-
-</script>
 
 </main>
 
@@ -791,122 +372,3 @@ function openActiveCollections() {
 
 
 <?php require APPROOT . '/views/inc/components/footer.php'; ?>
-
-<style>
-.info-container {
-    display: flex;
-    justify-content: space-between; /* Space between driver and vehicle info */
-    margin-bottom: 15px; /* Space below the info section */
-}
-
-.profile-info, .vehicle-info {
-    flex: 1; /* Allow both sections to take equal space */
-    margin-right: 20px; /* Space between driver and vehicle info */
-}
-
-.vehicle-info {
-    margin-right: 0; /* Remove margin for the last item */
-}
-
-.label {
-    font-weight: bold; /* Keep labels bold for clarity */
-}
-
-.value {
-    margin-left: 5px; /* Space between label and value */
-}
-
-.badge {
-    display: inline-block; /* Make it inline-block for padding */
-    padding: 5px 10px; /* Padding for the badge */
-    border-radius: 3px; /* Rounded corners */
-    color: #333; /* Darker text color for visibility */
-
-    margin-right: 5px; /* Space between badges */
-}
-
-.completed {
-    background-color: var(--mainn); /* Green for completed */
-}
-
-.pending {
-    background-color: #ffc107; /* Yellow for pending */
-}
-
-.stats-container {
-    display: flex;
-    justify-content: space-between; /* Space between stats */
-    margin-bottom: 15px; /* Space below the stats section */
-    background-color: #f4f4f4;
-    border-radius: 5px; /* Rounded corners */
-    padding: 10px; /* Padding inside the outline */
-}
-
-.stat-item {
-    flex: 1; /* Allow each stat item to take equal space */
-    text-align: center; /* Center the text */
-}
-
-.stat-item .label {
-    font-weight: bold; /* Keep labels bold for clarity */
-    display: block; /* Make label a block element */
-    margin-bottom: 5px; /* Space between label and value */
-    color: var(--main);
-}
-
-.stat-item .value {
-    font-size: 1.5em; /* Increase font size for the value */
-    font-weight: bold; /* Make the value bold */
-    color: var(--dark); /* Darker color for better visibility */
-}
-
-.add-button {
-    background-color: var(--main); /* Green background */
-    color: white; /* White text */
-    border: none; /* No border */
-    border-radius: 5px; /* Rounded corners */
-    padding: 10px 15px; /* Padding */
-    font-size: 16px; /* Font size */
-    cursor: pointer; /* Pointer cursor on hover */
-    display: flex; /* Flexbox for icon and text */
-    align-items: center; /* Center items vertically */
-}
-
-.add-button i {
-    margin-right: 5px; /* Space between icon and text */
-}
-
-.add-button:hover {
-    background-color: #218838; /* Darker green on hover */
-}
-</style>
-
-<style>
-    .status {
-        padding: 5px 10px;
-        border-radius: 5px;
-        color: white; /* Default text color */
-        font-weight: bold;
-    }
-
-    .status.pending {
-        background-color: orange; /* Color for pending status */
-    }
-
-    .status.in-progress {
-        background-color: blue; /* Color for in-progress status */
-    }
-
-    .status.completed {
-        background-color: green; /* Color for completed status */
-    }
-
-    .status.awaiting-inventory {
-        background-color: var(--main); /* Color for awaiting inventory addition */
-        color: black; /* Change text color for better contrast */
-    }
-
-    .status.cancelled {
-        background-color: red; /* Color for cancelled status */
-    }
-</style>
