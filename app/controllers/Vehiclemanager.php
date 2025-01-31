@@ -83,6 +83,7 @@ class VehicleManager extends Controller {
         $vehicles = $this->vehicleModel->getAllVehicles();
         $shifts = $this->shiftModel->getAllShifts();
         $schedules = $this->scheduleModel->getAllSchedules();
+        $collectionSchedules = $this->scheduleModel->getSchedulesForNextWeek(); 
         $ongoingCollections = $this->collectionModel->getOngoingCollections();
         $todayRoutes = $this->routeModel->getTodayAssignedRoutes();
 
@@ -95,6 +96,7 @@ class VehicleManager extends Controller {
             'shifts' => $shifts,
             'schedules' => $schedules,
             'ongoing_collections' => $ongoingCollections,
+            'collectionSchedules' => $collectionSchedules,
             'todayRoutes' => $todayRoutes 
         ]);
     }
@@ -1455,6 +1457,8 @@ class VehicleManager extends Controller {
             echo json_encode([]);
         }
     }
+
+
 
 }
 ?>

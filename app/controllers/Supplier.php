@@ -1,5 +1,7 @@
 <?php
 require_once APPROOT . '/models/M_Fertilizer_Order.php';
+require_once APPROOT . '/models/M_Supplier.php';
+require_once APPROOT . '/models/M_Route.php';
 require_once '../app/helpers/auth_middleware.php';
 
 if (session_status() == PHP_SESSION_NONE) {
@@ -9,6 +11,8 @@ if (session_status() == PHP_SESSION_NONE) {
 class Supplier extends Controller {
 
     private $fertilizerOrderModel;
+    private $supplierModel;
+    private $routeModel;
 
     public function __construct() {
         // Check if the user is logged in
@@ -23,6 +27,8 @@ class Supplier extends Controller {
 
         // Initialize the model
         $this->fertilizerOrderModel = new M_Fertilizer_Order();
+        $this->supplierModel = new M_Supplier();
+        $this->routeModel = new M_Route();
     }
 
     
@@ -424,5 +430,18 @@ class Supplier extends Controller {
         $this->view('supplier/v_schedule_details', $data);
     }
 
+    public function getUnallocatedSuppliersByDay($day) {
+        // Ensure the day parameter is valid
+        if (!in_array($day, ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'])) {
+            echo json_encode(['success' => false, 'message' => 'Invalid day provided']);
+            return;
+        }
+    
+        // Fetch unallocated suppliers for the given day
+        $suppliers = $this->routeModel->getUnallocatedSuppliersByDay($day);
+    
+        // Return the response
+        echo json_encode(['success' => true, 'data' => $suppliers]);
+    }
 }
 ?>

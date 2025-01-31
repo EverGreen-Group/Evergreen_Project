@@ -140,4 +140,16 @@ class Collectionschedules extends Controller {
         header('Content-Type: application/json');
         echo json_encode($schedule);
     }
+
+
+    public function showCollectionSchedules() {
+        $schedules = $this->collectionScheduleModel->getSchedulesForNextWeek();
+        
+        // Pass the schedules to the view
+        $data = [
+            'schedules' => $schedules,
+        ];
+        
+        $this->view('vehicle_manager/v_collection', $data);
+    }
 } 

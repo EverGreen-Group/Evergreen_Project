@@ -162,9 +162,9 @@
                     <label class="supplier-name">Leaf Quality Details</label>
                     <div class="quality-grid">
                         <select id="leafType" required>
-                            <option value="S">Super</option>
-                            <option value="B">Broad</option>
-                            <option value="N">Normal</option>
+                            <?php foreach ($leafTypes as $leafType): ?>
+                                <option value="<?= $leafType->leaf_type_id; ?>"><?= $leafType->name; ?></option>
+                            <?php endforeach; ?>
                         </select>
                         <select id="leafAge" required>
                             <option value="Young">Young</option>
