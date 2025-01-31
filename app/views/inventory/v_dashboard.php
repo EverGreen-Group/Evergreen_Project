@@ -213,20 +213,6 @@
 				const tableBody = document.getElementById('stockTable');
 				let html = '';
 
-				// Add dummy data first
-				html += `
-				<tr>
-					<td>John Doe</td>
-					<td style="text-align: center;">COL001</td>
-					<td>150 units</td>
-					<td>2024-03-20 09:30:00</td>
-					<td class="status-cell">Not_Validate</td>
-					<td class="actions">
-						<button class="ap-button" onclick="showCollectionBagDetails('1')">Approve</button>
-						<button class="rp-button" onclick="reportModel('1')">Reject</button>
-					</td>
-				</tr>
-			`;
 
 				// Then add actual data if any exists
 				data.forEach(stock => {
@@ -275,23 +261,7 @@
 				const tableBody = document.getElementById('stockTable');
 				let html = '';
 
-				// Always show dummy data if status matches or is 'All'
-				if (status === 'All' || status === 'Not_Validate') {
-					html += `
-					<tr>
-						<td>John Doe</td>
-						<td style="text-align: center;">COL001</td>
-						<td>150 units</td>
-						<td>2024-03-20 09:30:00</td>
-						<td class="status-cell">Not_Validate</td>
-						<td class="actions">
-							<button class="ap-button" onclick="showCollectionBagDetails('1')">Approve</button>
-							<button class="rp-button" onclick="reportModel('1')">Reject</button>
-						</td>
-					</tr>
-				`;
-				}
-
+			
 				// Add actual filtered data
 				data.forEach(stock => {
 					html += `

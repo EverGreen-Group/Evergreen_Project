@@ -91,10 +91,8 @@ class Inventory extends controller
                 'product-name' => trim($_POST['product-name']),
                 "location" => trim($_POST['location']),
                 "details" => trim($_POST['details']),
-                "code" => trim($_POST['code']),
+                "grade" => trim($_POST['grade']),
                 "price" => trim($_POST['price']),
-                "profit" => trim($_POST['profit']),
-                "margin" => trim($_POST['margin']),
                 "quantity" => trim($_POST['quantity']),
                 "unit" => trim($_POST['unit']),
                 'image_path' => '',
@@ -142,26 +140,15 @@ class Inventory extends controller
             if (empty($data['details'])) {
                 $data['details_err'] = 'Please enter product details';
             }
-            if (empty($data['code'])) {
-                $data['code_err'] = 'Please enter code';
-            }
             if (empty($data['price'])) {
                 $data['price_err'] = 'Please enter price';
-            }
-            if (empty($data['profit'])) {
-                $data['profit_err'] = 'Please enter profit';
-            }
-            if (empty($data['margin'])) {
-                $data['margin_err'] = 'Please enter margin';
             }
             if (empty($data['quantity'])) {
                 $data['quantity_err'] = 'Please enter quantity';
             }
-
             if (
                 empty($data['product-name_err']) && empty($data['location_err']) &&
                 empty($data['details_err']) && empty($data['price_err']) &&
-                empty($data['profit_err']) && empty($data['margin_err']) &&
                 empty($data['quantity_err'])
             ) {
 
@@ -183,10 +170,8 @@ class Inventory extends controller
                 'product-name' => '',
                 "location" => '',
                 "details" => '',
-                "code" => '',
+                "grade" => '',
                 "price" => '',
-                "profit" => '',
-                "margin" => '',
                 "quantity" => '',
                 "unit" => '',
                 'image_path' => '',
@@ -475,10 +460,8 @@ class Inventory extends controller
                 'product-name' => trim($_POST['product-name']),
                 'location' => trim($_POST['location']),
                 'details' => trim($_POST['details']),
-                "code" => trim($_POST['code']),
+                "grade" => trim($_POST['grade']),
                 'price' => trim($_POST['price']),
-                'profit' => trim($_POST['profit']),
-                'margin' => trim($_POST['margin']),
                 'quantity' => trim($_POST['quantity']),
                 'unit' => trim($_POST['unit']),
                 'image_path' => '',
@@ -487,8 +470,6 @@ class Inventory extends controller
                 'location_err' => '',
                 'details_err' => '',
                 'price_err' => '',
-                'profit_err' => '',
-                'margin_err' => '',
                 'quantity_err' => ''
             ];
 
@@ -522,17 +503,8 @@ class Inventory extends controller
             if (empty($data['details'])) {
                 $data['details_err'] = 'Please enter product details';
             }
-            if (empty($data['code'])) {
-                $data['code_err'] = 'Please enter code';
-            }
             if (empty($data['price'])) {
                 $data['price_err'] = 'Please enter price';
-            }
-            if (empty($data['profit'])) {
-                $data['profit_err'] = 'Please enter profit';
-            }
-            if (empty($data['margin'])) {
-                $data['margin_err'] = 'Please enter margin';
             }
             if (empty($data['quantity'])) {
                 $data['quantity_err'] = 'Please enter quantity';
@@ -541,8 +513,7 @@ class Inventory extends controller
             // Make sure no errors
             if (
                 empty($data['product-name_err']) && empty($data['location_err']) &&
-                empty($data['details_err']) && empty($data['price_err']) && empty($data['code_err']) &&
-                empty($data['profit_err']) && empty($data['margin_err']) &&
+                empty($data['details_err']) && empty($data['price_err']) &&
                 empty($data['quantity_err'])
             ) {
 

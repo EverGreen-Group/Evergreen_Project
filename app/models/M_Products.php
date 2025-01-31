@@ -10,17 +10,15 @@ class M_Products{
     
 
     public function createProduct($data){
-        $sql = "INSERT INTO product(product_name, location, details, code, price, profit, margin, quantity, unit,  image_path) 
-                VALUES(:product_name, :location, :details, :code, :price, :profit, :margin, :quantity, :unit, :image_path)";
+        $sql = "INSERT INTO product(product_name, location, details, grade, price, quantity, unit,  image_path) 
+                VALUES(:product_name, :location, :details, :grade, :price, :quantity, :unit, :image_path)";
 
         $this->db->query($sql);
         $this->db->bind(':product_name', $data['product-name']);
         $this->db->bind(':location', $data['location']);
         $this->db->bind(':details', $data['details']);
-        $this->db->bind(':code', $data['code']);
+        $this->db->bind(':grade', $data['grade']);
         $this->db->bind(':price', $data['price']);
-        $this->db->bind(':profit', $data['profit']);
-        $this->db->bind(':margin', $data['margin']);
         $this->db->bind(':quantity', $data['quantity']);
         $this->db->bind(':unit', $data['unit']);
         $this->db->bind(':image_path', $data['image_path']);
@@ -75,10 +73,8 @@ class M_Products{
                 SET product_name = :product_name,
                     location = :location,
                     details = :details,
-                    code = :code,
+                    grade = :grade,
                     price = :price,
-                    profit = :profit,
-                    margin = :margin,
                     quantity = :quantity,
                     unit= :unit";
         
@@ -95,10 +91,8 @@ class M_Products{
         $this->db->bind(':product_name', $data['product-name']);
         $this->db->bind(':location', $data['location']);
         $this->db->bind(':details', $data['details']);
-        $this->db->bind(':code', $data['code']);
+        $this->db->bind(':grade', $data['grade']);
         $this->db->bind(':price', $data['price']);
-        $this->db->bind(':profit', $data['profit']);
-        $this->db->bind(':margin', $data['margin']);
         $this->db->bind(':quantity', $data['quantity']);
         $this->db->bind(':unit', $data['unit']);
         $this->db->bind(':id', $data['id']);
