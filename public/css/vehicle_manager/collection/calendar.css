@@ -1,0 +1,37 @@
+/* .calendar {
+  width: 100%;
+  border-collapse: collapse;
+  background: white;
+} */
+
+/* .calendar th,
+.calendar td {
+  padding: 10px;
+  text-align: center;
+  border: 1px solid #ddd;
+} */
+
+.calendar-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+  padding: 10px;
+}
+
+.calendar-header button {
+  background: var(--main);
+  border: none;
+  padding: 5px 15px;
+  border-radius: 4px;
+  cursor: pointer;
+  color: white;
+}
+
+.calendar-day {
+  cursor: pointer;
+}
+
+.calendar-day:hover {
+  background-color: #f0f0f0;
+}

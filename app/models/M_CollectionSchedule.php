@@ -597,7 +597,7 @@ class M_CollectionSchedule {
         }
 
         // If schedule exists and is not in use, proceed with deletion
-        $this->db->query('DELETE FROM collection_schedules WHERE schedule_id = :schedule_id');
+        $this->db->query('UPDATE collection_schedules SET is_deleted = 1 WHERE schedule_id = :schedule_id');
         $this->db->bind(':schedule_id', $schedule_id);
 
         // Execute
