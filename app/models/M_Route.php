@@ -129,7 +129,6 @@ class M_Route {
             JOIN users u ON s.user_id = u.user_id
             LEFT JOIN route_suppliers rs ON s.supplier_id = rs.supplier_id
             WHERE rs.supplier_id IS NULL 
-            AND u.approval_status = 'Approved'
             AND s.is_active = 1
             AND s.is_deleted = 0
         ");
