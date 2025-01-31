@@ -45,7 +45,7 @@
             Create a Schedule
         </a>
         <a href="#" id="openUpdateScheduleModal" class="btn btn-primary">
-            <i class='bx bx-plus'></i>
+            <i class='bx bx-analyse'></i>
             Update Schedule
         </a>
         <a href="#" class="btn btn-primary">
@@ -364,6 +364,32 @@
         </form>
     </div>
 </div>
+
+
+<style>
+    /* Status styles */
+.status.pending {
+    color: orange; /* Color for Pending status */
+}
+
+.status.approved {
+    color: green; /* Color for Approved status */
+}
+
+.status.rejected {
+    color: red; /* Color for Rejected status */
+}
+
+.status.awaiting-inventory-addition  {
+    color: green; /* Color for Rejected status */
+}
+
+.status.completed {
+    color: blue; /* Color for Completed status */
+}
+
+/* Add more statuses as needed */
+</style>
 
 
 </main>

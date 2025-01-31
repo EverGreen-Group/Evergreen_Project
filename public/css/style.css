@@ -523,6 +523,9 @@ body {
 #content main .table-data .order table tr td .status.completed {
   background: var(--main);
 }
+#content main .table-data .order table tr td .status.awaiting-inventory {
+  background: #3092fc;
+}
 #content main .table-data .order table tr td .status.process {
   background: var(--yellow);
 }
@@ -531,6 +534,14 @@ body {
 }
 
 #content main .table-data .order table tr td .status.error {
+  background: var(--red);
+}
+
+#content main .table-data .order table tr td .status.in-progress {
+  background: #ff9800;
+}
+
+#content main .table-data .order table tr td .status.cancelled {
   background: var(--red);
 }
 
