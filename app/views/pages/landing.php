@@ -8,10 +8,18 @@
                 <h1>Connecting <span class="highlight">Tea Leaves</span> Suppliers with Excellence</h1>
                 <p>A modern platform designed for tea leaf suppliers to manage collections, track deliveries, and ensure quick communication with the factory for assistance.</p>
                 <div class="hero-cta">
-                    <a href="<?php echo URLROOT; ?>/auth/supplier_register/" class="cta-button">Become a Supplier</a>
+                    <a href="<?php echo URLROOT; ?>/auth/supplier_register/" class="cta-button">
+                        <?php if ($hasSubmittedApplication): ?>
+                            View Application Status
+                        <?php else: ?>
+                            Become a Supplier
+                        <?php endif; ?>
+                    </a>
+                    <?php if (!isLoggedIn()): ?>
                     <a href="<?php echo URLROOT; ?>/auth/login" class="login-link">
                         Already registered? Sign in <i class='bx bx-right-arrow-alt'></i>
                     </a>
+                    <?php endif; ?>
                 </div>
             </div>
             <div class="hero-image">

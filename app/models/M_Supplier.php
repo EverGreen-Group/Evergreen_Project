@@ -26,7 +26,7 @@ class M_Supplier {
 
     public function confirmSupplierRole($applicationId) {
         // Step 1: Get the user_id from the supplier_applications table
-        $sql1 = "SELECT user_id FROM supplier_applications WHERE application_id = :application_id";
+        $sql1 = "SELECT user_id, primary_phone FROM supplier_applications WHERE application_id = :application_id";
         $this->db->query($sql1);
         $this->db->bind(':application_id', $applicationId);
         $userIdResult = $this->db->single(); // Assuming single() returns an object
@@ -37,6 +37,7 @@ class M_Supplier {
             return false; // No user found for the given application ID
         }
         $userId = $userIdResult->user_id;
+        $primaryPhone = $userIdResult->primary_phone;
 
         // Step 2: Get latitude and longitude from application_addresses
         $sql2 = "SELECT latitude, longitude FROM application_addresses WHERE application_id = :application_id";
@@ -51,10 +52,11 @@ class M_Supplier {
         }
 
         // Step 3: Insert the new supplier record into the suppliers table
-        $sql3 = "INSERT INTO suppliers (user_id, application_id, latitude, longitude, preferred_day, is_active, is_deleted) 
-                  VALUES (:user_id, :application_id, :latitude, :longitude, 'Monday', 1, 0)";
+        $sql3 = "INSERT INTO suppliers (user_id, contact_number application_id, latitude, longitude, preferred_day, is_active, is_deleted) 
+                  VALUES (:user_id, :contact_number, :application_id, :latitude, :longitude, 'Monday', 1, 0)";
         $this->db->query($sql3);
         $this->db->bind(':user_id', $userId);
+        $this->db->bind(':contact_number', $primaryPhone);
         $this->db->bind(':application_id', $applicationId);
         $this->db->bind(':latitude', $addressData->latitude);
         $this->db->bind(':longitude', $addressData->longitude);
@@ -69,5 +71,14 @@ class M_Supplier {
         }
 
         return false; // Return false if the insertion failed
+    }
+
+    public function checkApplicationStatus($userId) {
+        $sql = "SELECT COUNT(*) as count FROM supplier_applications WHERE user_id = :user_id";
+        $this->db->query($sql);
+        $this->db->bind(':user_id', $userId);
+        $result = $this->db->single();
+        return $result->count > 0;
+
     }
 } 
