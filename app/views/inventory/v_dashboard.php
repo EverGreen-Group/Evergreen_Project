@@ -259,7 +259,7 @@
 					<td>2024-03-20 09:30:00</td>
 					<td class="status-cell">Not_Validate</td>
 					<td class="actions">
-						<button class="ap-button" onclick="showCollectionBagDetails('COL001')">Approve</button>
+						<button class="ap-button" onclick="showCollectionBagDetails('1')">Approve</button>
 						<button class="rp-button" onclick="reportModel('COL001')">Reject</button>
 					</td>
 				</tr>
@@ -285,8 +285,8 @@
 						<td>2024-03-20 09:30:00</td>
 						<td class="status-cell">Not_Validate</td>
 						<td class="actions">
-							<button class="ap-button" onclick="showCollectionBagDetails('COL001')">Approve</button>
-							<button class="rp-button" onclick="reportModel('COL001')">Reject</button>
+							<button class="ap-button" onclick="showCollectionBagDetails('1')">Approve</button>
+							<button class="rp-button" onclick="reportModel('1')">Reject</button>
 						</td>
 					</tr>
 				`;
@@ -324,8 +324,8 @@
 						<td>2024-03-20 09:30:00</td>
 						<td class="status-cell">Not_Validate</td>
 						<td class="actions">
-							<button class="ap-button" onclick="showCollectionBagDetails('COL001')">Approve</button>
-							<button class="rp-button" onclick="reportModel('COL001')">Reject</button>
+							<button class="ap-button" onclick="showCollectionBagDetails('1')">Approve</button>
+							<button class="rp-button" onclick="reportModel('1')">Reject</button>
 						</td>
 					</tr>
 				`;
