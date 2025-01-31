@@ -162,7 +162,7 @@ async function addBagToCollection() {
     supplier_id: currentSupplierId,
     bag_id: document.getElementById("bagId").value,
     actual_weight_kg: document.getElementById("actualWeight").value,
-    leaf_type: document.getElementById("leafType").value,
+    leaf_type_id: document.getElementById("leafType").value,
     leaf_age: document.getElementById("leafAge").value,
     moisture_level: document.getElementById("moistureLevel").value,
     notes: document.getElementById("deductionNotes").value,

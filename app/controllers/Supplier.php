@@ -423,5 +423,6 @@ class Supplier extends Controller {
 
         $this->view('supplier/v_schedule_details', $data);
     }
+
 }
 ?>

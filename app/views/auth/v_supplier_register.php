@@ -949,7 +949,7 @@
 
 <!-- Add Google Maps JavaScript API -->
 <script async defer
-    src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCdt_khahhXrKdrA8cLgKeQB2CZtde-_Vc&callback=initMap"></script>
+    src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAC8AYYCYuMkIUAjQWsAwQDiqbMmLa-7eo&callback=initMap"></script>
 
 <script>
     // Replace the existing initMap function with this version
