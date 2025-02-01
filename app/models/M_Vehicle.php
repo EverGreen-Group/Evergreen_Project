@@ -86,67 +86,27 @@ class M_Vehicle {
     }
 
     public function updateVehicle($data) {
-        try {
-            if (!isset($data->vehicle_id)) {
-                return "Vehicle ID is required";
-            }
+        // Prepare the SQL statement
+        $this->db->query("UPDATE vehicles SET 
+            vehicle_type = :vehicle_type,
+            make = :make,
+            model = :model,
+            manufacturing_year = :manufacturing_year,
+            color = :color,
+            capacity = :capacity
+            WHERE license_plate = :license_plate");
 
-            $this->db->beginTransaction();
+        // Bind the parameters
+        $this->db->bind(':license_plate', $data['license_plate']); // Use the existing license plate
+        $this->db->bind(':vehicle_type', $data['vehicle_type']);
+        $this->db->bind(':make', $data['make']);
+        $this->db->bind(':model', $data['model']);
+        $this->db->bind(':manufacturing_year', $data['manufacturing_year']);
+        $this->db->bind(':color', $data['color']);
+        $this->db->bind(':capacity', $data['capacity']);
 
-            $sql = "UPDATE vehicles SET ";
-            $params = [];
-            $updates = [];
-
-            $validFields = [
-                'license_plate', 'status', 'vehicle_type', 'owner_name', 
-                'owner_contact', 'capacity', 'seating_capacity', 
-                'insurance_expiry_date', 'road_tax_expiry_date', 'color',
-                'engine_number', 'chassis_number', 'condition',
-                'last_serviced_date', 'last_maintenance', 'next_maintenance',
-                'mileage', 'fuel_type', 'registration_date'
-            ];
-
-            foreach ($validFields as $field) {
-                if (isset($data->$field) && $data->$field !== '') {
-                    $updates[] = "`$field` = :$field";
-                    $params[$field] = $data->$field;
-                }
-            }
-
-            if (empty($updates)) {
-                $this->db->rollBack();
-                return "No fields to update";
-            }
-
-            $sql .= implode(', ', $updates);
-            $sql .= " WHERE vehicle_id = :vehicle_id";
-            $params['vehicle_id'] = $data->vehicle_id;
-
-            // Log the query for debugging
-            error_log("Update Query: $sql");
-            error_log("Parameters: " . print_r($params, true));
-
-            $stmt = $this->db->prepare($sql);
-            $success = $stmt->execute($params);
-
-            if (!$success) {
-                $error = $stmt->errorInfo();
-                $this->db->rollBack();
-                return "Database error: " . ($error[2] ?? 'Unknown error');
-            }
-
-            $this->db->commit();
-            return true;
-
-        } catch (PDOException $e) {
-            $this->db->rollBack();
-            error_log("PDO Error: " . $e->getMessage());
-            return "Database error: " . $e->getMessage();
-        } catch (Exception $e) {
-            $this->db->rollBack();
-            error_log("General Error: " . $e->getMessage());
-            return "Error: " . $e->getMessage();
-        }
+        // Execute the query
+        return $this->db->execute(); // Return the result of the execution
     }
 
     public function getVehicleByRouteId($id) {
@@ -161,6 +121,13 @@ class M_Vehicle {
         return $this->db->single();
     }
 
+    public function getVehicleByLicensePlate($license_plate) {
+        // Prepare the SQL statement
+        $this->db->query("SELECT * FROM vehicles WHERE license_plate = :license_plate");
+        $this->db->bind(':license_plate', $license_plate);
+    
+        return $this->db->single();
+    }
     public function checkLicensePlateExists($licensePlate) {
         $this->db->query('SELECT COUNT(*) as count FROM vehicles WHERE license_plate = :license_plate');
         $this->db->bind(':license_plate', $licensePlate);
@@ -327,6 +294,29 @@ class M_Vehicle {
 
         // Execute the query and return the results
         return $this->db->resultSet();
+    }
+
+    public function addVehicle($data) {
+        // Prepare the SQL statement
+        $this->db->query("INSERT INTO vehicles (license_plate, status, capacity, vehicle_type, make, model, manufacturing_year, color) 
+                          VALUES (:license_plate, :status, :capacity, :vehicle_type, :make, :model, :manufacturing_year, :color)");
+
+        // Bind the parameters
+        $this->db->bind(':license_plate', $data['license_plate']);
+        $this->db->bind(':status', 'Available'); // Default status
+        $this->db->bind(':capacity', $data['capacity']);
+        $this->db->bind(':vehicle_type', $data['vehicle_type']);
+        $this->db->bind(':make', $data['make']);
+        $this->db->bind(':model', $data['model']);
+        $this->db->bind(':manufacturing_year', $data['manufacturing_year']);
+        $this->db->bind(':color', $data['color']);
+
+        // Execute the query
+        if ($this->db->execute()) {
+            return true; // Insertion successful
+        } else {
+            return false; // Insertion failed
+        }
     }
 
 }
