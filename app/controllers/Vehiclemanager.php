@@ -147,13 +147,28 @@ class VehicleManager extends Controller {
 
     // Other methods remain unchanged
     public function vehicle() {
-        $data = [
-            'totalVehicles' => $this->vehicleModel->getTotalVehicles(),
-            'availableVehicles' => $this->vehicleModel->getAvailableVehicles(),
-            'vehicles' => $this->vehicleModel->getVehicleDetails(),
-            'vehicleTypeStats' => $this->vehicleModel->getVehicleTypeStats()
-        ];
-
+        // Retrieve filter parameters from the GET request
+        $license_plate = isset($_GET['license_plate']) ? $_GET['license_plate'] : null;
+        $vehicle_type = isset($_GET['vehicle_type']) ? $_GET['vehicle_type'] : null;
+        $capacity = isset($_GET['capacity']) ? $_GET['capacity'] : null;
+        $make = isset($_GET['make']) ? $_GET['make'] : null;
+        $model = isset($_GET['model']) ? $_GET['model'] : null;
+        $manufacturing_year = isset($_GET['manufacturing_year']) ? $_GET['manufacturing_year'] : null;
+    
+        // Fetch vehicles based on filters
+        if ($license_plate || $vehicle_type || $capacity || $make || $model || $manufacturing_year) {
+            $data['vehicles'] = $this->vehicleModel->getFilteredVehicles($license_plate, $vehicle_type, $capacity, $make, $model, $manufacturing_year);
+        } else {
+            // Otherwise, fetch all vehicles
+            $data['vehicles'] = $this->vehicleModel->getVehicleDetails();
+        }
+    
+        // Additional data for the view
+        $data['totalVehicles'] = $this->vehicleModel->getTotalVehicles();
+        $data['availableVehicles'] = $this->vehicleModel->getAvailableVehicles();
+        $data['vehicleTypeStats'] = $this->vehicleModel->getVehicleTypeStats();
+    
+        // Load the view and pass the data
         $this->view('vehicle_manager/v_new_vehicle', $data);
     }
 
@@ -486,129 +501,60 @@ class VehicleManager extends Controller {
     public function logout() {
         // Handle logout functionality
     }
-
-    public function uploadVehicleImage() {
-        if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES['vehicle_image'])) {
-            $vehicle_id = $_POST['vehicle_id'];
-            $file = $_FILES['vehicle_image'];
-            
-            // Configure upload settings
-            $upload_dir = 'uploads/vehicles/';
-            $file_extension = strtolower(pathinfo($file['name'], PATHINFO_EXTENSION));
-            $file_name = uniqid() . '.' . $file_extension;
-            $file_path = $upload_dir . $file_name;
-            
-            // Check file type
-            $allowed_types = ['jpg', 'jpeg', 'png'];
-            if (!in_array($file_extension, $allowed_types)) {
-                echo json_encode(['error' => 'Invalid file type']);
-                return;
-            }
-            
-            // Move uploaded file
-            if (move_uploaded_file($file['tmp_name'], $file_path)) {
-                // Save to database
-                $result = $this->vehicleModel->saveVehicleDocument(
-                    $vehicle_id,
-                    'Image',
-                    $file_path
-                );
-                
-                echo json_encode(['success' => true, 'file_path' => $file_path]);
-            } else {
-                echo json_encode(['error' => 'Failed to upload file']);
-            }
-        }
-    }
-
-    public function createVehicle() {
-        if ($_SERVER['REQUEST_METHOD'] == 'POST') {
-            try {
-                // Sanitize POST data
-                $_POST = filter_input_array(INPUT_POST, FILTER_SANITIZE_STRING);
-
-                // Create vehicle
-                $result = $this->vehicleModel->createVehicle($_POST);
-                
-                if ($result === true) {
-                    flash('vehicle_message', 'Vehicle Added Successfully', 'alert alert-success');
-                    redirect('vehiclemanager/index');
-                } else {
-                    flash('vehicle_message', $result, 'alert alert-danger');
-                    redirect('vehiclemanager/index');
-                }
-            } catch (Exception $e) {
-                flash('vehicle_message', 'Error creating vehicle: ' . $e->getMessage(), 'alert alert-danger');
-                redirect('vehiclemanager/index');
-            }
-        } else {
-            redirect('vehiclemanager/index');
-        }
-    }
-
     public function updateVehicle() {
-        if ($_SERVER['REQUEST_METHOD'] == 'GET') {
-            // Render the update vehicle view (if applicable)
+        if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+            // Validate and sanitize input
+            $license_plate = htmlspecialchars(trim($_POST['license_plate'])); // Keep the license plate as is
+            $vehicle_type = htmlspecialchars(trim($_POST['vehicle_type']));
+            $make = htmlspecialchars(trim($_POST['make']));
+            $model = htmlspecialchars(trim($_POST['model']));
+            $manufacturing_year = htmlspecialchars(trim($_POST['manufacturing_year']));
+            $color = htmlspecialchars(trim($_POST['color']));
+            $capacity = htmlspecialchars(trim($_POST['capacity']));
+
+            // Check the current status of the vehicle
+            $currentVehicle = $this->vehicleModel->getVehicleByLicensePlate($license_plate);
+            if ($currentVehicle && $currentVehicle->status === 'In Use') {
+                // Handle the case where the vehicle is in use
+                echo "Cannot update vehicle. The vehicle is currently in use.";
+                return; // Exit the function if the vehicle is in use
+            }
+
+            // Initialize the data array for updating
             $data = [
-                'title' => 'Update Vehicle'
-                // You can add more data here if needed
+                'license_plate' => $license_plate, // Keep the existing license plate
+                'vehicle_type' => $vehicle_type,
+                'make' => $make,
+                'model' => $model,
+                'manufacturing_year' => $manufacturing_year,
+                'color' => $color,
+                'capacity' => $capacity,
             ];
-            $this->view('vehicle_manager/v_update_vehicle', $data); // Assuming you have a view for updating vehicles
-        } else {
-            // Handle POST request
-            $this->handleVehicleUpdateSubmission();
+
+            // Handle file upload if a new image is provided
+            if (isset($_FILES['vehicle_image']) && $_FILES['vehicle_image']['error'] == 0) {
+                $image = $_FILES['vehicle_image'];
+                $target_dir = "/opt/lampp/htdocs/Evergreen_Project/public/uploads/vehicle_photos/";
+                $target_file = $target_dir . $license_plate . ".jpg"; // Save as {license_plate}.jpg
+
+                // Move the uploaded file to the target directory
+                if (move_uploaded_file($image['tmp_name'], $target_file)) {
+                    // Update the image path in the data array
+                    $data['image_path'] = $target_file; // Optional: store the new image path in the database
+                } else {
+                    // Handle file upload error
+                    echo "Error uploading file.";
+                    return; // Exit the function if the upload fails
+                }
+            }
+
+            // Update vehicle details in the database
+            $this->vehicleModel->updateVehicle($data);
+
+            // Redirect or show success message
+            header('Location: ' . URLROOT . '/vehiclemanager/vehicle');
+            exit();
         }
-    }
-
-    private function handleVehicleUpdateSubmission() {
-        // Prevent PHP errors from being output
-        error_reporting(E_ALL);
-        ini_set('display_errors', 0);
-        
-        // Set JSON header
-        header('Content-Type: application/json');
-
-        try {
-            if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-                throw new Exception('Method not allowed');
-            }
-
-            // Get JSON data from request body
-            $json = file_get_contents('php://input');
-            if (!$json) {
-                throw new Exception('No data received');
-            }
-
-            $data = json_decode($json);
-            if (!$data || !isset($data->vehicle_id)) {
-                throw new Exception('Invalid data format');
-            }
-
-            // Log the received data for debugging
-            error_log('Received vehicle update data: ' . print_r($data, true));
-
-            $result = $this->vehicleModel->updateVehicle($data);
-            
-            if ($result === true) {
-                echo json_encode([
-                    'success' => true,
-                    'message' => 'Vehicle updated successfully'
-                ]);
-            } else {
-                echo json_encode([
-                    'success' => false,
-                    'message' => is_string($result) ? $result : 'Failed to update vehicle'
-                ]);
-            }
-
-        } catch (Exception $e) {
-            error_log('Vehicle Update Error: ' . $e->getMessage());
-            echo json_encode([
-                'success' => false,
-                'message' => 'Error: ' . $e->getMessage()
-            ]);
-        }
-        exit; // Ensure no additional output
     }
 
     public function getVehicleById($id) {
@@ -886,111 +832,47 @@ class VehicleManager extends Controller {
     }
 
     public function addVehicle() {
-        if ($_SERVER['REQUEST_METHOD'] == 'GET') {
-            $data = [
-                'title' => 'Add New Vehicle'
-            ];
-            $this->view('vehicle_manager/v_add_vehicle', $data);
-        } else if ($_SERVER['REQUEST_METHOD'] == 'POST') {
-            // send thru postt
-            $this->handleVehicleSubmission();
-        }
-    }
+        if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+            // Validate and sanitize input
+            $license_plate = htmlspecialchars(trim($_POST['license_plate']));
+            $vehicle_type = htmlspecialchars(trim($_POST['vehicle_type']));
+            $make = htmlspecialchars(trim($_POST['make']));
+            $model = htmlspecialchars(trim($_POST['model']));
+            $manufacturing_year = htmlspecialchars(trim($_POST['manufacturing_year']));
+            $color = htmlspecialchars(trim($_POST['color']));
+            $capacity = htmlspecialchars(trim($_POST['capacity']));
 
-    private function handleVehicleSubmission() {
-        try {
-            // Basic vehicle data
-            $vehicleData = [
-                'license_plate' => $_POST['license_plate'],
-                'vehicle_type' => $_POST['vehicle_type'],
-                'status' => $_POST['status'],
-                'make' => $_POST['make'],
-                'model' => $_POST['model'],
-                'manufacturing_year' => $_POST['manufacturing_year'],
-                'color' => $_POST['color'],
-                'capacity' => $_POST['capacity']
-            ];
+            // Handle file upload
+            if (isset($_FILES['vehicle_image']) && $_FILES['vehicle_image']['error'] == 0) {
+                $image = $_FILES['vehicle_image'];
+                $target_dir = "/opt/lampp/htdocs/Evergreen_Project/public/uploads/vehicle_photos/";
+                $target_file = $target_dir . $license_plate . ".jpg"; // Save as {license_plate}.jpg
 
-            // Handle vehicle image
-            if (isset($_FILES['vehicle_image']) && $_FILES['vehicle_image']['error'] === UPLOAD_ERR_OK) {
-                $this->handleVehicleImage($_FILES['vehicle_image'], $_POST['license_plate']);
-            }
+                // Move the uploaded file to the target directory
+                if (move_uploaded_file($image['tmp_name'], $target_file)) {
+                    // File upload successful, now save vehicle details to the database
+                    $this->vehicleModel->addVehicle([
+                        'license_plate' => $license_plate,
+                        'vehicle_type' => $vehicle_type,
+                        'make' => $make,
+                        'model' => $model,
+                        'manufacturing_year' => $manufacturing_year,
+                        'color' => $color,
+                        'capacity' => $capacity,
+                        'image_path' => $target_file // Optional: store the image path in the database
+                    ]);
 
-            // Create vehicle (temporarily without documents)
-            $result = $this->vehicleModel->createVehicle($vehicleData);
-
-            if ($result) {
-                flash('vehicle_message', 'Vehicle added successfully', 'alert-success');
-                redirect('vehiclemanager/vehicle'); // Changed from vehiclemanager to vehiclemanager/vehicles
-            } else {
-                flash('vehicle_message', 'Failed to add vehicle', 'alert-danger');
-                redirect('vehiclemanager/addVehicle');
-            }
-
-        } catch (Exception $e) {
-            flash('vehicle_message', 'Error: ' . $e->getMessage(), 'alert-danger');
-            redirect('vehiclemanager/addVehicle');
-        }
-    }
-
-    private function handleFileUpload($file, $uploadDir) {
-        $uploadDir = '../public/uploads/' . $uploadDir . '/';
-        $fileName = uniqid() . '_' . basename($file['name']);
-        $targetPath = $uploadDir . $fileName;
-
-        if (move_uploaded_file($file['tmp_name'], $targetPath)) {
-            return $fileName;
-        }
-        return false;
-    }
-
-    private function handleVehicleImage($file, $licensePlate) {
-        try {
-            if ($file['error'] === UPLOAD_ERR_OK) {
-                // Define the upload directory path
-                $uploadDir = UPLOADROOT . '/vehicle_photos/';
-                
-                // Log the upload directory path
-                error_log("Upload directory: " . $uploadDir);
-                
-                // Create directory if it doesn't exist
-                if (!file_exists($uploadDir)) {
-                    if (!mkdir($uploadDir, 0777, true)) {
-                        error_log("Failed to create directory: " . $uploadDir);
-                        return false;
-                    }
-                }
-
-                $fileName = $licensePlate . '.jpg';
-                $targetPath = $uploadDir . $fileName;
-                
-                // Log the target path
-                error_log("Target path: " . $targetPath);
-
-                // Debugging: Log the full path
-                error_log("Full path to image: " . $targetPath);
-
-                // Check if file is actually uploaded
-                if (is_uploaded_file($file['tmp_name'])) {
-                    // Move the uploaded file
-                    if (move_uploaded_file($file['tmp_name'], $targetPath)) {
-                        error_log("File successfully uploaded to: " . $targetPath);
-                        return true;
-                    } else {
-                        error_log("Failed to move uploaded file. Error: " . error_get_last()['message']);
-                        return false;
-                    }
+                    // Redirect or show success message
+                    header('Location: ' . URLROOT . '/vehiclemanager/vehicle');
+                    exit();
                 } else {
-                    error_log("File was not uploaded via HTTP POST");
-                    return false;
+                    // Handle file upload error
+                    echo "Error uploading file.";
                 }
             } else {
-                error_log("File upload error code: " . $file['error']);
-                return false;
+                // Handle no file uploaded or other errors
+                echo "No file uploaded or there was an error.";
             }
-        } catch (Exception $e) {
-            error_log("Error uploading vehicle image: " . $e->getMessage());
-            return false;
         }
     }
 
@@ -1458,7 +1340,33 @@ class VehicleManager extends Controller {
         }
     }
 
+    public function removeVehicle() {
+        if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+            // Validate and sanitize input
+            $license_plate = htmlspecialchars(trim($_POST['license_plate']));
 
+            // Check if the vehicle exists
+            $vehicle = $this->vehicleModel->getVehicleByLicensePlate($license_plate);
+            if ($vehicle) {
+                // Remove the vehicle from the database
+                if ($this->vehicleModel->deleteVehicle($license_plate)) {
+                    // Optionally, remove the vehicle image file
+                    $imagePath = "/opt/lampp/htdocs/Evergreen_Project/public/uploads/vehicle_photos/" . $license_plate . ".jpg";
+                    if (file_exists($imagePath)) {
+                        unlink($imagePath); // Delete the image file
+                    }
+
+                    // Redirect or show success message
+                    header('Location: ' . URLROOT . '/vehiclemanager/vehicle');
+                    exit();
+                } else {
+                    echo "Error removing vehicle.";
+                }
+            } else {
+                echo "Vehicle not found.";
+            }
+        }
+    }
 
 }
 ?>
