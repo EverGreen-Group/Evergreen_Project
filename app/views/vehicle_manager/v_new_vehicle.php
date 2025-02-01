@@ -221,6 +221,14 @@
                             </div>
                         </div>
                     </div>
+
+                    <!-- Remove Vehicle Button -->
+                    <div class="remove-vehicle">
+                        <form action="<?php echo URLROOT; ?>/vehiclemanager/removeVehicle" method="POST" onsubmit="return confirm('Are you sure you want to remove this vehicle?');">
+                            <input type="hidden" name="license_plate" value="<?php echo htmlspecialchars($firstVehicle->license_plate); ?>">
+                            <button type="submit" class="btn btn-danger" style="width:100%;">Remove Vehicle</button>
+                        </form>
+                    </div>
                 </div>
             <?php else: ?>
                 <p>No vehicle details available.</p>

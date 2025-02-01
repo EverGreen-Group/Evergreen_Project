@@ -1340,7 +1340,33 @@ class VehicleManager extends Controller {
         }
     }
 
+    public function removeVehicle() {
+        if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+            // Validate and sanitize input
+            $license_plate = htmlspecialchars(trim($_POST['license_plate']));
 
+            // Check if the vehicle exists
+            $vehicle = $this->vehicleModel->getVehicleByLicensePlate($license_plate);
+            if ($vehicle) {
+                // Remove the vehicle from the database
+                if ($this->vehicleModel->deleteVehicle($license_plate)) {
+                    // Optionally, remove the vehicle image file
+                    $imagePath = "/opt/lampp/htdocs/Evergreen_Project/public/uploads/vehicle_photos/" . $license_plate . ".jpg";
+                    if (file_exists($imagePath)) {
+                        unlink($imagePath); // Delete the image file
+                    }
+
+                    // Redirect or show success message
+                    header('Location: ' . URLROOT . '/vehiclemanager/vehicle');
+                    exit();
+                } else {
+                    echo "Error removing vehicle.";
+                }
+            } else {
+                echo "Vehicle not found.";
+            }
+        }
+    }
 
 }
 ?>

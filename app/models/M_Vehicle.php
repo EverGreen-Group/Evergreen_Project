@@ -151,32 +151,12 @@ class M_Vehicle {
         $this->db->bind(':schedule_id', $id);
         return $this->db->single();
     }  
-    public function deleteVehicle($id) {
-        try {
-            $this->db->beginTransaction();
+    public function deleteVehicle($license_plate) {
+        $this->db->query("DELETE FROM vehicles WHERE license_plate = :license_plate");
 
-            // Delete vehicle image if exists
-            $vehicle = $this->getVehicleById($id);
-            if ($vehicle) {
-                $imagePath = APPROOT . '/../public/uploads/vehicle_photos/' . $vehicle->license_plate . '.jpg';
-                if (file_exists($imagePath)) {
-                    unlink($imagePath);
-                }
-            }
+        $this->db->bind(':license_plate', $license_plate);
 
-            // Delete vehicle record
-            $this->db->query('DELETE FROM vehicles WHERE vehicle_id = :id');
-            $this->db->bind(':id', $id);
-            
-            $result = $this->db->execute();
-            $this->db->commit();
-            
-            return $result;
-        } catch (Exception $e) {
-            $this->db->rollBack();
-            error_log("Error deleting vehicle: " . $e->getMessage());
-            return false;
-        }
+        return $this->db->execute();
     }
 
 
