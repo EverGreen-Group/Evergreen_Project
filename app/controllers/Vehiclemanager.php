@@ -147,13 +147,28 @@ class VehicleManager extends Controller {
 
     // Other methods remain unchanged
     public function vehicle() {
-        $data = [
-            'totalVehicles' => $this->vehicleModel->getTotalVehicles(),
-            'availableVehicles' => $this->vehicleModel->getAvailableVehicles(),
-            'vehicles' => $this->vehicleModel->getVehicleDetails(),
-            'vehicleTypeStats' => $this->vehicleModel->getVehicleTypeStats()
-        ];
-
+        // Retrieve filter parameters from the GET request
+        $license_plate = isset($_GET['license_plate']) ? $_GET['license_plate'] : null;
+        $vehicle_type = isset($_GET['vehicle_type']) ? $_GET['vehicle_type'] : null;
+        $capacity = isset($_GET['capacity']) ? $_GET['capacity'] : null;
+        $make = isset($_GET['make']) ? $_GET['make'] : null;
+        $model = isset($_GET['model']) ? $_GET['model'] : null;
+        $manufacturing_year = isset($_GET['manufacturing_year']) ? $_GET['manufacturing_year'] : null;
+    
+        // Fetch vehicles based on filters
+        if ($license_plate || $vehicle_type || $capacity || $make || $model || $manufacturing_year) {
+            $data['vehicles'] = $this->vehicleModel->getFilteredVehicles($license_plate, $vehicle_type, $capacity, $make, $model, $manufacturing_year);
+        } else {
+            // Otherwise, fetch all vehicles
+            $data['vehicles'] = $this->vehicleModel->getVehicleDetails();
+        }
+    
+        // Additional data for the view
+        $data['totalVehicles'] = $this->vehicleModel->getTotalVehicles();
+        $data['availableVehicles'] = $this->vehicleModel->getAvailableVehicles();
+        $data['vehicleTypeStats'] = $this->vehicleModel->getVehicleTypeStats();
+    
+        // Load the view and pass the data
         $this->view('vehicle_manager/v_new_vehicle', $data);
     }
 

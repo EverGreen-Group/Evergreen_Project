@@ -27,6 +27,8 @@
       </div>
   </div>
 
+  <?php print_r($data); ?>
+
   <div class="action-buttons">
         <a href="#" id="openCreateScheduleModal" class="btn btn-primary">
             <i class='bx bx-plus'></i>
@@ -68,7 +70,7 @@
             <i class='bx bx-search'></i>
         </div>
         <div class="filter-options">
-            <form action="your_action_url" method="GET"> <!-- Replace with your action URL -->
+            <form action="/Evergreen_Project/vehiclemanager/vehicle" method="GET"> <!-- Correct action URL -->
                 <div class="filter-group">
                     <label for="license-plate">License Plate:</label>
                     <input type="text" id="license-plate" name="license_plate" placeholder="Enter license plate">
@@ -120,118 +122,110 @@
             </button>
         </div>
         <div class="vehicle-grid">
-            <!-- Vehicle Card 1 -->
-            <div class="vehicle-card">
-                <img src="https://winwin.lk/images/f60f70/16753901752224530.jpg" alt="Audi R8 Green">
-                <div class="card-content">
-                    <div class="card-title">
-                        <h4>Audi's R8 Green</h4>
-                        <button class="bookmark-btn">
-                            <i class='bx bx-bookmark'></i>
-                        </button>
-                    </div>
-                    <div class="vehicle-specs">
-                        <div class="spec">
-                            <span class="spec-label">Make:</span>
-                            <span class="spec-value">Audi</span>
-                        </div>
-                        <div class="spec">
-                            <span class="spec-label">Model:</span>
-                            <span class="spec-value">Auto</span>
-                        </div>
-                        <div class="spec">
-                            <span class="spec-label">Color:</span>
-                            <span class="spec-value">Green</span>
-                        </div>
-                    </div>
-                    <div class="capacity">2,500 kg</div>
-                </div>
-            </div>
-
-            <!-- Vehicle Card 2 -->
-            <div class="vehicle-card">
-                <img src="https://i.ikman-st.com/tata-dimo-batta-express-2016-for-sale-colombo-1/c3823989-e7bc-45cf-93ef-59f9a9654df2/620/466/fitted.jpg" alt="Bentley Flying Spur">
-                <div class="card-content">
-                    <div class="card-title">
-                        <h4>Bentley Flying Spur</h4>
-                        <button class="bookmark-btn">
-                            <i class='bx bx-bookmark'></i>
-                        </button>
-                    </div>
-                    <div class="vehicle-specs">
-                        <div class="spec">
-                            <span class="spec-label">Make:</span>
-                            <span class="spec-value">Bentley</span>
-                        </div>
-                        <div class="spec">
-                            <span class="spec-label">Model:</span>
-                            <span class="spec-value">Petrol</span>
-                        </div>
-                        <div class="spec">
-                            <span class="spec-label">Color:</span>
-                            <span class="spec-value">Brown</span>
+            <?php if (!empty($vehicles)): ?>
+                <?php foreach ($vehicles as $vehicle): ?>
+                    <div class="vehicle-card" 
+                         data-license-plate="<?php echo htmlspecialchars($vehicle->license_plate); ?>"
+                         data-vehicle-type="<?php echo htmlspecialchars($vehicle->vehicle_type); ?>"
+                         data-status="<?php echo htmlspecialchars($vehicle->status); ?>"
+                         data-capacity="<?php echo htmlspecialchars($vehicle->capacity); ?>"
+                         data-make="<?php echo htmlspecialchars($vehicle->make); ?>"
+                         data-model="<?php echo htmlspecialchars($vehicle->model); ?>"
+                         data-manufacturing-year="<?php echo htmlspecialchars($vehicle->manufacturing_year); ?>"
+                         data-color="<?php echo htmlspecialchars($vehicle->color); ?>"
+                         onclick="updateVehicleDetails(this)">
+                        <img src="https://winwin.lk/images/f60f70/16753901752224530.jpg" alt="<?php echo htmlspecialchars($vehicle->make . ' ' . $vehicle->model); ?>">
+                        <div class="card-content">
+                            <div class="card-title">
+                                <h4><?php echo htmlspecialchars($vehicle->license_plate); ?></h4>
+                                <button class="bookmark-btn">
+                                    <i class='bx bx-bookmark'></i>
+                                </button>
+                            </div>
+                            <div class="vehicle-specs">
+                                <div class="spec">
+                                    <span class="spec-label">Make:</span>
+                                    <span class="spec-value"><?php echo htmlspecialchars($vehicle->make); ?></span>
+                                </div>
+                                <div class="spec">
+                                    <span class="spec-label">Model:</span>
+                                    <span class="spec-value"><?php echo htmlspecialchars($vehicle->model); ?></span>
+                                </div>
+                                <div class="spec">
+                                    <span class="spec-label">Color:</span>
+                                    <span class="spec-value"><?php echo htmlspecialchars($vehicle->color); ?></span>
+                                </div>
+                            </div>
+                            <div class="capacity"><?php echo htmlspecialchars($vehicle->capacity); ?> kg</div>
                         </div>
                     </div>
-                    <div class="capacity">2,300 kg</div>
-                </div>
-            </div>
+                <?php endforeach; ?>
+            <?php else: ?>
+                <p>No vehicles found matching your criteria.</p>
+            <?php endif; ?>
         </div>
     </div>
-    <!-- LOAIND THE VEHICLE DETAILS HERE -->
+
+    <!-- Vehicle Details Section -->
     <div class="order vehicle-details">
         <div class="head">
             <h3>Vehicle Details</h3>
         </div>
         <div class="details-container">
-            <div class="vehicle-image">
-                <img src="https://winwin.lk/images/f60f70/16753901752224530.jpg" alt="Toyota Dyna Truck">
-            </div>
-            
-            <div class="details-content">
-                <div class="details-section">
-                    <h4 class="section-title">Basic Information</h4>
-                    <div class="info-list">
-                        <div class="info-item">
-                            <span class="label">License Plate:</span>
-                            <span class="value">WP-1234</span>
-                        </div>
-                        <div class="info-item">
-                            <span class="label">Vehicle Type:</span>
-                            <span class="value">TRUCK</span>
-                        </div>
-                        <div class="info-item">
-                            <span class="label">Status:</span>
-                            <span class="value status-available">AVAILABLE</span>
+            <?php if (!empty($vehicles)): ?>
+                <?php $firstVehicle = $vehicles[0]; // Display details of the first vehicle as an example ?>
+                <div class="vehicle-image">
+                    <img src="https://winwin.lk/images/f60f70/16753901752224530.jpg" alt="<?php echo htmlspecialchars($firstVehicle->make . ' ' . $firstVehicle->model); ?>">
+                </div>
+                
+                <div class="details-content">
+                    <div class="details-section">
+                        <h4 class="section-title">Basic Information</h4>
+                        <div class="info-list">
+                            <div class="info-item">
+                                <span class="label">License Plate:</span>
+                                <span class="value"><?php echo htmlspecialchars($firstVehicle->license_plate); ?></span>
+                            </div>
+                            <div class="info-item">
+                                <span class="label">Vehicle Type:</span>
+                                <span class="value"><?php echo htmlspecialchars($firstVehicle->vehicle_type); ?></span>
+                            </div>
+                            <div class="info-item">
+                                <span class="label">Status:</span>
+                                <span class="value status-available"><?php echo htmlspecialchars($firstVehicle->status); ?></span>
+                            </div>
                         </div>
                     </div>
-                </div>
 
-                <div class="details-section">
-                    <h4 class="section-title">Specifications</h4>
-                    <div class="info-list">
-                        <div class="info-item">
-                            <span class="label">Capacity:</span>
-                            <span class="value">2500 kg</span>
-                        </div>
-                        <div class="info-item">
-                            <span class="label">Make:</span>
-                            <span class="value">Toyota</span>
-                        </div>
-                        <div class="info-item">
-                            <span class="label">Model:</span>
-                            <span class="value">Dyna</span>
-                        </div>
-                        <div class="info-item">
-                            <span class="label">Manufacturing Year:</span>
-                            <span class="value">2018</span>
-                        </div>
-                        <div class="info-item">
-                            <span class="label">Color:</span>
-                            <span class="value">Blue</span>
+                    <div class="details-section">
+                        <h4 class="section-title">Specifications</h4>
+                        <div class="info-list">
+                            <div class="info-item">
+                                <span class="label">Capacity:</span>
+                                <span class="value"><?php echo htmlspecialchars($firstVehicle->capacity); ?> kg</span>
+                            </div>
+                            <div class="info-item">
+                                <span class="label">Make:</span>
+                                <span class="value"><?php echo htmlspecialchars($firstVehicle->make); ?></span>
+                            </div>
+                            <div class="info-item">
+                                <span class="label">Model:</span>
+                                <span class="value"><?php echo htmlspecialchars($firstVehicle->model); ?></span>
+                            </div>
+                            <div class="info-item">
+                                <span class="label">Manufacturing Year:</span>
+                                <span class="value"><?php echo htmlspecialchars($firstVehicle->manufacturing_year); ?></span>
+                            </div>
+                            <div class="info-item">
+                                <span class="label">Color:</span>
+                                <span class="value"><?php echo htmlspecialchars($firstVehicle->color); ?></span>
+                            </div>
                         </div>
                     </div>
                 </div>
-            </div>
+            <?php else: ?>
+                <p>No vehicle details available.</p>
+            <?php endif; ?>
         </div>
     </div>
 </div>
@@ -501,6 +495,30 @@
     box-shadow: 0 0 0 2px rgba(60, 145, 230, 0.1);
 }
 </style>
+
+<script>
+function updateVehicleDetails(card) {
+    // Get data attributes from the clicked card
+    const licensePlate = card.getAttribute('data-license-plate');
+    const vehicleType = card.getAttribute('data-vehicle-type');
+    const status = card.getAttribute('data-status');
+    const capacity = card.getAttribute('data-capacity');
+    const make = card.getAttribute('data-make');
+    const model = card.getAttribute('data-model');
+    const manufacturingYear = card.getAttribute('data-manufacturing-year');
+    const color = card.getAttribute('data-color');
+
+    // Update the vehicle details section
+    document.querySelector('.vehicle-details .value[data-label="license-plate"]').textContent = licensePlate;
+    document.querySelector('.vehicle-details .value[data-label="vehicle-type"]').textContent = vehicleType;
+    document.querySelector('.vehicle-details .value[data-label="status"]').textContent = status;
+    document.querySelector('.vehicle-details .value[data-label="capacity"]').textContent = capacity + ' kg';
+    document.querySelector('.vehicle-details .value[data-label="make"]').textContent = make;
+    document.querySelector('.vehicle-details .value[data-label="model"]').textContent = model;
+    document.querySelector('.vehicle-details .value[data-label="manufacturing-year"]').textContent = manufacturingYear;
+    document.querySelector('.vehicle-details .value[data-label="color"]').textContent = color;
+}
+</script>
 </main>
 
 

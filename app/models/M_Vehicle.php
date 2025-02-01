@@ -279,5 +279,55 @@ class M_Vehicle {
         ] : null;
     }
 
+    public function getFilteredVehicles($license_plate = null, $vehicle_type = null, $capacity = null, $make = null, $model = null, $manufacturing_year = null) {
+        $sql = "SELECT * FROM vehicles WHERE 1=1"; // Start with a base query
+
+        // Build the query based on provided filters
+        if (!empty($license_plate)) {
+            $sql .= " AND license_plate = :license_plate";
+        }
+        if (!empty($vehicle_type)) {
+            $sql .= " AND vehicle_type = :vehicle_type";
+        }
+        if (!empty($capacity)) {
+            $sql .= " AND capacity >= :capacity";
+        }
+        if (!empty($make)) {
+            $sql .= " AND make = :make";
+        }
+        if (!empty($model)) {
+            $sql .= " AND model = :model";
+        }
+        if (!empty($manufacturing_year)) {
+            $sql .= " AND manufacturing_year = :manufacturing_year";
+        }
+
+        // Prepare the statement
+        $this->db->query($sql);
+
+        // Bind parameters if they were set
+        if (!empty($license_plate)) {
+            $this->db->bind(':license_plate', $license_plate);
+        }
+        if (!empty($vehicle_type)) {
+            $this->db->bind(':vehicle_type', $vehicle_type);
+        }
+        if (!empty($capacity)) {
+            $this->db->bind(':capacity', $capacity);
+        }
+        if (!empty($make)) {
+            $this->db->bind(':make', $make);
+        }
+        if (!empty($model)) {
+            $this->db->bind(':model', $model);
+        }
+        if (!empty($manufacturing_year)) {
+            $this->db->bind(':manufacturing_year', $manufacturing_year);
+        }
+
+        // Execute the query and return the results
+        return $this->db->resultSet();
+    }
+
 }
 ?>
