@@ -17,102 +17,102 @@
         </div>
     </div>
 
-    <div class="stats-wrapper">
-        <div class="stats-container">
-            <!-- Your existing stats content -->
-            <ul class="box-info">
-                <li class="box-collection">
-                    <i class='bx bx-box'></i>
-                    <span class="text">
-                        <h3><?php echo isset($data['total_collections']) ? $data['total_collections'] : '3'; ?></h3>
-                        <p>Collections</p>
-                        <small>this month</small>
-                    </span>
-                </li>
-                <li class="box-collection">
-                    <i class='bx bxs-leaf'></i>
-                    <span class="text">
-                        <h3><?php echo isset($data['total_quantity']) ? $data['total_quantity'] : '120'; ?></h3>
-                        <p>Tea Leaves</p>
-                        <small>kg this month</small>
-                    </span>
-                </li>
-            </ul>
+    <!-- Your existing stats content -->
+    <ul class="box-info">
+        <li class="box-collection">
+            <i class='bx bx-box'></i>
+            <span class="text">
+                <h3><?php echo isset($data['total_collections']) ? $data['total_collections'] : '3'; ?></h3>
+                <p>Collections</p>
+                <small>this month</small>
+            </span>
+        </li>
+        <li class="box-collection">
+            <i class='bx bxs-leaf'></i>
+            <span class="text">
+                <h3><?php echo isset($data['total_quantity']) ? $data['total_quantity'] : '120'; ?></h3>
+                <p>Tea Leaves</p>
+                <small>kg this month</small>
+            </span>
+        </li>
+    </ul>
 
+
+    <div class="table-data">
+        <div class="calendar-schedule-container">
             <div class="calendar-wrapper">
                 <div class="calendar-container">
                     <h4>Upcoming Land Inspections</h4>
                     <div id="calendar"></div>
                 </div>
             </div>
-        </div>
-    </div>
+            
+            <div class="schedule-section">
+                <div class="section-header">
+                    <h3>Scheduled Collections</h3>
+                
+                    <?php if (isset($data['schedule'])): ?>
+                        <div class="schedule-card-container">
+                            <div class="schedule-card">
+                                <button class="nav-btn prev-btn">
+                                    <i class='bx bx-chevron-left'></i>
+                                </button>
 
+                                <div class="card-content">
+                                    <div class="card-header">
+                                        <div class="status-badge <?php echo (date('Y-m-d') === $data['schedule']['next_collection_date']) ? 'today' : 'upcoming'; ?>">
+                                            <?php echo (date('Y-m-d') === $data['schedule']['next_collection_date']) ? 'Today' : 'Next Collection'; ?>
+                                        </div>
+                                    </div>
+                                    <div class="card-body">
+                                        <div class="schedule-info">
+                                            <div class="info-item">
+                                                <i class='bx bx-calendar'></i>
+                                                <span><?php echo date('F j, Y', strtotime($data['schedule']['next_collection_date'])); ?></span>
+                                            </div>
+                                            <div class="info-item">
+                                                <i class='bx bx-time-five'></i>
+                                                <span><?php echo $data['schedule']['time_slot']; ?></span>
+                                            </div>
+                                            <div class="info-item">
+                                                <i class='bx bx-map'></i>
+                                                <span>Route: <?php echo htmlspecialchars($data['schedule']['route_name']); ?></span>
+                                            </div>
+                                        </div>
+                                        <div class="schedule-action">
+                                            <a href="<?php echo URLROOT; ?>/Supplier/scheduleDetails" class="view-details-btn">
+                                                <i class='bx bx-info-circle'></i>
+                                                <span>View Details</span>
+                                            </a>
+                                        </div>
+                                    </div>
+                                </div>
 
-    <div class="table-data">
-        <!-- Scheduled Collections Section -->
-        <div class="schedule-section">
-            <div class="section-header">
-                <h3>Scheduled Collections</h3>
-            </div>
-            <?php if (isset($data['schedule']) ): ?>
-                <div class="schedule-card">
-                    <button class="nav-btn prev-btn">
-                        <i class='bx bx-chevron-left'></i>
-                    </button>
+                                <button class="nav-btn next-btn">
+                                    <i class='bx bx-chevron-right'></i>
+                                </button>
+                            </div>
 
-                    <div class="card-content">
-                        <div class="card-header">
-                            <div class="status-badge <?php echo (date('Y-m-d') === $data['schedule']['next_collection_date']) ? 'today' : 'upcoming'; ?>">
-                                <?php echo (date('Y-m-d') === $data['schedule']['next_collection_date']) ? 'Today' : 'Next Collection'; ?>
+                            <div class="schedule-actions">
+                                <select class="schedule-select">
+                                    <option value="" disabled selected>Select New Day</option>
+                                    <?php foreach ($data['schedule']['all_collection_days'] as $day): ?>
+                                        <option value="<?php echo strtolower($day); ?>"><?php echo ucfirst($day); ?></option>
+                                    <?php endforeach; ?>
+                                </select>
+                                <button class="change-schedule-btn">
+                                    <i class='bx bx-calendar-edit'></i>
+                                    <span>Request Schedule Change</span>
+                                </button>
                             </div>
-                        </div>
-                        <div class="card-body">
-                            <div class="schedule-info">
-                                <div class="info-item">
-                                    <i class='bx bx-calendar'></i>
-                                    <span><?php echo date('F j, Y', strtotime($data['schedule']['next_collection_date'])); ?></span>
-                                </div>
-                                <div class="info-item">
-                                    <i class='bx bx-time-five'></i>
-                                    <span><?php echo $data['schedule']['time_slot']; ?></span>
-                                </div>
-                                <div class="info-item">
-                                    <i class='bx bx-map'></i>
-                                    <span>Route: <?php echo htmlspecialchars($data['schedule']['route_name']); ?></span>
-                                </div>
+                        <?php else: ?>
+                            <div class="no-schedule-message">
+                                <p>No collection schedule found. Please contact your route manager.</p>
                             </div>
-                            <div class="schedule-action">
-                                <a href="<?php echo URLROOT; ?>/Supplier/scheduleDetails" class="view-details-btn">
-                                    <i class='bx bx-info-circle'></i>
-                                    <span>View Details</span>
-                                </a>
-                            </div>
-                        </div>
+                        <?php endif; ?>
                     </div>
-
-                    <button class="nav-btn next-btn">
-                        <i class='bx bx-chevron-right'></i>
-                    </button>
                 </div>
-
-                <div class="schedule-actions">
-                    <select class="schedule-select">
-                        <option value="" disabled selected>Select New Day</option>
-                        <?php foreach ($data['schedule']['all_collection_days'] as $day): ?>
-                            <option value="<?php echo strtolower($day); ?>"><?php echo ucfirst($day); ?></option>
-                        <?php endforeach; ?>
-                    </select>
-                    <button class="change-schedule-btn">
-                        <i class='bx bx-calendar-edit'></i>
-                        <span>Request Schedule Change</span>
-                    </button>
-                </div>
-            <?php else: ?>
-                <div class="no-schedule-message">
-                    <p>No collection schedule found. Please contact your route manager.</p>
-                </div>
-            <?php endif; ?>
+            </div>
         </div>
         
         <!--<div class="order stats-chart-container">
@@ -505,7 +505,7 @@
 
     <style>
         .box-info {
-            margin-left: 100px;
+            margin-left: 10px;
         }
 
         .box-collection {
@@ -610,6 +610,8 @@
             gap: 20px;
             margin: 20px 0;
             width: 100%;
+            flex-wrap: wrap;
+            justify-content: space-between;
         }
 
         .stats-container {
@@ -620,6 +622,7 @@
             border-radius: 20px;
             box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
             min-width: 250px;
+            flex: 1 1 calc(33.33% - 20px);
         }
 
         .stats-chart-container {
@@ -686,10 +689,48 @@
                 padding: 15px;
             }
         }
+
+        .table-data {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+        }
+
+        .calendar-schedule-container {
+            display: flex;
+            gap: 20px;
+            width: 100%;
+        }
+
+        .schedule-section {
+            flex: 2;
+            min-width: 500px;
+        }
+
+        .schedule-card-container {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .schedule-card {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .schedule-actions {
+            margin-top: 15px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
         .calendar-wrapper {
             margin-top: 20px;
             margin-right: 100px;
-            width: 450px;
+            width: 600px;
+            flex: 1;
+            max-width: 700px;
         }
 
         .calendar-container {
@@ -802,6 +843,18 @@
 
             .btn-submit,
             .btn-cancel {
+                width: 100%;
+            }
+        }
+
+        @media (max-width: 1024px) {
+            .calendar-schedule-container {
+                flex-direction: column;
+            }
+            
+            .calendar-wrapper,
+            .schedule-section {
+                max-width: 100%;
                 width: 100%;
             }
         }
