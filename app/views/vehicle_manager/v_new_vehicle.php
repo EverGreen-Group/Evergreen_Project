@@ -69,7 +69,7 @@
             <i class='bx bx-search'></i>
         </div>
         <div class="filter-options">
-            <form action="/Evergreen_Project/vehiclemanager/vehicle" method="GET"> <!-- Correct action URL -->
+            <form action="/Evergreen_Project/vehiclemanager/vehicle" method="GET">
                 <div class="filter-group">
                     <label for="license-plate">License Plate:</label>
                     <input type="text" id="license-plate" name="license_plate" placeholder="Enter license plate">

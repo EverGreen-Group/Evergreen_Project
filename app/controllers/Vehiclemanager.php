@@ -184,25 +184,54 @@ class VehicleManager extends Controller {
     }
 
     public function driver() {
-        $unassignedDrivers = $this->driverModel->getUnassignedDriversList(); 
-        $allDrivers = $this->driverModel->getAllDrivers();
-        $totalDrivers = $this->driverModel->getTotalDrivers();
-        $onDutyDrivers = $this->driverModel->getDriversOnDuty();
-        $unassignedDriversCount = $this->driverModel->getUnassignedDriversCount();
+        // Initialize $data array first
+        $data = [];
 
-        $data = [
-            'unassigned_drivers' => $unassignedDrivers,
-            'all_drivers' => $allDrivers,
-            'total_drivers' => $totalDrivers,
-            'on_duty_drivers' => $onDutyDrivers,
-            'unassigned_drivers_count' => $unassignedDriversCount,
-            'users' => $this->userModel->getAllUnassignedUsers(),
-            'update_users' => $this->userModel->getAllUserDrivers()
-        ];
+        // Get filter parameters
+        $driver_id = isset($_GET['driver_id']) ? $_GET['driver_id'] : null;
+        $name = isset($_GET['name']) ? $_GET['name'] : null;
+        $nic = isset($_GET['nic']) ? $_GET['nic'] : null;
+        $contact_number = isset($_GET['contact_number']) ? $_GET['contact_number'] : null;
+        $driver_status = isset($_GET['driver_status']) ? $_GET['driver_status'] : null;
+        $employee_status = isset($_GET['employee_status']) ? $_GET['employee_status'] : null;
+
+        // Get filtered or all drivers
+        if ($driver_id || $name || $nic || $contact_number || $driver_status || $employee_status) {
+            $data['drivers'] = $this->driverModel->getFilteredDrivers($driver_id, $name, $nic, $contact_number, $driver_status, $employee_status);
+        } else {
+            $data['drivers'] = $this->driverModel->getAllDrivers();
+        }
+
+        // Add other data to the array
+        $data['unassigned_drivers'] = $this->driverModel->getUnassignedDriversList();
+        $data['total_drivers'] = $this->driverModel->getTotalDrivers();
+        $data['on_duty_drivers'] = $this->driverModel->getDriversOnDuty();
+        $data['unassigned_drivers_count'] = $this->driverModel->getUnassignedDriversCount();
+        $data['users'] = $this->userModel->getAllUnassignedUsers();
+        $data['update_users'] = $this->userModel->getAllUserDrivers();
         
-        $this->view('vehicle_manager/v_driver', $data);
+        $this->view('vehicle_manager/v_driver_2', $data);
     }
 
+
+    public function getDriverDetails($driverId) {
+        // Set header to return JSON
+        header('Content-Type: application/json');
+    
+        try {
+            $driver = $this->driverModel->getDriverDetails($driverId);
+            
+            if ($driver) {
+                echo json_encode($driver);
+            } else {
+                http_response_code(404);
+                echo json_encode(['error' => 'Driver not found']);
+            }
+        } catch (Exception $e) {
+            http_response_code(500);
+            echo json_encode(['error' => 'Server error']);
+        }
+    }
 
     public function addDriver() {
         if ($_SERVER['REQUEST_METHOD'] == 'POST') {
