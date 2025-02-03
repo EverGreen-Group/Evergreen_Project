@@ -4,9 +4,7 @@
   font-style: normal;
   font-weight: 300;
   font-display: swap;
-  src: url("../fonts/lato/Lato-Light.woff2") format("woff2"),
-    url("../fonts/lato/Lato-Light.woff") format("woff"),
-    url("../fonts/lato/Lato-Light.ttf") format("truetype");
+  src: url("../fonts/lato/Lato-Light.ttf") format("truetype");
 }
 
 /* Lato - Regular */
@@ -15,9 +13,7 @@
   font-style: normal;
   font-weight: 400;
   font-display: swap;
-  src: url("../fonts/lato/Lato-Regular.woff2") format("woff2"),
-    url("../fonts/lato/Lato-Regular.woff") format("woff"),
-    url("../fonts/lato/Lato-Regular.ttf") format("truetype");
+  src: url("../fonts/lato/Lato-Regular.ttf") format("truetype");
 }
 
 /* Lato - Bold */
@@ -26,9 +22,7 @@
   font-style: normal;
   font-weight: 700;
   font-display: swap;
-  src: url("../fonts/lato/Lato-Bold.woff2") format("woff2"),
-    url("../fonts/lato/Lato-Bold.woff") format("woff"),
-    url("../fonts/lato/Lato-Bold.ttf") format("truetype");
+  src: url("../fonts/lato/Lato-Bold.ttf") format("truetype");
 }
 
 /* Poppins - Light */
@@ -37,9 +31,7 @@
   font-style: normal;
   font-weight: 300;
   font-display: swap;
-  src: url("../fonts/poppins/Poppins-Light.woff2") format("woff2"),
-    url("../fonts/poppins/Poppins-Light.woff") format("woff"),
-    url("../fonts/poppins/Poppins-Light.ttf") format("truetype");
+  src: url("../fonts/poppins/Poppins-Light.ttf") format("truetype");
 }
 
 /* Poppins - Regular */
@@ -48,9 +40,7 @@
   font-style: normal;
   font-weight: 400;
   font-display: swap;
-  src: url("../fonts/poppins/Poppins-Regular.woff2") format("woff2"),
-    url("../fonts/poppins/Poppins-Regular.woff") format("woff"),
-    url("../fonts/poppins/Poppins-Regular.ttf") format("truetype");
+  src: url("../fonts/poppins/Poppins-Regular.ttf") format("truetype");
 }
 
 /* Poppins - Medium */
@@ -59,9 +49,7 @@
   font-style: normal;
   font-weight: 500;
   font-display: swap;
-  src: url("../fonts/poppins/Poppins-Medium.woff2") format("woff2"),
-    url("../fonts/poppins/Poppins-Medium.woff") format("woff"),
-    url("../fonts/poppins/Poppins-Medium.ttf") format("truetype");
+  src: url("../fonts/poppins/Poppins-Medium.ttf") format("truetype");
 }
 
 /* Poppins - SemiBold */
@@ -70,9 +58,7 @@
   font-style: normal;
   font-weight: 600;
   font-display: swap;
-  src: url("../fonts/poppins/Poppins-SemiBold.woff2") format("woff2"),
-    url("../fonts/poppins/Poppins-SemiBold.woff") format("woff"),
-    url("../fonts/poppins/Poppins-SemiBold.ttf") format("truetype");
+  src: url("../fonts/poppins/Poppins-SemiBold.ttf") format("truetype");
 }
 
 * {
