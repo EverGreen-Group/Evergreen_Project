@@ -1,4 +1,65 @@
-@import url("https://fonts.googleapis.com/css2?family=Lato:wght@400;700&family=Poppins:wght@400;500;600;700&display=swap");
+/* Lato - Light */
+@font-face {
+  font-family: "Lato";
+  font-style: normal;
+  font-weight: 300;
+  font-display: swap;
+  src: url("../fonts/lato/Lato-Light.ttf") format("truetype");
+}
+
+/* Lato - Regular */
+@font-face {
+  font-family: "Lato";
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url("../fonts/lato/Lato-Regular.ttf") format("truetype");
+}
+
+/* Lato - Bold */
+@font-face {
+  font-family: "Lato";
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url("../fonts/lato/Lato-Bold.ttf") format("truetype");
+}
+
+/* Poppins - Light */
+@font-face {
+  font-family: "Poppins";
+  font-style: normal;
+  font-weight: 300;
+  font-display: swap;
+  src: url("../fonts/poppins/Poppins-Light.ttf") format("truetype");
+}
+
+/* Poppins - Regular */
+@font-face {
+  font-family: "Poppins";
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url("../fonts/poppins/Poppins-Regular.ttf") format("truetype");
+}
+
+/* Poppins - Medium */
+@font-face {
+  font-family: "Poppins";
+  font-style: normal;
+  font-weight: 500;
+  font-display: swap;
+  src: url("../fonts/poppins/Poppins-Medium.ttf") format("truetype");
+}
+
+/* Poppins - SemiBold */
+@font-face {
+  font-family: "Poppins";
+  font-style: normal;
+  font-weight: 600;
+  font-display: swap;
+  src: url("../fonts/poppins/Poppins-SemiBold.ttf") format("truetype");
+}
 
 * {
   margin: 0;
