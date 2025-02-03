@@ -82,7 +82,9 @@ class M_User {
     }
 
     public function getAllUnassignedUsers() {
-        $this->db->query("SELECT * FROM users WHERE user_id NOT IN (SELECT user_id FROM drivers) AND role_id = :role_id");
+        $this->db->query("
+        SELECT u.user_id,u.email,u.first_name,u.last_name,u.nic,u.date_of_birth,u.role_id FROM users u WHERE u.user_id NOT IN (SELECT user_id FROM drivers) AND role_id = :role_id
+        ");
         $this->db->bind(':role_id', 7);
         return $this->db->resultSet();
     }
@@ -96,7 +98,7 @@ class M_User {
     }
 
     public function getAllUserDrivers() {
-        $this->db->query("SELECT * FROM users WHERE user_id IN (SELECT user_id FROM drivers) AND role_id = :role_id");
+        $this->db->query("SELECT u.user_id,u.email,u.first_name,u.last_name,u.nic,u.date_of_birth,u._role_id FROM users u WHERE u.user_id IN (SELECT user_id FROM drivers) AND role_id = :role_id");
         $this->db->bind(':role_id', 6);
         return $this->db->resultSet();
     }
