@@ -103,6 +103,10 @@ function togglePasswordVisibility() {
         z-index: 1; /* Bring it above the blurred background */
     }
 
+    .auth-form-section {
+        margin-top:100px;
+    }
+
     /* Optional: Style the date input for better visibility */
     input[type="date"] {
         padding: 10px;
