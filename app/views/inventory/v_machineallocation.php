@@ -6,12 +6,15 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title><?php echo SITENAME; ?></title>
     <link rel="stylesheet" href="<?php echo URLROOT; ?>/css/pages/machineallo.css" />
+    <link rel="stylesheet" href="<?php echo URLROOT; ?>/css/components/style.css" />
     <link rel="stylesheet" href="<?php echo URLROOT; ?>/css/components/topnavbar_style.css" />
     <link href="https://unpkg.com/boxicons@2.0.9/css/boxicons.min.css" rel="stylesheet" />
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 
+
 <body>
+
 
     <!-- Top nav bar -->
     <?php require APPROOT . '/views/inc/components/topnavbar.php' ?>
@@ -19,50 +22,58 @@
     <?php require APPROOT . '/views/inc/components/sidebar_inventory.php' ?>
 
     <main>
-        <h1 style="margin-top:20px; margin-left:30px;">MACHINE ALLOCATION</h1>
+        <div class="head-title">
+            <div class="left">
+                <h1>Machine Allocation</h1>
 
-        <div class="container" style="margin-left:20px; border-radius: 20px;">
+            </div>
+        </div>
 
-            <table>
-                <thead>
-                    <tr>
-                        <th>Check</th>
-                        <th>Machine</th>
-                        <th>Status</th>
-                        <th>Button</th>
-                        <th>Button</th>
-                        <th>Details</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <!-- <pre><?= print_r($data) ?></pre> -->
-                    <?php foreach ($data['machines'] as $machine): ?>
+
+        <div>
+
+            <div class="chart-container"
+                style="margin: 20px; padding: 20px; background: white; border-radius: 10px; width: 90%;">
+                <table>
+                    <thead>
                         <tr>
-                            <td><input type="checkbox"></td>
-                            <td>
-                                <div class="machine-info">
-                                    <span class="machine-icon"></span>
-                                    <span><?php echo $machine->machine_name; ?></span>
-                                </div>
-                            </td>
-                            <td><span class="status-ready"><?php echo $machine->status; ?></span></td>
-                            <td>
-                                <form method="POST"
-                                    action="<?php echo URLROOT; ?>/Inventory/machine?id=<?php echo $machine->id; ?>">
-                                    <button type="submit" name="status_allocate" class="btn allocate">Allocate</button>
-                                </form>
-                            </td>
-                            <td>
-                            <form method="POST"
-                                    action="<?php echo URLROOT; ?>/Inventory/machine?id=<?php echo $machine->id; ?>">
-                                    <button type="submit" name="status_deallocate" class="btn deallocate">Deallocate</button>
-                                </form>
-                            </td>
-                            <td><button class="btn detail">details</button></td>
+                            <th>Machine</th>
+                            <th>Status</th>
+                            <th>Button</th>
+                            <th>Button</th>
+                            <th>Details</th>
                         </tr>
-                    <?php endforeach; ?>
+                    </thead>
+                    <tbody>
+                        <!-- <pre><?= print_r($data) ?></pre> -->
+                        <?php foreach ($data['machines'] as $machine): ?>
+                            <tr>
 
-                    <!-- <tr>
+                                <td>
+                                    <div class="machine-info">
+                                        <span class="machine-icon"></span>
+                                        <span><?php echo $machine->machine_name; ?></span>
+                                    </div>
+                                </td>
+                                <td><span class="status-ready"><?php echo $machine->status; ?></span></td>
+                                <td>
+                                    <form method="POST"
+                                        action="<?php echo URLROOT; ?>/Inventory/machine?id=<?php echo $machine->id; ?>">
+                                        <button type="submit" name="status_allocate" class="btn allocate">Allocate</button>
+                                    </form>
+                                </td>
+                                <td>
+                                    <form method="POST"
+                                        action="<?php echo URLROOT; ?>/Inventory/machine?id=<?php echo $machine->id; ?>">
+                                        <button type="submit" name="status_deallocate"
+                                            class="btn deallocate">Deallocate</button>
+                                    </form>
+                                </td>
+                                <td><button class="btn detail">details</button></td>
+                            </tr>
+                        <?php endforeach; ?>
+
+                        <!-- <tr>
                         <td><input type="checkbox"></td>
                         <td>
                             <div class="machine-info">
@@ -114,8 +125,9 @@
                         <td><button class="btn deallocate">Deallocate</button></td>
                         <td><button class="btn detail">details</button></td>
                     </tr> -->
-                </tbody>
-            </table>
+                    </tbody>
+                </table>
+            </div>
 
 
             <div id="openAddMachineModal" class="modal">
@@ -134,7 +146,8 @@
                 <canvas id="machineAllocationChart"></canvas>
             </div>
 
-            <div class="form-container">
+            <div class="chart-container"
+                style="margin: 20px; padding: 20px; background: white; border-radius: 10px; width: 90%;">
                 <h1>Add New Machine Form</h1>
                 <form name="form" action="<?php echo URLROOT ?>/Inventory/machine" method="POST">
                     <div class="form-group">
@@ -176,214 +189,215 @@
             </div>
         </div>
     </main>
+</body>
 
-    <script>
-        const ctx = document.getElementById('machineAllocationChart');
+<script>
+    const ctx = document.getElementById('machineAllocationChart');
 
-        new Chart(ctx, {
-            type: 'bar',
-            data: {
-                labels: ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'],
-                datasets: [
-                    {
-                        label: 'Machine A',
-                        data: [0, 7, 6, 8, 7, 4, 3],
-                        backgroundColor: 'rgba(255, 99, 132, 0.5)',
-                        borderColor: 'rgba(255, 99, 132, 1)',
-                        borderWidth: 1
-                    },
-                    {
-                        label: 'Machine B',
-                        data: [6, 5, 4, 5, 4, 2, 1],
-                        backgroundColor: 'rgba(54, 162, 235, 0.5)',
-                        borderColor: 'rgba(54, 162, 235, 1)',
-                        borderWidth: 1
-                    },
-                    {
-                        label: 'Machine C',
-                        data: [4, 3, 5, 4, 3, 2, 1],
-                        backgroundColor: 'rgba(75, 192, 192, 0.5)',
-                        borderColor: 'rgba(75, 192, 192, 1)',
-                        borderWidth: 1
-                    },
-                    {
-                        label: 'Machine D',
-                        data: [3, 4, 5, 3, 4, 2, 1],
-                        backgroundColor: 'rgba(153, 102, 255, 0.5)',
-                        borderColor: 'rgba(153, 102, 255, 1)',
-                        borderWidth: 1
-                    }
-                ]
-            },
-            options: {
-                responsive: true,
-                scales: {
-                    y: {
-                        beginAtZero: true,
-                        title: {
-                            display: true,
-                            text: 'Working Hours'
-                        },
-                        stacked: true
-                    },
-                    x: {
-                        title: {
-                            display: true,
-                            text: 'Days of the Week'
-                        },
-                        stacked: true
-                    }
+    new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'],
+            datasets: [
+                {
+                    label: 'Machine A',
+                    data: [0, 7, 6, 8, 7, 4, 3],
+                    backgroundColor: 'rgba(255, 99, 132, 0.5)',
+                    borderColor: 'rgba(255, 99, 132, 1)',
+                    borderWidth: 1
                 },
-                plugins: {
+                {
+                    label: 'Machine B',
+                    data: [6, 5, 4, 5, 4, 2, 1],
+                    backgroundColor: 'rgba(54, 162, 235, 0.5)',
+                    borderColor: 'rgba(54, 162, 235, 1)',
+                    borderWidth: 1
+                },
+                {
+                    label: 'Machine C',
+                    data: [4, 3, 5, 4, 3, 2, 1],
+                    backgroundColor: 'rgba(75, 192, 192, 0.5)',
+                    borderColor: 'rgba(75, 192, 192, 1)',
+                    borderWidth: 1
+                },
+                {
+                    label: 'Machine D',
+                    data: [3, 4, 5, 3, 4, 2, 1],
+                    backgroundColor: 'rgba(153, 102, 255, 0.5)',
+                    borderColor: 'rgba(153, 102, 255, 1)',
+                    borderWidth: 1
+                }
+            ]
+        },
+        options: {
+            responsive: true,
+            scales: {
+                y: {
+                    beginAtZero: true,
                     title: {
                         display: true,
-                        text: 'Daily Machine Working Hours'
+                        text: 'Working Hours'
                     },
-                    legend: {
+                    stacked: true
+                },
+                x: {
+                    title: {
                         display: true,
-                        position: 'top'
+                        text: 'Days of the Week'
                     },
-                    tooltip: {
-                        callbacks: {
-                            label: function (context) {
-                                return `${context.dataset.label}: ${context.raw} hours`;
-                            }
+                    stacked: true
+                }
+            },
+            plugins: {
+                title: {
+                    display: true,
+                    text: 'Daily Machine Working Hours'
+                },
+                legend: {
+                    display: true,
+                    position: 'top'
+                },
+                tooltip: {
+                    callbacks: {
+                        label: function (context) {
+                            return `${context.dataset.label}: ${context.raw} hours`;
                         }
                     }
                 }
             }
-        });
-    </script>
+        }
+    });
+</script>
 
-    <?php require APPROOT . '/views/inc/components/footer.php' ?>
+<?php require APPROOT . '/views/inc/components/footer.php' ?>
 
-    <!-- Add this modal/popup HTML before the closing </main> tag -->
-    <div id="machineModal" class="modal">
-        <div class="modal-content">
-            <span class="close">&times;</span>
-            <div class="modal-header">
-                <img src="<?php echo URLROOT; ?>/img/machine-report.png" alt="Machine Report">
-                <h2 id="machineName">Machine A</h2>
-            </div>
-            <h3>Machine A Report</h3>
-            <div class="report-container">
-                <div class="report-row">
-                    <span>Brand</span>
-                    <span>usha</span>
-                </div>
-                <div class="report-row">
-                    <span>Started Date</span>
-                    <span>Nov 23, 2023</span>
-                </div>
-                <div class="report-row">
-                    <span>Last maintance Day</span>
-                    <span>10 days</span>
-                </div>
-                <div class="report-row">
-                    <span>Next Maintance Day</span>
-                    <span>All (50 products)</span>
-                </div>
-                <div class="report-row">
-                    <span>Total Working Hours</span>
-                    <span>200 items</span>
-                </div>
-                <div class="report-row">
-                    <span>3 discrepancies found</span>
-                    <span>+5 unit of Product A C</span>
-                </div>
-            </div>
-            <button class="btn remove-machine">Remove machine</button>
+<!-- Add this modal/popup HTML before the closing </main> tag -->
+<div id="machineModal" class="modal">
+    <div class="modal-content">
+        <span class="close">&times;</span>
+        <div class="modal-header">
+            <img src="<?php echo URLROOT; ?>/img/machine-report.png" alt="Machine Report">
+            <h2 id="machineName">Machine A</h2>
         </div>
+        <h3>Machine A Report</h3>
+        <div class="report-container">
+            <div class="report-row">
+                <span>Brand</span>
+                <span>usha</span>
+            </div>
+            <div class="report-row">
+                <span>Started Date</span>
+                <span>Nov 23, 2023</span>
+            </div>
+            <div class="report-row">
+                <span>Last maintance Day</span>
+                <span>10 days</span>
+            </div>
+            <div class="report-row">
+                <span>Next Maintance Day</span>
+                <span>All (50 products)</span>
+            </div>
+            <div class="report-row">
+                <span>Total Working Hours</span>
+                <span>200 items</span>
+            </div>
+            <div class="report-row">
+                <span>3 discrepancies found</span>
+                <span>+5 unit of Product A C</span>
+            </div>
+        </div>
+        <button class="btn remove-machine">Remove machine</button>
     </div>
+</div>
 
-    <!-- Add this CSS in your machineallo.css file -->
-    <style>
-        .modal {
-            display: none;
-            position: fixed;
-            z-index: 6000;
-            left: 0;
-            top: 0;
-            width: 100%;
-            height: 100%;
-            background-color: rgba(0, 0, 0, 0.5);
-        }
+<!-- Add this CSS in your machineallo.css file -->
+<style>
+    .modal {
+        display: none;
+        position: fixed;
+        z-index: 6000;
+        left: 0;
+        top: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0, 0, 0, 0.5);
+    }
 
-        .modal-content {
-            background-color: #fefefe;
-            margin: 15% auto;
-            padding: 20px;
-            border-radius: 10px;
-            width: 80%;
-            max-width: 500px;
-        }
+    .modal-content {
+        background-color: #fefefe;
+        margin: 15% auto;
+        padding: 20px;
+        border-radius: 10px;
+        width: 80%;
+        max-width: 500px;
+    }
 
-        .close {
-            color: #aaa;
-            float: right;
-            font-size: 28px;
-            font-weight: bold;
-            cursor: pointer;
-        }
+    .close {
+        color: #aaa;
+        float: right;
+        font-size: 28px;
+        font-weight: bold;
+        cursor: pointer;
+    }
 
-        .modal-header {
-            text-align: center;
-            margin-bottom: 20px;
-        }
+    .modal-header {
+        text-align: center;
+        margin-bottom: 20px;
+    }
 
-        .modal-header img {
-            width: 100px;
-            margin-bottom: 10px;
-        }
+    .modal-header img {
+        width: 100px;
+        margin-bottom: 10px;
+    }
 
-        .report-container {
-            background-color: #f8f9fa;
-            padding: 20px;
-            border-radius: 8px;
-            margin: 20px 0;
-        }
+    .report-container {
+        background-color: #f8f9fa;
+        padding: 20px;
+        border-radius: 8px;
+        margin: 20px 0;
+    }
 
-        .report-row {
-            display: flex;
-            justify-content: space-between;
-            padding: 10px 0;
-            border-bottom: 1px solid #eee;
-        }
+    .report-row {
+        display: flex;
+        justify-content: space-between;
+        padding: 10px 0;
+        border-bottom: 1px solid #eee;
+    }
 
-        .remove-machine {
-            background-color: #00b300;
-            color: white;
-            width: 100%;
-            padding: 10px;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-        }
-    </style>
+    .remove-machine {
+        background-color: #00b300;
+        color: white;
+        width: 100%;
+        padding: 10px;
+        border: none;
+        border-radius: 5px;
+        cursor: pointer;
+    }
+</style>
 
-    <!-- Add this JavaScript before the closing </body> tag -->
-    <script>
-        const modal = document.getElementById("machineModal");
-        const detailButtons = document.querySelectorAll(".btn.detail");
-        const closeBtn = document.querySelector(".close");
+<!-- Add this JavaScript before the closing </body> tag -->
+<script>
+    const modal = document.getElementById("machineModal");
+    const detailButtons = document.querySelectorAll(".btn.detail");
+    const closeBtn = document.querySelector(".close");
 
-        detailButtons.forEach(button => {
-            button.addEventListener("click", function () {
-                const machineName = this.closest("tr").querySelector(".machine-info span:last-child").textContent;
-                document.getElementById("machineName").textContent = machineName;
-                modal.style.display = "block";
-            });
+    detailButtons.forEach(button => {
+        button.addEventListener("click", function () {
+            const machineName = this.closest("tr").querySelector(".machine-info span:last-child").textContent;
+            document.getElementById("machineName").textContent = machineName;
+            modal.style.display = "block";
         });
+    });
 
-        closeBtn.addEventListener("click", function () {
+    closeBtn.addEventListener("click", function () {
+        modal.style.display = "none";
+    });
+
+    window.addEventListener("click", function (event) {
+        if (event.target == modal) {
             modal.style.display = "none";
-        });
+        }
+    });
 
-        window.addEventListener("click", function (event) {
-            if (event.target == modal) {
-                modal.style.display = "none";
-            }
-        });
-</body >
 
 </html >

@@ -1,23 +1,18 @@
-<!DOCTYPE html>
-<html lang="en">
+<?php require APPROOT . '/views/inc/components/header.php'; ?>
 
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title><?php echo SITENAME; ?></title>
-    <link rel="stylesheet" href="<?php echo URLROOT; ?>/css/pages/product.css" />
-    <link rel="stylesheet" href="<?php echo URLROOT; ?>/css/components/topnavbar_style.css" />
+<!-- Side bar -->
+<?php require APPROOT . '/views/inc/components/sidebar_inventory.php'; ?>
+<!-- Top nav bar -->
+<?php require APPROOT . '/views/inc/components/topnavbar.php'; ?>
+<link rel="stylesheet" href="<?php echo URLROOT; ?>/css/components/topnavbar_style.css" />
+<link rel="stylesheet" href="<?php echo URLROOT; ?>/css/pages/product.css" />
     <link href="https://unpkg.com/boxicons@2.0.9/css/boxicons.min.css" rel="stylesheet" />
 
-</head>
 
-<body>
     <main>
 
         <!-- Top nav bar -->
-        <?php require APPROOT . '/views/inc/components/topnavbar.php' ?>
-        <!-- Side bar -->
-        <?php require APPROOT . '/views/inc/components/sidebar_inventory.php' ?>
+
 
         <!-- Header Section -->
         <header>
@@ -71,6 +66,41 @@
                 <?php endforeach; ?>
             </div>
         </div>
+
+
+
+        <!-- <div class="table-data">
+            <div class="order">
+                <div class="head">
+                    <h2><img src="<?php echo URLROOT; ?>/img/warehouse-svgrepo-com.svg" alt="Warehouse Icon"
+                    style="width: 24px; heignt:24px"> Total Products</h2>
+                    <span class="product-info">(<?php echo count($data['products']); ?> products)</span>
+                </div>
+                <div class="product-grid">
+                    <?php foreach ($data['products'] as $product): ?>
+                        <div class="product-card"
+                            onclick="openProductModal(<?php echo htmlspecialchars(json_encode($product)); ?>)">
+                            <div class="product-image">
+                                <?php if (!empty($product->image_path)): ?>
+                                    <img src="<?php echo URLROOT; ?>/uploads/products/<?php echo $product->image_path; ?>"
+                                        alt="<?php echo $product->product_name; ?>">
+                                <?php else: ?>
+                                    <img src="<?php echo URLROOT; ?>/img/default-product.png" alt="Default Product Image">
+                                <?php endif; ?>
+                            </div>
+                            <div class="product-info">
+                                <h3><?php echo $product->product_name; ?></h3>
+                                <p>Quantity: <?php echo $product->quantity; ?>     <?php echo $product->unit; ?></p>
+                                <p>Price: Rs.<?php echo $product->price; ?></p>
+                            </div>
+                        </div>
+                    <?php endforeach; ?>
+                </div>
+            </div>
+        </div>
+
+ -->
+
 
         <!-- Product Modal -->
         <div id="productModal" class="modal">
@@ -126,7 +156,6 @@
             <button class="page-number">2</button>
             <button class="page-number">3</button>
             <button class="next">&gt;</button>
-        </div>
         </div>
 
     </main>
