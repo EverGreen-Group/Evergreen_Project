@@ -121,14 +121,16 @@
                 </div>
             </div>
             <div class="head-actions">
-                <a href="<?php echo URLROOT; ?>/suppliermanager/updateSupplier/<?php echo isset($_GET['id']) ? $_GET['id'] : ''; ?>" 
+                <a href="<?php echo URLROOT; ?>/suppliermanager/updateSupplier/<?php echo $supplier->user_id; ?>" 
                     class="btn-download" 
-                    id="statementBtn">
+                    id="updateBtn"
+                    onclick="checkSupplierSelection()">
                     Update Details
                 </a>
-                <a href="<?php echo URLROOT; ?>/suppliermanager/deleteSupplier/<?php echo isset($_GET['id']) ? $_GET['id'] : ''; ?>" 
+                <a href="<?php echo URLROOT; ?>/suppliermanager/deleteSupplier/<?php echo $supplier->user_id; ?>" 
                     class="btn-download" 
-                    id="statementBtn">
+                    id="deleteBtn"
+                    onclick="checkSupplierSelection()">
                     Delete Supplier
                 </a>
             </div>
@@ -327,6 +329,22 @@
             alert('Supplier added to collection!');
         });
     });
+
+    function checkSupplierSelection() {
+        const selectedSupplier = document.getElementById('currentSupplier').value;
+        if (!selectedSupplier) {
+            alert('Please select a supplier before updating details.');
+            window.location.reload(); // Reload the page after alert
+        } else {
+            if (id="updateBtn"){
+                window.location.href = '<?php echo URLROOT; ?>/suppliermanager/updateSupplier/' + selectedSupplier;
+            }else{
+                window.location.href = '<?php echo URLROOT; ?>/suppliermanager/deleteSupplier/' + selectedSupplier;
+            }
+        }
+
+    }
+
 </script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script src="<?php echo URLROOT; ?>/css/components/script.js"></script>

@@ -16,6 +16,7 @@ require_once '../app/models/M_SupplierApplication.php';
 require_once '../app/models/M_Supplier.php';
 require_once '../app/models/M_Complaint.php';
 require_once '../app/models/M_LandInspection.php';
+require_once '../app/models/M_ManageSupplier.php';
 
 class SupplierManager extends Controller {
     private $vehicleManagerModel;
@@ -34,6 +35,7 @@ class SupplierManager extends Controller {
     private $supplierModel;
     private $complaintModel;
     private $landInspectionModel;
+    private $manageSupplierModel;
 
     public function __construct() {
         // Check if user is logged in
@@ -57,6 +59,7 @@ class SupplierManager extends Controller {
         $this->supplierModel = new M_Supplier();
         $this->complaintModel = $this->model('M_Complaint');
         $this->landInspectionModel = new M_LandInspection();
+        $this->manageSupplierModel = new M_UpdateSupplier();
     }
 
     public function index() {
@@ -202,21 +205,80 @@ class SupplierManager extends Controller {
         $this->view('supplier_manager/v_all_complaints', $data);
     }
 
-    public function updateSupplier() {
-        $data = [
+    public function deleteSupplier($userId = null) {
+        // If no user ID provided or no supplier selected, redirect back
+        if (!$userId) {
+            flash('supplier_error', 'Please select a supplier first');
+            redirect('suppliermanager/suppliers');
+        }
+    
+        if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+            // Handle form submission
+            $data = [
+                'user_id' => trim($_POST['user_id']),
+                'first_name' => trim($_POST['first_name']),
+                'last_name' => trim($_POST['last_name']),
+                'email' => trim($_POST['email']),
+                'nic' => trim($_POST['nic']),
+                'first_name_err' => '',
+                'last_name_err' => '',
+                'email_err' => '',
+                'nic_err' => ''
+            ];
+    
+            // Validate data
+            if (empty($data['first_name'])) {
+                $data['first_name_err'] = 'Please enter first name';
+            }
+            if (empty($data['last_name'])) {
+                $data['last_name_err'] = 'Please enter last name';
+            }
+            if (empty($data['email'])) {
+                $data['email_err'] = 'Please enter email';
+            }
+            if (empty($data['nic'])) {
+                $data['nic_err'] = 'Please enter NIC';
+            }
+    
+            // Make sure no errors
+            if (empty($data['first_name_err']) && empty($data['last_name_err']) && 
+                empty($data['email_err']) && empty($data['nic_err'])) {
+                
+                // Update user
+                if ($this->manageSupplierModel->updateSupplier($data)) {
+                    flash('supplier_success', 'Supplier updated successfully');
+                    redirect('suppliermanager/suppliers');
+                } else {
+                    flash('supplier_error', 'Something went wrong');
+                    $this->view('supplier_manager/v_update_supplier', $data);
+                }
+            } else {
+                // Load view with errors
+                $this->view('supplier_manager/v_update_supplier', $data);
+            }
+        } else {
+            // Fetch existing user data
+            $userData = $this->manageSupplierModel->getSupplierByUserId($userId);
             
-        ];
+            if (!$userData) {
+                flash('supplier_error', 'Supplier not found');
+                redirect('suppliermanager/suppliers');
+            }
+    
+            $data = [
+                'user_id' => $userData->user_id,
+                'first_name' => $userData->first_name,
+                'last_name' => $userData->last_name,
+                'email' => $userData->email,
+                'nic' => $userData->nic,
+                'first_name_err' => '',
+                'last_name_err' => '',
+                'email_err' => '',
+                'nic_err' => ''
+            ];
 
-        $this->view('supplier_manager/v_update_supplier', $data);
-    }
-
-    public function deleteSupplier() {
-
-        $data = [
-            
-        ];
-
-        $this->view('supplier_manager/v_delete_supplier', $data);
+            $this->view('supplier_manager/v_delete_supplier', $data);
+        }
     }
 
     public function complaints() {
@@ -375,6 +437,82 @@ class SupplierManager extends Controller {
                 ]);
             }
             exit;
+        }
+    }
+
+    public function updateSupplier($userId = null) {
+        // If no user ID provided or no supplier selected, redirect back
+        if (!$userId) {
+            flash('supplier_error', 'Please select a supplier first');
+            redirect('suppliermanager/suppliers');
+        }
+    
+        if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+            // Handle form submission
+            $data = [
+                'user_id' => trim($_POST['user_id']),
+                'first_name' => trim($_POST['first_name']),
+                'last_name' => trim($_POST['last_name']),
+                'email' => trim($_POST['email']),
+                'nic' => trim($_POST['nic']),
+                'first_name_err' => '',
+                'last_name_err' => '',
+                'email_err' => '',
+                'nic_err' => ''
+            ];
+    
+            // Validate data
+            if (empty($data['first_name'])) {
+                $data['first_name_err'] = 'Please enter first name';
+            }
+            if (empty($data['last_name'])) {
+                $data['last_name_err'] = 'Please enter last name';
+            }
+            if (empty($data['email'])) {
+                $data['email_err'] = 'Please enter email';
+            }
+            if (empty($data['nic'])) {
+                $data['nic_err'] = 'Please enter NIC';
+            }
+    
+            // Make sure no errors
+            if (empty($data['first_name_err']) && empty($data['last_name_err']) && 
+                empty($data['email_err']) && empty($data['nic_err'])) {
+                
+                // Update user
+                if ($this->manageSupplierModel->updateSupplier($data)) {
+                    flash('supplier_success', 'Supplier updated successfully');
+                    redirect('suppliermanager/suppliers');
+                } else {
+                    flash('supplier_error', 'Something went wrong');
+                    $this->view('supplier_manager/v_update_supplier', $data);
+                }
+            } else {
+                // Load view with errors
+                $this->view('supplier_manager/v_update_supplier', $data);
+            }
+        } else {
+            // Fetch existing user data
+            $userData = $this->manageSupplierModel->getSupplierByUserId($userId);
+            
+            if (!$userData) {
+                flash('supplier_error', 'Supplier not found');
+                redirect('suppliermanager/suppliers');
+            }
+    
+            $data = [
+                'user_id' => $userData->user_id,
+                'first_name' => $userData->first_name,
+                'last_name' => $userData->last_name,
+                'email' => $userData->email,
+                'nic' => $userData->nic,
+                'first_name_err' => '',
+                'last_name_err' => '',
+                'email_err' => '',
+                'nic_err' => ''
+            ];
+    
+            $this->view('supplier_manager/v_update_supplier', $data);
         }
     }
 

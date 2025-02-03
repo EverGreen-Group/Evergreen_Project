@@ -232,8 +232,8 @@
                         </div>
                     </div>
                 </form>
-
-        </div>
+            </div>
+            
         <div class="order">
             <div class="head">
                 <h3>Fertilizer Requests History</h3>
