@@ -414,6 +414,7 @@ class SupplierManager extends Controller {
                 $totalQuantity = $this->supplierModel->getTotalCollectionQuantity($supplier->supplier_id);
                 $collectionDays = $this->supplierModel->getCollectionDaysCount($supplier->supplier_id);
                 $performanceRate = $this->supplierModel->calculatePerformanceRate($totalQuantity, $collectionDays);
+                $monthlyCollections = $this->supplierModel->getMonthlyCollections($supplier->supplier_id);
                 
                 // Get recent collections
                 $recentCollections = $this->supplierModel->getRecentCollections($supplier->supplier_id);
@@ -427,7 +428,8 @@ class SupplierManager extends Controller {
                             'collectionDays' => $collectionDays,
                             'performanceRate' => $performanceRate
                         ],
-                        'recentCollections' => $recentCollections
+                        'recentCollections' => $recentCollections,
+                        'monthlyCollections' => $monthlyCollections
                     ]
                 ]);
             } else {
