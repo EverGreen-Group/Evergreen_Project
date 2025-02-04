@@ -66,6 +66,9 @@ class Supplier extends Controller {
         $data['previous_inspections'] = $this->landInspectionModel->getPreviousInspectionRequests($supplier_id);
         $data['next_inspection'] = $this->landInspectionModel->getNextLandInspection($supplier_id);
 
+        // Get pending fertilizer orders
+        $data['pending_fertilizer_orders'] = $this->fertilizerOrderModel->getPendingOrdersBySupplier($supplier_id);
+
         $this->view('supplier/v_supply_dashboard', $data);
     }
     
