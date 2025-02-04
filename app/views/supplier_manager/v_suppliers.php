@@ -64,22 +64,21 @@
     </ul>
 
     
-    <!-- Bar Graph and Collection Stats Row -->
     <div class="table-data">
-        <!-- Weekly Collection Graph -->
+        <!-- Bar Graph and Collection Stats Row -->
         <div class="order" style="flex: 0.5;">
             <div class="head">
-                <h3>Weekly Collection Overview</h3>
+                <h3>Monthly Collection Overview</h3>
                 <div class="head-actions">
                     <a href="<?php echo URLROOT; ?>/suppliermanager/supplierStatement/<?php echo isset($_GET['id']) ? $_GET['id'] : ''; ?>" 
-                       class="btn-download" 
-                       id="statementBtn">
+                    class="btn-download" 
+                    id="statementBtn">
                         <i class='bx bx-file'></i> Monthly Statement
                     </a>
                 </div>
             </div>
-            <div class="graph-container">
-                <canvas id="teaLeavesGraph"></canvas>
+            <div style="width:700px; height: 400px; position: relative;">
+                <canvas id="monthlyCollectionChart"></canvas>
             </div>
         </div>
 
@@ -396,45 +395,142 @@
             .catch(error => console.error('Error:', error));
     }
     
-    // Sample data for the line graph
-    const collectionDates = ['2023-10-01', '2023-10-02', '2023-10-03', '2023-10-04', '2023-10-05'];
-    const teaLeavesCollected = [45, 43, 41, 39, 44]; // Sample values for tea leaves collected
+    // Initialize chart with empty data
+    let collectionChart = null;
 
-    const ctx = document.getElementById('teaLeavesGraph').getContext('2d');
-    const teaLeavesGraph = new Chart(ctx, {
-        type: 'line', // Specify the type of chart
-        data: {
-            labels: collectionDates, // X-axis labels
-            datasets: [{
-                label: 'Tea Leaves Collected (kg)', // Label for the dataset
-                data: teaLeavesCollected, // Data for the Y-axis
-                borderColor: 'rgba(75, 192, 192, 1)', // Line color
-                backgroundColor: 'rgba(75, 192, 192, 0.2)', // Area color
-                borderWidth: 2,
-                fill: false // Fill the area under the line
-            }]
-        },
-        options: {
-            responsive: true,
-            scales: {
-                x: {
+    function initializeEmptyChart() {
+        const ctx = document.getElementById('monthlyCollectionChart').getContext('2d');
+        const months = [
+            'January', 'February', 'March', 'April', 'May', 'June',
+            'July', 'August', 'September', 'October', 'November', 'December'
+        ];
+
+        // Destroy existing chart if it exists
+        if (collectionChart) {
+            collectionChart.destroy();
+        }
+
+        collectionChart = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: months,
+                datasets: [{
+                    label: 'Monthly Collections (kg)',
+                    data: new Array(12).fill(0),
+                    borderColor: '#2563eb',
+                    backgroundColor: 'rgba(37, 99, 235, 0.1)',
+                    borderWidth: 2,
+                    pointRadius: 4,
+                    pointHoverRadius: 6,
+                    fill: true,
+                    tension: 0.4
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
                     title: {
+                        display: false
+                    },
+                    legend: {
                         display: true,
-                        text: 'Collection Dates' // X-axis title
+                        position: 'top'
+                    },
+                    tooltip: {
+                        mode: 'index',
+                        intersect: false,
+                        callbacks: {
+                            label: function(context) {
+                                return `Quantity: ${context.parsed.y.toFixed(2)} kg`;
+                            }
+                        }
                     }
                 },
-                y: {
-                    title: {
-                        display: true,
-                        text: 'Amount (kg)' // Y-axis title
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        title: {
+                            display: true,
+                            text: 'Quantity (kg)'
+                        },
+                        ticks: {
+                            callback: function(value) {
+                                return value.toFixed(1) + ' kg';
+                            }
+                        }
                     },
-                    beginAtZero: true, // Start Y-axis at zero
-                    max: 50, // Set a custom maximum value for the Y-axis
-                    min: 30
+                    x: {
+                        grid: {
+                            display: false
+                        }
+                    }
                 }
             }
+        });
+    }
+
+    // Function to update chart with new data
+    function updateChartData(monthlyCollections) {
+        if (!collectionChart) {
+            initializeEmptyChart();
         }
-    });
+
+        // Create an array of 12 zeros (one for each month)
+        const monthlyData = new Array(12).fill(0);
+
+        // Update the values based on the received data
+        monthlyCollections.forEach(collection => {
+            const monthIndex = parseInt(collection.month) - 1; // Convert 1-based month to 0-based index
+            if (monthIndex >= 0 && monthIndex < 12) { // Add bounds check
+                monthlyData[monthIndex] = parseFloat(collection.total_quantity) || 0;
+            }
+        });
+
+        // Update chart data
+        collectionChart.data.datasets[0].data = monthlyData;
+        collectionChart.update('active'); // Add animation type
+    }
+
+    // Initialize empty chart when the page loads
+    document.addEventListener('DOMContentLoaded', initializeEmptyChart);
+
+    // Modify the updateSupplierDetails function to properly handle the chart update
+    function updateSupplierDetails(supplierId) {
+        if (!supplierId) {
+            initializeEmptyChart();
+            return;
+        }
+
+        fetch(`${URLROOT}/suppliermanager/getSupplierDetails`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+            },
+            body: 'supplier_id=' + supplierId
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.status === 'success') {
+                // Update other supplier details...
+
+                // Check if monthlyCollections exists and is an array
+                if (data.data.monthlyCollections && Array.isArray(data.data.monthlyCollections)) {
+                    updateChartData(data.data.monthlyCollections);
+                } else {
+                    console.error('Invalid monthly collections data:', data.data.monthlyCollections);
+                    initializeEmptyChart(); // Reset chart if data is invalid
+                }
+            } else {
+                console.error('Error fetching supplier details:', data.message);
+                initializeEmptyChart(); // Reset chart on error
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            initializeEmptyChart(); // Reset chart on fetch error
+        });
+    }
 
     // Initialize the map with a default center
     let map;
@@ -507,7 +603,10 @@
     });
 
     function updateSupplierDetails(supplierId) {
-        if (!supplierId) return;
+        if (!supplierId) {
+            initializeEmptyChart(); // Reset to empty chart
+            return;
+        }
 
         fetch('<?php echo URLROOT; ?>/suppliermanager/getSupplierDetails', {
             method: 'POST',
@@ -589,31 +688,33 @@
                 }
 
                 // Update recent collections
-            const collectionsBody = document.getElementById('recentCollectionsBody');
-            collectionsBody.innerHTML = ''; // Clear existing entries
+                const collectionsBody = document.getElementById('recentCollectionsBody');
+                collectionsBody.innerHTML = ''; // Clear existing entries
 
-            data.data.recentCollections.forEach(collection => {
-                const date = new Date(collection.collection_time);
-                const formattedDate = date.toLocaleDateString();
-                const formattedTime = date.toLocaleTimeString();
+                data.data.recentCollections.forEach(collection => {
+                    const date = new Date(collection.collection_time);
+                    const formattedDate = date.toLocaleDateString();
+                    const formattedTime = date.toLocaleTimeString();
 
-                const entryHtml = `
-                    <tr class="collection-entry">
-                        <td class="collection-header">
-                            ${formattedDate} ${formattedTime}
-                        </td>
-                    </tr>
-                    <tr class="collection-details">
-                        <td>
-                            <span class="weight">${parseFloat(collection.initial_weight).toFixed(2)}</span>
-                            <span class="deduction">${collection.deductions ? parseFloat(collection.deductions).toFixed(2) : '0.00'}</span>
-                            <span class="final-weight">${parseFloat(collection.final_weight).toFixed(2)}</span>
-                            <span class="unit">kg</span>
-                        </td>
-                    </tr>
-                `;
-                collectionsBody.innerHTML += entryHtml;
-            });
+                    const entryHtml = `
+                        <tr class="collection-entry">
+                            <td class="collection-header">
+                                ${formattedDate} ${formattedTime}
+                            </td>
+                        </tr>
+                        <tr class="collection-details">
+                            <td>
+                                <span class="weight">${parseFloat(collection.initial_weight).toFixed(2)}</span>
+                                <span class="deduction">${collection.deductions ? parseFloat(collection.deductions).toFixed(2) : '0.00'}</span>
+                                <span class="final-weight">${parseFloat(collection.final_weight).toFixed(2)}</span>
+                                <span class="unit">kg</span>
+                            </td>
+                        </tr>
+                    `;
+                    collectionsBody.innerHTML += entryHtml;
+                });
+
+                updateChartData(data.data.monthlyCollections);
             
             } else {
                 // Show error message
