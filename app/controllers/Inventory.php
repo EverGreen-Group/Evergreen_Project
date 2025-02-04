@@ -54,7 +54,7 @@ class Inventory extends controller
 
         
         $this->view('inventory/v_dashboard', $data);
-        var_dump($data);
+        //var_dump($data);
     }
 
     public function product()

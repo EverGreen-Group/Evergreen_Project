@@ -1,68 +1,7 @@
 // SECTION 1
 //////////////////////////////////////////////////////////////////////////////////////////////////
 
-document.addEventListener("DOMContentLoaded", function () {
-  const ctx = document
-    .getElementById("machineAllocationChart")
-    .getContext("2d");
 
-  // Use chartData from PHP
-  const machineAllocationChart = new Chart(ctx, {
-    type: "bar",
-    data: {
-      labels: chartData.labels,
-      datasets: [
-        {
-          label: "Working Hours",
-          data: chartData.hours,
-          backgroundColor: [
-            "rgba(255, 99, 132, 0.8)",
-            "rgba(54, 162, 235, 0.8)",
-            "rgba(255, 206, 86, 0.8)",
-            "rgba(75, 192, 192, 0.8)",
-          ],
-          borderColor: [
-            "rgba(255, 99, 132, 1)",
-            "rgba(54, 162, 235, 1)",
-            "rgba(255, 206, 86, 1)",
-            "rgba(75, 192, 192, 1)",
-          ],
-          borderWidth: 1,
-        },
-      ],
-    },
-    options: {
-      responsive: true,
-      scales: {
-        y: {
-          beginAtZero: true,
-          title: {
-            display: true,
-            text: "Working Hours",
-          },
-          ticks: {
-            stepSize: 50,
-          },
-        },
-        x: {
-          title: {
-            display: true,
-            text: "Machines",
-          },
-        },
-      },
-      plugins: {
-        legend: {
-          display: false,
-        },
-        title: {
-          display: true,
-          text: "Machine Working Hours",
-        },
-      },
-    },
-  });
-});
 
 function reportModel() {
   const modal = document.getElementById("reportModal");
