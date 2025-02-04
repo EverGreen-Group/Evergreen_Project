@@ -17,7 +17,6 @@
 
 <!-- MAIN -->
 <main>
-    <?php print_r($data); ?>
     <div class="head-title">
         <div class="left">
             <h1>Driver Management</h1>
@@ -31,10 +30,6 @@
         <a href="#" id="openAddDriverModal" class="btn btn-primary" onclick="document.getElementById('addDriverModal').style.display='block'">
             <i class='bx bx-plus'></i>
             Register New Driver
-        </a>
-        <a href="#" id="openAssignRouteModal" class="btn btn-primary">
-            <i class='bx bx-map'></i>
-            Assign Route
         </a>
         <a href="#" class="btn btn-primary">
             <i class='bx bx-calendar'></i>
