@@ -334,5 +334,26 @@ class M_CollectionSupplierRecord {
             return [];
         }
     }
+
+
+    public function getYearlyCollectionQuantity($supplier_id) {
+        try {
+            $sql = "SELECT ROUND(SUM(quantity), 1) as total_quantity 
+                    FROM collection_supplier_records 
+                    WHERE supplier_id = :supplier_id 
+                    AND YEAR(collection_time) = YEAR(CURRENT_DATE())
+                    AND (status = 'Collected' OR status = 'Added')";
+            
+            $this->db->query($sql);
+            $this->db->bind(':supplier_id', $supplier_id);
+            $result = $this->db->single();
+            
+            return $result->total_quantity ?? 0;
+        } catch (Exception $e) {
+            error_log("Error fetching yearly collection quantity: " . $e->getMessage());
+            return 0;
+        }
+    }
+
     
 } 

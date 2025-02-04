@@ -69,6 +69,9 @@ class Supplier extends Controller {
         // Get pending fertilizer orders
         $data['pending_fertilizer_orders'] = $this->fertilizerOrderModel->getPendingOrdersBySupplier($supplier_id);
 
+        // Get yearly collection quantity
+        $data['yearly_quantity'] = $this->collectionSupplierRecordModel->getYearlyCollectionQuantity($supplier_id);
+
         $this->view('supplier/v_supply_dashboard', $data);
     }
     
