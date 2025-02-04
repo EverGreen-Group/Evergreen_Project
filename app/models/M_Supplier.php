@@ -112,17 +112,20 @@ class M_Supplier {
     }
 
     public function getMonthlyCollections($supplierId) {
-        $this->db->query('
-            SELECT 
+        $this->db->query('SELECT 
                 MONTH(collection_time) as month,
                 YEAR(collection_time) as year,
-                SUM(quantity) as total_quantity
-            FROM collection_supplier_records
-            WHERE supplier_id = :supplier_id
+                COALESCE(SUM(CASE 
+                    WHEN cs.capacity_kg IS NOT NULL 
+                    THEN cs.capacity_kg - COALESCE(cs.deductions, 0)
+                    ELSE csr.quantity 
+                END), 0) as total_quantity
+            FROM collection_supplier_records csr
+            LEFT JOIN collection_bags cs ON csr.collection_id = cs.collection_id
+            WHERE csr.supplier_id = :supplier_id
             AND YEAR(collection_time) = YEAR(CURRENT_DATE())
             GROUP BY YEAR(collection_time), MONTH(collection_time)
-            ORDER BY YEAR(collection_time), MONTH(collection_time)
-        ');
+            ORDER BY YEAR(collection_time), MONTH(collection_time)');
         
         $this->db->bind(':supplier_id', $supplierId);
         return $this->db->resultSet();
