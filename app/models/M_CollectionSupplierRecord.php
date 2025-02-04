@@ -95,9 +95,9 @@ class M_CollectionSupplierRecord {
                     FROM collection_supplier_records csr
                     WHERE 
                         csr.supplier_id = :supplier_id
-                        AND csr.status = 'Collected' OR csr.status = 'Added'
-                        AND csr.collection_time >= DATE_SUB(CURDATE(), INTERVAL 6 MONTH)
-                        AND csr.collection_time <= CURDATE()
+                        AND (csr.status = 'Collected' OR csr.status = 'Added')
+                        AND csr.collection_time >= DATE_FORMAT(NOW(), '%Y-%m-01')
+                        AND csr.collection_time <= NOW()
                     GROUP BY 
                         MONTH(csr.collection_time),
                         MONTHNAME(csr.collection_time)
