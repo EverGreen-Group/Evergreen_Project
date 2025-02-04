@@ -246,6 +246,17 @@ class M_Fertilizer_Order {
         }
     }
 
+    public function getPendingOrdersBySupplier($supplier_id) {
+        $this->db->query("SELECT fertilizer_name, order_date, total_amount, status 
+                          FROM fertilizer_orders 
+                          WHERE supplier_id = :supplier_id 
+                          AND status = 'pending' 
+                          ORDER BY order_date DESC 
+                          LIMIT 5");
+        $this->db->bind(':supplier_id', $supplier_id);
+        return $this->db->resultset();
+    }
+
     
     
 }
