@@ -38,9 +38,9 @@
         <li class="box-collection">
             <i class='bx bx-box'></i>
             <span class="text">
-                <h3><?php echo isset($data['total_collections']) ? $data['total_collections'] : '3'; ?></h3>
-                <p></p>
-                <small>collected</small>
+                <h3><?php echo isset($data['yearly_quantity']) ? $data['yearly_quantity'] : '0'; ?></h3>
+                <p>Tea Leaves</p>
+                <small>kg this year</small>
             </span>
         </li>
     </ul>
@@ -439,7 +439,7 @@
                         fill: true,
                         pointBackgroundColor: '#2eb85c',
                         pointRadius: 4,
-                        pointHoverRadius: 6
+                        pointHoverRadius: 3
                     }]
                 },
                 options: {
@@ -1225,15 +1225,15 @@
         }
 
         @media (max-width: 768px) {
-    .schedule-section {
-        flex-direction: column;
-    }
-    
-    .land-inspection-card,
-    .fertilizer-order-card,
-    .schedule-card-container {
-        width: 100%;
-    }
-}
+            .schedule-section {
+                flex-direction: column;
+            }
+            
+            .land-inspection-card,
+            .fertilizer-order-card,
+            .schedule-card-container {
+                width: 100%;
+            }
+        }
 
     </style>
