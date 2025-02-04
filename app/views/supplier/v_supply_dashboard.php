@@ -35,181 +35,214 @@
                 <small>kg this month</small>
             </span>
         </li>
+        <li class="box-collection">
+            <i class='bx bx-box'></i>
+            <span class="text">
+                <h3><?php echo isset($data['total_collections']) ? $data['total_collections'] : '3'; ?></h3>
+                <p></p>
+                <small>collected</small>
+            </span>
+        </li>
     </ul>
 
 
     <div class="table-data">
-        <div class="calendar-schedule-container">
-            <div class="calendar-wrapper">
-                <div class="calendar-container">
-                    <h4>Upcoming Land Inspections</h4>
-                    <div id="calendar"></div>
-                </div>
-            </div>
-            
-            <div class="schedule-section">
-                <div class="section-header">
-                    <h3>Scheduled Collections</h3>
-                
-                    <?php if (isset($data['schedule'])): ?>
-                        <div class="schedule-card-container">
-                            <div class="schedule-card">
-                                <button class="nav-btn prev-btn">
-                                    <i class='bx bx-chevron-left'></i>
-                                </button>
-
-                                <div class="card-content">
-                                    <div class="card-header">
-                                        <div class="status-badge <?php echo (date('Y-m-d') === $data['schedule']['next_collection_date']) ? 'today' : 'upcoming'; ?>">
-                                            <?php echo (date('Y-m-d') === $data['schedule']['next_collection_date']) ? 'Today' : 'Next Collection'; ?>
-                                        </div>
-                                    </div>
-                                    <div class="card-body">
-                                        <div class="schedule-info">
-                                            <div class="info-item">
-                                                <i class='bx bx-calendar'></i>
-                                                <span><?php echo date('F j, Y', strtotime($data['schedule']['next_collection_date'])); ?></span>
-                                            </div>
-                                            <div class="info-item">
-                                                <i class='bx bx-time-five'></i>
-                                                <span><?php echo $data['schedule']['time_slot']; ?></span>
-                                            </div>
-                                            <div class="info-item">
-                                                <i class='bx bx-map'></i>
-                                                <span>Route: <?php echo htmlspecialchars($data['schedule']['route_name']); ?></span>
-                                            </div>
-                                        </div>
-                                        <div class="schedule-action">
-                                            <a href="<?php echo URLROOT; ?>/Supplier/scheduleDetails" class="view-details-btn">
-                                                <i class='bx bx-info-circle'></i>
-                                                <span>View Details</span>
-                                            </a>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <button class="nav-btn next-btn">
-                                    <i class='bx bx-chevron-right'></i>
-                                </button>
-                            </div>
-
-                            <div class="schedule-actions">
-                                <select class="schedule-select">
-                                    <option value="" disabled selected>Select New Day</option>
-                                    <?php foreach ($data['schedule']['all_collection_days'] as $day): ?>
-                                        <option value="<?php echo strtolower($day); ?>"><?php echo ucfirst($day); ?></option>
-                                    <?php endforeach; ?>
-                                </select>
-                                <button class="change-schedule-btn">
-                                    <i class='bx bx-calendar-edit'></i>
-                                    <span>Request Schedule Change</span>
-                                </button>
-                            </div>
-                        <?php else: ?>
-                            <div class="no-schedule-message">
-                                <p>No collection schedule found. Please contact your route manager.</p>
-                            </div>
-                        <?php endif; ?>
-                    </div>
-                </div>
-            </div>
-        </div>
-        
-        <!--<div class="order stats-chart-container">
-            <div class="head">
-                <h4>Tea Collection History</h4>
-            </div>
-            <div style="height: 400px; position: relative;">
-                <canvas id="teaCollectionChart"></canvas>
-            </div>
-        </div> --> 
-
-        <!-- Land Inspection Request Section -->
-        <div class="order">
-            <div class="head">
-                <h4>Submit Land Inspection Request</h4>
-            </div>
-
-            <form action="<?php echo URLROOT; ?>/supplier/requestInspection" method="POST" class="request-form">
-                <div class="form-container">
-                    <div class="form-row">
-                        <div class="form-group">
-                            <label for="land_area">Land Area (Acres):</label>
-                            <input type="number" id="land_area" name="land_area" min="1" step="0.1" required>
+        <div class="schedule-section">
+                <?php if (isset($data['next_inspection']) && $data['next_inspection']): ?>
+                    <div class="land-inspection-card">
+                        <div class="section-header">
+                            <h4>Next Land Inspection</h4>
                         </div>
-                    </div>
-
-                    <div class="form-row">
-                        <div class="form-group">
-                            <label for="location">Location:</label>
-                            <input type="text" id="location" name="location" required>
-                        </div>
-
-                        <div class="form-group">
-                            <label for="preferred_date">Preferred Date:</label>
-                            <input type="date" id="preferred_date" name="preferred_date" required>
-                        </div>
-                    </div>
-
-                    <div class="form-row">
-                        <div class="form-group">
-                            <label for="comments">Comments (Optional):</label>
-                            <input type="text" id="comments" name="comments">
-                        </div>
-                    </div>
-
-                    <div class="form-actions">
-                        <button type="submit" class="btn-submit">Submit Request</button>
-                        <button type="button" class="btn-cancel" onclick="this.form.reset()">Cancel</button>
-                    </div>
-                </div>
-            </form>
-        </div>
-
-        <!-- Previous Land Inspection Requests Section -->
-        <div class="order">
-            <div class="head">
-                <h4>Previous Land Inspection Requests</h4>
-            </div>
-            <table>
-                <thead>
-                    <tr>
-                        <th>Request ID</th>
-                        <th>Preferred Date</th>
-                        <th>Scheduled Date</th>
-                        <th>Scheduled Time</th>
-                        <th>Status</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <?php if (!empty($data['previous_inspections'])): ?>
-                        <?php foreach ($data['previous_inspections'] as $inspection): ?>
-                            <tr>
-                                <td><?php echo htmlspecialchars($inspection->request_id ?? 'N/A'); ?></td>
-                                <td><?php echo htmlspecialchars($inspection->preferred_date ?? 'N/A'); ?></td>
-                                <td><?php echo htmlspecialchars($inspection->scheduled_date ?? 'Not Scheduled'); ?></td>
-                                <td><?php echo htmlspecialchars($inspection->scheduled_time ?? 'Not Scheduled'); ?></td>
-                                <td>
-                                    <span class="status-badge <?php echo match(strtolower($inspection->status ?? '')) {
-                                        'pending' => 'pending',
+                        <div class="card-content">
+                            <div class="card-header">
+                                <div class="status-badge <?php echo match(strtolower($data['next_inspection']->status ?? '')) {
+                                        'pending' => 'upcoming',
                                         'completed' => 'approved',
                                         'cancelled' => 'rejected',
                                         default => 'pending'
                                     }; ?>">
-                                        <?php echo htmlspecialchars($inspection->status ?? 'Pending'); ?>
-                                    </span>
-                                </td>
-                            </tr>
-                        <?php endforeach; ?>
-                    <?php else: ?>
+                                    <?php echo htmlspecialchars($data['next_inspection']->status ?? 'Pending'); ?>
+                                </div>
+                            </div>
+                            <div class="card-body">
+                                <div class="schedule-info">
+                                    <div class="info-item">
+                                        <i class='bx bx-calendar'></i>
+                                        <span><?php echo date('F j, Y', strtotime($data['next_inspection']->scheduled_date)); ?></span>
+                                    </div>
+                                    <div class="info-item">
+                                        <i class='bx bx-time-five'></i>
+                                        <span><?php echo $data['next_inspection']->scheduled_time ? date('h:i A', strtotime($data['next_inspection']->scheduled_time)) : 'Not Specified'; ?></span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                <?php endif; ?>
+                
+                <div class="schedule-section">
+                    <div class="section-header">
+                        <h3>Scheduled Collections</h3>
+                    
+                        <?php if (isset($data['schedule'])): ?>
+                            <div class="schedule-card-container">
+                                <div class="schedule-card">
+                                    <button class="nav-btn prev-btn">
+                                        <i class='bx bx-chevron-left'></i>
+                                    </button>
+
+                                    <div class="card-content">
+                                        <div class="card-header">
+                                            <div class="status-badge <?php echo (date('Y-m-d') === $data['schedule']['next_collection_date']) ? 'today' : 'upcoming'; ?>">
+                                                <?php echo (date('Y-m-d') === $data['schedule']['next_collection_date']) ? 'Today' : 'Next Collection'; ?>
+                                            </div>
+                                        </div>
+                                        <div class="card-body">
+                                            <div class="schedule-info">
+                                                <div class="info-item">
+                                                    <i class='bx bx-calendar'></i>
+                                                    <span><?php echo date('F j, Y', strtotime($data['schedule']['next_collection_date'])); ?></span>
+                                                </div>
+                                                <div class="info-item">
+                                                    <i class='bx bx-time-five'></i>
+                                                    <span><?php echo $data['schedule']['time_slot']; ?></span>
+                                                </div>
+                                                <div class="info-item">
+                                                    <i class='bx bx-map'></i>
+                                                    <span>Route: <?php echo htmlspecialchars($data['schedule']['route_name']); ?></span>
+                                                </div>
+                                            </div>
+                                            <div class="schedule-action">
+                                                <a href="<?php echo URLROOT; ?>/Supplier/scheduleDetails" class="view-details-btn">
+                                                    <i class='bx bx-info-circle'></i>
+                                                    <span>View Details</span>
+                                                </a>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <button class="nav-btn next-btn">
+                                        <i class='bx bx-chevron-right'></i>
+                                    </button>
+                                </div>
+
+                                <div class="schedule-actions">
+                                    <select class="schedule-select">
+                                        <option value="" disabled selected>Select New Day</option>
+                                        <?php foreach ($data['schedule']['all_collection_days'] as $day): ?>
+                                            <option value="<?php echo strtolower($day); ?>"><?php echo ucfirst($day); ?></option>
+                                        <?php endforeach; ?>
+                                    </select>
+                                    <button class="change-schedule-btn">
+                                        <i class='bx bx-calendar-edit'></i>
+                                        <span>Request Schedule Change</span>
+                                    </button>
+                                </div>
+                            <?php else: ?>
+                                <div class="no-schedule-message">
+                                    <p>No collection schedule found. Please contact your route manager.</p>
+                                </div>
+                            <?php endif; ?>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!--<div class="order stats-chart-container">
+                <div class="head">
+                    <h4>Tea Collection History</h4>
+                </div>
+                <div style="height: 400px; position: relative;">
+                    <canvas id="teaCollectionChart"></canvas>
+                </div>
+            </div> --> 
+
+            <!-- Land Inspection Request Section -->
+            <div class="order">
+                <div class="head">
+                    <h4>Submit Land Inspection Request</h4>
+                </div>
+
+                <form action="<?php echo URLROOT; ?>/supplier/requestInspection" method="POST" class="request-form">
+                    <div class="form-container">
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="land_area">Land Area (Acres):</label>
+                                <input type="number" id="land_area" name="land_area" min="1" step="0.1" required>
+                            </div>
+                        </div>
+
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="location">Location:</label>
+                                <input type="text" id="location" name="location" required>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="preferred_date">Preferred Date:</label>
+                                <input type="date" id="preferred_date" name="preferred_date" required>
+                            </div>
+                        </div>
+
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="comments">Comments (Optional):</label>
+                                <input type="text" id="comments" name="comments">
+                            </div>
+                        </div>
+
+                        <div class="form-actions">
+                            <button type="submit" class="btn-submit">Submit Request</button>
+                            <button type="button" class="btn-cancel" onclick="this.form.reset()">Cancel</button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+
+            <!-- Previous Land Inspection Requests Section -->
+            <div class="order">
+                <div class="head">
+                    <h4>Previous Land Inspection Requests</h4>
+                </div>
+                <table>
+                    <thead>
                         <tr>
-                            <td colspan="5" class="text-center">No previous inspection requests found</td>
+                            <th>Request ID</th>
+                            <th>Preferred Date</th>
+                            <th>Scheduled Date</th>
+                            <th>Scheduled Time</th>
+                            <th>Status</th>
                         </tr>
-                    <?php endif; ?>
-                </tbody>
-            </table>
+                    </thead>
+                    <tbody>
+                        <?php if (!empty($data['previous_inspections'])): ?>
+                            <?php foreach ($data['previous_inspections'] as $inspection): ?>
+                                <tr>
+                                    <td><?php echo htmlspecialchars($inspection->request_id ?? 'N/A'); ?></td>
+                                    <td><?php echo htmlspecialchars($inspection->preferred_date ?? 'N/A'); ?></td>
+                                    <td><?php echo htmlspecialchars($inspection->scheduled_date ?? 'Not Scheduled'); ?></td>
+                                    <td><?php echo htmlspecialchars($inspection->scheduled_time ?? 'Not Scheduled'); ?></td>
+                                    <td>
+                                        <span class="status-badge <?php echo match(strtolower($inspection->status ?? '')) {
+                                            'pending' => 'pending',
+                                            'completed' => 'approved',
+                                            'cancelled' => 'rejected',
+                                            default => 'pending'
+                                        }; ?>">
+                                            <?php echo htmlspecialchars($inspection->status ?? 'Pending'); ?>
+                                        </span>
+                                    </td>
+                                </tr>
+                            <?php endforeach; ?>
+                        <?php else: ?>
+                            <tr>
+                                <td colspan="5" class="text-center">No previous inspection requests found</td>
+                            </tr>
+                        <?php endif; ?>
+                    </tbody>
+                </table>
+            </div>
         </div>
-    </div>
 
     <!-- Add this after your main content but before closing </main> -->
     <div class="modal" id="scheduleDetailsModal">
@@ -514,12 +547,58 @@
             box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
         }
 
-        .schedule-action {
+        .schedule-section {
+            display: flex;
+            gap: 20px;
+            justify-content: space-between;
+            flex-wrap: wrap;
+        }
+
+        .land-inspection-card,
+        .schedule-card-container {
+            flex: 1;
+            min-width: 300px;
+            background: #fff;
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .card-content {
             display: flex;
             flex-direction: column;
             gap: 10px;
         }
 
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .status-badge {
+            padding: 5px 10px;
+            border-radius: 5px;
+            font-weight: bold;
+        }
+
+        .upcoming {
+            background: #f0ad4e;
+            color: white;
+        }
+
+        .approved {
+            background: #5cb85c;
+            color: white;
+        }
+
+        .rejected {
+            background: #d9534f;
+            color: white;
+        }
         .schedule-select {
             width: 100%;
             padding: 8px 12px;
@@ -705,12 +784,6 @@
         .schedule-section {
             flex: 2;
             min-width: 500px;
-        }
-
-        .schedule-card-container {
-            display: flex;
-            flex-direction: column;
-            gap: 15px;
         }
 
         .schedule-card {
