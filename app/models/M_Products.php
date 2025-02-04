@@ -111,7 +111,7 @@ class M_Products{
     }
 
     public function searchProducts($search) {
-        $sql = "SELECT * FROM product WHERE product_name LIKE :search OR code LIKE :search";
+        $sql = "SELECT * FROM product WHERE product_name LIKE :search ";
         $this->db->query($sql);
         $this->db->bind(':search', "%$search%");
         
