@@ -39,9 +39,9 @@
   </ul>
 
   <!-- Then your shift-management-row div continues below -->
-  <div class="shift-management-row">
+  <div class="table-data">
     <!-- Create Shift Form -->
-    <div class="shift-form-container">
+    <div class="order">
         <h2>Create New Shift</h2>
         <?php flash('shift_success'); ?>
         <?php flash('shift_error'); ?>
@@ -67,7 +67,7 @@
     </div>
 
     <!-- Shifts Table -->
-    <div class="shifts-table-container">
+    <div class="order">
         <h2>Current Shifts</h2>
         <table class="shifts-table">
             <thead>

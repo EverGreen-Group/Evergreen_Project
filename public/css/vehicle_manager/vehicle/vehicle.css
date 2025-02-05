@@ -258,6 +258,12 @@ button[type="submit"]:hover {
   color: #006d77;
 }
 
+.capacity.not-scheduled {
+  font-size: 1.2rem;
+  font-weight: 600;
+  color: #d60000;
+}
+
 .filter-btn {
   display: flex;
   align-items: center;
