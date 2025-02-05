@@ -33,7 +33,7 @@
         <div>
 
             <div class="chart-container"
-                style="margin: 20px; padding: 20px; background: white; border-radius: 10px; width: 90%;">
+                style="margin: 20px; padding: 20px; background: white; border-radius: 10px; width: 98%;">
                 <table>
                     <thead>
                         <tr>
@@ -69,62 +69,9 @@
                                             class="btn deallocate">Deallocate</button>
                                     </form>
                                 </td>
-                                <td><button class="btn detail">details</button></td>
+                                <td><button class="btn detail" onclick="">details</button></td>
                             </tr>
                         <?php endforeach; ?>
-
-                        <!-- <tr>
-                        <td><input type="checkbox"></td>
-                        <td>
-                            <div class="machine-info">
-                                <span class="machine-icon">A</span>
-                                <span>Machine A</span>
-                            </div>
-                        </td>
-                        <td><span class="status-ready">Allocated</span></td>
-                        <td><button class="btn allocate">Allocate</button></td>
-                        <td><button class="btn deallocate">Deallocate</button></td>
-                        <td><button class="btn detail">details</button></td>
-                    </tr>
-                    <tr>
-                        <td><input type="checkbox"></td>
-                        <td>
-                            <div class="machine-info">
-                                <span class="machine-icon">A</span>
-                                <span>Machine B</span>
-                            </div>
-                        </td>
-                        <td><span class="status-ready">Ready</span></td>
-                        <td><button class="btn allocate">Allocate</button></td>
-                        <td><button class="btn deallocate">Deallocate</button></td>
-                        <td><button class="btn detail">details</button></td>
-                    </tr>
-                    <tr>
-                        <td><input type="checkbox"></td>
-                        <td>
-                            <div class="machine-info">
-                                <span class="machine-icon">A</span>
-                                <span>Machine C</span>
-                            </div>
-                        </td>
-                        <td><span class="status-ready">Ready</span></td>
-                        <td><button class="btn allocate">Allocate</button></td>
-                        <td><button class="btn deallocate">Deallocate</button></td>
-                        <td><button class="btn detail">details</button></td>
-                    </tr>
-                    <tr>
-                        <td><input type="checkbox"></td>
-                        <td>
-                            <div class="machine-info">
-                                <span class="machine-icon">A</span>
-                                <span>Machine D</span>
-                            </div>
-                        </td>
-                        <td><span class="status-ready">Ready</span></td>
-                        <td><button class="btn allocate">Allocate</button></td>
-                        <td><button class="btn deallocate">Deallocate</button></td>
-                        <td><button class="btn detail">details</button></td>
-                    </tr> -->
                     </tbody>
                 </table>
             </div>
@@ -141,13 +88,13 @@
             </div>
 
             <div class="chart-container"
-                style="margin: 20px; padding: 20px; background: white; border-radius: 10px; width: 90%;">
+                style="margin: 20px; padding: 20px; background: white; border-radius: 10px; width: 98%;">
                 <h2>Weekly Machine Allocation Statistics</h2>
                 <canvas id="machineAllocationChart"></canvas>
             </div>
 
             <div class="chart-container"
-                style="margin: 20px; padding: 20px; background: white; border-radius: 10px; width: 90%;">
+                style="margin: 20px; padding: 20px; background: white; border-radius: 10px; width: 98%;">
                 <h1>Add New Machine Form</h1>
                 <form name="form" action="<?php echo URLROOT ?>/Inventory/machine" method="POST">
                     <div class="form-group">
