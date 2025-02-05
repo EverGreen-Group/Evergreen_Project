@@ -30,35 +30,62 @@ class VehicleDriver extends controller {
     }
 
     public function index() {
-        // Assuming you have a way to get the driverId, e.g., from session or request
-        $driverId = $_SESSION['driver_id']; // Assuming the driver ID is stored in the session
-
-        // Check if the driver ID is set
-        if (empty($driverId)) {
-            $data = [
-                'upcomingShifts' => [],
-                'message' => 'Driver ID not found in session.'
-            ];
-            $this->view('vehicle_driver/v_dashboard', $data);
+        if (!isset($_SESSION['driver_id'])) {
+            redirect('login'); // Assuming you have a redirect helper
             return;
         }
-
-        // Get upcoming schedules for the driver
-        $upcomingShifts = $this->scheduleModel->getUpcomingSchedules($driverId);
-
-        // Prepare data for the view
-        if (empty($upcomingShifts)) {
+    
+        $driverId = $_SESSION['driver_id'];
+        
+        try {
+            // Get all schedules
+            $allSchedules = $this->scheduleModel->getUpcomingSchedules($driverId);
+            
+            // Organize schedules by day
+            $todaySchedules = [];
+            $upcomingSchedules = [];
+            
+            foreach ($allSchedules as $schedule) {
+                if ($schedule->is_today) {
+                    $todaySchedules[] = $schedule;
+                } else {
+                    $upcomingSchedules[] = $schedule;
+                }
+            }
+            
+            // Get driver details (assuming you have a driver model)
+            // $driverDetails = $this->driverModel->getDriverById($driverId);
+            
             $data = [
-                'upcomingShifts' => [],
-                'message' => 'No schedules assigned.'
+                'todaySchedules' => $todaySchedules,
+                'upcomingSchedules' => $upcomingSchedules,
+                // 'driverDetails' => $driverDetails,
+                'currentWeek' => date('W'),
+                'currentDay' => date('l'),
+                'lastUpdated' => date('Y-m-d H:i:s'),
+                'message' => '',
+                'error' => ''
             ];
-        } else {
+            
+            if (empty($todaySchedules) && empty($upcomingSchedules)) {
+                $data['message'] = 'No upcoming schedules found.';
+            }
+            
+        } catch (Exception $e) {
+            // Log the error (assuming you have a logging system)
+            error_log($e->getMessage());
+            
             $data = [
-                'upcomingShifts' => $upcomingShifts
+                'todaySchedules' => [],
+                'upcomingSchedules' => [],
+                'message' => '',
+                'error' => 'An error occurred while fetching schedules. Please try again later.'
             ];
         }
-
-        // Load the view with the data
+    
+        // Add refresh interval for automatic updates (e.g., every 5 minutes)
+        $data['refreshInterval'] = 300; // 5 minutes in seconds
+        
         $this->view('vehicle_driver/v_dashboard', $data);
     }
 
