@@ -70,18 +70,18 @@ class Distribution extends Controller {
         ]);
     }
 
-    public function getOrderDetails($orderId) {
+    public function getProductDetails($productId) {
         // Set header to return JSON
         header('Content-Type: application/json');
     
         try {
-            $order = $this->orderModel->getOrderDetails($orderId);
+            $product = $this->orderModel->getProductDetails($productId);
             
-            if ($order) {
-                echo json_encode($order);
+            if ($product) {
+                echo json_encode($product);
             } else {
                 http_response_code(404);
-                echo json_encode(['error' => 'Order not found']);
+                echo json_encode(['error' => 'Product not found']);
             }
         } catch (Exception $e) {
             http_response_code(500);

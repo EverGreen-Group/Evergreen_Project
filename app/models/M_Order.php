@@ -23,11 +23,14 @@ class M_Order {
     }
 
 
-    public function getOrderDetails($orderId) {
+    public function getProductDetails($productId) {
         $this->db->query('
-            SELECT *
-            FROM fertilizer_orders
-            WHERE order_id = 18
+            SELECT fot.item_id, fot.order_id, fot.fertilizer_type_id,fot.quantity,fot.supplier_id, CONCAT(u.first_name, " ", u.last_name) AS `supplier_name`, fot.route_id, fot.is_schedule, fo.order_date, fo.order_time
+            FROM fertilizer_order_items fot
+            JOIN fertilizer_orders fo ON fot.order_id = fo.order_id
+            JOIN suppliers s ON s.supplier_id = fot.supplier_id
+            JOIN users u ON s.user_id = u.user_id
+            WHERE fot.order_id = 21
         ');
 
         // $this->db->bind(':order_id', $orderId);
