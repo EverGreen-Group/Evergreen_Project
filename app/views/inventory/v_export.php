@@ -13,6 +13,51 @@
 <script>
   const URLROOT = '<?php echo URLROOT; ?>';
   const UPLOADROOT = '<?php echo UPLOADROOT; ?>';
+
+
+  function showaddExportRecord() {
+    // Show the modal
+    document.getElementById("addExportModal").style.display = "block";
+  }
+
+  function addExportRecord(event) {
+    const StockType = document.getElementById("Stockname").value;
+    const Quantity = document.getElementById("exportQuantity").value;
+    const price = document.getElementById("exportPrice").value;
+    const company = document.getElementById("exportCompany").value;
+    const notes = document.getElementById("exportNotes").value;
+    const RegNo = document.getElementById("exportRegNo").value;
+    const Manager = document.getElementById("exportmanager").value;
+
+    const data = {
+      StockType,
+      Quantity,
+      price,
+      company,
+      notes,
+      RegNo,
+      Manager
+    };
+
+    document.getElementById("addExportModal").style.display = "none";
+
+    const url = `${URLROOT}/export/release`;
+    //console.log(data);
+
+    // Send the data to the server
+    fetch(url, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(data),
+    }).then(response => {
+      console.log("Response:", response);
+    })
+      .catch(error => {
+        console.error("Error:", error);
+      });
+  }
 </script>
 
 <!-- MAIN -->
@@ -264,7 +309,7 @@
               <td><?php echo $export->export_quantity; ?> kg</td>
               <td>Rs.<?php echo $export->export_price; ?></td>
               <td><?php echo $export->export_company; ?></td>
-              <td><?php echo $export->export_date; ?></td>
+              <td><?php echo $export->create_at; ?></td>
             </tr>
           <?php endforeach; ?>
           <!-- <tr>
@@ -383,39 +428,8 @@
 
   <script>
 
-    function addExportRecord(event) {
-      const StockType = document.getElementById("Stockname").value;
-      const Quantity = document.getElementById("exportQuantity").value;
-      const price = document.getElementById("exportPrice").value;
-      const company = document.getElementById("exportCompany").value;
-      const notes = document.getElementById("exportNotes").value;
-      const RegNo = document.getElementById("exportRegNo").value;
-      const Manager = document.getElementById("exportmanager").value;
 
-      const data = {
-        StockType,
-        Quantity,
-        price,
-        company,
-        notes,
-        RegNo,
-        Manager
-      };
 
-      document.getElementById("addExportModal").style.display = "none";
-
-      const url = `${URLROOT}/export/release`; 
-      console.log(data);
-
-      // Send the data to the server
-      fetch(url, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(data),
-      })
-    }
 
     function updateGradingOptions() {
       const teaType = document.getElementById('teaType').value;
@@ -451,136 +465,133 @@
       // Here you would implement the logic to open a modal and display the relevant information
     }
 
-    function showaddExportRecord() {
-      // Show the modal
-      document.getElementById("addExportModal").style.display = "block";
-    }
+
 
     document.addEventListener("DOMContentLoaded", function () {
-  const reportCtx = document.getElementById("reportTypesChart");
+      const reportCtx = document.getElementById("reportTypesChart");
 
-  if (reportCtx) {
-    // Clear any previous chart instances
-    Chart.helpers.each(Chart.instances, function (instance) {
-      instance.destroy();
-    });
+      if (reportCtx) {
+        // Clear any previous chart instances
+        Chart.helpers.each(Chart.instances, function (instance) {
+          instance.destroy();
+        });
 
-    new Chart(reportCtx, {
-      type: "line",
-      data: {
-        labels: [
-          "January",
-          "February",
-          "March",
-          "April",
-          "May",
-          "June",
-          "July",
-          "August",
-          "September",
-          "October",
-          "November",
-          "December",
-        ],
-        datasets: [
-          {
-            label: "Black Tea",
-            data: [
-              5000, 480, 500, 5300, 5500, 600, 6200, 6100, 6300, 6400, 6500,
-              6700,
+        new Chart(reportCtx, {
+          type: "line",
+          data: {
+            labels: [
+              "January",
+              "February",
+              "March",
+              "April",
+              "May",
+              "June",
+              "July",
+              "August",
+              "September",
+              "October",
+              "November",
+              "December",
             ],
-            backgroundColor: "rgba(54, 162, 235, 0.2)",
-            borderColor: "#36A2EB",
-            borderWidth: 2,
-            fill: false,
-            tension: 0.4,
-          },
-          {
-            label: "Green Tea",
-            data: [
-              3000, 3200, 3100, 3300, 3400, 3500, 3600, 3700, 3800, 3900, 4000,
-              4100,
+            datasets: [
+              {
+                label: "Black Tea",
+                data: [
+                  5000, 480, 500, 5300, 5500, 600, 6200, 6100, 6300, 6400, 6500,
+                  6700,
+                ],
+                backgroundColor: "rgba(54, 162, 235, 0.2)",
+                borderColor: "#36A2EB",
+                borderWidth: 2,
+                fill: false,
+                tension: 0.4,
+              },
+              {
+                label: "Green Tea",
+                data: [
+                  3000, 3200, 3100, 3300, 3400, 3500, 3600, 3700, 3800, 3900, 4000,
+                  4100,
+                ],
+                backgroundColor: "rgba(75, 192, 192, 0.2)",
+                borderColor: "#4BC0C0",
+                borderWidth: 2,
+                fill: false,
+                tension: 0.4,
+              },
+              {
+                label: "Herbal Tea",
+                data: [
+                  2000, 2100, 2200, 2500, 2400, 2300, 2600, 2700, 2800, 2900, 3000,
+                  3100,
+                ],
+                backgroundColor: "rgba(255, 206, 86, 0.2)",
+                borderColor: "#FFCE56",
+                borderWidth: 2,
+                fill: false,
+                tension: 0.4,
+              },
+              {
+                label: "Oolong Tea",
+                data: [
+                  1500, 1600, 1700, 1800, 1900, 2000, 2100, 2200, 2300, 2400, 2500,
+                  2600,
+                ],
+                backgroundColor: "rgba(153, 102, 255, 0.2)",
+                borderColor: "#9966FF",
+                borderWidth: 2,
+                fill: false,
+                tension: 0.4,
+              },
             ],
-            backgroundColor: "rgba(75, 192, 192, 0.2)",
-            borderColor: "#4BC0C0",
-            borderWidth: 2,
-            fill: false,
-            tension: 0.4,
           },
-          {
-            label: "Herbal Tea",
-            data: [
-              2000, 2100, 2200, 2500, 2400, 2300, 2600, 2700, 2800, 2900, 3000,
-              3100,
-            ],
-            backgroundColor: "rgba(255, 206, 86, 0.2)",
-            borderColor: "#FFCE56",
-            borderWidth: 2,
-            fill: false,
-            tension: 0.4,
-          },
-          {
-            label: "Oolong Tea",
-            data: [
-              1500, 1600, 1700, 1800, 1900, 2000, 2100, 2200, 2300, 2400, 2500,
-              2600,
-            ],
-            backgroundColor: "rgba(153, 102, 255, 0.2)",
-            borderColor: "#9966FF",
-            borderWidth: 2,
-            fill: false,
-            tension: 0.4,
-          },
-        ],
-      },
-      options: {
-        responsive: true,
-        maintainAspectRatio: false,
-        plugins: {
-          legend: {
-            position: "top",
-            labels: {
-              padding: 20,
-              font: {
-                size: 12,
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+              legend: {
+                position: "top",
+                labels: {
+                  padding: 20,
+                  font: {
+                    size: 12,
+                  },
+                },
+              },
+              title: {
+                display: true,
+                text: "Monthly Tea Leaf Stock",
+              },
+            },
+            scales: {
+              y: {
+                beginAtZero: true,
+                grid: {
+                  color: "rgba(0, 0, 0, 0.1)",
+                },
+                ticks: {
+                  callback: function (value) {
+                    return value + " kg";
+                  },
+                },
+                title: {
+                  display: true,
+                  text: "Stock (kg)",
+                },
+              },
+              x: {
+                grid: {
+                  display: false,
+                },
+                title: {
+                  display: true,
+                  text: "Months",
+                },
               },
             },
           },
-          title: {
-            display: true,
-            text: "Monthly Tea Leaf Stock",
-          },
-        },
-        scales: {
-          y: {
-            beginAtZero: true,
-            grid: {
-              color: "rgba(0, 0, 0, 0.1)",
-            },
-            ticks: {
-              callback: function (value) {
-                return value + " kg";
-              },
-            },
-            title: {
-              display: true,
-              text: "Stock (kg)",
-            },
-          },
-          x: {
-            grid: {
-              display: false,
-            },
-            title: {
-              display: true,
-              text: "Months",
-            },
-          },
-        },
-      },
+        });
+      }
     });
-  }
-});
   </script>
 
 </main>
