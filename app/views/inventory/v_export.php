@@ -67,17 +67,16 @@
     <div class="left">
       <h1>Tea Leaf Exports</h1>
       <ul class="breadcrumb">
-        <li><a href="#">Dashboard</a></li>
       </ul>
+    </div>
+    <div class="action-buttons">
+      <button class="btn btn-primary" onclick="showaddExportRecord()">
+        <i class='bx bx-plus'></i>
+        Add Export Record
+      </button>
     </div>
   </div>
 
-  <div class="action-buttons">
-    <button class="btn btn-primary" onclick="showaddExportRecord()">
-      <i class='bx bx-plus'></i>
-      Add Export Record
-    </button>
-  </div>
 
   <ul class="box-info">
     <li>
