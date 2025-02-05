@@ -94,6 +94,7 @@ header h1 {
     grid-template-columns: repeat(4, 1fr);
     gap: 20px;
     margin-top: 20px;
+    justify-content: space-evenly;
 }
 
 .product-card {
