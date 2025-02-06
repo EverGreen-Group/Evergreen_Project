@@ -765,7 +765,7 @@ class M_Collection {
         ');
 
         $this->db->bind(':collection_id', $collectionId);
-        return $this->db->resultSet();  // This will return an array of bags
+        return $this->db->resultSet();
     }
 
     public function getVehicleIdFromCollection($collectionId) {

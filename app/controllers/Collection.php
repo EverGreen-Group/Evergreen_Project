@@ -68,6 +68,7 @@ class Collection extends Controller{
             'driverDetails' => $driverDetails,
             'collectionSuppliersDetails' => $collectionSuppliersDetails,
             'totalSuppliers' => $totalSuppliers,
+            'collectionDetails' => $collectionDetails,
             'remainingSuppliers' => $remainingSuppliers,
             'vehicleRemainingCapacity' => $vehicleRemainingCapacity,
             'suppliersForMap' => $suppliersForMap

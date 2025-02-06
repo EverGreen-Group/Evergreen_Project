@@ -496,6 +496,7 @@ class Supplier extends Controller {
         $collectionDetails = $this->collectionModel->getCollectionDetails($collectionId);
 
         $data = [
+            'collectionId' => $collectionId,
             'collectionDetails' => $collectionDetails
         ];
 
@@ -514,6 +515,16 @@ class Supplier extends Controller {
     
         // Return the response
         echo json_encode(['success' => true, 'data' => $suppliers]);
+    }
+
+    public function getBagDetails($collectionId) {
+        // Fetch bag details from the model using the collection ID
+        $bagDetails = $this->collectionModel->getBagsByCollectionId($collectionId);
+
+        // Return the bag details as JSON
+        header('Content-Type: application/json');
+        echo json_encode($bagDetails);
+        exit();
     }
 }
 ?>

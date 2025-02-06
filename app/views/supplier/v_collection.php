@@ -4,7 +4,6 @@
 
 <main>
 
-<?php print_r($data); ?>
     <div class="head-title">
         <div class="left">
             <h1>Collection Details</h1>
@@ -96,34 +95,6 @@
 
             foreach ($bags as $bag) {
                 ?>
-                <div class="detail-card" onclick="toggleCard(this)">
-                    <div class="card-header">
-                        <i class='bx bx-package'></i>
-                        <h3>Bag ID: <?php echo $bag['bag_id']; ?></h3>
-                    </div>
-                    <div class="card-content">
-                        <div class="info-row">
-                            <span class="label">Actual Weight (kg):</span>
-                            <span class="value"><?php echo $bag['actual_weight_kg']; ?></span>
-                        </div>
-                        <div class="info-row">
-                            <span class="label">Leaf Age:</span>
-                            <span class="value"><?php echo $bag['leaf_age']; ?></span>
-                        </div>
-                        <div class="info-row">
-                            <span class="label">Moisture Level:</span>
-                            <span class="value"><?php echo $bag['moisture_level']; ?></span>
-                        </div>
-                        <div class="info-row">
-                            <span class="label">Deduction Notes:</span>
-                            <span class="value"><?php echo $bag['deduction_notes']; ?></span>
-                        </div>
-                        <div class="info-row">
-                            <span class="label">Leaf Type ID:</span>
-                            <span class="value"><?php echo $bag['leaf_type_id']; ?></span>
-                        </div>
-                    </div>
-                </div>
                 <?php
             }
             ?>
@@ -442,4 +413,69 @@ function toggleCard(card) {
     const content = card.querySelector('.card-content');
     content.style.display = content.style.display === 'none' ? 'block' : 'none';
 }
+</script>
+
+<script>
+    function fetchBagDetails() {
+        const collectionId = <?php echo $collectionId ?>;
+
+        fetch('<?php echo URLROOT; ?>/Supplier/getBagDetails/' + collectionId)
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+                return response.json();
+            })
+            .then(data => {
+                // Clear existing bag details
+                const bagDetailsSection = document.querySelector('.bag-details-section');
+                bagDetailsSection.innerHTML = ''; // Clear previous content
+                
+                // Check if there are any bags
+                if (data.length > 0) {
+                    data.forEach(bag => {
+                        // Create a new detail card for each bag
+                        const bagCard = `
+                            <div class="detail-card" onclick="toggleCard(this)">
+                                <div class="card-header">
+                                    <i class='bx bx-package'></i>
+                                    <h3>Bag ID: ${bag.bag_id}</h3>
+                                </div>
+                                <div class="card-content">
+                                    <div class="info-row">
+                                        <span class="label">Actual Weight (kg):</span>
+                                        <span class="value">${bag.actual_weight_kg}</span>
+                                    </div>
+                                    <div class="info-row">
+                                        <span class="label">Leaf Age:</span>
+                                        <span class="value">${bag.leaf_age}</span>
+                                    </div>
+                                    <div class="info-row">
+                                        <span class="label">Moisture Level:</span>
+                                        <span class="value">${bag.moisture_level}</span>
+                                    </div>
+                                    <div class="info-row">
+                                        <span class="label">Deduction Notes:</span>
+                                        <span class="value">${bag.deduction_notes}</span>
+                                    </div>
+                                    <div class="info-row">
+                                        <span class="label">Leaf Type ID:</span>
+                                        <span class="value">${bag.leaf_type_id}</span>
+                                    </div>
+                                </div>
+                            </div>
+                        `;
+                        bagDetailsSection.insertAdjacentHTML('beforeend', bagCard);
+                    });
+                } else {
+                    bagDetailsSection.innerHTML = '<p>No bags found.</p>';
+                }
+            })
+            .catch(error => {
+                console.error('Error fetching bag details:', error);
+            });
+    }
+
+    // Polling every 5 seconds
+    setInterval(fetchBagDetails, 15000);
 </script>

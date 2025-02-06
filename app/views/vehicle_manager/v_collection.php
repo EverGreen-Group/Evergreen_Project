@@ -231,7 +231,7 @@
                     <td>${new Date(collection.start_time).toLocaleTimeString()} - ${new Date(collection.end_time).toLocaleTimeString()}</td>
                     <td>${collection.driver_id || 'N/A'}</td>
                     <td><span class="status ${collection.status.toLowerCase().replace(' ', '-')}">${collection.status}</span></td>
-                    <td><button class="btn btn-primary" onclick="openActiveCollections(${collection.collection_id})">VIEW</button></td>
+                    <td><button class="btn btn-primary" onclick="window.location.href='<?php echo URLROOT; ?>/collection/details/' + ${collection.collection_id}">VIEW</button></td>
                 `;
                 tbody.appendChild(row);
             });
