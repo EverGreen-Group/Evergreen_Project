@@ -64,7 +64,9 @@ require APPROOT . '/views/inc/components/topnavbar.php';
                                 <?php 
                                 // Check if the schedule is today and if the current time is past the start time
                                 if ($schedule->is_today == 1 && $currentTime >= $startTime): ?>
-                                    <a href="<?= URLROOT ?>/vehicledriver/scheduleDetails/<?= htmlspecialchars($schedule->schedule_id) ?>" class="action-button">View Details</a>
+                                    <form action="<?php echo URLROOT; ?>/vehicledriver/createCollection/<?php echo htmlspecialchars($schedule->schedule_id); ?>" method="POST">
+                                        <button type="submit" class="btn-primary">Start Collection</button>
+                                    </form>
                                 <?php else: ?>
                                     <button class="action-button" disabled>Not Available</button>
                                 <?php endif; ?>

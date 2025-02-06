@@ -36,6 +36,14 @@ class VehicleDriver extends controller {
         }
     
         $driverId = $_SESSION['driver_id'];
+
+        $collectionId = $this->collectionModel->checkCollectionExists($driverId);
+
+        if ($collectionId) {
+            // Redirect to the collection details page if an ongoing collection exists
+            header('Location: ' . URLROOT . '/vehicledriver/collection/' . $collectionId);
+            exit();
+        }
         
         try {
             // Get all schedules
@@ -52,6 +60,8 @@ class VehicleDriver extends controller {
                     $upcomingSchedules[] = $schedule;
                 }
             }
+
+
             
             // Get driver details (assuming you have a driver model)
             // $driverDetails = $this->driverModel->getDriverById($driverId);
@@ -721,11 +731,9 @@ class VehicleDriver extends controller {
             $collectionId = $this->collectionModel->createCollection($scheduleId);
 
             if ($collectionId) {
-                flash('schedule_message', 'Collection created successfully. Awaiting vehicle manager approval.', 'alert alert-success');
-                redirect('vehicledriver/scheduleDetails/' . $scheduleId);
+                redirect('vehicledriver/collection/' . $collectionId);
             } else {
-                flash('schedule_message', 'Failed to create collection', 'alert alert-danger');
-                redirect('vehicledriver/scheduleDetails/' . $scheduleId);
+                redirect('vehicledriver/');
             }
         } else {
             // If not a POST request, show the form or redirect
