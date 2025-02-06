@@ -504,6 +504,7 @@ function toggleCard(card) {
             alert("Failed to confirm addition.");
         }
     }
+    
 
     // Polling every 5 seconds
     setInterval(fetchBagDetails, 5000);
