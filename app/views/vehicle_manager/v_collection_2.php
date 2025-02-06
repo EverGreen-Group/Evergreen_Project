@@ -21,7 +21,7 @@
 <main>
     <div class="head-title">
         <div class="left">
-            <h1>Collection #23</h1>
+            <h1><?php echo "Details for Collection #" . $collectionDetails->collection_id ?></h1>
         </div>
 
 
@@ -55,6 +55,13 @@
             </span>
         </li>
     </ul>
+
+    <?php
+    // Check if latitude and longitude are not null and the collection status is either 'In Progress' or 'Pending'
+    if (!is_null($data['vehicleDetails']->latitude) && 
+        !is_null($data['vehicleDetails']->longitude && 
+        ($collectionDetails->status === 'In Progress' || $collectionDetails->status === 'Pending'))): 
+    ?>
 
     <!-- Map Section -->
     <div class="table-data">
@@ -145,6 +152,14 @@
         });
     }
     </script>
+
+    <?php else: ?>
+        <div class="table-data">
+            <div class="order">
+            <p>Driver location is not available or the collection has ended.</p>
+            </div>
+        </div>
+    <?php endif; ?>
 
 
 

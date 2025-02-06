@@ -2,6 +2,9 @@
 require_once APPROOT . '/models/M_Fertilizer_Order.php';
 require_once APPROOT . '/models/M_Supplier.php';
 require_once APPROOT . '/models/M_Route.php';
+require_once APPROOT . '/models/M_Collection.php';
+require_once APPROOT . '/models/M_CollectionSchedule.php';
+require_once APPROOT . '/models/M_Bag.php';
 require_once '../app/helpers/auth_middleware.php';
 
 if (session_status() == PHP_SESSION_NONE) {
@@ -13,7 +16,10 @@ class Supplier extends Controller {
     private $fertilizerOrderModel;
     private $supplierModel;
     private $routeModel;
+    private $collectionModel;
 
+    private $scheduleModel;
+    private $bagModel;
     public function __construct() {
         // Check if the user is logged in
         requireAuth();
@@ -29,11 +35,68 @@ class Supplier extends Controller {
         $this->fertilizerOrderModel = new M_Fertilizer_Order();
         $this->supplierModel = new M_Supplier();
         $this->routeModel = new M_Route();
+        $this->collectionModel= new M_Collection();
+        $this->scheduleModel= new M_CollectionSchedule();
+        $this->bagModel = new M_Bag();
+        $this->supplierDetails = $this->supplierModel->getSupplierDetailsByUserId($_SESSION['user_id']);
+        $_SESSION['supplier_id'] = $this->supplierDetails->supplier_id;
     }
 
     
     public function index() {
-        $data = [];
+
+        $supplierId = $_SESSION['supplier_id'];
+
+        $collectionId = $this->collectionModel->checkCollectionExistsUsingSupplierId($supplierId);
+
+        try {
+            // Get all schedules
+            $allSchedules = $this->scheduleModel->getUpcomingSchedulesBySupplierId($supplierId);
+            
+            // Organize schedules by day
+            $todaySchedules = [];
+            $upcomingSchedules = [];
+            
+            foreach ($allSchedules as $schedule) {
+                if ($schedule->is_today) {
+                    $todaySchedules[] = $schedule;
+                } else {
+                    $upcomingSchedules[] = $schedule;
+                }
+            }
+
+
+            
+            // Get driver details (assuming you have a driver model)
+            // $driverDetails = $this->driverModel->getDriverById($driverId);
+            
+            $data = [
+                'todaySchedules' => $todaySchedules,
+                'upcomingSchedules' => $upcomingSchedules,
+                'currentWeek' => date('W'),
+                'currentDay' => date('l'),
+                'lastUpdated' => date('Y-m-d H:i:s'),
+                'message' => '',
+                'error' => '',
+                'collectionId' => $collectionId
+            ];
+            
+            if (empty($todaySchedules) && empty($upcomingSchedules)) {
+                $data['message'] = 'No upcoming schedules found.';
+            }
+            
+        } catch (Exception $e) {
+            // Log the error (assuming you have a logging system)
+            error_log($e->getMessage());
+            
+            $data = [
+                'todaySchedules' => [],
+                'upcomingSchedules' => [],
+                'message' => '',
+                'error' => 'An error occurred while fetching schedules. Please try again later.',
+                'collectionId' => $collectionId
+            ];
+        }
         $this->view('supplier/v_supply_dashboard', $data);
     }
 
@@ -430,6 +493,18 @@ class Supplier extends Controller {
         $this->view('supplier/v_schedule_details', $data);
     }
 
+    public function collection($collectionId) {
+
+        $collectionDetails = $this->collectionModel->getCollectionDetails($collectionId);
+
+        $data = [
+            'collectionId' => $collectionId,
+            'collectionDetails' => $collectionDetails
+        ];
+
+        $this->view('supplier/v_collection', $data);
+    }
+
     public function getUnallocatedSuppliersByDay($day) {
         // Ensure the day parameter is valid
         if (!in_array($day, ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'])) {
@@ -442,6 +517,16 @@ class Supplier extends Controller {
     
         // Return the response
         echo json_encode(['success' => true, 'data' => $suppliers]);
+    }
+
+    public function getBagDetails($collectionId) {
+        // Fetch bag details from the model using the collection ID
+        $bagDetails = $this->bagModel->getBagsByCollectionId($collectionId);
+
+        // Return the bag details as JSON
+        header('Content-Type: application/json');
+        echo json_encode($bagDetails);
+        exit();
     }
 }
 ?>

@@ -3,6 +3,7 @@
 <?php require APPROOT . '/views/inc/components/topnavbar.php'; ?>
 
 <main>
+
     <div class="head-title">
         <div class="left">
             <h1>Collection Details</h1>
@@ -45,23 +46,23 @@
             <div class="card-content">
                 <div class="info-row">
                     <span class="label">Vehicle Number:</span>
-                    <span class="value">CP-2030</span>
+                    <span class="value"><?php echo $collectionDetails->license_plate; ?></span>
                 </div>
                 <div class="info-row">
                     <span class="label">Vehicle Type:</span>
-                    <span class="value">Lorry</span>
+                    <span class="value"><?php echo $collectionDetails->vehicle_type; ?></span>
                 </div>
                 <div class="info-row">
                     <span class="label">Status:</span>
-                    <span class="value"><?php echo $status; ?></span>
+                    <span class="value"><?php echo $collectionDetails->collection_status; ?></span>
                 </div>
                 <div class="info-row">
-                    <span class="label">Total Quantity:</span>
-                    <span class="value"><?php echo $totalQuantity; ?></span>
+                    <span class="label">Driver:</span>
+                    <span class="value"><?php echo $collectionDetails->first_name . ' ' . $collectionDetails->last_name; ?></span>
                 </div>
                 <div class="info-row">
-                    <span class="label">Collected Time:</span>
-                    <span class="value"><?php echo $collectionTime; ?></span>
+                    <span class="label">Route Name:</span>
+                    <span class="value"><?php echo $collectionDetails->route_name; ?></span>
                 </div>
             </div>
         </div>
@@ -94,34 +95,6 @@
 
             foreach ($bags as $bag) {
                 ?>
-                <div class="detail-card" onclick="toggleCard(this)">
-                    <div class="card-header">
-                        <i class='bx bx-package'></i>
-                        <h3>Bag ID: <?php echo $bag['bag_id']; ?></h3>
-                    </div>
-                    <div class="card-content">
-                        <div class="info-row">
-                            <span class="label">Actual Weight (kg):</span>
-                            <span class="value"><?php echo $bag['actual_weight_kg']; ?></span>
-                        </div>
-                        <div class="info-row">
-                            <span class="label">Leaf Age:</span>
-                            <span class="value"><?php echo $bag['leaf_age']; ?></span>
-                        </div>
-                        <div class="info-row">
-                            <span class="label">Moisture Level:</span>
-                            <span class="value"><?php echo $bag['moisture_level']; ?></span>
-                        </div>
-                        <div class="info-row">
-                            <span class="label">Deduction Notes:</span>
-                            <span class="value"><?php echo $bag['deduction_notes']; ?></span>
-                        </div>
-                        <div class="info-row">
-                            <span class="label">Leaf Type ID:</span>
-                            <span class="value"><?php echo $bag['leaf_type_id']; ?></span>
-                        </div>
-                    </div>
-                </div>
                 <?php
             }
             ?>
@@ -130,9 +103,9 @@
 
     <!-- After map container -->
     <div class="confirm-container">
-    <button class="confirm-button" disabled>
+    <button class="confirm-button" onclick="confirmAddition()">
         <i class='bx bx-check'></i>
-        <span>Confirm Collection</span>
+        <span>Approve Bags</span>
     </button>
     </div>
 </main>
@@ -440,4 +413,99 @@ function toggleCard(card) {
     const content = card.querySelector('.card-content');
     content.style.display = content.style.display === 'none' ? 'block' : 'none';
 }
+</script>
+
+<script>
+    function fetchBagDetails() {
+        const collectionId = <?php echo $collectionId ?>;
+        const supplierId = <?php echo $_SESSION['supplier_id'] ?>;
+
+        fetch('<?php echo URLROOT; ?>/Bag/getSupplierBagDetails/' + collectionId + '/' + supplierId)
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+                return response.json();
+            })
+            .then(data => {
+                // Clear existing bag details
+                const bagDetailsSection = document.querySelector('.bag-details-section');
+                bagDetailsSection.innerHTML = ''; // Clear previous content
+                
+                // Check if there are any bags
+                if (data.length > 0) {
+                    data.forEach(bag => {
+                        // Create a new detail card for each bag
+                        const bagCard = `
+                            <div class="detail-card" onclick="toggleCard(this)">
+                                <div class="card-header">
+                                    <i class='bx bx-package'></i>
+                                    <h3>Bag ID: ${bag.bag_id}</h3>
+                                </div>
+                                <div class="card-content">
+                                    <div class="info-row">
+                                        <span class="label">Actual Weight (kg):</span>
+                                        <span class="value">${bag.actual_weight_kg}</span>
+                                    </div>
+                                    <div class="info-row">
+                                        <span class="label">Leaf Age:</span>
+                                        <span class="value">${bag.leaf_age}</span>
+                                    </div>
+                                    <div class="info-row">
+                                        <span class="label">Moisture Level:</span>
+                                        <span class="value">${bag.moisture_level}</span>
+                                    </div>
+                                    <div class="info-row">
+                                        <span class="label">Deduction Notes:</span>
+                                        <span class="value">${bag.deduction_notes}</span>
+                                    </div>
+                                    <div class="info-row">
+                                        <span class="label">Leaf Type ID:</span>
+                                        <span class="value">${bag.leaf_type_id}</span>
+                                    </div>
+                                </div>
+                            </div>
+                        `;
+                        bagDetailsSection.insertAdjacentHTML('beforeend', bagCard);
+                    });
+                } else {
+                    bagDetailsSection.innerHTML = '<p>No bags found.</p>';
+                }
+            })
+            .catch(error => {
+                console.error('Error fetching bag details:', error);
+            });
+    }
+
+
+    async function confirmAddition() {
+        const collectionId = <?= $collectionId ?>;
+        
+        try {
+            const response = await fetch(`<?php echo URLROOT; ?>/Bag/confirmAddition`, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "X-Requested-With": "XMLHttpRequest",
+                },
+                body: JSON.stringify({ collection_id: collectionId }),
+            });
+
+            const result = await response.json();
+
+            if (result.success) {
+                alert("Bags approved successfully.");
+                // Optionally, you can refresh the page or update the UI accordingly
+            } else {
+                alert(result.message || "Failed to approve bags.");
+            }
+        } catch (error) {
+            console.error("Error confirming addition:", error);
+            alert("Failed to confirm addition.");
+        }
+    }
+    
+
+    // Polling every 5 seconds
+    setInterval(fetchBagDetails, 5000);
 </script>

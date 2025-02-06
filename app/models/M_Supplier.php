@@ -81,4 +81,18 @@ class M_Supplier {
         return $result->count > 0;
 
     }
+
+    public function getSupplierDetailsByUserId($userId) {
+        $sql = "
+            SELECT s.*, u.first_name, u.last_name, u.email 
+            FROM suppliers s
+            JOIN users u ON s.user_id = u.user_id
+            WHERE s.user_id = :user_id AND s.is_deleted = 0
+        ";
+        $this->db->query($sql);
+        $this->db->bind(':user_id', $userId);
+        $result = $this->db->single(); // Fetch a single record
+        return $result; // Return the supplier details along with user info
+    }
+
 } 

@@ -451,7 +451,7 @@ class M_Collection {
             $this->db->execute();
 
             $this->db->commit(); // Commit the transaction
-            return true; // Return true if everything is successful
+            return $collectionId; // Return true if everything is successful
         } catch (Exception $e) {
             error_log('Error in createCollection: ' . $e->getMessage());
             $this->db->rollBack();
@@ -659,13 +659,16 @@ class M_Collection {
                 s.shift_id,
                 s.start_time as shift_start,
                 s.end_time as shift_end,
-                s.shift_name
+                s.shift_name,
+
+                v.*
             FROM collections c
             JOIN collection_schedules cs ON c.schedule_id = cs.schedule_id
             JOIN routes r ON cs.route_id = r.route_id
             JOIN drivers d ON cs.driver_id = d.driver_id
             JOIN users u ON d.user_id = u.user_id
             JOIN collection_shifts s ON cs.shift_id = s.shift_id
+            JOIN vehicles v ON r.vehicle_id = v.vehicle_id
             WHERE c.collection_id = :id
             AND cs.is_deleted = 0
             AND cs.is_active = 1
@@ -754,16 +757,7 @@ class M_Collection {
         }
     }
 
-    public function getBagsByCollectionId($collectionId) {
-        $this->db->query('
-            SELECT *
-            FROM bag_usage_history
-            WHERE collection_id = :collection_id
-        ');
 
-        $this->db->bind(':collection_id', $collectionId);
-        return $this->db->resultSet();  // This will return an array of bags
-    }
 
     public function getVehicleIdFromCollection($collectionId) {
         $this->db->query('
@@ -866,6 +860,20 @@ class M_Collection {
             // Begin transaction
             $this->db->beginTransaction();
 
+            // Check if the supplier is approved
+            $this->db->query('SELECT supplier_approved FROM collection_supplier_records WHERE supplier_id = :supplier_id AND collection_id = :collection_id');
+            $this->db->bind(':supplier_id', $data->supplier_id);
+            $this->db->bind(':collection_id', $data->collection_id);
+            $result = $this->db->single();
+
+            // If supplier is not approved, return an error message
+            if (!$result || $result->supplier_approved != 1) {
+                return [
+                    'success' => false,
+                    'message' => 'Supplier is not approved. Cannot finalize collection.'
+                ];
+            }
+
             // Get total weight from assigned bags
             $this->db->query('SELECT COALESCE(SUM(actual_weight_kg), 0) as total_weight 
                 FROM bag_usage_history 
@@ -933,10 +941,11 @@ class M_Collection {
 
     public function getAssignedBags($supplierId) {
         try {
-            $this->db->query('SELECT 
+            $this->db->query('
+                SELECT 
                 buh.bag_id,
                 buh.actual_weight_kg,
-                buh.leaf_type,
+                buh.leaf_type_id,
                 buh.leaf_age,
                 buh.moisture_level,
                 COALESCE(csr.status, "Pending") as status
@@ -944,7 +953,8 @@ class M_Collection {
                 LEFT JOIN collection_supplier_records csr ON buh.collection_id = csr.record_id
                 WHERE buh.supplier_id = :supplier_id
                 AND buh.action = "added"
-                ORDER BY buh.timestamp DESC');
+                ORDER BY buh.timestamp DESC
+                ');
             
             $this->db->bind(':supplier_id', $supplierId);
             $bags = $this->db->resultSet();
@@ -1056,6 +1066,24 @@ class M_Collection {
         '); // Limit to 1 to get the first matching collection
 
         $this->db->bind(':driver_id', $driverId);
+        $result = $this->db->single();
+
+        return $result ? $result->collection_id : null; // Return collection_id or null if not found
+    }
+
+
+    public function checkCollectionExistsUsingSupplierId($supplierId) {
+        // Check for collections that are either "Pending" or "In Progress" for the given driver
+        $this->db->query('
+            SELECT c.collection_id 
+            FROM collections c
+            JOIN collection_supplier_records csr ON csr.collection_id = c.collection_id
+            WHERE csr.supplier_id = :supplier_id
+            AND c.status IN ("Pending", "In Progress") 
+            LIMIT 1
+        '); // Limit to 1 to get the first matching collection
+
+        $this->db->bind(':supplier_id', $supplierId);
         $result = $this->db->single();
 
         return $result ? $result->collection_id : null; // Return collection_id or null if not found
