@@ -326,26 +326,26 @@
             <tr>
                 <th>Supplier ID</th>
                 <th>Name</th>
-                <th>Location</th>
+                <th>Average Collection</th>
                 <th>Preferred Day</th>
+                <th>Location</th>
             </tr>
         </thead>
         <tbody>
             <?php foreach ($data['unassignedSuppliersList'] as $supplier): ?>
                 <tr>
                     <td><?php echo htmlspecialchars($supplier->supplier_id); ?></td>
-                    <td><?php echo htmlspecialchars($supplier->first_name); ?></td>
-                    <td>
-                        <a href="#" class="location-link" 
-                            data-coordinates="<?php echo htmlspecialchars($supplier->coordinates); ?>"
-                            data-name="<?php echo htmlspecialchars($supplier->supplier_name); ?>">
-                            <?php echo htmlspecialchars($supplier->coordinates); ?>
-                        </a>
-                    </td>
+                    <td><?php echo htmlspecialchars($supplier->full_name); ?></td>
+                    <td><?php echo htmlspecialchars($supplier->average_collection); ?></td>
                     <td>
                         <span class="status completed">
-                            <?php echo $supplier->preferred_day; ?>
+                            <?php echo htmlspecialchars($supplier->preferred_day); ?>
                         </span>
+                    </td>
+                    <td>
+                        <a href="https://www.google.com/maps?q=<?php echo htmlspecialchars($supplier->latitude) . ',' . htmlspecialchars($supplier->longitude); ?>" target="_blank" class="location-link">
+                            <i class="bx bx-map" style="font-size: 24px; color: #007bff;"></i> <!-- Box icon for location -->
+                        </a>
                     </td>
                 </tr>
             <?php endforeach; ?>

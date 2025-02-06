@@ -16,6 +16,11 @@ class M_Route {
         return $this->db->resultset();
     }
 
+    public function getAllUndeletedRoutes() {
+        $this->db->query("SELECT * FROM routes r WHERE r.is_deleted = 0");
+        return $this->db->resultset();
+    }
+
     public function getTotalRoutes() {
         $sql = "SELECT COUNT(*) as total FROM routes WHERE is_deleted = 0";
         $stmt = $this->db->query($sql);
@@ -128,9 +133,11 @@ class M_Route {
             FROM suppliers s
             JOIN users u ON s.user_id = u.user_id
             LEFT JOIN route_suppliers rs ON s.supplier_id = rs.supplier_id
-            WHERE rs.supplier_id IS NULL 
+            LEFT JOIN routes r ON rs.route_id = r.route_id
+            WHERE (rs.supplier_id IS NULL OR r.route_id IS NULL OR r.is_deleted = 1)  -- Ensuring unallocated suppliers are included
             AND s.is_active = 1
-            AND s.is_deleted = 0
+            AND s.is_deleted = 0;
+
         ");
         
         $result = $this->db->resultSet();
@@ -253,12 +260,12 @@ class M_Route {
         
         try {
             // Delete from route_suppliers
-            $this->db->query('DELETE FROM route_suppliers WHERE route_id = :route_id');
-            $this->db->bind(':route_id', $route_id);
-            $this->db->execute();
+            // $this->db->query('DELETE FROM route_suppliers WHERE route_id = :route_id');
+            // $this->db->bind(':route_id', $route_id);
+            // $this->db->execute();
 
-            // Delete from routes
-            $this->db->query('DELETE FROM routes WHERE route_id = :route_id');
+            // Soft Delete from routes
+            $this->db->query('UPDATE routes SET is_deleted = 1 WHERE route_id = :route_id');
             $this->db->bind(':route_id', $route_id);
             $this->db->execute();
 

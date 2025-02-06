@@ -357,7 +357,7 @@ class VehicleManager extends Controller {
     }
 
     public function route() {
-        $allRoutes = $this->routeModel->getAllRoutes();
+        $allRoutes = $this->routeModel->getAllUndeletedRoutes();
         $totalRoutes = $this->routeModel->getTotalRoutes();
         $totalActive = $this->routeModel->getTotalActiveRoutes();
         $totalInactive = $this->routeModel->getTotalInactiveRoutes();
