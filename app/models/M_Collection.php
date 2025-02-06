@@ -451,7 +451,7 @@ class M_Collection {
             $this->db->execute();
 
             $this->db->commit(); // Commit the transaction
-            return true; // Return true if everything is successful
+            return $collectionId; // Return true if everything is successful
         } catch (Exception $e) {
             error_log('Error in createCollection: ' . $e->getMessage());
             $this->db->rollBack();
@@ -936,10 +936,11 @@ class M_Collection {
 
     public function getAssignedBags($supplierId) {
         try {
-            $this->db->query('SELECT 
+            $this->db->query('
+                SELECT 
                 buh.bag_id,
                 buh.actual_weight_kg,
-                buh.leaf_type,
+                buh.leaf_type_id,
                 buh.leaf_age,
                 buh.moisture_level,
                 COALESCE(csr.status, "Pending") as status
@@ -947,7 +948,8 @@ class M_Collection {
                 LEFT JOIN collection_supplier_records csr ON buh.collection_id = csr.record_id
                 WHERE buh.supplier_id = :supplier_id
                 AND buh.action = "added"
-                ORDER BY buh.timestamp DESC');
+                ORDER BY buh.timestamp DESC
+                ');
             
             $this->db->bind(':supplier_id', $supplierId);
             $bags = $this->db->resultSet();

@@ -76,6 +76,43 @@ class Collection extends Controller{
 
         $this->view('vehicle_manager/v_collection_2', $data);
     }
+
+    public function updateBag() {
+        // Check if the request is an AJAX request
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            // Get the raw POST data
+            $data = json_decode(file_get_contents("php://input"), true);
+
+            // Validate the incoming data
+            if (empty($data['bag_id']) || empty($data['actual_weight_kg'])) {
+                echo json_encode(['success' => false, 'message' => 'Bag ID and weight are required.']);
+                return;
+            }
+
+            // Prepare the data for updating
+            $bagId = $data['bag_id'];
+            $actualWeight = $data['actual_weight_kg'];
+            $leafTypeId = $data['leaf_type_id'];
+            $leafAge = $data['leaf_age'];
+            $moistureLevel = $data['moisture_level'];
+            $notes = $data['notes'];
+            $supplierId = $data['supplier_id'];
+            $collectionId = $data['collection_id'];
+
+
+            // Call the model method to update the bag
+            $updateResult = $this->bagModel->updateBag($bagId, $actualWeight, $leafTypeId, $leafAge, $moistureLevel, $notes, $supplierId, $collectionId);
+
+            if ($updateResult) {
+                echo json_encode(['success' => true, 'message' => 'Bag updated successfully.']);
+            } else {
+                echo json_encode(['success' => false, 'message' => 'Failed to update bag.']);
+            }
+        } else {
+            // Handle non-POST requests
+            echo json_encode(['success' => false, 'message' => 'Invalid request method.']);
+        }
+    }
 }
 
 
