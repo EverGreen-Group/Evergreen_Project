@@ -130,6 +130,12 @@ class M_CollectionSchedule {
                 AND exception_date = CURDATE()
                 AND exception_type = 'SKIP'
             )
+            AND NOT EXISTS (
+                SELECT 1 FROM collections 
+                WHERE schedule_id = cs.schedule_id 
+                AND DATE(end_time) = CURDATE() 
+                AND status = 'Completed'
+            )
             ORDER BY 
                 FIELD(schedule_status, 'today', 'upcoming', 'upcoming_next_week'),
                 FIELD(cs.day, 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'),
