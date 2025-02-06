@@ -3,6 +3,8 @@
 <?php require APPROOT . '/views/inc/components/topnavbar.php'; ?>
 
 <main>
+
+<?php print_r($data); ?>
     <div class="head-title">
         <div class="left">
             <h1>Collection Details</h1>
@@ -45,23 +47,23 @@
             <div class="card-content">
                 <div class="info-row">
                     <span class="label">Vehicle Number:</span>
-                    <span class="value">CP-2030</span>
+                    <span class="value"><?php echo $collectionDetails->license_plate; ?></span>
                 </div>
                 <div class="info-row">
                     <span class="label">Vehicle Type:</span>
-                    <span class="value">Lorry</span>
+                    <span class="value"><?php echo $collectionDetails->vehicle_type; ?></span>
                 </div>
                 <div class="info-row">
                     <span class="label">Status:</span>
-                    <span class="value"><?php echo $status; ?></span>
+                    <span class="value"><?php echo $collectionDetails->collection_status; ?></span>
                 </div>
                 <div class="info-row">
-                    <span class="label">Total Quantity:</span>
-                    <span class="value"><?php echo $totalQuantity; ?></span>
+                    <span class="label">Driver:</span>
+                    <span class="value"><?php echo $collectionDetails->first_name . ' ' . $collectionDetails->last_name; ?></span>
                 </div>
                 <div class="info-row">
-                    <span class="label">Collected Time:</span>
-                    <span class="value"><?php echo $collectionTime; ?></span>
+                    <span class="label">Route Name:</span>
+                    <span class="value"><?php echo $collectionDetails->route_name; ?></span>
                 </div>
             </div>
         </div>

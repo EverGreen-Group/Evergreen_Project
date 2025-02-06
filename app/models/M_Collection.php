@@ -659,13 +659,16 @@ class M_Collection {
                 s.shift_id,
                 s.start_time as shift_start,
                 s.end_time as shift_end,
-                s.shift_name
+                s.shift_name,
+
+                v.*
             FROM collections c
             JOIN collection_schedules cs ON c.schedule_id = cs.schedule_id
             JOIN routes r ON cs.route_id = r.route_id
             JOIN drivers d ON cs.driver_id = d.driver_id
             JOIN users u ON d.user_id = u.user_id
             JOIN collection_shifts s ON cs.shift_id = s.shift_id
+            JOIN vehicles v ON r.vehicle_id = v.vehicle_id
             WHERE c.collection_id = :id
             AND cs.is_deleted = 0
             AND cs.is_active = 1
@@ -1056,6 +1059,24 @@ class M_Collection {
         '); // Limit to 1 to get the first matching collection
 
         $this->db->bind(':driver_id', $driverId);
+        $result = $this->db->single();
+
+        return $result ? $result->collection_id : null; // Return collection_id or null if not found
+    }
+
+
+    public function checkCollectionExistsUsingSupplierId($supplierId) {
+        // Check for collections that are either "Pending" or "In Progress" for the given driver
+        $this->db->query('
+            SELECT c.collection_id 
+            FROM collections c
+            JOIN collection_supplier_records csr ON csr.collection_id = c.collection_id
+            WHERE csr.supplier_id = :supplier_id
+            AND c.status IN ("Pending", "In Progress") 
+            LIMIT 1
+        '); // Limit to 1 to get the first matching collection
+
+        $this->db->bind(':supplier_id', $supplierId);
         $result = $this->db->single();
 
         return $result ? $result->collection_id : null; // Return collection_id or null if not found
