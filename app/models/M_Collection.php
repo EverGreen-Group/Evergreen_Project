@@ -757,16 +757,7 @@ class M_Collection {
         }
     }
 
-    public function getBagsByCollectionId($collectionId) {
-        $this->db->query('
-            SELECT *
-            FROM bag_usage_history
-            WHERE collection_id = :collection_id
-        ');
 
-        $this->db->bind(':collection_id', $collectionId);
-        return $this->db->resultSet();
-    }
 
     public function getVehicleIdFromCollection($collectionId) {
         $this->db->query('
@@ -868,6 +859,20 @@ class M_Collection {
         try {
             // Begin transaction
             $this->db->beginTransaction();
+
+            // Check if the supplier is approved
+            $this->db->query('SELECT supplier_approved FROM collection_supplier_records WHERE supplier_id = :supplier_id AND collection_id = :collection_id');
+            $this->db->bind(':supplier_id', $data->supplier_id);
+            $this->db->bind(':collection_id', $data->collection_id);
+            $result = $this->db->single();
+
+            // If supplier is not approved, return an error message
+            if (!$result || $result->supplier_approved != 1) {
+                return [
+                    'success' => false,
+                    'message' => 'Supplier is not approved. Cannot finalize collection.'
+                ];
+            }
 
             // Get total weight from assigned bags
             $this->db->query('SELECT COALESCE(SUM(actual_weight_kg), 0) as total_weight 

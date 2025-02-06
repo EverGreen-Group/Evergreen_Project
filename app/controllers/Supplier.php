@@ -4,6 +4,7 @@ require_once APPROOT . '/models/M_Supplier.php';
 require_once APPROOT . '/models/M_Route.php';
 require_once APPROOT . '/models/M_Collection.php';
 require_once APPROOT . '/models/M_CollectionSchedule.php';
+require_once APPROOT . '/models/M_Bag.php';
 require_once '../app/helpers/auth_middleware.php';
 
 if (session_status() == PHP_SESSION_NONE) {
@@ -18,7 +19,7 @@ class Supplier extends Controller {
     private $collectionModel;
 
     private $scheduleModel;
-
+    private $bagModel;
     public function __construct() {
         // Check if the user is logged in
         requireAuth();
@@ -36,6 +37,7 @@ class Supplier extends Controller {
         $this->routeModel = new M_Route();
         $this->collectionModel= new M_Collection();
         $this->scheduleModel= new M_CollectionSchedule();
+        $this->bagModel = new M_Bag();
         $this->supplierDetails = $this->supplierModel->getSupplierDetailsByUserId($_SESSION['user_id']);
         $_SESSION['supplier_id'] = $this->supplierDetails->supplier_id;
     }
@@ -519,7 +521,7 @@ class Supplier extends Controller {
 
     public function getBagDetails($collectionId) {
         // Fetch bag details from the model using the collection ID
-        $bagDetails = $this->collectionModel->getBagsByCollectionId($collectionId);
+        $bagDetails = $this->bagModel->getBagsByCollectionId($collectionId);
 
         // Return the bag details as JSON
         header('Content-Type: application/json');

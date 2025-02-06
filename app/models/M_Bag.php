@@ -71,11 +71,26 @@ class M_Bag {
 
             return $deleteResult; // Return the result of the delete operation
         } catch (Exception $e) {
-            // Rollback the transaction in case of an error
+            // Rollback the transaction in cagetBagsByCollectionSupplierse of an error
             $this->db->rollBack();
             error_log("Error deleting bag: " . $e->getMessage());
             return false; // Return false on failure
         }
+    }
+
+
+    public function getBagsByCollectionSupplier($collectionId, $supplierId) {
+        $this->db->query('
+            SELECT *
+            FROM bag_usage_history
+            WHERE collection_id = :collection_id
+            AND supplier_id = :supplier_id
+        ');
+
+
+        $this->db->bind(':collection_id', $collectionId);
+        $this->db->bind(':supplier_id', $supplierId);
+        return $this->db->resultSet();
     }
 
 

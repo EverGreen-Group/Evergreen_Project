@@ -418,8 +418,9 @@ function toggleCard(card) {
 <script>
     function fetchBagDetails() {
         const collectionId = <?php echo $collectionId ?>;
+        const supplierId = <?php echo $_SESSION['supplier_id'] ?>;
 
-        fetch('<?php echo URLROOT; ?>/Supplier/getBagDetails/' + collectionId)
+        fetch('<?php echo URLROOT; ?>/Bag/getSupplierBagDetails/' + collectionId + '/' + supplierId)
             .then(response => {
                 if (!response.ok) {
                     throw new Error('Network response was not ok');

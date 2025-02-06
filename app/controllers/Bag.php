@@ -96,6 +96,16 @@ class Bag extends Controller{
         }
     }
 
+    public function getSupplierBagDetails($collectionId,$supplierId) {
+        // Fetch bag details from the model using the collection ID
+        $bagDetails = $this->bagModel->getBagsByCollectionSupplier($collectionId, $supplierId);
+
+        // Return the bag details as JSON
+        header('Content-Type: application/json');
+        echo json_encode($bagDetails);
+        exit();
+    }
+
 
 }
 
