@@ -306,6 +306,8 @@ class VehicleDriver extends controller {
         // Get all suppliers for this collection
         $collectionSuppliers = $this->collectionScheduleModel->getCollectionSupplierRecords($collectionId);
 
+        $collectionFertilizer = $this->collectionModel->getCollectionItems($collectionId);
+
         $leafTypesResult = $this->collectionModel->getCollectionTeaLeafTypes();
         $leafTypes = $leafTypesResult['success'] ? $leafTypesResult['leafTypes'] : [];
 
@@ -368,7 +370,8 @@ class VehicleDriver extends controller {
             'collection' => $collection,
             'vehicleLocation' => $vehicleLocation,
             'currentSupplier' => $currentSupplier,
-            'leafTypes' => $leafTypes
+            'leafTypes' => $leafTypes,
+            'fertilizers' => $collectionFertilizer
         ];
 
         $this->view('vehicle_driver/v_collection_route', $data);
@@ -720,6 +723,19 @@ class VehicleDriver extends controller {
         // }
 
         $result = $this->collectionModel->getAssignedBags($supplierId);
+        
+        header('Content-Type: application/json');
+        echo json_encode($result);
+    }
+
+
+    public function getFertilizerItems($supplierId) {
+        // if (!$this->isAjaxRequest()) {
+        //     redirect('pages/error');
+        //     return;
+        // }
+    
+        $result = $this->collectionModel->getFertilizerItems($supplierId);
         
         header('Content-Type: application/json');
         echo json_encode($result);
