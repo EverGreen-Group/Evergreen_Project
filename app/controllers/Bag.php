@@ -107,6 +107,37 @@ class Bag extends Controller{
     }
 
 
+    // WHEN THE SUPPLIER PRESSES CONFIRM ADDITION WHICH MEANS HE HAS CONFIRMED THE DRIVERS ADDITION AND THE DRIVER CAN NOW FINALIZE THIS SUPPLIERS COLLECTION
+    public function confirmAddition() {
+        // Check if the request is a POST request
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            // Get the supplier ID from the session
+            $supplierId = $_SESSION['supplier_id'];
+    
+            // Get the JSON data from the request body
+            $data = json_decode(file_get_contents("php://input"), true);
+    
+            // Validate the incoming data
+            if (empty($data['collection_id'])) {
+                echo json_encode(['success' => false, 'message' => 'Collection ID is required.']);
+                return;
+            }
+    
+    
+            // Call the model method to update the supplier approval status
+            $result = $this->bagModel->approveSupplierBags($supplierId, $data['collection_id']);
+    
+            if ($result) {
+                echo json_encode(['success' => true, 'message' => 'Supplier approval updated successfully.']);
+            } else {
+                echo json_encode(['success' => false, 'message' => 'Failed to update supplier approval.']);
+            }
+        } else {
+            echo json_encode(['success' => false, 'message' => 'Invalid request method.']);
+        }
+    }
+
+
 }
 
 

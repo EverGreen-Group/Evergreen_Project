@@ -103,9 +103,9 @@
 
     <!-- After map container -->
     <div class="confirm-container">
-    <button class="confirm-button" disabled>
+    <button class="confirm-button" onclick="confirmAddition()">
         <i class='bx bx-check'></i>
-        <span>Confirm Collection</span>
+        <span>Approve Bags</span>
     </button>
     </div>
 </main>
@@ -477,6 +477,34 @@ function toggleCard(card) {
             });
     }
 
+
+    async function confirmAddition() {
+        const collectionId = <?= $collectionId ?>;
+        
+        try {
+            const response = await fetch(`<?php echo URLROOT; ?>/Bag/confirmAddition`, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "X-Requested-With": "XMLHttpRequest",
+                },
+                body: JSON.stringify({ collection_id: collectionId }),
+            });
+
+            const result = await response.json();
+
+            if (result.success) {
+                alert("Bags approved successfully.");
+                // Optionally, you can refresh the page or update the UI accordingly
+            } else {
+                alert(result.message || "Failed to approve bags.");
+            }
+        } catch (error) {
+            console.error("Error confirming addition:", error);
+            alert("Failed to confirm addition.");
+        }
+    }
+
     // Polling every 5 seconds
-    setInterval(fetchBagDetails, 15000);
+    setInterval(fetchBagDetails, 5000);
 </script>

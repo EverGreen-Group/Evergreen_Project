@@ -94,4 +94,18 @@ class M_Bag {
     }
 
 
+    // CARE!!! THIS FUNCTION IS FOR SETTING THE SUPPLIER APPROVED TO 1 WHICH IS DONE BY THE SUPPLIER
+    public function approveSupplierBags($supplierId, $collectionId) {
+        // Prepare the SQL query to update supplier_approved
+        $this->db->query("UPDATE collection_supplier_records SET supplier_approved = 1 WHERE supplier_id = :supplier_id AND collection_id = :collection_id");
+    
+        // Bind the parameters
+        $this->db->bind(':supplier_id', $supplierId);
+        $this->db->bind(':collection_id', $collectionId);
+    
+        // Execute the query and return the result
+        return $this->db->execute(); // Returns true on success, false on failure
+    }
+
+
 } 
