@@ -529,8 +529,10 @@ class M_Collection {
         $this->db->query('SELECT cb.*, 
                           (SELECT buh.collection_id 
                            FROM bag_usage_history buh 
+                           JOIN collections c ON buh.collection_id = c.collection_id
                            WHERE buh.bag_id = cb.bag_id 
                            AND buh.action = "added" 
+                           AND c.status IN ("Pending", "In Progress", "Awaiting Inventory Addition")
                            AND NOT EXISTS (
                                SELECT 1 
                                FROM bag_usage_history buh2 
@@ -978,7 +980,25 @@ class M_Collection {
             $this->db->bind(':bags_used', $bagsUsed);
             $this->db->bind(':collection_id', $collectionId);
 
+            // Execute the update for the collections table
             if ($this->db->execute()) {
+                // Check if there are any fertilizer records for this collection
+                $this->db->query('SELECT COUNT(*) as count FROM collection_fertilizer_records WHERE collection_id = :collection_id');
+                $this->db->bind(':collection_id', $collectionId);
+                $fertilizerCount = $this->db->single()->count;
+
+                // Update the status of fertilizer items to "Delivered" if records exist
+                if ($fertilizerCount > 0) {
+                    $this->db->query('UPDATE collection_fertilizer_records SET status = "Delivered" WHERE collection_id = :collection_id');
+                    $this->db->bind(':collection_id', $collectionId);
+                    $this->db->execute(); // Execute the update for fertilizer items
+                }
+
+                // Update the status of fertilizer orders to "Delivered"
+                $this->db->query('UPDATE fertilizer_order_items SET status = "Delivered" WHERE item_id IN (SELECT item_id FROM collection_fertilizer_records WHERE collection_id = :collection_id)');
+                $this->db->bind(':collection_id', $collectionId);
+                $this->db->execute(); // Execute the update for fertilizer orders
+
                 return ['success' => true];
             } else {
                 return ['success' => false];
@@ -1041,5 +1061,22 @@ class M_Collection {
         return $result ? $result->collection_id : null; // Return collection_id or null if not found
     }
 
+
+    public function getCollectionItems($collectionId) {
+        $this->db->query("
+            SELECT *
+            FROM collection_fertilizer_records
+            WHERE collection_id = :collection_id
+        ");
+        
+        $this->db->bind(':collection_id', $collectionId);
+        return $this->db->resultSet();
+    }
+
+    public function getFertilizerItems($supplierId) {
+        $this->db->query('SELECT * FROM collection_fertilizer_records WHERE supplier_id = :supplier_id');
+        $this->db->bind(':supplier_id', $supplierId);
+        return $this->db->resultSet(); // Return the result set
+    }
 
 } 

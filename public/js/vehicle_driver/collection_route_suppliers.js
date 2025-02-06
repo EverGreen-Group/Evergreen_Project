@@ -104,6 +104,7 @@ function addCollection(supplierId) {
 
   // Check for existing assigned bags and update UI
   updateAssignedBagsList();
+  fetchAndDisplayFertilizerItems();
 
   // Show modal
   const modal = document.getElementById("addCollectionModal");
@@ -189,6 +190,7 @@ async function addBagToCollection() {
     if (data.success) {
       collectedBags.push(formData);
       updateAssignedBagsList();
+      fetchAndDisplayFertilizerItems();
       resetBagForm();
       showBagIdStep();
 
@@ -396,4 +398,44 @@ async function endCollection(collectionId) {
     console.error("Error ending collection:", error);
     alert("Failed to end collection.");
   }
+}
+
+function fetchAndDisplayFertilizerItems() {
+  const fertilizerItemList = document.getElementById("fertilizerItemList");
+
+  fetch(`${URLROOT}/vehicledriver/getFertilizerItems/${currentSupplierId}`, {
+    method: "GET",
+  })
+    .then((response) => response.json())
+    .then((data) => {
+      console.log("API Response:", data); // Debugging output
+
+      // FIX: Check if `data` is an array
+      if (Array.isArray(data) && data.length > 0) {
+        const itemsHtml = data
+          .map(
+            (item) => `
+              <div class="fertilizer-item">
+                  <span>Item ID: ${item.item_id}</span>
+                  <span class="fertilizer-item-info">
+                      Quantity: ${item.quantity}kg
+                  </span>
+              </div>
+          `
+          )
+          .join("");
+
+        fertilizerItemList.innerHTML = itemsHtml;
+      } else {
+        fertilizerItemList.innerHTML = "<p>No fertilizer items added yet.</p>";
+      }
+
+      // Show fertilizer items section
+      fertilizerItemList.style.display = "block";
+    })
+    .catch((error) => {
+      console.error("Error fetching fertilizer items:", error);
+      fertilizerItemList.innerHTML =
+        "<p>Error fetching fertilizer items. Please try again.</p>";
+    });
 }

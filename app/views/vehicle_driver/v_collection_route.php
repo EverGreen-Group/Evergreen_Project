@@ -12,7 +12,6 @@
 <script src="<?php echo URLROOT; ?>/public/js/vehicle_driver/collection_route_suppliers.js"></script>
 
 
-
 <div class="map-container" id="map"></div>
 
 
@@ -129,6 +128,17 @@
                 <div id="assignedBagsList"></div>
             </div>
         </div>
+
+        <!-- Fertilizer Order Section -->
+        <div id="fertilizerItemsSection" class="supplier-item"> <!-- Changed ID here -->
+            <div class="supplier-info">
+                <span class="supplier-name">Fertilizer Orders</span>
+                <div id="fertilizerItemList"></div>
+            </div>
+        </div>
+
+
+
 
         <!-- Step 1: Bag ID Input -->
         <div id="bagIdStep" class="collection-step supplier-item">
