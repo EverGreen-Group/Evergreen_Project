@@ -17,6 +17,83 @@
         </div>
     </div>
 
+    <!-- Collection Status Cards -->
+    <div class="info-cards">
+        <!-- Preferred Collection Card -->
+        <div class="card">
+            <div class="card-header">
+                <i class='bx bx-calendar'></i>
+                <h3>Next Collection</h3>
+            </div>
+            <div class="card-content">
+                <div class="info-item">
+                    <span class="label">Preferred Date:</span>
+                    <span class="value"><?php echo isset($data['nextCollection']->preferred_date) ? date('l, M j', strtotime($data['nextCollection']->preferred_date)) : 'Not scheduled'; ?></span>
+                </div>
+                <div class="info-item">
+                    <span class="label">Time:</span>
+                    <span class="value"><?php echo isset($data['nextCollection']->preferred_time) ? date('g:i A', strtotime($data['nextCollection']->preferred_time)) : '--:--'; ?></span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Driver Arrival Card -->
+        <div class="card">
+            <div class="card-header">
+                <i class='bx bx-time-five'></i>
+                <h3>Driver Status</h3>
+            </div>
+            <div class="card-content">
+                <div class="info-item">
+                    <span class="label">Arrival Status:</span>
+                    <span class="value status-badge <?php echo isset($data['driverStatus']->arrived) ? 'arrived' : 'pending'; ?>">
+                        <?php echo isset($data['driverStatus']->arrived) ? 'Arrived' : 'En Route'; ?>
+                    </span>
+                </div>
+                <?php if (isset($data['driverStatus']->arrival_time)): ?>
+                <div class="info-item">
+                    <span class="label">Arrived At:</span>
+                    <span class="value"><?php echo date('g:i A', strtotime($data['driverStatus']->arrival_time)); ?></span>
+                </div>
+                <?php endif; ?>
+            </div>
+        </div>
+
+        <!-- Vehicle Location Card -->
+        <div class="card">
+            <div class="card-header">
+                <i class='bx bx-map'></i>
+                <h3>Vehicle Location</h3>
+            </div>
+            <div class="card-content">
+                <div id="vehicle-location-map" style="height: 150px; margin-bottom: 10px;"></div>
+                <div class="info-item">
+                    <span class="label">Distance:</span>
+                    <span class="value" id="distance-away">Calculating...</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Collection Amount Card -->
+        <div class="card">
+            <div class="card-header">
+                <i class='bx bx-leaf'></i>
+                <h3>Collection Amount</h3>
+            </div>
+            <div class="card-content">
+                <div class="info-item">
+                    <span class="label">Today's Collection:</span>
+                    <span class="value"><?php echo isset($data['collection']->amount) ? number_format($data['collection']->amount, 1) . ' kg' : '0.0 kg'; ?></span>
+                </div>
+                <div class="info-item">
+                    <span class="label">Status:</span>
+                    <span class="value status-badge <?php echo isset($data['collection']->status) ? strtolower($data['collection']->status) : 'pending'; ?>">
+                        <?php echo isset($data['collection']->status) ? $data['collection']->status : 'Pending'; ?>
+                    </span>
+                </div>
+            </div>
+        </div>
+    </div>
 
     <div class="stats-container">
 
@@ -239,229 +316,137 @@ main {
   color: var(--primary-color);
 }
 
-.stat-value {
-  font-size: 2rem;
-  font-weight: bold;
-  color: var(--text-primary);
-}
+    .stat-value {
+        font-size: 1.5em; /* Adjust font size for better visibility */
+    }
 
-.stat-value small {
-  font-size: 0.875rem;
-  color: var(--text-secondary);
-  font-weight: normal;
-}
+    /* Media query for smaller screens */
+    @media (max-width: 768px) {
+        .stats-container {
+            flex-direction: column; /* Stack items vertically on small screens */
+        }
 
-.stat-divider {
-  width: 1px;
-  background-color: var(--border-color);
-}
+        .stat-item {
+            flex: 1 1 100%; /* Make each item take full width */
+        }
+    }
 
-/* Schedule Section */
-.schedule-section {
-  margin-bottom: var(--spacing-xl);
-}
+    .info-cards {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: 1rem;
+        margin: 1rem 0;
+    }
 
-.section-header {
-  margin-bottom: var(--spacing-lg);
-}
+    .card {
+        background: #fff;
+        padding: 1rem;
+        border-radius: 8px;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    }
 
-.section-header h3 {
-  color: var(--text-primary);
-  font-size: 1.25rem;
-}
+    .card-header {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        margin-bottom: 1rem;
+    }
 
-.schedule-card {
-  position: relative;
-  display: flex;
-  align-items: center;
-  gap: var(--spacing-md);
-  background-color: white;
-  padding: var(--spacing-lg);
-  border-radius: var(--border-radius-lg);
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-}
+    .card-header i {
+        font-size: 1.5rem;
+        color: #007664;
+    }
 
-.card-content {
-  flex: 1;
-}
+    .card-header h3 {
+        font-size: 1.1rem;
+        color: #333;
+        margin: 0;
+    }
 
-.schedule-info {
-  display: flex;
-  gap: var(--spacing-xl);
-  margin-bottom: var(--spacing-md);
-}
+    .info-item {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 0.5rem;
+    }
 
-.info-item {
-  display: flex;
-  align-items: center;
-  gap: var(--spacing-sm);
-}
+    .label {
+        color: #666;
+        font-size: 0.9rem;
+    }
 
-.info-item i {
-  color: var(--primary-color);
-}
+    .value {
+        font-weight: 500;
+        color: #333;
+    }
 
-.schedule-action {
-  display: flex;
-  gap: var(--spacing-md);
-  align-items: center;
-}
+    .status-badge {
+        padding: 0.25rem 0.5rem;
+        border-radius: 4px;
+        font-size: 0.8rem;
+    }
 
-/* Buttons and Controls */
-.nav-btn {
-  background: none;
-  border: none;
-  color: var(--primary-color);
-  cursor: pointer;
-  font-size: 1.5rem;
-  padding: var(--spacing-sm);
-}
+    .status-badge.arrived {
+        background: #d4edda;
+        color: #155724;
+    }
 
-.nav-btn:hover {
-  color: var(--secondary-color);
-}
+    .status-badge.pending {
+        background: #fff3cd;
+        color: #856404;
+    }
 
-.view-details-btn, 
-.change-schedule-btn {
-  display: flex;
-  align-items: center;
-  gap: var(--spacing-sm);
-  padding: var(--spacing-sm) var(--spacing-md);
-  border-radius: var(--border-radius-sm);
-  border: none;
-  background-color: var(--primary-color);
-  color: white;
-  cursor: pointer;
-  text-decoration: none;
-}
+    .status-badge.completed {
+        background: #cce5ff;
+        color: #004085;
+    }
 
-.view-details-btn:hover,
-.change-schedule-btn:hover {
-  background-color: var(--secondary-color);
-}
-
-.schedule-select {
-  padding: var(--spacing-sm);
-  border-radius: var(--border-radius-sm);
-  border: 1px solid var(--border-color);
-  outline: none;
-}
-
-/* Modal Styles */
-.modal {
-  display: none;
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background-color: rgba(0, 0, 0, 0.5);
-  z-index: 1000;
-}
-
-.modal.active {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.modal-content {
-  background-color: white;
-  border-radius: var(--border-radius-lg);
-  width: 90%;
-  max-width: 600px;
-  max-height: 90vh;
-  overflow-y: auto;
-}
-
-.modal-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: var(--spacing-lg);
-  border-bottom: 1px solid var(--border-color);
-}
-
-.modal-body {
-  padding: var(--spacing-lg);
-}
-
-.detail-group {
-  margin-bottom: var(--spacing-lg);
-}
-
-.detail-group h4 {
-  margin-bottom: var(--spacing-md);
-  color: var(--text-primary);
-}
-
-.detail-item {
-  display: flex;
-  justify-content: space-between;
-  margin-bottom: var(--spacing-sm);
-}
-
-/* Timeline Styles */
-.status-timeline {
-  position: relative;
-  padding-left: var(--spacing-lg);
-}
-
-.timeline-item {
-  position: relative;
-  padding-bottom: var(--spacing-lg);
-}
-
-.timeline-dot {
-  position: absolute;
-  left: -16px;
-  width: 12px;
-  height: 12px;
-  border-radius: 50%;
-  background-color: var(--border-color);
-}
-
-.timeline-item.active .timeline-dot {
-  background-color: var(--success-color);
-}
-
-.timeline-item::before {
-  content: '';
-  position: absolute;
-  left: -11px;
-  top: 12px;
-  bottom: 0;
-  width: 2px;
-  background-color: var(--border-color);
-}
-
-/* Responsive Design */
-@media (max-width: 768px) {
-  .stats-container {
-    grid-template-columns: 1fr;
-  }
-  
-  .stat-divider {
-    display: none;
-  }
-  
-  .schedule-info {
-    flex-direction: column;
-    gap: var(--spacing-md);
-  }
-  
-  .schedule-action {
-    flex-direction: column;
-    align-items: stretch;
-  }
-  
-  .modal-content {
-    width: 95%;
-    margin: var(--spacing-sm);
-  }
-}
+    #vehicle-location-map {
+        border-radius: 4px;
+        overflow: hidden;
+    }
 </style>
 
+<!-- Add necessary scripts -->
+<script src="https://maps.googleapis.com/maps/api/js?key=YOUR_API_KEY"></script>
+<script>
+    // Initialize map
+    function initMap() {
+        const map = new google.maps.Map(document.getElementById('vehicle-location-map'), {
+            zoom: 13,
+            center: { lat: 0, lng: 0 }
+        });
 
+        // Update vehicle location and distance
+        function updateVehicleLocation() {
+            // Replace with actual API call to get vehicle location
+            const vehicleLocation = <?php echo json_encode($data['vehicleLocation'] ?? null); ?>;
+            
+            if (vehicleLocation) {
+                const position = new google.maps.LatLng(vehicleLocation.lat, vehicleLocation.lng);
+                
+                // Update marker position
+                marker.setPosition(position);
+                map.setCenter(position);
+                
+                // Calculate and update distance
+                calculateDistance(position);
+            }
+        }
 
+        // Create vehicle marker
+        const marker = new google.maps.Marker({
+            map: map,
+            icon: {
+                url: '<?php echo URLROOT; ?>/public/images/truck-icon.png',
+                scaledSize: new google.maps.Size(32, 32)
+            }
+        });
 
+        // Update location every 30 seconds
+        setInterval(updateVehicleLocation, 30000);
+        updateVehicleLocation();
+    }
+
+    // Initialize map when page loads
+    google.maps.event.addDomListener(window, 'load', initMap);
+</script>

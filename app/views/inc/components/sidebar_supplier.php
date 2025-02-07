@@ -31,6 +31,13 @@
 					<span class="text">Payments</span>
 				</a>
 			</li>
+
+			<li>
+				<a href="<?php echo URLROOT; ?>/supplier/chat">
+					<i class='bx bxs-message-dots'></i>
+					<span class="text">Send Chat Request</span>
+				</a>
+			</li>
 			
 			<li>
 				<a href="<?php echo URLROOT; ?>/supplier/complaints">

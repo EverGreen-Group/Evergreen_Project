@@ -41,35 +41,27 @@
                     <span class="text">My Orders</span>
                 </a>
             </li>
-            <li>
-                <a href="<?php echo URLROOT; ?>/shop/tracking">
+            
+            <!-- Order Tracking Section -->
+            <li class="tracking-section <?php echo (strpos($_GET['url'] ?? '', 'shop/trackOrder') !== false || strpos($_GET['url'] ?? '', 'shop/activeDeliveries') !== false) ? 'active' : ''; ?>">
+                <a href="#" class="tracking-menu">
                     <i class='bx bx-map-alt'></i>
-                    <span>Track Order</span>
-                </a>
-            </li>
-            <!-- Delivery Tracking Section -->
-            <li class="delivery-section <?php echo (strpos($_GET['url'] ?? '', 'shopdelivery') !== false) ? 'active' : ''; ?>">
-                <a href="#" class="delivery-menu">
-                    <i class='bx bx-map-alt'></i>
-                    <span class="text">Delivery Tracking</span>
+                    <span class="text">Order Tracking</span>
                     <i class='bx bx-chevron-right arrow'></i>
                 </a>
-                <ul class="delivery-submenu">
-                    <li class="<?php echo ($_GET['url'] ?? '') === 'shopdelivery' ? 'active' : ''; ?>">
-                        <a href="<?php echo URLROOT; ?>/shopdelivery">
+                <ul class="tracking-submenu">
+                    <li class="<?php echo ($_GET['url'] ?? '') === 'shop/activeDeliveries' ? 'active' : ''; ?>">
+                        <a href="<?php echo URLROOT; ?>/shop/activeDeliveries">
                             <i class='bx bx-package'></i>
                             <span class="text">Active Deliveries</span>
                         </a>
                     </li>
-                    
-                    <?php if(isset($_SESSION['role_id']) && $_SESSION['role_id'] == 1): ?>
-                        <li class="<?php echo ($_GET['url'] ?? '') === 'shopdelivery/update' ? 'active' : ''; ?>">
-                            <a href="<?php echo URLROOT; ?>/shopdelivery/update">
-                                <i class='bx bx-edit'></i>
-                                <span class="text">Update Tracking</span>
-                            </a>
-                        </li>
-                    <?php endif; ?>
+                    <li class="<?php echo ($_GET['url'] ?? '') === 'shop/trackOrder' ? 'active' : ''; ?>">
+                        <a href="<?php echo URLROOT; ?>/shop/trackOrder">
+                            <i class='bx bx-map'></i>
+                            <span class="text">Track Order</span>
+                        </a>
+                    </li>
                 </ul>
             </li>
         <?php endif; ?>
@@ -78,12 +70,12 @@
     <ul class="side-menu">
         <?php if(isset($_SESSION['user_id'])): ?>
             <?php if($_SESSION['role_id'] == 1): ?>
-                <li>
+                <!-- <li>
                     <a href="<?php echo URLROOT; ?>/admin">
                         <i class='bx bxs-dashboard'></i>
                         <span class="text">Admin Dashboard</span>
                     </a>
-                </li>
+                </li> -->
             <?php endif; ?>
             <li>
                 <a href="<?php echo URLROOT; ?>/users/profile">
@@ -114,6 +106,58 @@
     </ul>
 </section>
 
+<style>
+.tracking-section .tracking-menu {
+    position: relative;
+    display: flex;
+    align-items: center;
+    padding: 10px 20px;
+    color: var(--dark);
+    transition: all 0.3s ease;
+}
+
+.tracking-section .tracking-menu .arrow {
+    margin-left: auto;
+    transition: transform 0.3s ease;
+}
+
+.tracking-section.active .tracking-menu .arrow {
+    transform: rotate(90deg);
+}
+
+.tracking-submenu {
+    display: none;
+    padding-left: 30px;
+}
+
+.tracking-section.active .tracking-submenu {
+    display: block;
+}
+
+.tracking-submenu li a {
+    padding: 8px 20px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    color: var(--dark);
+    transition: all 0.3s ease;
+}
+
+.tracking-submenu li.active a,
+.tracking-submenu li a:hover {
+    color: var(--main);
+    padding-left: 25px;
+}
+
+.cart-badge {
+    background: var(--red);
+    color: white;
+    padding: 2px 6px;
+    border-radius: 50%;
+    font-size: 0.8em;
+    margin-left: 5px;
+}
+</style>
 
 <script>
 // Sidebar Collapse
@@ -127,4 +171,10 @@ menuBar.addEventListener('click', function () {
 if(window.innerWidth <= 768) {
     sidebar.classList.add('hide');
 }
+
+// Tracking submenu toggle
+document.querySelector('.tracking-menu').addEventListener('click', function(e) {
+    e.preventDefault();
+    this.closest('.tracking-section').classList.toggle('active');
+});
 </script> 

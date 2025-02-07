@@ -1,5 +1,3 @@
-
-
 <?php
 
 class Order {
@@ -31,6 +29,49 @@ class Order {
         // $this->db->bind(':order_id', $orderId);
         return $this->db->single();
         
+    }
+
+    public function getOrderByNumber($orderNumber, $userId) {
+        $this->db->query('
+            SELECT o.*, 
+                   (SELECT COUNT(*) FROM order_items WHERE order_id = o.id) as items_count
+            FROM orders o
+            WHERE o.order_number = :order_number 
+            AND o.user_id = :user_id
+        ');
+        
+        $this->db->bind(':order_number', $orderNumber);
+        $this->db->bind(':user_id', $userId);
+        
+        $order = $this->db->single();
+        
+        if ($order) {
+            $order->items = $this->getOrderItems($order->id);
+            $order->tracking = $this->getOrderTracking($order->id);
+        }
+        
+        return $order;
+    }
+
+    public function getUserActiveOrders($userId) {
+        $this->db->query('
+            SELECT o.*, 
+                   (SELECT COUNT(*) FROM order_items WHERE order_id = o.id) as items_count
+            FROM orders o
+            WHERE o.user_id = :user_id
+            AND o.order_status IN ("processing", "shipped", "out_for_delivery")
+            ORDER BY o.created_at DESC
+        ');
+        
+        $this->db->bind(':user_id', $userId);
+        $orders = $this->db->resultSet();
+        
+        foreach ($orders as $order) {
+            $order->items = $this->getOrderItems($order->id);
+            $order->tracking = $this->getOrderTracking($order->id);
+        }
+        
+        return $orders;
     }
 }
 

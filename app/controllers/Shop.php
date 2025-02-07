@@ -13,7 +13,6 @@ class Shop extends Controller {
     private $cartModel;
     private $categoryModel;
     private $reviewModel;
-    private $shopModel;
 
     public function __construct() {
         $this->productModel = new M_Product();
@@ -21,7 +20,6 @@ class Shop extends Controller {
         $this->cartModel = new M_Cart();
         $this->categoryModel = new M_Category();
         $this->reviewModel = new M_Review();
-        // $this->shopModel = new M_Shop();
     }
 
     // Display shop homepage with categories and featured products
@@ -31,21 +29,11 @@ class Shop extends Controller {
         $newArrivals = $this->productModel->getNewArrivals();
         $bestSellers = $this->productModel->getBestSellers();
 
-        if(isset($_SESSION['user_id']) && $_SESSION['role_id'] == 1) {
-            $stats = [
-                'total_products' => $this->productModel->getTotalProducts(),
-                'total_orders' => $this->orderModel->getTotalOrders(),
-                'total_revenue' => $this->orderModel->getTotalRevenue(),
-                'pending_orders' => $this->orderModel->getPendingOrdersCount()
-            ];
-        }
-
         $data = [
             'categories' => $categories,
             'featured_products' => $featuredProducts,
             'new_arrivals' => $newArrivals,
-            'best_sellers' => $bestSellers,
-            'stats' => $stats ?? null
+            'best_sellers' => $bestSellers
         ];
 
         $this->view('shop/index', $data);
@@ -57,18 +45,13 @@ class Shop extends Controller {
             redirect('shop');
         }
 
-        // Get category details
-        $categoryModel = new M_Category();
-        $category = $categoryModel->getCategoryById($categoryId);
-
+        $category = $this->categoryModel->getCategoryById($categoryId);
         if (!$category) {
             flash('category_message', 'Category not found', 'alert alert-danger');
             redirect('shop');
         }
 
-        // Get products for this category
-        $productModel = new M_Product();
-        $products = $productModel->getProductsByCategory($categoryId);
+        $products = $this->productModel->getProductsByCategory($categoryId);
 
         $data = [
             'title' => $category->name . ' - Products',
@@ -82,8 +65,7 @@ class Shop extends Controller {
 
     // Helper method for cart count
     private function getCartCount() {
-        $cartModel = new M_Cart();
-        return $cartModel->getCartCount($_SESSION['user_id']);
+        return $this->cartModel->getCartCount($_SESSION['user_id']);
     }
 
     // View single product with reviews
@@ -111,16 +93,15 @@ class Shop extends Controller {
             redirect('users/login');
         }
 
-        $cartModel = $this->model('M_Cart');
         $data = [
-            'cart_items' => $cartModel->getCartItems($_SESSION['user_id']),
-            'cart_total' => $cartModel->getCartTotal($_SESSION['user_id'])
+            'cart_items' => $this->cartModel->getCartItems($_SESSION['user_id']),
+            'cart_total' => $this->cartModel->getCartTotal($_SESSION['user_id'])
         ];
 
         $this->view('shop/cart', $data);
     }
 
-    // Cart Actions
+    // Add to cart
     public function addToCart($productId = null) {
         if (!isLoggedIn()) {
             redirect('users/login');
@@ -139,6 +120,7 @@ class Shop extends Controller {
         redirect('shop/cart');
     }
 
+    // Remove from cart
     public function removeFromCart($productId = null) {
         if (!isLoggedIn()) {
             redirect('users/login');
@@ -153,62 +135,17 @@ class Shop extends Controller {
         redirect('shop/cart');
     }
 
-    // private function isAjaxRequest() {
-    //     return isset($_SERVER['HTTP_X_REQUESTED_WITH']) && 
-    //            strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) === 'xmlhttprequest';
-    // }
-
-    public function updateCart() {
-        if (!isLoggedIn()) {
-            jsonResponse(['success' => false, 'message' => 'Please login first']);
-        }
-
-        $data = json_decode(file_get_contents('php://input'));
-        
-        if (!isset($data->product_id) || !isset($data->quantity)) {
-            jsonResponse(['success' => false, 'message' => 'Invalid data']);
-        }
-
-        $cartModel = $this->model('M_Cart');
-        $success = $cartModel->updateCartItem(
-            $_SESSION['user_id'],
-            $data->product_id,
-            $data->quantity
-        );
-
-        if ($success) {
-            $total = $cartModel->getCartTotal($_SESSION['user_id']);
-            jsonResponse([
-                'success' => true,
-                'totals' => [
-                    'subtotal' => $total,
-                    'shipping' => 0 // Will be calculated based on selected method
-                ],
-                'message' => 'Cart updated'
-            ]);
-        }
-
-        jsonResponse([
-            'success' => false,
-            'message' => 'Failed to update cart'
-        ]);
-    }
-
     // Checkout Process
-    public function checkout() {
+    public function payment() {
+        if (!isLoggedIn()) {
+            redirect('users/login');
+        }
+
         if ($_SERVER['REQUEST_METHOD'] != 'POST') {
             redirect('shop/cart');
         }
 
-        if (!isLoggedIn()) {
-            flash('cart_message', 'Please login to checkout', 'alert alert-danger');
-            redirect('users/login');
-        }
-
-        // Get cart items
-        $cartModel = $this->model('M_Cart');
-        $cartItems = $cartModel->getCartItems($_SESSION['user_id']);
-
+        $cartItems = $this->cartModel->getCartItems($_SESSION['user_id']);
         if (empty($cartItems)) {
             flash('cart_message', 'Your cart is empty', 'alert alert-danger');
             redirect('shop/cart');
@@ -242,7 +179,7 @@ class Shop extends Controller {
             'postal_code' => trim($_POST['postal_code'] ?? '')
         ]);
 
-        // Prepare order data according to M_Order requirements
+        // Prepare order data
         $orderData = [
             'total_amount' => $subtotal,
             'shipping_fee' => $shippingFee,
@@ -256,12 +193,19 @@ class Shop extends Controller {
             'items' => $formattedItems
         ];
 
-        // Create order
-        $orderModel = $this->model('M_Order');
+        // Create order and deduct stock
         try {
-            $orderId = $orderModel->createOrder($_SESSION['user_id'], $orderData);
+            $orderId = $this->orderModel->createOrder($_SESSION['user_id'], $orderData);
 
             if ($orderId) {
+                // Deduct stock for each item in the order
+                foreach ($formattedItems as $item) {
+                    $this->productModel->deductStock($item['product_id'], $item['quantity']);
+                }
+
+                // Clear the cart after successful order creation
+                $this->cartModel->clearCart($_SESSION['user_id']);
+
                 redirect('shop/payment/' . $orderId);
             } else {
                 flash('cart_message', 'Failed to create order', 'alert alert-danger');
@@ -279,12 +223,7 @@ class Shop extends Controller {
             redirect('users/login');
         }
         
-        $orderModel = new M_Order();
-        $userId = $_SESSION['user_id']; // Make sure this session variable exists
-        
-        $orders = $orderModel->getUserOrders($userId);
-        
- 
+        $orders = $this->orderModel->getUserOrders($_SESSION['user_id']);
         
         $data = [
             'orders' => $orders
@@ -293,6 +232,7 @@ class Shop extends Controller {
         $this->view('shop/orders', $data);
     }
 
+    // View order details
     public function orderDetails($orderId) {
         requireAuth();
 
@@ -304,187 +244,7 @@ class Shop extends Controller {
         $this->view('shop/orderDetails', ['order' => $order]);
     }
 
-    public function orderConfirmation($orderId) {
-        requireAuth();
-
-        $order = $this->orderModel->getOrderDetails($orderId);
-        if (!$order || $order->user_id !== $_SESSION['user_id']) {
-            redirect('shop/orders');
-        }
-
-        $this->view('shop/orderConfirmation', ['order' => $order]);
-    }
-
-    // Product Reviews
-    public function addReview() {
-        requireAuth();
-
-        if ($_SERVER['REQUEST_METHOD'] == 'POST') {
-            $reviewData = [
-                'product_id' => $_POST['product_id'],
-                'user_id' => $_SESSION['user_id'],
-                'rating' => $_POST['rating'],
-                'comment' => $_POST['comment']
-            ];
-
-            if ($this->reviewModel->addReview($reviewData)) {
-                flash('review_message', 'Review submitted successfully');
-            } else {
-                flash('review_message', 'Failed to submit review', 'alert alert-danger');
-            }
-            redirect("shop/product/{$_POST['product_id']}");
-        }
-    }
-
-    // Search functionality
-    public function search() {
-        // Get search query
-        $query = isset($_GET['q']) ? trim($_GET['q']) : '';
-        
-        if (empty($query)) {
-            redirect('shop');
-        }
-
-        // Get search results from model
-        $products = $this->productModel->searchProducts($query);
-        
-        $data = [
-            'title' => 'Search Results for "' . htmlspecialchars($query) . '"',
-            'query' => $query,
-            'products' => $products,
-            'cart_count' => isset($_SESSION['user_id']) ? $this->getCartCount() : 0
-        ];
-
-        $this->view('shop/search', $data);
-    }
-
-    public function categories() {
-        $categories = $this->categoryModel->getAllCategoriesWithProducts();
-        $featuredCategories = $this->categoryModel->getFeaturedCategories();
-        
-        $data = [
-            'categories' => $categories,
-            'featured_categories' => $featuredCategories,
-            'title' => 'Shop Categories'
-        ];
-
-        $this->view('shop/categories', $data);
-    }
-
-    public function categoryProducts($id) {
-        $category = $this->categoryModel->getCategoryById($id);
-        if (!$category) {
-            redirect('shop/categories');
-        }
-
-        $products = $this->productModel->getProductsByCategory($id);
-        $data = [
-            'category' => $category,
-            'products' => $products
-        ];
-
-        $this->view('shop/category_products', $data);
-    }
-
-    // Add this method to your Shop controller
-    public function uploadProductImage() {
-        if (!isAdmin()) {
-            redirect('shop');
-        }
-
-        if ($_SERVER['REQUEST_METHOD'] == 'POST') {
-            // File upload settings
-            $targetDir = PUBLIC_PATH . '/img/products/';
-            $allowTypes = ['jpg', 'jpeg', 'png', 'webp'];
-            $maxSize = 5 * 1024 * 1024; // 5MB
-
-            // Handle file upload
-            if (isset($_FILES['image']) && $_FILES['image']['error'] == 0) {
-                $file = $_FILES['image'];
-                $fileName = $file['name'];
-                $fileType = strtolower(pathinfo($fileName, PATHINFO_EXTENSION));
-                $fileSize = $file['size'];
-                $productId = $_POST['product_id'];
-                $isPrimary = isset($_POST['is_primary']) ? 1 : 0;
-
-                // Validate file
-                if (!in_array($fileType, $allowTypes)) {
-                    flash('image_error', 'Invalid file type. Allowed types: ' . implode(', ', $allowTypes));
-                    redirect('shop/product/' . $productId);
-                }
-
-                if ($fileSize > $maxSize) {
-                    flash('image_error', 'File is too large. Maximum size: 5MB');
-                    redirect('shop/product/' . $productId);
-                }
-
-                // Generate unique filename
-                $newFileName = uniqid() . '.' . $fileType;
-                $targetFile = $targetDir . $newFileName;
-
-                // Upload file
-                if (move_uploaded_file($file['tmp_name'], $targetFile)) {
-                    // If this is primary image, update other images to non-primary
-                    if ($isPrimary) {
-                        $this->productModel->updatePrimaryImages($productId);
-                    }
-
-                    // Save to database
-                    if ($this->productModel->addProductImage($productId, $newFileName, $isPrimary)) {
-                        flash('image_success', 'Image uploaded successfully');
-                    } else {
-                        flash('image_error', 'Failed to save image information');
-                    }
-                } else {
-                    flash('image_error', 'Failed to upload image');
-                }
-            }
-
-            redirect('shop/product/' . $productId);
-        }
-    }
-
-    public function editOrder($orderId) {
-        if (!isLoggedIn()) {
-            redirect('users/login');
-        }
-
-        $order = $this->orderModel->getOrderById($orderId, $_SESSION['user_id']);
-        
-        if (!$order || !in_array($order->order_status, ['pending', 'processing'])) {
-            flash('order_message', 'Order cannot be edited', 'alert alert-danger');
-            redirect('shop/orders');
-        }
-
-        if ($_SERVER['REQUEST_METHOD'] == 'POST') {
-            $_POST = filter_input_array(INPUT_POST, FILTER_SANITIZE_STRING);
-
-            $data = [
-                'shipping_address' => trim($_POST['shipping_address']),
-                'shipping_method' => trim($_POST['shipping_method']),
-                'notes' => trim($_POST['notes']),
-                'errors' => []
-            ];
-
-            // Validate inputs
-            if (empty($data['shipping_address'])) {
-                $data['errors']['shipping_address'] = 'Shipping address is required';
-            }
-
-            if (empty($data['errors'])) {
-                if ($this->orderModel->updateOrder($orderId, $_SESSION['user_id'], $data)) {
-                    flash('order_message', 'Order updated successfully');
-                    redirect('shop/orders');
-                } else {
-                    flash('order_message', 'Failed to update order', 'alert alert-danger');
-                }
-            }
-        }
-
-        $data['order'] = $order;
-        $this->view('shop/edit_order', $data);
-    }
-
+    // Cancel order
     public function cancelOrder($orderId) {
         if (!isLoggedIn()) {
             jsonResponse(['success' => false, 'message' => 'Please login first']);
@@ -497,310 +257,62 @@ class Shop extends Controller {
         }
 
         if ($this->orderModel->cancelOrder($orderId, $_SESSION['user_id'])) {
+            // Restore stock for each item in the order
+            foreach ($order->items as $item) {
+                $this->productModel->restoreStock($item->product_id, $item->quantity);
+            }
+
             jsonResponse(['success' => true, 'message' => 'Order cancelled successfully']);
         }
 
         jsonResponse(['success' => false, 'message' => 'Failed to cancel order']);
     }
-    
 
-    public function viewProduct($id = null) {
-        if ($id === null) {
-            redirect('shop');
-        }
-
-        $productModel = $this->model('M_Product');
-        $product = $productModel->getProductWithDetails($id);
-
-        if (!$product) {
-            flash('product_message', 'Product not found', 'alert alert-danger');
-            redirect('shop');
-        }
-
-        // Get related products
-        $relatedProducts = $productModel->getRelatedProducts($id, $product->category_id);
-
-        $data = [
-            'product' => $product,
-            'related_products' => $relatedProducts,
-            'cart_count' => isset($_SESSION['user_id']) ? 
-                $this->model('M_Cart')->getCartCount($_SESSION['user_id']) : 0
-        ];
-
-        $this->view('shop/product', $data);
-    }
-
-    public function createOrder() {
+    public function trackOrder($orderNumber = null) {
         if (!isLoggedIn()) {
             redirect('users/login');
         }
 
-        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-            redirect('shop/cart');
-        }
-
-        // Get cart items
-        $cartItems = $this->cartModel->getCartItems($_SESSION['user_id']);
-        if (empty($cartItems)) {
-            flash('order_message', 'Your cart is empty', 'alert alert-danger');
-            redirect('shop/cart');
+        // If no order number is provided, show the tracking form
+        if ($orderNumber === null) {
+            $this->view('shop/tracking_form', [
+                'title' => 'Track Order'
+            ]);
             return;
         }
 
-        // Format shipping address
-        $shippingAddress = json_encode([
-            'street' => $_POST['street_address'],
-            'city' => $_POST['city'],
-            'province' => $_POST['province'],
-            'zip' => $_POST['zip_code'],
-            'country' => $_POST['country'],
-            'phone' => $_POST['phone'],
-            'email' => $_POST['email']
-        ]);
-
-        // Format cart items for order
-        $formattedItems = array_map(function($item) {
-            return [
-                'product_id' => $item->product_id,
-                'quantity' => $item->quantity,
-                'price' => $item->price
-            ];
-        }, $cartItems);
-
-        // Prepare order data
-        $orderData = [
-            'total_amount' => floatval($_POST['total_amount']),
-            'shipping_fee' => floatval($_POST['shipping_fee']),
-            'tax_amount' => floatval($_POST['tax_amount']),
-            'grand_total' => floatval($_POST['grand_total']),
-            'shipping_address' => $shippingAddress,
-            'billing_address' => $shippingAddress, // Using same address for billing
-            'shipping_method' => 'standard',
-            'payment_method' => $_POST['payment_method'],
-            'notes' => $_POST['additional_info'] ?? '',
-            'items' => $formattedItems
-        ];
-
-        try {
-            // Create the order
-            $orderId = $this->orderModel->createOrder($_SESSION['user_id'], $orderData);
-
-            if ($orderId) {
-                // Clear the cart after successful order creation
-                $this->cartModel->clearCart($_SESSION['user_id']);
-                
-                flash('order_message', 'Order placed successfully!', 'alert alert-success');
-                redirect('shop/orders');
-            } else {
-                throw new Exception('Failed to create order');
-            }
-        } catch (Exception $e) {
-            flash('order_message', 'Error creating order: ' . $e->getMessage(), 'alert alert-danger');
-            redirect('shop/cart');
-        }
-    }
-
-    public function payment($orderId = null) {
-        if (!isLoggedIn()) {
-            redirect('users/login');
-        }
-
-        // Get cart total and items
-        $cartModel = $this->cartModel;
-        $cartItems = $cartModel->getCartItems($_SESSION['user_id']);
-        $cartTotal = $cartModel->getCartTotal($_SESSION['user_id']);
-
-        if (empty($cartItems)) {
-            redirect('shop/cart');
+        // Get order details
+        $order = $this->orderModel->getOrderByNumber($orderNumber, $_SESSION['user_id']);
+        if (!$order) {
+            flash('order_message', 'Order not found', 'alert alert-danger');
+            redirect('shop/orders');
         }
 
         $data = [
-            'total' => $cartTotal,
-            'items' => $cartItems
+            'title' => 'Track Order #' . $orderNumber,
+            'order' => $order,
+            'tracking' => $this->orderModel->getOrderTracking($order->id),
+            'shipping_address' => json_decode($order->shipping_address),
+            'items' => $this->orderModel->getOrderItems($order->id),
+            'cart_count' => $this->getCartCount()
         ];
-
-        $this->view('shop/payment', $data);
-    }
-
-    public function processPayment()
-    {
-        // Check if user is logged in
-        if (!isLoggedIn()) {
-            redirect('users/login');
-        }
-
-        if ($_SERVER['REQUEST_METHOD'] == 'POST') {
-            // Sanitize POST data
-            $_POST = filter_input_array(INPUT_POST, FILTER_SANITIZE_STRING);
-
-            // Get cart items from session
-            $cart_items = isset($_SESSION['cart']) ? $_SESSION['cart'] : [];
-            
-            if (empty($cart_items)) {
-                redirect('shop/cart');
-            }
-
-            // Calculate total amount
-            $total_amount = 0;
-            foreach ($cart_items as $item) {
-                $total_amount += $item['price'] * $item['quantity'];
-            }
-
-            // Generate order number and tracking number
-            $order_number = 'ORD-' . time() . '-' . rand(1000, 9999);
-            $tracking_number = 'TRK-' . time() . '-' . rand(1000, 9999);
-
-            // Prepare order data
-            $order_data = [
-                'user_id' => $_SESSION['user_id'],
-                'order_number' => $order_number,
-                'tracking_number' => $tracking_number,
-                'total_amount' => $total_amount,
-                'shipping_address' => trim($_POST['street_address'] . ', ' . 
-                                        $_POST['town_city'] . ', ' . 
-                                        $_POST['province'] . ' ' . 
-                                        $_POST['zip_code']),
-                'payment_method' => trim($_POST['payment_method']),
-                'status' => 'pending',
-                'created_at' => date('Y-m-d H:i:s')
-            ];
-
-            // Start transaction
-            $this->shopModel->beginTransaction();
-
-            try {
-                // Create order
-                $order_id = $this->shopModel->createOrder($order_data);
-
-                if ($order_id) {
-                    // Add order items
-                    foreach ($cart_items as $item) {
-                        $order_item = [
-                            'order_id' => $order_id,
-                            'product_id' => $item['id'],
-                            'quantity' => $item['quantity'],
-                            'price' => $item['price']
-                        ];
-                        $this->shopModel->addOrderItem($order_item);
-                        
-                        // Update product stock
-                        $this->shopModel->updateProductStock($item['id'], $item['quantity']);
-                    }
-
-                    // Clear cart
-                    unset($_SESSION['cart']);
-
-                    // Commit transaction
-                    $this->shopModel->commit();
-
-                    // Redirect to tracking page
-                    redirect('shop/tracking/' . $tracking_number);
-                } else {
-                    throw new Exception("Failed to create order");
-                }
-            } catch (Exception $e) {
-                // Rollback transaction on error
-                $this->shopModel->rollback();
-                
-                // Log error
-                error_log("Payment processing error: " . $e->getMessage());
-                
-                flash('payment_error', 'An error occurred while processing your payment. Please try again.', 'alert alert-danger');
-                redirect('shop/cart');
-            }
-        } else {
-            // GET request - load payment page with cart data
-            $cart_items = isset($_SESSION['cart']) ? $_SESSION['cart'] : [];
-            
-            if (empty($cart_items)) {
-                redirect('shop/cart');
-            }
-
-            $total = 0;
-            foreach ($cart_items as $item) {
-                $total += $item['price'] * $item['quantity'];
-            }
-
-            $data = [
-                'title' => 'Payment',
-                'cart_items' => $cart_items,
-                'total' => $total
-            ];
-
-            $this->view('shop/payment', $data);
-        }
-    }
-
-    public function tracking() {
-        if (!isLoggedIn()) {
-            redirect('users/login');
-        }
-
-        $data = [];
-        
-        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-            $orderNumber = trim($_POST['order_number']);
-            $order = $this->orderModel->getOrderByNumber($orderNumber);
-            
-            if ($order) {
-                $data['order'] = $order;
-            } else {
-                flash('tracking_message', 'Order not found', 'alert alert-danger');
-            }
-        }
 
         $this->view('shop/tracking', $data);
     }
 
-    public function trackOrder() {
+    public function activeDeliveries() {
         if (!isLoggedIn()) {
             redirect('users/login');
         }
 
-        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-            $orderNumber = trim($_POST['order_number']);
-            $order = $this->orderModel->getOrderByNumber($orderNumber);
-            
-            if ($order) {
-                $data['order'] = $order;
-            } else {
-                flash('tracking_message', 'Order not found', 'alert alert-danger');
-            }
-            
-            $this->view('shop/tracking', $data);
-        } else {
-            redirect('shop/tracking');
-        }
-    }
+        $activeOrders = $this->orderModel->getUserActiveOrders($_SESSION['user_id']);
 
-    // Helper method to check if request is AJAX
-    // private function isAjaxRequest() {
-    //     return isset($_SERVER['HTTP_X_REQUESTED_WITH']) && 
-    //            strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) === 'xmlhttprequest';
-    // }
+        $data = [
+            'title' => 'Active Deliveries',
+            'active_orders' => $activeOrders,
+            'cart_count' => $this->getCartCount()
+        ];
 
-    // Helper method for JSON responses
-    private function jsonResponse($data) {
-        header('Content-Type: application/json');
-        echo json_encode($data);
-        exit;
-    }
-
-    public function deleteOrder($orderId) {
-        if (!isLoggedIn()) {
-            jsonResponse(['success' => false, 'message' => 'Unauthorized access']);
-            return;
-        }
-
-        try {
-            if ($this->orderModel->deleteOrder($orderId)) {
-                jsonResponse(['success' => true, 'message' => 'Order deleted successfully']);
-            } else {
-                jsonResponse(['success' => false, 'message' => 'Failed to delete order']);
-            }
-        } catch (Exception $e) {
-            error_log("Error deleting order: " . $e->getMessage());
-            jsonResponse(['success' => false, 'message' => 'An error occurred while deleting the order']);
-        }
+        $this->view('shop/active_deliveries', $data);
     }
 }

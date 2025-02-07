@@ -26,6 +26,7 @@
 
     <?php flash('category_message'); ?>
 
+    <!-- Products Section -->
     <div class="products-section">
         <?php if(empty($data['products'])): ?>
             <div class="no-products">
@@ -118,7 +119,6 @@
 </main>
 
 <script>
-// You can reuse the JavaScript functions from your index.php file
 function validateQuantity(input, max) {
     let value = parseInt(input.value);
     if (value < 1) input.value = 1;
@@ -166,4 +166,4 @@ async function addToCart(productId) {
 }
 </script>
 
-<?php require APPROOT . '/views/inc/components/footer.php'; ?> 
+<?php require APPROOT . '/views/inc/components/footer.php'; ?>

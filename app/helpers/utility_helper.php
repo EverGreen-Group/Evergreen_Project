@@ -12,3 +12,16 @@ function jsonResponse($data, $status = 200) {
     echo json_encode($data);
     exit;
 } 
+
+function getStatusIcon($status) {
+    $icons = [
+        'pending' => 'time',
+        'processing' => 'cog',
+        'shipped' => 'car',
+        'out_for_delivery' => 'navigation',
+        'delivered' => 'check-circle',
+        'cancelled' => 'x-circle'
+    ];
+    
+    return $icons[$status] ?? 'help-circle';
+} 

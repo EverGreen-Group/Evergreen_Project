@@ -19,62 +19,44 @@
         <div class="status-card">
             <div class="status-header">
                 <h2>Order Status</h2>
-                <span class="status-badge processing">Processing</span>
+                <span class="status-badge <?php echo strtolower($data['order']->order_status); ?>">
+                    <?php echo ucfirst($data['order']->order_status); ?>
+                </span>
             </div>
 
             <div class="order-info">
                 <div class="info-grid">
                     <div class="info-item">
                         <span class="label">Order Number:</span>
-                        <span class="value">ORD-2024-003</span>
+                        <span class="value"><?php echo $data['order']->order_number; ?></span>
                     </div>
                     <div class="info-item">
-                        <span class="label">Expected Delivery:</span>
-                        <span class="value">November 30, 2024</span>
+                        <span class="label">Order Date:</span>
+                        <span class="value"><?php echo date('F j, Y', strtotime($data['order']->created_at)); ?></span>
                     </div>
                 </div>
             </div>
 
             <div class="tracking-timeline">
-                <div class="timeline-step completed">
-                    <div class="step-icon">
-                        <i class='bx bx-package'></i>
+                <?php 
+                $statuses = ['pending', 'processing', 'shipped', 'delivered'];
+                $currentStatusIndex = array_search($data['order']->order_status, $statuses);
+                
+                foreach ($data['tracking'] as $index => $track): 
+                    $isCompleted = $index <= $currentStatusIndex;
+                    $isActive = $index === $currentStatusIndex;
+                ?>
+                    <div class="timeline-step <?php echo $isCompleted ? 'completed' : ($isActive ? 'active' : ''); ?>">
+                        <div class="step-icon">
+                            <i class='bx bx-<?php echo getStatusIcon($track->status); ?>'></i>
+                        </div>
+                        <div class="step-info">
+                            <h4><?php echo ucfirst($track->status); ?></h4>
+                            <p><?php echo date('M j, Y', strtotime($track->created_at)); ?><br>
+                               <?php echo date('h:i A', strtotime($track->created_at)); ?></p>
+                        </div>
                     </div>
-                    <div class="step-info">
-                        <h4>Order Placed</h4>
-                        <p>Nov 26, 2024<br>08:08 AM</p>
-                    </div>
-                </div>
-
-                <div class="timeline-step active">
-                    <div class="step-icon">
-                        <i class='bx bx-cog'></i>
-                    </div>
-                    <div class="step-info">
-                        <h4>Processing</h4>
-                        <p>Nov 29, 2024<br>09:49 AM</p>
-                    </div>
-                </div>
-
-                <div class="timeline-step">
-                    <div class="step-icon">
-                        <i class='bx bx-car'></i>
-                    </div>
-                    <div class="step-info">
-                        <h4>In Transit</h4>
-                        <p>Pending</p>
-                    </div>
-                </div>
-
-                <div class="timeline-step">
-                    <div class="step-icon">
-                        <i class='bx bx-check-circle'></i>
-                    </div>
-                    <div class="step-info">
-                        <h4>Delivered</h4>
-                        <p>Pending</p>
-                    </div>
-                </div>
+                <?php endforeach; ?>
             </div>
         </div>
 
@@ -85,7 +67,7 @@
                 </div>
                 <div class="card-content">
                     <h3>Delivery Address</h3>
-                    <p>No 123, Temple Road, Colombo 03</p>
+                    <p><?php echo $data['shipping_address']->address; ?></p>
                 </div>
             </div>
 
@@ -95,7 +77,7 @@
                 </div>
                 <div class="card-content">
                     <h3>Shipping Method</h3>
-                    <p>Express Delivery</p>
+                    <p><?php echo $data['order']->shipping_method; ?></p>
                 </div>
             </div>
         </div>
