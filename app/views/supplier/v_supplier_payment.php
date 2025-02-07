@@ -131,7 +131,7 @@ $currentMonth = '2025-02'; // assume current month is February 2025
                   <i class='bx bx-box'></i>
                   <span>
                     Bag Usage: 
-                    <a href="<?php echo URLROOT; ?>/Supplier/bagUsageDetail/<?php echo $record->bag_usage_history_id; ?>">
+                    <a href="<?php echo URLROOT; ?>/Supplier/bag/<?php echo $record->bag_usage_history_id; ?>">
                       <?php echo $record->bag_usage_history_id; ?>
                     </a>
                   </span>
@@ -183,14 +183,14 @@ $currentMonth = '2025-02'; // assume current month is February 2025
                   <i class='bx bx-receipt'></i>
                   <span>
                     Order: 
-                    <a href="<?php echo URLROOT; ?>/Supplier/fertilizerOrderDetail/<?php echo $purchase->order_id; ?>">
+                    <a href="<?php echo URLROOT; ?>/Supplier/fertilizer/<?php echo $purchase->order_id; ?>">
                       <?php echo $purchase->order_id; ?>
                     </a>
                   </span>
                 </div>
                 <div class="info-item">
                   <i class='bx bx-money'></i>
-                  <span>Price: $<?php echo number_format($purchase->price, 2); ?></span>
+                  <span>Price: රු.<?php echo number_format($purchase->price, 2); ?></span>
                 </div>
               </div>
             </div>
@@ -217,19 +217,19 @@ $currentMonth = '2025-02'; // assume current month is February 2025
           <div class="info-item">
             <i class='bx bx-leaf'></i>
             <span>Total Tea Leaves Supplied: 
-              <?php echo isset($data['totalTeaLeaves']) ? $data['totalTeaLeaves'] . ' kg' : '0 kg'; ?>
+              <strong><?php echo isset($data['totalTeaLeaves']) ? $data['totalTeaLeaves'] . ' kg' : '0 kg'; ?></strong>
             </span>
           </div>
           <div class="info-item">
             <i class='bx bx-dollar'></i>
             <span>Total Income: 
-              <?php echo isset($data['totalIncome']) ? 'රු.' . number_format($data['totalIncome'], 2) : 'රු.0.00'; ?>
+              <strong><?php echo isset($data['totalIncome']) ? 'රු.' . number_format($data['totalIncome'], 2) : 'රු.0.00'; ?></strong>
             </span>
           </div>
           <div class="info-item">
             <i class='bx bx-minus-circle'></i>
             <span>Total Deductions: 
-              <?php echo isset($data['totalDeductions']) ? 'රු.' . number_format($data['totalDeductions'], 2) : 'රු.0.00'; ?>
+              <strong><?php echo isset($data['totalDeductions']) ? 'රු.' . number_format($data['totalDeductions'], 2) : 'රු.0.00'; ?></strong>
             </span>
           </div>
         </div>

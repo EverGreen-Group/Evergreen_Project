@@ -141,7 +141,10 @@ main {
 
 .section-header h3 {
   color: var(--text-primary);
-  font-size: 1.25rem;
+  font-size: 1.5rem;
+  text-align: center;
+  border-bottom: 2px solid var(--primary-color);
+  padding-bottom: var(--spacing-sm);
 }
 
 .schedule-card {
@@ -180,6 +183,7 @@ main {
   display: flex;
   flex-wrap: wrap;
   gap: var(--spacing-xl);
+  justify-content: center;
 }
 
 .info-item {
@@ -188,10 +192,29 @@ main {
   gap: var(--spacing-sm);
   flex: 1;
   min-width: 200px;
+  padding: var(--spacing-md);
+  border: 1px solid var(--border-color);
+  border-radius: var(--border-radius-md);
+  background-color: var(--background-light);
+  transition: transform 0.2s;
+}
+
+.info-item:hover {
+  transform: scale(1.05);
 }
 
 .info-item i {
   color: var(--primary-color);
+  font-size: 1.5rem;
+}
+
+.info-item span {
+  font-size: 1.1rem;
+}
+
+strong {
+  color: var(--success-color);
+  font-weight: bold;
 }
 
 /* Buttons and Controls */

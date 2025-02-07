@@ -528,5 +528,27 @@ class Supplier extends Controller {
         echo json_encode($bagDetails);
         exit();
     }
+
+    public function bag($bagId) {
+        // $collectionDetails = $this->collectionModel->getCollectionDetails($collectionId);
+
+        $data = [
+            'bagId' => $bagId,
+            // 'bagDetails' => $collectionDetails
+        ];
+
+        $this->view('supplier/v_bag', $data);
+    }
+
+    public function fertilizer($fertilizerId) {
+        // $collectionDetails = $this->collectionModel->getCollectionDetails($collectionId);
+
+        $data = [
+            'fertilizerId' => $fertilizerId,
+            // 'bagDetails' => $collectionDetails
+        ];
+
+        $this->view('supplier/v_fertilizer', $data);
+    }
 }
 ?>

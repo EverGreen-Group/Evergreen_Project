@@ -149,6 +149,7 @@ if (empty($data['fertilizerRequestHistory'])) {
                   <span>Status: <?php echo $request->approval_status; ?></span>
                 </div>
               </div>
+              <!-- Action buttons placed in their own row with a divider -->
               <div class="schedule-action">
                 <button class="update-btn" onclick="location.href='<?php echo URLROOT; ?>/Supplier/editFertilizerRequest/<?php echo $request->order_id; ?>'">
                   <i class='bx bx-edit'></i>
@@ -196,3 +197,222 @@ if (empty($data['fertilizerRequestHistory'])) {
   }
 </script>
 
+<style>
+  /* Root Variables */
+  :root {
+    --primary-color: var(--mainn);
+    --secondary-color: #2ecc71;
+    --text-primary: #2c3e50;
+    --text-secondary: #7f8c8d;
+    --background-light: #f8f9fa;
+    --border-color: #e0e0e0;
+    --success-color: #27ae60;
+    --warning-color: #f39c12;
+    --spacing-xs: 0.25rem;
+    --spacing-sm: 0.5rem;
+    --spacing-md: 1rem;
+    --spacing-lg: 1.5rem;
+    --spacing-xl: 2rem;
+    --border-radius-sm: 4px;
+    --border-radius-md: 8px;
+    --border-radius-lg: 12px;
+  }
+
+  /* Layout & Common Styles */
+  main {
+    padding: var(--spacing-lg);
+    max-width: 1200px;
+    margin: 0 auto;
+  }
+
+  .head-title {
+    margin-bottom: var(--spacing-xl);
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .head-title h1 {
+    color: var(--text-primary);
+    font-size: 1.75rem;
+    margin-bottom: var(--spacing-sm);
+  }
+
+  .breadcrumb {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+    list-style: none;
+    padding: 0;
+  }
+
+  .breadcrumb a {
+    color: var(--text-secondary);
+    text-decoration: none;
+  }
+
+  .breadcrumb i {
+    color: var(--primary-color);
+  }
+
+  .section-divider {
+    height: 1px;
+    background-color: var(--border-color);
+    margin: var(--spacing-xl) 0;
+  }
+
+  /* Request Form Section */
+  .request-form-section {
+    margin-bottom: var(--spacing-xl);
+  }
+
+  .request-form-card {
+    background-color: white;
+    padding: var(--spacing-lg);
+    border-radius: var(--border-radius-lg);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  }
+
+  .request-form-card form {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: var(--spacing-lg);
+  }
+
+  .request-form-card .form-group {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .request-form-card label {
+    margin-bottom: var(--spacing-xs);
+    color: var(--text-primary);
+  }
+
+  .request-form-card input[type="text"],
+  .request-form-card input[type="number"],
+  .request-form-card select {
+    padding: var(--spacing-sm);
+    border: 1px solid var(--border-color);
+    border-radius: var(--border-radius-sm);
+  }
+
+  .read-only-group input {
+    background-color: var(--background-light);
+    cursor: not-allowed;
+  }
+
+  .request-form-card .submit-btn {
+    grid-column: span 2;
+    padding: var(--spacing-md);
+    background-color: var(--primary-color);
+    color: white;
+    border: none;
+    border-radius: var(--border-radius-sm);
+    cursor: pointer;
+    font-size: 1rem;
+  }
+
+  .request-form-card .submit-btn:hover {
+    background-color: var(--secondary-color);
+  }
+
+  /* Request History Section */
+  .request-history-section {
+    margin-bottom: var(--spacing-xl);
+  }
+
+  .schedule-card {
+    background-color: white;
+    padding: var(--spacing-lg);
+    border-radius: var(--border-radius-lg);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    margin-bottom: var(--spacing-md);
+    display: flex;
+    flex-direction: column;
+  }
+
+  .card-content {
+    flex: 1;
+  }
+
+  .card-header {
+    margin-bottom: var(--spacing-md);
+  }
+
+  .status-badge {
+    display: inline-block;
+    background-color: var(--primary-color);
+    color: white;
+    padding: var(--spacing-xs) var(--spacing-sm);
+    border-radius: var(--border-radius-sm);
+    font-size: 0.875rem;
+  }
+
+  .card-body {
+    margin-top: var(--spacing-md);
+  }
+
+  .schedule-info {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--spacing-lg);
+    margin-bottom: var(--spacing-md);
+  }
+
+  .info-item {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+    flex: 1;
+    min-width: 200px;
+  }
+
+  .info-item i {
+    color: var(--primary-color);
+  }
+
+  /* Action Buttons Section */
+  .schedule-action {
+    display: flex;
+    gap: var(--spacing-sm);
+    justify-content: flex-end;
+    margin-top: var(--spacing-md);
+    padding-top: var(--spacing-xs);
+    border-top: 1px solid var(--border-color);
+  }
+
+  .update-btn,
+  .cancel-btn {
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    font-size: 1.75rem;
+    padding: var(--spacing-xs) var(--spacing-sm);
+    border-radius: var(--border-radius-sm);
+    transition: background-color 0.3s ease, transform 0.2s ease;
+  }
+
+  .update-btn:hover {
+    background-color: var(--secondary-color);
+    color: white;
+    transform: scale(1.05);
+  }
+
+  .cancel-btn:hover {
+    background-color: var(--warning-color);
+    color: white;
+    transform: scale(1.05);
+  }
+
+  /* Responsive Design */
+  @media (max-width: 768px) {
+    .request-form-card form {
+      grid-template-columns: 1fr;
+    }
+    .schedule-info {
+      flex-direction: column;
+    }
+  }
+</style>
