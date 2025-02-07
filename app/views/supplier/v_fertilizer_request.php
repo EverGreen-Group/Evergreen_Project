@@ -1,47 +1,8 @@
-<?php
-// Dummy data for demonstration if not already provided by your controller.
-if (empty($data)) {
-  $data = [];
-}
-
-// Dummy fertilizer types for the request form.
-if (empty($data['fertilizerTypes'])) {
-  $data['fertilizerTypes'] = [
-    (object)[
-      'id'           => 1,
-      'name'         => 'NPK Fertilizer',
-      'pricePerUnit' => 100.00,
-      'unit'         => 'kg'
-    ],
-    (object)[
-      'id'           => 2,
-      'name'         => 'Urea',
-      'pricePerUnit' => 80.00,
-      'unit'         => 'kg'
-    ]
-  ];
-}
-
-// Dummy data for fertilizer request history.
-if (empty($data['fertilizerRequestHistory'])) {
-  $data['fertilizerRequestHistory'] = [
-    (object)[
-      'order_id'        => 301,
-      'fertilizer_type' => 'NPK Fertilizer',
-      'order_date'      => '2025-02-05',
-      'order_time'      => '10:30 AM',
-      'amount'          => 50,
-      'unit'            => 'kg',
-      'price'           => 5000.00,
-      'approval_status' => 'Pending'
-    ]
-  ];
-}
-?>
 <?php require APPROOT . '/views/inc/components/header.php'; ?>
 <?php require APPROOT . '/views/inc/components/sidebar_supplier.php'; ?>
 <?php require APPROOT . '/views/inc/components/topnavbar.php'; ?>
 <link rel="stylesheet" href="<?php echo URLROOT; ?>/css/supplier/fertilizer_requests/styles.css">
+
 <main>
   <!-- Page Header -->
   <div class="head-title">
@@ -65,13 +26,17 @@ if (empty($data['fertilizerRequestHistory'])) {
       <h3>New Fertilizer Request</h3>
     </div>
     <div class="request-form-card">
-      <form id="fertilizer-request-form" action="<?php echo URLROOT; ?>/Supplier/submitFertilizerRequest" method="post">
+      <!-- Note: The form action has been updated to match the old version’s endpoint -->
+      <form id="fertilizer-request-form" action="<?php echo URLROOT; ?>/Supplier/createFertilizerOrder" method="post">
         <div class="form-group">
           <label for="fertilizer">Fertilizer Type:</label>
           <select id="fertilizer" name="fertilizer" required onchange="updatePricePerUnit()">
             <option value="">-- Select Fertilizer --</option>
-            <?php foreach($data['fertilizerTypes'] as $type): ?>
-              <option value="<?php echo $type->id; ?>" data-price="<?php echo $type->pricePerUnit; ?>" data-unit="<?php echo $type->unit; ?>">
+            <?php foreach($data['fertilizer_types'] as $type): ?>
+              <option value="<?php echo $type->type_id; ?>"
+                data-price-kg="<?php echo $type->unit_price_kg; ?>"
+                data-price-pack="<?php echo $type->unit_price_packs; ?>"
+                data-price-box="<?php echo $type->unit_price_box; ?>">
                 <?php echo $type->name; ?>
               </option>
             <?php endforeach; ?>
@@ -79,12 +44,11 @@ if (empty($data['fertilizerRequestHistory'])) {
         </div>
         <div class="form-group">
           <label for="unit">Unit:</label>
-          <select id="unit" name="unit" required>
+          <select id="unit" name="unit" required onchange="updatePricePerUnit()">
             <option value="">-- Select Unit --</option>
-            <!-- Common units for demonstration -->
-            <option value="kg">kg</option>
-            <option value="bag">bag</option>
-            <option value="liter">liter</option>
+            <option value="kg">Kilograms (kg)</option>
+            <option value="packs">Packs</option>
+            <option value="box">Box</option>
           </select>
         </div>
         <div class="form-group">
@@ -106,55 +70,53 @@ if (empty($data['fertilizerRequestHistory'])) {
     </div>
   </div>
 
-  <div class="section-divider"></div>
-
   <!-- Fertilizer Request History Section -->
   <div class="request-history-section">
     <div class="section-header">
       <h3>Fertilizer Request History</h3>
     </div>
-    <?php if (!empty($data['fertilizerRequestHistory'])): ?>
-      <?php foreach($data['fertilizerRequestHistory'] as $request): ?>
+    <?php if (!empty($data['orders'])): ?>
+      <?php foreach($data['orders'] as $order): ?>
         <div class="schedule-card">
           <div class="card-content">
             <div class="card-header">
               <div class="status-badge">
-                Order #<?php echo $request->order_id; ?>
+                Order #<?php echo $order->order_id; ?>
               </div>
             </div>
             <div class="card-body">
               <div class="schedule-info">
                 <div class="info-item">
                   <i class='bx bx-box'></i>
-                  <span>Fertilizer: <?php echo $request->fertilizer_type; ?></span>
+                  <span>Fertilizer: <?php echo $order->fertilizer_name; ?></span>
                 </div>
                 <div class="info-item">
                   <i class='bx bx-calendar'></i>
-                  <span>Date: <?php echo date('m/d/Y', strtotime($request->order_date)); ?></span>
+                  <span>Date: <?php echo date('m/d/Y', strtotime($order->order_date)); ?></span>
                 </div>
                 <div class="info-item">
                   <i class='bx bx-time-five'></i>
-                  <span>Time: <?php echo $request->order_time; ?></span>
+                  <span>Time: <?php echo $order->order_time; ?></span>
                 </div>
                 <div class="info-item">
                   <i class='bx bx-calculator'></i>
-                  <span>Amount: <?php echo $request->amount . ' ' . $request->unit; ?></span>
+                  <span>Amount: <?php echo $order->total_amount . ' ' . $order->unit; ?></span>
                 </div>
                 <div class="info-item">
                   <i class='bx bx-dollar'></i>
-                  <span>Price: <?php echo 'රු.' . number_format($request->price, 2); ?></span>
+                  <span>Price: <?php echo 'රු.' . number_format($order->total_price, 2); ?></span>
                 </div>
                 <div class="info-item">
                   <i class='bx bx-check-circle'></i>
-                  <span>Status: <?php echo $request->approval_status; ?></span>
+                  <span>Status: <?php echo isset($order->payment_status) ? $order->payment_status : 'Pending'; ?></span>
                 </div>
               </div>
-              <!-- Action buttons placed in their own row with a divider -->
+              <!-- Action buttons -->
               <div class="schedule-action">
-                <button class="update-btn" onclick="location.href='<?php echo URLROOT; ?>/Supplier/editFertilizerRequest/<?php echo $request->order_id; ?>'">
+                <button class="update-btn" onclick="location.href='<?php echo URLROOT; ?>/Supplier/editFertilizerRequest/<?php echo $order->order_id; ?>'">
                   <i class='bx bx-edit'></i>
                 </button>
-                <button class="cancel-btn" onclick="location.href='<?php echo URLROOT; ?>/Supplier/cancelFertilizerRequest/<?php echo $request->order_id; ?>'">
+                <button class="cancel-btn" onclick="location.href='<?php echo URLROOT; ?>/Supplier/deleteFertilizerRequest/<?php echo $order->order_id; ?>'">
                   <i class='bx bx-trash'></i>
                 </button>
               </div>
@@ -170,32 +132,59 @@ if (empty($data['fertilizerRequestHistory'])) {
   </div>
 </main>
 
-<!-- Scripts -->
 <script src="<?php echo URLROOT; ?>/public/css/script.js"></script>
 <script>
-  // Update price per unit based on the selected fertilizer.
-  function updatePricePerUnit() {
-    var fertilizerSelect = document.getElementById('fertilizer');
-    var selectedOption = fertilizerSelect.options[fertilizerSelect.selectedIndex];
-    var pricePerUnit = selectedOption.getAttribute('data-price');
-    if (pricePerUnit) {
-      document.getElementById('price_per_unit').value = 'රු.' + parseFloat(pricePerUnit).toFixed(2);
-    } else {
-      document.getElementById('price_per_unit').value = '';
-    }
+// Update Price Per Unit based on the selected fertilizer and unit
+function updatePricePerUnit() {
+  const fertilizerSelect = document.getElementById('fertilizer');
+  const unitSelect = document.getElementById('unit');
+  const pricePerUnitInput = document.getElementById('price_per_unit');
+
+  const selectedOption = fertilizerSelect.options[fertilizerSelect.selectedIndex];
+  if (!selectedOption || selectedOption.value === "") {
+    pricePerUnitInput.value = '';
     updateTotalPrice();
+    return;
   }
 
-  // Calculate and update the total price based on amount and price per unit.
-  function updateTotalPrice() {
-    var fertilizerSelect = document.getElementById('fertilizer');
-    var selectedOption = fertilizerSelect.options[fertilizerSelect.selectedIndex];
-    var pricePerUnit = parseFloat(selectedOption.getAttribute('data-price')) || 0;
-    var amount = parseFloat(document.getElementById('amount').value) || 0;
-    var total = pricePerUnit * amount;
-    document.getElementById('total_price').value = 'රු.' + total.toFixed(2);
+  const unit = unitSelect.value;
+  let price = 0;
+  
+  if (unit === "kg") {
+    price = parseFloat(selectedOption.getAttribute('data-price-kg'));
+  } else if (unit === "packs") {
+    price = parseFloat(selectedOption.getAttribute('data-price-pack'));
+  } else if (unit === "box") {
+    price = parseFloat(selectedOption.getAttribute('data-price-box'));
+  } else {
+    price = 0;
   }
+  
+  if (!isNaN(price)) {
+    pricePerUnitInput.value = price.toFixed(2);
+  } else {
+    pricePerUnitInput.value = '';
+  }
+  
+  updateTotalPrice();
+}
+
+// Update total price based on amount and price per unit
+function updateTotalPrice() {
+  const amount = parseFloat(document.getElementById('amount').value);
+  const pricePerUnit = parseFloat(document.getElementById('price_per_unit').value);
+  const totalPriceInput = document.getElementById('total_price');
+  
+  if (!isNaN(amount) && !isNaN(pricePerUnit)) {
+    totalPriceInput.value = (amount * pricePerUnit).toFixed(2);
+  } else {
+    totalPriceInput.value = '';
+  }
+}
 </script>
+
+<?php require APPROOT . '/views/inc/components/footer.php'; ?>
+
 
 <style>
   /* Root Variables */
