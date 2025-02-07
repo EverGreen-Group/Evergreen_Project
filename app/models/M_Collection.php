@@ -939,7 +939,7 @@ class M_Collection {
         }
     }
 
-    public function getAssignedBags($supplierId) {
+    public function getAssignedBags($supplierId, $collectionId) {
         try {
             $this->db->query('
                 SELECT 
@@ -952,11 +952,13 @@ class M_Collection {
                 FROM bag_usage_history buh
                 LEFT JOIN collection_supplier_records csr ON buh.collection_id = csr.record_id
                 WHERE buh.supplier_id = :supplier_id
+                AND buh.collection_id = :collection_id
                 AND buh.action = "added"
                 ORDER BY buh.timestamp DESC
                 ');
             
             $this->db->bind(':supplier_id', $supplierId);
+            $this->db->bind(':collection_id', $collectionId);
             $bags = $this->db->resultSet();
 
             return [

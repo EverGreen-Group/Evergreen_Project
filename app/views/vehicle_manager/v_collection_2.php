@@ -175,7 +175,6 @@
                         <th>Route Name</th>
                         <th>Set Day</th>
                         <th>Number of Suppliers</th>
-                        <th>Action</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -185,12 +184,6 @@
                         <td><?php echo $data['routeDetails']->route_name  ?></td>
                         <td><?php echo $data['routeDetails']->day  ?></td>
                         <td><?php echo $data['routeDetails']->number_of_suppliers  ?></td>
-                        <td>
-                            <a href="view.php?id=<?= urlencode($routeDetails->route_id); ?>" 
-                               class="btn btn-primary" style="max-width:80px;max-height:30px;">
-                                VIEW
-                            </a>
-                        </td>
                     </tr>
                 <?php else: ?>
                     <tr>
@@ -214,7 +207,6 @@
                         <th>First Name</th>
                         <th>Last Name</th>
                         <th>Contact Number</th>
-                        <th>Action</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -225,7 +217,6 @@
                         <td><?php echo $data['driverDetails']->first_name  ?></td>
                         <td><?php echo $data['driverDetails']->last_name  ?></td>
                         <td><?php echo $data['driverDetails']->contact_number  ?></td>
-                        <td><a href="" class="btn btn-primary" style="max-width:80px;max-height:30px;"> VIEW</a></td>
                     </tr>
                     <?php else: ?>
                         <tr>
@@ -247,7 +238,6 @@
                         <th>Capacity</th>
                         <th>Color</th>
                         <th>Type</th>
-                        <th>Action</th>
                 </thead>
                 <tbody>
                     <?php if ($data['vehicleDetails']):?>
@@ -258,7 +248,6 @@
                         <td><?php echo $data['vehicleDetails']->capacity  ?></td>
                         <td><?php echo $data['vehicleDetails']->color  ?></td>
                         <td><?php echo $data['vehicleDetails']->vehicle_type  ?></td>
-                        <td><a href="" class="btn btn-primary" style="max-width:80px;max-height:30px;"> VIEW</a></td>
                     </tr>
                     <?php else: ?>
                         <tr>
@@ -277,17 +266,6 @@
         <div class="left">
             <h1 style="margin-top:40px;">Collection Information</h1>
         </div>
-    </div>
-
-    <div class="action-buttons">
-        <a href="#" class="btn btn-primary">
-            <i class='bx bx-plus'></i>
-            Add supplier
-        </a>
-        <a href="#" class="btn btn-primary">
-            <i class='bx bx-minus'></i>
-            Remove supplier
-        </a>
     </div>
 
 
