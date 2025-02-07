@@ -86,6 +86,7 @@ class VehicleManager extends Controller
         $vehicles = $this->vehicleModel->getAllVehicles();
         $shifts = $this->shiftModel->getAllShifts();
         $schedules = $this->scheduleModel->getAllSchedules();
+        $collectionSchedules = $this->scheduleModel->getSchedulesForNextWeek(); 
         $ongoingCollections = $this->collectionModel->getOngoingCollections();
         $todayRoutes = $this->routeModel->getTodayAssignedRoutes();
 
@@ -98,7 +99,7 @@ class VehicleManager extends Controller
             'shifts' => $shifts,
             'schedules' => $schedules,
             'ongoing_collections' => $ongoingCollections,
-            'todayRoutes' => $todayRoutes
+            'todayRoutes' => $todayRoutes 
         ]);
     }
 
@@ -151,8 +152,7 @@ class VehicleManager extends Controller
 
 
     // Other methods remain unchanged
-    public function vehicle()
-    {
+    public function vehicle() {
         $data = [
             'totalVehicles' => $this->vehicleModel->getTotalVehicles(),
             'availableVehicles' => $this->vehicleModel->getAvailableVehicles(),
@@ -163,9 +163,8 @@ class VehicleManager extends Controller
         $this->view('vehicle_manager/v_vehicle', $data);
     }
 
-    public function driver()
-    {
-        $unassignedDrivers = $this->driverModel->getUnassignedDriversList();
+    public function driver() {
+        $unassignedDrivers = $this->driverModel->getUnassignedDriversList(); 
         $allDrivers = $this->driverModel->getAllDrivers();
         $totalDrivers = $this->driverModel->getTotalDrivers();
         $onDutyDrivers = $this->driverModel->getDriversOnDuty();
@@ -180,10 +179,29 @@ class VehicleManager extends Controller
             'users' => $this->userModel->getAllUnassignedUsers(),
             'update_users' => $this->userModel->getAllUserDrivers()
         ];
-
+        
         $this->view('vehicle_manager/v_driver', $data);
     }
 
+
+    public function getDriverDetails($driverId) {
+        // Set header to return JSON
+        header('Content-Type: application/json');
+    
+        try {
+            $driver = $this->driverModel->getDriverDetails($driverId);
+            
+            if ($driver) {
+                echo json_encode($driver);
+            } else {
+                http_response_code(404);
+                echo json_encode(['error' => 'Driver not found']);
+            }
+        } catch (Exception $e) {
+            http_response_code(500);
+            echo json_encode(['error' => 'Server error']);
+        }
+    }
 
     public function addDriver()
     {
@@ -310,8 +328,7 @@ class VehicleManager extends Controller
         }
     }
 
-    public function route()
-    {
+    public function route() {
         $allRoutes = $this->routeModel->getAllRoutes();
         $totalRoutes = $this->routeModel->getTotalRoutes();
         $totalActive = $this->routeModel->getTotalActiveRoutes();
@@ -493,25 +510,24 @@ class VehicleManager extends Controller
         // Handle logout functionality
     }
 
-    public function uploadVehicleImage()
-    {
+    public function uploadVehicleImage() {
         if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES['vehicle_image'])) {
             $vehicle_id = $_POST['vehicle_id'];
             $file = $_FILES['vehicle_image'];
-
+            
             // Configure upload settings
             $upload_dir = 'uploads/vehicles/';
             $file_extension = strtolower(pathinfo($file['name'], PATHINFO_EXTENSION));
             $file_name = uniqid() . '.' . $file_extension;
             $file_path = $upload_dir . $file_name;
-
+            
             // Check file type
             $allowed_types = ['jpg', 'jpeg', 'png'];
             if (!in_array($file_extension, $allowed_types)) {
                 echo json_encode(['error' => 'Invalid file type']);
                 return;
             }
-
+            
             // Move uploaded file
             if (move_uploaded_file($file['tmp_name'], $file_path)) {
                 // Save to database
@@ -520,7 +536,7 @@ class VehicleManager extends Controller
                     'Image',
                     $file_path
                 );
-
+                
                 echo json_encode(['success' => true, 'file_path' => $file_path]);
             } else {
                 echo json_encode(['error' => 'Failed to upload file']);
@@ -528,8 +544,7 @@ class VehicleManager extends Controller
         }
     }
 
-    public function createVehicle()
-    {
+    public function createVehicle() {
         if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             try {
                 // Sanitize POST data
@@ -537,7 +552,7 @@ class VehicleManager extends Controller
 
                 // Create vehicle
                 $result = $this->vehicleModel->createVehicle($_POST);
-
+                
                 if ($result === true) {
                     flash('vehicle_message', 'Vehicle Added Successfully', 'alert alert-success');
                     redirect('vehiclemanager/index');
@@ -554,8 +569,7 @@ class VehicleManager extends Controller
         }
     }
 
-    public function updateVehicle()
-    {
+    public function updateVehicle() {
         if ($_SERVER['REQUEST_METHOD'] == 'GET') {
             // Render the update vehicle view (if applicable)
             $data = [
@@ -569,12 +583,11 @@ class VehicleManager extends Controller
         }
     }
 
-    private function handleVehicleUpdateSubmission()
-    {
+    private function handleVehicleUpdateSubmission() {
         // Prevent PHP errors from being output
         error_reporting(E_ALL);
         ini_set('display_errors', 0);
-
+        
         // Set JSON header
         header('Content-Type: application/json');
 
@@ -598,7 +611,7 @@ class VehicleManager extends Controller
             error_log('Received vehicle update data: ' . print_r($data, true));
 
             $result = $this->vehicleModel->updateVehicle($data);
-
+            
             if ($result === true) {
                 echo json_encode([
                     'success' => true,
@@ -618,7 +631,6 @@ class VehicleManager extends Controller
                 'message' => 'Error: ' . $e->getMessage()
             ]);
         }
-        exit; // Ensure no additional output
     }
 
     public function getVehicleById($id)
@@ -904,8 +916,7 @@ class VehicleManager extends Controller
         }
     }
 
-    public function addVehicle()
-    {
+    public function addVehicle() {
         if ($_SERVER['REQUEST_METHOD'] == 'GET') {
             $data = [
                 'title' => 'Add New Vehicle'
@@ -917,8 +928,7 @@ class VehicleManager extends Controller
         }
     }
 
-    private function handleVehicleSubmission()
-    {
+    private function handleVehicleSubmission() {
         try {
             // Basic vehicle data
             $vehicleData = [
@@ -954,8 +964,7 @@ class VehicleManager extends Controller
         }
     }
 
-    private function handleFileUpload($file, $uploadDir)
-    {
+    private function handleFileUpload($file, $uploadDir) {
         $uploadDir = '../public/uploads/' . $uploadDir . '/';
         $fileName = uniqid() . '_' . basename($file['name']);
         $targetPath = $uploadDir . $fileName;
@@ -966,16 +975,15 @@ class VehicleManager extends Controller
         return false;
     }
 
-    private function handleVehicleImage($file, $licensePlate)
-    {
+    private function handleVehicleImage($file, $licensePlate) {
         try {
             if ($file['error'] === UPLOAD_ERR_OK) {
                 // Define the upload directory path
                 $uploadDir = UPLOADROOT . '/vehicle_photos/';
-
+                
                 // Log the upload directory path
                 error_log("Upload directory: " . $uploadDir);
-
+                
                 // Create directory if it doesn't exist
                 if (!file_exists($uploadDir)) {
                     if (!mkdir($uploadDir, 0777, true)) {
@@ -986,7 +994,7 @@ class VehicleManager extends Controller
 
                 $fileName = $licensePlate . '.jpg';
                 $targetPath = $uploadDir . $fileName;
-
+                
                 // Log the target path
                 error_log("Target path: " . $targetPath);
 
@@ -1475,6 +1483,52 @@ class VehicleManager extends Controller
             echo json_encode(['success' => true]);
         } else {
             echo json_encode(['success' => false, 'message' => 'Failed to approve collection']);
+        }
+    }
+
+    public function getCollectionsByDate() {
+        // Get the date from the request
+        $date = $_GET['date'] ?? null;
+    
+        if ($date) {
+            // Fetch collections for the specified date
+            $collections = $this->collectionModel->getCollectionsByDate($date);
+            
+            // Return the collections as JSON
+            header('Content-Type: application/json');
+            echo json_encode($collections);
+        } else {
+            // Handle the case where no date is provided
+            header('Content-Type: application/json');
+            echo json_encode([]);
+        }
+    }
+
+    public function removeVehicle() {
+        if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+            // Validate and sanitize input
+            $license_plate = htmlspecialchars(trim($_POST['license_plate']));
+
+            // Check if the vehicle exists
+            $vehicle = $this->vehicleModel->getVehicleByLicensePlate($license_plate);
+            if ($vehicle) {
+                // Remove the vehicle from the database
+                if ($this->vehicleModel->deleteVehicle($license_plate)) {
+                    // Optionally, remove the vehicle image file
+                    $imagePath = "/opt/lampp/htdocs/Evergreen_Project/public/uploads/vehicle_photos/" . $license_plate . ".jpg";
+                    if (file_exists($imagePath)) {
+                        unlink($imagePath); // Delete the image file
+                    }
+
+                    // Redirect or show success message
+                    header('Location: ' . URLROOT . '/vehiclemanager/vehicle');
+                    exit();
+                } else {
+                    echo "Error removing vehicle.";
+                }
+            } else {
+                echo "Vehicle not found.";
+            }
         }
     }
 

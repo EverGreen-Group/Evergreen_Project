@@ -167,3 +167,8 @@ function handleUserSelection(selectElement, elements) {
     elements.gender.textContent = "";
   }
 }
+
+function showDriverProfile() {
+  // Show the modal
+  document.getElementById("viewDriverProfileModal").style.display = "block";
+}

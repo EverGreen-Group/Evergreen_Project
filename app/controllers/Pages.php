@@ -1,17 +1,37 @@
 <?php
 
 require_once APPROOT . '/helpers/auth_middleware.php';
+require_once '../app/models/M_Supplier.php';
+
 class Pages extends Controller {
+
+    private $supplierModel;
     public function __construct() {
-        // Any constructor logic if needed
+        $this->supplierModel = new M_Supplier();
     }
 
     public function index() {
+
+        if (isset($_SESSION['user_id'])) {
+            $hasSubmittedApplication = $this->checkApplicationStatus($_SESSION['user_id']);
+        } else {
+            $hasSubmittedApplication = false;
+        }
+
+
         $data = [
-            'title' => 'Welcome to Evergreen'
+            'title' => 'Welcome to Evergreen',
+            'hasSubmittedApplication' => $hasSubmittedApplication
         ];
         
         $this->view('pages/landing', $data);
+    }
+
+    private function checkApplicationStatus() {
+
+        $hasSubmittedApplication = $this->supplierModel->checkApplicationStatus($_SESSION['user_id']);
+    
+        return $hasSubmittedApplication;
     }
 
     public function supplier_application_status() {

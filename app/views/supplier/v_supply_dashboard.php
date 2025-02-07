@@ -1,7 +1,7 @@
 <?php require APPROOT . '/views/inc/components/header.php'; ?>
 <?php require APPROOT . '/views/inc/components/sidebar_supplier.php'; ?>
 <?php require APPROOT . '/views/inc/components/topnavbar.php'; ?>
-<?php require APPROOT . '/views/supplier/css/dashboard_style.php'; ?>
+
 
 <main>
     <!-- Dashboard Header -->
@@ -60,14 +60,6 @@
                     </div>
                 </div>
                 <div class="schedule-action">
-                    <select class="schedule-select">
-                        <option value="" disabled selected>Select New Day</option>
-                        <option value="monday">Monday</option>
-                        <option value="tuesday">Tuesday</option>
-                        <option value="wednesday">Wednesday</option>
-                        <option value="thursday">Thursday</option>
-                        <option value="friday">Friday</option>
-                    </select>
                     <button class="change-schedule-btn">
                         <i class='bx bx-calendar-edit'></i>
                         <span>Request Schedule Change</span>
@@ -83,48 +75,57 @@
     <!-- Schedule Section -->
     <div class="schedule-section">
         <div class="section-header">
-            <h3>Scheduled Collections</h3>
+            <h3>Upcoming Schedule</h3>
         </div>
-        
-        <div class="schedule-card">
-            <button class="nav-btn prev-btn">
-                <i class='bx bx-chevron-left'></i>
-            </button>
 
-            <div class="card-content">
-                <div class="card-header">
-                    <div class="status-badge today">Today</div>
-                </div>
-                <div class="card-body">
-                    <div class="schedule-info">
-                        <div class="info-item">
-                            <i class='bx bx-calendar'></i>
-                            <span>Today</span>
-                        </div>
-                        <div class="info-item">
-                            <i class='bx bx-time-five'></i>
-                            <span>08:00 AM</span>
-                        </div>
+        <?php if (!empty($data['todaySchedules'])): ?>
+            <?php $schedule = $data['todaySchedules'][0]; // Access the first schedule ?>
+            <div class="schedule-card">
+                <div class="card-content">
+                    <div class="card-header">
+                        <div class="status-badge today">Collection Schedule #<?php echo $schedule->schedule_id; ?></div>
                     </div>
-                    <div class="schedule-action">
-                        <a href="<?php echo URLROOT; ?>/Supplier/scheduleDetails" class="view-details-btn">
-                            <i class='bx bx-info-circle'></i>
-                            <span>View Details</span>
-                        </a>
+                    <div class="card-body">
+                        <div class="schedule-info">
+                            <div class="info-item">
+                                <i class='bx bx-calendar'></i>
+                                <span><?php echo date('m/d/Y', strtotime($schedule->start_time)); ?></span> <!-- Format the date -->
+                            </div>
+                            <div class="info-item">
+                                <i class='bx bx-time-five'></i>
+                                <span><?php echo date('h:i A', strtotime($schedule->start_time)); ?></span> <!-- Format the time -->
+                            </div>
+                            <div class="info-item">
+                                <i class='bx bx-user'></i>
+                                <span>Driver: <?php echo $schedule->driver_id; // You may want to fetch the driver's name ?></span>
+                            </div>
+                            <div class="info-item">
+                                <i class='bx bx-car'></i>
+                                <span>Vehicle: <?php echo $schedule->license_plate; ?></span>
+                            </div>
+                            <div class="info-item">
+                                <i class='bx bx-check-circle'></i>
+                                <span>Current Status: <?php echo $schedule->schedule_status; ?></span>
+                            </div>
+                        </div>
+                        <div class="schedule-action">
+                            <?php if (!empty($data['collectionId'])): ?>
+                                <a href="<?php echo URLROOT; ?>/Supplier/collection/<?php echo $data['collectionId']; ?>" class="view-details-btn">
+                                    <i class='bx bx-info-circle'></i>
+                                    <span>View Details</span>
+                                </a>
+                            <?php else: ?>
+                                <span class="no-details">Collection hasnt started yet!</span>
+                            <?php endif; ?>
+                        </div>
                     </div>
                 </div>
             </div>
-
-            <button class="nav-btn next-btn">
-                <i class='bx bx-chevron-right'></i>
-            </button>
-        </div>
-
-        <div class="card-navigation">
-            <span class="current-card">1</span>
-            <span>/</span>
-            <span class="total-cards">4</span>
-        </div>
+        <?php else: ?>
+            <div class="no-schedule">
+                <p>No upcoming schedules for today.</p>
+            </div>
+        <?php endif; ?>
     </div>
 
     <div class="section-divider"></div>
@@ -136,164 +137,331 @@
 </script>
 
 <!-- Scripts -->
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script src="<?php echo URLROOT; ?>/public/css/script.js"></script>
 
-<!-- Add this after your main content but before closing </main> -->
-<div class="modal" id="scheduleDetailsModal">
-    <div class="modal-content">
-        <div class="modal-header">
-            <h3>Collection Details</h3>
-            <button class="close-modal">
-                <i class='bx bx-x'></i>
-            </button>
-        </div>
-        <div class="modal-body">
-            <div class="detail-group">
-                <h4>Collection Information</h4>
-                <div class="detail-item">
-                    <span class="label">Date:</span>
-                    <span class="value">Today</span>
-                </div>
-                <div class="detail-item">
-                    <span class="label">Time:</span>
-                    <span class="value">08:00 AM</span>
-                </div>
-                <div class="detail-item">
-                    <span class="label">Order ID:</span>
-                    <span class="value">#11</span>
-                </div>
-                <div class="detail-item">
-                    <span class="label">Quantity:</span>
-                    <span class="value">20 kg</span>
-                </div>
-            </div>
-            <div class="detail-group">
-                <h4>Status Updates</h4>
-                <div class="status-timeline">
-                    <div class="timeline-item active">
-                        <div class="timeline-dot"></div>
-                        <div class="timeline-content">
-                            <p class="time">08:00 AM</p>
-                            <p class="status">Collection Scheduled</p>
-                        </div>
-                    </div>
-                    <div class="timeline-item">
-                        <div class="timeline-dot"></div>
-                        <div class="timeline-content">
-                            <p class="time">Pending</p>
-                            <p class="status">Collector Arrival</p>
-                        </div>
-                    </div>
-                    <div class="timeline-item">
-                        <div class="timeline-dot"></div>
-                        <div class="timeline-content">
-                            <p class="time">Pending</p>
-                            <p class="status">Collection Complete</p>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
 
-<script>
-// Add this to your existing JavaScript file
-function initializeModal() {
-    const modal = document.getElementById('scheduleDetailsModal');
-    const viewDetailsBtn = document.querySelector('.view-details-btn');
-    const closeModalBtn = document.querySelector('.close-modal');
 
-    viewDetailsBtn.addEventListener('click', () => {
-        modal.classList.add('active');
-        document.body.style.overflow = 'hidden'; // Prevent background scrolling
-    });
 
-    closeModalBtn.addEventListener('click', () => {
-        modal.classList.remove('active');
-        document.body.style.overflow = ''; // Restore scrolling
-    });
-
-    // Close modal when clicking outside
-    modal.addEventListener('click', (e) => {
-        if (e.target === modal) {
-            modal.classList.remove('active');
-            document.body.style.overflow = '';
-        }
-    });
-}
-
-// Add this to your DOMContentLoaded event
-document.addEventListener('DOMContentLoaded', function() {
-    initializeScheduleCards();
-    initializeModal();
-});
-</script>
 
 <style>
-    .schedule-action {
-        display: flex;
-        flex-direction: column;
-        gap: 10px;
-    }
+:root {
+  /* Color Variables */
+  --primary-color: var(--mainn);
+  --secondary-color: #2ecc71;
+  --text-primary: #2c3e50;
+  --text-secondary: #7f8c8d;
+  --background-light: #f8f9fa;
+  --border-color: #e0e0e0;
+  --success-color: #27ae60;
+  --warning-color: #f39c12;
+  
+  /* Spacing */
+  --spacing-xs: 0.25rem;
+  --spacing-sm: 0.5rem;
+  --spacing-md: 1rem;
+  --spacing-lg: 1.5rem;
+  --spacing-xl: 2rem;
+  
+  /* Border Radius */
+  --border-radius-sm: 4px;
+  --border-radius-md: 8px;
+  --border-radius-lg: 12px;
+}
 
-    .schedule-select {
-        width: 100%;
-        padding: 8px 12px;
-        border: 1px solid #008000;
-        border-radius: 25px;
-        background: white;
-        color: #2b2b2b;
-        font-size: 0.95rem;
-        cursor: pointer;
-        outline: none;
-        transition: all 0.3s ease;
-    }
+/* Layout & Common Styles */
+main {
+  padding: var(--spacing-lg);
+  max-width: 1200px;
+  margin: 0 auto;
+}
 
-    .schedule-select:hover {
-        border-color: #006400;
-        box-shadow: 0 2px 5px rgba(0, 128, 0, 0.1);
-    }
+.section-divider {
+  height: 1px;
+  background-color: var(--border-color);
+  margin: var(--spacing-xl) 0;
+}
 
-    .schedule-select:focus {
-        border-color: #006400;
-        box-shadow: 0 2px 5px rgba(0, 128, 0, 0.1);
-    }
+/* Dashboard Header */
+.head-title {
+  margin-bottom: var(--spacing-xl);
+}
 
-    /* Add this CSS to your stylesheet */
-    .stats-container {
-        display: flex; /* Use flexbox for layout */
-        flex-wrap: wrap; /* Allow items to wrap to the next line */
-        justify-content: space-between; /* Space items evenly */
-        margin: 0 auto; /* Center the container */
-        padding: 10px; /* Add some padding */
-    }
+.head-title h1 {
+  color: var(--text-primary);
+  font-size: 1.75rem;
+  margin-bottom: var(--spacing-sm);
+}
 
-    .stat-item {
-        flex: 1 1 45%; /* Allow items to grow and shrink, with a base width of 45% */
-        box-sizing: border-box; /* Include padding and border in the element's total width and height */
-        margin: 10px; /* Add margin for spacing */
-        min-width: 200px; /* Set a minimum width for smaller screens */
-    }
+.breadcrumb {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  list-style: none;
+  padding: 0;
+}
 
-    .stat-header {
-        display: flex; /* Use flexbox for header layout */
-        align-items: center; /* Center items vertically */
-    }
+.breadcrumb a {
+  color: var(--text-secondary);
+  text-decoration: none;
+}
 
-    .stat-value {
-        font-size: 1.5em; /* Adjust font size for better visibility */
-    }
+.breadcrumb i {
+  color: var(--primary-color);
+}
 
-    /* Media query for smaller screens */
-    @media (max-width: 768px) {
-        .stats-container {
-            flex-direction: column; /* Stack items vertically on small screens */
-        }
+/* Stats Container */
+.stats-container {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  gap: var(--spacing-lg);
+  background-color: white;
+  padding: var(--spacing-lg);
+  border-radius: var(--border-radius-lg);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  margin-bottom: var(--spacing-xl);
+}
 
-        .stat-item {
-            flex: 1 1 100%; /* Make each item take full width */
-        }
-    }
+.stat-item {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-md);
+}
+
+.stat-header {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  color: var(--text-secondary);
+}
+
+.stat-header i {
+  font-size: 1.5rem;
+  color: var(--primary-color);
+}
+
+.stat-value {
+  font-size: 2rem;
+  font-weight: bold;
+  color: var(--text-primary);
+}
+
+.stat-value small {
+  font-size: 0.875rem;
+  color: var(--text-secondary);
+  font-weight: normal;
+}
+
+.stat-divider {
+  width: 1px;
+  background-color: var(--border-color);
+}
+
+/* Schedule Section */
+.schedule-section {
+  margin-bottom: var(--spacing-xl);
+}
+
+.section-header {
+  margin-bottom: var(--spacing-lg);
+}
+
+.section-header h3 {
+  color: var(--text-primary);
+  font-size: 1.25rem;
+}
+
+.schedule-card {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-md);
+  background-color: white;
+  padding: var(--spacing-lg);
+  border-radius: var(--border-radius-lg);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.card-content {
+  flex: 1;
+}
+
+.schedule-info {
+  display: flex;
+  gap: var(--spacing-xl);
+  margin-bottom: var(--spacing-md);
+}
+
+.info-item {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+}
+
+.info-item i {
+  color: var(--primary-color);
+}
+
+.schedule-action {
+  display: flex;
+  gap: var(--spacing-md);
+  align-items: center;
+}
+
+/* Buttons and Controls */
+.nav-btn {
+  background: none;
+  border: none;
+  color: var(--primary-color);
+  cursor: pointer;
+  font-size: 1.5rem;
+  padding: var(--spacing-sm);
+}
+
+.nav-btn:hover {
+  color: var(--secondary-color);
+}
+
+.view-details-btn, 
+.change-schedule-btn {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  padding: var(--spacing-sm) var(--spacing-md);
+  border-radius: var(--border-radius-sm);
+  border: none;
+  background-color: var(--primary-color);
+  color: white;
+  cursor: pointer;
+  text-decoration: none;
+}
+
+.view-details-btn:hover,
+.change-schedule-btn:hover {
+  background-color: var(--secondary-color);
+}
+
+.schedule-select {
+  padding: var(--spacing-sm);
+  border-radius: var(--border-radius-sm);
+  border: 1px solid var(--border-color);
+  outline: none;
+}
+
+/* Modal Styles */
+.modal {
+  display: none;
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  z-index: 1000;
+}
+
+.modal.active {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.modal-content {
+  background-color: white;
+  border-radius: var(--border-radius-lg);
+  width: 90%;
+  max-width: 600px;
+  max-height: 90vh;
+  overflow-y: auto;
+}
+
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: var(--spacing-lg);
+  border-bottom: 1px solid var(--border-color);
+}
+
+.modal-body {
+  padding: var(--spacing-lg);
+}
+
+.detail-group {
+  margin-bottom: var(--spacing-lg);
+}
+
+.detail-group h4 {
+  margin-bottom: var(--spacing-md);
+  color: var(--text-primary);
+}
+
+.detail-item {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: var(--spacing-sm);
+}
+
+/* Timeline Styles */
+.status-timeline {
+  position: relative;
+  padding-left: var(--spacing-lg);
+}
+
+.timeline-item {
+  position: relative;
+  padding-bottom: var(--spacing-lg);
+}
+
+.timeline-dot {
+  position: absolute;
+  left: -16px;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background-color: var(--border-color);
+}
+
+.timeline-item.active .timeline-dot {
+  background-color: var(--success-color);
+}
+
+.timeline-item::before {
+  content: '';
+  position: absolute;
+  left: -11px;
+  top: 12px;
+  bottom: 0;
+  width: 2px;
+  background-color: var(--border-color);
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .stats-container {
+    grid-template-columns: 1fr;
+  }
+  
+  .stat-divider {
+    display: none;
+  }
+  
+  .schedule-info {
+    flex-direction: column;
+    gap: var(--spacing-md);
+  }
+  
+  .schedule-action {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  
+  .modal-content {
+    width: 95%;
+    margin: var(--spacing-sm);
+  }
+}
 </style>
+
+
+
+

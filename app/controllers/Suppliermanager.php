@@ -166,6 +166,24 @@ class SupplierManager extends Controller {
         redirect('suppliermanager/applications');
     }
 
+
+    public function confirmSupplierRole() {
+        if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+            $data = json_decode(file_get_contents('php://input'), true);
+            $applicationId = $data['application_id'];
+
+            $result = $this->supplierModel->confirmSupplierRole($applicationId);
+            if ($result) {
+                echo json_encode(['success' => true]);
+            } else {
+                echo json_encode(['success' => false, 'message' => 'Failed to confirm role. Check application ID and user data.']);
+            }
+        } else {
+            http_response_code(400);
+            echo json_encode(['success' => false, 'message' => 'Invalid request.']);
+        }
+    }
+
     public function suppliers() {
         // Get all suppliers from the database
         $suppliers = $this->supplierModel->getAllSuppliers();

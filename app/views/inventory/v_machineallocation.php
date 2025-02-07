@@ -63,7 +63,7 @@
                                     <form method="POST"
                                         action="<?php echo URLROOT; ?>/Inventory/machine?id=<?php echo $machine->id; ?>">
                                         <button type="submit" name="status_deallocate"
-                                            class="btn btn-secondary">Deallocate</button>
+                                            class="btn btn-tertiary">Deallocate</button>
                                     </form>
                                 </td>
                                 <td><button class="btn detail" onclick="">details</button></td>

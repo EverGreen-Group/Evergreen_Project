@@ -93,24 +93,53 @@ class M_CollectionSchedule {
         $this->db->query("
             SELECT 
                 cs.schedule_id,
-                cs.week_number,
                 cs.day,
                 r.route_name,
                 v.vehicle_type,
                 v.license_plate,
                 cs_shift.shift_name,
-                cs_shift.start_time,
-                cs_shift.end_time
+                COALESCE(ce.new_time, cs_shift.start_time) as start_time,
+                cs_shift.end_time,
+                ce.exception_type,
+                ce.reason as exception_reason,
+                CASE 
+                    WHEN cs.day = DATE_FORMAT(CURDATE(), '%W') THEN 'today'
+                    WHEN FIELD(cs.day, 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday') 
+                        > FIELD(DATE_FORMAT(CURDATE(), '%W'), 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday')
+                    THEN 'upcoming'
+                    ELSE 'upcoming_next_week'
+                END as schedule_status,
+                CASE 
+                    WHEN cs.day = DATE_FORMAT(CURDATE(), '%W') THEN 1 
+                    ELSE 0 
+                END as is_today
             FROM collection_schedules cs
             JOIN routes r ON cs.route_id = r.route_id
             JOIN vehicles v ON r.vehicle_id = v.vehicle_id
             JOIN collection_shifts cs_shift ON cs.shift_id = cs_shift.shift_id
+            LEFT JOIN collection_exceptions ce ON 
+                cs.schedule_id = ce.schedule_id 
+                AND ce.exception_date = CURDATE()
             WHERE cs.driver_id = :driver_id
             AND cs.is_active = 1
             AND cs.is_deleted = 0
+            AND r.is_deleted = 0
+            AND NOT EXISTS (
+                SELECT 1 FROM collection_exceptions 
+                WHERE schedule_id = cs.schedule_id 
+                AND exception_date = CURDATE()
+                AND exception_type = 'SKIP'
+            )
+            AND NOT EXISTS (
+                SELECT 1 FROM collections 
+                WHERE schedule_id = cs.schedule_id 
+                AND DATE(end_time) = CURDATE() 
+                AND status = 'Completed'
+            )
             ORDER BY 
-                cs.week_number,
-                FIELD(cs.day, 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday')
+                FIELD(schedule_status, 'today', 'upcoming', 'upcoming_next_week'),
+                FIELD(cs.day, 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'),
+                COALESCE(ce.new_time, cs_shift.start_time)
         ");
 
         $this->db->bind(':driver_id', $driverId);
@@ -597,7 +626,7 @@ class M_CollectionSchedule {
         }
 
         // If schedule exists and is not in use, proceed with deletion
-        $this->db->query('DELETE FROM collection_schedules WHERE schedule_id = :schedule_id');
+        $this->db->query('UPDATE collection_schedules SET is_deleted = 1 WHERE schedule_id = :schedule_id');
         $this->db->bind(':schedule_id', $schedule_id);
 
         // Execute
@@ -1002,4 +1031,79 @@ class M_CollectionSchedule {
             throw $e;
         }
     }
+
+    public function getSchedulesForNextWeek() {
+        $schedules = [];
+        $today = date('Y-m-d');
+        
+        // Get the next 7 days
+        for ($i = 0; $i < 7; $i++) {
+            $date = date('Y-m-d', strtotime("+$i days"));
+            $dayOfWeek = date('l', strtotime($date)); // Get the full name of the day (e.g., "Monday")
+
+            // Fetch schedules for the specific day
+            $sql = "SELECT * FROM collection_schedules
+            INNER JOIN routes on collection_schedules.route_id = routes.route_id
+            WHERE collection_schedules.day = :day AND collection_schedules.is_active = 1 AND collection_schedules.is_deleted = 0";
+            $this->db->query($sql);
+            $this->db->bind(':day', $dayOfWeek);
+            $schedules[$date] = $this->db->resultSet(); // Store schedules by date
+        }
+
+        return $schedules;
+    }
+
+    public function getUpcomingSchedulesBySupplierId($supplierId) {
+        $this->db->query("
+            SELECT 
+                cs.schedule_id,
+                cs.day,
+                cs.driver_id,
+                r.route_name,
+                v.vehicle_type,
+                v.license_plate,
+                cs_shift.shift_name,
+                COALESCE(ce.new_time, cs_shift.start_time) as start_time,
+                cs_shift.end_time,
+                ce.exception_type,
+                ce.reason as exception_reason,
+                CASE 
+                    WHEN cs.day = DATE_FORMAT(CURDATE(), '%W') THEN 'today'
+                    WHEN FIELD(cs.day, 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday') 
+                        > FIELD(DATE_FORMAT(CURDATE(), '%W'), 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday')
+                    THEN 'upcoming'
+                    ELSE 'upcoming_next_week'
+                END as schedule_status,
+                CASE 
+                    WHEN cs.day = DATE_FORMAT(CURDATE(), '%W') THEN 1 
+                    ELSE 0 
+                END as is_today
+            FROM collection_schedules cs
+            JOIN routes r ON cs.route_id = r.route_id
+            JOIN route_suppliers rs ON r.route_id = rs.route_id
+            JOIN vehicles v ON r.vehicle_id = v.vehicle_id
+            JOIN collection_shifts cs_shift ON cs.shift_id = cs_shift.shift_id
+            LEFT JOIN collection_exceptions ce ON 
+                cs.schedule_id = ce.schedule_id 
+                AND ce.exception_date = CURDATE()
+            WHERE rs.supplier_id = :supplier_id
+            AND cs.is_active = 1
+            AND cs.is_deleted = 0
+            AND r.is_deleted = 0
+            AND NOT EXISTS (
+                SELECT 1 FROM collection_exceptions 
+                WHERE schedule_id = cs.schedule_id 
+                AND exception_date = CURDATE()
+                AND exception_type = 'SKIP'
+            )
+            ORDER BY 
+                FIELD(schedule_status, 'today', 'upcoming', 'upcoming_next_week'),
+                FIELD(cs.day, 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'),
+                COALESCE(ce.new_time, cs_shift.start_time)
+        ");
+
+        $this->db->bind(':supplier_id', $supplierId);
+        return $this->db->resultSet();
+    }
+
 } 
