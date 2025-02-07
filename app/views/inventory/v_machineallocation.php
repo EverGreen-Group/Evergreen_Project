@@ -30,7 +30,7 @@
 
         <div class="table-data">
 
-            <div class="order">
+            <div class="">
                 <table>
                     <thead>
                         <tr>
