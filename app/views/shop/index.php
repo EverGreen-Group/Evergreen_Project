@@ -24,7 +24,7 @@
         <?php endif; ?>
     </div>
 
-    <?php if(isset($_SESSION['role_id']) && $_SESSION['role_id'] == 1): ?>
+    <?php if(isset($_SESSION['role_id']) && $_SESSION['role_id'] == 1 && isset($data['stats'])): ?>
         <ul class="box-info">
             <li>
                 <i class='bx bxs-shopping-bag'></i>
@@ -77,7 +77,6 @@
                                 <?php echo isset($category->product_count) ? $category->product_count : 0; ?> Products
                             </span>
                         </span>
-                        
                     </div>
                 </a>
             <?php endforeach; ?>
@@ -92,11 +91,9 @@
         </div>
         <div class="products-grid">
             <?php foreach($data['featured_products'] as $product): ?>
-                <div class="product-card">
+                <div class="product-card <?php echo ($product->quantity <= 0) ? 'out-of-stock' : ''; ?>">
                     <?php if($product->quantity <= 0): ?>
-                        <div class="product-badge out-of-stock">Out of Stock</div>
-                    <?php elseif($product->quantity <= 10): ?>
-                        <div class="product-badge low-stock">Low Stock</div>
+                        <div class="product-badge">Out of Stock</div>
                     <?php endif; ?>
 
                     <div class="product-image">
@@ -125,28 +122,13 @@
                                 <i class='bx bx-map'></i>
                                 <?php echo $product->location; ?>
                             </div>
-                            <div class="product-stock">
-                                <i class='bx bx-package'></i>
-                                <?php echo $product->quantity; ?> in stock
-                            </div>
                         </div>
                         
                         <div class="product-actions">
                             <?php if(isset($_SESSION['user_id'])): ?>
                                 <?php if($product->quantity > 0): ?>
-                                    <form action="<?php echo URLROOT; ?>/shop/addToCart/<?php echo $product->id; ?>" method="POST" class="product-actions">
-                                        <div class="quantity-controls">
-                                            <button type="button" onclick="decrementQuantity(<?php echo $product->id; ?>)" class="btn-quantity">
-                                                <i class='bx bx-minus'></i>
-                                            </button>
-                                            <input type="number" name="quantity" id="qty-<?php echo $product->id; ?>" 
-                                                   value="1" min="1" max="<?php echo $product->quantity; ?>" 
-                                                   onchange="validateQuantity(this, <?php echo $product->quantity; ?>)">
-                                            <button type="button" onclick="incrementQuantity(<?php echo $product->id; ?>)" class="btn-quantity">
-                                                <i class='bx bx-plus'></i>
-                                            </button>
-                                        </div>
-                                        <button type="submit" class="btn-add-cart" <?php echo ($product->quantity <= 0) ? 'disabled' : ''; ?>>
+                                    <form action="<?php echo URLROOT; ?>/shop/addToCart/<?php echo $product->id; ?>" method="POST">
+                                        <button type="submit" class="btn-add-cart">
                                             <i class='bx bx-cart-add'></i>
                                             Add to Cart
                                         </button>
@@ -154,13 +136,13 @@
                                 <?php else: ?>
                                     <button class="btn-out-of-stock" disabled>
                                         <i class='bx bx-x-circle'></i>
-                                        Out of Stock
+                                        Unavailable
                                     </button>
                                 <?php endif; ?>
                             <?php else: ?>
                                 <a href="<?php echo URLROOT; ?>/auth/login" class="btn-login-to-buy">
                                     <i class='bx bx-log-in'></i>
-                                    Login to Buy
+                                    Login to Purchase
                                 </a>
                             <?php endif; ?>
                         </div>
@@ -178,11 +160,9 @@
         </div>
         <div class="products-grid">
             <?php foreach($data['new_arrivals'] as $product): ?>
-                <div class="product-card">
+                <div class="product-card <?php echo ($product->quantity <= 0) ? 'out-of-stock' : ''; ?>">
                     <?php if($product->quantity <= 0): ?>
-                        <div class="product-badge out-of-stock">Out of Stock</div>
-                    <?php elseif($product->quantity <= 10): ?>
-                        <div class="product-badge low-stock">Low Stock</div>
+                        <div class="product-badge">Out of Stock</div>
                     <?php endif; ?>
 
                     <div class="product-image">
@@ -199,7 +179,7 @@
                     </div>
 
                     <div class="product-details">
-                    <div class="product-category"><?php echo $product->category_name; ?></div>
+                        <div class="product-category"><?php echo $product->category_name; ?></div>
                         <h3 class="product-name">
                             <a href="<?php echo URLROOT; ?>/shop/viewProduct/<?php echo $product->id; ?>">
                                 <?php echo $product->product_name; ?>
@@ -211,28 +191,13 @@
                                 <i class='bx bx-map'></i>
                                 <?php echo $product->location; ?>
                             </div>
-                            <div class="product-stock">
-                                <i class='bx bx-package'></i>
-                                <?php echo $product->quantity; ?> in stock
-                            </div>
                         </div>
                         
                         <div class="product-actions">
                             <?php if(isset($_SESSION['user_id'])): ?>
                                 <?php if($product->quantity > 0): ?>
-                                    <form action="<?php echo URLROOT; ?>/shop/addToCart/<?php echo $product->id; ?>" method="POST" class="product-actions">
-                                        <div class="quantity-controls">
-                                            <button type="button" onclick="decrementQuantity(<?php echo $product->id; ?>)" class="btn-quantity">
-                                                <i class='bx bx-minus'></i>
-                                            </button>
-                                            <input type="number" name="quantity" id="qty-<?php echo $product->id; ?>" 
-                                                   value="1" min="1" max="<?php echo $product->quantity; ?>" 
-                                                   onchange="validateQuantity(this, <?php echo $product->quantity; ?>)">
-                                            <button type="button" onclick="incrementQuantity(<?php echo $product->id; ?>)" class="btn-quantity">
-                                                <i class='bx bx-plus'></i>
-                                            </button>
-                                        </div>
-                                        <button type="submit" class="btn-add-cart" <?php echo ($product->quantity <= 0) ? 'disabled' : ''; ?>>
+                                    <form action="<?php echo URLROOT; ?>/shop/addToCart/<?php echo $product->id; ?>" method="POST">
+                                        <button type="submit" class="btn-add-cart">
                                             <i class='bx bx-cart-add'></i>
                                             Add to Cart
                                         </button>
@@ -240,59 +205,14 @@
                                 <?php else: ?>
                                     <button class="btn-out-of-stock" disabled>
                                         <i class='bx bx-x-circle'></i>
-                                        Out of Stock
+                                        Unavailable
                                     </button>
                                 <?php endif; ?>
                             <?php else: ?>
                                 <a href="<?php echo URLROOT; ?>/auth/login" class="btn-login-to-buy">
                                     <i class='bx bx-log-in'></i>
-                                    Login to Buy
+                                    Login to Purchase
                                 </a>
-                            <?php endif; ?>
-                        </div>
-                    </div>
-                </div>
-            <?php endforeach; ?>
-        </div>
-    </section>
-
-    <!-- Best Sellers -->
-    <section class="product-section">
-        <div class="section-header">
-            <h2>Best Sellers</h2>
-            <a href="<?php echo URLROOT; ?>/shop/best-sellers" class="view-all">View All</a>
-        </div>
-        <div class="products-grid">
-            <?php foreach($data['best_sellers'] as $product): ?>
-                <div class="product-card">
-                    <?php if($product->quantity <= 0): ?>
-                        <div class="product-badge out-of-stock">Out of Stock</div>
-                    <?php elseif($product->quantity <= 10): ?>
-                        <div class="product-badge low-stock">Low Stock</div>
-                    <?php endif; ?>
-
-                    <div class="product-image">
-                        <img src="<?php echo URLROOT; ?>/img/products/<?php echo $product->primary_image; ?>" 
-                             alt="<?php echo $product->product_name; ?>"
-                             onerror="this.src='<?php echo URLROOT; ?>/img/products/default.jpg'">
-                    </div>
-
-                    <div class="product-details">
-                        <div class="product-category"><?php echo $product->category_name; ?></div>
-                        <h3 class="product-name"><?php echo $product->product_name; ?></h3>
-                        <div class="product-price">Rs. <?php echo number_format($product->price, 2); ?></div>
-                        <div class="product-location">
-                            <i class='bx bx-map'></i>
-                            <?php echo $product->location; ?>
-                        </div>
-                        
-                        <div class="product-actions">
-                            <a href="<?php echo URLROOT; ?>/shop/product/<?php echo $product->id; ?>" 
-                               class="btn-view">View Details</a>
-                            <?php if(isset($_SESSION['user_id']) && $product->quantity > 0): ?>
-                                <button onclick="addToCart(<?php echo $product->id; ?>)" class="btn-add-cart">
-                                    <i class='bx bx-cart-add'></i>
-                                </button>
                             <?php endif; ?>
                         </div>
                     </div>
@@ -302,6 +222,36 @@
     </section>
 </main>
 
+<style>
+    .product-card.out-of-stock {
+        opacity: 0.7;
+        position: relative;
+    }
+    
+    .product-badge {
+        position: absolute;
+        top: 10px;
+        left: 10px;
+        background: #ff4444;
+        color: white;
+        padding: 5px 10px;
+        border-radius: 5px;
+        font-size: 0.9em;
+        z-index: 2;
+    }
+    
+    .btn-out-of-stock {
+        width: 100%;
+        background: #cccccc;
+        color: #666666;
+        cursor: not-allowed;
+    }
+    
+    .product-card.out-of-stock .product-overlay {
+        background-color: rgba(255, 255, 255, 0.7);
+    }
+</style>
+
 <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script>
@@ -310,4 +260,4 @@
 </script>
 <script src="<?php echo URLROOT; ?>/js/main.js"></script>
 
-<?php require APPROOT . '/views/inc/components/footer.php'; ?> 
+<?php require APPROOT . '/views/inc/components/footer.php'; ?>

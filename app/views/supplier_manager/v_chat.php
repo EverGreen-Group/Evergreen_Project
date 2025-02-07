@@ -9,7 +9,7 @@
         <!-- Left Sidebar: Suppliers List -->
         <div class="suppliers-sidebar">
             <div class="search-box">
-                <input type="text" placeholder="Search suppliers...">
+                <input type="text" id="supplier-search" placeholder="Search suppliers...">
                 <i class='bx bx-search'></i>
             </div>
             
@@ -60,15 +60,19 @@
             <h3>Chat Requests</h3>
             <?php if(!empty($data['chat_requests'])): ?>
                 <?php foreach($data['chat_requests'] as $request): ?>
-                    <div class="request-card">
-                        <div class="supplier-info">
+                    <div class="chat-request">
+                        <div class="request-info">
                             <h4><?php echo htmlspecialchars($request->first_name . ' ' . $request->last_name); ?></h4>
                             <p>SUP<?php echo sprintf('%03d', $request->user_id); ?></p>
                         </div>
-                        <button class="accept-btn" data-request-id="<?php echo $request->request_id; ?>" 
-                                data-user-id="<?php echo $request->user_id; ?>">
-                            Accept
-                        </button>
+                        <div class="request-actions">
+                            <button class="accept-btn" onclick="handleRequestAction('accept', '<?php echo $request->source; ?>', <?php echo $request->request_id; ?>)">
+                                Accept
+                            </button>
+                            <button class="reject-btn" onclick="handleRequestAction('reject', '<?php echo $request->source; ?>', <?php echo $request->request_id; ?>)">
+                                Reject
+                            </button>
+                        </div>
                     </div>
                 <?php endforeach; ?>
             <?php else: ?>
@@ -106,6 +110,28 @@ function loadMessages() {
         }
     });
 }
+
+// Handle supplier selection
+document.querySelectorAll('.supplier-item').forEach(item => {
+    item.addEventListener('click', function() {
+        currentChatUserId = this.dataset.userId;
+        const supplierName = this.querySelector('h4').textContent;
+        
+        // Update UI
+        document.querySelectorAll('.supplier-item').forEach(i => i.classList.remove('active'));
+        this.classList.add('active');
+        
+        // Show chat interface
+        document.querySelector('.no-chat-selected').style.display = 'none';
+        document.querySelector('.chat-interface').style.display = 'flex';
+        
+        // Update chat header
+        document.getElementById('current-chat-name').textContent = supplierName;
+        
+        // Load messages
+        loadMessages();
+    });
+});
 
 // Send message function
 function sendMessage() {
@@ -145,66 +171,59 @@ function sendMessage() {
     });
 }
 
-// Send button click handler
-document.getElementById('send-message-btn').addEventListener('click', sendMessage);
-
-// Enter key press handler
+// Enter key to send message
 document.getElementById('message-input').addEventListener('keypress', function(e) {
-    if (e.key === 'Enter') {
+    if (e.key === 'Enter' && !e.shiftKey) {
+        e.preventDefault();
         sendMessage();
     }
 });
 
-// Click handler for supplier items
-document.querySelectorAll('.supplier-item').forEach(item => {
-    item.addEventListener('click', function() {
-        // Remove active class from all items
-        document.querySelectorAll('.supplier-item').forEach(i => i.classList.remove('active'));
-        // Add active class to clicked item
-        this.classList.add('active');
+// Auto refresh messages
+setInterval(loadMessages, 3000);
+
+// Search functionality for suppliers
+document.getElementById('supplier-search').addEventListener('input', function(e) {
+    const searchTerm = e.target.value.toLowerCase();
+    const supplierItems = document.querySelectorAll('.supplier-item');
+    
+    supplierItems.forEach(item => {
+        const supplierName = item.querySelector('h4').textContent.toLowerCase();
+        const supplierId = item.querySelector('p').textContent.toLowerCase();
         
-        // Show chat interface
-        document.querySelector('.no-chat-selected').style.display = 'none';
-        document.querySelector('.chat-interface').style.display = 'flex';
-        
-        // Set current chat user
-        currentChatUserId = this.dataset.userId;
-        document.getElementById('current-chat-name').textContent = 
-            this.querySelector('h4').textContent;
-        
-        // Load messages
-        loadMessages();
+        if (supplierName.includes(searchTerm) || supplierId.includes(searchTerm)) {
+            item.style.display = 'flex';
+        } else {
+            item.style.display = 'none';
+        }
     });
+    
+    checkEmptyResults();
 });
 
-// Accept chat request
-document.querySelectorAll('.accept-btn').forEach(button => {
-    button.addEventListener('click', function() {
-        const requestId = this.dataset.requestId;
-        const userId = this.dataset.userId;
-        
-        fetch('<?php echo URLROOT; ?>/suppliermanager/acceptChatRequest', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({ request_id: requestId })
-        })
-        .then(response => response.json())
-        .then(data => {
-            if(data.success) {
-                // Remove request card
-                this.closest('.request-card').remove();
-                // Refresh suppliers list
-                location.reload(); // You might want to handle this more elegantly
-            }
-        });
-    });
-});
+// Add this to handle empty search results
+const checkEmptyResults = () => {
+    const supplierItems = document.querySelectorAll('.supplier-item');
+    const visibleItems = Array.from(supplierItems).filter(item => 
+        item.style.display !== 'none'
+    );
+    
+    const existingNoResults = document.querySelector('.no-results');
+    if (existingNoResults) {
+        existingNoResults.remove();
+    }
+    
+    if (visibleItems.length === 0) {
+        const noResults = document.createElement('div');
+        noResults.className = 'no-results';
+        noResults.innerHTML = '<p>No suppliers found</p>';
+        document.querySelector('.suppliers-list').appendChild(noResults);
+    }
+};
 
-// Edit message
+// Edit message handler
 document.addEventListener('click', function(e) {
-    if(e.target.closest('.edit-msg-btn')) {
+    if (e.target.closest('.edit-msg-btn')) {
         const messageDiv = e.target.closest('.message');
         const messageText = messageDiv.querySelector('p').textContent;
         currentEditMessageId = messageDiv.dataset.msgId;
@@ -218,11 +237,9 @@ document.addEventListener('click', function(e) {
 document.getElementById('save-edit-btn').addEventListener('click', function() {
     const newMessage = document.getElementById('edit-message-text').value;
     
-    fetch('<?php echo URLROOT; ?>/suppliermanager/editMessage', {
+    fetch(`${URLROOT}/suppliermanager/editMessage`, {
         method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
             msg_id: currentEditMessageId,
             new_message: newMessage
@@ -230,57 +247,111 @@ document.getElementById('save-edit-btn').addEventListener('click', function() {
     })
     .then(response => response.json())
     .then(data => {
-        if(data.success) {
+        if (data.success) {
             document.querySelector('.edit-message-modal').style.display = 'none';
-            loadMessages(); // Reload messages to show the edit
+            loadMessages();
         }
     });
 });
 
-// Delete message
+// Delete message handler
 document.addEventListener('click', function(e) {
-    if(e.target.closest('.delete-msg-btn')) {
-        if(confirm('Are you sure you want to delete this message?')) {
+    if (e.target.closest('.delete-msg-btn')) {
+        if (confirm('Are you sure you want to delete this message?')) {
             const messageDiv = e.target.closest('.message');
             const msgId = messageDiv.dataset.msgId;
             
-            fetch('<?php echo URLROOT; ?>/suppliermanager/deleteMessage', {
+            fetch(`${URLROOT}/suppliermanager/deleteMessage`, {
                 method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
-                    msg_id: msgId
-                })
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ msg_id: msgId })
             })
             .then(response => response.json())
             .then(data => {
-                if(data.success) {
-                    loadMessages(); // Reload messages to remove the deleted one
+                if (data.success) {
+                    loadMessages();
                 }
             });
         }
     }
 });
 
-// Cancel edit
-document.getElementById('cancel-edit-btn').addEventListener('click', function() {
-    document.querySelector('.edit-message-modal').style.display = 'none';
-});
+// Update the accept/reject functions
+function handleRequestAction(action, source, requestId) {
+    const endpoint = action === 'accept' ? 'acceptChatRequest' : 'rejectChatRequest';
+    const button = event.target;
+    
+    // Disable button to prevent double clicks
+    button.disabled = true;
+    
+    fetch(`${URLROOT}/suppliermanager/${endpoint}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ 
+            request_id: requestId,
+            source: source 
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if(data.success) {
+            // Remove the request element with animation
+            const requestElement = button.closest('.chat-request');
+            requestElement.style.opacity = '0';
+            setTimeout(() => {
+                requestElement.remove();
+                // Check if no more requests
+                if (document.querySelectorAll('.chat-request').length === 0) {
+                    location.reload(); // Refresh if no more requests
+                }
+            }, 300);
+        } else {
+            alert('Failed to process request');
+            button.disabled = false;
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('An error occurred');
+        button.disabled = false;
+    });
+}
 
-// Close modal if clicked outside
-window.addEventListener('click', function(e) {
-    if(e.target == document.querySelector('.edit-message-modal')) {
-        document.querySelector('.edit-message-modal').style.display = 'none';
-    }
-});
+// Add this to your view file
+document.addEventListener('DOMContentLoaded', function() {
+    const suppliersSidebar = document.querySelector('.suppliers-sidebar');
+    const requestsSidebar = document.querySelector('.requests-sidebar');
+    const toggleSuppliers = document.querySelector('.toggle-suppliers');
+    const toggleRequests = document.querySelector('.toggle-requests');
 
-// Auto refresh messages every 5 seconds
-setInterval(() => {
-    if (currentChatUserId) {
-        loadMessages();
+    if(toggleSuppliers) {
+        toggleSuppliers.addEventListener('click', () => {
+            suppliersSidebar.classList.toggle('active');
+        });
     }
-}, 5000);
+
+    if(toggleRequests) {
+        toggleRequests.addEventListener('click', () => {
+            requestsSidebar.classList.toggle('active');
+        });
+    }
+
+    // Close sidebars when clicking outside
+    document.addEventListener('click', (e) => {
+        if(!e.target.closest('.suppliers-sidebar') && 
+           !e.target.closest('.toggle-suppliers') && 
+           suppliersSidebar?.classList.contains('active')) {
+            suppliersSidebar.classList.remove('active');
+        }
+        
+        if(!e.target.closest('.requests-sidebar') && 
+           !e.target.closest('.toggle-requests') && 
+           requestsSidebar?.classList.contains('active')) {
+            requestsSidebar.classList.remove('active');
+        }
+    });
+});
 </script>
+
 
 <?php require APPROOT . '/views/inc/components/footer.php'; ?>

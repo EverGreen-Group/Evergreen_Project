@@ -423,5 +423,30 @@ class Supplier extends Controller {
 
         $this->view('supplier/v_schedule_details', $data);
     }
+
+    public function chat() {
+        $chatModel = $this->model('M_Chat');
+        
+        $data = [
+            'supplier_managers' => $chatModel->getSupplierManagers(),
+            'active_chats' => $chatModel->getActiveChats($_SESSION['user_id'])
+        ];
+
+        $this->view('supplier/v_chat', $data);
+    }
+//added newly by theekshana
+    public function sendChatRequest() {
+        if($_SERVER['REQUEST_METHOD'] == 'POST') {
+            $data = json_decode(file_get_contents("php://input"));
+            
+            $chatModel = $this->model('M_Chat');
+            $result = $chatModel->createChatRequest($_SESSION['user_id'], $data->manager_id);
+            
+            echo json_encode([
+                'success' => $result,
+                'message' => $result ? 'Chat request sent successfully' : 'Failed to send chat request'
+            ]);
+        }
+    }
 }
 ?>

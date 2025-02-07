@@ -17,6 +17,83 @@
         </div>
     </div>
 
+    <!-- Collection Status Cards -->
+    <div class="info-cards">
+        <!-- Preferred Collection Card -->
+        <div class="card">
+            <div class="card-header">
+                <i class='bx bx-calendar'></i>
+                <h3>Next Collection</h3>
+            </div>
+            <div class="card-content">
+                <div class="info-item">
+                    <span class="label">Preferred Date:</span>
+                    <span class="value"><?php echo isset($data['nextCollection']->preferred_date) ? date('l, M j', strtotime($data['nextCollection']->preferred_date)) : 'Not scheduled'; ?></span>
+                </div>
+                <div class="info-item">
+                    <span class="label">Time:</span>
+                    <span class="value"><?php echo isset($data['nextCollection']->preferred_time) ? date('g:i A', strtotime($data['nextCollection']->preferred_time)) : '--:--'; ?></span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Driver Arrival Card -->
+        <div class="card">
+            <div class="card-header">
+                <i class='bx bx-time-five'></i>
+                <h3>Driver Status</h3>
+            </div>
+            <div class="card-content">
+                <div class="info-item">
+                    <span class="label">Arrival Status:</span>
+                    <span class="value status-badge <?php echo isset($data['driverStatus']->arrived) ? 'arrived' : 'pending'; ?>">
+                        <?php echo isset($data['driverStatus']->arrived) ? 'Arrived' : 'En Route'; ?>
+                    </span>
+                </div>
+                <?php if (isset($data['driverStatus']->arrival_time)): ?>
+                <div class="info-item">
+                    <span class="label">Arrived At:</span>
+                    <span class="value"><?php echo date('g:i A', strtotime($data['driverStatus']->arrival_time)); ?></span>
+                </div>
+                <?php endif; ?>
+            </div>
+        </div>
+
+        <!-- Vehicle Location Card -->
+        <div class="card">
+            <div class="card-header">
+                <i class='bx bx-map'></i>
+                <h3>Vehicle Location</h3>
+            </div>
+            <div class="card-content">
+                <div id="vehicle-location-map" style="height: 150px; margin-bottom: 10px;"></div>
+                <div class="info-item">
+                    <span class="label">Distance:</span>
+                    <span class="value" id="distance-away">Calculating...</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Collection Amount Card -->
+        <div class="card">
+            <div class="card-header">
+                <i class='bx bx-leaf'></i>
+                <h3>Collection Amount</h3>
+            </div>
+            <div class="card-content">
+                <div class="info-item">
+                    <span class="label">Today's Collection:</span>
+                    <span class="value"><?php echo isset($data['collection']->amount) ? number_format($data['collection']->amount, 1) . ' kg' : '0.0 kg'; ?></span>
+                </div>
+                <div class="info-item">
+                    <span class="label">Status:</span>
+                    <span class="value status-badge <?php echo isset($data['collection']->status) ? strtolower($data['collection']->status) : 'pending'; ?>">
+                        <?php echo isset($data['collection']->status) ? $data['collection']->status : 'Pending'; ?>
+                    </span>
+                </div>
+            </div>
+        </div>
+    </div>
 
     <div class="stats-container">
 
@@ -296,4 +373,123 @@ document.addEventListener('DOMContentLoaded', function() {
             flex: 1 1 100%; /* Make each item take full width */
         }
     }
+
+    .info-cards {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: 1rem;
+        margin: 1rem 0;
+    }
+
+    .card {
+        background: #fff;
+        padding: 1rem;
+        border-radius: 8px;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    }
+
+    .card-header {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        margin-bottom: 1rem;
+    }
+
+    .card-header i {
+        font-size: 1.5rem;
+        color: #007664;
+    }
+
+    .card-header h3 {
+        font-size: 1.1rem;
+        color: #333;
+        margin: 0;
+    }
+
+    .info-item {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 0.5rem;
+    }
+
+    .label {
+        color: #666;
+        font-size: 0.9rem;
+    }
+
+    .value {
+        font-weight: 500;
+        color: #333;
+    }
+
+    .status-badge {
+        padding: 0.25rem 0.5rem;
+        border-radius: 4px;
+        font-size: 0.8rem;
+    }
+
+    .status-badge.arrived {
+        background: #d4edda;
+        color: #155724;
+    }
+
+    .status-badge.pending {
+        background: #fff3cd;
+        color: #856404;
+    }
+
+    .status-badge.completed {
+        background: #cce5ff;
+        color: #004085;
+    }
+
+    #vehicle-location-map {
+        border-radius: 4px;
+        overflow: hidden;
+    }
 </style>
+
+<!-- Add necessary scripts -->
+<script src="https://maps.googleapis.com/maps/api/js?key=YOUR_API_KEY"></script>
+<script>
+    // Initialize map
+    function initMap() {
+        const map = new google.maps.Map(document.getElementById('vehicle-location-map'), {
+            zoom: 13,
+            center: { lat: 0, lng: 0 }
+        });
+
+        // Update vehicle location and distance
+        function updateVehicleLocation() {
+            // Replace with actual API call to get vehicle location
+            const vehicleLocation = <?php echo json_encode($data['vehicleLocation'] ?? null); ?>;
+            
+            if (vehicleLocation) {
+                const position = new google.maps.LatLng(vehicleLocation.lat, vehicleLocation.lng);
+                
+                // Update marker position
+                marker.setPosition(position);
+                map.setCenter(position);
+                
+                // Calculate and update distance
+                calculateDistance(position);
+            }
+        }
+
+        // Create vehicle marker
+        const marker = new google.maps.Marker({
+            map: map,
+            icon: {
+                url: '<?php echo URLROOT; ?>/public/images/truck-icon.png',
+                scaledSize: new google.maps.Size(32, 32)
+            }
+        });
+
+        // Update location every 30 seconds
+        setInterval(updateVehicleLocation, 30000);
+        updateVehicleLocation();
+    }
+
+    // Initialize map when page loads
+    google.maps.event.addDomListener(window, 'load', initMap);
+</script>
