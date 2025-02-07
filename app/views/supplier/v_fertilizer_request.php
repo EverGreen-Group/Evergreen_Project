@@ -1,419 +1,198 @@
+<?php
+// Dummy data for demonstration if not already provided by your controller.
+if (empty($data)) {
+  $data = [];
+}
+
+// Dummy fertilizer types for the request form.
+if (empty($data['fertilizerTypes'])) {
+  $data['fertilizerTypes'] = [
+    (object)[
+      'id'           => 1,
+      'name'         => 'NPK Fertilizer',
+      'pricePerUnit' => 100.00,
+      'unit'         => 'kg'
+    ],
+    (object)[
+      'id'           => 2,
+      'name'         => 'Urea',
+      'pricePerUnit' => 80.00,
+      'unit'         => 'kg'
+    ]
+  ];
+}
+
+// Dummy data for fertilizer request history.
+if (empty($data['fertilizerRequestHistory'])) {
+  $data['fertilizerRequestHistory'] = [
+    (object)[
+      'order_id'        => 301,
+      'fertilizer_type' => 'NPK Fertilizer',
+      'order_date'      => '2025-02-05',
+      'order_time'      => '10:30 AM',
+      'amount'          => 50,
+      'unit'            => 'kg',
+      'price'           => 5000.00,
+      'approval_status' => 'Pending'
+    ]
+  ];
+}
+?>
 <?php require APPROOT . '/views/inc/components/header.php'; ?>
-
-<!-- Side bar -->
 <?php require APPROOT . '/views/inc/components/sidebar_supplier.php'; ?>
-<!-- Top nav bar -->
 <?php require APPROOT . '/views/inc/components/topnavbar.php'; ?>
-
-<!-- MAIN -->
+<link rel="stylesheet" href="<?php echo URLROOT; ?>/css/supplier/fertilizer_requests/styles.css">
 <main>
-    <div class="head-title">
-        <div class="left">
-            <h1>Fertilizer Requests</h1>
-            <ul class="breadcrumb">
-                <li>
-                    <a href="SupplyDashboard.html">Home </a>
-                </li>
-                <li><i class='bx bx-chevron-right'></i></li>
-                <li>
-                    <a class="active" href="#"> Fertilizer Requests</a>
-                </li>
-            </ul>
-        </div>
-
-        <!-- <div class="table-data">
-                        <div class="todo">
-                            <div class="head">
-                                <h3>Fertilizer Request History</h3>
-                                <h5>Last 6 months</h5>
-                                <i class='bx bx-plus'></i>
-                                <i class='bx bx-filter'></i>
-                            </div>
-                            <canvas id="fertilizerRequestChart" ></canvas>
-                        </div>
-                        <div class="todo">
-                            <div class="head">
-                                <h5>This year</h5>
-                                <i class='bx bx-plus'></i>
-                                <i class='bx bx-filter'></i>
-                            </div>
-                            <canvas id="fertilizerChart" width="500" height="400"></canvas>
-                        </div>
-                    </div> -->
-
-
-    <div class="table-data">
-        <div class="order">
-            <div class="head">
-                <h3>Available Fertilizer Types</h3>
-            </div>
-            
-            <div class="fertilizer-selector">
-                <select id="fertilizerSelect" class="fertilizer-dropdown">
-                    <option value="">Select Fertilizer Type</option>
-                    <?php foreach ($data['fertilizer_types'] as $index => $fertilizer): ?>
-                        <option value="<?php echo $index; ?>"><?php echo htmlspecialchars($fertilizer->name); ?></option>
-                    <?php endforeach; ?>
-                </select>
-            </div>
-
-            <div class="fertilizer-details">
-                <?php foreach ($data['fertilizer_types'] as $index => $fertilizer): ?>
-                    <div class="detail-card" id="fertilizer-<?php echo $index; ?>" style="display: none;">
-                        <div class="detail-row">
-                            <div class="detail-label">Description:</div>
-                            <div class="detail-value"><?php echo htmlspecialchars($fertilizer->description); ?></div>
-                        </div>
-                        <div class="detail-row">
-                            <div class="detail-label">Usage:</div>
-                            <div class="detail-value"><?php echo htmlspecialchars($fertilizer->recommended_usage); ?></div>
-                        </div>
-                        <div class="detail-row">
-                            <div class="detail-label">Price (kg):</div>
-                            <div class="detail-value">Rs. <?php echo number_format($fertilizer->unit_price_kg, 2); ?></div>
-                        </div>
-                        <div class="detail-row">
-                            <div class="detail-label">Price (Pack):</div>
-                            <div class="detail-value">Rs. <?php echo number_format($fertilizer->unit_price_packs, 2); ?></div>
-                        </div>
-                        <div class="detail-row">
-                            <div class="detail-label">Price (Box):</div>
-                            <div class="detail-value">Rs. <?php echo number_format($fertilizer->unit_price_box, 2); ?></div>
-                        </div>
-                    </div>
-                <?php endforeach; ?>
-            </div>
-
-            <style>
-                .fertilizer-selector {
-                    margin-bottom: 15px;
-                }
-
-                .fertilizer-dropdown {
-                    width: 100%;
-                    padding: 8px;
-                    border: 1px solid #ddd;
-                    border-radius: 5px;
-                    font-size: 0.9rem;
-                }
-
-                .detail-card {
-                    background: white;
-                    border-radius: 8px;
-                    padding: 10px;
-                }
-
-                .detail-row {
-                    display: flex;
-                    padding: 8px 0;
-                    border-bottom: 1px solid #eee;
-                }
-
-                .detail-row:last-child {
-                    border-bottom: none;
-                }
-
-                .detail-label {
-                    flex: 1;
-                    color: #666;
-                    font-size: 0.9rem;
-                }
-
-                .detail-value {
-                    flex: 2;
-                    font-size: 0.9rem;
-                }
-
-                @media screen and (max-width: 360px) {
-                    .detail-row {
-                        flex-direction: column;
-                        gap: 4px;
-                    }
-
-                    .detail-label {
-                        font-weight: 500;
-                    }
-                }
-            </style>
-
-            <script>
-                document.getElementById('fertilizerSelect').addEventListener('change', function() {
-                    // Hide all detail cards
-                    document.querySelectorAll('.detail-card').forEach(card => {
-                        card.style.display = 'none';
-                    });
-
-                    // Show selected card
-                    const selectedIndex = this.value;
-                    if (selectedIndex !== '') {
-                        document.getElementById('fertilizer-' + selectedIndex).style.display = 'block';
-                    }
-                });
-            </script>
-        </div>
-        <div class="table-data">
-
-
-                <form method="POST" class="request-form" id="fertilizerForm">
-                    <div class="form-container">
-                        <div class="form-group">
-                            <label for="type_id">Fertilizer Type:</label>
-                            <select id="type_id" name="type_id" required>
-                                <option value="">Select Fertilizer</option>
-                                <?php foreach ($data['fertilizer_types'] as $type): ?>
-                                    <option value="<?php echo $type->type_id; ?>"
-                                        data-unit-price-kg="<?php echo $type->unit_price_kg; ?>"
-                                        data-pack-price="<?php echo $type->unit_price_packs; ?>"
-                                        data-box-price="<?php echo $type->unit_price_box; ?>">
-                                        <?php echo $type->name; ?>
-                                    </option>
-                                <?php endforeach; ?>
-                            </select>
-                        </div>
-
-                        <div class="form-row">
-                            <div class="form-group">
-                                <label for="unit">Unit:</label>
-                                <select id="unit" name="unit" required>
-                                    <option value="">Select Unit</option>
-                                    <option value="kg">Kilograms (kg)</option>
-                                    <option value="packs">Packs</option>
-                                    <option value="box">Box</option>
-                                </select>
-                            </div>
-
-                            <div class="form-group">
-                                <label for="total_amount">Amount:</label>
-                                <input type="number" id="total_amount" name="total_amount" min="1" max="50" required>
-                            </div>
-                        </div>
-
-                        <div class="form-row">
-                            <div class="form-group">
-                                <label for="price_per_unit">Price Per Unit:</label>
-                                <input type="number" id="price_per_unit" name="price_per_unit" readonly>
-                            </div>
-
-                            <div class="form-group">
-                                <label for="total_price">Total Price:</label>
-                                <input type="number" id="total_price" name="total_price" readonly>
-                            </div>
-                        </div>
-
-                        <div class="form-actions">
-                            <button type="submit" class="btn-submit">Submit Request</button>
-                            <button type="button" class="btn-cancel" 
-                                onclick="document.getElementById('fertilizerForm').reset()">Cancel</button>
-                        </div>
-                    </div>
-                </form>
-
-        </div>
-        <div class="order">
-            <div class="head">
-                <h3>Fertilizer Requests History</h3>
-            </div>
-            <table class="table">
-                <thead>
-                    <tr>
-                        <th>Order id</th>
-                        <th>Fertilizer Type</th>
-                        <th>Order Date</th>
-                        <th>Order Time</th>
-                        <th>Amount</th>
-                        <th>Unit</th>
-                        <th>Price</th>
-                        <th>Payment Status</th>
-                        <th>Update order</th>
-                        <th>Cancel order</th>
-                    </tr>
-                </thead>
-                <tbody>
-
-                    <?php foreach ($data['orders'] as $order): ?>
-                        <tr>
-                            <td><?php echo $order->order_id; ?></td>
-                            <td><?php echo $order->fertilizer_name; ?></td>
-                            <td><?php echo $order->order_date; ?></td>
-                            <td><?php echo $order->order_time; ?></td>
-                            <td><?php echo $order->total_amount; ?></td>
-                            <td><?php echo $order->unit; ?></td>
-                            <td><?php echo $order->total_price; ?></td>
-                            <td><?php echo isset($order->payment_status) ? $order->payment_status : 'Pending'; ?></td>
-                            <td>
-                                <a href="<?php echo URLROOT; ?>/Supplier/editFertilizerRequest/<?php echo $order->order_id; ?>"
-                                    class="btn-edit btn-primary">
-                                    Edit
-                                </a>
-                            </td>
-                            <td>
-                                <button class="btn-delete" data-id="<?php echo $order->order_id; ?>">Delete</button>
-                            </td>
-                        </tr>
-                    <?php endforeach; ?>
-
-                </tbody>
-            </table>
-        </div>
+  <!-- Page Header -->
+  <div class="head-title">
+    <div class="left">
+      <h1>Fertilizer Requests</h1>
+      <ul class="breadcrumb">
+        <li>
+          <i class='bx bx-home'></i>
+          <a href="<?php echo URLROOT; ?>/Supplier/dashboard/">Dashboard</a>
+        </li>
+        <li>
+          <span>Fertilizer Requests</span>
+        </li>
+      </ul>
     </div>
+  </div>
+
+  <!-- New Fertilizer Request Form Section -->
+  <div class="request-form-section">
+    <div class="section-header">
+      <h3>New Fertilizer Request</h3>
+    </div>
+    <div class="request-form-card">
+      <form id="fertilizer-request-form" action="<?php echo URLROOT; ?>/Supplier/submitFertilizerRequest" method="post">
+        <div class="form-group">
+          <label for="fertilizer">Fertilizer Type:</label>
+          <select id="fertilizer" name="fertilizer" required onchange="updatePricePerUnit()">
+            <option value="">-- Select Fertilizer --</option>
+            <?php foreach($data['fertilizerTypes'] as $type): ?>
+              <option value="<?php echo $type->id; ?>" data-price="<?php echo $type->pricePerUnit; ?>" data-unit="<?php echo $type->unit; ?>">
+                <?php echo $type->name; ?>
+              </option>
+            <?php endforeach; ?>
+          </select>
+        </div>
+        <div class="form-group">
+          <label for="unit">Unit:</label>
+          <select id="unit" name="unit" required>
+            <option value="">-- Select Unit --</option>
+            <!-- Common units for demonstration -->
+            <option value="kg">kg</option>
+            <option value="bag">bag</option>
+            <option value="liter">liter</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label for="amount">Amount:</label>
+          <input type="number" id="amount" name="amount" min="1" required oninput="updateTotalPrice()">
+        </div>
+        <div class="form-group read-only-group">
+          <label for="price_per_unit">Price Per Unit:</label>
+          <input type="text" id="price_per_unit" name="price_per_unit" readonly>
+        </div>
+        <div class="form-group read-only-group">
+          <label for="total_price">Total Price:</label>
+          <input type="text" id="total_price" name="total_price" readonly>
+        </div>
+        <div class="form-group">
+          <button type="submit" class="submit-btn">Submit Request</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <div class="section-divider"></div>
+
+  <!-- Fertilizer Request History Section -->
+  <div class="request-history-section">
+    <div class="section-header">
+      <h3>Fertilizer Request History</h3>
+    </div>
+    <?php if (!empty($data['fertilizerRequestHistory'])): ?>
+      <?php foreach($data['fertilizerRequestHistory'] as $request): ?>
+        <div class="schedule-card">
+          <div class="card-content">
+            <div class="card-header">
+              <div class="status-badge">
+                Order #<?php echo $request->order_id; ?>
+              </div>
+            </div>
+            <div class="card-body">
+              <div class="schedule-info">
+                <div class="info-item">
+                  <i class='bx bx-box'></i>
+                  <span>Fertilizer: <?php echo $request->fertilizer_type; ?></span>
+                </div>
+                <div class="info-item">
+                  <i class='bx bx-calendar'></i>
+                  <span>Date: <?php echo date('m/d/Y', strtotime($request->order_date)); ?></span>
+                </div>
+                <div class="info-item">
+                  <i class='bx bx-time-five'></i>
+                  <span>Time: <?php echo $request->order_time; ?></span>
+                </div>
+                <div class="info-item">
+                  <i class='bx bx-calculator'></i>
+                  <span>Amount: <?php echo $request->amount . ' ' . $request->unit; ?></span>
+                </div>
+                <div class="info-item">
+                  <i class='bx bx-dollar'></i>
+                  <span>Price: <?php echo 'රු.' . number_format($request->price, 2); ?></span>
+                </div>
+                <div class="info-item">
+                  <i class='bx bx-check-circle'></i>
+                  <span>Status: <?php echo $request->approval_status; ?></span>
+                </div>
+              </div>
+              <div class="schedule-action">
+                <button class="update-btn" onclick="location.href='<?php echo URLROOT; ?>/Supplier/editFertilizerRequest/<?php echo $request->order_id; ?>'">
+                  <i class='bx bx-edit'></i>
+                </button>
+                <button class="cancel-btn" onclick="location.href='<?php echo URLROOT; ?>/Supplier/cancelFertilizerRequest/<?php echo $request->order_id; ?>'">
+                  <i class='bx bx-trash'></i>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      <?php endforeach; ?>
+    <?php else: ?>
+      <div class="no-schedule">
+        <p>No fertilizer requests found.</p>
+      </div>
+    <?php endif; ?>
+  </div>
 </main>
-</section>
 
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-<script src="<?php echo URLROOT; ?>/css/script.js"></script>
+<!-- Scripts -->
+<script src="<?php echo URLROOT; ?>/public/css/script.js"></script>
 <script>
-    window.FERTILIZER_TYPES = <?php echo json_encode($data['fertilizer_types']); ?>;
+  // Update price per unit based on the selected fertilizer.
+  function updatePricePerUnit() {
+    var fertilizerSelect = document.getElementById('fertilizer');
+    var selectedOption = fertilizerSelect.options[fertilizerSelect.selectedIndex];
+    var pricePerUnit = selectedOption.getAttribute('data-price');
+    if (pricePerUnit) {
+      document.getElementById('price_per_unit').value = 'රු.' + parseFloat(pricePerUnit).toFixed(2);
+    } else {
+      document.getElementById('price_per_unit').value = '';
+    }
+    updateTotalPrice();
+  }
+
+  // Calculate and update the total price based on amount and price per unit.
+  function updateTotalPrice() {
+    var fertilizerSelect = document.getElementById('fertilizer');
+    var selectedOption = fertilizerSelect.options[fertilizerSelect.selectedIndex];
+    var pricePerUnit = parseFloat(selectedOption.getAttribute('data-price')) || 0;
+    var amount = parseFloat(document.getElementById('amount').value) || 0;
+    var total = pricePerUnit * amount;
+    document.getElementById('total_price').value = 'රු.' + total.toFixed(2);
+  }
 </script>
 
-
-<style>
-    /* Request Form Styles */
-.request-form {
-    background: white;
-    border-radius: 10px;
-    padding: 15px;
-}
-
-.form-container {
-    display: flex;
-    flex-direction: column;
-    gap: 15px;
-}
-
-.form-row {
-    display: flex;
-    gap: 15px;
-}
-
-.form-group {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    gap: 5px;
-}
-
-.form-group label {
-    font-size: 0.9rem;
-    color: #666;
-}
-
-.form-group select,
-.form-group input {
-    padding: 8px;
-    border: 1px solid #ddd;
-    border-radius: 5px;
-    font-size: 0.9rem;
-    width: 100%;
-}
-
-.form-group input[readonly] {
-    background-color: #f5f5f5;
-}
-
-.form-actions {
-    display: flex;
-    gap: 10px;
-    margin-top: 10px;
-}
-
-.btn-submit,
-.btn-cancel {
-    padding: 8px 20px;
-    border: none;
-    border-radius: 5px;
-    cursor: pointer;
-    font-size: 0.9rem;
-    flex: 1;
-    transition: all 0.3s ease;
-}
-
-.btn-submit {
-    background: #008000;
-    color: white;
-}
-
-.btn-submit:hover {
-    background: #006400;
-}
-
-.btn-cancel {
-    background: #f5f5f5;
-    color: #666;
-}
-
-.btn-cancel:hover {
-    background: #e0e0e0;
-}
-
-@media screen and (max-width: 360px) {
-    .request-form {
-        padding: 10px;
-    }
-
-    .form-row {
-        flex-direction: column;
-        gap: 10px;
-    }
-
-    .form-actions {
-        flex-direction: column;
-    }
-
-    .btn-submit,
-    .btn-cancel {
-        width: 100%;
-    }
-}
-</style>
-
-
-<script>
-
-    /* FERTILIZER REQUESTS */
-    /* ORDER POPUP */
-    document.getElementById('fertilizerForm').addEventListener('submit', function (e) {
-        e.preventDefault();
-
-        const formData = new FormData(this);
-
-        fetch('<?php echo URLROOT; ?>/supplier/createFertilizerOrder', {
-            method: 'POST',
-            body: formData
-        })
-            .then(response => response.json())
-            .then(data => {
-                showNotification(data.message, data.success);
-                if (data.success) {
-                    setTimeout(() => {
-                        window.location.reload();
-                    }, 3000);
-                }
-            })
-            .catch(error => {
-                showNotification('An error occurred. Please try again.', false);
-            });
-    });
-
-    function showNotification(message, isSuccess) {
-        const notification = document.getElementById('notification');
-        notification.textContent = message;
-        notification.className = 'notification ' + (isSuccess ? 'success' : 'error');
-        notification.style.display = 'block';
-
-        // Fade out after 3 seconds
-        setTimeout(() => {
-            notification.style.animation = 'fadeOut 0.5s ease-out';
-            setTimeout(() => {
-                notification.style.display = 'none';
-                notification.style.animation = '';
-            }, 500);
-        }, 3000);
-    }
-
-</script>
-
-<!-- DELETE MODAL -->
-
-</body>
-
-</html>

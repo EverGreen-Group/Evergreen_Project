@@ -130,9 +130,9 @@ class Supplier extends Controller {
 
     public function payments()
     {
-        $data = [];
 
-        $this->view('shared/supplier/v_view_monthly_statement', $data);
+
+        $this->view('supplier/v_supplier_payment', []);
     }
 
     public function paymentanalysis()
