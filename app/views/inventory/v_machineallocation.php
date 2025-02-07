@@ -1,6 +1,4 @@
-<!DOCTYPE html>
-<html lang="en">
-
+<?php require APPROOT . '/views/inc/components/header.php'; ?>
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -30,10 +28,9 @@
         </div>
 
 
-        <div>
+        <div class="table-data">
 
-            <div class="chart-container"
-                style="margin: 20px; padding: 20px; background: white; border-radius: 10px; width: 98%;">
+            <div class="order">
                 <table>
                     <thead>
                         <tr>
@@ -55,18 +52,18 @@
                                         <span><?php echo $machine->machine_name; ?></span>
                                     </div>
                                 </td>
-                                <td><span class="status-ready"><?php echo $machine->status; ?></span></td>
+                                <td><span class="status-completed"><?php echo $machine->status; ?></span></td>
                                 <td>
                                     <form method="POST"
                                         action="<?php echo URLROOT; ?>/Inventory/machine?id=<?php echo $machine->id; ?>">
-                                        <button type="submit" name="status_allocate" class="btn allocate">Allocate</button>
+                                        <button type="submit" name="status_allocate" class="btn btn-primary">Allocate</button>
                                     </form>
                                 </td>
                                 <td>
                                     <form method="POST"
                                         action="<?php echo URLROOT; ?>/Inventory/machine?id=<?php echo $machine->id; ?>">
                                         <button type="submit" name="status_deallocate"
-                                            class="btn deallocate">Deallocate</button>
+                                            class="btn btn-secondary">Deallocate</button>
                                     </form>
                                 </td>
                                 <td><button class="btn detail" onclick="">details</button></td>

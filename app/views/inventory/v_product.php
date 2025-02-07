@@ -144,7 +144,7 @@
                     </div>
                     <div class="product-info-section">
                         <div class="info-group">
-                            <label>Code:</label>
+                            <label></label>
                             <span id="modal-product-code"></span>
                         </div>
                         <div class="info-group">
