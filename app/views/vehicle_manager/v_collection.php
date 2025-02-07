@@ -44,6 +44,10 @@
             <i class='bx bx-plus'></i>
             Create a Schedule
         </a>
+        <a href="<?php echo URLROOT; ?>/reschedule/" class="btn btn-primary">
+            <i class='bx bx-calendar-edit'></i>
+            Manage Exceptions
+        </a>
         <a href="#" id="openUpdateScheduleModal" class="btn btn-primary">
             <i class='bx bx-analyse'></i>
             Update Schedule
