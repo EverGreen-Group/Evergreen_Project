@@ -124,7 +124,7 @@ class M_Route {
 
     public function getUnallocatedSuppliers() {
         $this->db->query("
-            SELECT 
+            SELECT DISTINCT
                 s.*,
                 u.first_name,
                 u.last_name,
@@ -134,7 +134,7 @@ class M_Route {
             JOIN users u ON s.user_id = u.user_id
             LEFT JOIN route_suppliers rs ON s.supplier_id = rs.supplier_id
             LEFT JOIN routes r ON rs.route_id = r.route_id
-            WHERE (rs.supplier_id IS NULL OR r.route_id IS NULL OR r.is_deleted = 1)  -- Ensuring unallocated suppliers are included
+            WHERE (rs.supplier_id IS NULL OR r.route_id IS NULL OR r.is_deleted = 1)
             AND s.is_active = 1
             AND s.is_deleted = 0;
 

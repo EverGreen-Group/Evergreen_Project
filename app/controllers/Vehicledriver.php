@@ -716,13 +716,13 @@ class VehicleDriver extends controller {
         echo json_encode($result);
     }
 
-    public function getAssignedBags($supplierId) {
+    public function getAssignedBags($supplierId, $collectionId) {
         // if (!$this->isAjaxRequest()) {
         //     redirect('pages/error');
         //     return;
         // }
 
-        $result = $this->collectionModel->getAssignedBags($supplierId);
+        $result = $this->collectionModel->getAssignedBags($supplierId, $collectionId);
         
         header('Content-Type: application/json');
         echo json_encode($result);

@@ -186,7 +186,7 @@ class M_Vehicle {
         $this->db->query('
             SELECT v.* 
             FROM vehicles v
-            LEFT JOIN routes r ON v.vehicle_id = r.vehicle_id AND r.day = :day
+            LEFT JOIN routes r ON v.vehicle_id = r.vehicle_id AND r.day = :day AND r.is_deleted = 0
             WHERE r.vehicle_id IS NULL
         ');
         $this->db->bind(':day', $day);

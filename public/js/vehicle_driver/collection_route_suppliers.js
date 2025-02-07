@@ -355,9 +355,12 @@ function updateAssignedBagsList() {
   );
 
   // Get assigned bags from server
-  fetch(`${URLROOT}/vehicledriver/getAssignedBags/${currentSupplierId}`, {
-    method: "GET",
-  })
+  fetch(
+    `${URLROOT}/vehicledriver/getAssignedBags/${currentSupplierId}/${collectionId}`,
+    {
+      method: "GET",
+    }
+  )
     .then((response) => response.json())
     .then((data) => {
       let totalBags =
@@ -391,10 +394,14 @@ function updateAssignedBagsList() {
           )
           .join("");
 
-        // Show newly added bags in this session
-        const newBagsHtml = collectedBags
-          .map(
-            (bag) => `
+        // Show existing bags and newly added bags
+        assignedBagsList.innerHTML = existingBagsHtml;
+
+        // Append newly added bags directly
+        if (collectedBags.length > 0) {
+          assignedBagsList.innerHTML += collectedBags
+            .map(
+              (bag) => `
               <div class="assigned-bag">
                   <span>Bag #${bag.bag_id}</span>
                   <span class="assigned-bag-info">
@@ -407,10 +414,9 @@ function updateAssignedBagsList() {
                   </span>
               </div>
           `
-          )
-          .join("");
-
-        assignedBagsList.innerHTML = existingBagsHtml + newBagsHtml;
+            )
+            .join("");
+        }
       } else if (collectedBags.length > 0) {
         // Only show newly added bags if no existing bags
         assignedBagsList.innerHTML = collectedBags
@@ -445,7 +451,7 @@ function updateAssignedBagsList() {
         "<p>Error fetching bags. Please try again.</p>";
       // Still show newly added bags if any
       if (collectedBags.length > 0) {
-        const newBagsHtml = collectedBags
+        assignedBagsList.innerHTML += collectedBags
           .map(
             (bag) => `
               <div class="assigned-bag">
@@ -462,7 +468,6 @@ function updateAssignedBagsList() {
           `
           )
           .join("");
-        assignedBagsList.innerHTML += newBagsHtml;
         confirmCollectionButton.style.display = "block";
       } else {
         confirmCollectionButton.style.display = "none";
@@ -511,8 +516,8 @@ async function finalizeSupplierCollection() {
     if (data.success) {
       alert("Collection finalized successfully");
       closeModal("addCollectionModal");
-      // Optionally refresh the main supplier list/view
-      location.reload();
+      // Redirect to the vehicle driver page instead of reloading
+      window.location.href = "<?php echo URLROOT; ?>/vehicledriver"; // Redirect to the specified URL
     } else {
       alert(data.message || "Failed to finalize collection");
     }
