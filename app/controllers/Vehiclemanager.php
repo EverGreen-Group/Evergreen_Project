@@ -19,7 +19,8 @@ require_once '../app/models/M_User.php'; // Correctly include the M_User model
 require_once '../app/models/M_Employee.php';
 require_once '../app/models/M_CollectionBag.php';
 
-class VehicleManager extends Controller {
+class VehicleManager extends Controller
+{
     private $vehicleManagerModel;
     private $routeModel;       // Declare a variable for Route model
     private $teamModel;        // Declare a variable for Team model
@@ -35,12 +36,13 @@ class VehicleManager extends Controller {
     private $userModel;
     private $employeeModel;
     private $bagModel;
-    
 
-    public function __construct() {
+
+    public function __construct()
+    {
         // Check if user is logged in
         requireAuth();
-        
+
         // Check if user has Vehicle Manager OR Admin role
         if (!RoleHelper::hasAnyRole([RoleHelper::ADMIN, RoleHelper::VEHICLE_MANAGER])) {
             // Redirect unauthorized access
@@ -48,7 +50,7 @@ class VehicleManager extends Controller {
             redirect('');
             exit();
         }
-        
+
 
         // Initialize models
         $this->vehicleManagerModel = new M_VehicleManager();
@@ -73,7 +75,8 @@ class VehicleManager extends Controller {
     //            strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) === 'xmlhttprequest';
     // }
 
-    public function index() {
+    public function index()
+    {
         // Get dashboard stats from the model
         $stats = $this->vehicleManagerModel->getDashboardStats();
 
@@ -96,30 +99,33 @@ class VehicleManager extends Controller {
             'shifts' => $shifts,
             'schedules' => $schedules,
             'ongoing_collections' => $ongoingCollections,
-            'collectionSchedules' => $collectionSchedules,
             'todayRoutes' => $todayRoutes 
         ]);
     }
 
-    public function getSupplierRecords($collectionId) {
+    public function getSupplierRecords($collectionId)
+    {
         $records = $this->collectionSupplierRecordModel->getSupplierRecords($collectionId);
         echo json_encode($records);
     }
-    
-    public function updateSupplierRecord() {
+
+    public function updateSupplierRecord()
+    {
         $data = json_decode(file_get_contents('php://input'));
         $success = $this->collectionSupplierRecordModel->updateSupplierRecord($data);
         echo json_encode(['success' => $success]);
     }
-    
-    public function addSupplierRecord() {
+
+    public function addSupplierRecord()
+    {
         $data = json_decode(file_get_contents('php://input'));
         $success = $this->collectionSupplierRecordModel->addSupplierRecord($data);
         echo json_encode(['success' => $success]);
     }
 
     // Add method to handle the assignment of collections
-    public function createSchedule() {
+    public function createSchedule()
+    {
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $data = [
                 'route_id' => $_POST['route_id'],
@@ -142,37 +148,11 @@ class VehicleManager extends Controller {
             }
         }
     }
-    
-    
+
+
 
     // Other methods remain unchanged
     public function vehicle() {
-        // Retrieve filter parameters from the GET request
-        $license_plate = isset($_GET['license_plate']) ? $_GET['license_plate'] : null;
-        $vehicle_type = isset($_GET['vehicle_type']) ? $_GET['vehicle_type'] : null;
-        $capacity = isset($_GET['capacity']) ? $_GET['capacity'] : null;
-        $make = isset($_GET['make']) ? $_GET['make'] : null;
-        $model = isset($_GET['model']) ? $_GET['model'] : null;
-        $manufacturing_year = isset($_GET['manufacturing_year']) ? $_GET['manufacturing_year'] : null;
-    
-        // Fetch vehicles based on filters
-        if ($license_plate || $vehicle_type || $capacity || $make || $model || $manufacturing_year) {
-            $data['vehicles'] = $this->vehicleModel->getFilteredVehicles($license_plate, $vehicle_type, $capacity, $make, $model, $manufacturing_year);
-        } else {
-            // Otherwise, fetch all vehicles
-            $data['vehicles'] = $this->vehicleModel->getVehicleDetails();
-        }
-    
-        // Additional data for the view
-        $data['totalVehicles'] = $this->vehicleModel->getTotalVehicles();
-        $data['availableVehicles'] = $this->vehicleModel->getAvailableVehicles();
-        $data['vehicleTypeStats'] = $this->vehicleModel->getVehicleTypeStats();
-    
-        // Load the view and pass the data
-        $this->view('vehicle_manager/v_new_vehicle', $data);
-    }
-
-    public function vehiclez() {
         $data = [
             'totalVehicles' => $this->vehicleModel->getTotalVehicles(),
             'availableVehicles' => $this->vehicleModel->getAvailableVehicles(),
@@ -184,33 +164,23 @@ class VehicleManager extends Controller {
     }
 
     public function driver() {
-        // Initialize $data array first
-        $data = [];
+        $unassignedDrivers = $this->driverModel->getUnassignedDriversList(); 
+        $allDrivers = $this->driverModel->getAllDrivers();
+        $totalDrivers = $this->driverModel->getTotalDrivers();
+        $onDutyDrivers = $this->driverModel->getDriversOnDuty();
+        $unassignedDriversCount = $this->driverModel->getUnassignedDriversCount();
 
-        // Get filter parameters
-        $driver_id = isset($_GET['driver_id']) ? $_GET['driver_id'] : null;
-        $name = isset($_GET['name']) ? $_GET['name'] : null;
-        $nic = isset($_GET['nic']) ? $_GET['nic'] : null;
-        $contact_number = isset($_GET['contact_number']) ? $_GET['contact_number'] : null;
-        $driver_status = isset($_GET['driver_status']) ? $_GET['driver_status'] : null;
-        $employee_status = isset($_GET['employee_status']) ? $_GET['employee_status'] : null;
-
-        // Get filtered or all drivers
-        if ($driver_id || $name || $nic || $contact_number || $driver_status || $employee_status) {
-            $data['drivers'] = $this->driverModel->getFilteredDrivers($driver_id, $name, $nic, $contact_number, $driver_status, $employee_status);
-        } else {
-            $data['drivers'] = $this->driverModel->getAllDrivers();
-        }
-
-        // Add other data to the array
-        $data['unassigned_drivers'] = $this->driverModel->getUnassignedDriversList();
-        $data['total_drivers'] = $this->driverModel->getTotalDrivers();
-        $data['on_duty_drivers'] = $this->driverModel->getDriversOnDuty();
-        $data['unassigned_drivers_count'] = $this->driverModel->getUnassignedDriversCount();
-        $data['users'] = $this->userModel->getAllUnassignedUsers();
-        $data['update_users'] = $this->userModel->getAllUserDrivers();
+        $data = [
+            'unassigned_drivers' => $unassignedDrivers,
+            'all_drivers' => $allDrivers,
+            'total_drivers' => $totalDrivers,
+            'on_duty_drivers' => $onDutyDrivers,
+            'unassigned_drivers_count' => $unassignedDriversCount,
+            'users' => $this->userModel->getAllUnassignedUsers(),
+            'update_users' => $this->userModel->getAllUserDrivers()
+        ];
         
-        $this->view('vehicle_manager/v_driver_2', $data);
+        $this->view('vehicle_manager/v_driver', $data);
     }
 
 
@@ -233,7 +203,8 @@ class VehicleManager extends Controller {
         }
     }
 
-    public function addDriver() {
+    public function addDriver()
+    {
         if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             $_POST = filter_input_array(INPUT_POST, FILTER_SANITIZE_STRING);
 
@@ -319,7 +290,8 @@ class VehicleManager extends Controller {
     }
 
 
-    public function updateDriver() {
+    public function updateDriver()
+    {
         if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             // Sanitize and retrieve the input data
             $user_id = trim($_POST['user_id']);
@@ -328,12 +300,12 @@ class VehicleManager extends Controller {
             $city = trim($_POST['city']);
             $contact_number = trim($_POST['contact_number']);
             $emergency_contact = trim($_POST['emergency_contact']);
-    
+
             // Validate the input data as needed
-    
+
             // Update the driver information in the database
             $result = $this->employeeModel->updateDriverInfo($user_id, $address_line1, $address_line2, $city, $contact_number, $emergency_contact);
-    
+
             // Check if the update was successful
             if ($result) {
                 // Redirect or provide feedback
@@ -357,21 +329,21 @@ class VehicleManager extends Controller {
     }
 
     public function route() {
-        $allRoutes = $this->routeModel->getAllUndeletedRoutes();
+        $allRoutes = $this->routeModel->getAllRoutes();
         $totalRoutes = $this->routeModel->getTotalRoutes();
         $totalActive = $this->routeModel->getTotalActiveRoutes();
         $totalInactive = $this->routeModel->getTotalInactiveRoutes();
         $unallocatedSuppliers = $this->routeModel->getUnallocatedSuppliers();
-        
+
         // Format suppliers for the map/dropdown
-        $suppliersForMap = array_map(function($supplier) {
+        $suppliersForMap = array_map(function ($supplier) {
             return [
                 'id' => $supplier->supplier_id,
                 'name' => $supplier->full_name, // Changed from supplier_name to full_name
                 'preferred_day' => $supplier->preferred_day, // Include preferred_day
                 'location' => [
-                    'lat' => (float)$supplier->latitude,
-                    'lng' => (float)$supplier->longitude
+                    'lat' => (float) $supplier->latitude,
+                    'lng' => (float) $supplier->longitude
                 ],
                 'average_collection' => $supplier->average_collection,
                 'number_of_collections' => $supplier->number_of_collections
@@ -391,7 +363,8 @@ class VehicleManager extends Controller {
         $this->view('vehicle_manager/v_route', $data);
     }
 
-    public function shift() {
+    public function shift()
+    {
         // Handle POST request for creating new shift
         if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             try {
@@ -429,7 +402,7 @@ class VehicleManager extends Controller {
         $shifts = $this->shiftModel->getAllShifts();
         $totalShifts = $this->shiftModel->getTotalShifts();
         $totalTeamsInCollection = $this->teamModel->getTotalTeamsInCollection();
-        
+
         // Initialize the schedules array
         $schedules = [];
 
@@ -441,7 +414,7 @@ class VehicleManager extends Controller {
         foreach ($shifts as $shift) {
             // Fetch schedules for the specific shift
             $shiftSchedules = $this->scheduleModel->getSchedulesByShiftIdAndDate($shift->shift_id, $startDate, $endDate);
-            
+
             // Organize schedules by date
             foreach ($shiftSchedules as $schedule) {
                 $date = date('Y-m-d', strtotime($schedule->created_at)); // Assuming schedule has a created_at field
@@ -459,13 +432,14 @@ class VehicleManager extends Controller {
             'totalTeamsInCollection' => $totalTeamsInCollection,
             'schedules' => $schedules // Pass the organized schedules to the view
         ];
-        
+
         // Load the view with the data
         $this->view('vehicle_manager/v_shift', $data);
     }
 
     // Add method for handling shift deletion
-    public function deleteShift($id) {
+    public function deleteShift($id)
+    {
         if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             try {
                 if ($this->shiftModel->deleteShift($id)) {
@@ -480,7 +454,8 @@ class VehicleManager extends Controller {
         }
     }
 
-    public function getShift($id) {
+    public function getShift($id)
+    {
         header('Content-Type: application/json'); // Set the content type to JSON
         try {
             $shift = $this->shiftModel->getShiftById($id);
@@ -495,7 +470,8 @@ class VehicleManager extends Controller {
         exit; // Ensure no additional output is sent
     }
 
-    public function updateShift($id) {
+    public function updateShift($id)
+    {
         if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             $data = [
                 'shift_id' => $id,
@@ -517,76 +493,148 @@ class VehicleManager extends Controller {
         }
     }
 
-    public function settings() {
+    public function settings()
+    {
         $data = [];
         $this->view('vehicle_manager/v_settings', $data);
     }
 
-    public function personal_details() {
+    public function personal_details()
+    {
         $data = [];
         $this->view('vehicle_manager/v_personal_details', $data);
     }
 
-    public function logout() {
+    public function logout()
+    {
         // Handle logout functionality
     }
-    public function updateVehicle() {
-        if ($_SERVER['REQUEST_METHOD'] == 'POST') {
-            // Validate and sanitize input
-            $license_plate = htmlspecialchars(trim($_POST['license_plate'])); // Keep the license plate as is
-            $vehicle_type = htmlspecialchars(trim($_POST['vehicle_type']));
-            $make = htmlspecialchars(trim($_POST['make']));
-            $model = htmlspecialchars(trim($_POST['model']));
-            $manufacturing_year = htmlspecialchars(trim($_POST['manufacturing_year']));
-            $color = htmlspecialchars(trim($_POST['color']));
-            $capacity = htmlspecialchars(trim($_POST['capacity']));
 
-            // Check the current status of the vehicle
-            $currentVehicle = $this->vehicleModel->getVehicleByLicensePlate($license_plate);
-            if ($currentVehicle && $currentVehicle->status === 'In Use') {
-                // Handle the case where the vehicle is in use
-                echo "Cannot update vehicle. The vehicle is currently in use.";
-                return; // Exit the function if the vehicle is in use
+    public function uploadVehicleImage() {
+        if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES['vehicle_image'])) {
+            $vehicle_id = $_POST['vehicle_id'];
+            $file = $_FILES['vehicle_image'];
+            
+            // Configure upload settings
+            $upload_dir = 'uploads/vehicles/';
+            $file_extension = strtolower(pathinfo($file['name'], PATHINFO_EXTENSION));
+            $file_name = uniqid() . '.' . $file_extension;
+            $file_path = $upload_dir . $file_name;
+            
+            // Check file type
+            $allowed_types = ['jpg', 'jpeg', 'png'];
+            if (!in_array($file_extension, $allowed_types)) {
+                echo json_encode(['error' => 'Invalid file type']);
+                return;
             }
-
-            // Initialize the data array for updating
-            $data = [
-                'license_plate' => $license_plate, // Keep the existing license plate
-                'vehicle_type' => $vehicle_type,
-                'make' => $make,
-                'model' => $model,
-                'manufacturing_year' => $manufacturing_year,
-                'color' => $color,
-                'capacity' => $capacity,
-            ];
-
-            // Handle file upload if a new image is provided
-            if (isset($_FILES['vehicle_image']) && $_FILES['vehicle_image']['error'] == 0) {
-                $image = $_FILES['vehicle_image'];
-                $target_dir = "/opt/lampp/htdocs/Evergreen_Project/public/uploads/vehicle_photos/";
-                $target_file = $target_dir . $license_plate . ".jpg"; // Save as {license_plate}.jpg
-
-                // Move the uploaded file to the target directory
-                if (move_uploaded_file($image['tmp_name'], $target_file)) {
-                    // Update the image path in the data array
-                    $data['image_path'] = $target_file; // Optional: store the new image path in the database
-                } else {
-                    // Handle file upload error
-                    echo "Error uploading file.";
-                    return; // Exit the function if the upload fails
-                }
+            
+            // Move uploaded file
+            if (move_uploaded_file($file['tmp_name'], $file_path)) {
+                // Save to database
+                $result = $this->vehicleModel->saveVehicleDocument(
+                    $vehicle_id,
+                    'Image',
+                    $file_path
+                );
+                
+                echo json_encode(['success' => true, 'file_path' => $file_path]);
+            } else {
+                echo json_encode(['error' => 'Failed to upload file']);
             }
-
-            // Update vehicle details in the database
-            $this->vehicleModel->updateVehicle($data);
-
-            // Redirect or show success message
-            header('Location: ' . URLROOT . '/vehiclemanager/vehicle');
-            exit();
         }
     }
 
-    public function getVehicleById($id) {
+    public function createVehicle() {
+        if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+            try {
+                // Sanitize POST data
+                $_POST = filter_input_array(INPUT_POST, FILTER_SANITIZE_STRING);
+
+                // Create vehicle
+                $result = $this->vehicleModel->createVehicle($_POST);
+                
+                if ($result === true) {
+                    flash('vehicle_message', 'Vehicle Added Successfully', 'alert alert-success');
+                    redirect('vehiclemanager/index');
+                } else {
+                    flash('vehicle_message', $result, 'alert alert-danger');
+                    redirect('vehiclemanager/index');
+                }
+            } catch (Exception $e) {
+                flash('vehicle_message', 'Error creating vehicle: ' . $e->getMessage(), 'alert alert-danger');
+                redirect('vehiclemanager/index');
+            }
+        } else {
+            redirect('vehiclemanager/index');
+        }
+    }
+
+    public function updateVehicle() {
+        if ($_SERVER['REQUEST_METHOD'] == 'GET') {
+            // Render the update vehicle view (if applicable)
+            $data = [
+                'title' => 'Update Vehicle'
+                // You can add more data here if needed
+            ];
+            $this->view('vehicle_manager/v_update_vehicle', $data); // Assuming you have a view for updating vehicles
+        } else {
+            // Handle POST request
+            $this->handleVehicleUpdateSubmission();
+        }
+    }
+
+    private function handleVehicleUpdateSubmission() {
+        // Prevent PHP errors from being output
+        error_reporting(E_ALL);
+        ini_set('display_errors', 0);
+        
+        // Set JSON header
+        header('Content-Type: application/json');
+
+        try {
+            if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+                throw new Exception('Method not allowed');
+            }
+
+            // Get JSON data from request body
+            $json = file_get_contents('php://input');
+            if (!$json) {
+                throw new Exception('No data received');
+            }
+
+            $data = json_decode($json);
+            if (!$data || !isset($data->vehicle_id)) {
+                throw new Exception('Invalid data format');
+            }
+
+            // Log the received data for debugging
+            error_log('Received vehicle update data: ' . print_r($data, true));
+
+            $result = $this->vehicleModel->updateVehicle($data);
+            
+            if ($result === true) {
+                echo json_encode([
+                    'success' => true,
+                    'message' => 'Vehicle updated successfully'
+                ]);
+            } else {
+                echo json_encode([
+                    'success' => false,
+                    'message' => is_string($result) ? $result : 'Failed to update vehicle'
+                ]);
+            }
+
+        } catch (Exception $e) {
+            error_log('Vehicle Update Error: ' . $e->getMessage());
+            echo json_encode([
+                'success' => false,
+                'message' => 'Error: ' . $e->getMessage()
+            ]);
+        }
+    }
+
+    public function getVehicleById($id)
+    {
         $vehicle = $this->vehicleModel->getVehicleById($id);
         if ($vehicle) {
             echo json_encode(['success' => true, 'vehicle' => $vehicle]);
@@ -595,9 +643,10 @@ class VehicleManager extends Controller {
         }
     }
 
-    public function deleteVehicle($id) {
+    public function deleteVehicle($id)
+    {
         header('Content-Type: application/json');
-        
+
         try {
             // Log the request method and ID
             error_log("Delete request received for vehicle ID: " . $id);
@@ -628,36 +677,37 @@ class VehicleManager extends Controller {
         exit;
     }
 
-    public function createRoute() {
+    public function createRoute()
+    {
         // Clear any previous output
         ob_clean();
-        
+
         // Set JSON headers
         header('Content-Type: application/json');
-        
+
         try {
             // Get and validate JSON input
             $json = file_get_contents('php://input');
             error_log("Received data: " . $json); // Debug log
-            
+
             $data = json_decode($json);
-            
+
             if (!$data) {
                 throw new Exception('Invalid JSON data received');
             }
 
             // Create the route
             $result = $this->routeModel->createRoute($data);
-            
+
             $response = [
                 'success' => true,
                 'message' => 'Route created successfully',
                 'routeId' => $result // Assuming createRoute returns the new route ID
             ];
-            
+
             error_log("Sending response: " . json_encode($response)); // Debug log
             echo json_encode($response);
-            
+
         } catch (Exception $e) {
             error_log("Error in createRoute: " . $e->getMessage());
             echo json_encode([
@@ -668,11 +718,12 @@ class VehicleManager extends Controller {
         exit;
     }
 
-    public function getRouteSuppliers($routeId) {
+    public function getRouteSuppliers($routeId)
+    {
         // Clear any previous output and set JSON header
         ob_clean();
         header('Content-Type: application/json');
-        
+
         if (!$routeId) {
             echo json_encode(['error' => 'Route ID is required']);
             return;
@@ -687,7 +738,7 @@ class VehicleManager extends Controller {
 
             // Get suppliers for this route
             $suppliers = $this->routeModel->getRouteSuppliers($routeId);
-            
+
             // Combine the data
             $response = [
                 'success' => true,
@@ -707,7 +758,7 @@ class VehicleManager extends Controller {
                         'date' => $route->date,
                         'number_of_suppliers' => $route->number_of_suppliers
                     ],
-                    'suppliers' => array_map(function($supplier) {
+                    'suppliers' => array_map(function ($supplier) {
                         return [
                             'id' => $supplier->supplier_id,
                             'name' => $supplier->full_name,
@@ -724,7 +775,7 @@ class VehicleManager extends Controller {
 
             error_log('Sending response: ' . json_encode($response));
             echo json_encode($response);
-            
+
         } catch (Exception $e) {
             error_log('Error in getRouteSuppliers: ' . $e->getMessage());
             echo json_encode([
@@ -738,9 +789,10 @@ class VehicleManager extends Controller {
 
 
 
-    public function update_leave_status() {
+    public function update_leave_status()
+    {
         header('Content-Type: application/json');
-        
+
         if ($_SERVER['REQUEST_METHOD'] != 'POST') {
             echo json_encode(['success' => false, 'message' => 'Invalid request method']);
             return;
@@ -749,12 +801,12 @@ class VehicleManager extends Controller {
         try {
             $rawInput = file_get_contents("php://input");
             error_log("Received raw input: " . $rawInput);
-            
+
             $data = json_decode($rawInput);
 
             if (!$data || !isset($data->requestId) || !isset($data->status) || !isset($data->vehicle_manager_id)) {
                 echo json_encode([
-                    'success' => false, 
+                    'success' => false,
                     'message' => 'Missing required data',
                     'received' => $data
                 ]);
@@ -771,9 +823,9 @@ class VehicleManager extends Controller {
             }
 
             $result = $this->staffModel->updateLeaveStatus(
-                (int)$data->requestId,
+                (int) $data->requestId,
                 $data->status,
-                (int)$data->vehicle_manager_id
+                (int) $data->vehicle_manager_id
             );
 
             if ($result) {
@@ -799,16 +851,17 @@ class VehicleManager extends Controller {
 
 
 
-    public function getCollectionRoute($collectionId) {
+    public function getCollectionRoute($collectionId)
+    {
         // Get collection details
         $collection = $this->collectionModel->getCollectionById($collectionId);
-        
+
         // Get route and supplier details
         $routeData = $this->routeModel->getRouteWithSuppliers($collection->route_id);
-        
+
         // Get current progress from supplier records
         $supplierRecords = $this->collectionSupplierRecordModel->getSupplierRecords($collectionId);
-        
+
         $data = [
             'team_name' => $collection->team_name,
             'route_name' => $collection->route_name,
@@ -827,7 +880,8 @@ class VehicleManager extends Controller {
         echo json_encode($data);
     }
 
-    private function getCurrentStop($supplierRecords) {
+    private function getCurrentStop($supplierRecords)
+    {
         // Find the last collected supplier
         foreach ($supplierRecords as $index => $record) {
             if ($record->status === 'Collected') {
@@ -837,10 +891,11 @@ class VehicleManager extends Controller {
         return 0; // Return 0 if no collections yet
     }
 
-    public function updateSupplierStatus($recordId) {
+    public function updateSupplierStatus($recordId)
+    {
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $data = json_decode(file_get_contents('php://input'));
-            
+
             if ($this->collectionSupplierRecordModel->updateSupplierStatus($recordId, $data->status)) {
                 echo json_encode(['success' => true]);
             } else {
@@ -849,10 +904,11 @@ class VehicleManager extends Controller {
         }
     }
 
-    public function removeCollectionSupplier($recordId) {
-        if($_SERVER['REQUEST_METHOD'] === 'POST'){
+    public function removeCollectionSupplier($recordId)
+    {
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $data = json_decode(file_get_contents('php://input'));
-            if($this->collectionSupplierRecordModel->removeCollectionSupplier($recordId)){
+            if ($this->collectionSupplierRecordModel->removeCollectionSupplier($recordId)) {
                 echo json_encode(['success' => true]);
             } else {
                 echo json_encode(['success' => false]);
@@ -861,51 +917,116 @@ class VehicleManager extends Controller {
     }
 
     public function addVehicle() {
-        if ($_SERVER['REQUEST_METHOD'] == 'POST') {
-            // Validate and sanitize input
-            $license_plate = htmlspecialchars(trim($_POST['license_plate']));
-            $vehicle_type = htmlspecialchars(trim($_POST['vehicle_type']));
-            $make = htmlspecialchars(trim($_POST['make']));
-            $model = htmlspecialchars(trim($_POST['model']));
-            $manufacturing_year = htmlspecialchars(trim($_POST['manufacturing_year']));
-            $color = htmlspecialchars(trim($_POST['color']));
-            $capacity = htmlspecialchars(trim($_POST['capacity']));
-
-            // Handle file upload
-            if (isset($_FILES['vehicle_image']) && $_FILES['vehicle_image']['error'] == 0) {
-                $image = $_FILES['vehicle_image'];
-                $target_dir = "/opt/lampp/htdocs/Evergreen_Project/public/uploads/vehicle_photos/";
-                $target_file = $target_dir . $license_plate . ".jpg"; // Save as {license_plate}.jpg
-
-                // Move the uploaded file to the target directory
-                if (move_uploaded_file($image['tmp_name'], $target_file)) {
-                    // File upload successful, now save vehicle details to the database
-                    $this->vehicleModel->addVehicle([
-                        'license_plate' => $license_plate,
-                        'vehicle_type' => $vehicle_type,
-                        'make' => $make,
-                        'model' => $model,
-                        'manufacturing_year' => $manufacturing_year,
-                        'color' => $color,
-                        'capacity' => $capacity,
-                        'image_path' => $target_file // Optional: store the image path in the database
-                    ]);
-
-                    // Redirect or show success message
-                    header('Location: ' . URLROOT . '/vehiclemanager/vehicle');
-                    exit();
-                } else {
-                    // Handle file upload error
-                    echo "Error uploading file.";
-                }
-            } else {
-                // Handle no file uploaded or other errors
-                echo "No file uploaded or there was an error.";
-            }
+        if ($_SERVER['REQUEST_METHOD'] == 'GET') {
+            $data = [
+                'title' => 'Add New Vehicle'
+            ];
+            $this->view('vehicle_manager/v_add_vehicle', $data);
+        } else if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+            // send thru postt
+            $this->handleVehicleSubmission();
         }
     }
 
-    public function checkVehicleUsage($id) {
+    private function handleVehicleSubmission() {
+        try {
+            // Basic vehicle data
+            $vehicleData = [
+                'license_plate' => $_POST['license_plate'],
+                'vehicle_type' => $_POST['vehicle_type'],
+                'status' => $_POST['status'],
+                'make' => $_POST['make'],
+                'model' => $_POST['model'],
+                'manufacturing_year' => $_POST['manufacturing_year'],
+                'color' => $_POST['color'],
+                'capacity' => $_POST['capacity']
+            ];
+
+            // Handle vehicle image
+            if (isset($_FILES['vehicle_image']) && $_FILES['vehicle_image']['error'] === UPLOAD_ERR_OK) {
+                $this->handleVehicleImage($_FILES['vehicle_image'], $_POST['license_plate']);
+            }
+
+            // Create vehicle (temporarily without documents)
+            $result = $this->vehicleModel->createVehicle($vehicleData);
+
+            if ($result) {
+                flash('vehicle_message', 'Vehicle added successfully', 'alert-success');
+                redirect('vehiclemanager/vehicle'); // Changed from vehiclemanager to vehiclemanager/vehicles
+            } else {
+                flash('vehicle_message', 'Failed to add vehicle', 'alert-danger');
+                redirect('vehiclemanager/addVehicle');
+            }
+
+        } catch (Exception $e) {
+            flash('vehicle_message', 'Error: ' . $e->getMessage(), 'alert-danger');
+            redirect('vehiclemanager/addVehicle');
+        }
+    }
+
+    private function handleFileUpload($file, $uploadDir) {
+        $uploadDir = '../public/uploads/' . $uploadDir . '/';
+        $fileName = uniqid() . '_' . basename($file['name']);
+        $targetPath = $uploadDir . $fileName;
+
+        if (move_uploaded_file($file['tmp_name'], $targetPath)) {
+            return $fileName;
+        }
+        return false;
+    }
+
+    private function handleVehicleImage($file, $licensePlate) {
+        try {
+            if ($file['error'] === UPLOAD_ERR_OK) {
+                // Define the upload directory path
+                $uploadDir = UPLOADROOT . '/vehicle_photos/';
+                
+                // Log the upload directory path
+                error_log("Upload directory: " . $uploadDir);
+                
+                // Create directory if it doesn't exist
+                if (!file_exists($uploadDir)) {
+                    if (!mkdir($uploadDir, 0777, true)) {
+                        error_log("Failed to create directory: " . $uploadDir);
+                        return false;
+                    }
+                }
+
+                $fileName = $licensePlate . '.jpg';
+                $targetPath = $uploadDir . $fileName;
+                
+                // Log the target path
+                error_log("Target path: " . $targetPath);
+
+                // Debugging: Log the full path
+                error_log("Full path to image: " . $targetPath);
+
+                // Check if file is actually uploaded
+                if (is_uploaded_file($file['tmp_name'])) {
+                    // Move the uploaded file
+                    if (move_uploaded_file($file['tmp_name'], $targetPath)) {
+                        error_log("File successfully uploaded to: " . $targetPath);
+                        return true;
+                    } else {
+                        error_log("Failed to move uploaded file. Error: " . error_get_last()['message']);
+                        return false;
+                    }
+                } else {
+                    error_log("File was not uploaded via HTTP POST");
+                    return false;
+                }
+            } else {
+                error_log("File upload error code: " . $file['error']);
+                return false;
+            }
+        } catch (Exception $e) {
+            error_log("Error uploading vehicle image: " . $e->getMessage());
+            return false;
+        }
+    }
+
+    public function checkVehicleUsage($id)
+    {
         $schedules = $this->scheduleModel->getSchedulesByVehicleId($id);
         $collections = $this->collectionModel->getCollectionsByVehicleId($id);
 
@@ -916,13 +1037,14 @@ class VehicleManager extends Controller {
         ]);
     }
 
-    public function getRouteDetails($routeId) {
+    public function getRouteDetails($routeId)
+    {
         // Clear any previous output
         ob_clean();
-        
+
         // Set JSON headers
         header('Content-Type: application/json');
-        
+
         try {
             if (!$routeId) {
                 throw new Exception('Route ID is required');
@@ -930,7 +1052,7 @@ class VehicleManager extends Controller {
 
             // Get route details from model
             $routeDetails = $this->routeModel->getRouteById($routeId);
-            
+
             if (!$routeDetails) {
                 throw new Exception('Route not found');
             }
@@ -945,13 +1067,13 @@ class VehicleManager extends Controller {
                     'id' => $routeId,
                     'name' => $routeDetails->route_name,
                     'status' => $routeDetails->status,
-                    'suppliers' => array_map(function($supplier) {
+                    'suppliers' => array_map(function ($supplier) {
                         return [
                             'id' => $supplier->supplier_id,
                             'name' => $supplier->full_name,
                             'coordinates' => [
-                                'lat' => (float)$supplier->latitude,
-                                'lng' => (float)$supplier->longitude
+                                'lat' => (float) $supplier->latitude,
+                                'lng' => (float) $supplier->longitude
                             ]
                         ];
                     }, $routeSuppliers)
@@ -972,10 +1094,11 @@ class VehicleManager extends Controller {
     }
 
 
-    public function deleteRoute() {
+    public function deleteRoute()
+    {
         if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             $route_id = $_POST['route_id'];
-            
+
             // Call model method to delete route
             if ($this->routeModel->deleteRoute($route_id)) {
                 // Redirect with success message
@@ -989,13 +1112,14 @@ class VehicleManager extends Controller {
         }
     }
 
-    public function getAvailableVehicles($day) {
+    public function getAvailableVehicles($day)
+    {
         // Make sure nothing is output before this
         ob_clean(); // Clear any previous output
-        
+
         try {
             $vehicles = $this->vehicleModel->getAvailableVehiclesByDay($day);
-            
+
             header('Content-Type: application/json');
             echo json_encode([
                 'status' => 'success',
@@ -1013,13 +1137,14 @@ class VehicleManager extends Controller {
         }
     }
 
-    public function getVehicleDetails($id) {
+    public function getVehicleDetails($id)
+    {
         ob_clean();
-        
+
         try {
             $vehicle = $this->vehicleModel->getVehicleById($id);
-        
-            
+
+
             header('Content-Type: application/json');
             echo json_encode([
                 'status' => 'success',
@@ -1037,15 +1162,17 @@ class VehicleManager extends Controller {
         }
     }
 
-    public function getRoutesByDay($day) {
+    public function getRoutesByDay($day)
+    {
         $routes = $this->routeModel->getRoutesByDay($day);
         echo json_encode(['routes' => $routes]);
     }
 
-    public function getEmployeeByUserId($user_id) {
+    public function getEmployeeByUserId($user_id)
+    {
         // Fetch employee data
         $employeeData = $this->employeeModel->getEmployeeByUserId($user_id);
-        
+
         // Ensure all expected keys exist
         $response = [
             'employee_id' => $employeeData->employee_id ?? null,
@@ -1058,12 +1185,13 @@ class VehicleManager extends Controller {
             'address_line2' => $employeeData->address_line2 ?? '',
             'city' => $employeeData->city ?? ''
         ];
-        
+
         echo json_encode($response);
         exit;
     }
 
-    public function removeDriver($user_id) {
+    public function removeDriver($user_id)
+    {
         if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             try {
                 // Call the model method to remove the driver
@@ -1075,7 +1203,7 @@ class VehicleManager extends Controller {
             } catch (Exception $e) {
                 flash('driver_message', 'Error: ' . $e->getMessage(), 'alert alert-danger');
             }
-            
+
             redirect('vehiclemanager/driver'); // Redirect to the driver management page
         } else {
             // If not a POST request, redirect to the driver management page
@@ -1083,7 +1211,8 @@ class VehicleManager extends Controller {
         }
     }
 
-    public function bag() {
+    public function bag()
+    {
         $data = [
             // 'totalVehicles' => $this->vehicleModel->getTotalVehicles(),
             // 'availableVehicles' => $this->vehicleModel->getAvailableVehicles(),
@@ -1094,26 +1223,27 @@ class VehicleManager extends Controller {
         $this->view('vehicle_manager/collection_bags/index', $data);
     }
 
-    public function createBag() {
+    public function createBag()
+    {
         if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             // Get the raw POST data
             $input = file_get_contents("php://input");
             $data = json_decode($input, true); // Decode the JSON payload
-    
+
             // Log the received data
             error_log("Received data: " . print_r($data, true));
-    
+
             // Convert to appropriate types
             $data['capacity_kg'] = (float) ($data['capacity_kg'] ?? 50.00); // Default value
             $data['bag_weight_kg'] = isset($data['bag_weight_kg']) ? (float) $data['bag_weight_kg'] : null; // Convert to float or null
-    
+
             // Call the model method to create the collection bag
             $bagId = $this->bagModel->createCollectionBag($data);
-    
+
             if ($bagId) {
                 // Generate QR Code
-                $this->generateQRCode($bagId); 
-    
+                $this->generateQRCode($bagId);
+
                 // Return success response
                 echo json_encode(['success' => true, 'lastInsertedId' => $bagId]);
             } else {
@@ -1125,28 +1255,30 @@ class VehicleManager extends Controller {
         }
     }
 
-    private function generateQRCode($bagId) {
+    private function generateQRCode($bagId)
+    {
         try {
             $qrCode = new QrCode($bagId);
             $qrCode->setSize(300); // Set the size
             $qrCode->setMargin(10); // Set the margin
-    
+
 
             $writer = new PngWriter();
-        
+
             // Define the path to save the QR code image
             $filePath = UPLOADROOT . '/qr_codes/' . $bagId . '.png';
-        
+
             // Save the generated QR code to a file
             $writer->writeFile($qrCode, $filePath); // Directly write to file
-        
+
         } catch (\Exception $e) {
             error_log('QR Code generation failed: ' . $e->getMessage());
         }
     }
-    
 
-    public function getBags() {
+
+    public function getBags()
+    {
         // Fetch bags from the model
         $bags = $this->bagModel->getAllBags(); // Assuming this method exists in your model
 
@@ -1154,7 +1286,8 @@ class VehicleManager extends Controller {
         echo json_encode(['success' => true, 'bags' => $bags]);
     }
 
-    public function getBagDetails($bagId) {
+    public function getBagDetails($bagId)
+    {
         // Fetch bag details from the model
         $bag = $this->bagModel->getBagDetails($bagId); // Assuming this method exists in your model
 
@@ -1166,7 +1299,8 @@ class VehicleManager extends Controller {
         }
     }
 
-    public function updateBag() {
+    public function updateBag()
+    {
         if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             // Get the raw POST data
             $input = file_get_contents("php://input");
@@ -1174,8 +1308,8 @@ class VehicleManager extends Controller {
 
             // Validate and sanitize input
             $bagId = $data['bag_id'] ?? null;
-            $capacityKg = (float)($data['capacity_kg'] ?? 0);
-            $bagWeightKg = (float)($data['bag_weight_kg'] ?? 0);
+            $capacityKg = (float) ($data['capacity_kg'] ?? 0);
+            $bagWeightKg = (float) ($data['bag_weight_kg'] ?? 0);
             $status = $data['status'] ?? 'inactive'; // Default to inactive if not provided
 
             // Call the model method to update the collection bag
@@ -1193,7 +1327,8 @@ class VehicleManager extends Controller {
         }
     }
 
-    public function removeBag() {
+    public function removeBag()
+    {
         if ($_SERVER['REQUEST_METHOD'] == 'DELETE') {
             // Get the raw POST data
             $input = file_get_contents("php://input");
@@ -1223,17 +1358,18 @@ class VehicleManager extends Controller {
         }
     }
 
-    public function deleteBagQR() {
+    public function deleteBagQR()
+    {
         // Get the JSON input
         $input = json_decode(file_get_contents('php://input'), true);
-        
+
         // Check if the image path is provided
         if (isset($input['image_path'])) {
             $imagePath = $input['image_path'];
-    
+
             // Debugging: Log the full path
             error_log("Full path to image: " . $imagePath);
-    
+
             // Check if the file exists
             if (file_exists($imagePath)) {
                 // Attempt to delete the file
@@ -1253,20 +1389,18 @@ class VehicleManager extends Controller {
             echo json_encode(['success' => false, 'message' => 'No image path provided.']);
         }
     }
-    
 
-    public function getCollectionRequests() {
+
+    public function getCollectionRequests()
+    {
         $collections = $this->collectionModel->getPendingCollections();
         header('Content-Type: application/json');
         echo json_encode($collections);
     }
 
-    public function getCollectionDetails($id = null) {
-        // Check if it's an AJAX request
-        if (!$this->isAjaxRequest()) {
-            redirect(page: 'pages/error');
-            return;
-        }
+    public function getCollectionDetails($id)
+    {
+
 
         // Validate ID
         if (!$id || !is_numeric($id)) {
@@ -1277,7 +1411,7 @@ class VehicleManager extends Controller {
 
         // Get collection details
         $collection = $this->collectionModel->getCollectionDetails($id);
-        
+
         if (!$collection) {
             http_response_code(404);
             echo json_encode(['error' => 'Collection not found']);
@@ -1316,7 +1450,8 @@ class VehicleManager extends Controller {
         echo json_encode($response);
     }
 
-    public function approveCollection() {
+    public function approveCollection()
+    {
         // Check if it's an AJAX request
         if (!$this->isAjaxRequest()) {
             redirect('pages/error');
