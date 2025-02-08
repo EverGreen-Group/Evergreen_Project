@@ -130,9 +130,9 @@ class Supplier extends Controller {
 
     public function payments()
     {
-        $data = [];
 
-        $this->view('shared/supplier/v_view_monthly_statement', $data);
+
+        $this->view('supplier/v_supplier_payment', []);
     }
 
     public function paymentanalysis()
@@ -527,6 +527,28 @@ class Supplier extends Controller {
         header('Content-Type: application/json');
         echo json_encode($bagDetails);
         exit();
+    }
+
+    public function bag($bagId) {
+        // $collectionDetails = $this->collectionModel->getCollectionDetails($collectionId);
+
+        $data = [
+            'bagId' => $bagId,
+            // 'bagDetails' => $collectionDetails
+        ];
+
+        $this->view('supplier/v_bag', $data);
+    }
+
+    public function fertilizer($fertilizerId) {
+        // $collectionDetails = $this->collectionModel->getCollectionDetails($collectionId);
+
+        $data = [
+            'fertilizerId' => $fertilizerId,
+            // 'bagDetails' => $collectionDetails
+        ];
+
+        $this->view('supplier/v_fertilizer', $data);
     }
 }
 ?>
