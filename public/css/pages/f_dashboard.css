@@ -1,6 +1,7 @@
 @import url("https://fonts.googleapis.com/css2?family=Lato:wght@400;700&family=Poppins:wght@400;500;600;700&display=swap");
 
 .container {
+    font-family: Arial, sans-serif;
     max-width: auto;
     margin: 0 auto;
     padding: 20px;
@@ -9,7 +10,12 @@
     box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
 }
 
-
+header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 30px;
+}
 
 h1 {
     font-size: 24px;

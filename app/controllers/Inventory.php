@@ -1,8 +1,6 @@
 <?php
 require_once APPROOT . '/models/M_Products.php';
 require_once APPROOT . '/models/M_Fertilizer.php';
-require_once APPROOT . '/models/M_Dashbord.php';
-require_once APPROOT . '/models/M_Machine.php';
 
 require_once '../app/models/M_Products.php';
 class Inventory extends controller
@@ -10,51 +8,22 @@ class Inventory extends controller
     private $productModel;
     private $fertilizerModel;
 
-    private $stockvalidate;
-    private $machineModel;
-
-
-
-
-
     public function __construct()
     {
 
         $this->productModel = new M_Products();
         $this->fertilizerModel = new M_Fertilizer();
-        $this->stockvalidate = new M_stockvalidate();
-        $this->machineModel = new M_Machine();
-
     }
 
     public function index()
     {
-        if ($_SERVER ['REQUEST_METHOD'] =='POST'){
-            $report = ['report' => $_POST['report']];
-
-            
-            
-        }
-        $totalstock = $this->stockvalidate->gettodaytotalstock();
         $products = $this->productModel->getAllProducts();
-        $fertilizer = $this->fertilizerModel->getfertilizer();
-        $stockvalidate = $this->stockvalidate->getvalidateStocks();
-        $machines = $this->machineModel->gettimesofmachine();
-        $validatedetails = $this->stockvalidate->getvalidatestockdetails();
 
         $data = [
-            'products' => $products,
-            'fertilizer' => $fertilizer,
-            'stockvalidate' => $stockvalidate,
-            'machines' => $machines,
-            'totalstock' => $totalstock,
-            'validatedetails' => $validatedetails
-
+            'products' => $products
         ];
 
-        
         $this->view('inventory/v_dashboard', $data);
-        //var_dump($data);
     }
 
     public function product()
@@ -64,20 +33,13 @@ class Inventory extends controller
             'products' => $products
         ];
 
-        if (isset($_GET['search'])) {
-            $search = $_GET['search'];
-            $products = $this->productModel->searchProducts($search);
-            $data = [
-                'products' => $products
-            ];
-        }
-
         $this->view('inventory/v_product', $data);
     }
 
-
-    public function order()
-    {
+    public function getfertilizer(){
+        
+    }
+    public function order(){
         $data = [];
 
         $this->view('inventory/v_order', $data);
@@ -91,8 +53,10 @@ class Inventory extends controller
                 'product-name' => trim($_POST['product-name']),
                 "location" => trim($_POST['location']),
                 "details" => trim($_POST['details']),
-                "grade" => trim($_POST['grade']),
+                "code" => trim($_POST['code']),
                 "price" => trim($_POST['price']),
+                "profit" => trim($_POST['profit']),
+                "margin" => trim($_POST['margin']),
                 "quantity" => trim($_POST['quantity']),
                 "unit" => trim($_POST['unit']),
                 'image_path' => '',
@@ -140,15 +104,26 @@ class Inventory extends controller
             if (empty($data['details'])) {
                 $data['details_err'] = 'Please enter product details';
             }
+            if (empty($data['code'])) {
+                $data['code_err'] = 'Please enter code';
+            }
             if (empty($data['price'])) {
                 $data['price_err'] = 'Please enter price';
+            }
+            if (empty($data['profit'])) {
+                $data['profit_err'] = 'Please enter profit';
+            }
+            if (empty($data['margin'])) {
+                $data['margin_err'] = 'Please enter margin';
             }
             if (empty($data['quantity'])) {
                 $data['quantity_err'] = 'Please enter quantity';
             }
+
             if (
                 empty($data['product-name_err']) && empty($data['location_err']) &&
                 empty($data['details_err']) && empty($data['price_err']) &&
+                empty($data['profit_err']) && empty($data['margin_err']) &&
                 empty($data['quantity_err'])
             ) {
 
@@ -170,8 +145,10 @@ class Inventory extends controller
                 'product-name' => '',
                 "location" => '',
                 "details" => '',
-                "grade" => '',
+                "code" => '',
                 "price" => '',
+                "profit" => '',
+                "margin" => '',
                 "quantity" => '',
                 "unit" => '',
                 'image_path' => '',
@@ -192,7 +169,7 @@ class Inventory extends controller
             'fertilizer' => $fertilizer
         ];
 
-
+        
 
         $this->view('inventory/v_fertilizer_dashboard', $data);
 
@@ -288,7 +265,7 @@ class Inventory extends controller
 
                 if ($this->fertilizerModel->createFertilizer($data)) {
                     flash('fertilizer_message', 'Fertilizer Added');
-
+                    
                     redirect('inventory/fertilizerdashboard');
 
                 } else {
@@ -313,19 +290,18 @@ class Inventory extends controller
                 'unit' => '',
 
             ];
-
+            
 
             $this->view('inventory/v_create_fertilizer', $data);
         }
 
     }
 
-    public function updatefertilizer($id)
-    {
+    public function updatefertilizer($id){
 
-        if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+        if($_SERVER['REQUEST_METHOD']=='POST'){
             $data = [
-                'id' => $id,
+                 'id' => $id,
                 'fertilizer_name' => $_POST['fertilizer_name'],
                 'company_name' => $_POST['company_name'],
                 'details' => $_POST['details'],
@@ -346,96 +322,25 @@ class Inventory extends controller
             if (
                 !empty($data['fertilizer_name']) && !empty($data['company_name']) && !empty($data['details'])
                 && !empty($data['code']) && !empty($data['price']) && !empty($data['quantity']) && !empty($data['unit'])
-            ) {
+            ){
 
-                
             }
 
-        } else {
+        }else{
             $fertilizer = $this->fertilizerModel->getFertilizerById($id);
             $data = [
                 'id' => $id,
                 'fertilizer' => $fertilizer
-            ];
-            // print_r($data);
+            ];  
             $this->view('inventory/v_update_fertilizer', $data);
         }
     }
 
     public function machine()
     {
-        if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['form'])) {
-            // Sanitize POST data
-            $_POST = filter_input_array(INPUT_POST);
-          // Collect form data
+        $data = [];
 
-            $data = [
-                'machine_name' => trim($_POST['machine_name']),
-                'brand' => trim($_POST['brand']),
-                'started_date' => trim($_POST['started_date']),
-                'last_maintenance' => trim($_POST['last_maintenance']),
-                'next_maintenance' => trim($_POST['next_maintenance']),
-                'total_working_hours' => trim($_POST['total_working_hours']),
-                'special_notes' => trim($_POST['specialnotes']),
-            ];
-
-            // Validate data
-            $errors = [];
-            if (empty($data['machine_name'])) $errors['machine_name'] = 'Machine name is required.';
-            if (empty($data['brand'])) $errors['brand'] = 'Brand is required.';
-            if (empty($data['started_date'])) $errors['started_date'] = 'Started date is required.';
-            if (empty($data['last_maintenance'])) $errors['last_maintenance'] = 'Last maintenance is required.';
-            if (empty($data['next_maintenance'])) $errors['next_maintenance'] = 'Next maintenance is required.';
-            if (empty($data['total_working_hours'])) $errors['total_working_hours'] = 'Total working hours are required.';
-            if (empty($data['special_notes'])) $errors['special_notes'] = 'Special notes are required.';
-
-            if (empty($errors)) {
-                // Save the data to the database
-                $machineModel = $this->model('M_Machine');
-
-                if ($machineModel->insertMachineData($data)) {
-                    // Redirect to success page or show success message
-                    flash('machine_message', 'Machine data added successfully!');
-                    redirect('Inventory/machine');
-                } else {
-                    // Handle database error
-                    die('Something went wrong');
-                }
-            } else {
-                // Load the form view with errors
-                $this->view('inventory/v_machineallocation', $data);
-            }
-        }
-        elseif (isset($_GET['id']) && isset($_POST['status_allocate'])) {
-            $us=$_GET['id'];
-
-            $machineModel = $this->model('M_Machine');
-            $machineModel->updateMachineByStatus($us, 'Allocated');
-            redirect('Inventory/machine');
-            
-        }
-        elseif (isset($_GET['id']) && isset($_POST['status_deallocate'])) {
-            $us=$_GET['id'];
-
-            $machineModel = $this->model('M_Machine');
-            $machineModel->updateMachineByStatus($us, 'Repair');
-            redirect('Inventory/machine');
-            
-        }
-        else {
-            // GET request
-            $machines= $this->machineModel->getmachines();
-            $data = [
-                'machines' => $machines
-            ];
-            // Load the form view for GET requests
-            $this->view('inventory/v_machineallocation',$data);
-            //var_dump($data);
-        }
-
-        
         $this->view('inventory/v_machineallocation', $data);
-        //var_dump($data);
     }
 
 
@@ -460,8 +365,10 @@ class Inventory extends controller
                 'product-name' => trim($_POST['product-name']),
                 'location' => trim($_POST['location']),
                 'details' => trim($_POST['details']),
-                "grade" => trim($_POST['grade']),
+                "code" => trim($_POST['code']),
                 'price' => trim($_POST['price']),
+                'profit' => trim($_POST['profit']),
+                'margin' => trim($_POST['margin']),
                 'quantity' => trim($_POST['quantity']),
                 'unit' => trim($_POST['unit']),
                 'image_path' => '',
@@ -470,6 +377,8 @@ class Inventory extends controller
                 'location_err' => '',
                 'details_err' => '',
                 'price_err' => '',
+                'profit_err' => '',
+                'margin_err' => '',
                 'quantity_err' => ''
             ];
 
@@ -503,8 +412,17 @@ class Inventory extends controller
             if (empty($data['details'])) {
                 $data['details_err'] = 'Please enter product details';
             }
+            if (empty($data['code'])) {
+                $data['code_err'] = 'Please enter code';
+            }
             if (empty($data['price'])) {
                 $data['price_err'] = 'Please enter price';
+            }
+            if (empty($data['profit'])) {
+                $data['profit_err'] = 'Please enter profit';
+            }
+            if (empty($data['margin'])) {
+                $data['margin_err'] = 'Please enter margin';
             }
             if (empty($data['quantity'])) {
                 $data['quantity_err'] = 'Please enter quantity';
@@ -513,7 +431,8 @@ class Inventory extends controller
             // Make sure no errors
             if (
                 empty($data['product-name_err']) && empty($data['location_err']) &&
-                empty($data['details_err']) && empty($data['price_err']) &&
+                empty($data['details_err']) && empty($data['price_err']) && empty($data['code_err']) &&
+                empty($data['profit_err']) && empty($data['margin_err']) &&
                 empty($data['quantity_err'])
             ) {
 
@@ -559,19 +478,17 @@ class Inventory extends controller
         redirect('inventory/product');
     }
 
-    public function recodes()
-    {
+    public function recodes(){
         $data = [];
 
         $this->view('inventory/v_recodes', $data);
     }
 
-    public function deletefertilizer($id)
-    {
-        if ($_SERVER['REQUEST_METHOD'] == 'GET') {
-            if ($this->fertilizerModel->deleteFertilizer($id)) {
+    public function deletefertilizer($id){
+        if($_SERVER['REQUEST_METHOD']=='GET'){
+            if($this->fertilizerModel->deleteFertilizer($id)){
                 flash('fertilizer_message', 'Fertilizer Removed');
-            } else {
+            }else{
                 flash('fertilizer_message', 'Something went wrong', 'alert alert-danger');
             }
         }
@@ -584,22 +501,6 @@ class Inventory extends controller
         $this->view('inventory/v_payments', $data);
     }
 
-    public function getStockValidations() {
-        // Get status filter if provided
-        $status = isset($_GET['status']) ? $_GET['status'] : 'All';
-        
-        // Get the data from model
-        $stocks = $this->stockvalidate->getvalidateStocks($status);
-        
-        // Return JSON response
-        header('Content-Type: application/json');
-        echo json_encode($stocks);
-        exit();
-    }
-
-
-    
-
-
+ 
 
 }

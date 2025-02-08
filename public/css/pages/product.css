@@ -1,6 +1,8 @@
 @import url("https://fonts.googleapis.com/css2?family=Lato:wght@400;700&family=Poppins:wght@400;500;600;700&display=swap");
 
-
+* {
+    font-family: var(--poppins);
+}
 
 h1,
 h2,
@@ -57,7 +59,7 @@ header h1 {
 
 .create-product {
     padding: 10px 20px;
-    background-color:var(--main);
+    background-color: #27ae60;
     color: #fff;
     border: none;
     border-radius: 8px;
@@ -94,7 +96,6 @@ header h1 {
     grid-template-columns: repeat(4, 1fr);
     gap: 20px;
     margin-top: 20px;
-    justify-content: space-evenly;
 }
 
 .product-card {
@@ -161,12 +162,12 @@ header h1 {
 }
 
 .pagination button:hover {
-    background-color: var(--main);
+    background-color: #27ae60;
     color: #fff;
 }
 
 .pagination button.active {
-    background-color: var(--main);
+    background-color: #27ae60;
     color: #fff;
 }
 
@@ -280,12 +281,12 @@ header h1 {
 }
 
 .btn-update {
-    background-color: var(--main);
+    background-color: #4CAF50;
     color: white;
 }
 
 .btn-delete {
-    background-color: var(--red);
+    background-color: #f44336;
     color: white;
 }
 

@@ -1,4 +1,5 @@
-<?php require APPROOT . '/views/inc/components/header.php'; ?>
+<!DOCTYPE html>
+<html lang="en">
 
 <head>
     <meta charset="UTF-8">
@@ -10,7 +11,7 @@
 
 </head>
 
-
+<body>
 
     <!-- Top nav bar -->
     <?php require APPROOT . '/views/inc/components/topnavbar.php' ?>
@@ -19,23 +20,20 @@
 
     <main>
 
-        <div class="head-title">
-            <div class="left">
-                <h1>Fertilizer Available</h1>
-
-            </div>
+        <header style="margin: 20px;">
+            <h1>Fertilizer</h1>
+            <!-- <div class="search-filter">
+                <input type="text" placeholder="Search">
+                <button class="filter-btn">Filter</button>
+            </div> -->
             <a href="<?php echo URLROOT; ?>/inventory/fertilizerdashboard">
-                <button class="btn btn-primary">Fertilizer Dashboard</button>
+                <button class="create-btn">Fertilizer Dashboard</button>
             </a>
-        </div>
-        
         </header>
 
         <div class="container">
             <section class="orders">
-                <div class="head">
-                <h3>Available Orders </h3>
-                </div>
+                <h2>Available Orders <span class="inventory-count">10 Inventory Plans</span></h2>
                 <table>
                     <thead>
                         <tr>
