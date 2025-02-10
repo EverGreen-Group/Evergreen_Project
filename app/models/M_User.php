@@ -8,15 +8,14 @@ class M_User {
     }
 
     public function register($data) {
-        $sql = "INSERT INTO users (email, first_name, last_name, nic, gender, date_of_birth, password, role_id, approval_status) 
-                VALUES (:email, :first_name, :last_name, :nic, :gender, :date_of_birth, :password, :role_id, :approval_status)";
+        $sql = "INSERT INTO users (email, first_name, last_name, nic, date_of_birth, password, role_id, approval_status) 
+                VALUES (:email, :first_name, :last_name, :nic, :date_of_birth, :password, :role_id, :approval_status)";
         
         $this->db->query($sql);
         $this->db->bind(':email', $data['email']);
         $this->db->bind(':first_name', $data['first_name']);
         $this->db->bind(':last_name', $data['last_name']);
         $this->db->bind(':nic', $data['nic']);
-        $this->db->bind(':gender', $data['gender']);
         $this->db->bind(':date_of_birth', $data['date_of_birth']);
         $this->db->bind(':password', $data['password']);
         $this->db->bind(':role_id', $data['role_id']);
@@ -83,7 +82,9 @@ class M_User {
     }
 
     public function getAllUnassignedUsers() {
-        $this->db->query("SELECT * FROM users WHERE user_id NOT IN (SELECT user_id FROM drivers) AND role_id = :role_id");
+        $this->db->query("
+        SELECT u.user_id,u.email,u.first_name,u.last_name,u.nic,u.date_of_birth,u.role_id FROM users u WHERE u.user_id NOT IN (SELECT user_id FROM drivers) AND role_id = :role_id
+        ");
         $this->db->bind(':role_id', 7);
         return $this->db->resultSet();
     }
@@ -97,7 +98,7 @@ class M_User {
     }
 
     public function getAllUserDrivers() {
-        $this->db->query("SELECT * FROM users WHERE user_id IN (SELECT user_id FROM drivers) AND role_id = :role_id");
+        $this->db->query("SELECT u.user_id,u.email,u.first_name,u.last_name,u.nic,u.date_of_birth,u._role_id FROM users u WHERE u.user_id IN (SELECT user_id FROM drivers) AND role_id = :role_id");
         $this->db->bind(':role_id', 6);
         return $this->db->resultSet();
     }
@@ -124,6 +125,53 @@ class M_User {
         $this->db->query("SELECT supplier_id FROM suppliers WHERE user_id = :user_id");
         $this->db->bind(':user_id', $userId);
         return $this->db->single();
+    }
+
+    public function storeVerificationCode($email, $code)
+    {
+        $this->db->query("UPDATE users SET verification_code = :code WHERE email = :email");
+        $this->db->bind(':code', $code);
+        $this->db->bind(':email', $email);
+        return $this->db->execute();
+    }
+
+    public function verifyEmail($code)
+    {
+        $this->db->query("SELECT * FROM users WHERE verification_code = :code");
+        $this->db->bind(':code', $code);
+        $this->db->execute();
+        if ($this->db->rowCount() > 0) {
+            // Update user to set verified status
+            $this->db->query("UPDATE users SET verified = 1 WHERE verification_code = :code");
+            $this->db->bind(':code', $code);
+            $this->db->execute();
+            return true;
+        }
+        return false;
+    }
+
+    public function storeResetToken($email, $token)
+    {
+        $this->db->query("UPDATE users SET reset_token = :token WHERE email = :email");
+        $this->db->bind(':token', $token);
+        $this->db->bind(':email', $email);
+        return $this->db->execute();
+    }
+
+    public function verifyResetToken($token)
+    {
+        $this->db->query("SELECT * FROM users WHERE reset_token = :token");
+        $this->db->bind(':token', $token);
+        $this->db->execute();
+        return $this->db->rowCount() > 0; // Returns true if token exists
+    }
+
+    public function updatePassword($token, $newPassword)
+    {
+        $this->db->query("UPDATE users SET password = :password, reset_token = NULL WHERE reset_token = :token");
+        $this->db->bind(':password', $newPassword);
+        $this->db->bind(':token', $token);
+        return $this->db->execute();
     }
 }
 ?>

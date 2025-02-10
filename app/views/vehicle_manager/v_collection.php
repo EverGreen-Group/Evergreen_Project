@@ -5,6 +5,7 @@
 <!-- Top nav bar -->
 <?php require APPROOT . '/views/inc/components/topnavbar.php'; ?>
 <link rel="stylesheet" href="<?php echo URLROOT; ?>/css/vehicle_manager/collection/collection.css">
+<link rel="stylesheet" href="<?php echo URLROOT; ?>/css/vehicle_manager/collection/calendar.css">
 <!-- <script async defer src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCdt_khahhXrKdrA8cLgKeQB2CZtde-_Vc&callback=initMap"></script> -->
 <script>
     const URLROOT = '<?php echo URLROOT; ?>';
@@ -43,6 +44,18 @@
             <i class='bx bx-plus'></i>
             Create a Schedule
         </a>
+        <a href="<?php echo URLROOT; ?>/reschedule/" class="btn btn-primary">
+            <i class='bx bx-calendar-edit'></i>
+            Manage Exceptions
+        </a>
+        <a href="#" id="openUpdateScheduleModal" class="btn btn-primary">
+            <i class='bx bx-analyse'></i>
+            Update Schedule
+        </a>
+        <a href="#" class="btn btn-primary">
+            <i class='bx bx-show'></i>
+            View Collection History
+        </a>
     </div>
 
 
@@ -70,83 +83,55 @@
 
     <?php flash('schedule_error'); ?>
     <?php flash('schedule_success'); ?>
+    
 
     <div class="table-data">
-        <div class="order">
-            <div class="head">
-                <h3>Active Collections</h3>
-                <i class='bx bx-leaf'></i>
-            </div>
-            <table>
-                <thead>
-                    <tr>
-                        <th>Collection ID</th>
-                        <th>Route</th>
-                        <th>Team</th>
-                        <th>Status</th>
-                        <th>Detals</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <tr>
-                        <td>COL001</td>
-                        <td>Route A</td>
-                        <td>Team 1</td>
-                        <td><span class="status pending">In Progress</span></td>
-                        <td><button class="btn btn-primary">VIEW</button></td>
-                    </tr>
-                    <tr>
-                        <td>COL002</td>
-                        <td>Route B</td>
-                        <td>Team 2</td>
-                        <td><span class="status completed">Completed</span></td>
-                        <td><button class="btn btn-primary">VIEW</button></td>
-                    </tr>
-                </tbody>
-            </table>
+        <div class="order" style="max-width:500px;">
+            <div id="calendar"></div>  
         </div>
-
         <div class="order">
             <div class="head">
-                <h3>Collection Confirmation Request</h3>
-                <i class='bx bx-leaf'></i>
+                <h3>Collection List</h3>
+                <script src="<?php echo URLROOT; ?>/public/js/vehicle_manager/calendar.js"></script>
             </div>
-            <table id="collection-confirmation-table">
+            <table id="collection-table">
                 <thead>
                     <tr>
                         <th>Collection ID</th>
                         <th>Route</th>
+                        <th>Shift Times</th>
                         <th>Driver</th>
-                        <th>Deliveries</th>
+                        <th>Status</th>
                         <th>Details</th>
                     </tr>
                 </thead>
                 <tbody>
                     <tr>
-                        <td>COL001</td>
-                        <td>Route A</td>
-                        <td>Driver 1</td>
-                        <td><span class="status cancelled">NO</span></td>
-                        <td><button class="btn btn-primary" onclick="openCollectionRequestDetailModal()">VIEW</button></td>
-                    </tr>
-                    <tr>
-                        <td>COL002</td>
-                        <td>Route B</td>
-                        <td>Driver 2</td>
-                        <td><span class="status completed">YES</span></td>
-                        <td><button class="btn btn-primary" onclick="openCollectionRequestDetailModal()">VIEW</button></td>
+                        <td colspan="6">No collections found. Please select a date.</td>
                     </tr>
                 </tbody>
             </table>
         </div>
+
     </div>
 
     <script>
-        
-    </script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const calendar = new Calendar('calendar', function(date) {
+            // Your date selection handler
+            fetchCollections(
+                date.getFullYear(),
+                date.getMonth() + 1,
+                date.getDate()
+            );
+        });
+    });
+</script>
 
-    <!-- Collection Schedules Section -->
+
+
     <div class="table-data">
+
         <div class="order">
             <div class="head">
                 <h3>Collection Schedules</h3>
@@ -206,83 +191,65 @@
         </div>
     </div>
 
+
+
+
+<script>
+
+    
+    function fetchCollections(year, month, day) {
+        const date = `${year}-${month.toString().padStart(2, '0')}-${day.toString().padStart(2, '0')}`;
+        
+        // Make an AJAX call to fetch collections for the selected date
+        fetch(`<?php echo URLROOT; ?>/vehiclemanager/getCollectionsByDate?date=${date}`)
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+                return response.json();
+            })
+            .then(data => {
+                populateCollectionList(data);
+            })
+            .catch(error => {
+                console.error('Error fetching collections:', error);
+                const collectionListDiv = document.getElementById('collection-list');
+                collectionListDiv.innerHTML = '<p>Error fetching collections. Please try again later.</p>';
+            });
+    }
+    // Function to populate the collection list in table format
+    function populateCollectionList(collections) {
+        const tbody = document.querySelector('#collection-table tbody');
+        tbody.innerHTML = ''; // Clear previous data
+
+        if (collections.length === 0) {
+            const noDataRow = document.createElement('tr');
+            noDataRow.innerHTML = '<td colspan="6">No collections found for this date.</td>';
+            tbody.appendChild(noDataRow);
+        } else {
+            collections.forEach(collection => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${collection.collection_id}</td>
+                    <td>${collection.route_id || 'N/A'}</td>
+                    <td>${new Date(collection.start_time).toLocaleTimeString()} - ${new Date(collection.end_time).toLocaleTimeString()}</td>
+                    <td>${collection.driver_id || 'N/A'}</td>
+                    <td><span class="status ${collection.status.toLowerCase().replace(' ', '-')}">${collection.status}</span></td>
+                    <td><button class="btn btn-primary" onclick="window.location.href='<?php echo URLROOT; ?>/collection/details/' + ${collection.collection_id}">VIEW</button></td>
+                `;
+                tbody.appendChild(row);
+            });
+        }
+    }
+</script>
+    <!-- Collection Schedules Section -->
+    <div class="table-data">
+
+    </div>
+
     <?php flash('schedule_create_error'); ?>
     <?php flash('schedule_create_success'); ?>
 
-<!-- Edit Schedule Section -->
-<div class="table-data">
-    <div class="order">
-        <div class="head">
-            <h3>Edit Schedule</h3>
-        </div>
-        <form id="editScheduleForm" method="POST" action="<?php echo URLROOT; ?>/collectionschedules/update">
-            <div class="form-group">
-                <label for="schedule_id">Select Schedule:</label>
-                <select id="schedule_id" name="schedule_id" required onchange="loadScheduleData(this.value)">
-                    <option value="">Select a schedule</option>
-                    <?php foreach ($data['schedules'] as $schedule): ?>
-                        <option value="<?= $schedule->schedule_id; ?>">
-                            Schedule <?= str_pad($schedule->schedule_id, 3, '0', STR_PAD_LEFT); ?>
-                        </option>
-                    <?php endforeach; ?>
-                </select>
-            </div>
-
-            <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px;">
-                <div class="form-group">
-                    <label for="edit_route">Route:</label>
-                    <select id="edit_route" name="route_id" required>
-                        <?php foreach ($data['routes'] as $route): ?>
-                            <option value="<?= $route->route_id; ?>"><?= htmlspecialchars($route->route_name); ?></option>
-                        <?php endforeach; ?>
-                    </select>
-                </div>
-
-                <div class="form-group">
-                    <label for="edit_driver">Driver:</label>
-                    <select id="edit_driver" name="driver_id" required>
-                        <?php foreach ($data['drivers'] as $driver): ?>
-                            <option value="<?= $driver->driver_id; ?>"><?= htmlspecialchars($driver->first_name); ?></option>
-                        <?php endforeach; ?>
-                    </select>
-                </div>
-
-                <div class="form-group">
-                    <label for="edit_shift">Shift:</label>
-                    <select id="edit_shift" name="shift_id" required>
-                        <?php foreach ($data['shifts'] as $shift): ?>
-                            <option value="<?= $shift->shift_id; ?>"><?= $shift->shift_name; ?></option>
-                        <?php endforeach; ?>
-                    </select>
-                </div>
-
-                <div class="form-group">
-                    <label for="edit_week_number">Week:</label>
-                    <select id="edit_week_number" name="week_number" required>
-                        <option value="1">Week 1</option>
-                        <option value="2">Week 2</option>
-                    </select>
-                </div>
-
-            </div>
-
-            <button type="submit" class="btn-submit">Update Schedule</button>
-        </form>
-    </div>
-</div>
-
-
-<!-- PART FOR MODAL -->
-
-<div id="collectionRequestDetailsModal" class="modal" onclick="closeModal('collectionRequestDetailsModal')">
-    <div class="modal-content" onclick="event.stopPropagation();">
-        <span class="close" onclick="closeModal('collectionRequestDetailsModal')">&times;</span>
-        <h2>Collection Confirmation Request</h2>
-        <div id="collectionRequestDetailsContent">
-            <!-- Bag details will be populated here -->
-        </div>
-    </div>
-</div>
 
 <!-- Create Schedule Modal -->
 <div id="createScheduleModal" class="modal" onclick="event.stopPropagation(); closeModal('createScheduleModal')">
@@ -341,6 +308,92 @@
         </form>
     </div>
 </div>
+
+<!-- Update Schedule Modal -->
+<div id="updateScheduleModal" class="modal" onclick="event.stopPropagation(); closeModal('updateScheduleModal')">
+    <div class="modal-content" style="width: 80%; max-width: 600px;" onclick="event.stopPropagation();">
+        <span class="close" onclick="closeModal('updateScheduleModal')">&times;</span>
+        <h2 style="margin-bottom: 30px;">Update Schedule</h2>
+
+        <form id="editScheduleForm" method="POST" action="<?php echo URLROOT; ?>/collectionschedules/update">
+            <div style="display: flex; flex-direction: column; gap: 20px;">
+                <div class="form-group">
+                    <label for="schedule_id">Select Schedule:</label>
+                    <select id="schedule_id" name="schedule_id" required onchange="loadScheduleData(this.value)">
+                        <option value="">Select a schedule</option>
+                        <?php foreach ($data['schedules'] as $schedule): ?>
+                            <option value="<?= $schedule->schedule_id; ?>">
+                                Schedule <?= str_pad($schedule->schedule_id, 3, '0', STR_PAD_LEFT); ?>
+                            </option>
+                        <?php endforeach; ?>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="edit_route">Route:</label>
+                    <select id="edit_route" name="route_id" required>
+                        <?php foreach ($data['routes'] as $route): ?>
+                            <option value="<?= $route->route_id; ?>"><?= htmlspecialchars($route->route_name); ?></option>
+                        <?php endforeach; ?>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="edit_driver">Driver:</label>
+                    <select id="edit_driver" name="driver_id" required>
+                        <?php foreach ($data['drivers'] as $driver): ?>
+                            <option value="<?= $driver->driver_id; ?>"><?= htmlspecialchars($driver->first_name); ?></option>
+                        <?php endforeach; ?>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="edit_shift">Shift:</label>
+                    <select id="edit_shift" name="shift_id" required>
+                        <?php foreach ($data['shifts'] as $shift): ?>
+                            <option value="<?= $shift->shift_id; ?>"><?= $shift->shift_name; ?></option>
+                        <?php endforeach; ?>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="edit_week_number">Week:</label>
+                    <select id="edit_week_number" name="week_number" required>
+                        <option value="1">Week 1</option>
+                        <option value="2">Week 2</option>
+                    </select>
+                </div>
+            </div>
+            <button type="submit" class="btn-secondary">Update Schedule</button>
+        </form>
+    </div>
+</div>
+
+
+<style>
+    /* Status styles */
+.status.pending {
+    color: orange; /* Color for Pending status */
+}
+
+.status.approved {
+    color: green; /* Color for Approved status */
+}
+
+.status.rejected {
+    color: red; /* Color for Rejected status */
+}
+
+.status.awaiting-inventory-addition  {
+    color: green; /* Color for Rejected status */
+}
+
+.status.completed {
+    color: blue; /* Color for Completed status */
+}
+
+/* Add more statuses as needed */
+</style>
 
 
 </main>

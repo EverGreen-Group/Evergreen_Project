@@ -16,6 +16,11 @@ class M_Route {
         return $this->db->resultset();
     }
 
+    public function getAllUndeletedRoutes() {
+        $this->db->query("SELECT * FROM routes r WHERE r.is_deleted = 0");
+        return $this->db->resultset();
+    }
+
     public function getTotalRoutes() {
         $sql = "SELECT COUNT(*) as total FROM routes WHERE is_deleted = 0";
         $stmt = $this->db->query($sql);
@@ -119,6 +124,53 @@ class M_Route {
 
     public function getUnallocatedSuppliers() {
         $this->db->query("
+            SELECT DISTINCT
+                s.*,
+                u.first_name,
+                u.last_name,
+                CONCAT(u.first_name, ' ', u.last_name) as full_name,
+                CONCAT(s.latitude, ', ', s.longitude) as coordinates
+            FROM suppliers s
+            JOIN users u ON s.user_id = u.user_id
+            LEFT JOIN route_suppliers rs ON s.supplier_id = rs.supplier_id
+            LEFT JOIN routes r ON rs.route_id = r.route_id
+            WHERE (rs.supplier_id IS NULL OR r.route_id IS NULL OR r.is_deleted = 1)
+            AND s.is_active = 1
+            AND s.is_deleted = 0;
+
+        ");
+        
+        $result = $this->db->resultSet();
+        error_log('Unallocated suppliers query result: ' . print_r($result, true));
+        return $result;
+    }
+
+
+    public function getSuppliersInCollection($collectionId) {
+        $this->db->query("
+            SELECT 
+                s.*,
+                u.first_name,
+                u.last_name,
+                CONCAT(u.first_name, ' ', u.last_name) as full_name,
+                CONCAT(s.latitude, ', ', s.longitude) as coordinates,
+                csr.approval_status
+            FROM suppliers s
+            JOIN users u ON s.user_id = u.user_id
+            LEFT JOIN collection_supplier_records csr ON s.supplier_id = csr.supplier_id
+            JOIN collections c ON c.collection_id = csr.collection_id
+            WHERE c.collection_id = :collection_id
+            AND s.is_active = 1
+            AND s.is_deleted = 0
+        ");
+        $this->db->bind(':collection_id', $collectionId);
+        $result = $this->db->resultSet();
+        error_log('Unallocated suppliers query result: ' . print_r($result, true));
+        return $result;
+    }
+
+    public function getUnallocatedSuppliersByDay($preferredDay) {
+        $this->db->query("
             SELECT 
                 s.*,
                 u.first_name,
@@ -129,13 +181,14 @@ class M_Route {
             JOIN users u ON s.user_id = u.user_id
             LEFT JOIN route_suppliers rs ON s.supplier_id = rs.supplier_id
             WHERE rs.supplier_id IS NULL 
-            AND u.approval_status = 'Approved'
             AND s.is_active = 1
             AND s.is_deleted = 0
+            AND s.preferred_day = :preferred_day
         ");
         
+        $this->db->bind(':preferred_day', $preferredDay);
         $result = $this->db->resultSet();
-        error_log('Unallocated suppliers query result: ' . print_r($result, true));
+        error_log('Unallocated suppliers query result for day ' . $preferredDay . ': ' . print_r($result, true));
         return $result;
     }
 
@@ -207,12 +260,12 @@ class M_Route {
         
         try {
             // Delete from route_suppliers
-            $this->db->query('DELETE FROM route_suppliers WHERE route_id = :route_id');
-            $this->db->bind(':route_id', $route_id);
-            $this->db->execute();
+            // $this->db->query('DELETE FROM route_suppliers WHERE route_id = :route_id');
+            // $this->db->bind(':route_id', $route_id);
+            // $this->db->execute();
 
-            // Delete from routes
-            $this->db->query('DELETE FROM routes WHERE route_id = :route_id');
+            // Soft Delete from routes
+            $this->db->query('UPDATE routes SET is_deleted = 1 WHERE route_id = :route_id');
             $this->db->bind(':route_id', $route_id);
             $this->db->execute();
 
@@ -240,6 +293,18 @@ class M_Route {
         
         $this->db->bind(':day', $day);
         return $this->db->resultset();
+    }
+
+    public function getRouteDetailsByCollection($collectionId){
+        $sql = "
+        SELECT r.* FROM collection_schedules cs
+        JOIN collections c ON c.schedule_id = cs.schedule_id
+        JOIN routes r on cs.route_id = r.route_id
+        WHERE c.collection_id = :collection_id;
+        ";
+        $this->db->query($sql);
+        $this->db->bind(':collection_id', $collectionId);
+        return $this->db->single();
     }
 
     public function getTodayAssignedRoutes() {

@@ -28,15 +28,19 @@
         <div id="map"></div>
     </div>
 
-
+    <?php
+    $status = "In Progress"; // Replace with actual status variable
+    $totalQuantity = "50 kg"; // Replace with actual total quantity variable
+    $collectionTime = "08:00 AM"; // Replace with actual collection time variable
+    ?>
 
     <!-- Collection Details -->
     <div class="details-grid">
         <!-- Vehicle Information -->
-        <div class="detail-card">
+        <div class="detail-card" onclick="toggleCard(this)">
             <div class="card-header">
                 <i class='bx bxs-truck'></i>
-                <h3>Vehicle Information</h3>
+                <h3>Collection Information</h3>
             </div>
             <div class="card-content">
                 <div class="info-row">
@@ -47,112 +51,84 @@
                     <span class="label">Vehicle Type:</span>
                     <span class="value">Lorry</span>
                 </div>
-            </div>
-        </div>
-
-        <!-- Team Information -->
-        <div class="detail-card">
-            <div class="card-header">
-                <i class='bx bxs-group'></i>
-                <h3>Collection Team</h3>
-            </div>
-            <div class="card-content">
                 <div class="info-row">
-                    <span class="label">Team ID:</span>
-                    <span class="value">Team #05</span>
+                    <span class="label">Status:</span>
+                    <span class="value"><?php echo $status; ?></span>
                 </div>
                 <div class="info-row">
-                    <span class="label">Driver:</span>
-                    <span class="value">John Doe</span>
+                    <span class="label">Total Quantity:</span>
+                    <span class="value"><?php echo $totalQuantity; ?></span>
                 </div>
                 <div class="info-row">
-                    <span class="label">Partner:</span>
-                    <span class="value">Jane Smith</span>
+                    <span class="label">Collected Time:</span>
+                    <span class="value"><?php echo $collectionTime; ?></span>
                 </div>
             </div>
         </div>
 
-        <!-- Collection Details -->
-        <div class="detail-card">
-            <div class="card-header">
-                <i class='bx bx-package'></i>
-                <h3>Collection Details</h3>
-            </div>
-            <div class="card-content">
-                <div class="info-row">
-                    <span class="label">Scheduled Time:</span>
-                    <span class="value">08:00 AM</span>
-                </div>
-                <div class="info-row">
-                    <span class="label">Expected Quantity:</span>
-                    <span class="value">20 kg</span>
-                </div>
-            </div>
-        </div>
 
-        <!-- Tea Leaf Details Card -->
-        <div class="detail-card">
-            <div class="card-header">
-                <i class='bx bx-leaf'></i>
-                <h3>Tea Leaf Details</h3>
-            </div>
-            <div class="card-content">
-                <div class="info-row">
-                    <span class="label">Leaf Type:</span>
-                    <span class="value pending-value">Pending</span>
-                </div>
-                <div class="info-row">
-                    <span class="label">Price per KG:</span>
-                    <span class="value pending-value">Pending</span>
-                </div>
-                <div class="info-row">
-                    <span class="label">Number of Bags:</span>
-                    <span class="value pending-value">Pending</span>
-                </div>
-                <div class="info-row">
-                    <span class="label">Total Weight:</span>
-                    <span class="value pending-value">Pending</span>
-                </div>
-            </div>
-        </div>
-    </div>
+        <!-- Bag Details Section -->
+        <div class="bag-details-section">
+            <h3>Bag Details</h3>
+            <?php
+            // Example array of bags; replace with actual data from your database
+            $bags = [
+                [
+                    'bag_id' => 'BAG-001',
+                    'actual_weight_kg' => 10.5,
+                    'leaf_age' => 'Fresh',
+                    'moisture_level' => 'Low',
+                    'deduction_notes' => 'None',
+                    'leaf_type_id' => 'Leaf Type A'
+                ],
+                [
+                    'bag_id' => 'BAG-002',
+                    'actual_weight_kg' => 12.0,
+                    'leaf_age' => 'Mature',
+                    'moisture_level' => 'Medium',
+                    'deduction_notes' => 'Minor damage',
+                    'leaf_type_id' => 'Leaf Type B'
+                ],
+                // Add more bags as needed
+            ];
 
-    <!-- Status Timeline -->
-    <div class="timeline-section">
-        <h3>Collection Progress</h3>
-        <div class="timeline">
-            <div class="timeline-item completed">
-                <div class="timeline-marker"></div>
-                <div class="timeline-content">
-                    <h4>Collection Scheduled</h4>
-                    <p>08:00 AM</p>
+            foreach ($bags as $bag) {
+                ?>
+                <div class="detail-card" onclick="toggleCard(this)">
+                    <div class="card-header">
+                        <i class='bx bx-package'></i>
+                        <h3>Bag ID: <?php echo $bag['bag_id']; ?></h3>
+                    </div>
+                    <div class="card-content">
+                        <div class="info-row">
+                            <span class="label">Actual Weight (kg):</span>
+                            <span class="value"><?php echo $bag['actual_weight_kg']; ?></span>
+                        </div>
+                        <div class="info-row">
+                            <span class="label">Leaf Age:</span>
+                            <span class="value"><?php echo $bag['leaf_age']; ?></span>
+                        </div>
+                        <div class="info-row">
+                            <span class="label">Moisture Level:</span>
+                            <span class="value"><?php echo $bag['moisture_level']; ?></span>
+                        </div>
+                        <div class="info-row">
+                            <span class="label">Deduction Notes:</span>
+                            <span class="value"><?php echo $bag['deduction_notes']; ?></span>
+                        </div>
+                        <div class="info-row">
+                            <span class="label">Leaf Type ID:</span>
+                            <span class="value"><?php echo $bag['leaf_type_id']; ?></span>
+                        </div>
+                    </div>
                 </div>
-            </div>
-            <div class="timeline-item active">
-                <div class="timeline-marker"></div>
-                <div class="timeline-content">
-                    <h4>Vehicle Dispatched</h4>
-                    <p>08:15 AM</p>
-                </div>
-            </div>
-            <div class="timeline-item">
-                <div class="timeline-marker"></div>
-                <div class="timeline-content">
-                    <h4>Arrived at Location</h4>
-                    <p>Pending</p>
-                </div>
-            </div>
-            <div class="timeline-item">
-                <div class="timeline-marker"></div>
-                <div class="timeline-content">
-                    <h4>Collection Complete</h4>
-                    <p>Pending</p>
-                </div>
-            </div>
+                <?php
+            }
+            ?>
         </div>
     </div>
 
-        <!-- After map container -->
+    <!-- After map container -->
     <div class="confirm-container">
     <button class="confirm-button" disabled>
         <i class='bx bx-check'></i>
@@ -162,6 +138,31 @@
 </main>
 
 <style>
+
+:root {
+  /* Color Variables */
+  --primary-color: var(--mainn);
+  --secondary-color: #2ecc71;
+  --text-primary: #2c3e50;
+  --text-secondary: #7f8c8d;
+  --background-light: #f8f9fa;
+  --border-color: #e0e0e0;
+  --success-color: #27ae60;
+  --warning-color: #f39c12;
+  
+  /* Spacing */
+  --spacing-xs: 0.25rem;
+  --spacing-sm: 0.5rem;
+  --spacing-md: 1rem;
+  --spacing-lg: 1.5rem;
+  --spacing-xl: 2rem;
+  
+  /* Border Radius */
+  --border-radius-sm: 4px;
+  --border-radius-md: 8px;
+  --border-radius-lg: 12px;
+}
+
 .status-card {
     background: white;
     border-radius: 15px;
@@ -202,6 +203,8 @@
     border-radius: 15px;
     padding: 20px;
     box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    margin-bottom: 20px;
+    transition: max-height 0.3s ease;
 }
 
 .card-header {
@@ -386,6 +389,20 @@
 .confirm-button i {
     font-size: 1.2rem;
 }
+
+.section-divider {
+  height: 1px;
+  background-color: var(--border-color);
+  margin: var(--spacing-xl) 0;
+}
+
+.card-content {
+    display: block;
+}
+
+.detail-card .card-content {
+    display: none;
+}
 </style>
 
 
@@ -416,6 +433,11 @@
         });
     }
 </script>
-<script async defer
-    src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCdt_khahhXrKdrA8cLgKeQB2CZtde-_Vc&callback=initMap">
+<script async defer src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAC8AYYCYuMkIUAjQWsAwQDiqbMmLa-7eo&callback=initMap"></script>
+
+<script>
+function toggleCard(card) {
+    const content = card.querySelector('.card-content');
+    content.style.display = content.style.display === 'none' ? 'block' : 'none';
+}
 </script>
