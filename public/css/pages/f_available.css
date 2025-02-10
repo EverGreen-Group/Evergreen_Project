@@ -7,7 +7,7 @@
     min-height: 100vh;
     margin: 20px;
     width: 100%;
-    background-color: white;
+    background-color: var(--light);
     padding: 20px;
     box-sizing: border-box;
     border-radius: 10px;
@@ -15,16 +15,14 @@
 
 header {
     display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-top: 20px;
-    margin-bottom: 20px;
 }
 
-h1 {
-    color: #333;
+.head h3 {
+    margin-right: auto;
     font-size: 24px;
+    font-weight: 600;
 }
+
 
 .search-filter {
     display: flex;
@@ -47,19 +45,7 @@ h1 {
     cursor: pointer;
 }
 
-.create-btn {
-    padding: 8px 12px;
-    background-color: #28a745;
-    color: white;
-    border: none;
-    border-radius: 4px;
-    cursor: pointer;
-}
 
-.orders h2 {
-    font-size: 18px;
-    margin-bottom: 10px;
-}
 
 .inventory-count {
     font-weight: normal;
@@ -129,15 +115,18 @@ table tbody td {
     color: white;
 }
 
-.completed-orders, .cancel-orders {
+.completed-orders,
+.cancel-orders {
     margin-top: 20px;
 }
 
-.completed-orders h3, .cancel-orders h3 {
+.completed-orders h3,
+.cancel-orders h3 {
     font-size: 16px;
     margin-bottom: 10px;
 }
 
-.completed-orders p, .cancel-orders p {
+.completed-orders p,
+.cancel-orders p {
     color: #888;
 }

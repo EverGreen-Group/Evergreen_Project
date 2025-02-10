@@ -19,7 +19,8 @@ require_once '../app/models/M_User.php'; // Correctly include the M_User model
 require_once '../app/models/M_Employee.php';
 require_once '../app/models/M_CollectionBag.php';
 
-class VehicleManager extends Controller {
+class VehicleManager extends Controller
+{
     private $vehicleManagerModel;
     private $routeModel;       // Declare a variable for Route model
     private $teamModel;        // Declare a variable for Team model
@@ -35,12 +36,13 @@ class VehicleManager extends Controller {
     private $userModel;
     private $employeeModel;
     private $bagModel;
-    
 
-    public function __construct() {
+
+    public function __construct()
+    {
         // Check if user is logged in
         requireAuth();
-        
+
         // Check if user has Vehicle Manager OR Admin role
         if (!RoleHelper::hasAnyRole([RoleHelper::ADMIN, RoleHelper::VEHICLE_MANAGER])) {
             // Redirect unauthorized access
@@ -48,7 +50,7 @@ class VehicleManager extends Controller {
             redirect('');
             exit();
         }
-        
+
 
         // Initialize models
         $this->vehicleManagerModel = new M_VehicleManager();
@@ -73,7 +75,8 @@ class VehicleManager extends Controller {
     //            strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) === 'xmlhttprequest';
     // }
 
-    public function index() {
+    public function index()
+    {
         // Get dashboard stats from the model
         $stats = $this->vehicleManagerModel->getDashboardStats();
 
@@ -101,25 +104,29 @@ class VehicleManager extends Controller {
         ]);
     }
 
-    public function getSupplierRecords($collectionId) {
+    public function getSupplierRecords($collectionId)
+    {
         $records = $this->collectionSupplierRecordModel->getSupplierRecords($collectionId);
         echo json_encode($records);
     }
-    
-    public function updateSupplierRecord() {
+
+    public function updateSupplierRecord()
+    {
         $data = json_decode(file_get_contents('php://input'));
         $success = $this->collectionSupplierRecordModel->updateSupplierRecord($data);
         echo json_encode(['success' => $success]);
     }
-    
-    public function addSupplierRecord() {
+
+    public function addSupplierRecord()
+    {
         $data = json_decode(file_get_contents('php://input'));
         $success = $this->collectionSupplierRecordModel->addSupplierRecord($data);
         echo json_encode(['success' => $success]);
     }
 
     // Add method to handle the assignment of collections
-    public function createSchedule() {
+    public function createSchedule()
+    {
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $data = [
                 'route_id' => $_POST['route_id'],
@@ -142,8 +149,8 @@ class VehicleManager extends Controller {
             }
         }
     }
-    
-    
+
+
 
     // Other methods remain unchanged
     public function vehicle() {
@@ -319,7 +326,8 @@ class VehicleManager extends Controller {
     }
 
 
-    public function updateDriver() {
+    public function updateDriver()
+    {
         if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             // Sanitize and retrieve the input data
             $user_id = trim($_POST['user_id']);
@@ -328,12 +336,12 @@ class VehicleManager extends Controller {
             $city = trim($_POST['city']);
             $contact_number = trim($_POST['contact_number']);
             $emergency_contact = trim($_POST['emergency_contact']);
-    
+
             // Validate the input data as needed
-    
+
             // Update the driver information in the database
             $result = $this->employeeModel->updateDriverInfo($user_id, $address_line1, $address_line2, $city, $contact_number, $emergency_contact);
-    
+
             // Check if the update was successful
             if ($result) {
                 // Redirect or provide feedback
@@ -362,16 +370,16 @@ class VehicleManager extends Controller {
         $totalActive = $this->routeModel->getTotalActiveRoutes();
         $totalInactive = $this->routeModel->getTotalInactiveRoutes();
         $unallocatedSuppliers = $this->routeModel->getUnallocatedSuppliers();
-        
+
         // Format suppliers for the map/dropdown
-        $suppliersForMap = array_map(function($supplier) {
+        $suppliersForMap = array_map(function ($supplier) {
             return [
                 'id' => $supplier->supplier_id,
                 'name' => $supplier->full_name, // Changed from supplier_name to full_name
                 'preferred_day' => $supplier->preferred_day, // Include preferred_day
                 'location' => [
-                    'lat' => (float)$supplier->latitude,
-                    'lng' => (float)$supplier->longitude
+                    'lat' => (float) $supplier->latitude,
+                    'lng' => (float) $supplier->longitude
                 ],
                 'average_collection' => $supplier->average_collection,
                 'number_of_collections' => $supplier->number_of_collections
@@ -391,7 +399,8 @@ class VehicleManager extends Controller {
         $this->view('vehicle_manager/v_route', $data);
     }
 
-    public function shift() {
+    public function shift()
+    {
         // Handle POST request for creating new shift
         if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             try {
@@ -429,7 +438,7 @@ class VehicleManager extends Controller {
         $shifts = $this->shiftModel->getAllShifts();
         $totalShifts = $this->shiftModel->getTotalShifts();
         $totalTeamsInCollection = $this->teamModel->getTotalTeamsInCollection();
-        
+
         // Initialize the schedules array
         $schedules = [];
 
@@ -441,7 +450,7 @@ class VehicleManager extends Controller {
         foreach ($shifts as $shift) {
             // Fetch schedules for the specific shift
             $shiftSchedules = $this->scheduleModel->getSchedulesByShiftIdAndDate($shift->shift_id, $startDate, $endDate);
-            
+
             // Organize schedules by date
             foreach ($shiftSchedules as $schedule) {
                 $date = date('Y-m-d', strtotime($schedule->created_at)); // Assuming schedule has a created_at field
@@ -459,13 +468,14 @@ class VehicleManager extends Controller {
             'totalTeamsInCollection' => $totalTeamsInCollection,
             'schedules' => $schedules // Pass the organized schedules to the view
         ];
-        
+
         // Load the view with the data
         $this->view('vehicle_manager/v_shift', $data);
     }
 
     // Add method for handling shift deletion
-    public function deleteShift($id) {
+    public function deleteShift($id)
+    {
         if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             try {
                 if ($this->shiftModel->deleteShift($id)) {
@@ -480,7 +490,8 @@ class VehicleManager extends Controller {
         }
     }
 
-    public function getShift($id) {
+    public function getShift($id)
+    {
         header('Content-Type: application/json'); // Set the content type to JSON
         try {
             $shift = $this->shiftModel->getShiftById($id);
@@ -495,7 +506,8 @@ class VehicleManager extends Controller {
         exit; // Ensure no additional output is sent
     }
 
-    public function updateShift($id) {
+    public function updateShift($id)
+    {
         if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             $data = [
                 'shift_id' => $id,
@@ -517,17 +529,20 @@ class VehicleManager extends Controller {
         }
     }
 
-    public function settings() {
+    public function settings()
+    {
         $data = [];
         $this->view('vehicle_manager/v_settings', $data);
     }
 
-    public function personal_details() {
+    public function personal_details()
+    {
         $data = [];
         $this->view('vehicle_manager/v_personal_details', $data);
     }
 
-    public function logout() {
+    public function logout()
+    {
         // Handle logout functionality
     }
     public function updateVehicle() {
@@ -586,7 +601,8 @@ class VehicleManager extends Controller {
         }
     }
 
-    public function getVehicleById($id) {
+    public function getVehicleById($id)
+    {
         $vehicle = $this->vehicleModel->getVehicleById($id);
         if ($vehicle) {
             echo json_encode(['success' => true, 'vehicle' => $vehicle]);
@@ -595,9 +611,10 @@ class VehicleManager extends Controller {
         }
     }
 
-    public function deleteVehicle($id) {
+    public function deleteVehicle($id)
+    {
         header('Content-Type: application/json');
-        
+
         try {
             // Log the request method and ID
             error_log("Delete request received for vehicle ID: " . $id);
@@ -628,36 +645,37 @@ class VehicleManager extends Controller {
         exit;
     }
 
-    public function createRoute() {
+    public function createRoute()
+    {
         // Clear any previous output
         ob_clean();
-        
+
         // Set JSON headers
         header('Content-Type: application/json');
-        
+
         try {
             // Get and validate JSON input
             $json = file_get_contents('php://input');
             error_log("Received data: " . $json); // Debug log
-            
+
             $data = json_decode($json);
-            
+
             if (!$data) {
                 throw new Exception('Invalid JSON data received');
             }
 
             // Create the route
             $result = $this->routeModel->createRoute($data);
-            
+
             $response = [
                 'success' => true,
                 'message' => 'Route created successfully',
                 'routeId' => $result // Assuming createRoute returns the new route ID
             ];
-            
+
             error_log("Sending response: " . json_encode($response)); // Debug log
             echo json_encode($response);
-            
+
         } catch (Exception $e) {
             error_log("Error in createRoute: " . $e->getMessage());
             echo json_encode([
@@ -668,11 +686,12 @@ class VehicleManager extends Controller {
         exit;
     }
 
-    public function getRouteSuppliers($routeId) {
+    public function getRouteSuppliers($routeId)
+    {
         // Clear any previous output and set JSON header
         ob_clean();
         header('Content-Type: application/json');
-        
+
         if (!$routeId) {
             echo json_encode(['error' => 'Route ID is required']);
             return;
@@ -687,7 +706,7 @@ class VehicleManager extends Controller {
 
             // Get suppliers for this route
             $suppliers = $this->routeModel->getRouteSuppliers($routeId);
-            
+
             // Combine the data
             $response = [
                 'success' => true,
@@ -707,7 +726,7 @@ class VehicleManager extends Controller {
                         'date' => $route->date,
                         'number_of_suppliers' => $route->number_of_suppliers
                     ],
-                    'suppliers' => array_map(function($supplier) {
+                    'suppliers' => array_map(function ($supplier) {
                         return [
                             'id' => $supplier->supplier_id,
                             'name' => $supplier->full_name,
@@ -724,7 +743,7 @@ class VehicleManager extends Controller {
 
             error_log('Sending response: ' . json_encode($response));
             echo json_encode($response);
-            
+
         } catch (Exception $e) {
             error_log('Error in getRouteSuppliers: ' . $e->getMessage());
             echo json_encode([
@@ -738,9 +757,10 @@ class VehicleManager extends Controller {
 
 
 
-    public function update_leave_status() {
+    public function update_leave_status()
+    {
         header('Content-Type: application/json');
-        
+
         if ($_SERVER['REQUEST_METHOD'] != 'POST') {
             echo json_encode(['success' => false, 'message' => 'Invalid request method']);
             return;
@@ -749,12 +769,12 @@ class VehicleManager extends Controller {
         try {
             $rawInput = file_get_contents("php://input");
             error_log("Received raw input: " . $rawInput);
-            
+
             $data = json_decode($rawInput);
 
             if (!$data || !isset($data->requestId) || !isset($data->status) || !isset($data->vehicle_manager_id)) {
                 echo json_encode([
-                    'success' => false, 
+                    'success' => false,
                     'message' => 'Missing required data',
                     'received' => $data
                 ]);
@@ -771,9 +791,9 @@ class VehicleManager extends Controller {
             }
 
             $result = $this->staffModel->updateLeaveStatus(
-                (int)$data->requestId,
+                (int) $data->requestId,
                 $data->status,
-                (int)$data->vehicle_manager_id
+                (int) $data->vehicle_manager_id
             );
 
             if ($result) {
@@ -799,16 +819,17 @@ class VehicleManager extends Controller {
 
 
 
-    public function getCollectionRoute($collectionId) {
+    public function getCollectionRoute($collectionId)
+    {
         // Get collection details
         $collection = $this->collectionModel->getCollectionById($collectionId);
-        
+
         // Get route and supplier details
         $routeData = $this->routeModel->getRouteWithSuppliers($collection->route_id);
-        
+
         // Get current progress from supplier records
         $supplierRecords = $this->collectionSupplierRecordModel->getSupplierRecords($collectionId);
-        
+
         $data = [
             'team_name' => $collection->team_name,
             'route_name' => $collection->route_name,
@@ -827,7 +848,8 @@ class VehicleManager extends Controller {
         echo json_encode($data);
     }
 
-    private function getCurrentStop($supplierRecords) {
+    private function getCurrentStop($supplierRecords)
+    {
         // Find the last collected supplier
         foreach ($supplierRecords as $index => $record) {
             if ($record->status === 'Collected') {
@@ -837,10 +859,11 @@ class VehicleManager extends Controller {
         return 0; // Return 0 if no collections yet
     }
 
-    public function updateSupplierStatus($recordId) {
+    public function updateSupplierStatus($recordId)
+    {
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $data = json_decode(file_get_contents('php://input'));
-            
+
             if ($this->collectionSupplierRecordModel->updateSupplierStatus($recordId, $data->status)) {
                 echo json_encode(['success' => true]);
             } else {
@@ -849,10 +872,11 @@ class VehicleManager extends Controller {
         }
     }
 
-    public function removeCollectionSupplier($recordId) {
-        if($_SERVER['REQUEST_METHOD'] === 'POST'){
+    public function removeCollectionSupplier($recordId)
+    {
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $data = json_decode(file_get_contents('php://input'));
-            if($this->collectionSupplierRecordModel->removeCollectionSupplier($recordId)){
+            if ($this->collectionSupplierRecordModel->removeCollectionSupplier($recordId)) {
                 echo json_encode(['success' => true]);
             } else {
                 echo json_encode(['success' => false]);
@@ -905,7 +929,8 @@ class VehicleManager extends Controller {
         }
     }
 
-    public function checkVehicleUsage($id) {
+    public function checkVehicleUsage($id)
+    {
         $schedules = $this->scheduleModel->getSchedulesByVehicleId($id);
         $collections = $this->collectionModel->getCollectionsByVehicleId($id);
 
@@ -916,13 +941,14 @@ class VehicleManager extends Controller {
         ]);
     }
 
-    public function getRouteDetails($routeId) {
+    public function getRouteDetails($routeId)
+    {
         // Clear any previous output
         ob_clean();
-        
+
         // Set JSON headers
         header('Content-Type: application/json');
-        
+
         try {
             if (!$routeId) {
                 throw new Exception('Route ID is required');
@@ -930,7 +956,7 @@ class VehicleManager extends Controller {
 
             // Get route details from model
             $routeDetails = $this->routeModel->getRouteById($routeId);
-            
+
             if (!$routeDetails) {
                 throw new Exception('Route not found');
             }
@@ -945,13 +971,13 @@ class VehicleManager extends Controller {
                     'id' => $routeId,
                     'name' => $routeDetails->route_name,
                     'status' => $routeDetails->status,
-                    'suppliers' => array_map(function($supplier) {
+                    'suppliers' => array_map(function ($supplier) {
                         return [
                             'id' => $supplier->supplier_id,
                             'name' => $supplier->full_name,
                             'coordinates' => [
-                                'lat' => (float)$supplier->latitude,
-                                'lng' => (float)$supplier->longitude
+                                'lat' => (float) $supplier->latitude,
+                                'lng' => (float) $supplier->longitude
                             ]
                         ];
                     }, $routeSuppliers)
@@ -972,10 +998,11 @@ class VehicleManager extends Controller {
     }
 
 
-    public function deleteRoute() {
+    public function deleteRoute()
+    {
         if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             $route_id = $_POST['route_id'];
-            
+
             // Call model method to delete route
             if ($this->routeModel->deleteRoute($route_id)) {
                 // Redirect with success message
@@ -989,13 +1016,14 @@ class VehicleManager extends Controller {
         }
     }
 
-    public function getAvailableVehicles($day) {
+    public function getAvailableVehicles($day)
+    {
         // Make sure nothing is output before this
         ob_clean(); // Clear any previous output
-        
+
         try {
             $vehicles = $this->vehicleModel->getAvailableVehiclesByDay($day);
-            
+
             header('Content-Type: application/json');
             echo json_encode([
                 'status' => 'success',
@@ -1013,13 +1041,14 @@ class VehicleManager extends Controller {
         }
     }
 
-    public function getVehicleDetails($id) {
+    public function getVehicleDetails($id)
+    {
         ob_clean();
-        
+
         try {
             $vehicle = $this->vehicleModel->getVehicleById($id);
-        
-            
+
+
             header('Content-Type: application/json');
             echo json_encode([
                 'status' => 'success',
@@ -1037,15 +1066,17 @@ class VehicleManager extends Controller {
         }
     }
 
-    public function getRoutesByDay($day) {
+    public function getRoutesByDay($day)
+    {
         $routes = $this->routeModel->getRoutesByDay($day);
         echo json_encode(['routes' => $routes]);
     }
 
-    public function getEmployeeByUserId($user_id) {
+    public function getEmployeeByUserId($user_id)
+    {
         // Fetch employee data
         $employeeData = $this->employeeModel->getEmployeeByUserId($user_id);
-        
+
         // Ensure all expected keys exist
         $response = [
             'employee_id' => $employeeData->employee_id ?? null,
@@ -1058,12 +1089,13 @@ class VehicleManager extends Controller {
             'address_line2' => $employeeData->address_line2 ?? '',
             'city' => $employeeData->city ?? ''
         ];
-        
+
         echo json_encode($response);
         exit;
     }
 
-    public function removeDriver($user_id) {
+    public function removeDriver($user_id)
+    {
         if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             try {
                 // Call the model method to remove the driver
@@ -1075,7 +1107,7 @@ class VehicleManager extends Controller {
             } catch (Exception $e) {
                 flash('driver_message', 'Error: ' . $e->getMessage(), 'alert alert-danger');
             }
-            
+
             redirect('vehiclemanager/driver'); // Redirect to the driver management page
         } else {
             // If not a POST request, redirect to the driver management page
@@ -1083,7 +1115,8 @@ class VehicleManager extends Controller {
         }
     }
 
-    public function bag() {
+    public function bag()
+    {
         $data = [
             // 'totalVehicles' => $this->vehicleModel->getTotalVehicles(),
             // 'availableVehicles' => $this->vehicleModel->getAvailableVehicles(),
@@ -1094,26 +1127,27 @@ class VehicleManager extends Controller {
         $this->view('vehicle_manager/collection_bags/index', $data);
     }
 
-    public function createBag() {
+    public function createBag()
+    {
         if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             // Get the raw POST data
             $input = file_get_contents("php://input");
             $data = json_decode($input, true); // Decode the JSON payload
-    
+
             // Log the received data
             error_log("Received data: " . print_r($data, true));
-    
+
             // Convert to appropriate types
             $data['capacity_kg'] = (float) ($data['capacity_kg'] ?? 50.00); // Default value
             $data['bag_weight_kg'] = isset($data['bag_weight_kg']) ? (float) $data['bag_weight_kg'] : null; // Convert to float or null
-    
+
             // Call the model method to create the collection bag
             $bagId = $this->bagModel->createCollectionBag($data);
-    
+
             if ($bagId) {
                 // Generate QR Code
-                $this->generateQRCode($bagId); 
-    
+                $this->generateQRCode($bagId);
+
                 // Return success response
                 echo json_encode(['success' => true, 'lastInsertedId' => $bagId]);
             } else {
@@ -1125,28 +1159,30 @@ class VehicleManager extends Controller {
         }
     }
 
-    private function generateQRCode($bagId) {
+    private function generateQRCode($bagId)
+    {
         try {
             $qrCode = new QrCode($bagId);
             $qrCode->setSize(300); // Set the size
             $qrCode->setMargin(10); // Set the margin
-    
+
 
             $writer = new PngWriter();
-        
+
             // Define the path to save the QR code image
             $filePath = UPLOADROOT . '/qr_codes/' . $bagId . '.png';
-        
+
             // Save the generated QR code to a file
             $writer->writeFile($qrCode, $filePath); // Directly write to file
-        
+
         } catch (\Exception $e) {
             error_log('QR Code generation failed: ' . $e->getMessage());
         }
     }
-    
 
-    public function getBags() {
+
+    public function getBags()
+    {
         // Fetch bags from the model
         $bags = $this->bagModel->getAllBags(); // Assuming this method exists in your model
 
@@ -1154,7 +1190,8 @@ class VehicleManager extends Controller {
         echo json_encode(['success' => true, 'bags' => $bags]);
     }
 
-    public function getBagDetails($bagId) {
+    public function getBagDetails($bagId)
+    {
         // Fetch bag details from the model
         $bag = $this->bagModel->getBagDetails($bagId); // Assuming this method exists in your model
 
@@ -1166,7 +1203,8 @@ class VehicleManager extends Controller {
         }
     }
 
-    public function updateBag() {
+    public function updateBag()
+    {
         if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             // Get the raw POST data
             $input = file_get_contents("php://input");
@@ -1174,8 +1212,8 @@ class VehicleManager extends Controller {
 
             // Validate and sanitize input
             $bagId = $data['bag_id'] ?? null;
-            $capacityKg = (float)($data['capacity_kg'] ?? 0);
-            $bagWeightKg = (float)($data['bag_weight_kg'] ?? 0);
+            $capacityKg = (float) ($data['capacity_kg'] ?? 0);
+            $bagWeightKg = (float) ($data['bag_weight_kg'] ?? 0);
             $status = $data['status'] ?? 'inactive'; // Default to inactive if not provided
 
             // Call the model method to update the collection bag
@@ -1193,7 +1231,8 @@ class VehicleManager extends Controller {
         }
     }
 
-    public function removeBag() {
+    public function removeBag()
+    {
         if ($_SERVER['REQUEST_METHOD'] == 'DELETE') {
             // Get the raw POST data
             $input = file_get_contents("php://input");
@@ -1223,17 +1262,18 @@ class VehicleManager extends Controller {
         }
     }
 
-    public function deleteBagQR() {
+    public function deleteBagQR()
+    {
         // Get the JSON input
         $input = json_decode(file_get_contents('php://input'), true);
-        
+
         // Check if the image path is provided
         if (isset($input['image_path'])) {
             $imagePath = $input['image_path'];
-    
+
             // Debugging: Log the full path
             error_log("Full path to image: " . $imagePath);
-    
+
             // Check if the file exists
             if (file_exists($imagePath)) {
                 // Attempt to delete the file
@@ -1253,20 +1293,18 @@ class VehicleManager extends Controller {
             echo json_encode(['success' => false, 'message' => 'No image path provided.']);
         }
     }
-    
 
-    public function getCollectionRequests() {
+
+    public function getCollectionRequests()
+    {
         $collections = $this->collectionModel->getPendingCollections();
         header('Content-Type: application/json');
         echo json_encode($collections);
     }
 
-    public function getCollectionDetails($id = null) {
-        // Check if it's an AJAX request
-        if (!$this->isAjaxRequest()) {
-            redirect(page: 'pages/error');
-            return;
-        }
+    public function getCollectionDetails($id)
+    {
+
 
         // Validate ID
         if (!$id || !is_numeric($id)) {
@@ -1277,7 +1315,7 @@ class VehicleManager extends Controller {
 
         // Get collection details
         $collection = $this->collectionModel->getCollectionDetails($id);
-        
+
         if (!$collection) {
             http_response_code(404);
             echo json_encode(['error' => 'Collection not found']);
@@ -1316,7 +1354,8 @@ class VehicleManager extends Controller {
         echo json_encode($response);
     }
 
-    public function approveCollection() {
+    public function approveCollection()
+    {
         // Check if it's an AJAX request
         if (!$this->isAjaxRequest()) {
             redirect('pages/error');
