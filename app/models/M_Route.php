@@ -408,5 +408,18 @@ class M_Route {
         return $stmt->execute(); // Return true on success, false on failure
     }
 
+    public function getSupplierCountByDay() {
+        $this->db->query("
+            SELECT 
+                r.day, 
+                COUNT(rs.supplier_id) AS supplier_count 
+            FROM routes r
+            LEFT JOIN route_suppliers rs ON r.route_id = rs.route_id AND rs.is_deleted = 0
+            GROUP BY r.day
+        ");
+        
+        return $this->db->resultSet();
+    }
+
 }
 ?>

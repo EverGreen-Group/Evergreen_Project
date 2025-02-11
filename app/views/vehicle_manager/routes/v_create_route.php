@@ -17,6 +17,7 @@
 
 <!-- MAIN -->
 <main>
+    <?php print_r($data); ?>
     <div class="head-title">
         <div class="left">
             <h1>Route Management</h1>
@@ -244,9 +245,12 @@ require APPROOT . '/views/inc/components/footer.php';
 
 
 <script>
-    // Hardcoded data for the number of suppliers allocated for each day
+    // Use the supplier data passed from the controller
     const days = ['MON', 'TUE', 'WED', 'THUR', 'FRI', 'SAT', 'SUN'];
-    const supplier = [5, 7, 3, 9, 6, 4, 8]; // Example data
+    const supplier = [
+        <?php echo implode(',', $data['supplierData']); ?>
+    ]; // Use PHP to output the supplier counts
+    console.log('Supplier Data:', supplier); 
 
     const ctx = document.getElementById('supplierChart').getContext('2d');
     const supplierChart = new Chart(ctx, {

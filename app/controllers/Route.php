@@ -27,13 +27,32 @@ class Route extends Controller{
         $totalInactive = $this->routeModel->getTotalInactiveRoutes();
         $unallocatedSuppliers = $this->routeModel->getUnallocatedSuppliers();
 
+        $supplierCounts = $this->routeModel->getSupplierCountByDay();
+
+        // Prepare data for the chart
+        $supplierData = [
+            'Monday' => 0,
+            'Tuesday' => 0,
+            'Wednesday' => 0,
+            'Thursday' => 0,
+            'Friday' => 0,
+            'Saturday' => 0,
+            'Sunday' => 0,
+        ];
+
+        // Populate the supplier data based on the fetched results
+        foreach ($supplierCounts as $count) {
+            // Use the day name directly from the database
+            $supplierData[$count->day] = (int)$count->supplier_count;
+        }
 
         $data = [
             'allRoutes' => $allRoutes,
             'totalRoutes' => $totalRoutes,
             'totalActive' => $totalActive,
             'totalInactive' => $totalInactive,
-            'unassignedSuppliersList' => $unallocatedSuppliers
+            'unassignedSuppliersList' => $unallocatedSuppliers,
+            'supplierData' => $supplierData
         ];
 
         $this->view('vehicle_manager/routes/v_create_route', $data);
