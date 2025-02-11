@@ -124,7 +124,7 @@ class M_Route {
         $stopOrder = $this->getStopOrder($routeId, $supplierId);
 
         // Remove the supplier from the route
-        $sql = "UPDATE route_suppliers SET is_deleted = 1 WHERE route_id = :route_id AND supplier_id = :supplier_id";
+        $sql = "DELETE FROM route_suppliers WHERE route_id = :route_id AND supplier_id = :supplier_id";
         $stmt = $this->db->prepare($sql);
         $stmt->bindParam(':route_id', $routeId);
         $stmt->bindParam(':supplier_id', $supplierId);

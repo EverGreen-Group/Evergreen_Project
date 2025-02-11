@@ -27,9 +27,9 @@
     </div>
 
     <div class="action-buttons">
-        <a href="#" class="btn btn-primary">
+        <a href="#" class="btn btn-primary" style="margin-right:20px;">
             <i class='bx bx-brightness'></i>
-            Generate Route
+            Generate Route For Unalloacted Suppliers
         </a>
     </div>
 
@@ -77,9 +77,8 @@
     <div class="order">
     <div class="head">
         <h3>Unallocated Suppliers</h3>
-        <div class="filter-container">
-            <label for="day-filter">Filter by Day:</label>
-            <select id="day-filter">
+        <div class="filter-container filter-group" style="max-width:100px;">
+            <select id="day-filter" name="day_filter" class="filter-select">
                 <option value="">All Days</option>
                 <option value="Monday">Monday</option>
                 <option value="Tuesday">Tuesday</option>
@@ -144,9 +143,8 @@
         <div class="order">
             <div class="head">
                 <h3>Routes</h3>
-                <div class="filter-container">
-                    <label for="routes-day-filter">Filter by Day:</label>
-                    <select id="routes-day-filter">
+                <div class="filter-container filter-group" style="max-width:100px;">
+                    <select id="day-filter" name="day_filter" class="filter-select">
                         <option value="">All Days</option>
                         <option value="Monday">Monday</option>
                         <option value="Tuesday">Tuesday</option>
@@ -258,9 +256,10 @@ require APPROOT . '/views/inc/components/footer.php';
             labels: days,
             datasets: [{
                 data: supplier,
-                backgroundColor: 'rgba(75, 192, 192, 0.6)',
+                backgroundColor: '#007FFC',
                 borderColor: 'rgba(75, 192, 192, 1)',
-                borderWidth: 0.5
+                borderWidth: 0.5,
+                barThickness: 14
             }]
         },
         options: {

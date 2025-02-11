@@ -23,7 +23,7 @@
       </a>
     </li>
     <li class="<?php echo (basename($_SERVER['REQUEST_URI']) == 'route') ? 'active' : ''; ?>">
-      <a href="<?php echo URLROOT; ?>/vehiclemanager/route">
+      <a href="<?php echo URLROOT; ?>/route">
         <i class="bx bx-trip"></i>
         <span class="text">Route</span>
       </a>
