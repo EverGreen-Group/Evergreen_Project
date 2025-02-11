@@ -998,48 +998,7 @@ class VehicleManager extends Controller
     }
 
 
-    public function deleteRoute()
-    {
-        if ($_SERVER['REQUEST_METHOD'] == 'POST') {
-            $route_id = $_POST['route_id'];
 
-            // Call model method to delete route
-            if ($this->routeModel->deleteRoute($route_id)) {
-                // Redirect with success message
-                flash('route_message', 'Route deleted successfully');
-                redirect('vehiclemanager/route');
-            } else {
-                // Redirect with error message
-                flash('route_message', 'Failed to delete route', 'error');
-                redirect('vehiclemanager/route');
-            }
-        }
-    }
-
-    public function getAvailableVehicles($day)
-    {
-        // Make sure nothing is output before this
-        ob_clean(); // Clear any previous output
-
-        try {
-            $vehicles = $this->vehicleModel->getAvailableVehiclesByDay($day);
-
-            header('Content-Type: application/json');
-            echo json_encode([
-                'status' => 'success',
-                'data' => $vehicles,
-                'message' => 'Vehicles retrieved successfully'
-            ]);
-            exit; // End the script after sending JSON
-        } catch (Exception $e) {
-            header('Content-Type: application/json');
-            echo json_encode([
-                'status' => 'error',
-                'message' => $e->getMessage()
-            ]);
-            exit;
-        }
-    }
 
     public function getVehicleDetails($id)
     {

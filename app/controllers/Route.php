@@ -27,28 +27,12 @@ class Route extends Controller{
         $totalInactive = $this->routeModel->getTotalInactiveRoutes();
         $unallocatedSuppliers = $this->routeModel->getUnallocatedSuppliers();
 
-        // Format suppliers for the map/dropdown
-        $suppliersForMap = array_map(function ($supplier) {
-            return [
-                'id' => $supplier->supplier_id,
-                'name' => $supplier->full_name, // Changed from supplier_name to full_name
-                'preferred_day' => $supplier->preferred_day, // Include preferred_day
-                'location' => [
-                    'lat' => (float) $supplier->latitude,
-                    'lng' => (float) $supplier->longitude
-                ],
-                'average_collection' => $supplier->average_collection,
-                'number_of_collections' => $supplier->number_of_collections
-
-            ];
-        }, $unallocatedSuppliers);
 
         $data = [
             'allRoutes' => $allRoutes,
             'totalRoutes' => $totalRoutes,
             'totalActive' => $totalActive,
             'totalInactive' => $totalInactive,
-            'unallocatedSuppliers' => $suppliersForMap,
             'unassignedSuppliersList' => $unallocatedSuppliers
         ];
 
@@ -158,6 +142,74 @@ class Route extends Controller{
                 // Handle error
                 // You can set an error message to display to the user
             }
+        }
+    }
+
+    public function createRoute() {
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            // Get the form data
+            $routeName = trim($_POST['route_name']);
+            $routeDay = trim($_POST['route_day']);
+            $vehicleId = trim($_POST['vehicle_id']);
+
+            // Validate the input
+            if (empty($routeName) || empty($routeDay) || empty($vehicleId)) {
+                // Handle validation error (e.g., set an error message)
+                // You can redirect back with an error message or set a session variable
+                return;
+            }
+
+            // Call the model method to create the route
+            if ($this->routeModel->createRoute($routeName, $routeDay, $vehicleId)) {
+                // Redirect to the route management page or success page
+                header('Location: ' . URLROOT . '/route/'); // Adjust the redirect as needed
+                exit();
+            } else {
+                // Handle error (e.g., set an error message)
+            }
+        }
+    }
+
+    public function deleteRoute()
+    {
+        if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+            $route_id = $_POST['route_id'];
+
+            // Call model method to delete route
+            if ($this->routeModel->deleteRoute($route_id)) {
+                // Redirect with success message
+                flash('route_message', 'Route deleted successfully');
+                redirect('route/');
+            } else {
+                // Redirect with error message
+                flash('route_message', 'Failed to delete route', 'error');
+                redirect('route/');
+            }
+        }
+    }
+
+    public function getAvailableVehicles($day)
+    {
+        // Make sure nothing is output before this
+        ob_clean(); // Clear any previous output
+
+        try {
+            $vehicles = $this->vehicleModel->getAvailableVehiclesByDay($day);
+
+            header('Content-Type: application/json');
+            echo json_encode([
+                'status' => 'success',
+                'data' => $vehicles,
+                'message' => 'Vehicles retrieved successfully'
+            ]);
+            exit; // End the script after sending JSON
+        } catch (Exception $e) {
+            header('Content-Type: application/json');
+            echo json_encode([
+                'status' => 'error',
+                'message' => $e->getMessage()
+            ]);
+            exit;
         }
     }
 

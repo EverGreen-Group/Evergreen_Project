@@ -57,69 +57,14 @@ class M_Route {
         return 0;
     }
 
-    public function createRoute($routeData) {
-        try {
-            // Start transaction
-            $this->db->beginTransaction();
-
-            // Insert into routes table
-            $this->db->query("INSERT INTO routes (
-                route_name, 
-                start_location_lat,
-                start_location_long,
-                end_location_lat,
-                end_location_long,
-                date,
-                number_of_suppliers,
-                status,
-                vehicle_id,
-                day
-            ) VALUES (
-                :name,
-                :factory_lat,
-                :factory_long,
-                :factory_lat,
-                :factory_long,
-                CURRENT_DATE(),
-                :num_suppliers,
-                :status,
-                :vehicle_id,
-                :day
-            )");
-            
-            $this->db->bind(':name', $routeData->name);
-            $this->db->bind(':factory_lat', self::FACTORY_LAT);
-            $this->db->bind(':factory_long', self::FACTORY_LONG);
-            $this->db->bind(':num_suppliers', count($routeData->stops));
-            $this->db->bind(':status', $routeData->status);
-            $this->db->bind(':vehicle_id', $routeData->vehicle_id);
-            $this->db->bind(':day', $routeData->day);
-            
-            $this->db->execute();
-            $routeId = $this->db->lastInsertId();
-
-            // Insert route suppliers
-            if (!empty($routeData->stops)) {
-                $this->db->query("INSERT INTO route_suppliers (route_id, supplier_id) 
-                                 VALUES (:route_id, :supplier_id)");
-                
-                foreach ($routeData->stops as $stop) {
-                    $this->db->bind(':route_id', $routeId);
-                    $this->db->bind(':supplier_id', $stop->id);
-                    $this->db->execute();
-                }
-            }
-
-            // Commit transaction
-            $this->db->commit();
-            return true;
-
-        } catch (Exception $e) {
-            // Rollback on error
-            $this->db->rollBack();
-            error_log("Error creating route: " . $e->getMessage());
-            return false;
-        }
+    public function createRoute($routeName, $routeDay, $vehicleId) {
+        $sql = "INSERT INTO routes (route_name, day, vehicle_id, number_of_suppliers, remaining_capacity) VALUES (:route_name, :day, :vehicle_id, 0, 0)";
+        $stmt = $this->db->prepare($sql);
+        $stmt->bindParam(':route_name', $routeName);
+        $stmt->bindParam(':day', $routeDay);
+        $stmt->bindParam(':vehicle_id', $vehicleId);
+        
+        return $stmt->execute(); // Return true on success, false on failure
     }
 
     public function getUnallocatedSuppliers() {
@@ -179,7 +124,7 @@ class M_Route {
                 CONCAT(s.latitude, ', ', s.longitude) as coordinates
             FROM suppliers s
             JOIN users u ON s.user_id = u.user_id
-            LEFT JOIN route_suppliers rs ON s.supplier_id = rs.supplier_id
+            LEFT JOIN route_suppliers rs ON s.supplier_id = rs.supplier_id AND rs.is_deleted = 0
             WHERE rs.supplier_id IS NULL 
             AND s.is_active = 1
             AND s.is_deleted = 0
@@ -259,12 +204,12 @@ class M_Route {
         $this->db->beginTransaction();
         
         try {
-            // Delete from route_suppliers
-            // $this->db->query('DELETE FROM route_suppliers WHERE route_id = :route_id');
-            // $this->db->bind(':route_id', $route_id);
-            // $this->db->execute();
+            // Soft delete from route_suppliers
+            $this->db->query('UPDATE route_suppliers SET is_deleted = 1 WHERE route_id = :route_id');
+            $this->db->bind(':route_id', $route_id);
+            $this->db->execute();
 
-            // Soft Delete from routes
+            // Soft delete from routes
             $this->db->query('UPDATE routes SET is_deleted = 1 WHERE route_id = :route_id');
             $this->db->bind(':route_id', $route_id);
             $this->db->execute();

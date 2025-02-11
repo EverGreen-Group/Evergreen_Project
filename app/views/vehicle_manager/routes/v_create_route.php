@@ -28,13 +28,47 @@
 
     <div class="action-buttons">
         <a href="#" class="btn btn-primary">
-            <i class='bx bx-users'></i>
-            Manage Unallocated Suppliers
+            <i class='bx bx-brightness'></i>
+            Generate Route
         </a>
-        <a href="#" class="btn btn-primary">
-            <i class='bx bx-calendar'></i>
-            Manage Supplier Availability
-        </a>
+    </div>
+
+    <div class="table-data">
+        <div class="order">
+            <div class="head">
+                <h3>Create Route</h3>
+                <i class='bx bx-search'></i>
+            </div>
+            <div class="filter-options">
+                <form action="<?php echo URLROOT; ?>/route/createRoute" method="POST">
+                    <div class="filter-group">
+                        <label for="route-name">Route Name:</label>
+                        <input type="text" id="route-name" name="route_name" placeholder="Enter route name" required>
+                    </div>
+                    <div class="filter-group">
+                        <label for="route-day">Select Day:</label>
+                        <select id="route-day" name="route_day" required onchange="fetchAvailableVehicles(this.value)">
+                            <option value="">-- Select Day --</option>
+                            <option value="Monday">Monday</option>
+                            <option value="Tuesday">Tuesday</option>
+                            <option value="Wednesday">Wednesday</option>
+                            <option value="Thursday">Thursday</option>
+                            <option value="Friday">Friday</option>
+                            <option value="Saturday">Saturday</option>
+                            <option value="Sunday">Sunday</option>
+                        </select>
+                    </div>
+                    <div class="filter-group">
+                        <label for="select-vehicle">Select Vehicle:</label>
+                        <select id="select-vehicle" name="vehicle_id" required>
+                            <option value="">-- Select Vehicle --</option>
+                            <!-- Vehicle options will be populated here -->
+                        </select>
+                    </div>
+                    <button type="submit" class="btn btn-primary">Create Route</button>
+                </form>
+            </div>
+        </div>
     </div>
 
 
@@ -105,48 +139,6 @@
     </div>
   </div>
 
-
-    <div class="table-data">
-        <div class="order">
-            <div class="head">
-                <h3>Create Route</h3>
-                <i class='bx bx-search'></i>
-            </div>
-            <div class="filter-options">
-                <form action="<?php echo URLROOT; ?>/route/createRoute" method="POST">
-                    <div class="filter-group">
-                        <label for="route-name">Route Name:</label>
-                        <input type="text" id="route-name" name="route_name" placeholder="Enter route name">
-                    </div>
-                    <div class="filter-group">
-                        <label for="route-day">Select Day:</label>
-                        <select id="route-day" name="route_day">
-                            <option value="">-- Select Day --</option>
-                            <option value="Monday">Monday</option>
-                            <option value="Tuesday">Tuesday</option>
-                            <option value="Wednesday">Wednesday</option>
-                            <option value="Thursday">Thursday</option>
-                            <option value="Friday">Friday</option>
-                            <option value="Saturday">Saturday</option>
-                            <option value="Sunday">Sunday</option>
-                        </select>
-                    </div>
-                    <div class="filter-group">
-                        <label for="select-vehicle">Select Vehicle:</label>
-                        <select id="select-vehicle" name="vehicle_id">
-                            <option value="">-- Select Vehicle --</option>
-                            <!-- Add vehicle options here -->
-                            <option value="vehicle1">Vehicle 1</option>
-                            <option value="vehicle2">Vehicle 2</option>
-                            <option value="vehicle3">Vehicle 3</option>
-                        </select>
-                    </div>
-                    <button type="submit" class="btn btn-primary">Create Route</button>
-                </form>
-            </div>
-        </div>
-    </div>
-
     <div class="table-data">
 
         <div class="order">
@@ -174,7 +166,7 @@
                         <th>Name</th>
                         <th>Suppliers</th>
                         <th>Day</th>
-                        <th>Expected Collection</th>
+                        <th>Remaining Capacity</th>
                         <th>Vehicle Assigned</th>
                         <th>Status</th>
                         <th>Actions</th>
@@ -187,8 +179,8 @@
                             <td><?php echo htmlspecialchars($route->route_name); ?></td>
                             <td><?php echo htmlspecialchars($route->number_of_suppliers); ?></td>
                             <td><?php echo htmlspecialchars($route->day); ?></td>
-                            <td>0</td>
-                            <td>0</td>
+                            <td><?php echo htmlspecialchars($route->remaining_capacity); ?></td>
+                            <td><?php echo htmlspecialchars($route->vehicle_id); ?></td>
                             <td>
                                 <span class="status <?php echo htmlspecialchars($route->status === 'Active' ? 'completed' : 'error'); ?>">
                                     <?php echo htmlspecialchars($route->status); ?>
@@ -196,19 +188,23 @@
                             </td>
                             <td>
                                 <div style="display: flex; gap: 5px;">
-                                    <!-- Change the form to a button that triggers our JavaScript -->
+                                    <!-- Manage button with icon only -->
                                     <a 
                                         href="<?php echo URLROOT; ?>/route/manageRoute/<?php echo $route->route_id; ?>" 
-                                        class="btn btn-secondary update-route-btn"
+                                        class="btn btn-tertiary" 
+                                        style="display: flex; align-items: center; justify-content: center; width: 40px; height: 40px; border: none; background: none;"
                                     >
-                                        Manage
+                                        <i class='bx bx-cog' style="font-size: 24px; color:green;"></i> <!-- Boxicon for settings -->
                                     </a>
                                     
-                                    <!-- Keep the delete form as is -->
-                                    <form action="<?php echo URLROOT; ?>/vehiclemanager/deleteRoute/" method="POST" style="margin: 0;" 
-                                        onsubmit="return confirm('Are you sure you want to delete this route?');">
+                                    <!-- Delete button with icon only -->
+                                    <form action="<?php echo URLROOT; ?>/route/deleteRoute/" method="POST" style="margin: 0;"> 
                                         <input type="hidden" name="route_id" value="<?php echo $route->route_id; ?>">
-                                        <button type="submit" class="btn btn-tertiary">Delete</button>
+                                        <button type="submit" class="btn btn-tertiary" 
+                                            style="display: flex; align-items: center; justify-content: center; width: 40px; height: 40px; border: none; background: none;" 
+                                            onsubmit="return confirm('Are you sure you want to delete this route?');">
+                                            <i class='bx bx-trash' style="font-size: 24px; color:red;"></i> <!-- Boxicon for trash -->
+                                        </button>
                                     </form>
                                 </div>
                             </td>
@@ -308,3 +304,28 @@ require APPROOT . '/views/inc/components/footer.php';
 
 
 <?php require APPROOT . '/views/inc/components/footer.php'; ?>
+
+<script>
+function fetchAvailableVehicles(day) {
+    const vehicleSelect = document.getElementById('select-vehicle');
+    vehicleSelect.innerHTML = '<option value="">-- Select Vehicle --</option>'; // Reset options
+
+    if (day) {
+        fetch(`<?php echo URLROOT; ?>/route/getAvailableVehicles/${day}`)
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === 'success') {
+                    data.data.forEach(vehicle => {
+                        const option = document.createElement('option');
+                        option.value = vehicle.vehicle_id; // Assuming vehicle_id is the correct field
+                        option.textContent = vehicle.license_plate; // Assuming license_plate is the field to display
+                        vehicleSelect.appendChild(option);
+                    });
+                } else {
+                    console.error(data.message);
+                }
+            })
+            .catch(error => console.error('Error fetching vehicles:', error));
+    }
+}
+</script>
