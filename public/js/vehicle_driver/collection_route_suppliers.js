@@ -557,7 +557,7 @@ async function finalizeSupplierCollection() {
       alert("Collection finalized successfully");
       closeModal("addCollectionModal");
       // Redirect to the vehicle driver page instead of reloading
-      window.location.href = "<?php echo URLROOT; ?>/vehicledriver"; // Redirect to the specified URL
+      window.location.href = `${URLROOT}/vehicledriver/${collectionId}`; // Redirect to the specified URL
     } else {
       alert(data.message || "Failed to finalize collection");
     }

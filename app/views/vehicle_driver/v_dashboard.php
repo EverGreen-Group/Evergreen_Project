@@ -228,46 +228,6 @@ require APPROOT . '/views/inc/components/topnavbar.php';
         <?php endif; ?>
     </div>
 
-    <!-- Collection Details -->
-    <div class="details-grid">
-        <!-- Vehicle Information -->
-        <div class="detail-card" onclick="toggleCard(this)">
-            <div class="card-header">
-                <i class='bx bxs-truck'></i>
-                <h3>Upcoming Schedule</h3>
-            </div>
-            <div class="card-content">
-                <div class="info-row">
-                    <span class="label">Schedule ID:</span>
-                    <span class="value"></span>
-                </div>
-                <div class="info-row">
-                    <span class="label">Route:</span>
-                    <span class="value"></span>
-                </div>
-                <div class="info-row">
-                    <span class="label">Vehicle:</span>
-                    <span class="value"></span>
-                </div>
-                <div class="info-row">
-                    <span class="label">Start Time:</span>
-                    <span class="value"></span>
-                </div>
-                <div class="info-row">
-                    <span class="label">Day:</span>
-                    <span class="value"></span>
-                </div>
-                <div class="info-row">
-                    <span class="label">Status:</span>
-                    <span class="value"></span>
-                </div>
-                <div class="info-row">
-                    <span class="label">Action:</span>
-                    <a class="btn btn-primary" href="">Start Collection</a>
-                </div>
-            </div>
-        </div>
-    </div>
 </main>
 
 <script src="<?php echo URLROOT; ?>/css/components/script.js"></script>
