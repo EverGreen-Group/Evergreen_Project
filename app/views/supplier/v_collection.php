@@ -416,65 +416,104 @@ function toggleCard(card) {
 </script>
 
 <script>
-    function fetchBagDetails() {
-        const collectionId = <?php echo $collectionId ?>;
-        const supplierId = <?php echo $_SESSION['supplier_id'] ?>;
+   async function confirmAddition() {
+        const collectionId = <?= $collectionId ?>;
+        
+        try {
+            const response = await fetch(`<?php echo URLROOT; ?>/Bag/confirmAddition`, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "X-Requested-With": "XMLHttpRequest",
+                },
+                body: JSON.stringify({ collection_id: collectionId }),
+            });
 
-        fetch('<?php echo URLROOT; ?>/Bag/getSupplierBagDetails/' + collectionId + '/' + supplierId)
-            .then(response => {
-                if (!response.ok) {
-                    throw new Error('Network response was not ok');
-                }
-                return response.json();
-            })
-            .then(data => {
-                // Clear existing bag details
-                const bagDetailsSection = document.querySelector('.bag-details-section');
-                bagDetailsSection.innerHTML = ''; // Clear previous content
-                
-                // Check if there are any bags
-                if (data.length > 0) {
-                    data.forEach(bag => {
-                        // Create a new detail card for each bag
-                        const bagCard = `
-                            <div class="detail-card" onclick="toggleCard(this)">
-                                <div class="card-header">
-                                    <i class='bx bx-package'></i>
-                                    <h3>Bag ID: ${bag.bag_id}</h3>
+            const result = await response.json();
+
+            if (result.success) {
+                alert("Bags approved successfully.");
+                // Optionally, you can refresh the page or update the UI accordingly
+            } else {
+                alert(result.message || "Failed to approve bags.");
+            }
+        } catch (error) {
+            console.error("Error confirming addition:", error);
+            alert("Failed to confirm addition.");
+        }
+   }
+</script>
+
+<script>
+    
+    async function fetchBagDetails() {
+        console.log('Starting fetchBagDetails...');
+        const collectionId = <?php echo $collectionId ?>;
+        const supplierId = <?php echo $_SESSION['supplier_id'] ?? 'null' ?>;
+        
+        if (!supplierId) {
+            console.error('No supplier ID found!');
+            return;
+        }
+        
+        try {
+            console.log('Fetching from:', '<?php echo URLROOT; ?>/Bag/getSupplierBagDetails/' + collectionId + '/' + supplierId);
+            const response = await fetch('<?php echo URLROOT; ?>/Bag/getSupplierBagDetails/' + collectionId + '/' + supplierId);
+            
+            if (!response.ok) {
+                throw new Error('Network response was not ok');
+            }
+            
+            const data = await response.json();
+            console.log('Received bag data:', data);
+            
+            // Update the display
+            const bagDetailsSection = document.querySelector('.bag-details-section');
+            bagDetailsSection.innerHTML = ''; // Clear previous content
+            
+            if (data.length > 0) {
+                data.forEach(bag => {
+                    // Create a new detail card for each bag
+                    const bagCard = `
+                        <div class="detail-card" onclick="toggleCard(this)">
+                            <div class="card-header">
+                                <i class='bx bx-package'></i>
+                                <h3>Bag ID: ${bag.bag_id}</h3>
+                            </div>
+                            <div class="card-content">
+                                <div class="info-row">
+                                    <span class="label">Actual Weight (kg):</span>
+                                    <span class="value">${bag.actual_weight_kg}</span>
                                 </div>
-                                <div class="card-content">
-                                    <div class="info-row">
-                                        <span class="label">Actual Weight (kg):</span>
-                                        <span class="value">${bag.actual_weight_kg}</span>
-                                    </div>
-                                    <div class="info-row">
-                                        <span class="label">Leaf Age:</span>
-                                        <span class="value">${bag.leaf_age}</span>
-                                    </div>
-                                    <div class="info-row">
-                                        <span class="label">Moisture Level:</span>
-                                        <span class="value">${bag.moisture_level}</span>
-                                    </div>
-                                    <div class="info-row">
-                                        <span class="label">Deduction Notes:</span>
-                                        <span class="value">${bag.deduction_notes}</span>
-                                    </div>
-                                    <div class="info-row">
-                                        <span class="label">Leaf Type ID:</span>
-                                        <span class="value">${bag.leaf_type_id}</span>
-                                    </div>
+                                <div class="info-row">
+                                    <span class="label">Leaf Age:</span>
+                                    <span class="value">${bag.leaf_age}</span>
+                                </div>
+                                <div class="info-row">
+                                    <span class="label">Moisture Level:</span>
+                                    <span class="value">${bag.moisture_level}</span>
+                                </div>
+                                <div class="info-row">
+                                    <span class="label">Deduction Notes:</span>
+                                    <span class="value">${bag.deduction_notes}</span>
+                                </div>
+                                <div class="info-row">
+                                    <span class="label">Leaf Type ID:</span>
+                                    <span class="value">${bag.leaf_type_id}</span>
                                 </div>
                             </div>
-                        `;
-                        bagDetailsSection.insertAdjacentHTML('beforeend', bagCard);
-                    });
-                } else {
-                    bagDetailsSection.innerHTML = '<p>No bags found.</p>';
-                }
-            })
-            .catch(error => {
-                console.error('Error fetching bag details:', error);
-            });
+                        </div>
+                    `;
+                    bagDetailsSection.insertAdjacentHTML('beforeend', bagCard);
+                });
+            } else {
+                bagDetailsSection.innerHTML = '<p>No bags found.</p>';
+            }
+            
+            console.log('Bag display updated');
+        } catch (error) {
+            console.error('Error in fetchBagDetails:', error);
+        }
     }
 
 
@@ -506,6 +545,64 @@ function toggleCard(card) {
     }
     
 
-    // Polling every 5 seconds
-    setInterval(fetchBagDetails, 5000);
+    let ws;
+    const supplierId = <?php echo $_SESSION['supplier_id'] ?? 'null' ?>;
+
+    function initializeWebSocket() {
+        console.log('Starting WebSocket initialization...');
+        ws = new WebSocket('ws://localhost:8080');
+
+        ws.onopen = function() {
+            console.log('WebSocket connection opened');
+            console.log('Supplier: Connected to WebSocket server');
+            const registerMessage = {
+                type: 'register',
+                supplierId: supplierId
+            };
+            console.log('Sending registration message:', registerMessage);
+            ws.send(JSON.stringify(registerMessage));
+        };
+
+        ws.onmessage = function(event) {
+            console.log('Supplier received message:', event.data);
+            try {
+                const data = JSON.parse(event.data);
+                console.log('Parsed message data:', data);
+                
+                if (data.type === 'refreshTrigger') {
+                    console.log('Refresh trigger received, fetching bag details...');
+                    fetchBagDetails();
+                    console.log('Fetch bag details called');
+                } else {
+                    console.log('Unknown message type:', data.type);
+                }
+            } catch (error) {
+                console.error('Error processing message:', error);
+            }
+        };
+
+        ws.onerror = function(error) {
+            console.error('WebSocket Error:', error);
+        };
+
+        ws.onclose = function(event) {
+            console.log('Supplier: Disconnected from WebSocket server. Code:', event.code, 'Reason:', event.reason);
+            setTimeout(initializeWebSocket, 5000);
+        };
+    }
+
+    document.addEventListener('DOMContentLoaded', async function() {
+        console.log('DOM Content Loaded');
+        try {
+            console.log('Initializing WebSocket...');
+            initializeWebSocket();
+            console.log('WebSocket initialized');
+            
+            console.log('Fetching initial bag details...');
+            await fetchBagDetails();
+            console.log('Initial bag details fetched');
+        } catch (error) {
+            console.error('Error during initialization:', error);
+        }
+    });
 </script>

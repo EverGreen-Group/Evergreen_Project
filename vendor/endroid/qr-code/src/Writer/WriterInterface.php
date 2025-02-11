@@ -9,46 +9,33 @@
 
 namespace Endroid\QrCode\Writer;
 
-use Endroid\QrCode\QrCodeInterface;
+use Endroid\QrCode\QrCode;
 
 interface WriterInterface
 {
     /**
-     * @param QrCodeInterface $qrCode
-     * @return string
+     * @param QrCode $qrCode
      */
-    public function writeString(QrCodeInterface $qrCode);
+    public function __construct(QrCode $qrCode);
 
     /**
-     * @param QrCodeInterface $qrCode
      * @return string
      */
-    public function writeDataUri(QrCodeInterface $qrCode);
+    public function writeString();
 
     /**
-     * @param QrCodeInterface $qrCode
      * @param string $path
      */
-    public function writeFile(QrCodeInterface $qrCode, $path);
+    public function writeFile($path);
 
     /**
      * @return string
      */
-    public static function getContentType();
+    public function getContentType();
 
     /**
      * @param string $extension
      * @return bool
      */
-    public static function supportsExtension($extension);
-
-    /**
-     * @return string[]
-     */
-    public static function getSupportedExtensions();
-
-    /**
-     * @return string
-     */
-    public function getName();
+    public function supportsExtension($extension);
 }

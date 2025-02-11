@@ -9,8 +9,10 @@
 
 namespace Endroid\QrCode\Factory;
 
+use Endroid\QrCode\ErrorCorrectionLevel;
+use Endroid\QrCode\LabelAlignment;
 use Endroid\QrCode\QrCode;
-use Endroid\QrCode\WriterRegistryInterface;
+use Symfony\Component\OptionsResolver\Options;
 use Symfony\Component\OptionsResolver\OptionsResolver;
 use Symfony\Component\PropertyAccess\PropertyAccess;
 
@@ -19,47 +21,39 @@ class QrCodeFactory
     /**
      * @var array
      */
-    protected $definedOptions = [
-        'writer',
+    private $definedOptions = [
         'size',
-        'margin',
+        'quiet_zone',
         'foreground_color',
         'background_color',
         'encoding',
         'error_correction_level',
-        'logo_path',
-        'logo_width',
         'label',
         'label_font_size',
         'label_font_path',
         'label_alignment',
         'label_margin',
+        'logo_path',
+        'logo_size',
         'validate_result'
     ];
 
     /**
      * @var array
      */
-    protected $defaultOptions;
-
-    /**
-     * @var WriterRegistryInterface
-     */
-    protected $writerRegistry;
+    private $defaultOptions;
 
     /**
      * @var OptionsResolver
      */
-    protected $optionsResolver;
+    private $optionsResolver;
 
     /**
      * @param array $defaultOptions
-     * @param WriterRegistryInterface $writerRegistry
      */
-    public function __construct(array $defaultOptions = [], WriterRegistryInterface $writerRegistry = null)
+    public function __construct(array $defaultOptions = [])
     {
         $this->defaultOptions = $defaultOptions;
-        $this->writerRegistry = $writerRegistry;
     }
 
     /**
@@ -73,17 +67,8 @@ class QrCodeFactory
         $accessor = PropertyAccess::createPropertyAccessor();
 
         $qrCode = new QrCode($text);
-
-        if ($this->writerRegistry instanceof WriterRegistryInterface) {
-            $qrCode->setWriterRegistry($this->writerRegistry);
-        }
-
         foreach ($this->definedOptions as $option) {
             if (isset($options[$option])) {
-                if ($option === 'writer') {
-                    $options['writer_by_name'] = $options[$option];
-                    $option = 'writer_by_name';
-                }
                 $accessor->setValue($qrCode, $option, $options[$option]);
             }
         }
@@ -94,7 +79,7 @@ class QrCodeFactory
     /**
      * @return OptionsResolver
      */
-    protected function getOptionsResolver()
+    private function getOptionsResolver()
     {
         if (!$this->optionsResolver instanceof OptionsResolver) {
             $this->optionsResolver = $this->createOptionsResolver();
@@ -106,7 +91,7 @@ class QrCodeFactory
     /**
      * @return OptionsResolver
      */
-    protected function createOptionsResolver()
+    private function createOptionsResolver()
     {
         $optionsResolver = new OptionsResolver();
         $optionsResolver

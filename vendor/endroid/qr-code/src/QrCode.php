@@ -12,31 +12,42 @@ namespace Endroid\QrCode;
 use Endroid\QrCode\Exception\InvalidPathException;
 use Endroid\QrCode\Exception\InvalidWriterException;
 use Endroid\QrCode\Exception\UnsupportedExtensionException;
+use Endroid\QrCode\Writer\BinaryWriter;
+use Endroid\QrCode\Writer\EpsWriter;
+use Endroid\QrCode\Writer\PngDataUriWriter;
+use Endroid\QrCode\Writer\PngWriter;
+use Endroid\QrCode\Writer\SvgDataUriWriter;
+use Endroid\QrCode\Writer\SvgWriter;
 use Endroid\QrCode\Writer\WriterInterface;
 
-class QrCode implements QrCodeInterface
+class QrCode
 {
     const LABEL_FONT_PATH_DEFAULT = __DIR__ . '/../assets/noto_sans.otf';
 
     /**
+     * @var WriterInterface[]
+     */
+    private $writers;
+
+    /**
      * @var string
      */
-    protected $text;
+    private $text;
 
     /**
      * @var int
      */
-    protected $size = 300;
+    private $size;
 
     /**
      * @var int
      */
-    protected $margin = 10;
+    private $quietZone;
 
     /**
      * @var array
      */
-    protected $foregroundColor = [
+    private $foregroundColor = [
         'r' => 0,
         'g' => 0,
         'b' => 0
@@ -45,7 +56,7 @@ class QrCode implements QrCodeInterface
     /**
      * @var array
      */
-    protected $backgroundColor = [
+    private $backgroundColor = [
         'r' => 255,
         'g' => 255,
         'b' => 255
@@ -54,79 +65,100 @@ class QrCode implements QrCodeInterface
     /**
      * @var string
      */
-    protected $encoding = 'UTF-8';
+    private $encoding = 'UTF-8';
 
     /**
      * @var ErrorCorrectionLevel
      */
-    protected $errorCorrectionLevel;
+    private $errorCorrectionLevel;
 
     /**
      * @var string
      */
-    protected $logoPath;
+    private $label;
 
     /**
      * @var int
      */
-    protected $logoWidth;
+    private $labelFontSize = 16;
 
     /**
      * @var string
      */
-    protected $label;
-
-    /**
-     * @var int
-     */
-    protected $labelFontSize = 16;
-
-    /**
-     * @var string
-     */
-    protected $labelFontPath = self::LABEL_FONT_PATH_DEFAULT;
+    private $labelFontPath = self::LABEL_FONT_PATH_DEFAULT;
 
     /**
      * @var LabelAlignment
      */
-    protected $labelAlignment;
+    private $labelAlignment;
 
     /**
      * @var array
      */
-    protected $labelMargin = [
-        't' => 0,
+    private $labelMargin = [
+        't' => 10,
         'r' => 10,
         'b' => 10,
         'l' => 10,
     ];
 
     /**
-     * @var WriterRegistryInterface
+     * @var string
      */
-    protected $writerRegistry;
+    private $logoPath;
 
     /**
-     * @var WriterInterface
+     * @var int
      */
-    protected $writer;
+    private $logoSize;
 
     /**
      * @var bool
      */
-    protected $validateResult = false;
+    private $validateResult = false;
 
     /**
      * @param string $text
      */
     public function __construct($text = '')
     {
+        $this->writers = [];
+        $this->writersByExtension = [];
+
         $this->text = $text;
 
         $this->errorCorrectionLevel = new ErrorCorrectionLevel(ErrorCorrectionLevel::LOW);
         $this->labelAlignment = new LabelAlignment(LabelAlignment::CENTER);
 
-        $this->writerRegistry = new StaticWriterRegistry();
+        $this->registerBuiltInWriters();
+    }
+
+    protected function registerBuiltInWriters()
+    {
+        $this->registerWriter(new BinaryWriter($this));
+        $this->registerWriter(new EpsWriter($this));
+        $this->registerWriter(new PngDataUriWriter($this));
+        $this->registerWriter(new PngWriter($this));
+        $this->registerWriter(new SvgDataUriWriter($this));
+        $this->registerWriter(new SvgWriter($this));
+    }
+
+    /**
+     * @param WriterInterface $writer
+     */
+    public function registerWriter(WriterInterface $writer)
+    {
+        if (!isset($this->writers[get_class($writer)])) {
+            $this->writers[get_class($writer)] = $writer;
+        }
+    }
+
+    /**
+     * @return WriterInterface[]
+     */
+    public function getRegisteredWriters()
+    {
+        return $this->writers;
     }
 
     /**
@@ -141,7 +173,7 @@ class QrCode implements QrCodeInterface
     }
 
     /**
-     * {@inheritdoc}
+     * @return string
      */
     public function getText()
     {
@@ -160,7 +192,7 @@ class QrCode implements QrCodeInterface
     }
 
     /**
-     * {@inheritdoc}
+     * @return int
      */
     public function getSize()
     {
@@ -168,22 +200,22 @@ class QrCode implements QrCodeInterface
     }
 
     /**
-     * @param int $margin
+     * @param int $quietZone
      * @return $this
      */
-    public function setMargin($margin)
+    public function setQuietZone($quietZone)
     {
-        $this->margin = $margin;
+        $this->quietZone = $quietZone;
 
         return $this;
     }
 
     /**
-     * {@inheritdoc}
+     * @return int
      */
-    public function getMargin()
+    public function getQuietZone()
     {
-        return $this->margin;
+        return $this->quietZone;
     }
 
     /**
@@ -198,7 +230,7 @@ class QrCode implements QrCodeInterface
     }
 
     /**
-     * {@inheritdoc}
+     * @return array
      */
     public function getForegroundColor()
     {
@@ -217,7 +249,7 @@ class QrCode implements QrCodeInterface
     }
 
     /**
-     * {@inheritdoc}
+     * @return array
      */
     public function getBackgroundColor()
     {
@@ -236,7 +268,7 @@ class QrCode implements QrCodeInterface
     }
 
     /**
-     * {@inheritdoc}
+     * @return string
      */
     public function getEncoding()
     {
@@ -255,56 +287,11 @@ class QrCode implements QrCodeInterface
     }
 
     /**
-     * {@inheritdoc}
+     * @return string
      */
     public function getErrorCorrectionLevel()
     {
         return $this->errorCorrectionLevel->getValue();
-    }
-
-    /**
-     * @param string $logoPath
-     * @return $this
-     * @throws InvalidPathException
-     */
-    public function setLogoPath($logoPath)
-    {
-        $logoPath = realpath($logoPath);
-
-        if (!is_file($logoPath)) {
-            throw new InvalidPathException('Invalid logo path: ' . $logoPath);
-        }
-
-        $this->logoPath = $logoPath;
-
-        return $this;
-    }
-
-    /**
-     * {@inheritdoc}
-     */
-    public function getLogoPath()
-    {
-        return $this->logoPath;
-    }
-
-    /**
-     * @param int $logoWidth
-     * @return $this
-     */
-    public function setLogoWidth($logoWidth)
-    {
-        $this->logoWidth = $logoWidth;
-
-        return $this;
-    }
-
-    /**
-     * {@inheritdoc}
-     */
-    public function getLogoWidth()
-    {
-        return $this->logoWidth;
     }
 
     /**
@@ -339,7 +326,7 @@ class QrCode implements QrCodeInterface
     }
 
     /**
-     * {@inheritdoc}
+     * @return string
      */
     public function getLabel()
     {
@@ -358,7 +345,7 @@ class QrCode implements QrCodeInterface
     }
 
     /**
-     * {@inheritdoc}
+     * @return int
      */
     public function getLabelFontSize()
     {
@@ -384,7 +371,7 @@ class QrCode implements QrCodeInterface
     }
 
     /**
-     * {@inheritdoc}
+     * @return string
      */
     public function getLabelFontPath()
     {
@@ -403,7 +390,7 @@ class QrCode implements QrCodeInterface
     }
 
     /**
-     * {@inheritdoc}
+     * @return string
      */
     public function getLabelAlignment()
     {
@@ -411,7 +398,7 @@ class QrCode implements QrCodeInterface
     }
 
     /**
-     * @param int[] $labelMargin
+     * @param array $labelMargin
      * @return $this
      */
     public function setLabelMargin(array $labelMargin)
@@ -422,7 +409,7 @@ class QrCode implements QrCodeInterface
     }
 
     /**
-     * {@inheritdoc}
+     * @return array
      */
     public function getLabelMargin()
     {
@@ -430,84 +417,48 @@ class QrCode implements QrCodeInterface
     }
 
     /**
-     * @param WriterRegistryInterface $writerRegistry
+     * @param string $logoPath
      * @return $this
+     * @throws InvalidPathException
      */
-    public function setWriterRegistry(WriterRegistryInterface $writerRegistry)
+    public function setLogoPath($logoPath)
     {
-        $this->writerRegistry = $writerRegistry;
+        $logoPath = realpath($logoPath);
 
-        return $this;
-    }
-
-    /**
-     * @param WriterInterface $writer
-     * @return $this
-     */
-    public function setWriter(WriterInterface $writer)
-    {
-        $this->writer = $writer;
-
-        return $this;
-    }
-
-    /**
-     * @param WriterInterface $name
-     * @return WriterInterface
-     */
-    public function getWriter($name = null)
-    {
-        if (!is_null($name)) {
-            return $this->writerRegistry->getWriter($name);
+        if (!is_file($logoPath)) {
+            throw new InvalidPathException('Invalid logo path: ' . $logoPath);
         }
 
-        if ($this->writer instanceof WriterInterface) {
-            return $this->writer;
-        }
-
-        return $this->writerRegistry->getDefaultWriter();
-    }
-
-    /**
-     * @param string $name
-     * @return $this
-     * @throws InvalidWriterException
-     */
-    public function setWriterByName($name)
-    {
-        $this->writer = $this->writerRegistry->getWriter($name);
+        $this->logoPath = $logoPath;
 
         return $this;
     }
 
     /**
-     * @param string $path
+     * @return string
+     */
+    public function getLogoPath()
+    {
+        return $this->logoPath;
+    }
+
+    /**
+     * @param int $logoSize
      * @return $this
      */
-    public function setWriterByPath($path)
+    public function setLogoSize($logoSize)
     {
-        $extension = pathinfo($path, PATHINFO_EXTENSION);
-
-        $this->setWriterByExtension($extension);
+        $this->logoSize = $logoSize;
 
         return $this;
     }
 
     /**
-     * @param string $extension
-     * @return $this
-     * @throws UnsupportedExtensionException
+     * @return int
      */
-    public function setWriterByExtension($extension)
+    public function getLogoSize()
     {
-        foreach ($this->writerRegistry->getWriters() as $writer) {
-            if ($writer->supportsExtension($extension)) {
-                $this->writer = $writer;
-                return $this;
-            }
-        }
-
-        throw new UnsupportedExtensionException('Missing writer for extension "'.$extension.'"');
+        return $this->logoSize;
     }
 
     /**
@@ -522,7 +473,7 @@ class QrCode implements QrCodeInterface
     }
 
     /**
-     * {@inheritdoc}
+     * @return bool
      */
     public function getValidateResult()
     {
@@ -530,35 +481,79 @@ class QrCode implements QrCodeInterface
     }
 
     /**
+     * @param string $writerClass
      * @return string
+     * @throws InvalidWriterException
      */
-    public function writeString()
+    public function getContentType($writerClass)
     {
-        return $this->getWriter()->writeString($this);
+        $this->assertValidWriterClass($writerClass);
+
+        return $this->writers[$writerClass]->getContentType();
     }
 
     /**
+     * @param string $writerClass
+     * @throws InvalidWriterException
+     */
+    protected function assertValidWriterClass($writerClass)
+    {
+        if (!isset($this->writers[$writerClass])) {
+            throw new InvalidWriterException('Invalid writer "'.$writerClass.'"');
+        }
+    }
+
+    /**
+     * @param string $writerClass
      * @return string
      */
-    public function writeDataUri()
+    public function writeString($writerClass)
     {
-        return $this->getWriter()->writeDataUri($this);
+        $this->assertValidWriterClass($writerClass);
+
+        return $this->writers[$writerClass]->writeString();
     }
 
     /**
      * @param string $path
+     * @param string $writerClass
      */
-    public function writeFile($path)
+    public function writeFile($path, $writerClass = null)
     {
-        return $this->getWriter()->writeFile($this, $path);
+        $writer = $this->getWriterByPath($path);
+
+        if ($writerClass !== null) {
+            $this->assertValidWriterClass($writerClass);
+            $writer = $this->writers[$writerClass];
+        }
+
+        return $writer->writeFile($path);
     }
 
     /**
-     * @return string
-     * @throws InvalidWriterException
+     * @param string $path
+     * @return WriterInterface
      */
-    public function getContentType()
+    public function getWriterByPath($path)
     {
-        return $this->getWriter()->getContentType();
+        $extension = pathinfo($path, PATHINFO_EXTENSION);
+
+        return $this->getWriterByExtension($extension);
+    }
+
+    /**
+     * @param string $extension
+     * @return WriterInterface
+     * @throws UnsupportedExtensionException
+     */
+    public function getWriterByExtension($extension)
+    {
+        foreach ($this->writers as $writer) {
+            if ($writer->supportsExtension($extension)) {
+                return $writer;
+            }
+        }
+
+        throw new UnsupportedExtensionException('Missing writer for extension "'.$extension.'"');
     }
 }

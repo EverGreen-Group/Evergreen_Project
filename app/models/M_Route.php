@@ -24,12 +24,27 @@ class M_Route {
      * Create a new route.
      */
     public function createRoute($routeName, $routeDay, $vehicleId) {
-        $sql = "INSERT INTO routes (route_name, day, vehicle_id, number_of_suppliers, remaining_capacity) VALUES (:route_name, :day, :vehicle_id, 0, 0)";
+        // Step 1: Get the capacity of the vehicle
+        $this->db->query("SELECT capacity FROM vehicles WHERE vehicle_id = :vehicle_id");
+        $this->db->bind(':vehicle_id', $vehicleId);
+        $vehicle = $this->db->single(); // Fetch the single vehicle record
+
+        // Check if the vehicle exists and has a capacity
+        if ($vehicle) {
+            $remainingCapacity = $vehicle->capacity; // Assuming 'capacity' is the column name
+        } else {
+            // Handle the case where the vehicle does not exist
+            return false; // Or throw an exception, or handle as needed
+        }
+
+        // Step 2: Insert the new route with the remaining capacity
+        $sql = "INSERT INTO routes (route_name, day, vehicle_id, number_of_suppliers, remaining_capacity) VALUES (:route_name, :day, :vehicle_id, 0, :remaining_capacity)";
         $stmt = $this->db->prepare($sql);
         $stmt->bindParam(':route_name', $routeName);
         $stmt->bindParam(':day', $routeDay);
         $stmt->bindParam(':vehicle_id', $vehicleId);
-        
+        $stmt->bindParam(':remaining_capacity', $remainingCapacity); // Bind the remaining capacity
+
         return $stmt->execute(); // Return true on success, false on failure
     }
 
@@ -247,7 +262,7 @@ class M_Route {
                 AND cs.is_active = 1
             WHERE r.day = :day 
             AND r.is_deleted = 0 
-            AND cs.route_id IS NULL
+            AND (cs.route_id IS NULL OR cs.is_deleted = 1)
         ");
         
         $this->db->bind(':day', $day);

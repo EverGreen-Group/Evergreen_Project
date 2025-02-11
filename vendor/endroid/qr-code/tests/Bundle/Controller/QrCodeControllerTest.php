@@ -20,8 +20,7 @@ class QrCodeControllerTest extends WebTestCase
         $client->request('GET', $client->getContainer()->get('router')->generate('endroid_qrcode_generate', [
             'text' => 'Life is too short to be generating QR codes',
             'extension' => 'png',
-            'size' => 200,
-            'margin' => 10,
+            'size' => 150,
             'label' => 'Scan the code',
             'label_font_size' => 16,
         ]));
@@ -29,7 +28,7 @@ class QrCodeControllerTest extends WebTestCase
         $response = $client->getResponse();
         $image = imagecreatefromstring($response->getContent());
 
-        $this->assertTrue(imagesx($image) == 220);
+        $this->assertTrue(imagesx($image) == 150);
         $this->assertEquals(Response::HTTP_OK, $response->getStatusCode());
     }
 

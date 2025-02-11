@@ -261,6 +261,33 @@ window.onload = function () {
   startQRCodeScanner();
 };
 
+// Initialize WebSocket connection
+let ws;
+
+function initializeWebSocket() {
+  console.log("Driver: Initializing WebSocket connection...");
+  ws = new WebSocket("ws://localhost:8080");
+
+  ws.onopen = function () {
+    console.log("Driver: Connected to WebSocket server");
+  };
+
+  ws.onclose = function () {
+    console.log("Driver: Disconnected from WebSocket server");
+    // Attempt to reconnect after 5 seconds
+    setTimeout(initializeWebSocket, 5000);
+  };
+
+  ws.onerror = function (error) {
+    console.error("Driver WebSocket Error:", error);
+  };
+}
+
+// Initialize WebSocket when page loads
+document.addEventListener("DOMContentLoaded", function () {
+  initializeWebSocket();
+});
+
 async function addBagToCollection() {
   // Get form values
   const actualWeight = document.getElementById("actualWeight").value;
@@ -303,13 +330,26 @@ async function addBagToCollection() {
     const data = await response.json();
 
     if (data.success) {
+      // Send refresh trigger via WebSocket
+      if (ws && ws.readyState === WebSocket.OPEN) {
+        const wsMessage = {
+          type: "refreshTrigger",
+          supplierId: formData.supplier_id,
+        };
+        console.log("Sending refresh trigger:", wsMessage);
+        ws.send(JSON.stringify(wsMessage));
+      } else {
+        console.error(
+          "WebSocket is not connected. State:",
+          ws ? ws.readyState : "ws is null"
+        );
+      }
+
       collectedBags.push(formData);
       updateAssignedBagsList();
       fetchAndDisplayFertilizerItems();
       resetBagForm();
       showBagIdStep();
-
-      // Show success message
       alert(
         "Bag added successfully. Scan another bag or click Finalize Collection to complete."
       );
@@ -656,7 +696,7 @@ async function updateBag(bagId) {
  * Called when the user confirms the update in the update step.
  */
 async function submitUpdateBag() {
-  // Gather updated data from the update step form
+  console.log("Current Supplier ID:", currentSupplierId);
   const updatedBag = {
     bag_id: currentUpdateBagId,
     actual_weight_kg: document.getElementById("updateActualWeight").value,
@@ -664,12 +704,12 @@ async function submitUpdateBag() {
     leaf_age: document.getElementById("updateLeafAge").value,
     moisture_level: document.getElementById("updateMoistureLevel").value,
     notes: document.getElementById("updateDeductionNotes").value,
-    // Include supplier_id and collection_id if your controller requires them.
     supplier_id: currentSupplierId,
     collection_id: collectionId,
   };
 
-  // Basic validation (you can expand on this as needed)
+  console.log("Updating bag with data:", updatedBag);
+
   if (
     !updatedBag.actual_weight_kg ||
     isNaN(updatedBag.actual_weight_kg) ||
@@ -692,12 +732,20 @@ async function submitUpdateBag() {
     const result = await response.json();
 
     if (result.success) {
+      // Send refresh trigger via WebSocket
+      if (ws && ws.readyState === WebSocket.OPEN) {
+        ws.send(
+          JSON.stringify({
+            type: "refreshTrigger",
+            supplierId: updatedBag.supplier_id,
+          })
+        );
+      }
+
       alert("Bag updated successfully.");
-      // Optionally, hide the update step and reset the form back to the add bag step:
       document.getElementById("updateBagStep").style.display = "none";
       resetBagForm();
       showBagIdStep();
-      // Refresh the assigned bags list to show the updated data
       updateAssignedBagsList();
     } else {
       alert(result.message || "Failed to update bag.");
@@ -740,8 +788,17 @@ async function deleteBag(bagId) {
     const result = await response.json();
 
     if (result.success) {
+      // Send refresh trigger via WebSocket
+      if (ws && ws.readyState === WebSocket.OPEN) {
+        ws.send(
+          JSON.stringify({
+            type: "refreshTrigger",
+            supplierId: currentSupplierId,
+          })
+        );
+      }
+
       alert("Bag deleted successfully.");
-      // Refresh the assigned bags list to remove the deleted bag
       updateAssignedBagsList();
     } else {
       alert(result.message || "Failed to delete bag.");
