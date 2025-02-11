@@ -135,7 +135,7 @@ class Route extends Controller{
             // Call the model method to add the supplier to the route with the new stop order
             if ($this->routeModel->addSupplierToRoute($routeId, $supplierId, $newStopOrder)) {
                 // Update the remaining capacity after adding the supplier
-                $this->routeModel->updateRemainingCapacity($routeId);
+                $this->routeModel->updateRemainingCapacity($routeId, 'add');
 
                 // Redirect or handle success
                 header('Location: ' . URLROOT . '/route/manageRoute/' . $routeId);
@@ -154,6 +154,7 @@ class Route extends Controller{
 
             // Call the model method to remove the supplier from the route
             if ($this->routeModel->removeSupplierFromRoute($routeId, $supplierId)) {
+                $this->routeModel->updateRemainingCapacity($routeId, 'remove');
                 // Redirect or handle success
                 header('Location: ' . URLROOT . '/route/manageRoute/' . $routeId);
                 exit();
