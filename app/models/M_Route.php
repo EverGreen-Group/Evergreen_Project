@@ -345,5 +345,123 @@ class M_Route {
         $this->db->bind(':route_id', $routeId);
         return $this->db->resultSet(); // Assuming this method fetches the results as an array of objects
     }
+
+
+    public function addSupplierToRoute($routeId, $supplierId, $stopOrder) {
+        $sql = "INSERT INTO route_suppliers (route_id, supplier_id, stop_order) VALUES (:route_id, :supplier_id, :stop_order)";
+        $stmt = $this->db->prepare($sql);
+        $stmt->bindParam(':route_id', $routeId);
+        $stmt->bindParam(':supplier_id', $supplierId);
+        $stmt->bindParam(':stop_order', $stopOrder);
+        
+        return $stmt->execute(); // Return true on success, false on failure
+    }
+
+    public function getLastStopOrder($routeId) {
+        $sql = "SELECT MAX(stop_order) AS last_stop_order FROM route_suppliers WHERE route_id = :route_id";
+        $stmt = $this->db->prepare($sql);
+        $stmt->bindParam(':route_id', $routeId);
+        
+        if ($stmt->execute()) {
+            $result = $stmt->fetch(PDO::FETCH_ASSOC);
+            return $result['last_stop_order'] ? (int)$result['last_stop_order'] : 0; // Return the last stop order or 0 if none
+        }
+        return 0; // Return 0 if query fails
+    }
+
+    public function updateRemainingCapacity($routeId) {
+        // Get the vehicle capacity
+        $vehicleCapacity = $this->getVehicleCapacityByRouteId($routeId); // Create this method to fetch vehicle capacity
+
+        // Get the total average collection for the route
+        $totalAverageCollection = $this->getTotalAverageCollection($routeId);
+
+        // Calculate remaining capacity
+        $remainingCapacity = $vehicleCapacity - $totalAverageCollection;
+
+        // Update the remaining capacity in the database
+        $sql = "UPDATE routes SET remaining_capacity = :remaining_capacity , number_of_suppliers = number_of_suppliers + 1 WHERE route_id = :route_id";
+        $stmt = $this->db->prepare($sql);
+        $stmt->bindParam(':remaining_capacity', $remainingCapacity);
+        $stmt->bindParam(':route_id', $routeId);
+        
+        return $stmt->execute(); // Return true on success, false on failure
+    }
+
+    private function getTotalAverageCollection($routeId) {
+        $sql = "
+            SELECT SUM(s.average_collection) AS total_average 
+            FROM route_suppliers rs
+            JOIN suppliers s ON rs.supplier_id = s.supplier_id
+            WHERE rs.route_id = :route_id
+        ";
+        $stmt = $this->db->prepare($sql);
+        $stmt->bindParam(':route_id', $routeId);
+        
+        if ($stmt->execute()) {
+            $result = $stmt->fetch(PDO::FETCH_ASSOC);
+            return $result['total_average'] ? (float)$result['total_average'] : 0; // Return the total average or 0 if none
+        }
+        return 0; // Return 0 if query fails
+    }
+
+    private function getVehicleCapacityByRouteId($routeId) {
+        $sql = "SELECT v.capacity FROM routes r JOIN vehicles v ON r.vehicle_id = v.vehicle_id WHERE r.route_id = :route_id";
+        $stmt = $this->db->prepare($sql);
+        $stmt->bindParam(':route_id', $routeId);
+        
+        if ($stmt->execute()) {
+            $result = $stmt->fetch(PDO::FETCH_ASSOC);
+            return $result['capacity'] ? (float)$result['capacity'] : 0; // Return the vehicle capacity or 0 if none
+        }
+        return 0; // Return 0 if query fails
+    }
+
+    public function removeSupplierFromRoute($routeId, $supplierId) {
+        // First, get the stop_order of the supplier being removed
+        $stopOrder = $this->getStopOrder($routeId, $supplierId);
+
+        // Remove the supplier from the route
+        $sql = "DELETE FROM route_suppliers WHERE route_id = :route_id AND supplier_id = :supplier_id";
+        $stmt = $this->db->prepare($sql);
+        $stmt->bindParam(':route_id', $routeId);
+        $stmt->bindParam(':supplier_id', $supplierId);
+        $stmt->execute();
+
+        // Adjust the stop orders for remaining suppliers
+        $this->adjustStopOrders($routeId, $stopOrder);
+
+        // Decrement the number of suppliers in the routes table
+        $sql = "UPDATE routes SET number_of_suppliers = number_of_suppliers - 1 WHERE route_id = :route_id";
+        $stmt = $this->db->prepare($sql);
+        $stmt->bindParam(':route_id', $routeId);
+        $stmt->execute();
+
+        return true; // Return true on success
+    }
+
+    private function getStopOrder($routeId, $supplierId) {
+        $sql = "SELECT stop_order FROM route_suppliers WHERE route_id = :route_id AND supplier_id = :supplier_id";
+        $stmt = $this->db->prepare($sql);
+        $stmt->bindParam(':route_id', $routeId);
+        $stmt->bindParam(':supplier_id', $supplierId);
+        
+        if ($stmt->execute()) {
+            $result = $stmt->fetch(PDO::FETCH_ASSOC);
+            return $result['stop_order'] ? (int)$result['stop_order'] : 0; // Return the stop order or 0 if none
+        }
+        return 0; // Return 0 if query fails
+    }
+
+    private function adjustStopOrders($routeId, $removedStopOrder) {
+        // Update the stop_order for suppliers with a higher stop_order
+        $sql = "UPDATE route_suppliers SET stop_order = stop_order - 1 WHERE route_id = :route_id AND stop_order > :removed_stop_order";
+        $stmt = $this->db->prepare($sql);
+        $stmt->bindParam(':route_id', $routeId);
+        $stmt->bindParam(':removed_stop_order', $removedStopOrder);
+        
+        return $stmt->execute(); // Return true on success, false on failure
+    }
+
 }
 ?>
