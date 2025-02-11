@@ -17,7 +17,6 @@
 
 <!-- MAIN -->
 <main>
-    <?php print_r($data); ?>
     <div class="head-title">
         <div class="left">
             <h1>Route Management</h1>
