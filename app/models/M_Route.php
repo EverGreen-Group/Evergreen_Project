@@ -124,7 +124,7 @@ class M_Route {
         $stopOrder = $this->getStopOrder($routeId, $supplierId);
 
         // Remove the supplier from the route
-        $sql = "DELETE FROM route_suppliers WHERE route_id = :route_id AND supplier_id = :supplier_id";
+        $sql = "UPDATE route_suppliers SET is_deleted = 1 WHERE route_id = :route_id AND supplier_id = :supplier_id";
         $stmt = $this->db->prepare($sql);
         $stmt->bindParam(':route_id', $routeId);
         $stmt->bindParam(':supplier_id', $supplierId);
@@ -132,12 +132,6 @@ class M_Route {
 
         // Adjust the stop orders for remaining suppliers
         $this->adjustStopOrders($routeId, $stopOrder);
-
-        // Decrement the number of suppliers in the routes table
-        $sql = "UPDATE routes SET number_of_suppliers = number_of_suppliers - 1 WHERE route_id = :route_id";
-        $stmt = $this->db->prepare($sql);
-        $stmt->bindParam(':route_id', $routeId);
-        $stmt->execute();
 
         return true; // Return true on success
     }
@@ -324,13 +318,16 @@ class M_Route {
      * Get the last stop order number for a given route.
      */
     public function getLastStopOrder($routeId) {
-        $sql = "SELECT MAX(stop_order) AS last_stop_order FROM route_suppliers WHERE route_id = :route_id";
+        $sql = "SELECT MAX(stop_order) AS last_stop_order 
+                FROM route_suppliers 
+                WHERE route_id = :route_id AND is_deleted = 0";
         $stmt = $this->db->prepare($sql);
         $stmt->bindParam(':route_id', $routeId);
         
         if ($stmt->execute()) {
             $result = $stmt->fetch(PDO::FETCH_ASSOC);
-            return $result['last_stop_order'] ? (int)$result['last_stop_order'] : 0;
+            // Explicitly check if last_stop_order is NULL and set it to 0
+            return isset($result['last_stop_order']) ? (int)$result['last_stop_order'] : 0;
         }
         return 0;
     }
