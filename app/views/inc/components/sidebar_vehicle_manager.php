@@ -17,13 +17,13 @@
       </a>
     </li>
     <li class="<?php echo (basename($_SERVER['REQUEST_URI']) == 'team') ? 'active' : ''; ?>">
-      <a href="<?php echo URLROOT; ?>/vehiclemanager/team">
+      <a href="<?php echo URLROOT; ?>/vehiclemanager/driver">
         <i class="bx bxs-group"></i>
-        <span class="text">Team</span>
+        <span class="text">Driver</span>
       </a>
     </li>
     <li class="<?php echo (basename($_SERVER['REQUEST_URI']) == 'route') ? 'active' : ''; ?>">
-      <a href="<?php echo URLROOT; ?>/vehiclemanager/route">
+      <a href="<?php echo URLROOT; ?>/route">
         <i class="bx bx-trip"></i>
         <span class="text">Route</span>
       </a>
@@ -34,10 +34,10 @@
         <span class="text">Shift</span>
       </a>
     </li>
-    <li class="<?php echo (basename($_SERVER['REQUEST_URI']) == 'staff') ? 'active' : ''; ?>">
-      <a href="<?php echo URLROOT; ?>/vehiclemanager/staff">
-        <i class="bx bxs-group"></i>
-        <span class="text">Staff</span>
+    <li class="<?php echo (basename($_SERVER['REQUEST_URI']) == 'team') ? 'active' : ''; ?>">
+      <a href="<?php echo URLROOT; ?>/distribution/">
+        <i class="bx bxs-truck"></i>
+        <span class="text">Distribution</span>
       </a>
     </li>
   </ul>

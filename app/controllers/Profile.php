@@ -38,6 +38,23 @@ class Profile extends Controller {
         $this->view('pages/profile', $data);
     }
 
+    public function driver($user_id) {
+        // Check if user is logged in
+        if (!isset($_SESSION['user_id'])) {
+            redirect('users/login');
+        }
+
+        // Get basic user info
+        $userInfo = $this->driverModel->getDriverAndEmployeeDetails($user_id);
+        
+        // Initialize data array
+        $data = [
+            'userInfo' => $userInfo
+        ];
+
+        $this->view('pages/profile/driver_profile', $data);
+    }
+
     public function update() {
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             try {

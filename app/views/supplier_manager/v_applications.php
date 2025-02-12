@@ -105,8 +105,10 @@
                             <td>APP<?= str_pad($application->application_id, 4, '0', STR_PAD_LEFT) ?></td>
                             <td><?= $application->user_name ?></td>
                             <td>
-                                <a href="<?= URLROOT ?>/suppliermanager/confirmSupplierRole/<?= $application->application_id ?>" 
-                                   class="btn-confirm">
+                                <a href="javascript:void(0);" 
+                                   class="btn-confirm"
+                                   onclick="confirmSupplierRole(<?php echo $application->application_id ?>)"
+                                   >
                                     <i class='bx bx-user-check'></i> Confirm Role
                                 </a>
                             </td>
@@ -116,6 +118,30 @@
             </table>
         </div>
     </div>
+
+    <script>
+    function confirmSupplierRole(applicationId) {
+        const data = { application_id: applicationId };
+        fetch('<?= URLROOT ?>/suppliermanager/confirmSupplierRole', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(data)
+        })
+        .then(response => response.json()) // Corrected from respose to response
+        .then(data => {
+            if (data.success) {
+                location.reload(); // Corrected from location.refresh() to location.reload()
+            } else {
+                alert('Error confirming role: ' + (data.message || 'Unknown error')); // Added fallback for message
+            }
+        })
+        .catch(error => {
+            alert('Error confirming role: ' + error.message);
+        });
+    }
+</script>
 
     <!-- Land Inspection Requests -->
 <div class="table-data">

@@ -27,7 +27,7 @@
                             <input type="checkbox" id="remember" name="remember">
                             <label for="remember">Remember me</label>
                         </div>
-                        <a href="<?php echo URLROOT; ?>/auth/reset" class="forgot-password">Forgot password?</a>
+                        <a href="<?php echo URLROOT; ?>/auth/forgotPassword" class="forgot-password">Forgot password?</a>
                     </div>
                     <button type="submit" class="auth-button">Sign In</button>
                     

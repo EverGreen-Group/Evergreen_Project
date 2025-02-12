@@ -1,5 +1,10 @@
 <?php
 require_once APPROOT . '/models/M_Fertilizer_Order.php';
+require_once APPROOT . '/models/M_Supplier.php';
+require_once APPROOT . '/models/M_Route.php';
+require_once APPROOT . '/models/M_Collection.php';
+require_once APPROOT . '/models/M_CollectionSchedule.php';
+require_once APPROOT . '/models/M_Bag.php';
 require_once '../app/helpers/auth_middleware.php';
 require_once APPROOT . '/models/M_Complaint.php';
 require_once APPROOT . '/models/M_LandInspection.php';
@@ -12,11 +17,12 @@ if (session_status() == PHP_SESSION_NONE) {
 class Supplier extends Controller {
 
     private $fertilizerOrderModel;
-    private $landInspectionModel;
-    private $complaintModel;
-    private $collectionSupplierRecordModel;
-    private $paymentModel;
+    private $supplierModel;
+    private $routeModel;
+    private $collectionModel;
 
+    private $scheduleModel;
+    private $bagModel;
     public function __construct() {
         // Check if the user is logged in
         requireAuth();
@@ -30,48 +36,70 @@ class Supplier extends Controller {
 
         // Initialize fertilizer order model
         $this->fertilizerOrderModel = new M_Fertilizer_Order();
-        // Initialize complaint model
-        $this->complaintModel = new M_Complaint();
-        // Initialize land inspection model
-        $this->landInspectionModel = new M_LandInspection();
-        // Initialize collection supplier record model
-        $this->collectionSupplierRecordModel = $this->model('M_CollectionSupplierRecord');
-        // Initialize payment model
-        $this->paymentModel = $this->model('M_Payment');
+        $this->supplierModel = new M_Supplier();
+        $this->routeModel = new M_Route();
+        $this->collectionModel= new M_Collection();
+        $this->scheduleModel= new M_CollectionSchedule();
+        $this->bagModel = new M_Bag();
+        $this->supplierDetails = $this->supplierModel->getSupplierDetailsByUserId($_SESSION['user_id']);
+        $_SESSION['supplier_id'] = $this->supplierDetails->supplier_id;
     }
 
     
     public function index() {
-        // Fetch the supplier ID from the session
-        /*if (isset($_SESSION['supplier_id'])) {
-            $supplier_id = $_SESSION['supplier_id'];
-        } else {
-            // Handle the case where the supplier ID is not set in the session
-            die('Supplier ID not found in session. Please log in.');
-        }*/
 
-        $supplier_id = 2; // Replace with $_SESSION['supplier_id'] when authentication is implemented
-    
-        // Get collection count for current month
-        $data['total_collections'] = $this->collectionSupplierRecordModel->getCurrentMonthCollectionCount($supplier_id);
-        
-        // Get tea collection data for the current month
-        $collectionData = $this->collectionSupplierRecordModel->getMonthlyCollectionData();
-        $data['total_quantity'] = array_sum(array_column($collectionData, 'quantity'));
-        
-        // Get schedule data
-        $data['schedule'] = $this->collectionSupplierRecordModel->getSupplierSchedule($supplier_id);
-        
-        // Get previous and next inspection data
-        $data['previous_inspections'] = $this->landInspectionModel->getPreviousInspectionRequests($supplier_id);
-        $data['next_inspection'] = $this->landInspectionModel->getNextLandInspection($supplier_id);
+        $supplierId = $_SESSION['supplier_id'];
 
-        // Get pending fertilizer orders
-        $data['pending_fertilizer_orders'] = $this->fertilizerOrderModel->getPendingOrdersBySupplier($supplier_id);
+        $collectionId = $this->collectionModel->checkCollectionExistsUsingSupplierId($supplierId);
 
-        // Get yearly collection quantity
-        $data['yearly_quantity'] = $this->collectionSupplierRecordModel->getYearlyCollectionQuantity($supplier_id);
+        try {
+            // Get all schedules
+            $allSchedules = $this->scheduleModel->getUpcomingSchedulesBySupplierId($supplierId);
+            
+            // Organize schedules by day
+            $todaySchedules = [];
+            $upcomingSchedules = [];
+            
+            foreach ($allSchedules as $schedule) {
+                if ($schedule->is_today) {
+                    $todaySchedules[] = $schedule;
+                } else {
+                    $upcomingSchedules[] = $schedule;
+                }
+            }
 
+
+            
+            // Get driver details (assuming you have a driver model)
+            // $driverDetails = $this->driverModel->getDriverById($driverId);
+            
+            $data = [
+                'todaySchedules' => $todaySchedules,
+                'upcomingSchedules' => $upcomingSchedules,
+                'currentWeek' => date('W'),
+                'currentDay' => date('l'),
+                'lastUpdated' => date('Y-m-d H:i:s'),
+                'message' => '',
+                'error' => '',
+                'collectionId' => $collectionId
+            ];
+            
+            if (empty($todaySchedules) && empty($upcomingSchedules)) {
+                $data['message'] = 'No upcoming schedules found.';
+            }
+            
+        } catch (Exception $e) {
+            // Log the error (assuming you have a logging system)
+            error_log($e->getMessage());
+            
+            $data = [
+                'todaySchedules' => [],
+                'upcomingSchedules' => [],
+                'message' => '',
+                'error' => 'An error occurred while fetching schedules. Please try again later.',
+                'collectionId' => $collectionId
+            ];
+        }
         $this->view('supplier/v_supply_dashboard', $data);
     }
     
@@ -99,10 +127,9 @@ class Supplier extends Controller {
 
     public function payments()
     {
-        $fertilizerModel = new M_Fertilizer_Order();
-        $data['orders'] = $fertilizerModel->getAllOrders();
 
-        $this->view('shared/supplier/v_view_monthly_statement', $data);
+
+        $this->view('supplier/v_supplier_payment', []);
     }
 
     public function paymentanalysis()
@@ -474,244 +501,62 @@ class Supplier extends Controller {
         $this->view('supplier/v_schedule_details', $data);
     }
 
-    public function submitComplaint() {
-        // Check if the supplier is logged in
-        /*if (!isset($_SESSION['supplier_logged_in']) || !$_SESSION['supplier_logged_in']) {
-            echo "Error: You must be logged in to place an order.";
-            return;
-        }*/
+    public function collection($collectionId) {
 
-        //TEMP SUPPLIER ID
-        $supplier_id = 2;
-    
-        // Check if it's a POST request
-        if ($_SERVER['REQUEST_METHOD'] == 'POST') {
-    
-            // Debug: Log received POST data
-            error_log('Complaint Submission POST Data: ' . print_r($_POST, true));
-            error_log('Complaint Submission FILES Data: ' . print_r($_FILES, true));
-    
-            // Handle file uploads
-            $uploadedImages = [];
-            if (!empty($_FILES['images']['name'][0])) {
-                $uploadDir = APPROOT . '/public/uploads/complaints/';
-                
-                // Create directory if it doesn't exist
-                if (!file_exists($uploadDir)) {
-                    mkdir($uploadDir, 0777, true);
-                }
-    
-                foreach ($_FILES['images']['tmp_name'] as $key => $tmpName) {
-                    $fileName = uniqid() . '_' . basename($_FILES['images']['name'][$key]);
-                    $uploadPath = $uploadDir . $fileName;
-    
-                    if (move_uploaded_file($tmpName, $uploadPath)) {
-                        $uploadedImages[] = $fileName;
-                    } else {
-                        // Debug: Log file upload failures
-                        error_log('File upload failed for: ' . $fileName);
-                    }
-                }
-            }
+        $collectionDetails = $this->collectionModel->getCollectionDetails($collectionId);
 
-            // Prepare complaint data
-            $complaintData = [
-                'supplier_id' => $supplier_id,          // CHANGE TO $_SESSION['user_id'] AFTER LOGIN IS COMPLETED
-                'complaint_type' => trim($_POST['complaint_type']),
-                'subject' => trim($_POST['subject']),
-                'description' => trim($_POST['description']),
-                'images' => implode(',', $uploadedImages), // Store image filenames as CSV
-                'priority_level' => trim($_POST['priority'])
-            ];
-    
-            // Debug: Log complaint data before submission
-            error_log('Prepared Complaint Data: ' . print_r($complaintData, true));
-    
-            // Submit complaint
-            $result = $this->complaintModel->submitComplaint($complaintData);
-    
-            if ($result) {
-                flash('message', 'Complaint submitted successfully', 'alert alert-success');
-                redirect('supplier/complaints');
-            } else {
-                // Log failure details
-                error_log('Complaint submission failed for user: ' . $_SESSION['user_id']);
-                flash('message', 'Failed to submit complaint. Please try again.', 'alert alert-danger');
-                redirect('supplier/complaints');
-            }
-        } else {
-            // Redirect if not a POST request
-            redirect('supplier/complaints');
-        }
+        $data = [
+            'collectionId' => $collectionId,
+            'collectionDetails' => $collectionDetails
+        ];
+
+        $this->view('supplier/v_collection', $data);
     }
 
-    public function requestInspection() {
-        // Check if the supplier is logged in
-        /*if (!isset($_SESSION['user_id'])) {
-            flash('message', 'Please log in to submit an inspection request', 'alert alert-danger');
-            redirect('login');
+    public function getUnallocatedSuppliersByDay($day) {
+        // Ensure the day parameter is valid
+        if (!in_array($day, ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'])) {
+            echo json_encode(['success' => false, 'message' => 'Invalid day provided']);
             return;
-        }*/
-    
-        // Check if it's a POST request
-        if ($_SERVER['REQUEST_METHOD'] == 'POST') {
-            // Validate and sanitize input
-            $data = [
-                //'supplier_id' => $_SESSION['user_id'], // Using session user_id
-                'supplier_id' => 2,
-                'land_area' => filter_input(INPUT_POST, 'land_area', FILTER_VALIDATE_FLOAT),
-                'location' => trim(filter_input(INPUT_POST, 'location', FILTER_SANITIZE_STRING)),
-                'preferred_date' => trim(filter_input(INPUT_POST, 'preferred_date', FILTER_SANITIZE_STRING)),
-                'comments' => trim(filter_input(INPUT_POST, 'comments', FILTER_SANITIZE_STRING)) ?: null
-            ];
-    
-            // Basic validation
-            $errors = [];
-            if ($data['land_area'] === false || $data['land_area'] <= 0) {
-                $errors[] = 'Invalid land area';
-            }
-            if (empty($data['location'])) {
-                $errors[] = 'Location is required';
-            }
-            if (empty($data['preferred_date'])) {
-                $errors[] = 'Preferred date is required';
-            }
-    
-            if (empty($errors)) {
-                // Initialize land inspection model
-                $landInspectionModel = new M_LandInspection();
-    
-                // Submit inspection request
-                if ($landInspectionModel->submitInspectionRequest($data)) {
-                    flash('message', 'Land inspection request submitted successfully', 'alert alert-success');
-                    redirect('supplier/index');
-                } else {
-                    // Log the error for debugging
-                    error_log('Land Inspection Request Failed: ' . $landInspectionModel->getError());
-                    flash('message', 'Failed to submit land inspection request. Please try again.', 'alert alert-danger');
-                }
-            } else {
-                // If there are validation errors
-                flash('message', implode('<br>', $errors), 'alert alert-danger');
-            }
         }
     
-        // Redirect back to the dashboard or inspection request page
-        redirect('supplier/index');
+        // Fetch unallocated suppliers for the given day
+        $suppliers = $this->routeModel->getUnallocatedSuppliersByDay($day);
+    
+        // Return the response
+        echo json_encode(['success' => true, 'data' => $suppliers]);
     }
 
-    public function getTeaLeavesCollectionData() {
+    public function getBagDetails($collectionId) {
+        // Fetch bag details from the model using the collection ID
+        $bagDetails = $this->bagModel->getBagsByCollectionId($collectionId);
+
+        // Return the bag details as JSON
         header('Content-Type: application/json');
-        
-        try {
-            // Get the data from the model
-            $data = $this->collectionSupplierRecordModel->getMonthlyCollectionData();
-            
-            // Define all months
-            $months = [
-                'January', 'February', 'March', 'April', 'May', 'June',
-                'July', 'August', 'September', 'October', 'November', 'December'
-            ];
-            
-            // Fill in missing months with zero values
-            $complete_data = [];
-            $data_map = array_column($data, 'quantity', 'month');
-            
-            foreach ($months as $month) {
-                $complete_data[] = [
-                    'month' => $month,
-                    'quantity' => floatval($data_map[$month] ?? 0)
-                ];
-            }
-            
-            echo json_encode($complete_data);
-        } catch (Exception $e) {
-            http_response_code(500);
-            echo json_encode(['error' => 'Failed to fetch collection data']);
-        }
+        echo json_encode($bagDetails);
+        exit();
     }
 
-    // Add new method to handle schedule changes
-    public function updateSchedule() {
-        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-            redirect('supplier/index');
-            return;
-        }
+    public function bag($bagId) {
+        // $collectionDetails = $this->collectionModel->getCollectionDetails($collectionId);
 
-        $supplier_id = 2; // Replace with $_SESSION['supplier_id'] when authentication is implemented
-        $new_day = $_POST['new_day'] ?? '';
+        $data = [
+            'bagId' => $bagId,
+            // 'bagDetails' => $collectionDetails
+        ];
 
-        // Convert day name to number (0-6)
-        $dayMap = array_flip(['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday']);
-        $dayNumber = $dayMap[strtolower($new_day)] ?? -1;
-
-        if ($dayNumber === -1) {
-            flash('message', 'Invalid day selected', 'alert alert-danger');
-            redirect('supplier/index');
-            return;
-        }
-
-        if ($this->collectionSupplierRecordModel->updateSupplierSchedule($supplier_id, $dayNumber)) {
-            flash('message', 'Schedule updated successfully', 'alert alert-success');
-        } else {
-            flash('message', 'Failed to update schedule', 'alert alert-danger');
-        }
-
-        redirect('supplier/index');
+        $this->view('supplier/v_bag', $data);
     }
 
-    
-    public function viewMonthlyStatement($month = null) {
-        // Use the current month if none is specified
-        if (!$month) {
-            $month = date('Y-m'); // Format: YYYY-MM
-        }
-        
-        // Validate the month format
-        if (!preg_match('/^\d{4}-\d{2}$/', $month)) {
-            flash('message', 'Invalid month format', 'alert alert-danger');
-            redirect('supplier/index');
-            return;
-        }
-    
-        $supplier_id = 2; // Replace with $_SESSION['supplier_id'] later
-        
-        try {
-            // Get supplier details
-            $supplier = $this->paymentModel->getSupplierDetails($supplier_id);
-            
-            // Get collection data for the specific month
-            $collections = $this->collectionSupplierRecordModel->getMonthlyCollectionsByPeriod(
-                $supplier_id, 
-                date('m', strtotime($month))
-            );
-            
-            // Get fertilizer orders for the month
-            $orders = $this->fertilizerOrderModel->getOrdersByMonth($supplier_id, $month);
-            
-            // Calculate totals
-            $total_tea_income = array_sum(array_column($collections, 'amount'));
-            $total_fertilizer = array_sum(array_column($orders, 'total_price'));
-            
-            // Prepare data for view
-            $data = [
-                'supplier' => $supplier,
-                'collections' => $collections,
-                'orders' => $orders,
-                'total_tea_income' => $total_tea_income,
-                'total_fertilizer' => $total_fertilizer,
-                'net_amount' => $total_tea_income - $total_fertilizer,
-                'current_month' => $month // Ensure this is set
-            ];
-            
-            $this->view('shared/supplier/v_view_monthly_statement', $data);
-            
-        } catch (Exception $e) {
-            error_log("Error in viewMonthlyStatement: " . $e->getMessage());
-            flash('message', 'Error generating monthly statement. Please try again.', 'alert alert-danger');
-            redirect('supplier/index');
-        }
+    public function fertilizer($fertilizerId) {
+        // $collectionDetails = $this->collectionModel->getCollectionDetails($collectionId);
+
+        $data = [
+            'fertilizerId' => $fertilizerId,
+            // 'bagDetails' => $collectionDetails
+        ];
+
+        $this->view('supplier/v_fertilizer', $data);
     }
-    
 }
 ?>

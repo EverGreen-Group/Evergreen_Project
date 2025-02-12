@@ -6,8 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title><?php echo SITENAME; ?></title>
     <link rel="stylesheet" href="<?php echo URLROOT; ?>/public/css/style.css">
-    <link href="https://unpkg.com/boxicons@2.0.9/css/boxicons.min.css" rel="stylesheet" />
-    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500&display=swap" rel="stylesheet">
+    <!-- <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500&display=swap" rel="stylesheet"> -->
 </head>
 <style>
     body {
@@ -32,7 +31,7 @@
         padding: 15px 30px;
         background-color: rgba(255, 255, 255, 0.95);
         border-radius: 50px;
-        box-shadow: 0 2px 15px rgba(0, 0, 0, 0.05);
+        box-shadow: 0 2px 35px rgba(34, 164, 93, 0.2);
         position: relative;
         z-index: 1;
     }
@@ -82,8 +81,8 @@
     }
 
     .nav-button {
-        background-color: #e8ffd4 !important;
-        color: #22a45d !important;
+        background-color: #22a45d !important;
+        color: white !important;
         border: none;
         padding: 8px 20px;
         border-radius: 20px;
@@ -166,10 +165,40 @@
                     class="<?php echo ($_GET['url'] ?? '') === 'pages/store' ? 'active' : ''; ?>">
                     STORE
                 </a>
-                <a href="<?php echo URLROOT; ?>/profile"
-                    class="<?php echo ($_GET['url'] ?? '') === 'profile/' ? 'active' : ''; ?>">
-                    PROFILE
+                <a href="<?php echo URLROOT; ?>/pages/about"
+                    class="<?php echo ($_GET['url'] ?? '') === 'pages/store' ? 'active' : ''; ?>">
+                    ABOUT
                 </a>
+                
+                <?php if (RoleHelper::hasRole(RoleHelper::DRIVER)): ?>
+                    <a href="<?php echo URLROOT; ?>/vehicledriver/index" class="<?php echo ($_GET['url'] ?? '') === 'vehicledriver/index' ? 'active' : ''; ?>">
+                        DASHBOARD
+                    </a>
+                <?php endif; ?>
+
+                <?php if (RoleHelper::hasRole(RoleHelper::SUPPLIER_MANAGER)): ?>
+                    <a href="<?php echo URLROOT; ?>/suppliermanager/index" class="<?php echo ($_GET['url'] ?? '') === 'suppliermanager/index' ? 'active' : ''; ?>">
+                        SUPPLIER MANAGER
+                    </a>
+                <?php endif; ?>
+
+                <?php if (RoleHelper::hasRole(RoleHelper::EMPLOYEE)): ?>
+                    <a href="<?php echo URLROOT; ?>/employeemanager/index" class="<?php echo ($_GET['url'] ?? '') === 'employeemanager/index' ? 'active' : ''; ?>">
+                        EMPLOYEE DASHBOARD
+                    </a>
+                <?php endif; ?>
+
+                <?php if (RoleHelper::isAdmin()): ?>
+                    <a href="<?php echo URLROOT; ?>/admin/index" class="<?php echo ($_GET['url'] ?? '') === 'admin/index' ? 'active' : ''; ?>">
+                        ADMIN DASHBOARD
+                    </a>
+                <?php endif; ?>
+
+                <?php if (isset($_SESSION['user_id'])): ?>
+                    <a href="<?php echo URLROOT; ?>/profile" class="<?php echo ($_GET['url'] ?? '') === 'profile' ? 'active' : ''; ?>">
+                        Profile
+                    </a>
+                <?php endif; ?>
             </div>
             <div class="nav-auth">
                 <?php if (isset($_SESSION['user_id'])): ?>

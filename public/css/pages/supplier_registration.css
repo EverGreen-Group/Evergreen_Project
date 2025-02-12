@@ -1,0 +1,235 @@
+.form-progress {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 2rem;
+  position: relative;
+  max-width: 1000px;
+  margin: 0 auto 2rem;
+}
+
+.progress-step {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  flex: 1;
+  position: relative;
+  padding: 0 10px;
+}
+
+.progress-step::before {
+  content: "";
+  position: absolute;
+  top: 15px;
+  left: -50%;
+  width: 100%;
+  height: 2px;
+  background: #ddd;
+  z-index: 0;
+}
+
+.progress-step:first-child::before {
+  display: none;
+}
+
+.progress-step.active .step-number {
+  background: #22a45d;
+  color: white;
+}
+
+.step-number {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  background: #fff;
+  border: 2px solid #ddd;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 5px;
+  position: relative;
+  z-index: 1;
+  transition: all 0.3s ease;
+}
+
+.step-title {
+  font-size: 0.75rem;
+  color: #666;
+  text-align: center;
+}
+
+.form-step {
+  display: none;
+}
+
+.form-step.active {
+  display: block;
+}
+
+.form-navigation {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 2rem;
+}
+
+.next-btn,
+.prev-btn {
+  padding: 10px 20px;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  font-weight: 600;
+}
+
+.next-btn {
+  background: #22a45d;
+  color: white;
+}
+
+.prev-btn {
+  background: #f0f0f0;
+  color: #333;
+}
+
+.auth-form-container {
+  max-width: 800px;
+}
+
+.input-help {
+  display: block;
+  font-size: 0.8rem;
+  color: #666;
+  margin-top: 0.25rem;
+}
+
+.auth-form-group input:focus,
+.auth-form-group select:focus {
+  border-color: #22a45d;
+  box-shadow: 0 0 0 2px rgba(34, 164, 93, 0.2);
+}
+
+.auth-form-group input.error,
+.auth-form-group select.error {
+  border-color: #dc3545;
+}
+
+.auth-form-group input.error + .input-help {
+  color: #dc3545;
+}
+
+.auth-form-row {
+  display: flex;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.auth-form-row .auth-form-group {
+  flex: 1;
+}
+
+.form-section {
+  margin-bottom: 2rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid #eee;
+}
+
+.section-title {
+  font-size: 1.1rem;
+  color: #333;
+  margin-bottom: 1rem;
+}
+
+.checkbox-group {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  margin-top: 0.5rem;
+  padding: 0.5rem;
+}
+
+.checkbox-item {
+  display: flex;
+  align-items: center;
+  min-width: 120px;
+  background: #f8f9fa;
+  padding: 0.5rem 1rem;
+  border-radius: 4px;
+  border: 1px solid #dee2e6;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.checkbox-item:hover {
+  background: #e9ecef;
+  border-color: #22a45d;
+}
+
+.checkbox-item input[type="checkbox"] {
+  margin-right: 8px;
+  width: 16px;
+  height: 16px;
+  cursor: pointer;
+}
+
+.checkbox-item input[type="checkbox"]:checked + span {
+  color: #2b5a00;
+  font-weight: 500;
+}
+
+.submit-btn {
+  padding: 10px 20px;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  font-weight: 600;
+  background: #22a45d;
+  color: white;
+}
+
+input[type="file"] {
+  padding: 10px;
+  border: 1px dashed #ccc;
+  border-radius: 5px;
+  width: 100%;
+}
+
+input[type="file"]:hover {
+  border-color: #22a45d;
+}
+
+.auth-select {
+  width: 100%;
+  padding: 8px 12px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  background-color: white;
+}
+
+#accountNumber {
+  letter-spacing: 1px;
+  font-family: monospace;
+}
+
+.error {
+  border-color: red !important;
+}
+
+.error-message {
+  color: red;
+  font-size: 0.8em;
+  margin-top: 0.2em;
+  display: block;
+}
+
+/* Add to your existing styles */
+.location-search-input {
+  width: 100%;
+  padding: 8px;
+  margin-top: 10px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+}
+
+#map {
+  border: 1px solid #ddd;
+  border-radius: 4px;
+}

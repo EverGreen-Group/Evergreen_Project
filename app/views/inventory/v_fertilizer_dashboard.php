@@ -1,5 +1,4 @@
-<!DOCTYPE html>
-<html lang="en">
+<?php require APPROOT . '/views/inc/components/header.php'; ?>
 
 <head>
     <meta charset="UTF-8">
@@ -15,7 +14,7 @@
             padding: 20px;
             background-color: #fff;
             border-radius: 8px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
         }
 
         .constraints-order {
@@ -112,110 +111,60 @@
 </head>
 
 <body>
-    <?php require APPROOT . '/views/inc/components/header.php' ?>
     <!-- Top nav bar -->
     <?php require APPROOT . '/views/inc/components/topnavbar.php' ?>
     <!-- Side bar -->
     <?php require APPROOT . '/views/inc/components/sidebar_inventory.php' ?>
 
     <main>
-        <div class="container">
-            <header>
+
+
+        <div class="head-title">
+            <div class="left">
                 <h1>Fertilizer</h1>
+                <ul class="breadcrumb">
+                </ul>
+            </div>
+            <div class="action-buttons">
                 <a href="<?php echo URLROOT; ?>/inventory/createfertilizer">
-                    <button class="filter-btn">+ New fertilizer</button>
+                    <button class="btn btn-primary">
+                        <i class='bx bx-plus'></i>
+                        New fertilizer
+                    </button>
                 </a>
-            </header>
+            </div>
+        </div>
 
-            <section class="summary">
-                <div class="summary-box completed-orders">
-                    <h3>Completed Orders</h3>
-                    <p class="count">1,345</p>
-                    <a href="#" class="details-link">View detail ></a>
-                </div>
 
-                <div class="summary-box cancel-orders">
-                    <h3>Cancel Orders</h3>
-                    <p class="count">12</p>
-                    <a href="#" class="details-link">View detail ></a>
-                </div>
 
-                <div class="summary-box available-orders">
-                    <h3>Available Orders</h3>
-                    <p class="count">200</p>
-                    <a href="#" class="details-link">View detail ></a>
-                </div>
 
-                <div class="summary-box to-be-ordered">
-                    <h3>To be ordered</h3>
-                    <p class="count">120</p>
-                    <a href="#" class="details-link">View detail ></a>
-                </div>
-            </section>
+        <ul class="box-info">
+            <li>
+                <i class='bx bxs-shopping-bag'></i>
+                <span class="text">
+                    <p>Accept Orders</p>
+                    <h3><?php echo isset($data['totalVehicles']) ? $data['totalVehicles'] : '0'; ?></h3>
+                </span>
+            </li>
+            <li>
+                <i class='bx bxs-user'></i>
+                <span class="text">
+                    <p>Reject Orders</p>
+                    <h3><?php echo isset($data['a']) ? $data['a'] : '0'; ?></h3>
+                </span>
+            </li>
+            <li>
+                <i class='bx bxs-user'></i>
+                <span class="text">
+                    <p>Available Orders</p>
+                    <h3><?php echo isset($data['b']) ? $data['b'] : '0'; ?></h3>
+                </span>
+            </li>
+        </ul>
 
-            <section style="display: flex; justify-content: center; align-items: center; padding: 20px; margin: 20px;">
-                <div style="width: 80%; text-align: center;">
-                    <h2>Monthly Fertilizer Usage</h2>
-                    <canvas id="fertilizerChart"></canvas>
-                </div>
-            </section>
 
-            <section class="fertilizer-stock">
-                <h2>Fertilizer Stock</h2>
-                <p>This month (3)</p>
-                <a href="#" class="details-link">View detail ></a>
-
-                <table>
-                    <thead>
-                    <td>Fertilizer name</td>
-                        <td>code</td>
-                        <td>Quantity</td>
-                        <td>update</td>
-                        <td>delete</td>
-                    </thead>
-                    <tbody>
-                        <?php foreach ($data['fertilizer'] as $fertilizer) : ?>
-                        <tr>
-                            <td><?php echo $fertilizer->fertilizer_name; ?></td>
-                            <td><?php echo $fertilizer->code; ?></td>
-                            <td><?php echo $fertilizer->quantity; ?></td>
-                            <td><a href="<?php echo URLROOT; ?>/inventory/updatefertilizer/<?php echo $fertilizer->id; ?>"><button class="update-btn">Update</button></a></td>
-                            <td><a href="<?php echo URLROOT; ?>/inventory/deletefertilizer/<?php echo $fertilizer->id; ?>"><button class="delete-btn">Delete</button></a></td>
-                        </tr>
-                        <?php endforeach; ?>
-                        <!-- <tr>
-
-                            <td>B 589</td>
-                            <td>50kg</td>
-                            <td><button class="update-btn">Update</button></td>
-                            <td><button class="delete-btn">Delete</button></td>
-                        </tr>
-                        <tr>
-
-                            <td>C 450</td>
-                            <td>50kg</td>
-                            <td><button class="update-btn">Update</button></td>
-                            <td><button class="delete-btn">Delete</button></td>
-                        </tr>
-                        <tr>
-
-                            <td>C 345</td>
-                            <td>Content</td>
-                            <td><button class="update-btn">Update</button></td>
-                            <td><button class="delete-btn">Delete</button></td>
-                        </tr>
-                        <tr>
-
-                            <td>B 110</td>
-                            <td>123Kg</td>
-                            <td><button class="update-btn">Update</button></td>
-                            <td><button class="delete-btn">Delete</button></td>
-                        </tr> -->
-                    </tbody>
-                </table>
-
-                <!-- Fertilizer Constraints Section -->
-            <div class="table-data fertilizer-constraints">
+        <!-- Fertilizer Constraints Section -->
+        <!-- <div class="table-data fertilizer-constraints">
                 <div class="constraints-order">
                     <div class="constraints-head">
                         <h3>Fertilizer Request Constraints</h3>
@@ -300,10 +249,80 @@
                         </div>
                     </div>
                 </div>
+            </div> -->
+        <div class="table-data">
+            <div class="order">
+
+                <section
+                    style="display: flex; justify-content: center; align-items: center; padding: 20px; margin: 20px;">
+                    <div style="width: 80%; text-align: center;">
+                        <h2>Monthly Fertilizer Usage</h2>
+                        <canvas id="fertilizerChart"></canvas>
+                    </div>
+                </section>
+
+                <section class="fertilizer-stock">
+                    <h2>Fertilizer Stock</h2>
+                    <p>This month (3)</p>
+                    <a href="#" class="details-link">View detail ></a>
+
+                    <table>
+                        <thead>
+                            <td>Fertilizer name</td>
+                            <td>code</td>
+                            <td>Quantity</td>
+                            <td>update</td>
+                            <td>delete</td>
+                        </thead>
+                        <tbody>
+                            <?php foreach ($data['fertilizer'] as $fertilizer): ?>
+                                <tr>
+                                    <td><?php echo $fertilizer->fertilizer_name; ?></td>
+                                    <td><?php echo $fertilizer->code; ?></td>
+                                    <td><?php echo $fertilizer->quantity; ?></td>
+                                    <td><a
+                                            href="<?php echo URLROOT; ?>/inventory/updatefertilizer/<?php echo $fertilizer->id; ?>"><button
+                                                class="update-btn">Update</button></a></td>
+                                    <td><a
+                                            href="<?php echo URLROOT; ?>/inventory/deletefertilizer/<?php echo $fertilizer->id; ?>"><button
+                                                class="delete-btn">Delete</button></a></td>
+                                </tr>
+                            <?php endforeach; ?>
+                            <!-- <tr>
+
+                            <td>B 589</td>
+                            <td>50kg</td>
+                            <td><button class="update-btn">Update</button></td>
+                            <td><button class="delete-btn">Delete</button></td>
+                        </tr>
+                        <tr>
+
+                            <td>C 450</td>
+                            <td>50kg</td>
+                            <td><button class="update-btn">Update</button></td>
+                            <td><button class="delete-btn">Delete</button></td>
+                        </tr>
+                        <tr>
+
+                            <td>C 345</td>
+                            <td>Content</td>
+                            <td><button class="update-btn">Update</button></td>
+                            <td><button class="delete-btn">Delete</button></td>
+                        </tr>
+                        <tr>
+
+                            <td>B 110</td>
+                            <td>123Kg</td>
+                            <td><button class="update-btn">Update</button></td>
+                            <td><button class="delete-btn">Delete</button></td>
+                        </tr> -->
+                        </tbody>
+                    </table>
+
+
+                </section>
+
             </div>
-
-            </section>
-
         </div>
     </main>
 

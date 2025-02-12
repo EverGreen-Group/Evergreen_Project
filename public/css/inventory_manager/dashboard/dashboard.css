@@ -1,0 +1,375 @@
+.top-selling-section {
+  margin: 40px auto;
+  padding: 20px;
+  background-color: #fff;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+/* Section header */
+.section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.section-header h2 {
+  font-size: 24px;
+  color: #333;
+}
+
+.section-header .view-all {
+  font-size: 16px;
+  color: #27ae60;
+  text-decoration: none;
+}
+
+.section-header .view-all:hover {
+  text-decoration: underline;
+}
+
+/* Product grid */
+.product-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 20px;
+}
+
+.product-card {
+  background-color: #fff;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  padding: 20px;
+  text-align: center;
+  transition: box-shadow 0.3s ease;
+}
+
+.product-card:hover {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.product-card h3 {
+  font-size: 18px;
+  color: #333;
+  margin-bottom: 10px;
+}
+
+.product-card .sold {
+  font-size: 16px;
+  color: #27ae60;
+  font-weight: bold;
+}
+
+/* Pagination */
+.pagination {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-top: 20px;
+}
+
+.pagination button {
+  background-color: #fff;
+  border: 1px solid #e0e0e0;
+  padding: 8px 12px;
+  font-size: 16px;
+  color: #333;
+  margin: 0 5px;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.pagination button:hover {
+  background-color: #27ae60;
+  color: #fff;
+}
+
+.pagination button.active {
+  background-color: #27ae60;
+  color: #fff;
+}
+
+.pagination span {
+  font-size: 16px;
+  margin: 0 5px;
+}
+
+.order table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 20px;
+}
+
+.order th,
+.order td {
+  border: 1px solid #ddd;
+  padding: 8px;
+  text-align: left;
+}
+
+.order th {
+  background-color: #f2f2f2;
+  font-weight: bold;
+}
+
+.order tr:nth-child(even) {
+  background-color: #f9f9f9;
+}
+
+.order tr:hover {
+  background-color: #f5f5f5;
+}
+
+.ap-button {
+  padding: 8px 12px;
+  background-color: #28a745;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.rp-button {
+  padding: 8px 12px;
+  background-color: #2345;
+  color: white;
+  border: none;
+  margin-left: 10px;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+/* Report Modal */
+.report-modal {
+  display: none;
+  position: fixed;
+  z-index: 6000;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.modal-content {
+  background-color: #fff;
+  border-radius: 8px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  width: 90%;
+  max-width: 400px;
+  position: relative;
+  animation: modalPop 0.3s ease-out;
+}
+
+.modal-content h2 {
+  margin: 0;
+  padding: 15px 20px;
+  border-bottom: 1px solid #eee;
+}
+
+.modal-body {
+  padding: 20px;
+}
+
+.modal-body textarea {
+  width: 100%;
+  min-height: 100px;
+  padding: 10px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  resize: vertical;
+}
+
+.modal-footer {
+  padding: 15px 20px;
+  border-top: 1px solid #eee;
+  text-align: right;
+}
+
+.modal-footer button {
+  padding: 8px 16px;
+  background-color: #007bff;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.modal-footer button:hover {
+  background-color: #0056b3;
+}
+
+.close {
+  position: absolute;
+  right: 10px;
+  top: 10px;
+  font-size: 24px;
+  cursor: pointer;
+  color: #666;
+}
+
+.close:hover {
+  color: #333;
+}
+
+#content main .table-data {
+  display: flex;
+}
+
+/*get simaak models */
+.modal {
+  display: none;
+  /* Hidden by default */
+  position: fixed;
+  /* Stay in place */
+  z-index: 6000;
+  /* Sit on top */
+  left: 0;
+  top: 0;
+  width: 100%;
+  /* Full width */
+  height: 100%;
+  /* Full height */
+  overflow: auto;
+  /* Enable scroll if needed */
+  /*background-color: rgb(0, 0, 0);*/
+  /* Fallback color */
+  background-color: rgba(0, 0, 0, 0.6);
+  /* Black w/ opacity */
+  align-items: center;
+  justify-content: center;
+}
+
+.modal-content {
+  background-color: #fefefe;
+  margin: 5% auto;
+  /* Reduced top margin to 5% */
+  padding: 20px;
+  border: 1px solid #888;
+  width: 85%;
+  /* Increased width to 85% of the viewport */
+  max-width: 1000px;
+  /* Set a maximum width for larger screens */
+  border-radius: 8px;
+  /* Optional: round the corners */
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+  /* Optional: add shadow for depth */
+}
+
+@keyframes modalPop {
+  0% {
+    transform: scale(0.8);
+    opacity: 0;
+  }
+
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+/*simak modal part */
+.vehicle-modal-content {
+  padding: 20px;
+}
+
+.vehicle-modal-image {
+  width: 100%;
+  height: 250px;
+  overflow: hidden;
+  border-radius: 8px;
+  margin-bottom: 20px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background-color: #f5f5f5;
+}
+
+.vehicle-modal-image img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  object-position: center;
+}
+
+.vehicle-modal-details {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.detail-group {
+  border-bottom: 1px solid #eee;
+  padding-bottom: 15px;
+}
+
+.detail-group h3 {
+  color: var(--main);
+  margin-bottom: 10px;
+  font-size: 1.2em;
+}
+
+.detail-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 0;
+}
+
+.detail-row .label {
+  color: #666;
+  font-weight: 500;
+  flex: 1;
+}
+
+.detail-row .value {
+  flex: 2;
+  color: #333;
+}
+
+.status-badge {
+  padding: 5px 12px;
+  border-radius: 15px;
+  font-size: 0.9em;
+  display: inline-block;
+  flex-grow: 0;
+}
+
+.status-badge.available {
+  background: #e8f5e9;
+  color: #2e7d32;
+  max-width: 200px;
+}
+
+.status-badge.in-use {
+  background: #e3f2fd;
+  color: #1565c0;
+}
+
+.status-badge.maintenance {
+  background: #fff3e0;
+  color: #ef6c00;
+}
+
+/* Responsive adjustments */
+@media screen and (max-width: 768px) {
+  .vehicle-modal-details {
+    gap: 15px;
+  }
+
+  .detail-row {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 5px;
+  }
+
+  .detail-row .label,
+  .detail-row .value {
+    flex: none;
+  }
+}

@@ -29,87 +29,75 @@ class M_Supplier {
     }
 
 
-    public function getSupplierById($supplierId) {
-        $this->db->query('
-            SELECT 
-                s.supplier_id,
-                s.user_id,
-                s.is_active,
-                s.latitude,
-                s.longitude,
-                u.first_name,
-                u.last_name,
-                u.email,
-                u.nic,
-                u.gender,
-                u.date_of_birth
-            FROM suppliers s 
-            JOIN users u ON s.user_id = u.user_id 
-            WHERE s.supplier_id = :supplier_id
-        ');
-        
-        $this->db->bind(':supplier_id', $supplierId);
-        return $this->db->single();
+    public function confirmSupplierRole($applicationId) {
+        // Step 1: Get the user_id from the supplier_applications table
+        $sql1 = "SELECT user_id, primary_phone FROM supplier_applications WHERE application_id = :application_id";
+        $this->db->query($sql1);
+        $this->db->bind(':application_id', $applicationId);
+        $userIdResult = $this->db->single(); // Assuming single() returns an object
+
+        // Check if userId was found
+        if (!$userIdResult) {
+            error_log("No user found for application ID: " . $applicationId); // Log the error
+            return false; // No user found for the given application ID
+        }
+        $userId = $userIdResult->user_id;
+        $primaryPhone = $userIdResult->primary_phone;
+
+        // Step 2: Get latitude and longitude from application_addresses
+        $sql2 = "SELECT latitude, longitude FROM application_addresses WHERE application_id = :application_id";
+        $this->db->query($sql2);
+        $this->db->bind(':application_id', $applicationId);
+        $addressData = $this->db->single(); // Assuming single() returns an object
+
+        // Check if address data was found
+        if (!$addressData) {
+            error_log("No address found for application ID: " . $applicationId); // Log the error
+            return false; // No address found for the given application ID
+        }
+
+        // Step 3: Insert the new supplier record into the suppliers table
+        $sql3 = "INSERT INTO suppliers (user_id, contact_number application_id, latitude, longitude, preferred_day, is_active, is_deleted) 
+                  VALUES (:user_id, :contact_number, :application_id, :latitude, :longitude, 'Monday', 1, 0)";
+        $this->db->query($sql3);
+        $this->db->bind(':user_id', $userId);
+        $this->db->bind(':contact_number', $primaryPhone);
+        $this->db->bind(':application_id', $applicationId);
+        $this->db->bind(':latitude', $addressData->latitude);
+        $this->db->bind(':longitude', $addressData->longitude);
+
+        // Step 4: Execute the query and check if it was successful
+        if ($this->db->execute()) {
+            // Step 5: Update the user's role_id to 5
+            $sql4 = "UPDATE users SET role_id = 5 WHERE user_id = :user_id";
+            $this->db->query($sql4);
+            $this->db->bind(':user_id', $userId);
+            return $this->db->execute(); // Returns true on success
+        }
+
+        return false; // Return false if the insertion failed
     }
 
-
-    public function getTotalCollectionQuantity($supplierId) {
-        $this->db->query('SELECT SUM(quantity) as total_quantity 
-                         FROM collection_supplier_records 
-                         WHERE supplier_id = :supplier_id');
-        $this->db->bind(':supplier_id', $supplierId);
+    public function checkApplicationStatus($userId) {
+        $sql = "SELECT COUNT(*) as count FROM supplier_applications WHERE user_id = :user_id";
+        $this->db->query($sql);
+        $this->db->bind(':user_id', $userId);
         $result = $this->db->single();
-        return $result->total_quantity ?? 0;
+        return $result->count > 0;
+
     }
 
-    public function getCollectionDaysCount($supplierId) {
-        $this->db->query('SELECT COUNT(DISTINCT DATE(collection_time)) as collection_days 
-                         FROM collection_supplier_records 
-                         WHERE supplier_id = :supplier_id 
-                         AND MONTH(collection_time) = MONTH(CURRENT_DATE())');
-        $this->db->bind(':supplier_id', $supplierId);
-        $result = $this->db->single();
-        return $result->collection_days ?? 0;
+    public function getSupplierDetailsByUserId($userId) {
+        $sql = "
+            SELECT s.*, u.first_name, u.last_name, u.email 
+            FROM suppliers s
+            JOIN users u ON s.user_id = u.user_id
+            WHERE s.user_id = :user_id AND s.is_deleted = 0
+        ";
+        $this->db->query($sql);
+        $this->db->bind(':user_id', $userId);
+        $result = $this->db->single(); // Fetch a single record
+        return $result; // Return the supplier details along with user info
     }
-
-    public function calculatePerformanceRate($totalQuantity, $collectionDays, $dailyTarget = 300) {
-        if ($collectionDays == 0) return 0;
-        $actualDaily = $totalQuantity / $collectionDays;
-        return round(($actualDaily / $dailyTarget) * 100, 2);
-    }
-
-    public function getSupplierByName($searchTerm) {
-        $this->db->query('SELECT s.*, u.first_name, u.last_name 
-                         FROM suppliers s 
-                         JOIN users u ON s.user_id = u.user_id 
-                         WHERE CONCAT(u.first_name, " ", u.last_name) LIKE :search 
-                         AND s.is_active = 1');
-        $this->db->bind(':search', "%$searchTerm%");
-        return $this->db->resultSet();
-    }
-
-    public function getRecentCollections($supplierId, $limit = 5) {
-        $this->db->query('
-            SELECT 
-                csr.collection_time,
-                csr.quantity as initial_weight,
-                csr.collection_id,
-                cb.deductions,
-                cb.capacity_kg,
-                COALESCE(cb.capacity_kg - cb.deductions, csr.quantity) as final_weight
-            FROM collection_supplier_records csr
-            LEFT JOIN collection_bags cb ON csr.collection_id = cb.collection_id
-            WHERE csr.supplier_id = :supplier_id 
-            AND csr.status IN ("Added", "Collected")
-            ORDER BY csr.collection_time DESC
-            LIMIT :limit
-        ');
-    
-        $this->db->bind(':supplier_id', $supplierId);
-        $this->db->bind(':limit', $limit);
-        
-        return $this->db->resultSet();
-    }
-
 
 } 

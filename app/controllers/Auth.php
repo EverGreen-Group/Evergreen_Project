@@ -2,6 +2,9 @@
 
 require_once APPROOT . '/helpers/auth_middleware.php';
 
+use PHPMailer\PHPMailer\PHPMailer;
+use PHPMailer\PHPMailer\Exception;
+
 class Auth extends Controller
 {
     private $userModel;
@@ -22,7 +25,6 @@ class Auth extends Controller
             'first_name' => '',
             'last_name' => '',
             'nic' => '',
-            'gender' => '',
             'date_of_birth' => '',
             'password' => '',
             'error' => ''
@@ -37,7 +39,6 @@ class Auth extends Controller
                 'first_name' => trim($_POST['first_name']),
                 'last_name' => trim($_POST['last_name']),
                 'nic' => trim($_POST['nic']),
-                'gender' => trim($_POST['gender']),
                 'date_of_birth' => trim($_POST['date_of_birth']),
                 'password' => trim($_POST['password']),
                 'error' => ''
@@ -47,12 +48,30 @@ class Auth extends Controller
             if (
                 empty($data['email']) ||
                 empty($data['first_name']) || empty($data['last_name']) ||
-                empty($data['nic']) || empty($data['gender']) ||
+                empty($data['nic']) ||
                 empty($data['date_of_birth']) || empty($data['password'])
             ) {
                 $data['error'] = 'Please fill in all fields';
             } elseif (!filter_var($data['email'], FILTER_VALIDATE_EMAIL)) {
                 $data['error'] = 'Please enter a valid email';
+            } elseif (strlen($data['first_name']) < 2) {
+                $data['error'] = 'First name must be at least 2 characters';
+            } elseif (strlen($data['last_name']) < 2) {
+                $data['error'] = 'Last name must be at least 2 characters';
+            } elseif (!preg_match('/^[0-9]{8,}[XxVv]?$/', $data['nic'])) { // NIC validation for more than 7 digits with optional ending X or V
+                $data['error'] = 'NIC must contain more than 7 digits and may optionally end with X, x, V, or v';
+            } elseif (strlen($data['password']) < 8) { // Password must be at least 8 characters
+                $data['error'] = 'Password must be at least 8 characters long';
+            } elseif (!preg_match('/[A-Z]/', $data['password'])) { // At least one uppercase letter
+                $data['error'] = 'Password must contain at least one uppercase letter';
+            } elseif (!preg_match('/[a-z]/', $data['password'])) { // At least one lowercase letter
+                $data['error'] = 'Password must contain at least one lowercase letter';
+            } elseif (!preg_match('/[0-9]/', $data['password'])) { // At least one number
+                $data['error'] = 'Password must contain at least one number';
+            } elseif (!preg_match('/[\W_]/', $data['password'])) { // At least one special character
+                $data['error'] = 'Password must contain at least one special character';
+            } elseif (!$this->isOlderThan18($data['date_of_birth'])) { // Check if user is older than 18
+                $data['error'] = 'You must be at least 18 years old to register.';
             } elseif ($this->userModel->findUserByEmail($data['email'])) {
                 $data['error'] = 'Email is already registered';
             } elseif ($this->userModel->findUserByNIC($data['nic'])) {
@@ -68,9 +87,40 @@ class Auth extends Controller
 
                     // Register user
                     if ($this->userModel->register($data)) {
-                        // Redirect to login with success message
-                        header('Location: ' . URLROOT . '/auth/login');
-                        exit();
+                        // After successful registration
+                        $verificationCode = bin2hex(random_bytes(16)); // Generate a random verification code
+                        $this->userModel->storeVerificationCode($data['email'], $verificationCode); // Store the code in the database
+
+                        $verificationLink = URLROOT . "/auth/verify?code=" . $verificationCode; // Create verification link
+
+                        // Create a new PHPMailer instance
+                        $mail = new PHPMailer(true);
+                        try {
+                            //Server settings
+                            $mail->isSMTP();                                            // Send using SMTP
+                            $mail->Host       = 'smtp.gmail.com';                   // Set the SMTP server to send through
+                            $mail->SMTPAuth   = true;                                   // Enable SMTP authentication
+                            $mail->Username   = 'simaakniyaz@gmail.com';             // SMTP username
+                            $mail->Password   = 'yslhjwsnmozojika';                // SMTP password
+                            $mail->SMTPSecure = PHPMailer::ENCRYPTION_STARTTLS;       // Enable TLS encryption; `PHPMailer::ENCRYPTION_SMTPS` encouraged
+                            $mail->Port       = 587;                                   // TCP port to connect to
+
+                            //Recipients
+                            $mail->setFrom('your_email@example.com', 'Evergreen Verification Code');
+                            $mail->addAddress($data['email']);                         // Add a recipient
+
+                            // Content
+                            $mail->isHTML(true);                                       // Set email format to HTML
+                            $mail->Subject = 'Email Verification';
+                            $mail->Body    = "Please click the following link to verify your email: <a href='$verificationLink'>$verificationLink</a>";
+
+                            $mail->send();
+                            // Redirect to login with success message
+                            header('Location: ' . URLROOT . '/auth/login');
+                            exit();
+                        } catch (Exception $e) {
+                            $data['error'] = "Message could not be sent. Mailer Error: {$mail->ErrorInfo}";
+                        }
                     } else {
                         $data['error'] = 'Registration failed. Please try again.';
                     }
@@ -81,6 +131,15 @@ class Auth extends Controller
         }
 
         $this->view('auth/v_register', $data);
+    }
+
+    // Helper function to check if the user is older than 18
+    private function isOlderThan18($dateOfBirth)
+    {
+        $dob = new DateTime($dateOfBirth);
+        $today = new DateTime();
+        $age = $today->diff($dob)->y; // Calculate age in years
+        return $age >= 18; // Return true if 18 or older
     }
 
     public function login()
@@ -106,41 +165,69 @@ class Auth extends Controller
             } else {
                 $user = $this->userModel->findUserByEmail($data['username']);
 
+                if ($user) {
+                    // Check if the user is verified
+                    if ($user->verified == 1) {
+                        if (password_verify($data['password'], $user->password)) {
+                            $_SESSION['user_id'] = $user->user_id;
+                            $_SESSION['first_name'] = $user->first_name;
+                            $_SESSION['last_name'] = $user->last_name;
+                            $_SESSION['email'] = $user->email;
+                            $_SESSION['role_id'] = $user->role_id;
 
-                if ($user && password_verify($data['password'], $user->password)) {
-                    $_SESSION['user_id'] = $user->user_id;
-                    $_SESSION['first_name'] = $user->first_name;
-                    $_SESSION['last_name'] = $user->last_name;
-                    $_SESSION['email'] = $user->email;
-                    $_SESSION['role_id'] = $user->role_id;
+                            // Retrieve additional IDs based on role
+                            if ($user->role_id == RoleHelper::DRIVER) {
+                                $driverId = $this->userModel->getDriverId($user->user_id);
+                                $employeeId = $this->userModel->getEmployeeId($user->user_id);
+                                if ($driverId) {
+                                    $_SESSION['driver_id'] = $driverId->driver_id;
+                                }
+                                if ($employeeId) {
+                                    $_SESSION['employee_id'] = $employeeId->employee_id;
+                                }
+                            } elseif (in_array($user->role_id, [RoleHelper::VEHICLE_MANAGER, RoleHelper::INVENTORY_MANAGER, RoleHelper::SUPPLIER_MANAGER])) {
+                                $managerId = $this->userModel->getManagerId($user->user_id);
+                                $employeeId = $this->userModel->getEmployeeId($user->user_id);
+                                if ($managerId) {
+                                    $_SESSION['manager_id'] = $managerId->manager_id;
+                                }
+                                if ($employeeId) {
+                                    $_SESSION['employee_id'] = $employeeId->employee_id;
+                                }
+                            } elseif ($user->role_id == RoleHelper::SUPPLIER) {
+                                $supplierId = $this->userModel->getSupplierId($user->user_id);
+                                if ($supplierId) {
+                                    $_SESSION['supplier_id'] = $supplierId->supplier_id;
+                                }
+                            }
 
-                    // After successful login, redirect based on role
-                    switch (RoleHelper::getRole()) {
-                        case RoleHelper::DRIVER:
-                            header('Location: ' . URLROOT . '/vehicledriver/');
-                            break;
-                        case RoleHelper::VEHICLE_MANAGER:
-                            header('Location: ' . URLROOT . '/vehiclemanager/');
-                            break;
-                        case RoleHelper::SUPPLIER:
-                            header('Location: ' . URLROOT . '/supplier/');
-                            break;
-                        case RoleHelper::ADMIN:
-                            header('Location: ' . URLROOT . '/vehiclemanager/');
-                            break;
-                        case RoleHelper::DRIVING_PARTNER:
-                            header('Location: ' . URLROOT . '/drivingpartner/');
-                            break;
-                        case RoleHelper::INVENTORY_MANAGER:
-                            header('Location: ' . URLROOT . '/inventory/');
-                            break;
-                        case RoleHelper::SUPPLIER_MANAGER:
-                            header('Location: ' . URLROOT . '/suppliermanager/applications/');
-                            break;
-                        default:
-                            header('Location: ' . URLROOT . '/');
+                            // After successful login, redirect based on role
+                            switch (RoleHelper::getRole()) {
+                                case RoleHelper::DRIVER:
+                                    header('Location: ' . URLROOT . '/vehicledriver/');
+                                    break;
+                                case RoleHelper::VEHICLE_MANAGER:
+                                    header('Location: ' . URLROOT . '/vehiclemanager/');
+                                    break;
+                                case RoleHelper::SUPPLIER:
+                                    header('Location: ' . URLROOT . '/supplier/');
+                                    break;
+                                case RoleHelper::ADMIN:
+                                    header('Location: ' . URLROOT . '/vehiclemanager/');
+                                    break;
+                                case RoleHelper::INVENTORY_MANAGER:
+                                    header('Location: ' . URLROOT . '/inventory/');
+                                    break;
+                                default:
+                                    header('Location: ' . URLROOT . '/');
+                            }
+                            exit();
+                        } else {
+                            $data['error'] = 'Invalid credentials';
+                        }
+                    } else {
+                        $data['error'] = 'Your email is not verified. Please check your email for the verification link.';
                     }
-                    exit();
                 } else {
                     $data['error'] = 'Invalid credentials';
                 }
@@ -375,6 +462,133 @@ class Auth extends Controller
             default:
                 return 'Unknown upload error';
         }
+    }
+
+    public function verify()
+    {
+        if (isset($_GET['code'])) {
+            $code = $_GET['code'];
+            if ($this->userModel->verifyEmail($code)) {
+                // Email verified successfully
+                $this->view('auth/v_verify'); // Load the verification success view
+            } else {
+                // Invalid verification code
+                echo "Invalid verification code.";
+            }
+        } else {
+            // No code provided
+            echo "No verification code provided.";
+        }
+    }
+
+    public function forgotPassword()
+    {
+        $data = [
+            'email' => '',
+            'error' => '',
+            'success' => ''
+        ];
+
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            $_POST = filter_input_array(INPUT_POST);
+            $data['email'] = trim($_POST['email']);
+
+            // Validate email
+            if (empty($data['email'])) {
+                $data['error'] = 'Please enter your email address.';
+            } elseif (!$this->userModel->findUserByEmail($data['email'])) {
+                $data['error'] = 'No account found with that email address.';
+            } else {
+                // Generate a password reset token
+                $resetToken = bin2hex(random_bytes(16)); // Generate a random token
+                $this->userModel->storeResetToken($data['email'], $resetToken); // Store the token in the database
+
+                // Create reset link
+                $resetLink = URLROOT . "/auth/resetPassword?token=" . $resetToken;
+
+                // Send email using PHPMailer
+                $mail = new PHPMailer(true);
+                try {
+                    //Server settings
+                    $mail->isSMTP();                                            // Send using SMTP
+                    $mail->Host       = 'smtp.gmail.com';                     // Set the SMTP server to send through
+                    $mail->SMTPAuth   = true;                                   // Enable SMTP authentication
+                    $mail->Username   = 'simaakniyaz@gmail.com';               // SMTP username
+                    $mail->Password   = 'yslhjwsnmozojika';                    // SMTP password
+                    $mail->SMTPSecure = PHPMailer::ENCRYPTION_STARTTLS;       // Enable TLS encryption
+                    $mail->Port       = 587;                                   // TCP port to connect to
+
+                    //Recipients
+                    $mail->setFrom('your_email@example.com', 'Password Reset');
+                    $mail->addAddress($data['email']);                         // Add a recipient
+
+                    // Content
+                    $mail->isHTML(true);                                       // Set email format to HTML
+                    $mail->Subject = 'Password Reset Request';
+                    $mail->Body    = "Please click the following link to reset your password: <a href='$resetLink'>$resetLink</a>";
+
+                    $mail->send();
+                    $data['success'] = 'A password reset link has been sent to your email address.';
+                } catch (Exception $e) {
+                    $data['error'] = "Message could not be sent. Mailer Error: {$mail->ErrorInfo}";
+                }
+            }
+        }
+
+        $this->view('auth/v_forgot_password', $data);
+    }
+
+    public function resetPassword()
+    {
+        $data = [
+            'token' => '',
+            'password' => '',
+            'confirm_password' => '',
+            'error' => ''
+        ];
+
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            $_POST = filter_input_array(INPUT_POST);
+            $data['token'] = trim($_POST['token']);
+            $data['password'] = trim($_POST['password']);
+            $data['confirm_password'] = trim($_POST['confirm_password']);
+
+            // Validate token and passwords
+            if (empty($data['token']) || empty($data['password']) || empty($data['confirm_password'])) {
+                $data['error'] = 'Please fill in all fields.';
+            } elseif ($data['password'] !== $data['confirm_password']) {
+                $data['error'] = 'Passwords do not match.';
+            } elseif (strlen($data['password']) < 8) { // Minimum length check
+                $data['error'] = 'Password must be at least 8 characters long.';
+            } elseif (!preg_match('/[A-Za-z]/', $data['password'])) { // Check for letters
+                $data['error'] = 'Password must contain at least one letter.';
+            } elseif (!preg_match('/[0-9]/', $data['password'])) { // Check for numbers
+                $data['error'] = 'Password must contain at least one number.';
+            } elseif (!preg_match('/[!@#$%^&*(),.?":{}|<>]/', $data['password'])) { // Check for special characters
+                $data['error'] = 'Password must contain at least one special character.';
+            } else {
+                // Verify the token
+                if ($this->userModel->verifyResetToken($data['token'])) {
+                    // Hash the new password
+                    $hashedPassword = password_hash($data['password'], PASSWORD_DEFAULT);
+                    // Update the password in the database
+                    $this->userModel->updatePassword($data['token'], $hashedPassword);
+                    
+                    // Redirect to login page after successful password reset
+                    header('Location: ' . URLROOT . '/auth/login');
+                    exit();
+                } else {
+                    $data['error'] = 'Invalid or expired token.';
+                }
+            }
+        } else {
+            // If GET request, retrieve the token from the URL
+            if (isset($_GET['token'])) {
+                $data['token'] = $_GET['token'];
+            }
+        }
+
+        $this->view('auth/v_reset_password', $data);
     }
 
 }
