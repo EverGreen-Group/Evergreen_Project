@@ -59,25 +59,87 @@
     </div>
 
 
-    <!-- Box Info -->
-    <ul class="box-info">
-        <li>
-            <i class='bx bxs-car'></i>
-            <span class="text">
-                <h3><?php echo $stats['vehicles']->total_vehicles; ?></h3>
-                <p>Vehicles</p>
-                <small><?php echo $stats['vehicles']->total_vehicles; ?> Available</small>
-            </span>
+    <!-- Next Schedule Alert -->
+    <div class="next-schedule-alert">
+        <i class='bx bx-time-five'></i>
+        <div class="schedule-info">
+            <h4>Next Collection Schedule</h4>
+            <p><?php 
+                if ($stats['next_schedule']) {
+                    echo $stats['next_schedule']->route_name . ' - ' . $stats['next_schedule']->start_time;
+                } else {
+                    echo 'No upcoming schedules for today';
+                }
+            ?></p>
+        </div>
+    </div>
+
+
+
+
+    <!-- Replace the old box-info with new Statistics Cards -->
+    <ul class="dashboard-stats">
+        <!-- Vehicle Statistics -->
+        <li class="stat-card">
+            <div class="stat-content">
+                <i class='bx bxs-car'></i>
+                <div class="stat-info">
+                    <h3><?php echo $stats['vehicles']->total_vehicles; ?></h3>
+                    <p>Total Vehicles</p>
+                </div>
+            </div>
+            <div class="stat-details">
+                <span class="active"><?php echo $stats['vehicles']->in_use; ?> In Use</span>
+                <span class="available"><?php echo $stats['vehicles']->available_vehicles; ?> Available</span>
+            </div>
         </li>
-        <li>
-            <i class='bx bxs-user'></i>
-            <span class="text">
-                <h3><?php echo $stats['drivers']->total_drivers; ?></h3>
-                <p>Drivers</p>
-                <small><?php echo $stats['drivers']->available_drivers; ?> Available</small>
-            </span>
+
+        <!-- Driver Statistics -->
+        <li class="stat-card">
+            <div class="stat-content">
+                <i class='bx bxs-user'></i>
+                <div class="stat-info">
+                    <h3><?php echo $stats['drivers']->total_drivers; ?></h3>
+                    <p>Total Drivers</p>
+                </div>
+            </div>
+            <div class="stat-details">
+                <span class="active"><?php echo $stats['collections']->in_progress ?? 0; ?> On Duty</span>
+                <span class="available"><?php echo $stats['drivers']->available_drivers; ?> Available</span>
+            </div>
+        </li>
+
+        <!-- Collection Statistics -->
+        <li class="stat-card">
+            <div class="stat-content">
+                <i class='bx bxs-package'></i>
+                <div class="stat-info">
+                    <h3><?php echo $stats['collections']->in_progress; ?></h3>
+                    <p>Collections in Progress</p>
+                </div>
+            </div>
+            <div class="stat-details">
+                <span class="completed"><?php echo $stats['collections']->completed_today; ?> Completed Today</span>
+            </div>
+        </li>
+
+        <!-- Collection Bags Statistics -->
+        <li class="stat-card">
+            <div class="stat-content">
+                <i class='bx bx-shopping-bag'></i>
+                <div class="stat-info">
+                    <h3><?php echo $stats['bags']->total_bags; ?></h3>
+                    <p>Collection Bags</p>
+                </div>
+            </div>
+            <div class="stat-details">
+                <span class="active"><?php echo $stats['bags']->active_bags; ?> Active</span>
+                <span class="warning"><?php echo $stats['bags']->inactive_bags; ?> Inactive</span>
+            </div>
         </li>
     </ul>
+
+
 
 
 
@@ -329,14 +391,14 @@
                     </select>
                 </div>
 
-                <div class="form-group">
+                <!-- <div class="form-group">
                     <label for="edit_route">Route:</label>
                     <select id="edit_route" name="route_id" required>
-                        <?php foreach ($data['routes'] as $route): ?>
+                        <?php foreach ($data['todayRoutes'] as $route): ?>
                             <option value="<?= $route->route_id; ?>"><?= htmlspecialchars($route->route_name); ?></option>
                         <?php endforeach; ?>
                     </select>
-                </div>
+                </div> -->
 
                 <div class="form-group">
                     <label for="edit_driver">Driver:</label>
@@ -393,6 +455,131 @@
 }
 
 /* Add more statuses as needed */
+
+/* Add more statuses as needed */
+
+.dashboard-stats {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    gap: 20px;
+    margin: 20px 0;
+}
+
+.stat-card {
+    background: var(--light);
+    padding: 20px;
+    border-radius: 10px;
+    transition: transform 0.3s ease;
+    
+}
+
+.stat-card:hover {
+    transform: translateY(-5px);
+}
+
+.stat-content {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+
+.stat-content i {
+    font-size: 2.5rem;
+    color: var(--main);
+}
+
+.stat-info h3 {
+    font-size: 1.8rem;
+    margin-bottom: 5px;
+    color: var(--dark);
+}
+
+.stat-info p {
+    color: #555;
+    font-size: 0.9rem;
+    font-weight: 500;
+    margin: 0;
+    opacity: 1;
+}
+
+.stat-details {
+    margin-top: 15px;
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.85rem;
+}
+
+.stat-details span {
+    padding: 4px 8px;
+    border-radius: 5px;
+}
+
+.stat-details .active {
+    background: rgba(var(--main-rgb), 0.1);
+    color: var(--main);
+}
+
+.stat-details .available {
+    background: rgba(39, 174, 96, 0.1);
+    color: #27ae60;
+}
+
+.stat-details .warning {
+    background: rgba(241, 196, 15, 0.1);
+    color: #f1c40f;
+}
+
+.stat-details .completed {
+    background: rgba(46, 204, 113, 0.1);
+    color: #2ecc71;
+}
+
+.dashboard-stats.secondary {
+    margin-top: 20px;
+}
+
+.dashboard-stats.secondary .stat-card {
+    background: #fff;
+    border: 1px solid rgba(var(--main-rgb), 0.1);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+.dashboard-stats.secondary .stat-content i {
+    color: var(--main);
+}
+
+.dashboard-stats.secondary .stat-info h3 {
+    color: var(--dark);
+}
+
+.dashboard-stats.secondary .stat-info p {
+    color: #555;
+}
+
+.next-schedule-alert {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    background: var(--light);
+    padding: 20px;
+    border-radius: 10px;
+    margin: 20px 0;
+    border-left: 4px solid var(--main);
+}
+
+.next-schedule-alert i {
+    font-size: 2rem;
+    color: var(--main);
+}
+
+.schedule-info h4 {
+    color: var(--dark);
+    margin-bottom: 5px;
+}
+
+.schedule-info p {
+    color: #555;
+}
 </style>
 
 
