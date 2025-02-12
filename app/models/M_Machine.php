@@ -50,4 +50,22 @@ class M_Machine
         return $this->db->execute();
         
     }
+
+    public function leafprice($data){
+        $this->db->query('INSERT INTO leaf_price (normal_leaf_rate, super_leaf_rate, date) VALUES (:normal_leaf_rate, :super_leaf_rate, :date)');
+
+        // Bind parameters
+        $this->db->bind(':leaf_name', $data['leaf_name']);
+        $this->db->bind(':price', $data['price']);
+        $this->db->bind(':date', $data['date']);
+
+        // Execute and return result
+        return $this->db->execute();
+    }
+
+    public function getleafprice()
+    {
+        $this->db->query('SELECT * FROM leaf_price ORDER BY id DESC LIMIT 1');
+        return $this->db->resultSet();
+    }
 }

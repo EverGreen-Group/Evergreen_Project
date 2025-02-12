@@ -177,53 +177,47 @@
 
                 <!-- Moisture Content Deductions -->
                 <div class="config-section">
-                    <h4><i class='bx bx-droplet'></i> Moisture Deductions</h4>
+                    <h4><i class='bx bx-droplet'></i> Fertilizer Stock Limitation</h4>
                     <div class="config-item">
-                        <label>Low Moisture (Below 68%)</label>
+                        <label>Lower Stock Limit</label>
                         <div class="input-control">
-                            <input type="number" value="5" min="0" max="100">
-                            <span class="suffix">% deduction</span>
+                            <input type="number" id="fertilizer_stock_lower" value="200" min="1000" max="10000">
+                            <span class="suffix">kg</span>
                         </div>
                     </div>
                     <div class="config-item">
-                        <label>Optimal Range</label>
+                        <label>Should Import Limit</label>
                         <div class="range-input">
-                            <input type="number" value="68" min="0" max="100">
-                            <span>% to</span>
-                            <input type="number" value="72" min="0" max="100">
-                            <span>%</span>
+                            <input type="number" id="fertilizer_stock_mid_low" value="10000" min="1000" max="20000">
+                            <span>kg to</span>
+                            <input type="number" id="fertilizer_stock_mid_high" value="72000" min="100000" max="70000">
+                            <span>kg</span>
                         </div>
                     </div>
-                    <div class="config-item">
-                        <label>High Moisture (Above 72%)</label>
-                        <div class="input-control">
-                            <input type="number" value="8" min="0" max="100">
-                            <span class="suffix">% deduction</span>
-                        </div>
-                    </div>
+
                 </div>
 
                 <!-- Leaf Age Deductions -->
                 <div class="config-section">
                     <h4><i class='bx bx-time'></i> Leaf Age Deductions</h4>
                     <div class="config-item">
-                        <label>4-6 Hours Old</label>
+                        <label>6-10 Hours Old</label>
                         <div class="input-control">
-                            <input type="number" value="3" min="0" max="100">
+                            <input type="number" id="Leaf_age_1" value="2" min="0" max="100">
                             <span class="suffix">% deduction</span>
                         </div>
                     </div>
                     <div class="config-item">
-                        <label>6-8 Hours Old</label>
+                        <label>1 Day Old</label>
                         <div class="input-control">
-                            <input type="number" value="5" min="0" max="100">
+                            <input type="number" id="Leaf_age_2" value="5">
                             <span class="suffix">% deduction</span>
                         </div>
                     </div>
                     <div class="config-item">
-                        <label>Over 8 Hours Old</label>
+                        <label>Over 1 Day Old</label>
                         <div class="input-control">
-                            <input type="number" value="10" min="0" max="100">
+                            <input type="number" id="Leaf_age_3" value="8">
                             <span class="suffix">% deduction</span>
                         </div>
                     </div>
@@ -498,27 +492,45 @@
     }
 </style>
 <script>
+    const URLROOT = '<?php echo URLROOT; ?>';
+    const UPLOADROOT = '<?php echo UPLOADROOT; ?>';
 
     function saveRateConfig() {
         const normalLeafRate = document.getElementById('normal_leaf_rate').value;
         const superLeafRate = document.getElementById('super_leaf_rate').value;
+        const fertilizerStockLower = document.getElementById('fertilizer_stock_lower').value;
+        const fertilizerStockMidLow = document.getElementById('fertilizer_stock_mid_low').value;
+        const fertilizerStockMidHigh = document.getElementById('fertilizer_stock_mid_high').value;
+        const leafAge1 = document.getElementById('Leaf_age_1').value;
+        const leafAge2 = document.getElementById('Leaf_age_2').value;
+        const leafAge3 = document.getElementById('Leaf_age_3').value;
 
-        // Send the data to the server using fetch or XMLHttpRequest
-        // fetch('saveRateConfig.php', {
-        //     method: 'POST',
-        //     headers: {
-        //         'Content-Type': 'application/json'
-        //     },
-        //     body: JSON.stringify({ normalLeafRate, superLeafRate })
-        // })
-        // .then(response => response.json())
-        // .then(data => {
-        //     console.log(data);
-        // });
+        const postData = {
+            normalLeafRate,
+            superLeafRate,
+            fertilizerStockLower,
+            fertilizerStockMidLow,
+            fertilizerStockMidHigh,
+            leafAge1,
+            leafAge2,
+            leafAge3
+        };
+
+
+        const url = `${URLROOT}/inventory/payments`;
+        fetch(url, { 
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(postData)
+        })
+           
+           
+        
 
         // For demonstration purposes
-        console.log('Normal Leaf Rate:', normalLeafRate);
-        console.log('Super Leaf Rate:', superLeafRate);
+        console.log(postData);
     }
 
     document.querySelectorAll('.clickable-row').forEach(row => {

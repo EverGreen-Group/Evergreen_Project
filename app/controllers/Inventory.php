@@ -29,11 +29,11 @@ class Inventory extends controller
 
     public function index()
     {
-        if ($_SERVER ['REQUEST_METHOD'] =='POST'){
+        if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             $report = ['report' => $_POST['report']];
 
-            
-            
+
+
         }
         $totalstock = $this->stockvalidate->gettodaytotalstock();
         $products = $this->productModel->getAllProducts();
@@ -52,7 +52,7 @@ class Inventory extends controller
 
         ];
 
-        
+
         $this->view('inventory/v_dashboard', $data);
         //var_dump($data);
     }
@@ -210,7 +210,7 @@ class Inventory extends controller
     public function createfertilizer()
     {
         if ($_SERVER['REQUEST_METHOD'] == 'POST') {
-             $_POST = filter_input_array(INPUT_POST);
+            $_POST = filter_input_array(INPUT_POST);
 
             $data = [
                 'fertilizer_name' => $_POST['fertilizer_name'],
@@ -237,7 +237,7 @@ class Inventory extends controller
 
                 // Create upload directory if it doesn't exist
                 if (!file_exists($uploadDir)) {
-                   // mkdir($uploadDir, 0777, true);
+                    // mkdir($uploadDir, 0777, true);
                 }
 
                 // Generate unique filename
@@ -249,13 +249,12 @@ class Inventory extends controller
                 if (move_uploaded_file($_FILES['fertilizer_image']['tmp_name'], $uploadPath)) {
                     $data['image_path'] = $uniqueFilename;
                 }
-            }
-            else {
+            } else {
                 print_r("no file found");
             }
 
-           
-            
+
+
 
             //validation
             if (empty($data['fertilizer_name'])) {
@@ -348,7 +347,7 @@ class Inventory extends controller
                 && !empty($data['code']) && !empty($data['price']) && !empty($data['quantity']) && !empty($data['unit'])
             ) {
 
-                
+
             }
 
         } else {
@@ -367,7 +366,7 @@ class Inventory extends controller
         if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['form'])) {
             // Sanitize POST data
             $_POST = filter_input_array(INPUT_POST);
-          // Collect form data
+            // Collect form data
 
             $data = [
                 'machine_name' => trim($_POST['machine_name']),
@@ -381,13 +380,21 @@ class Inventory extends controller
 
             // Validate data
             $errors = [];
-            if (empty($data['machine_name'])) $errors['machine_name'] = 'Machine name is required.';
-            if (empty($data['brand'])) $errors['brand'] = 'Brand is required.';
-            if (empty($data['started_date'])) $errors['started_date'] = 'Started date is required.';
-            if (empty($data['last_maintenance'])) $errors['last_maintenance'] = 'Last maintenance is required.';
-            if (empty($data['next_maintenance'])) $errors['next_maintenance'] = 'Next maintenance is required.';
-            if (empty($data['total_working_hours'])) $errors['total_working_hours'] = 'Total working hours are required.';
-            if (empty($data['special_notes'])) $errors['special_notes'] = 'Special notes are required.';
+            if (empty($data['machine_name']))
+                $errors['machine_name'] = 'Machine name is required.';
+            if (empty($data['brand']))
+                $errors['brand'] = 'Brand is required.';
+            if (empty($data['started_date']))
+                $errors['started_date'] = 'Started date is required.';
+            if (empty($data['last_maintenance']))
+                $errors['last_maintenance'] = 'Last maintenance is required.';
+            if (empty($data['next_maintenance']))
+                $errors['next_maintenance'] = 'Next maintenance is required.';
+            if (empty($data['total_working_hours']))
+                $errors['total_working_hours'] = 'Total working hours are required.';
+            if (empty($data['special_notes']))
+                $errors['special_notes'] = 'Special notes are required.';
+
 
             if (empty($errors)) {
                 // Save the data to the database
@@ -403,37 +410,36 @@ class Inventory extends controller
                 }
             } else {
                 // Load the form view with errors
+                var_dump($errors);
+                var_dump($data);
                 $this->view('inventory/v_machineallocation', $data);
             }
-        }
-        elseif (isset($_GET['id']) && isset($_POST['status_allocate'])) {
-            $us=$_GET['id'];
+        } elseif (isset($_GET['id']) && isset($_POST['status_allocate'])) {
+            $us = $_GET['id'];
 
             $machineModel = $this->model('M_Machine');
             $machineModel->updateMachineByStatus($us, 'Allocated');
             redirect('Inventory/machine');
-            
-        }
-        elseif (isset($_GET['id']) && isset($_POST['status_deallocate'])) {
-            $us=$_GET['id'];
+
+        } elseif (isset($_GET['id']) && isset($_POST['status_deallocate'])) {
+            $us = $_GET['id'];
 
             $machineModel = $this->model('M_Machine');
             $machineModel->updateMachineByStatus($us, 'Repair');
             redirect('Inventory/machine');
-            
-        }
-        else {
+
+        } else {
             // GET request
-            $machines= $this->machineModel->getmachines();
+            $machines = $this->machineModel->getmachines();
             $data = [
                 'machines' => $machines
             ];
             // Load the form view for GET requests
-            $this->view('inventory/v_machineallocation',$data);
+            $this->view('inventory/v_machineallocation', $data);
             //var_dump($data);
         }
 
-        
+
         $this->view('inventory/v_machineallocation', $data);
         //var_dump($data);
     }
@@ -580,17 +586,47 @@ class Inventory extends controller
 
     public function payments()
     {
-        $data = [];
-        $this->view('inventory/v_payments', $data);
+        $jsonData = file_get_contents("php://input");
+        $input = json_decode($jsonData, true);
+
+        if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+
+            $existingData = this->machineModel->getleafprice();
+
+            
+            $data1 =[
+                'normalLeafRate' => $input['normalLeafRate'],
+                'superLeafRate'=> $input['superLeafRate']
+            ];
+
+            $data2=[
+                'fertilizerStockLower' => $input['fertilizerStockLower'],
+                'fertilizerStockMidLow'=> $input['fertilizerStockMidLow'],
+                'fertilizerStockMidHigh'=> $input['fertilizerStockMidHigh']
+            ];
+
+            $data3=[
+                'leafAge1'=> $input['leafAge1'],
+                'leafAge2'=> $input['leafAge2'],
+                'leafAge3'=> $input['leafAge3']
+            ];  
+
+
+        }
+
+        
+
+        $this->view('inventory/v_payments');
     }
 
-    public function getStockValidations() {
+    public function getStockValidations()
+    {
         // Get status filter if provided
         $status = isset($_GET['status']) ? $_GET['status'] : 'All';
-        
+
         // Get the data from model
         $stocks = $this->stockvalidate->getvalidateStocks($status);
-        
+
         // Return JSON response
         header('Content-Type: application/json');
         echo json_encode($stocks);
@@ -598,7 +634,7 @@ class Inventory extends controller
     }
 
 
-    
+
 
 
 

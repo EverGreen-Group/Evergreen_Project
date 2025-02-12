@@ -1,4 +1,5 @@
 <?php require APPROOT . '/views/inc/components/header.php'; ?>
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -27,69 +28,61 @@
             </div>
         </div>
 
+        <div style="display: flex;">
+            <div class="table-data">
 
-        <div class="table-data">
-
-            <div class="">
-                <table>
-                    <thead>
-                        <tr>
-                            <th>Machine</th>
-                            <th>Status</th>
-                            <th>Button</th>
-                            <th>Button</th>
-                            <th>Details</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <!-- <pre><?= print_r($data) ?></pre> -->
-                        <?php foreach ($data['machines'] as $machine): ?>
+                <div class="">
+                    <table>
+                        <thead>
                             <tr>
-
-                                <td>
-                                    <div class="machine-info">
-                                        <span class="machine-icon"></span>
-                                        <span><?php echo $machine->machine_name; ?></span>
-                                    </div>
-                                </td>
-                                <td><span class="status-completed"><?php echo $machine->status; ?></span></td>
-                                <td>
-                                    <form method="POST"
-                                        action="<?php echo URLROOT; ?>/Inventory/machine?id=<?php echo $machine->id; ?>">
-                                        <button type="submit" name="status_allocate" class="btn btn-primary">Allocate</button>
-                                    </form>
-                                </td>
-                                <td>
-                                    <form method="POST"
-                                        action="<?php echo URLROOT; ?>/Inventory/machine?id=<?php echo $machine->id; ?>">
-                                        <button type="submit" name="status_deallocate"
-                                            class="btn btn-secondary">Deallocate</button>
-                                    </form>
-                                </td>
-                                <td><button class="btn detail" onclick="">details</button></td>
+                                <th>Machine</th>
+                                <th>Status</th>
+                                <th>Button</th>
+                                <th>Button</th>
+                                <th>Details</th>
                             </tr>
-                        <?php endforeach; ?>
-                    </tbody>
-                </table>
-            </div>
+                        </thead>
+                        <tbody>
+                            <!-- <pre><?= print_r($data) ?></pre> -->
+                            <?php foreach ($data['machines'] as $machine): ?>
+                                <tr>
+
+                                    <td>
+                                        <div class="machine-info">
+                                            <span class="machine-icon"></span>
+                                            <span><?php echo $machine->machine_name; ?></span>
+                                        </div>
+                                    </td>
+                                    <td><span class="status completed"><?php echo $machine->status; ?></span></td>
+                                    <td>
+                                        <form method="POST"
+                                            action="<?php echo URLROOT; ?>/Inventory/machine?id=<?php echo $machine->id; ?>">
+                                            <button type="submit" name="status_allocate"
+                                                class="btn btn-primary">Allocate</button>
+                                        </form>
+                                    </td>
+                                    <td>
+                                        <form method="POST"
+                                            action="<?php echo URLROOT; ?>/Inventory/machine?id=<?php echo $machine->id; ?>">
+                                            <button type="submit" name="status_deallocate"
+                                                class="btn btn-tertiary">Deallocate</button>
+                                        </form>
+                                    </td>
+                                    <td><button class="btn detail" onclick="">details</button></td>
+                                </tr>
+                            <?php endforeach; ?>
+                        </tbody>
+                    </table>
+                </div>
 
 
-            <div id="openAddMachineModal" class="modal">
-                <div class="modal-content">
-                    <span class="close" onclick="closeModal('openAddMachineModal')">&times;</span>
-                    <h2>Add New Machine</h2>
-                    <div id="addMachineContent">
-                        <!-- Machine details will be populated here -->
-                    </div>
+                <div class="table-data">
+                    <h2>Weekly Machine Allocation Statistics</h2>
+                    <canvas id="machineAllocationChart"></canvas>
+                </div>
+
                 </div>
             </div>
-
-            <div class="chart-container"
-                style="margin: 20px; padding: 20px; background: white; border-radius: 10px; width: 98%;">
-                <h2>Weekly Machine Allocation Statistics</h2>
-                <canvas id="machineAllocationChart"></canvas>
-            </div>
-
             <div class="chart-container"
                 style="margin: 20px; padding: 20px; background: white; border-radius: 10px; width: 98%;">
                 <h1>Add New Machine Form</h1>
@@ -131,7 +124,7 @@
                     <button type="submit" class="btn-submit">Submit</button>
                 </form>
             </div>
-        </div>
+        
     </main>
 </body>
 
