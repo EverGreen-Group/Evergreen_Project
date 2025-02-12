@@ -291,7 +291,7 @@ class M_Route {
         $currentDay = date('l'); // Get the current day (e.g., 'Tuesday')
     
         $this->db->query("
-            SELECT r.*, v.license_plate 
+            SELECT DISTINCT r.*, v.license_plate 
             FROM routes r
             JOIN collection_schedules cs ON r.route_id = cs.route_id 
             JOIN vehicles v ON r.vehicle_id = v.vehicle_id 
