@@ -86,7 +86,7 @@
             <div class="chart-container"
                 style="margin: 20px; padding: 20px; background: white; border-radius: 10px; width: 98%;">
                 <h1>Add New Machine Form</h1>
-                <form name="form" action="<?php echo URLROOT ?>/Inventory/machine" method="POST">
+                <form name="abcd" action="<?php echo URLROOT ?>/Inventory/machine" method="POST">
                     <div class="form-group">
                         <label for="machine-name">Machine Name</label>
                         <input type="text" id="machine-name" name="machine_name" placeholder="Enter Machine Name"

@@ -363,8 +363,9 @@ class Inventory extends controller
 
     public function machine()
     {
-        if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['form'])) {
+        if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['machine_name'])) {
             // Sanitize POST data
+            var_dump($_POST);
             $_POST = filter_input_array(INPUT_POST);
             // Collect form data
 
@@ -396,6 +397,7 @@ class Inventory extends controller
                 $errors['special_notes'] = 'Special notes are required.';
 
 
+                var_dump($data);
             if (empty($errors)) {
                 // Save the data to the database
                 $machineModel = $this->model('M_Machine');
@@ -411,7 +413,7 @@ class Inventory extends controller
             } else {
                 // Load the form view with errors
                 var_dump($errors);
-                var_dump($data);
+                
                 $this->view('inventory/v_machineallocation', $data);
             }
         } elseif (isset($_GET['id']) && isset($_POST['status_allocate'])) {
