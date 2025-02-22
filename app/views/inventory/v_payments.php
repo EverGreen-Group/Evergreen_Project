@@ -5,6 +5,9 @@
 <!-- Top nav bar -->
 <?php require APPROOT . '/views/inc/components/topnavbar.php'; ?>
 
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
+
 <!-- MAIN -->
 <main>
     <div class="head-title">
@@ -23,7 +26,7 @@
             </ul>
         </div>
         <div class="head-actions">
-            <button class="btn-download" onclick="downloadPaymentReport()">
+            <button class="btn-download" onclick="downloadReport()">
                 <i class='bx bx-download'></i> Export Report
             </button>
         </div>
@@ -228,6 +231,20 @@
 </main>
 </div>
 </section>
+<?php
+use Barryvdh\DomPDF\Facade as PDF;
+
+ function downloadReport()
+{
+    $students = [
+        ['name' => 'John Doe', 'date' => '2024-02-17', 'status' => 'Present'],
+        ['name' => 'Jane Smith', 'date' => '2024-02-17', 'status' => 'Absent']
+    ];
+
+    $pdf = PDF::loadView('report', compact('students'));
+    return $pdf->download('attendance_report.pdf');
+}
+?>
 
 <style>
     /* Stats Grid */
@@ -492,6 +509,7 @@
     }
 </style>
 <script>
+
     const URLROOT = '<?php echo URLROOT; ?>';
     const UPLOADROOT = '<?php echo UPLOADROOT; ?>';
 
@@ -551,8 +569,28 @@
         // Reload the page with the selected year
         window.location.href = `<?php echo URLROOT; ?>/supplier/payments/${selectedYear}`;
     });
+    function downloadReport() {
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF();
 
+    doc.setFont("helvetica", "bold");
+    doc.text("Attendance Report", 20, 20);
 
+    const students = [
+        { name: "John Doe", date: "2024-02-17", status: "Present" },
+        { name: "Jane Smith", date: "2024-02-17", status: "Absent" }
+    ];
+
+    let y = 40; // Y position for text
+    doc.setFont("helvetica", "normal");
+
+    students.forEach((student, index) => {
+        doc.text(`${index + 1}. ${student.name} | ${student.date} | ${student.status}`, 20, y);
+        y += 10;
+    });
+
+    doc.save("attendance_report.pdf");
+}
 
 </script>
 </body>
