@@ -7,18 +7,83 @@ main {
     align-items: center;
 }
 
+/*here*/
+
+.chat-container {
+    display: flex;
+    height: 100vh;
+}
+
+.suppliers-sidebar {
+    width: 300px;
+    padding: 10px;
+    overflow-y: auto;
+}
+
+.suppliers-sidebar .list-group-item {
+    display: flex;
+    align-items: center;
+    padding: 10px;
+}
+
+.suppliers-sidebar .img-thumbnail {
+    margin-right: 10px;
+}
+
+.chat-area {
+    flex: 1;
+    padding: 20px;
+    overflow-y: auto;
+}
+
+#messages_area {
+    height: 75vh;
+    overflow-y: auto;
+    background-color: #e6e6e6;
+    padding: 10px;
+}
+
+.input-group {
+    margin-top: 10px;
+}
+
+.edit-message-modal {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: white;
+    padding: 20px;
+    border: 1px solid #ccc;
+    box-shadow: 0 0 10px rgba(0,0,0,0.1);
+    z-index: 1000;
+}
+
+.modal-content textarea {
+    width: 100%;
+    height: 100px;
+    margin-bottom: 10px;
+}
+
+.modal-buttons button {
+    margin-right: 10px;
+}
+
+/*here*/
+
 /* Chat Container Layout */
 .chat-container {
     width: 95%;
     max-width: 1400px;
-    height: auto;
+    height: 100%;
     display: grid;
-    grid-template-columns: 280px 1fr 300px;
+    grid-template-columns: 280px 1fr;
+    grid-template-rows: 1fr;
     gap: 0;
     background: #fff;
     border-radius: 12px;
     box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-    margin: auto;
+    min-height: 0;
 }
 
 /* Left Sidebar */
@@ -97,6 +162,7 @@ main {
     flex-direction: column;
     height: 100%;
     position: relative;
+    min-height: 0;
 }
 
 .chat-interface {
@@ -112,9 +178,11 @@ main {
 }
 
 .messages {
-    height: 100%;
+    height: auto;
+    min-height: 0;
     overflow-y: auto;
     padding: 20px;
+    flex: 1;
 }
 
 .chat-header {
@@ -135,28 +203,105 @@ main {
 }
 
 .message {
-    max-width: 65%;
-    margin: 10px 0;
+    width: fit-content;
+    max-width: 70%;
+    margin: 10px;
+    padding: 12px 15px;
+    border-radius: 10px;
+    position: relative;
+    word-wrap: break-word;
 }
 
 .message.sent {
     margin-left: auto;
+    background-color: #dcf8c6;
+    border-radius: 15px 0 15px 15px;
+}
+
+.message.received {
+    margin-right: auto;
+    background-color: #fcfcfc;
+    border-radius: 0 15px 15px 15px;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+}
+
+.message-container {
+    position: relative;
+    display: flex;
+    align-items: flex-start;
 }
 
 .message-content {
-    padding: 12px 16px;
-    border-radius: 12px;
-    position: relative;
+    flex-grow: 1;
 }
 
-.message.sent .message-content {
-    background: #10b981;
-    color: white;
+.message-actions {
+    display: none;
+    position: absolute;
+    right: 0;
+    top: -25px;
+    background: white;
+    border-radius: 5px;
+    padding: 4px;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+    gap: 5px;
+    z-index: 10;
 }
 
-.message.received .message-content {
-    background: #f3f4f6;
-    color: #111827;
+.message:hover .message-actions {
+    display: flex;
+}
+
+.message-actions button {
+    border: none;
+    background: none;
+    cursor: pointer;
+    padding: 4px;
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+}
+
+.edit-msg-btn {
+    color: #4CAF50;
+}
+
+.delete-msg-btn {
+    color: #f44336;
+}
+
+.message-actions button:hover {
+    background-color: rgba(0, 0, 0, 0.05);
+}
+
+/* Make sure icons are visible */
+.bx {
+    font-size: 1.2rem;
+    pointer-events: none;
+}
+
+/* Edit message modal */
+.edit-message-modal {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0,0,0,0.5);
+    z-index: 1000;
+}
+
+.edit-message-modal .modal-content {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background-color: white;
+    padding: 20px;
+    border-radius: 8px;
+    width: 90%;
+    max-width: 500px;
 }
 
 /* Chat Input */
@@ -320,79 +465,6 @@ main {
     background: #059669;
 }
 
-/* Chat Request Styles */
-.chat-request {
-    background: #ffffff;
-    border-radius: 8px;
-    padding: 15px;
-    margin: 10px 0;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-    transition: opacity 0.3s ease;
-}
-
-.request-info {
-    margin-bottom: 10px;
-}
-
-.request-info h4 {
-    margin: 0;
-    color: #1f2937;
-    font-size: 1rem;
-}
-
-.request-info p {
-    margin: 5px 0 0;
-    color: #6b7280;
-    font-size: 0.9rem;
-}
-
-.request-actions {
-    display: flex;
-    gap: 10px;
-}
-
-.accept-btn, .reject-btn {
-    padding: 8px 16px;
-    border: none;
-    border-radius: 6px;
-    font-weight: 500;
-    cursor: pointer;
-    transition: all 0.2s ease;
-}
-
-.accept-btn {
-    background-color: #10b981;
-    color: white;
-}
-
-.accept-btn:hover {
-    background-color: #059669;
-}
-
-.reject-btn {
-    background-color: #ef4444;
-    color: white;
-}
-
-.reject-btn:hover {
-    background-color: #dc2626;
-}
-
-.reject-btn:disabled, .accept-btn:disabled {
-    opacity: 0.6;
-    cursor: not-allowed;
-}
-
-/* Chat Container Layout */
-.chat-container {
-    display: grid;
-    grid-template-columns: 250px 1fr 300px;
-    gap: 20px;
-    height: auto;
-    padding: 20px;
-
-}
-
 /* Responsive Design */
 @media screen and (max-width: 1200px) {
     .chat-container {
@@ -403,23 +475,6 @@ main {
 @media screen and (max-width: 992px) {
     .chat-container {
         grid-template-columns: 200px 1fr;
-    }
-    
-    .requests-sidebar {
-        position: fixed;
-        top: 60px;
-        right: 0;
-        width: 300px;
-        height: 100vh;
-        background: white;
-        box-shadow: -2px 0 5px rgba(0,0,0,0.1);
-        transform: translateX(100%);
-        transition: transform 0.3s ease;
-        z-index: 1000;
-    }
-    
-    .requests-sidebar.active {
-        transform: translateX(0);
     }
     
     .toggle-requests {
@@ -437,51 +492,37 @@ main {
 }
 
 @media screen and (max-width: 768px) {
+    main {
+        padding: 10px;
+    }
+
     .chat-container {
+        width: 100%;
+        height: 100vh;
         grid-template-columns: 1fr;
     }
-    
+
     .suppliers-sidebar {
         position: fixed;
         left: 0;
-        top: 60px;
-        width: 250px;
-        height: 100vh;
-        background: white;
+        top: 0;
+        width: 80%;
+        height: 100%;
+        z-index: 1000;
         transform: translateX(-100%);
         transition: transform 0.3s ease;
-        z-index: 1000;
     }
-    
+
     .suppliers-sidebar.active {
         transform: translateX(0);
     }
-    
-    .toggle-suppliers {
-        display: block;
-        position: fixed;
-        left: 20px;
-        bottom: 20px;
-        padding: 12px;
-        border-radius: 50%;
-        background: #10b981;
-        color: white;
-        box-shadow: 0 2px 5px rgba(0,0,0,0.2);
-        z-index: 1001;
+
+    .message {
+        max-width: 85%;
     }
-    
-    .chat-interface {
-        height: calc(100vh - 120px);
-    }
-    
-    .request-actions {
-        flex-direction: row;
-        gap: 8px;
-    }
-    
-    .accept-btn, .reject-btn {
-        padding: 6px 12px;
-        font-size: 0.9rem;
+
+    .message-actions {
+        top: -20px;
     }
 }
 
@@ -490,22 +531,6 @@ main {
         padding: 10px;
     }
     
-    .chat-request {
-        padding: 12px;
-    }
-    
-    .request-info h4 {
-        font-size: 0.95rem;
-    }
-    
-    .request-info p {
-        font-size: 0.85rem;
-    }
-    
-    .accept-btn, .reject-btn {
-        padding: 5px 10px;
-        font-size: 0.85rem;
-    }
 }
 
 /* Animation for sidebars */
@@ -533,4 +558,150 @@ main {
     .toggle-btn {
         display: block;
     }
+}
+
+/* Add these styles for message actions */
+.message {
+    position: relative;
+}
+
+.message-actions {
+    position: absolute;
+    top: -20px;
+    right: 5px;
+    display: none;
+    gap: 8px;
+    background: rgba(255, 255, 255, 0.9);
+    padding: 4px 8px;
+    border-radius: 4px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.message:hover .message-actions {
+    display: flex;
+}
+
+.message-actions button {
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 2px;
+    transition: all 0.2s ease;
+}
+
+.edit-msg-btn {
+    color: #4CAF50;
+}
+
+.edit-msg-btn:hover {
+    color: #45a049;
+}
+
+.delete-msg-btn {
+    color: #f44336;
+}
+
+.delete-msg-btn:hover {
+    color: #da190b;
+}
+
+/* Modal styles for edit message */
+.edit-message-modal {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 1000;
+}
+
+.modal-content {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: white;
+    padding: 20px;
+    border-radius: 8px;
+    width: 90%;
+    max-width: 500px;
+}
+
+.modal-content h3 {
+    margin-bottom: 15px;
+    color: #333;
+}
+
+.modal-content textarea {
+    width: 100%;
+    min-height: 100px;
+    padding: 10px;
+    margin-bottom: 15px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    resize: vertical;
+}
+
+.modal-buttons {
+    display: flex;
+    gap: 10px;
+    justify-content: flex-end;
+}
+
+.modal-buttons button {
+    padding: 8px 16px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+#save-edit-btn {
+    background: #4CAF50;
+    color: white;
+}
+
+#save-edit-btn:hover {
+    background: #45a049;
+}
+
+.modal-buttons button:last-child {
+    background: #f44336;
+    color: white;
+}
+
+.modal-buttons button:last-child:hover {
+    background: #da190b;
+}
+
+/* Custom Scrollbar Styling */
+.messages::-webkit-scrollbar,
+.suppliers-list::-webkit-scrollbar {
+    width: 8px;
+}
+
+.messages::-webkit-scrollbar-track,
+.suppliers-list::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 4px;
+}
+
+.messages::-webkit-scrollbar-thumb,
+.suppliers-list::-webkit-scrollbar-thumb {
+    background: #c1c1c1;
+    border-radius: 4px;
+}
+
+.messages::-webkit-scrollbar-thumb:hover,
+.suppliers-list::-webkit-scrollbar-thumb:hover {
+    background: #a8a8a8;
+}
+
+/* For Firefox */
+.messages,
+.suppliers-list {
+    scrollbar-width: thin;
+    scrollbar-color: #c1c1c1 #f1f1f1;
 }

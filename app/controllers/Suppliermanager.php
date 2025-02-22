@@ -16,6 +16,7 @@ require_once '../app/models/M_SupplierApplication.php';
 require_once '../app/models/M_Supplier.php';
 require_once '../app/models/M_Chat.php';
 
+
 class SupplierManager extends Controller {
     private $vehicleManagerModel;
     private $routeModel;       // Declare a variable for Route model
@@ -35,10 +36,11 @@ class SupplierManager extends Controller {
     
 
     public function __construct() {
-        // Check if user is logged in
-        // requireAuth();
+        if(!isLoggedIn()) {
+            redirect('users/login');
+        }
         
-
+        
         // Initialize models
         $this->vehicleManagerModel = new M_VehicleManager();
         $this->routeModel = new M_Route();        // Instantiate Route model
@@ -108,7 +110,7 @@ class SupplierManager extends Controller {
         // If application not found, redirect with error
         if (!$application) {
             flash('application_error', 'Application not found');
-            redirect('suppliermanager/applications');
+            redirect('supplier_manager/applications');
         }
 
         // Get all related data
@@ -146,7 +148,7 @@ class SupplierManager extends Controller {
         ];
 
         // Load the view
-        $this->view('supplier_manager/v_view_application', $data);
+        $this->view('suppliermanager/v_view_application', $data);
     }
 
     public function approveApplication($applicationId) {
@@ -243,79 +245,137 @@ class SupplierManager extends Controller {
 
     public function chat() {
         $data = [
-            'chat_requests' => $this->chatModel->getChatRequests(),
-            'active_suppliers' => $this->chatModel->getActiveSuppliers()
+            'active_suppliers' => $this->chatModel->getActiveSuppliers(),
+            'page_title' => 'Chat with Suppliers',
+            'user_id' => $_SESSION['user_id'] // For WebSocket initialization
         ];
-
+        
         $this->view('supplier_manager/v_chat', $data);
     }
 
-    public function acceptChatRequest() {
-        if ($_SERVER['REQUEST_METHOD'] == 'POST') {
-            $data = json_decode(file_get_contents("php://input"));
-            
-            if (!isset($data->request_id) || !isset($data->source)) {
-                echo json_encode(['success' => false, 'message' => 'Missing required fields']);
-                return;
-            }
-            
-            $result = $this->chatModel->acceptChatRequest($data->request_id, $data->source);
-            
-            echo json_encode(['success' => $result]);
-        }
-    }
-
-    public function rejectChatRequest() {
-        if ($_SERVER['REQUEST_METHOD'] == 'POST') {
-            $data = json_decode(file_get_contents("php://input"));
-            
-            if (!isset($data->request_id) || !isset($data->source)) {
-                echo json_encode(['success' => false, 'message' => 'Missing required fields']);
-                return;
-            }
-            
-            $result = $this->chatModel->rejectChatRequest($data->request_id, $data->source);
-            
-            echo json_encode(['success' => $result]);
-        }
-    }
-
     public function sendMessage() {
+        header('Content-Type: application/json');
         if ($_SERVER['REQUEST_METHOD'] == 'POST') {
-            $data = json_decode(file_get_contents("php://input"));
+            $data = json_decode(file_get_contents("php://input"), true);
             
-            if (empty($data->receiver_id) || empty($data->message)) {
+            if (empty($data['receiver_id']) || empty($data['message'])) {
                 echo json_encode(['success' => false, 'message' => 'Missing required fields']);
-                return;
+                exit();
             }
             
-            $result = $this->chatModel->sendMessage(
+            if (!isset($_SESSION['user_id']) || empty($_SESSION['user_id'])) {
+                echo json_encode(['success' => false, 'message' => 'User not logged in']);
+                exit();
+            }
+            
+            $result = $this->chatModel->saveMessage(
                 $_SESSION['user_id'],
-                $data->receiver_id,
-                $data->message
+                $data['receiver_id'],
+                $data['message'],
+                'text'
             );
             
-            echo json_encode(['success' => $result ? true : false]);
+            if ($result['success']) {
+                echo json_encode([
+                    'success' => true,
+                    'message' => 'Message sent successfully',
+                    'data' => $result
+                ]);
+            } else {
+                echo json_encode([
+                    'success' => false,
+                    'message' => $result['error'] ?? 'Failed to send message'
+                ]);
+            }
+            exit();
         }
+        echo json_encode(['success' => false, 'message' => 'Invalid request method']);
+        exit();
     }
 
     public function getMessages() {
-        if($_SERVER['REQUEST_METHOD'] == 'POST') {
-            $data = json_decode(file_get_contents("php://input"));
+        header('Content-Type: application/json');
+        if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+            $data = json_decode(file_get_contents("php://input"), true);
             
-            if(!isset($data->receiver_id)) {
-                echo json_encode(['success' => false, 'message' => 'Invalid input']);
-                return;
+            if (empty($data['receiver_id'])) {
+                echo json_encode(['success' => false, 'message' => 'Missing receiver_id']);
+                exit();
             }
-
-            $chatModel = $this->model('M_Chat');
-            $messages = $chatModel->getMessages($_SESSION['user_id'], $data->receiver_id);
             
+            if (!isset($_SESSION['user_id']) || empty($_SESSION['user_id'])) {
+                echo json_encode(['success' => false, 'message' => 'User not logged in']);
+                exit();
+            }
+    
+            $senderId = $_SESSION['user_id'];
+            $receiverId = (int)$data['receiver_id'];
+    
+            $messages = $this->chatModel->getMessages($senderId, $receiverId);
+    
             echo json_encode([
                 'success' => true,
                 'messages' => $messages
             ]);
+            exit();
         }
+        echo json_encode(['success' => false, 'message' => 'Invalid request method']);
+        exit();
+    }
+    
+    public function editMessage() {
+        header('Content-Type: application/json');
+        if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+            $data = json_decode(file_get_contents("php://input"), true);
+            
+            if (empty($data['message_id']) || empty($data['new_message'])) {
+                echo json_encode(['success' => false, 'message' => 'Missing required fields']);
+                exit();
+            }
+            
+            if (!isset($_SESSION['user_id']) || empty($_SESSION['user_id'])) {
+                echo json_encode(['success' => false, 'message' => 'User not logged in']);
+                exit();
+            }
+            
+            $result = $this->chatModel->editMessage(
+                $data['message_id'],
+                $data['new_message'],
+                $_SESSION['user_id']
+            );
+            
+            echo json_encode(['success' => $result]);
+            exit();
+        }
+        echo json_encode(['success' => false, 'message' => 'Invalid request method']);
+        exit();
+    }
+
+    public function deleteMessage() {
+        header('Content-Type: application/json');
+        if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+            $data = json_decode(file_get_contents("php://input"), true);
+            
+            if (empty($data['message_id'])) {
+                echo json_encode(['success' => false, 'message' => 'Missing message_id']);
+                exit();
+            }
+            
+            if (!isset($_SESSION['user_id']) || empty($_SESSION['user_id'])) {
+                echo json_encode(['success' => false, 'message' => 'User not logged in']);
+                exit();
+            }
+            
+            $result = $this->chatModel->deleteMessage(
+                $data['message_id'],
+                $_SESSION['user_id']
+            );
+            
+            echo json_encode(['success' => $result]);
+            exit();
+        }
+        echo json_encode(['success' => false, 'message' => 'Invalid request method']);
+        exit();
     }
 
     public function settings()
@@ -325,43 +385,6 @@ class SupplierManager extends Controller {
         $this->view('supplier_manager/v_settings', $data);
     }
 
-    public function editMessage() {
-        if($_SERVER['REQUEST_METHOD'] == 'POST') {
-            $data = json_decode(file_get_contents("php://input"));
-            
-            if($this->chatModel->editMessage($data->msg_id, $data->new_message, $_SESSION['user_id'])) {
-                echo json_encode(['success' => true]);
-            } else {
-                echo json_encode(['success' => false]);
-            }
-        }
-    }
-
-    public function deleteMessage() {
-        if($_SERVER['REQUEST_METHOD'] == 'POST') {
-            $data = json_decode(file_get_contents("php://input"));
-            
-            if($this->chatModel->deleteMessage($data->msg_id, $_SESSION['user_id'])) {
-                echo json_encode(['success' => true]);
-            } else {
-                echo json_encode(['success' => false]);
-            }
-        }
-    }
-
-    public function createChatRequest() {
-        if ($_SERVER['REQUEST_METHOD'] == 'POST') {
-            $data = json_decode(file_get_contents("php://input"));
-            
-            $chatModel = $this->model('M_Chat');
-            $result = $chatModel->createChatRequest($data->user_id);
-            
-            echo json_encode([
-                'success' => $result,
-                'message' => $result ? 'Chat request created' : 'Failed to create chat request'
-            ]);
-        }
-    }
 
 }
 ?>

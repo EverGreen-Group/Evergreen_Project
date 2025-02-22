@@ -493,29 +493,62 @@ class Supplier extends Controller {
         $this->view('supplier/v_schedule_details', $data);
     }
 
-    public function chat() {
-        $chatModel = $this->model('M_Chat');
-        
+    public function collection($collectionId) {
+
+        $collectionDetails = $this->collectionModel->getCollectionDetails($collectionId);
+
         $data = [
-            'supplier_managers' => $chatModel->getSupplierManagers(),
-            'active_chats' => $chatModel->getActiveChats($_SESSION['user_id'])
+            'collectionId' => $collectionId,
+            'collectionDetails' => $collectionDetails
         ];
 
-        $this->view('supplier/v_chat', $data);
+        $this->view('supplier/v_collection', $data);
     }
-//added newly by theekshana
-    public function sendChatRequest() {
-        if($_SERVER['REQUEST_METHOD'] == 'POST') {
-            $data = json_decode(file_get_contents("php://input"));
-            
-            $chatModel = $this->model('M_Chat');
-            $result = $chatModel->createChatRequest($_SESSION['user_id'], $data->manager_id);
-            
-            echo json_encode([
-                'success' => $result,
-                'message' => $result ? 'Chat request sent successfully' : 'Failed to send chat request'
-            ]);
+
+    public function getUnallocatedSuppliersByDay($day) {
+        // Ensure the day parameter is valid
+        if (!in_array($day, ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'])) {
+            echo json_encode(['success' => false, 'message' => 'Invalid day provided']);
+            return;
         }
+    
+        // Fetch unallocated suppliers for the given day
+        $suppliers = $this->routeModel->getUnallocatedSuppliersByDay($day);
+    
+        // Return the response
+        echo json_encode(['success' => true, 'data' => $suppliers]);
+    }
+
+    public function getBagDetails($collectionId) {
+        // Fetch bag details from the model using the collection ID
+        $bagDetails = $this->bagModel->getBagsByCollectionId($collectionId);
+
+        // Return the bag details as JSON
+        header('Content-Type: application/json');
+        echo json_encode($bagDetails);
+        exit();
+    }
+
+    public function bag($bagId) {
+        // $collectionDetails = $this->collectionModel->getCollectionDetails($collectionId);
+
+        $data = [
+            'bagId' => $bagId,
+            // 'bagDetails' => $collectionDetails
+        ];
+
+        $this->view('supplier/v_bag', $data);
+    }
+
+    public function fertilizer($fertilizerId) {
+        // $collectionDetails = $this->collectionModel->getCollectionDetails($collectionId);
+
+        $data = [
+            'fertilizerId' => $fertilizerId,
+            // 'bagDetails' => $collectionDetails
+        ];
+
+        $this->view('supplier/v_fertilizer', $data);
     }
 
     public function collection($collectionId) {
