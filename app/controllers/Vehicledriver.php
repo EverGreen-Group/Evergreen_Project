@@ -30,35 +30,72 @@ class VehicleDriver extends controller {
     }
 
     public function index() {
-        // Assuming you have a way to get the driverId, e.g., from session or request
-        $driverId = $_SESSION['driver_id']; // Assuming the driver ID is stored in the session
-
-        // Check if the driver ID is set
-        if (empty($driverId)) {
-            $data = [
-                'upcomingShifts' => [],
-                'message' => 'Driver ID not found in session.'
-            ];
-            $this->view('vehicle_driver/v_dashboard', $data);
+        if (!isset($_SESSION['driver_id'])) {
+            redirect('login'); // Assuming you have a redirect helper
             return;
         }
+    
+        $driverId = $_SESSION['driver_id'];
 
-        // Get upcoming schedules for the driver
-        $upcomingShifts = $this->scheduleModel->getUpcomingSchedules($driverId);
+        $collectionId = $this->collectionModel->checkCollectionExists($driverId);
 
-        // Prepare data for the view
-        if (empty($upcomingShifts)) {
+        if ($collectionId) {
+            // Redirect to the collection details page if an ongoing collection exists
+            header('Location: ' . URLROOT . '/vehicledriver/collection/' . $collectionId);
+            exit();
+        }
+        
+        try {
+            // Get all schedules
+            $allSchedules = $this->scheduleModel->getUpcomingSchedules($driverId);
+            
+            // Organize schedules by day
+            $todaySchedules = [];
+            $upcomingSchedules = [];
+            
+            foreach ($allSchedules as $schedule) {
+                if ($schedule->is_today) {
+                    $todaySchedules[] = $schedule;
+                } else {
+                    $upcomingSchedules[] = $schedule;
+                }
+            }
+
+
+            
+            // Get driver details (assuming you have a driver model)
+            // $driverDetails = $this->driverModel->getDriverById($driverId);
+            
             $data = [
-                'upcomingShifts' => [],
-                'message' => 'No schedules assigned.'
+                'todaySchedules' => $todaySchedules,
+                'upcomingSchedules' => $upcomingSchedules,
+                // 'driverDetails' => $driverDetails,
+                'currentWeek' => date('W'),
+                'currentDay' => date('l'),
+                'lastUpdated' => date('Y-m-d H:i:s'),
+                'message' => '',
+                'error' => ''
             ];
-        } else {
+            
+            if (empty($todaySchedules) && empty($upcomingSchedules)) {
+                $data['message'] = 'No upcoming schedules found.';
+            }
+            
+        } catch (Exception $e) {
+            // Log the error (assuming you have a logging system)
+            error_log($e->getMessage());
+            
             $data = [
-                'upcomingShifts' => $upcomingShifts
+                'todaySchedules' => [],
+                'upcomingSchedules' => [],
+                'message' => '',
+                'error' => 'An error occurred while fetching schedules. Please try again later.'
             ];
         }
-
-        // Load the view with the data
+    
+        // Add refresh interval for automatic updates (e.g., every 5 minutes)
+        $data['refreshInterval'] = 300; // 5 minutes in seconds
+        
         $this->view('vehicle_driver/v_dashboard', $data);
     }
 
@@ -269,6 +306,11 @@ class VehicleDriver extends controller {
         // Get all suppliers for this collection
         $collectionSuppliers = $this->collectionScheduleModel->getCollectionSupplierRecords($collectionId);
 
+        $collectionFertilizer = $this->collectionModel->getCollectionItems($collectionId);
+
+        $leafTypesResult = $this->collectionModel->getCollectionTeaLeafTypes();
+        $leafTypes = $leafTypesResult['success'] ? $leafTypesResult['leafTypes'] : [];
+
         $currentSupplier = null;
         foreach ($collectionSuppliers as $record) {
             if (!$record->arrival_time && $record->status != 'Collected') {
@@ -327,7 +369,9 @@ class VehicleDriver extends controller {
             'collections' => $formattedSuppliers,
             'collection' => $collection,
             'vehicleLocation' => $vehicleLocation,
-            'currentSupplier' => $currentSupplier
+            'currentSupplier' => $currentSupplier,
+            'leafTypes' => $leafTypes,
+            'fertilizers' => $collectionFertilizer
         ];
 
         $this->view('vehicle_driver/v_collection_route', $data);
@@ -646,18 +690,14 @@ class VehicleDriver extends controller {
     }
 
     public function addBagToCollection() {
-        error_log(print_r($_POST, true));
-        if (!$this->isAjaxRequest()) {
-            redirect('pages/error');
-            return;
-        }
+        $data = json_decode(file_get_contents("php://input"));
 
-        $data = json_decode(file_get_contents('php://input'));
-        
-        // Add to bag_usage_history
+        // Validate input data
+        // ...
+
+        // Call the model to add bag usage history
         $result = $this->collectionModel->addBagUsageHistory($data);
-        
-        header('Content-Type: application/json');
+
         echo json_encode($result);
     }
 
@@ -676,13 +716,26 @@ class VehicleDriver extends controller {
         echo json_encode($result);
     }
 
-    public function getAssignedBags($supplierId) {
+    public function getAssignedBags($supplierId, $collectionId) {
         // if (!$this->isAjaxRequest()) {
         //     redirect('pages/error');
         //     return;
         // }
 
-        $result = $this->collectionModel->getAssignedBags($supplierId);
+        $result = $this->collectionModel->getAssignedBags($supplierId, $collectionId);
+        
+        header('Content-Type: application/json');
+        echo json_encode($result);
+    }
+
+
+    public function getFertilizerItems($supplierId) {
+        // if (!$this->isAjaxRequest()) {
+        //     redirect('pages/error');
+        //     return;
+        // }
+    
+        $result = $this->collectionModel->getFertilizerItems($supplierId);
         
         header('Content-Type: application/json');
         echo json_encode($result);
@@ -694,11 +747,9 @@ class VehicleDriver extends controller {
             $collectionId = $this->collectionModel->createCollection($scheduleId);
 
             if ($collectionId) {
-                flash('schedule_message', 'Collection created successfully. Awaiting vehicle manager approval.', 'alert alert-success');
-                redirect('vehicledriver/scheduleDetails/' . $scheduleId);
+                redirect('vehicledriver/collection/' . $collectionId);
             } else {
-                flash('schedule_message', 'Failed to create collection', 'alert alert-danger');
-                redirect('vehicledriver/scheduleDetails/' . $scheduleId);
+                redirect('vehicledriver/');
             }
         } else {
             // If not a POST request, show the form or redirect

@@ -10,8 +10,7 @@
 </script>
 <script src="<?php echo URLROOT; ?>/public/js/vehicle_driver/collection_route_maps.js"></script>
 <script src="<?php echo URLROOT; ?>/public/js/vehicle_driver/collection_route_suppliers.js"></script>
-
-<?php print_r($data); ?>
+<script src="https://unpkg.com/@zxing/library@latest"></script>
 
 
 <div class="map-container" id="map"></div>
@@ -28,7 +27,6 @@
 </div>
 
 <div id="collectionBagDetailsModal" class="modal" onclick="closeModal('collectionBagDetailsModal')">
-    <?php print_r($data); ?>
     <div class="modal-content" onclick="event.stopPropagation();">
         <span class="close" onclick="closeModal('collectionBagDetailsModal')">&times;</span>
         <h2>Collection Route</h2>
@@ -132,6 +130,17 @@
             </div>
         </div>
 
+        <!-- Fertilizer Order Section -->
+        <div id="fertilizerItemsSection" class="supplier-item"> <!-- Changed ID here -->
+            <div class="supplier-info">
+                <span class="supplier-name">Fertilizer Orders</span>
+                <div id="fertilizerItemList"></div>
+            </div>
+        </div>
+
+
+
+
         <!-- Step 1: Bag ID Input -->
         <div id="bagIdStep" class="collection-step supplier-item">
             <div class="supplier-info">
@@ -140,6 +149,7 @@
                     <input type="text" id="bagId" placeholder="Scan or enter bag ID">
                     <button onclick="checkBag()" class="action-btn primary">Verify Bag</button>
                 </div>
+                <div id="reader" style="width: 300px; height: 300px;"></div>
             </div>
         </div>
 
@@ -164,9 +174,9 @@
                     <label class="supplier-name">Leaf Quality Details</label>
                     <div class="quality-grid">
                         <select id="leafType" required>
-                            <option value="S">Super</option>
-                            <option value="B">Broad</option>
-                            <option value="N">Normal</option>
+                            <?php foreach ($leafTypes as $leafType): ?>
+                                <option value="<?= $leafType->leaf_type_id; ?>"><?= $leafType->name; ?></option>
+                            <?php endforeach; ?>
                         </select>
                         <select id="leafAge" required>
                             <option value="Young">Young</option>
@@ -196,6 +206,67 @@
                 </button>
             </div>
         </div>
+
+
+        <!-- Step: Update Bag Details -->
+        <div id="updateBagStep" class="collection-step" style="display: none;">
+            <div class="supplier-item">
+                <div class="supplier-info">
+                    <span class="supplier-name">Bag Currently Selected: #<span id="updateSelectedBagId"></span></span>
+                    <span class="collection-amount">Capacity: <span id="updateBagCapacity"></span>kg</span>
+                </div>
+            </div>
+
+            <div class="supplier-item">
+                <div class="supplier-info">
+                    <label class="supplier-name">Weight (kg)</label>
+                    <input type="number" id="updateActualWeight" step="0.01" required>
+                </div>
+            </div>
+
+            <div class="supplier-item">
+                <div class="supplier-info">
+                    <label class="supplier-name">Leaf Quality Details</label>
+                    <div class="quality-grid">
+                        <select id="updateLeafType" required>
+                            <?php foreach ($leafTypes as $leafType): ?>
+                                <option value="<?= $leafType->leaf_type_id; ?>"><?= $leafType->name; ?></option>
+                            <?php endforeach; ?>
+                        </select>
+                        <select id="updateLeafAge" required>
+                            <option value="Young">Young</option>
+                            <option value="Medium">Medium</option>
+                            <option value="Mature">Mature</option>
+                        </select>
+                        <select id="updateMoistureLevel" required>
+                            <option value="Wet">Wet</option>
+                            <option value="Semi Wet">Semi Wet</option>
+                            <option value="Dry">Dry</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <div class="supplier-item">
+                <div class="supplier-info">
+                    <label class="supplier-name">Notes</label>
+                    <textarea id="updateDeductionNotes" placeholder="Add any deduction notes or remarks"></textarea>
+                </div>
+            </div>
+
+            <div class="supplier-actions">
+                <button type="button" onclick="submitUpdateBag()" class="action-btn primary">
+                    <i class='bx bx-check'></i>
+                    <span>Update Bag</span>
+                </button>
+                <!-- Optional: A cancel button to go back to the previous step -->
+                <button type="button" onclick="cancelUpdateBag()" class="action-btn">
+                    <i class='bx bx-x'></i>
+                    <span>Cancel Update</span>
+                </button>
+            </div>
+        </div>
+
 
         <!-- Finalize Button -->
         <div class="supplier-actions" id="finalizeActions">

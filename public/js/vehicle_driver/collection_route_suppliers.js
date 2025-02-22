@@ -104,6 +104,7 @@ function addCollection(supplierId) {
 
   // Check for existing assigned bags and update UI
   updateAssignedBagsList();
+  fetchAndDisplayFertilizerItems();
 
   // Show modal
   const modal = document.getElementById("addCollectionModal");
@@ -124,8 +125,7 @@ function resetBagForm() {
 function showBagIdStep() {
   document.getElementById("bagIdStep").style.display = "block";
   document.getElementById("bagDetailsStep").style.display = "none";
-  document.getElementById("confirmCollectionButton").style.display =
-    collectedBags.length > 0 ? "block" : "none";
+  document.getElementById("confirmCollectionButton").style.display = "block";
 }
 
 function showBagDetailsStep() {
@@ -157,15 +157,158 @@ async function checkBag() {
   }
 }
 
+// QR Code Scanning Functionality
+function startQRCodeScanner() {
+  // Check if the scanner is already running
+  const existingVideo = document.getElementById("video");
+  if (existingVideo) {
+    alert("Scanner is already running.");
+    return; // Exit if the scanner is already running
+  }
+
+  const videoElement = document.createElement("video");
+  videoElement.id = "video";
+  videoElement.style.width = "340px";
+  videoElement.style.height = "340px";
+  videoElement.style.marginTop = "5px";
+  // videoElement.style.maxWidth = "300px";
+
+  // Clear and add video element to reader div
+  const reader = document.getElementById("reader");
+  reader.innerHTML = "";
+  reader.appendChild(videoElement);
+
+  const codeReader = new ZXing.BrowserMultiFormatReader();
+
+  codeReader
+    .listVideoInputDevices()
+    .then((videoInputDevices) => {
+      // Use the first available camera
+      const selectedDeviceId = videoInputDevices[0].deviceId;
+
+      codeReader.decodeFromVideoDevice(
+        selectedDeviceId,
+        "video",
+        (result, err) => {
+          if (result) {
+            // Stop scanning after successful scan
+            codeReader.reset();
+
+            // Handle the scanned bag ID
+            document.getElementById("bagId").value = result.text;
+            checkBag();
+          }
+          if (err && !(err instanceof ZXing.NotFoundException)) {
+            console.error(err);
+          }
+        }
+      );
+    })
+    .catch((err) => {
+      console.error(err);
+      alert(
+        "Failed to start camera. Please ensure camera permissions are granted."
+      );
+    });
+
+  // Create controls div if it doesn't exist
+  let controlsDiv = document.getElementById("controls");
+  if (!controlsDiv) {
+    controlsDiv = document.createElement("div");
+    controlsDiv.id = "controls"; // Set an ID for easy reference
+    reader.parentNode.insertBefore(controlsDiv, reader.nextSibling);
+  } else {
+    // Clear existing buttons if controlsDiv already exists
+    controlsDiv.innerHTML = "";
+  }
+
+  // Add stop button
+  const stopButton = document.createElement("button");
+  stopButton.textContent = "Stop Scanner";
+  stopButton.className = "action-btn primary";
+  stopButton.style.marginTop = "10px";
+  stopButton.style.width = "100%";
+  stopButton.onclick = () => {
+    codeReader.reset();
+    controlsDiv.innerHTML = ""; // Clear buttons when stopped
+    startQRCodeScanner(); // Optionally, you can show the start button again
+  };
+
+  // Add start button
+  const startButton = document.createElement("button");
+  startButton.textContent = "Start Scanner";
+  startButton.className = "action-btn primary";
+  startButton.style.marginTop = "10px";
+  startButton.style.width = "100%";
+  startButton.style.display = "none";
+  startButton.onclick = startQRCodeScanner;
+
+  // controlsDiv.appendChild(stopButton);
+  // controlsDiv.appendChild(startButton);
+}
+
+// Initialize the scanner when the page loads
+document.addEventListener("DOMContentLoaded", function () {
+  if (typeof ZXing === "undefined") {
+    console.error("ZXing library not loaded properly");
+    alert("QR Scanner library failed to load. Please refresh the page.");
+    return;
+  }
+});
+
+// Start the QR code scanner when the page loads
+window.onload = function () {
+  startQRCodeScanner();
+};
+
+// Initialize WebSocket connection
+let ws;
+
+function initializeWebSocket() {
+  console.log("Driver: Initializing WebSocket connection...");
+  ws = new WebSocket("ws://localhost:8080");
+
+  ws.onopen = function () {
+    console.log("Driver: Connected to WebSocket server");
+  };
+
+  ws.onclose = function () {
+    console.log("Driver: Disconnected from WebSocket server");
+    // Attempt to reconnect after 5 seconds
+    setTimeout(initializeWebSocket, 5000);
+  };
+
+  ws.onerror = function (error) {
+    console.error("Driver WebSocket Error:", error);
+  };
+}
+
+// Initialize WebSocket when page loads
+document.addEventListener("DOMContentLoaded", function () {
+  initializeWebSocket();
+});
+
 async function addBagToCollection() {
+  // Get form values
+  const actualWeight = document.getElementById("actualWeight").value;
+  const leafType = document.getElementById("leafType").value;
+  const leafAge = document.getElementById("leafAge").value;
+  const moistureLevel = document.getElementById("moistureLevel").value;
+  const notes = document.getElementById("deductionNotes").value;
+
+  // Perform validation
+  if (!validateForm(actualWeight, leafType, leafAge, moistureLevel, notes)) {
+    return; // Stop execution if validation fails
+  }
+
   const formData = {
     supplier_id: currentSupplierId,
     bag_id: document.getElementById("bagId").value,
-    actual_weight_kg: document.getElementById("actualWeight").value,
-    leaf_type: document.getElementById("leafType").value,
-    leaf_age: document.getElementById("leafAge").value,
-    moisture_level: document.getElementById("moistureLevel").value,
-    notes: document.getElementById("deductionNotes").value,
+    actual_weight_kg: actualWeight,
+    leaf_type_id: leafType,
+    leaf_age: leafAge,
+    moisture_level: moistureLevel,
+    notes: notes,
     timestamp: new Date().toISOString(),
     action: "added",
     collection_id: collectionId,
@@ -187,12 +330,26 @@ async function addBagToCollection() {
     const data = await response.json();
 
     if (data.success) {
+      // Send refresh trigger via WebSocket
+      if (ws && ws.readyState === WebSocket.OPEN) {
+        const wsMessage = {
+          type: "refreshTrigger",
+          supplierId: formData.supplier_id,
+        };
+        console.log("Sending refresh trigger:", wsMessage);
+        ws.send(JSON.stringify(wsMessage));
+      } else {
+        console.error(
+          "WebSocket is not connected. State:",
+          ws ? ws.readyState : "ws is null"
+        );
+      }
+
       collectedBags.push(formData);
       updateAssignedBagsList();
+      fetchAndDisplayFertilizerItems();
       resetBagForm();
       showBagIdStep();
-
-      // Show success message
       alert(
         "Bag added successfully. Scan another bag or click Finalize Collection to complete."
       );
@@ -205,6 +362,31 @@ async function addBagToCollection() {
   }
 }
 
+// Validation function
+function validateForm(actualWeight, leafType, leafAge, moistureLevel, notes) {
+  if (!actualWeight || isNaN(actualWeight) || actualWeight <= 0) {
+    alert("Please enter a valid positive weight for the bag.");
+    return false;
+  }
+  if (!leafType) {
+    alert("Please select a leaf type.");
+    return false;
+  }
+  if (!leafAge) {
+    alert("Please enter the leaf age.");
+    return false;
+  }
+  if (!moistureLevel) {
+    alert("Please enter the moisture level.");
+    return false;
+  }
+  if (notes.length > 200) {
+    alert("Notes should not exceed 200 characters.");
+    return false;
+  }
+  return true; // All validations passed
+}
+
 function updateAssignedBagsList() {
   const assignedBagsSection = document.getElementById("assignedBagsSection");
   const assignedBagsList = document.getElementById("assignedBagsList");
@@ -213,9 +395,12 @@ function updateAssignedBagsList() {
   );
 
   // Get assigned bags from server
-  fetch(`${URLROOT}/vehicledriver/getAssignedBags/${currentSupplierId}`, {
-    method: "GET",
-  })
+  fetch(
+    `${URLROOT}/vehicledriver/getAssignedBags/${currentSupplierId}/${collectionId}`,
+    {
+      method: "GET",
+    }
+  )
     .then((response) => response.json())
     .then((data) => {
       let totalBags =
@@ -227,37 +412,51 @@ function updateAssignedBagsList() {
         const existingBagsHtml = data.bags
           .map(
             (bag) => `
-              <div class="assigned-bag">
-                  <span>Bag #${bag.bag_id}</span>
-                  <span class="assigned-bag-info">
-                      ${
-                        bag.actual_weight_kg
-                          ? bag.actual_weight_kg + "kg"
-                          : "Pending"
-                      }
-                      ${bag.status === "Added" ? "(Added)" : ""}
-                  </span>
-              </div>
-          `
+            <div class="assigned-bag">
+                <span>Bag #${bag.bag_id}</span>
+                <span class="assigned-bag-info">
+                    ${
+                      bag.actual_weight_kg
+                        ? bag.actual_weight_kg + "kg"
+                        : "Pending"
+                    }
+                </span>
+                <span class="action-icons">
+                    <i class='bx bx-edit' onclick="updateBag('${
+                      bag.bag_id
+                    }')" title="Update Bag"></i>
+                    <i class='bx bx-trash' onclick="deleteBag('${
+                      bag.bag_id
+                    }')" title="Delete Bag"></i>
+                </span>
+            </div>
+        `
           )
           .join("");
 
-        // Show newly added bags in this session
-        const newBagsHtml = collectedBags
-          .map(
-            (bag) => `
+        // Show existing bags and newly added bags
+        assignedBagsList.innerHTML = existingBagsHtml;
+
+        // Append newly added bags directly
+        if (collectedBags.length > 0) {
+          assignedBagsList.innerHTML += collectedBags
+            .map(
+              (bag) => `
               <div class="assigned-bag">
                   <span>Bag #${bag.bag_id}</span>
                   <span class="assigned-bag-info">
                       ${bag.actual_weight_kg}kg
                       (Just Added)
                   </span>
+                  <span class="action-icons">
+                      <i class='bx bx-edit' onclick="updateBag('${bag.bag_id}')" title="Update Bag"></i>
+                      <i class='bx bx-trash' onclick="deleteBag('${bag.bag_id}')" title="Delete Bag"></i>
+                  </span>
               </div>
           `
-          )
-          .join("");
-
-        assignedBagsList.innerHTML = existingBagsHtml + newBagsHtml;
+            )
+            .join("");
+        }
       } else if (collectedBags.length > 0) {
         // Only show newly added bags if no existing bags
         assignedBagsList.innerHTML = collectedBags
@@ -269,6 +468,10 @@ function updateAssignedBagsList() {
                       ${bag.actual_weight_kg}kg
                       (Just Added)
                   </span>
+                  <span class="action-icons">
+                      <i class='bx bx-edit' onclick="updateBag('${bag.bag_id}')" title="Update Bag"></i>
+                      <i class='bx bx-trash' onclick="deleteBag('${bag.bag_id}')" title="Delete Bag"></i>
+                  </span>
               </div>
           `
           )
@@ -279,9 +482,8 @@ function updateAssignedBagsList() {
 
       // Show assigned bags section
       assignedBagsSection.style.display = "block";
-
-      // Show confirm button if there are any bags (either existing or newly added)
-      confirmCollectionButton.style.display = totalBags > 0 ? "block" : "none";
+      // Always show the confirm button.
+      confirmCollectionButton.style.display = "block";
     })
     .catch((error) => {
       console.error("Error fetching assigned bags:", error);
@@ -289,7 +491,7 @@ function updateAssignedBagsList() {
         "<p>Error fetching bags. Please try again.</p>";
       // Still show newly added bags if any
       if (collectedBags.length > 0) {
-        const newBagsHtml = collectedBags
+        assignedBagsList.innerHTML += collectedBags
           .map(
             (bag) => `
               <div class="assigned-bag">
@@ -298,11 +500,14 @@ function updateAssignedBagsList() {
                       ${bag.actual_weight_kg}kg
                       (Just Added)
                   </span>
+                  <span class="action-icons">
+                      <i class='bx bx-edit' onclick="updateBag('${bag.bag_id}')" title="Update Bag"></i>
+                      <i class='bx bx-trash' onclick="deleteBag('${bag.bag_id}')" title="Delete Bag"></i>
+                  </span>
               </div>
           `
           )
           .join("");
-        assignedBagsList.innerHTML += newBagsHtml;
         confirmCollectionButton.style.display = "block";
       } else {
         confirmCollectionButton.style.display = "none";
@@ -351,8 +556,8 @@ async function finalizeSupplierCollection() {
     if (data.success) {
       alert("Collection finalized successfully");
       closeModal("addCollectionModal");
-      // Optionally refresh the main supplier list/view
-      location.reload();
+      // Redirect to the vehicle driver page instead of reloading
+      window.location.href = `${URLROOT}/vehicledriver/${collectionId}`; // Redirect to the specified URL
     } else {
       alert(data.message || "Failed to finalize collection");
     }
@@ -395,5 +600,211 @@ async function endCollection(collectionId) {
   } catch (error) {
     console.error("Error ending collection:", error);
     alert("Failed to end collection.");
+  }
+}
+
+function fetchAndDisplayFertilizerItems() {
+  const fertilizerItemList = document.getElementById("fertilizerItemList");
+
+  fetch(`${URLROOT}/vehicledriver/getFertilizerItems/${currentSupplierId}`, {
+    method: "GET",
+  })
+    .then((response) => response.json())
+    .then((data) => {
+      console.log("API Response:", data); // Debugging output
+
+      // FIX: Check if `data` is an array
+      if (Array.isArray(data) && data.length > 0) {
+        const itemsHtml = data
+          .map(
+            (item) => `
+              <div class="fertilizer-item">
+                  <span>Item ID: ${item.item_id}</span>
+                  <span class="fertilizer-item-info">
+                      Quantity: ${item.quantity}kg
+                  </span>
+              </div>
+          `
+          )
+          .join("");
+
+        fertilizerItemList.innerHTML = itemsHtml;
+      } else {
+        fertilizerItemList.innerHTML = "<p>No fertilizer items ordered.</p>";
+      }
+
+      // Show fertilizer items section
+      fertilizerItemList.style.display = "block";
+    })
+    .catch((error) => {
+      console.error("Error fetching fertilizer items:", error);
+      fertilizerItemList.innerHTML =
+        "<p>Error fetching fertilizer items. Please try again.</p>";
+    });
+}
+
+// Global variable to store the bag ID being updated
+let currentUpdateBagId = null;
+
+/**
+ * Called when the update icon is clicked.
+ * Fetches the bag details and shows the update step in the modal.
+ */
+async function updateBag(bagId) {
+  currentUpdateBagId = bagId;
+  try {
+    // Fetch bag details from the controller.
+    const response = await fetch(`${URLROOT}/Bag/getBagDetails/${bagId}`);
+    const data = await response.json();
+    if (data.success) {
+      // Hide the bag addition steps (bagIdStep and bagDetailsStep)
+      document.getElementById("bagIdStep").style.display = "none";
+      document.getElementById("bagDetailsStep").style.display = "none";
+      // Populate the update step fields with the bag details
+      document.getElementById("updateSelectedBagId").textContent = bagId;
+      document.getElementById("updateBagCapacity").textContent =
+        data.bag.capacity_kg || "";
+      document.getElementById("updateActualWeight").value =
+        data.bag.actual_weight_kg || "";
+      document.getElementById("updateLeafType").value =
+        data.bag.leaf_type_id || "";
+      document.getElementById("updateLeafAge").value =
+        data.bag.leaf_age || "Young";
+      document.getElementById("updateMoistureLevel").value =
+        data.bag.moisture_level || "Wet";
+      document.getElementById("updateDeductionNotes").value =
+        data.bag.notes || "";
+
+      // Show the update step
+      document.getElementById("updateBagStep").style.display = "block";
+
+      // Open the modal if it is not already open
+      const modal = document.getElementById("addCollectionModal");
+      if (modal) {
+        modal.style.display = "block";
+      }
+    } else {
+      alert(data.message || "Failed to fetch bag details");
+    }
+  } catch (error) {
+    console.error("Error fetching bag details:", error);
+    alert("Failed to fetch bag details");
+  }
+}
+
+/**
+ * Called when the user confirms the update in the update step.
+ */
+async function submitUpdateBag() {
+  console.log("Current Supplier ID:", currentSupplierId);
+  const updatedBag = {
+    bag_id: currentUpdateBagId,
+    actual_weight_kg: document.getElementById("updateActualWeight").value,
+    leaf_type_id: document.getElementById("updateLeafType").value,
+    leaf_age: document.getElementById("updateLeafAge").value,
+    moisture_level: document.getElementById("updateMoistureLevel").value,
+    notes: document.getElementById("updateDeductionNotes").value,
+    supplier_id: currentSupplierId,
+    collection_id: collectionId,
+  };
+
+  console.log("Updating bag with data:", updatedBag);
+
+  if (
+    !updatedBag.actual_weight_kg ||
+    isNaN(updatedBag.actual_weight_kg) ||
+    updatedBag.actual_weight_kg <= 0
+  ) {
+    alert("Please enter a valid positive weight for the bag.");
+    return;
+  }
+
+  try {
+    const response = await fetch(`${URLROOT}/bag/updateBag`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "X-Requested-With": "XMLHttpRequest",
+      },
+      body: JSON.stringify(updatedBag),
+    });
+
+    const result = await response.json();
+
+    if (result.success) {
+      // Send refresh trigger via WebSocket
+      if (ws && ws.readyState === WebSocket.OPEN) {
+        ws.send(
+          JSON.stringify({
+            type: "refreshTrigger",
+            supplierId: updatedBag.supplier_id,
+          })
+        );
+      }
+
+      alert("Bag updated successfully.");
+      document.getElementById("updateBagStep").style.display = "none";
+      resetBagForm();
+      showBagIdStep();
+      updateAssignedBagsList();
+    } else {
+      alert(result.message || "Failed to update bag.");
+    }
+  } catch (error) {
+    console.error("Error updating bag:", error);
+    alert("Failed to update bag.");
+  }
+}
+
+/**
+ * Optional function to cancel the update operation.
+ * Hides the update step and returns to the add bag steps.
+ */
+function cancelUpdateBag() {
+  document.getElementById("updateBagStep").style.display = "none";
+  // Optionally, you may want to clear the update fields here.
+  resetBagForm();
+  showBagIdStep();
+}
+
+async function deleteBag(bagId) {
+  if (
+    !confirm(
+      `Are you sure you want to delete Bag #${bagId}? This action cannot be undone.`
+    )
+  ) {
+    return;
+  }
+
+  try {
+    const response = await fetch(`${URLROOT}/bag/deleteBag/${bagId}`, {
+      method: "DELETE",
+      headers: {
+        "Content-Type": "application/json",
+        "X-Requested-With": "XMLHttpRequest",
+      },
+    });
+
+    const result = await response.json();
+
+    if (result.success) {
+      // Send refresh trigger via WebSocket
+      if (ws && ws.readyState === WebSocket.OPEN) {
+        ws.send(
+          JSON.stringify({
+            type: "refreshTrigger",
+            supplierId: currentSupplierId,
+          })
+        );
+      }
+
+      alert("Bag deleted successfully.");
+      updateAssignedBagsList();
+    } else {
+      alert(result.message || "Failed to delete bag.");
+    }
+  } catch (error) {
+    console.error("Error deleting bag:", error);
+    alert("Failed to delete bag.");
   }
 }

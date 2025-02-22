@@ -39,7 +39,7 @@ class M_Driver{
             SELECT drivers.*, users.first_name
             FROM drivers
             INNER JOIN users ON drivers.user_id = users.user_id
-            LEFT JOIN collection_schedules ON drivers.driver_id = collection_schedules.driver_id
+            LEFT JOIN collection_schedules ON drivers.driver_id = collection_schedules.driver_id AND collection_schedules.is_deleted = 0
             WHERE drivers.is_deleted = 0 AND collection_schedules.driver_id IS NULL
         "); 
 
@@ -67,7 +67,12 @@ class M_Driver{
                 CONCAT(ud.first_name, " ", ud.last_name) AS driver_name,
                 e.contact_number,
                 d.status,
-                ud.*
+                ud.email,
+                ud.nic,
+                ud.date_of_birth,
+                ud.role_id,
+                ud.first_name,
+                ud.last_name
             FROM drivers d
             JOIN employees e ON d.employee_id = e.employee_id
             JOIN users ud ON e.user_id = ud.user_id
@@ -168,8 +173,80 @@ class M_Driver{
     }
 
 
-    public function getDriverDetails($user_id) {
+    public function getDriverDetails($driverId) {
+        $this->db->query('
+            SELECT d.driver_id,d.employee_id,d.status AS availability,d.is_deleted,d.collections_count,d.deliveries_count,e.*,u.nic,u.date_of_birth,u.email,u.first_name,u.last_name
+            FROM drivers d
+            JOIN users u ON
+            d.user_id = u.user_id
+            JOIN employees e ON
+            e.user_id = u.user_id
+            WHERE d.driver_id = :driver_id
+        ');
+
+        $this->db->bind(':driver_id', $driverId);
+        return $this->db->single();
         
+    }
+
+
+    public function getFilteredDrivers($driver_id=null, $name=null, $nic=null, $contact_number=null, $driver_status=null, $employee_status=null) {
+        $sql = "SELECT d.*, 
+                u.first_name, u.last_name, u.email, u.nic, u.date_of_birth,
+                e.contact_number, e.emergency_contact, e.status as employee_status,
+                e.address_line1, e.address_line2, e.city, e.hire_date
+                FROM drivers d
+                JOIN employees e ON d.employee_id = e.employee_id
+                JOIN users u ON e.user_id = u.user_id
+                WHERE d.is_deleted = 0";
+
+        // Build the query based on provided filters
+        if (!empty($driver_id)) {
+            $sql .= " AND d.driver_id = :driver_id";
+        }
+        if (!empty($name)) {
+            $sql .= " AND (u.first_name LIKE :name OR u.last_name LIKE :name)";
+        }
+        if (!empty($nic)) {
+            $sql .= " AND u.nic LIKE :nic";
+        }
+        if (!empty($contact_number)) {
+            $sql .= " AND e.contact_number LIKE :contact_number";
+        }
+        if (!empty($driver_status)) {
+            $sql .= " AND d.status = :driver_status";
+        }
+        if (!empty($employee_status)) {
+            $sql .= " AND e.status = :employee_status";
+        }
+
+        $sql .= " ORDER BY d.driver_id DESC";
+
+        // Prepare the statement
+        $this->db->query($sql);
+
+        // Bind parameters if they were set
+        if (!empty($driver_id)) {
+            $this->db->bind(':driver_id', $driver_id);
+        }
+        if (!empty($name)) {
+            $this->db->bind(':name', "%$name%");
+        }
+        if (!empty($nic)) {
+            $this->db->bind(':nic', "%$nic%");
+        }
+        if (!empty($contact_number)) {
+            $this->db->bind(':contact_number', "%$contact_number%");
+        }
+        if (!empty($driver_status)) {
+            $this->db->bind(':driver_status', $driver_status);
+        }
+        if (!empty($employee_status)) {
+            $this->db->bind(':employee_status', $employee_status);
+        }
+
+        // Execute the query and return the results
+        return $this->db->resultSet();
     }
 
 }

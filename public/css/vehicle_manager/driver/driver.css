@@ -342,3 +342,97 @@
   background: #fff3e0;
   color: #ef6c00;
 }
+
+/* DRIVER PROFILE MODAL SECTION */
+
+.profile-header {
+  display: flex;
+  align-items: center;
+}
+
+.circular-image {
+  border-radius: 50%; /* Makes the image circular */
+  border: 2px solid #3c91e6; /* Optional: border around the image */
+}
+
+.profile-info {
+  margin-left: 20px; /* Space between image and text */
+}
+
+.driver-stats {
+  display: flex;
+  flex-wrap: wrap; /* Allows items to wrap to the next line if needed */
+  gap: 20px; /* Space between stat items */
+}
+
+.stat-item {
+  display: flex;
+  flex-direction: column; /* Stack label and value vertically */
+}
+
+.label {
+  font-weight: bold; /* Make the label bold */
+}
+
+.value {
+  margin-top: 5px; /* Space between label and value */
+}
+
+.profile-header {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+  padding: 20px;
+  background-color: #fff;
+  border-radius: 8px;
+}
+
+.profile-image {
+  flex-shrink: 0;
+}
+
+.profile-image img {
+  width: 160px;
+  height: 160px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.profile-info {
+  flex-grow: 1;
+}
+
+.name-row {
+  margin-bottom: 16px;
+}
+
+.name-row span {
+  font-size: 24px;
+  font-weight: 600;
+  margin-right: 8px;
+}
+
+.detail-row {
+  display: flex;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.label {
+  min-width: 80px;
+  font-weight: 500;
+  color: #666;
+}
+
+.value {
+  color: #333;
+}
+
+.status-badge {
+  display: inline-block;
+  padding: 4px 12px;
+  background-color: #4caf50;
+  color: white;
+  border-radius: 16px;
+  font-size: 14px;
+}

@@ -219,7 +219,7 @@
                         <td><?php echo htmlspecialchars($driver->license_number ?? 'N/A'); ?></td>
                         <td><?php echo htmlspecialchars($driver->experience ?? '0'); ?> years</td>
                         <td>
-                            <span class="status <?php echo strtolower($driver->status) === 'active' ? 'completed' : 'error'; ?>">
+                            <span class="status <?php echo strtolower($driver->status) === 'active' ? 'error' : 'completed'; ?>">
                                 <?php echo htmlspecialchars($driver->status); ?>
                             </span>
                         </td>
@@ -227,7 +227,7 @@
                             <div style="display: flex; gap: 5px;">
                                 <!-- View Profile Button - Changed to button style -->
                                 <button 
-                                    onclick="window.location.href='<?php echo URLROOT; ?>/profile/driver/<?php echo $driver->user_id; ?>'" 
+                                    onclick="showDriverProfile()" 
                                     class="btn btn-secondary"
                                     style="padding: 6px 12px; border: none;"
                                 >
@@ -376,6 +376,15 @@
     </div>
 </div>
 
+
+<script>
+
+function showDriverProfile() {
+  // Show the modal
+  document.getElementById("viewDriverProfileModal").style.display = "block";
+}
+</script>
+
 <!-- Update Driver Modal -->
 <div id="updateDriverModal" class="modal">
     <div class="modal-content">
@@ -491,6 +500,173 @@
                         <button type="submit" class="btn btn-primary full-width">UPDATE DRIVER</button>
                     </div>
                 </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- View Driver Profile Modal -->
+<div id="viewDriverProfileModal" class="modal">
+    <div class="modal-content">
+        <span class="close" onclick="closeModal('viewDriverProfileModal')">&times;</span>
+        <h2>Driver Profile</h2>
+        <div class="vehicle-modal-content">
+            <div class="vehicle-modal-details">
+                <div class="detail-group">
+                    <h3>Personal Information</h3>
+                    <div class="profile-header">
+                        <div class="profile-image">
+                            <img src="https://randomuser.me/api/portraits/men/1.jpg" alt="Driver Profile Image">
+                        </div>
+                        <div class="profile-info">
+                            <div class="name-row">
+                            <span id="driverFirstName">John</span>
+                            <span id="driverLastName">Doe</span>
+                            </div>
+                            <div class="detail-row">
+                            <span class="label">Email:</span>
+                            <span class="value" id="driverEmail">john.doe@example.com</span>
+                            </div>
+                            <div class="detail-row">
+                            <span class="label">Phone:</span>
+                            <span class="value" id="driverPhone">123-456-7890</span>
+                            </div>
+                        </div>
+                        </div>
+                </div>
+
+                <div class="detail-group">
+                    <h3>Driver Address</h3>
+                    <div class="detail-row">
+                        <span class="label">Address Line 1:</span>
+                        <span class="value" id="driverAddressLine1">123 Main St</span> <!-- Hardcoded -->
+                    </div>
+                    <div class="detail-row">
+                        <span class="label">Address Line 2:</span>
+                        <span class="value" id="driverAddressLine2">Apt 4B</span> <!-- Hardcoded -->
+                    </div>
+                    <div class="detail-row">
+                        <span class="label">City:</span>
+                        <span class="value" id="driverCity">New York</span> <!-- Hardcoded -->
+                    </div>
+                </div>
+
+                <div class="detail-group">
+                    <h3>Past Collections</h3>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Collection ID</th>
+                                <th>Vehicle</th>
+                                <th>Shift Start</th>
+                                <th>Shift End</th>
+                                <th>Status</th>
+                                <th>Duration</th>
+                            </tr>
+                        </thead>
+                        <tbody id="pastCollections">
+                            <tr>
+                                <td>COL001</td>
+                                <td>Vehicle 1</td>
+                                <td>08:00 AM</td>
+                                <td>10:00 AM</td>
+                                <td>Completed</td>
+                                <td>2 hours</td>
+                            </tr>
+                            <tr>
+                                <td>COL002</td>
+                                <td>Vehicle 2</td>
+                                <td>09:00 AM</td>
+                                <td>11:00 AM</td>
+                                <td>Completed</td>
+                                <td>2 hours</td>
+                            </tr>
+                            <tr>
+                                <td>COL003</td>
+                                <td>Vehicle 3</td>
+                                <td>10:00 AM</td>
+                                <td>12:00 PM</td>
+                                <td>Pending</td>
+                                <td>2 hours</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="detail-group">
+                    <h3>Driver Statistics</h3>
+                    <div class="driver-stats">
+                        <!-- <div class="stat-item">
+                            <span class="label">Date Joined:</span>
+                            <span class="value">January 1, 2020</span> 
+                        </div> -->
+                        <div class="stat-item">
+                            <span class="label">Collections Completed:</span>
+                            <span class="value">50</span> <!-- Hardcoded -->
+                        </div>
+                        <div class="stat-item">
+                            <span class="label">Reports Received:</span>
+                            <span class="value">2</span> <!-- Hardcoded -->
+                        </div>
+                        <div class="stat-item">
+                            <span class="label">Deliveries Completed:</span>
+                            <span class="value">45</span> <!-- Hardcoded -->
+                        </div>
+                    </div>
+                </div>
+
+                <div class="detail-group">
+                    <h3>Past Deliveries</h3>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Delivery ID</th>
+                                <th>Vehicle</th>
+                                <th>Delivery Time</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody id="pastDeliveries">
+                            <tr>
+                                <td>DEL001</td>
+                                <td>Vehicle 1</td>
+                                <td>12:00 PM</td>
+                                <td>Delivered</td>
+                            </tr>
+                            <tr>
+                                <td>DEL002</td>
+                                <td>Vehicle 2</td>
+                                <td>01:00 PM</td>
+                                <td>Delivered</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="detail-group">
+                    <h3>Reports</h3>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Report ID</th>
+                                <th>Date</th>
+                                <th>Details</th>
+                            </tr>
+                        </thead>
+                        <tbody id="driverReports">
+                            <tr>
+                                <td>REP001</td>
+                                <td>March 1, 2021</td>
+                                <td>No issues reported</td>
+                            </tr>
+                            <tr>
+                                <td>REP002</td>
+                                <td>April 15, 2021</td>
+                                <td>Minor issues reported</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
             </div>
         </div>
     </div>

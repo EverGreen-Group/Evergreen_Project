@@ -49,8 +49,8 @@
                                     value="<?php echo $data['product']->details ?? ''; ?>">
                             </div>
                             <div class="form-group">
-                                <label for="code">Code</label>
-                                <input type="text" id="code" name="code" placeholder="Enter Code" value="<?php echo $data['product']->code ?? ''; ?>">
+                                <label for="code">Grade</label>
+                                <input type="text" id="grade" name="grade" placeholder="Enter Code" value="<?php echo $data['product']->grade ?? ''; ?>">
                             </div>
                         </div>
                     </div>
@@ -84,16 +84,6 @@
                                         value="<?php echo $data['product']->price ?? ''; ?>">
                                 </div>
                             </div>
-                            <div class="form-group">
-                                <label for="profit">Profit</label>
-                                <input type="number" id="profit" name="profit"
-                                    value="<?php echo $data['product']->profit ?? ''; ?>">
-                            </div>
-                            <div class="form-group">
-                                <label for="margin">Margin</label>
-                                <input type="number" id="margin" name="margin"
-                                    value="<?php echo $data['product']->margin ?? ''; ?>">
-                            </div>
                         </div>
                     </div>
 
@@ -108,9 +98,9 @@
                             <div class="form-group">
                                 <label for="unit">Unit</label>
                                 <select id="unit" name="unit">
-                                    <option value="item" <?php echo ($data['product']->unit == 'item') ? 'selected' : ''; ?>>Item</option>
+                                   +
                                     <option value="kg" <?php echo ($data['product']->unit == 'kg') ? 'selected' : ''; ?>>Kg</option>
-                                    <option value="box" <?php echo ($data['product']->unit == 'box') ? 'selected' : ''; ?>>Box</option>
+                                    <option value="box" <?php echo ($data['product']->unit == 'box') ? 'selected' : ''; ?>>Box(100kg)</option>
                                 </select>
                             </div>
                         </div>

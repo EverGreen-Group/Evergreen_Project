@@ -4,229 +4,15 @@
 <?php require APPROOT . '/views/inc/components/sidebar_inventory.php' ?>
 <!-- Top nav bar -->
 <?php require APPROOT . '/views/inc/components/topnavbar.php' ?>
-<head>
-	<style>
-		
-/*inventory dashboard topselling ection*/
+<link rel="stylesheet" href="<?php echo URLROOT; ?>/css/inventory_manager/dashboard/dashboard.css">
+<script src="<?php echo URLROOT; ?>/public/js/inventory_manager/dashboard/dashboard.js"></script>
+<script>
+	const URLROOT = '<?php echo URLROOT; ?>';
+	const UPLOADROOT = '<?php echo UPLOADROOT; ?>';
+</script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
-.top-selling-section {
-  margin: 40px auto;
-  padding: 20px;
-  background-color: #fff;
-  border-radius: 8px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-}
-
-/* Section header */
-.section-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 20px;
-}
-
-.section-header h2 {
-  font-size: 24px;
-  color: #333;
-}
-
-.section-header .view-all {
-  font-size: 16px;
-  color: #27ae60;
-  text-decoration: none;
-}
-
-.section-header .view-all:hover {
-  text-decoration: underline;
-}
-
-/* Product grid */
-.product-grid {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 20px;
-}
-
-.product-card {
-  background-color: #fff;
-  border: 1px solid #e0e0e0;
-  border-radius: 8px;
-  padding: 20px;
-  text-align: center;
-  transition: box-shadow 0.3s ease;
-}
-
-.product-card:hover {
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-}
-
-.product-card h3 {
-  font-size: 18px;
-  color: #333;
-  margin-bottom: 10px;
-}
-
-.product-card .sold {
-  font-size: 16px;
-  color: #27ae60;
-  font-weight: bold;
-}
-
-/* Pagination */
-.pagination {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  margin-top: 20px;
-}
-
-.pagination button {
-  background-color: #fff;
-  border: 1px solid #e0e0e0;
-  padding: 8px 12px;
-  font-size: 16px;
-  color: #333;
-  margin: 0 5px;
-  border-radius: 5px;
-  cursor: pointer;
-  transition: background-color 0.3s ease;
-}
-
-.pagination button:hover {
-  background-color: #27ae60;
-  color: #fff;
-}
-
-.pagination button.active {
-  background-color: #27ae60;
-  color: #fff;
-}
-
-.pagination span {
-  font-size: 16px;
-  margin: 0 5px;
-}
-
-.order table {
-  width: 100%;
-  border-collapse: collapse;
-  margin-top: 20px;
-}
-
-.order th,
-.order td {
-  border: 1px solid #ddd;
-  padding: 8px;
-  text-align: left;
-}
-
-.order th {
-  background-color: #f2f2f2;
-  font-weight: bold;
-}
-
-.order tr:nth-child(even) {
-  background-color: #f9f9f9;
-}
-
-.order tr:hover {
-  background-color: #f5f5f5;
-}
-
-
-/* Report Modal */
-.report-modal {
-  display: none;
-  position: fixed;
-  z-index: 1000;
-  left: 0;
-  top: 0;
-  width: 100%;
-  height: 100%;
-  background-color: rgba(0, 0, 0, 0.6);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.modal-content {
-  background-color: #fff;
-  border-radius: 8px;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-  width: 90%;
-  max-width: 400px;
-  position: relative;
-  animation: modalPop 0.3s ease-out;
-}
-
-@keyframes modalPop {
-  0% {
-      transform: scale(0.7);
-      opacity: 0;
-  }
-  100% {
-      transform: scale(1);
-      opacity: 1;
-  }
-}
-
-.modal-content h2 {
-  margin: 0;
-  padding: 15px 20px;
-  border-bottom: 1px solid #eee;
-}
-
-.modal-body {
-  padding: 20px;
-}
-
-.modal-body textarea {
-  width: 100%;
-  min-height: 100px;
-  padding: 10px;
-  border: 1px solid #ddd;
-  border-radius: 4px;
-  resize: vertical;
-}
-
-.modal-footer {
-  padding: 15px 20px;
-  border-top: 1px solid #eee;
-  text-align: right;
-}
-
-.modal-footer button {
-  padding: 8px 16px;
-  background-color: #007bff;
-  color: white;
-  border: none;
-  border-radius: 4px;
-  cursor: pointer;
-}
-
-.modal-footer button:hover {
-  background-color: #0056b3;
-}
-
-.close {
-  position: absolute;
-  right: 10px;
-  top: 10px;
-  font-size: 24px;
-  cursor: pointer;
-  color: #666;
-}
-
-.close:hover {
-  color: #333;
-}
-
-#content main .table-data {
-	display: flex;
-}
-	</style>
-</head>
-
+<script></script>
 <!-- MAIN -->
 <main>
 	<div class="head-title">
@@ -241,7 +27,12 @@
 		<li>
 			<i class='bx bxs-calendar-check'></i>
 			<span class="text">
-				<h3>1020</h3>
+				<h3>
+					<?= isset($data['totalstock']->total_sum)
+						? $data['totalstock']->total_sum
+						: "0"; ?>
+				</h3>
+
 				<p>Today Stock</p>
 			</span>
 		</li>
@@ -273,12 +64,78 @@
 	<div class="table-data">
 		<div class="order">
 			<div class="head">
-				<h3>Validate Stock</h3>
-				<i class='bx bx-search'></i>
+				<h3>Raw Tea Leaves Supply</h3>
+				<i class='bx bx-shopping-bag'></i>
+			</div>
+			<div class="chart-container-wrapper" style="position:relative; width:100%; height:300px; padding:20px;">
+				<canvas id="reportTypesChart"></canvas>
+			</div>
+		</div>
+
+
+
+		<div id="reportModal" class="report-modal" style="display: none;">
+			<div class="modal-content" id="reportModalContent">
+				<span class="close" onclick="closeModal('reportModal')">&times;</span>
+				<h2>Report</h2>
+				<form action="<?php echo URLROOT; ?>/Inventory/" method="POST">
+					<div class="modal-body">
+						<textarea type="text" name="report" placeholder="Enter your report">
+
+				</textarea>
+					</div>
+					<div class="modal-footer">
+						<button type="submit" class="btn btn-primary">Submit</button>
+					</div>
+				</form>
+			</div>
+		</div>
+
+		<div class="todo">
+			<div class="head">
+				<h3>Machine Allocation Statics</h3>
+				<i class='bx bx-plus'></i>
 				<i class='bx bx-filter'></i>
 			</div>
+			<?php
+			$machines = $data['machines'];
+			// Example PHP array
+			// $machines = [
+			// 	(object) ["id" => 2, "machine_name" => "Machine A", "total_working_hours" => "200 items"],
+			// 	(object) ["id" => 3, "machine_name" => "Machine B", "total_working_hours" => "300 items"],
+			// 	(object) ["id" => 4, "machine_name" => "Machine C", "total_working_hours" => "150 hours"],
+			// 	(object) ["id" => 5, "machine_name" => "Machine D", "total_working_hours" => "500 hours"],
+			// ];
+			
+			// Extract machine names and working hours
+			$chartdata = [
+				'labels' => array_map(fn($machine) => $machine->machine_name, $machines),
+				'hours' => array_map(fn($machine) => (int) preg_replace('/\D/', '', $machine->total_working_hours), $machines),
+			];
 
-			<!-- Added table for validate stock -->
+			// Encode data to JSON
+			$jsonData = json_encode($chartdata);
+			?>
+
+			<!-- Machine Allocation Chart -->
+			<canvas id="machineAllocationChart"></canvas>
+		</div>
+	</div>
+	<!-- Stock Validation -->
+	<div class="table-data">
+		<div class="order">
+			<div class="head">
+				<h3>Validate Stock</h3>
+
+				<i class='bx bx-filter'></i>
+				<select name="" id="statusFilter" onchange="filterStocks()">
+					<option value="All">All</option>
+					<option value="Approved">Approved</option>
+					<option value="Rejected">Rejected</option>
+					<option value="Not_Validate">Not Checked</option>
+				</select>
+			</div>
+
 			<table>
 				<thead>
 					<tr>
@@ -286,61 +143,26 @@
 						<th>Collection No</th>
 						<th>Quantity</th>
 						<th>Time</th>
+						<th>Status</th>
 						<th>Actions</th>
 					</tr>
 				</thead>
-				<tbody>
-					<php foreach($data['stock'] as $stock) : ?>
-					<tr>
-					    <td>Michael Chen</td>
-						<td style="text-align: center;"> 12</td>
-						<td>325 units</td>
-						<td>2024-03-20 08:15 PM</td>
-						<td class="actions">
-							<button onclick="" style="padding: 8px 12px;
-	                                background-color: #28a745;
-	                                color: white;
-	                                border: none;
-	                                border-radius: 4px;
-	                                cursor: pointer;">Approve</button>
-							<button style="padding: 8px 12px;
-	                                background-color: #2345;
-	                                color: white;	
-	                                border: none;
-									margin-left: 10px;
-	                                border-radius: 4px;
-	                                cursor: pointer;">Reject</button>
-						</td>
-					</tr>
-					<php endforeach; ?>
-					<!-- Add more rows as needed -->
+				<tbody id="stockTable">
+					<!-- Data will be populated via JavaScript -->
 				</tbody>
 			</table>
 		</div>
-
-		<div id="reportModal" class="report-modal" style="display: none;">
-			<div class="modal-content" id="reportModalContent">
-				<span class="close" onclick="closeModal()">&times;</span>
-				<h2>Report</h2>
-				<div class="modal-body">
-					<textarea type="text" placeholder="Enter your report"></textarea>
-				</div>
-				<div class="modal-footer">
-					<button class="btn btn-primary">Submit</button>
+		<div id="collectionBagDetailsModal" class="modal">
+			<div class="modal-content">
+				<span class="close" onclick="closeModal('collectionBagDetailsModal')">&times;</span>
+				<h2>Colllection Details</h2>
+				<div id="collectionBagDetailsContent">
+					<!-- Bag details will be populated here -->
 				</div>
 			</div>
-
-
-		</div>
-		<div class="todo">
-			<div class="head">
-				<h3>Machine Allocation Statics</h3>
-				<i class='bx bx-plus'></i>
-				<i class='bx bx-filter'></i>
-			</div>
-			<canvas id="machineAllocationChart"></canvas>
 		</div>
 	</div>
+
 	<div class="top-selling-section">
 		<div class="section-header">
 			<h2>Top Selling Products</h2>
@@ -349,25 +171,29 @@
 
 		<div class="product-grid">
 			<div class="product-card">
-				<img src="<?php echo URLROOT; ?>/public/img//green tea1.webp" alt="Green Tea" class="product-image" style="height:300px; width: 300px;">
+				<img src="<?php echo URLROOT; ?>/public/img//green tea1.webp" alt="Green Tea" class="product-image"
+					style="height:300px; width: 300px;">
 				<h3>Green Tea</h3>
 				<p class="sold">120 items sold</p>
 			</div>
 
 			<div class="product-card">
-				<img src="<?php echo URLROOT; ?>/public/img/black tea.jpg" alt="Black Tea" class="product-image" style="height:300px; width: 300px;">
+				<img src="<?php echo URLROOT; ?>/public/img/black tea.jpg" alt="Black Tea" class="product-image"
+					style="height:300px; width: 300px;">
 				<h3>Black Tea</h3>
 				<p class="sold">100 items sold</p>
 			</div>
 
 			<div class="product-card">
-				<img src="<?php echo URLROOT; ?>/public/img/white tea.webp" alt="White Tea" class="product-image" style="height:300px; width: 300px;">
+				<img src="<?php echo URLROOT; ?>/public/img/white tea.webp" alt="White Tea" class="product-image"
+					style="height:300px; width: 300px;">
 				<h3>White Tea</h3>
 				<p class="sold">90 items sold</p>
 			</div>
 
 			<div class="product-card">
-				<img src="<?php echo URLROOT; ?>/public/img/oolong tea.webp" alt="oolong Tea" class="product-image" style="height:300px; width: 300px;">
+				<img src="<?php echo URLROOT; ?>/public/img/oolong tea.webp" alt="oolong Tea" class="product-image"
+					style="height:300px; width: 300px;">
 				<h3>Oolong Tea</h3>
 				<p class="sold">80 items sold</p>
 			</div>
@@ -382,36 +208,47 @@
 			<button class="next">&gt;</button>
 		</div>
 	</div>
+
+
 </main>
 <!-- MAIN -->
 </section>
 <!-- CONTENT -->
 
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script> const chartData = <?php echo $jsonData; ?>;</script>
 <script>
-	document.addEventListener('DOMContentLoaded', function() {
-		var ctx = document.getElementById('machineAllocationChart').getContext('2d');
-		var machineAllocationChart = new Chart(ctx, {
-			type: 'bar',
+	// Chart.js
+	document.addEventListener("DOMContentLoaded", function () {
+
+		const ctx = document
+			.getElementById("machineAllocationChart")
+			.getContext("2d");
+
+		console.log("chartData");
+		// Use chartData from PHP
+		const machineAllocationChart = new Chart(ctx, {
+			type: "bar",
 			data: {
-				labels: ['Machine A', 'Machine B', 'Machine C', 'Machine D'],
-				datasets: [{
-					label: 'Working Hours',
-					data: [8, 6, 7, 5],
-					backgroundColor: [
-						'rgba(255, 99, 132, 0.8)',
-						'rgba(54, 162, 235, 0.8)',
-						'rgba(255, 206, 86, 0.8)',
-						'rgba(75, 192, 192, 0.8)'
-					],
-					borderColor: [
-						'rgba(255, 99, 132, 1)',
-						'rgba(54, 162, 235, 1)',
-						'rgba(255, 206, 86, 1)',
-						'rgba(75, 192, 192, 1)'
-					],
-					borderWidth: 1
-				}]
+				labels: chartData.labels,
+				datasets: [
+					{
+						label: "Working Hours",
+						data: chartData.hours,
+						backgroundColor: [
+							"rgba(255, 99, 132, 0.8)",
+							"rgba(54, 162, 235, 0.8)",
+							"rgba(255, 206, 86, 0.8)",
+							"rgba(75, 192, 192, 0.8)",
+						],
+						borderColor: [
+							"rgba(255, 99, 132, 1)",
+							"rgba(54, 162, 235, 1)",
+							"rgba(255, 206, 86, 1)",
+							"rgba(75, 192, 192, 1)",
+						],
+						borderWidth: 1,
+					},
+				],
 			},
 			options: {
 				responsive: true,
@@ -420,59 +257,230 @@
 						beginAtZero: true,
 						title: {
 							display: true,
-							text: 'Working Hours'
+							text: "Working Hours",
 						},
-						max: 12,
 						ticks: {
-							stepSize: 2
-						}
+							stepSize: 50,
+						},
 					},
 					x: {
 						title: {
 							display: true,
-							text: 'Machines'
-						}
-					}
+							text: "Machines",
+						},
+					},
 				},
 				plugins: {
 					legend: {
-						display: false
+						display: false,
 					},
 					title: {
 						display: true,
-						text: 'Daily Machine Working Hours'
-					}
-				}
-			}
+						text: "Machine Working Hours",
+					},
+				},
+			},
 		});
 	});
 
+	//report Type chart
+	document.addEventListener("DOMContentLoaded", function () {
+		const reportCtx = document.getElementById("reportTypesChart");
 
-	function reportModel() {
-		const modal = document.getElementById('reportModal');
-		const model2 = document.getElementById('reportModalContent');
-		modal.style.display = 'flex';
-		modal.style.backgroundColor = 'rgba(0, 0, 0, 0.5)';
-		modal.style.backdropFilter = 'blur(1px)';
-		//model2.style.opacity = '1';
+		console.log("reportCtx");
+		if (reportCtx) {
 
-		// Add animation class
-		const modalContent = modal.querySelector('.modal-content');
-		modalContent.style.animation = 'modalPop 0.3s ease-out';
-	}
+			// Hardcoded chaotic data for Normal Leaf and Super Leaf for the past week
+			const labels = [
+				"Monday",
+				"Tuesday",
+				"Wednesday",
+				"Thursday",
+				"Friday",
+				"Saturday",
+				"Sunday",
+			];
+			const normalLeafData = [12, 18, 25, 30, 22, 35, 40]; // Chaotic values for Normal Leaf
+			const superLeafData = [8, 15, 20, 25, 18, 30, 28]; // Chaotic values for Super Leaf
 
-	function closeModal() {
-		const modal = document.getElementById('reportModal');
-		modal.style.display = 'none';
-	}
-
-	// Improved click outside listener
-	window.addEventListener('click', function(event) {
-		const modal = document.getElementById('reportModal');
-		if (event.target === modal) {
-			closeModal();
+			// Create the line chart with the chaotic data
+			new Chart(reportCtx, {
+				type: "line",
+				data: {
+					labels: labels,
+					datasets: [
+						{
+							label: "Normal Leaf",
+							data: normalLeafData,
+							backgroundColor: "rgba(54, 162, 235, 0.2)",
+							borderColor: "#36A2EB",
+							borderWidth: 2,
+							fill: false,
+							tension: 0.4,
+						},
+						{
+							label: "Super Leaf",
+							data: superLeafData,
+							backgroundColor: "rgba(255, 159, 64, 0.2)",
+							borderColor: "#FF9F40",
+							borderWidth: 2,
+							fill: false,
+							tension: 0.4,
+						},
+					],
+				},
+				options: {
+					responsive: true,
+					maintainAspectRatio: false,
+					plugins: {
+						legend: {
+							position: "top",
+							labels: {
+								padding: 20,
+								font: {
+									size: 12,
+								},
+							},
+						},
+						title: {
+							display: false,
+							text: "Weekly Collection of Raw Tea Leaves",
+						},
+					},
+					scales: {
+						y: {
+							beginAtZero: true,
+							grid: {
+								color: "rgba(0, 0, 0, 0.1)",
+							},
+							ticks: {
+								callback: function (value) {
+									return value + " kg";
+								},
+							},
+							title: {
+								display: true,
+								text: "Stock (kg)",
+							},
+						},
+						x: {
+							grid: {
+								display: false,
+							},
+							title: {
+								display: true,
+								text: "Days of the Week",
+							},
+						},
+					},
+				},
+			});
 		}
 	});
+
+	// Show collection bag details
+	document.addEventListener('DOMContentLoaded', function () {
+		loadStockData();
+		// Refresh every 30 seconds
+		setInterval(loadStockData, 30000);
+	});
+
+	function loadStockData() {
+		fetch(`${URLROOT}/inventory/getStockValidations`)
+			.then(response => response.json())
+			.then(data => {
+				const tableBody = document.getElementById('stockTable');
+				let html = '';
+
+
+				// Then add actual data if any exists
+				data.forEach(stock => {
+					html += `
+					<tr>
+						<td>${stock.full_name}</td>
+						<td style="text-align: center;">${stock.collection_id}</td>
+						<td>${stock.total_quantity} units</td>
+						<td>${stock.created_at}</td>
+						<td class="status completed">${stock.status}</td>
+						<td class="actions">
+							<button class="btn btn-primary" onclick="showCollectionBagDetails(${stock.collection_id})"><i class="bx bx-show"></i></button>
+						</td>
+					</tr>
+				`;
+				});
+
+				tableBody.innerHTML = html;
+			})
+			.catch(error => {
+				console.error('Error loading stock data:', error);
+				// If error occurs, at least show the dummy data
+				const tableBody = document.getElementById('stockTable');
+				tableBody.innerHTML = `
+				<tr>
+					<td>John Doe</td>
+					<td style="text-align: center;">COL001</td>
+					<td>150 units</td>
+					<td>2024-03-20 09:30:00</td>
+					<td class="status-cell">Not_Validate</td>
+					<td class="actions">
+						<button class="btn btn-primary" onclick="showCollectionBagDetails('1')"><i class="bx bx-show"></i></button>
+						
+					</td>
+				</tr>
+			`;
+			});
+	}
+
+	function filterStocks() {
+		const status = document.getElementById('statusFilter').value;
+		fetch(`${URLROOT}/inventory/getStockValidations?status=${status}`)
+			.then(response => response.json())
+			.then(data => {
+				const tableBody = document.getElementById('stockTable');
+				let html = '';
+
+
+				// Add actual filtered data
+				data.forEach(stock => {
+					html += `
+					<tr>
+						<td>${stock.full_name}</td>
+						<td style="text-align: center;">${stock.collection_id}</td>
+						<td>${stock.total_quantity} units</td>
+						<td>${stock.created_at}</td>
+						<td class="status-cell">${stock.status}</td>
+						<td class="actions">
+							<button class="btn btn-primary" onclick="showCollectionBagDetails(${stock.collection_id})"><i class="bx bx-show"></i></button>
+						</td>
+					</tr>
+				`;
+				});
+
+				tableBody.innerHTML = html;
+			})
+			.catch(error => {
+				console.error('Error filtering stock data:', error);
+				// Show dummy data on error
+				const tableBody = document.getElementById('stockTable');
+				if (status === 'All' || status === 'Not_Validate') {
+					tableBody.innerHTML = `
+					<tr>
+						<td>John Doe</td>
+						<td style="text-align: center;">COL001</td>
+						<td>150 units</td>
+						<td>2024-03-20 09:30:00</td>
+						<td class="status-cell">Not_Validate</td>
+						<td class="actions">
+							<button class="ap-button" onclick="showCollectionBagDetails('1')">Approve</button>
+							<button class="rp-button" onclick="reportModel('1')">Reject</button>
+						</td>
+					</tr>
+				`;
+				} else {
+					tableBody.innerHTML = ''; // Clear table if filtering for other statuses
+				}
+			});
+	}
 </script>
 
 <?php require APPROOT . '/views/inc/components/footer.php' ?>
