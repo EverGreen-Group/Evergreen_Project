@@ -2,11 +2,12 @@
     "name": "simaak/evergreen_project",
     "description": "A tea factory collection management system",
     "require": {
-        "endroid/qr-code": "^2.0"
+        "endroid/qr-code": "^2.0",
+        "cboden/ratchet": "^0.4.4"
     },
     "autoload": {
         "psr-4": {
-            "Simaak\\EvergreenProject\\": "src/"
+            "Simaak\\EvergreenProject\\": "app/"
         }
     },
     "authors": [

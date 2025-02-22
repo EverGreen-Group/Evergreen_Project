@@ -1,8 +1,14 @@
 <?php require APPROOT . '/views/inc/components/header.php'; ?>
-<?php require APPROOT . '/views/inc/components/sidebar_suppliermanager.php'; ?>
+<?php require APPROOT . '/views/inc/components/sidebar_supplier.php'; ?>
 <?php require APPROOT . '/views/inc/components/topnavbar.php'; ?>
 
+
+<html>
+
+<!-- Include chat.css from the css directory -->
 <link rel="stylesheet" href="<?php echo URLROOT; ?>/css/chat.css">
+<link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
+<link rel="stylesheet" href="" class="">
 
 <main>
     <div class="chat-container">
@@ -19,339 +25,391 @@
                     <div class="supplier-item" data-user-id="<?php echo $supplier->user_id; ?>">
                         <div class="supplier-info">
                             <h4><?php echo htmlspecialchars($supplier->first_name . ' ' . $supplier->last_name); ?></h4>
-                            <p>SUP<?php echo sprintf('%03d', $supplier->user_id); ?></p>
+                            <p>SUP<?php echo sprintf('%03d', $supplier->user_id);?></p>
                         </div>
-                        <div class="status-dot <?php echo $supplier->online_status ? 'online' : 'offline'; ?>"></div>
+                        <div class="status-dot offline"></div>
                     </div>
                 <?php endforeach; ?>
             </div>
         </div>
-
+        
         <!-- Middle: Chat Area -->
         <div class="chat-area">
             <!-- Initial State -->
-             
             <div class="no-chat-selected">
                 <i class='bx bx-message-square-dots'></i>
                 <p>Select a supplier to start messaging</p>
             </div>
-
-            <!-- Chat Interface (Hidden initially) -->
             <div class="chat-interface" style="display: none;">
-                <div class="chat-header">
-                    <div class="chat-user-info">
-                        <h3 id="current-chat-name"></h3>
-                        <span class="status">Active now</span>
-                    </div>
+            <div class="chat-header">
+                <div class="chat-user-info">
+                    <h3 id="current-chat-name"></h3>
+                    <span class="status">Active now</span>
                 </div>
+            </div>
 
-                <div class="messages" id="chat-messages"></div>
-                <div class="chat-input">
-                    <input type="text" id="message-input" placeholder="Type a message...">
-                    <button id="send-message-btn">
-                        <i class='bx bx-send'></i>
-                    </button>
-                </div>
+            
+            
+
+            <div class="messages" id="chat-messages">
+                <p>Loading messages...</p>
+                
+                
+            </div>
+
+            <!-- Chat Input Section -->
+            <div class="chat-input">
+                <input type="text" id="message-input" placeholder="Type a message...">
+                <button id="send-message-btn">
+                    <i class='bx bx-send'></i>
+                </button>
             </div>
         </div>
 
-        <!-- Right Sidebar: Chat Requests -->
-        <div class="requests-sidebar">
-            <h3>Chat Requests</h3>
-            <?php if(!empty($data['chat_requests'])): ?>
-                <?php foreach($data['chat_requests'] as $request): ?>
-                    <div class="chat-request">
-                        <div class="request-info">
-                            <h4><?php echo htmlspecialchars($request->first_name . ' ' . $request->last_name); ?></h4>
-                            <p>SUP<?php echo sprintf('%03d', $request->user_id); ?></p>
-                        </div>
-                        <div class="request-actions">
-                            <button class="accept-btn" onclick="handleRequestAction('accept', '<?php echo $request->source; ?>', <?php echo $request->request_id; ?>)">
-                                Accept
-                            </button>
-                            <button class="reject-btn" onclick="handleRequestAction('reject', '<?php echo $request->source; ?>', <?php echo $request->request_id; ?>)">
-                                Reject
-                            </button>
-                        </div>
-                    </div>
-                <?php endforeach; ?>
-            <?php else: ?>
-                <p class="no-requests">No pending requests</p>
-                
-            <?php endif; ?>
-        </div>
     </div>
+
+
 </main>
 
-
 <script>
-let currentChatUserId = null;
-let currentEditMessageId = null;
-
-// Function to load messages
-function loadMessages() {
-    if (!currentChatUserId) return;
     
-    fetch('<?php echo URLROOT; ?>/suppliermanager/getMessages', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ receiver_id: currentChatUserId })
-    })
-    .then(response => response.json())
-    .then(data => {
-        if (data.success && Array.isArray(data.messages)) {
-            displayMessages(data.messages);
-            // Smooth scroll to bottom after loading messages
-            const messagesDiv = document.getElementById('chat-messages');
-            messagesDiv.scrollTo({
-                top: messagesDiv.scrollHeight,
-                behavior: 'smooth'
-            });
+const URLROOT = 'http://localhost/Evergreen_Project';
+let ws;
+let currentChatUserId = null;
+const onlineUsers = new Set();
+
+// Initialize WebSocket connection with reconnection logic
+function initWebSocket() {
+    ws = new WebSocket('ws://localhost:8080');
+
+    ws.onopen = function() {
+        console.log('Connected to WebSocket server');
+        // Send initialization message with user ID
+        ws.send(JSON.stringify({
+            type: 'init',
+            userId: <?php echo $_SESSION['user_id']; ?>
+        }));
+    };
+
+    ws.onmessage = function(e) {
+        const data = JSON.parse(e.data);
+        switch (data.type) {
+            case 'message':
+            case 'sent':
+                if (data.receiverId === currentChatUserId || data.senderId === currentChatUserId) {
+                    appendMessage(data);
+                }
+                break;
+            case 'status':
+                updateUserStatus(data.userId, data.status);
+                break;
+            case 'message_updated':
+                updateMessage(data);
+                break;
+            case 'message_deleted':
+                deleteMessage(data.message_id);
+                break;
         }
-    });
+    };
+
+    ws.onclose = function() {
+        console.log('Disconnected from WebSocket server');
+        // Update all users to offline status
+        document.querySelectorAll('.status-dot').forEach(dot => {
+            dot.classList.remove('online');
+            dot.classList.add('offline');
+        });
+        // Attempt to reconnect after 3 seconds with exponential backoff
+        setTimeout(() => reconnectWebSocket(), 3000);
+    };
+
+    ws.onerror = function(error) {
+        console.error('WebSocket error:', error);
+    };
 }
 
-// Handle supplier selection
-document.querySelectorAll('.supplier-item').forEach(item => {
-    item.addEventListener('click', function() {
-        currentChatUserId = this.dataset.userId;
-        const supplierName = this.querySelector('h4').textContent;
+// Reconnect with exponential backoff
+function reconnectWebSocket(attempt = 1) {
+    if (attempt > 5) {
+        console.error('Max reconnection attempts reached');
+        return;
+    }
+    ws = new WebSocket('ws://localhost:8080');
+    ws.onopen = function() {
+        console.log(`Reconnected to WebSocket server after attempt ${attempt}`);
+        ws.send(JSON.stringify({
+            type: 'init',
+            userId: <?php echo $_SESSION['user_id']; ?>
+        }));
+    };
+    ws.onclose = function() {
+        console.log(`Reconnection attempt ${attempt} failed`);
+        setTimeout(() => reconnectWebSocket(attempt + 1), 3000 * Math.pow(2, attempt - 1));
+    };
+    ws.onmessage = ws.onmessage; // Reuse the existing onmessage handler
+    ws.onerror = ws.onerror; // Reuse the existing onerror handler
+}
+
+// Update user's online/offline status
+function updateUserStatus(userId, status) {
+    const userElement = document.querySelector(`.supplier-item[data-user-id="${userId}"]`);
+    if (userElement) {
+        const statusDot = userElement.querySelector('.status-dot');
+        statusDot.classList.remove('online', 'offline');
+        statusDot.classList.add(status);
         
-        // Update UI
-        document.querySelectorAll('.supplier-item').forEach(i => i.classList.remove('active'));
-        this.classList.add('active');
-        
-        // Show chat interface
-        document.querySelector('.no-chat-selected').style.display = 'none';
-        document.querySelector('.chat-interface').style.display = 'flex';
-        
-        // Update chat header
-        document.getElementById('current-chat-name').textContent = supplierName;
-        
-        // Load messages
-        loadMessages();
-    });
-});
+        if (status === 'online') {
+            onlineUsers.add(userId);
+        } else {
+            onlineUsers.delete(userId);
+        }
+    }
+}
+
+// Append or update message in chat
+function appendMessage(data) {
+    const messagesDiv = document.getElementById('chat-messages');
+    const messageDiv = document.createElement('div');
+    const isSent = data.senderId == <?php echo $_SESSION['user_id']; ?>;
+    const rowClass = isSent ? 'row justify-content-start' : 'row justify-content-end';
+    const backgroundClass = isSent ? 'alert-primary' : 'alert-success';
+    const from = data.senderName || 'Supplier';
+
+    messageDiv.className = `message ${isSent ? 'sent' : 'received'}`;
+    messageDiv.dataset.msgId = data.message_id;
+    messageDiv.innerHTML = `
+        <div class="${rowClass}">
+            <div class="col-sm-10">
+                <div class="shadow-sm alert ${backgroundClass}">
+                    <b>${from}: </b>${data.message}<br />
+                    <div class="text-right">
+                        <small><i>Sent: ${data.created_at} | ${data.read_at || 'NULL'} ${data.edited_at ? '| Edited: ' + data.edited_at : ''} (Type: ${data.message_type})</i></small>
+                    </div>
+                    ${isSent ? '<button class="edit-msg-btn btn btn-sm btn-warning mt-1">Edit</button><button class="delete-msg-btn btn btn-sm btn-danger mt-1">Delete</button>' : ''}
+                </div>
+            </div>
+        </div>
+    `;
+    messagesDiv.appendChild(messageDiv);
+    messagesDiv.scrollTop = messagesDiv.scrollHeight;
+}
+
+// Update message in chat after editing
+function updateMessage(data) {
+    const messageDiv = document.querySelector(`[data-msg-id="${data.message_id}"]`);
+    if (messageDiv) {
+        const isSent = data.senderId == <?php echo $_SESSION['user_id']; ?>;
+        const rowClass = isSent ? 'row justify-content-start' : 'row justify-content-end';
+        const backgroundClass = isSent ? 'alert-primary' : 'alert-success';
+        const from = data.senderName || 'Supplier';
+
+        messageDiv.innerHTML = `
+            <div class="${rowClass}">
+                <div class="col-sm-10">
+                    <div class="shadow-sm alert ${backgroundClass}">
+                        <b>${from}: </b>${data.message}<br />
+                        <div class="text-right">
+                            <small><i>Sent: ${data.created_at} | ${data.read_at || 'NULL'} | Edited: ${data.edited_at} (Type: ${data.message_type})</i></small>
+                        </div>
+                        ${isSent ? '<button class="edit-msg-btn btn btn-sm btn-warning mt-1">Edit</button><button class="delete-msg-btn btn btn-sm btn-danger mt-1">Delete</button>' : ''}
+                    </div>
+                </div>
+            </div>
+        `;
+    }
+}
+
+// Delete message from chat
+function deleteMessage(messageId) {
+    const messageDiv = document.querySelector(`[data-msg-id="${messageId}"]`);
+    if (messageDiv) {
+        messageDiv.remove();
+    }
+}
 
 // Send message function
 function sendMessage() {
     const messageInput = document.getElementById('message-input');
-    const sendButton = document.getElementById('send-message-btn');
     const message = messageInput.value.trim();
     
-    if (!message || !currentChatUserId) return;
+    if (!message || !currentChatUserId || !ws || ws.readyState !== WebSocket.OPEN) {
+        console.log('Cannot send message:', { message, currentChatUserId, wsState: ws?.readyState });
+        return;
+    }
     
-    // Add loading state
-    sendButton.classList.add('loading');
-    sendButton.innerHTML = '<div class="loading-indicator"></div>';
+    ws.send(JSON.stringify({
+        type: 'chat',
+        senderId: <?php echo $_SESSION['user_id']; ?>,
+        receiverId: currentChatUserId,
+        message: message
+    }));
     
-    fetch('<?php echo URLROOT; ?>/suppliermanager/sendMessage', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-            receiver_id: currentChatUserId,
-            message: message
-        })
-    })
-    .then(response => response.json())
-    .then(data => {
-        if (data.success) {
-            messageInput.value = '';
-            loadMessages();
-        }
-    })
-    .finally(() => {
-        // Remove loading state
-        sendButton.classList.remove('loading');
-        sendButton.innerHTML = '<i class="bx bx-send"></i>';
-        
-        // Scroll to bottom after new message
-        const messagesDiv = document.getElementById('chat-messages');
-        messagesDiv.scrollTop = messagesDiv.scrollHeight;
+    appendMessage({
+        senderId: <?php echo $_SESSION['user_id']; ?>,
+        receiverId: currentChatUserId,
+        message: message,
+        created_at: new Date().toLocaleTimeString(),
+        message_id: Date.now(), // Temporary; replace with actual message_id from server
+        message_type: 'text',
+        senderName: 'Me' // Placeholder; replace with actual name from server response
     });
+    messageInput.value = '';
 }
 
-// Enter key to send message
-document.getElementById('message-input').addEventListener('keypress', function(e) {
+// Event Listeners
+document.getElementById('send-message-btn')?.addEventListener('click', sendMessage);
+
+document.getElementById('message-input')?.addEventListener('keypress', function(e) {
     if (e.key === 'Enter' && !e.shiftKey) {
         e.preventDefault();
         sendMessage();
     }
 });
 
-// Auto refresh messages
-setInterval(loadMessages, 3000);
-
-// Search functionality for suppliers
-document.getElementById('supplier-search').addEventListener('input', function(e) {
-    const searchTerm = e.target.value.toLowerCase();
-    const supplierItems = document.querySelectorAll('.supplier-item');
-    
-    supplierItems.forEach(item => {
-        const supplierName = item.querySelector('h4').textContent.toLowerCase();
-        const supplierId = item.querySelector('p').textContent.toLowerCase();
+document.querySelectorAll('.supplier-item').forEach(item => {
+    item.addEventListener('click', function() {
+        document.querySelectorAll('.supplier-item').forEach(i => i.classList.remove('active'));
+        this.classList.add('active');
         
-        if (supplierName.includes(searchTerm) || supplierId.includes(searchTerm)) {
-            item.style.display = 'flex';
-        } else {
-            item.style.display = 'none';
-        }
+        document.querySelector('.no-chat-selected').style.display = 'none';
+        document.querySelector('.chat-interface').style.display = 'flex';
+        
+        currentChatUserId = this.dataset.userId;
+        document.getElementById('current-chat-name').textContent = 
+            this.querySelector('h4').textContent;
+        
+        document.getElementById('chat-messages').innerHTML = '<p>Loading messages...</p>';
+        fetchMessages(currentChatUserId);
     });
-    
-    checkEmptyResults();
 });
 
-// Add this to handle empty search results
-const checkEmptyResults = () => {
-    const supplierItems = document.querySelectorAll('.supplier-item');
-    const visibleItems = Array.from(supplierItems).filter(item => 
-        item.style.display !== 'none'
-    );
-    
-    const existingNoResults = document.querySelector('.no-results');
-    if (existingNoResults) {
-        existingNoResults.remove();
-    }
-    
-    if (visibleItems.length === 0) {
-        const noResults = document.createElement('div');
-        noResults.className = 'no-results';
-        noResults.innerHTML = '<p>No suppliers found</p>';
-        document.querySelector('.suppliers-list').appendChild(noResults);
-    }
-};
-
-// Edit message handler
-document.addEventListener('click', function(e) {
-    if (e.target.closest('.edit-msg-btn')) {
-        const messageDiv = e.target.closest('.message');
-        const messageText = messageDiv.querySelector('p').textContent;
-        currentEditMessageId = messageDiv.dataset.msgId;
-        
-        document.getElementById('edit-message-text').value = messageText;
-        document.querySelector('.edit-message-modal').style.display = 'block';
-    }
-});
-
-// Save edited message
-document.getElementById('save-edit-btn').addEventListener('click', function() {
-    const newMessage = document.getElementById('edit-message-text').value;
-    
-    fetch(`${URLROOT}/suppliermanager/editMessage`, {
+function fetchMessages(receiverId) {
+    const data = { receiver_id: receiverId };
+    fetch(`${URLROOT}/suppliermanager/getMessages`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-            msg_id: currentEditMessageId,
-            new_message: newMessage
-        })
+        body: JSON.stringify(data)
     })
     .then(response => response.json())
     .then(data => {
         if (data.success) {
-            document.querySelector('.edit-message-modal').style.display = 'none';
-            loadMessages();
+            displayMessages(data.messages);
+        } else {
+            console.log('Error:', data.message);
+            document.getElementById('chat-messages').innerHTML = 'No messages found.';
         }
+    })
+    .catch(error => {
+        console.error('Error fetching messages:', error);
+        document.getElementById('chat-messages').innerHTML = 'Error loading messages.';
     });
+}
+
+function displayMessages(messages) {
+    const messagesContainer = document.getElementById('chat-messages');
+    messagesContainer.innerHTML = '';
+    
+    messages.forEach(message => {
+        appendMessage({
+            message_id: message.message_id,
+            senderId: message.sender_id,
+            receiverId: message.receiver_id,
+            message: message.message,
+            created_at: message.created_at,
+            read_at: message.read_at || 'NULL',
+            edited_at: message.edited_at || null,
+            message_type: message.message_type,
+            senderName: message.sender_name
+        });
+    });
+    messagesContainer.scrollTop = messagesContainer.scrollHeight;
+}
+
+// Edit message handler
+document.addEventListener('click', function(e) {
+    if (e.target.closest('.edit-msg-btn')) {
+        const messageDiv = e.target.closest('.alert');
+        const messageId = messageDiv.dataset.msgId;
+        const currentMessage = messageDiv.querySelector('p').textContent.replace(/^[^:]+:\s*/, '');
+
+        document.getElementById('edit-message-text').value = currentMessage;
+        document.querySelector('.edit-message-modal').style.display = 'block';
+
+        document.getElementById('save-edit-btn').onclick = function() {
+            const newMessage = document.getElementById('edit-message-text').value;
+            fetch(`${URLROOT}/suppliermanager/editMessage`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ message_id: messageId, new_message: newMessage })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    ws.send(JSON.stringify({
+                        type: 'edit',
+                        message_id: messageId,
+                        new_message: newMessage,
+                        user_id: <?php echo $_SESSION['user_id']; ?>
+                    }));
+                    document.querySelector('.edit-message-modal').style.display = 'none';
+                }
+            })
+            .catch(error => console.error('Error editing message:', error));
+        };
+
+        document.getElementById('cancel-edit-btn').onclick = function() {
+            document.querySelector('.edit-message-modal').style.display = 'none';
+        };
+    }
 });
 
 // Delete message handler
 document.addEventListener('click', function(e) {
     if (e.target.closest('.delete-msg-btn')) {
         if (confirm('Are you sure you want to delete this message?')) {
-            const messageDiv = e.target.closest('.message');
-            const msgId = messageDiv.dataset.msgId;
+            const messageDiv = e.target.closest('.alert');
+            const messageId = messageDiv.dataset.msgId;
             
             fetch(`${URLROOT}/suppliermanager/deleteMessage`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ msg_id: msgId })
+                body: JSON.stringify({ message_id: messageId })
             })
             .then(response => response.json())
             .then(data => {
                 if (data.success) {
-                    loadMessages();
+                    ws.send(JSON.stringify({
+                        type: 'delete',
+                        message_id: messageId,
+                        user_id: <?php echo $_SESSION['user_id']; ?>
+                    }));
                 }
-            });
+            })
+            .catch(error => console.error('Error deleting message:', error));
         }
     }
 });
 
-// Update the accept/reject functions
-function handleRequestAction(action, source, requestId) {
-    const endpoint = action === 'accept' ? 'acceptChatRequest' : 'rejectChatRequest';
-    const button = event.target;
-    
-    // Disable button to prevent double clicks
-    button.disabled = true;
-    
-    fetch(`${URLROOT}/suppliermanager/${endpoint}`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ 
-            request_id: requestId,
-            source: source 
-        })
-    })
-    .then(response => response.json())
-    .then(data => {
-        if(data.success) {
-            // Remove the request element with animation
-            const requestElement = button.closest('.chat-request');
-            requestElement.style.opacity = '0';
-            setTimeout(() => {
-                requestElement.remove();
-                // Check if no more requests
-                if (document.querySelectorAll('.chat-request').length === 0) {
-                    location.reload(); // Refresh if no more requests
-                }
-            }, 300);
-        } else {
-            alert('Failed to process request');
-            button.disabled = false;
-        }
-    })
-    .catch(error => {
-        console.error('Error:', error);
-        alert('An error occurred');
-        button.disabled = false;
+// Search functionality
+document.getElementById('supplier-search')?.addEventListener('input', function(e) {
+    const searchTerm = e.target.value.toLowerCase();
+    document.querySelectorAll('.supplier-item').forEach(item => {
+        const supplierName = item.querySelector('h4')?.textContent.toLowerCase() || '';
+        const supplierId = item.querySelector('p')?.textContent.toLowerCase() || '';
+        item.style.display = 
+            supplierName.includes(searchTerm) || supplierId.includes(searchTerm) 
+            ? 'flex' : 'none';
     });
-}
+});
 
-// Add this to your view file
-document.addEventListener('DOMContentLoaded', function() {
-    const suppliersSidebar = document.querySelector('.suppliers-sidebar');
-    const requestsSidebar = document.querySelector('.requests-sidebar');
-    const toggleSuppliers = document.querySelector('.toggle-suppliers');
-    const toggleRequests = document.querySelector('.toggle-requests');
+// Initialize WebSocket when page loads
+document.addEventListener('DOMContentLoaded', initWebSocket);
 
-    if(toggleSuppliers) {
-        toggleSuppliers.addEventListener('click', () => {
-            suppliersSidebar.classList.toggle('active');
-        });
-    }
-
-    if(toggleRequests) {
-        toggleRequests.addEventListener('click', () => {
-            requestsSidebar.classList.toggle('active');
-        });
-    }
-
-    // Close sidebars when clicking outside
-    document.addEventListener('click', (e) => {
-        if(!e.target.closest('.suppliers-sidebar') && 
-           !e.target.closest('.toggle-suppliers') && 
-           suppliersSidebar?.classList.contains('active')) {
-            suppliersSidebar.classList.remove('active');
-        }
-        
-        if(!e.target.closest('.requests-sidebar') && 
-           !e.target.closest('.toggle-requests') && 
-           requestsSidebar?.classList.contains('active')) {
-            requestsSidebar.classList.remove('active');
-        }
-    });
+// Sidebar toggle (if needed)
+document.querySelector('.toggle-suppliers')?.addEventListener('click', () => {
+    document.querySelector('.suppliers-sidebar')?.classList.toggle('active');
 });
 </script>
-
+</html>
 
 <?php require APPROOT . '/views/inc/components/footer.php'; ?>
