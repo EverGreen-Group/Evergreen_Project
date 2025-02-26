@@ -135,6 +135,46 @@ class Supplier extends Controller {
         $this->view('supplier/v_supplier_payment', []);
     }
 
+    public function schedule()
+    {
+        $supplierId = $_SESSION['supplier_id'];
+
+        try {
+            // Get subscribed and available schedules separately
+            $subscribedSchedules = $this->scheduleModel->getSubscribedSchedules($supplierId);
+            $availableSchedules = $this->scheduleModel->getAvailableSchedules($supplierId);
+            
+            $formatSchedule = function($schedule) {
+                return [
+                    'schedule_id' => $schedule->schedule_id,
+                    'route_name' => $schedule->route_name,
+                    'day' => $schedule->day,
+                    'week_number' => $schedule->week_number,
+                    'shift_time' => $schedule->shift_time,
+                    'remaining_capacity' => $schedule->remaining_capacity,
+                    'vehicle' => $schedule->license_plate,
+                    'is_subscribed' => (bool)$schedule->is_subscribed
+                ];
+            };
+
+            $data = [
+                'subscribedSchedules' => array_map($formatSchedule, $subscribedSchedules),
+                'availableSchedules' => array_map($formatSchedule, $availableSchedules),
+                'error' => ''
+            ];
+        } catch (Exception $e) {
+            error_log($e->getMessage());
+            
+            $data = [
+                'subscribedSchedules' => [],
+                'availableSchedules' => [],
+                'error' => 'An error occurred while fetching schedules. Please try again later.'
+            ];
+        }
+
+        $this->view('supplier/v_supplier_schedule', $data);
+    }
+
     public function paymentanalysis()
     {
         $data = [];
@@ -549,6 +589,83 @@ class Supplier extends Controller {
         ];
 
         $this->view('supplier/v_fertilizer', $data);
+    }
+
+    // Add these methods for AJAX calls
+    public function subscribeToRoute()
+    {
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            redirect('supplier/schedule');
+        }
+
+        $routeId = $this->routeModel->getRouteIdByScheduleId($_POST['schedule_id']) ?? null;
+        $supplierId = $_SESSION['supplier_id'];
+
+        try {
+            // First, check if supplier is already subscribed to any route
+            $currentRoute = $this->routeModel->getSupplierCurrentRoute($supplierId);
+            
+            if ($currentRoute) {
+                // Need to unsubscribe from current route first
+                echo json_encode([
+                    'success' => false, 
+                    'message' => 'Please unsubscribe from your current route first.'
+                ]);
+                return;
+            }
+
+            // Get the last stop order for the route
+            $lastStopOrder = $this->routeModel->getLastStopOrder($routeId);
+            $newStopOrder = $lastStopOrder + 1;
+
+            // Add supplier to route
+            if ($this->routeModel->addSupplierToRoute($routeId, $supplierId, $newStopOrder)) {
+                // Update the remaining capacity
+                $this->routeModel->updateRemainingCapacity($routeId, 'add');
+                echo json_encode(['success' => true]);
+            } else {
+                echo json_encode([
+                    'success' => false, 
+                    'message' => 'Failed to subscribe to route'
+                ]);
+            }
+        } catch (Exception $e) {
+            echo json_encode([
+                'success' => false, 
+                'message' => $e->getMessage()
+            ]);
+        }
+    }
+
+    public function unsubscribeFromRoute()
+    {
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            redirect('supplier/schedule');
+        }
+
+        $routeId = $this->routeModel->getRouteIdByScheduleId($_POST['schedule_id']) ?? null;
+        $supplierId = $_SESSION['supplier_id'];
+
+        try {
+            
+            // Remove supplier from route
+            if ($this->routeModel->removeSupplierFromRoute($routeId, $supplierId)) {
+                $this->routeModel->updateRemainingCapacity($routeId, 'remove');
+                // Adjust stop orders for remaining suppliers
+                
+                echo json_encode(['success' => true]);
+            } else {
+                echo json_encode([
+                    'success' => false, 
+                    'message' => 'Failed to unsubscribe from route'
+                ]);
+            }
+        } catch (Exception $e) {
+            echo json_encode([
+                'success' => false, 
+                'message' => $e->getMessage()
+            ]);
+        }
     }
 }
 ?>

@@ -494,15 +494,18 @@ class M_Route {
      * Retrieve the vehicle capacity associated with a route.
      */
     private function getVehicleCapacityByRouteId($routeId) {
-        $sql = "SELECT v.capacity FROM routes r JOIN vehicles v ON r.vehicle_id = v.vehicle_id WHERE r.route_id = :route_id";
-        $stmt = $this->db->prepare($sql);
-        $stmt->bindParam(':route_id', $routeId);
+        $sql = "SELECT v.capacity 
+                FROM routes r 
+                JOIN vehicles v ON r.vehicle_id = v.vehicle_id 
+                WHERE r.route_id = :route_id";
+                
+        $this->db->query($sql);
+        $this->db->bind(':route_id', $routeId);
         
-        if ($stmt->execute()) {
-            $result = $stmt->fetch(PDO::FETCH_ASSOC);
-            return $result['capacity'] ? (float)$result['capacity'] : 0;
-        }
-        return 0;
+        $result = $this->db->single();
+        
+        // Check if result exists and has the capacity property
+        return $result->capacity;
     }
 
     /**
@@ -516,8 +519,14 @@ class M_Route {
         
         if ($stmt->execute()) {
             $result = $stmt->fetch(PDO::FETCH_ASSOC);
-            return $result['stop_order'] ? (int)$result['stop_order'] : 0;
+            
+            // Check if result is valid and contains the 'stop_order' key
+            if ($result && isset($result['stop_order'])) {
+                return (int)$result['stop_order'];
+            }
         }
+        
+        // Return a default value if no valid result is found
         return 0;
     }
 
@@ -532,6 +541,48 @@ class M_Route {
         $stmt->bindParam(':removed_stop_order', $removedStopOrder);
         
         return $stmt->execute();
+    }
+
+    public function getSupplierCurrentRoute($supplierId) {
+        $sql = "SELECT route_id FROM route_suppliers 
+                WHERE supplier_id = :supplier_id 
+                AND is_active = 1 
+                AND is_deleted = 0";
+        
+        $this->db->query($sql);
+        $this->db->bind(':supplier_id', $supplierId);
+        return $this->db->single();
+    }
+
+    public function getSupplierStopOrder($routeId, $supplierId) {
+        $sql = "SELECT stop_order FROM route_suppliers 
+                WHERE route_id = :route_id 
+                AND supplier_id = :supplier_id 
+                AND is_active = 1 
+                AND is_deleted = 0";
+        
+        $this->db->query($sql);
+        $this->db->bind(':route_id', $routeId);
+        $this->db->bind(':supplier_id', $supplierId);
+        $result = $this->db->single();
+        return $result ? $result->stop_order : null;
+    }
+
+    public function getRouteIdByScheduleId($scheduleId) {
+        $sql = "SELECT r.route_id 
+                FROM collection_schedules cs 
+                JOIN routes r ON cs.route_id = r.route_id 
+                WHERE cs.schedule_id = :schedule_id 
+                AND r.is_deleted = 0";  // Ensure the route is not deleted
+
+        $this->db->query($sql);
+        $this->db->bind(':schedule_id', $scheduleId);
+        
+        // Execute the query and return the route_id
+        $result = $this->db->single();
+        
+        // Check if result is valid and return the route_id or null
+        return ($result && isset($result->route_id)) ? $result->route_id : null;
     }
 }
 ?>

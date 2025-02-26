@@ -180,39 +180,7 @@ class M_CollectionSchedule {
         return $this->db->single();
     }
 
-    public function isUserReady($scheduleId, $userId) {
-        $this->db->query("
-            SELECT 
-                c.*,
-                CASE 
-                    WHEN :user_id IN (
-                        SELECT e.user_id 
-                        FROM drivers d 
-                        JOIN employees e ON d.employee_id = e.employee_id 
-                        JOIN teams t ON d.driver_id = t.driver_id
-                        WHERE t.team_id = cs.team_id
-                    ) THEN c.driver_approved
-                    ELSE c.partner_approved
-                END as user_ready
-            FROM collection_schedules cs
-            LEFT JOIN collections c ON cs.schedule_id = c.schedule_id
-            WHERE cs.schedule_id = :schedule_id
-            LIMIT 1
-        ");
-        
-        $this->db->bind(':schedule_id', $scheduleId);
-        $this->db->bind(':user_id', $userId);
-        
-        $result = $this->db->single();
-        
-        if (!$result) {
-            // Create a new collection entry if it doesn't exist
-            $this->createInitialCollection($scheduleId);
-            return false;
-        }
-        
-        return (bool)$result->user_ready;
-    }
+
 
     public function getCollectionByScheduleId($scheduleId) {
         $this->db->query("
@@ -224,132 +192,46 @@ class M_CollectionSchedule {
         return $this->db->single();
     }
 
-    public function createInitialCollection($scheduleId) {
-        $this->db->query("
-            INSERT INTO collections (
-                schedule_id,
-                status,
-                driver_approved,
-                partner_approved
-            ) VALUES (
-                :schedule_id,
-                'Pending',
-                0,
-                0
-            )
-        ");
-        $this->db->bind(':schedule_id', $scheduleId);
-        return $this->db->execute();
+    public function getSupplierSchedule($supplierId) {
+        $sql = "SELECT 
+                    cs.schedule_id,
+                    cs.route_id,
+                    r.route_name,
+                    cs.week_number,
+                    cs.day,
+                    s.shift_name,
+                    CONCAT(s.start_time, ' - ', s.end_time) as shift_time,
+                    v.license_plate,
+                    v.capacity as remaining_capacity,
+                    rs.is_active as is_subscribed
+                FROM collection_schedules cs
+                INNER JOIN routes r ON cs.route_id = r.route_id
+                INNER JOIN collection_shifts s ON cs.shift_id = s.shift_id
+                INNER JOIN vehicles v ON r.vehicle_id = v.vehicle_id
+                LEFT JOIN route_suppliers rs ON (r.route_id = rs.route_id AND rs.supplier_id = :supplier_id)
+                WHERE cs.is_deleted = 0 
+                AND cs.is_active = 1
+                AND rs.is_deleted = 0
+                ORDER BY 
+                    CASE cs.day
+                        WHEN 'Monday' THEN 1
+                        WHEN 'Tuesday' THEN 2
+                        WHEN 'Wednesday' THEN 3
+                        WHEN 'Thursday' THEN 4
+                        WHEN 'Friday' THEN 5
+                        WHEN 'Saturday' THEN 6
+                        WHEN 'Sunday' THEN 7
+                    END,
+                    cs.week_number,
+                    s.start_time";
+
+        $this->db->query($sql);
+        $this->db->bind(':supplier_id', $supplierId);
+        return $this->db->resultSet();
     }
 
-    public function setUserReady($scheduleId, $userId) {
-        try {
-            $this->db->beginTransaction();
 
-            // First check if this user is a driver or partner
-            $userRole = RoleHelper::hasRole(RoleHelper::DRIVER) ? 'driver' : 
-                       (RoleHelper::hasRole(RoleHelper::DRIVING_PARTNER) ? 'driving_partner' : null);
 
-            // Get the collection record
-            $collection = $this->getCollectionByScheduleId($scheduleId);
-            
-            if (!$collection) {
-                // Create initial collection if it doesn't exist
-                $this->createInitialCollection($scheduleId);
-                $collection = $this->getCollectionByScheduleId($scheduleId);
-            }
-
-            // Update the appropriate approval field based on role
-            if ($userRole == 'driver') {
-                $sql = "UPDATE collections 
-                       SET driver_approved = 1,
-                           start_time = CASE 
-                               WHEN partner_approved = 1 THEN NOW() 
-                               ELSE start_time 
-                           END
-                       WHERE schedule_id = :schedule_id";
-            } elseif ($userRole == 'driving_partner') {
-                $sql = "UPDATE collections 
-                       SET partner_approved = 1,
-                           start_time = CASE 
-                               WHEN driver_approved = 1 THEN NOW() 
-                               ELSE start_time 
-                           END
-                       WHERE schedule_id = :schedule_id";
-            } else {
-                throw new Exception("Invalid user role");
-            }
-
-            $this->db->query($sql);
-            $this->db->bind(':schedule_id', $scheduleId);
-            
-            if (!$this->db->execute()) {
-                throw new Exception("Failed to update ready status");
-            }
-
-            // Get updated collection to check if both are ready
-            $updatedCollection = $this->getCollectionByScheduleId($scheduleId);
-            if ($updatedCollection->driver_approved && $updatedCollection->partner_approved) {
-                // Both are ready, initialize collection records for each supplier
-                $schedule = $this->getScheduleById($scheduleId);
-                
-                // Create model instances directly
-                $routeModel = new M_Route();
-                $routeSuppliers = $routeModel->getRouteSuppliers($schedule->route_id);
-                
-                // Create supplier records
-                foreach ($routeSuppliers as $supplier) {
-                    $this->db->query("INSERT INTO collection_supplier_records 
-                                    (collection_id, supplier_id, status, created_at) 
-                                    VALUES (:collection_id, :supplier_id, 'pending', NOW())");
-                    $this->db->bind(':collection_id', $updatedCollection->collection_id);
-                    $this->db->bind(':supplier_id', $supplier->supplier_id);
-                    $this->db->execute();
-                }
-
-                // Optimize the route
-                $route = $routeModel->getRouteById($schedule->route_id);
-                $currentLocation = $this->getCurrentLocation();
-                $this->optimizeRoute($route->route_id, $currentLocation['lat'], $currentLocation['lng']);
-            }
-
-            $this->db->commit();
-            return true;
-
-        } catch (Exception $e) {
-            $this->db->rollBack();
-            throw $e;
-        }
-    }
-
-    public function areBothTeamMembersReady($scheduleId) {
-        $this->db->query("
-            SELECT 
-                driver_approved,
-                partner_approved,
-                start_time
-            FROM collections
-            WHERE schedule_id = :schedule_id
-            LIMIT 1
-        ");
-        
-        $this->db->bind(':schedule_id', $scheduleId);
-        $result = $this->db->single();
-        
-        if ($result->driver_approved && $result->partner_approved && !$result->start_time) {
-            // Both are ready and collection hasn't started yet, set start time
-            $this->db->query("
-                UPDATE collections 
-                SET start_time = CURRENT_TIMESTAMP,
-                    status = 'In Progress'
-                WHERE schedule_id = :schedule_id
-            ");
-            $this->db->bind(':schedule_id', $scheduleId);
-            $this->db->execute();
-        }
-        
-        return $result->driver_approved && $result->partner_approved;
-    }
 
     public function createCollectionAndSupplierRecords($scheduleId) {
         // Start transaction
@@ -524,23 +406,6 @@ class M_CollectionSchedule {
         return $this->db->execute();
     }
 
-    public function optimizeRoute($collectionId, $driverLat, $driverLng) {
-        // Get route_id for this collection
-        $this->db->query("
-            SELECT cs.route_id
-            FROM collections c
-            JOIN collection_schedules cs ON c.schedule_id = cs.schedule_id
-            WHERE c.collection_id = :collection_id
-        ");
-        $this->db->bind(':collection_id', $collectionId);
-        $result = $this->db->single();
-        
-        if ($result) {
-            $routeModel = new M_Route();
-            return $routeModel->updateRouteOrder($result->route_id, $driverLat, $driverLng);
-        }
-        return false;
-    }
 
     public function checkConflict($data) {
         // Base query to check conflicts
@@ -637,40 +502,7 @@ class M_CollectionSchedule {
         }
     }
 
-    public function getTeamAssignmentCount($team_id) {
-        $this->db->query('SELECT COUNT(DISTINCT days_of_week) as day_count 
-                          FROM collection_schedules 
-                          WHERE team_id = :team_id 
-                          AND is_active = 1');
-        $this->db->bind(':team_id', $team_id);
-        $result = $this->db->single();
-        return $result->day_count ?? 0;
-    }
 
-    public function getVehicleAssignmentCount($vehicle_id) {
-        $this->db->query('SELECT COUNT(DISTINCT days_of_week) as day_count 
-                          FROM collection_schedules 
-                          WHERE vehicle_id = :vehicle_id 
-                          AND is_active = 1');
-        $this->db->bind(':vehicle_id', $vehicle_id);
-        $result = $this->db->single();
-        return $result->day_count ?? 0;
-    }
-
-    public function getTeamAssignedDays($team_id) {
-        $this->db->query('SELECT days_of_week 
-                          FROM collection_schedules 
-                          WHERE team_id = :team_id 
-                          AND is_active = 1');
-        $this->db->bind(':team_id', $team_id);
-        $results = $this->db->resultSet();
-        
-        $days = [];
-        foreach ($results as $result) {
-            $days = array_merge($days, explode(',', $result->days_of_week));
-        }
-        return array_unique($days);
-    }
 
     // public function getVehicleAssignedDays($vehicle_id) {
     //     $this->db->query('SELECT days_of_week 
@@ -1102,6 +934,89 @@ class M_CollectionSchedule {
                 COALESCE(ce.new_time, cs_shift.start_time)
         ");
 
+        $this->db->bind(':supplier_id', $supplierId);
+        return $this->db->resultSet();
+    }
+
+    public function getSubscribedSchedules($supplierId) {
+        $sql = "SELECT 
+                    cs.schedule_id,
+                    cs.route_id,
+                    r.route_name,
+                    cs.week_number,
+                    cs.day,
+                    s.shift_name,
+                    CONCAT(s.start_time, ' - ', s.end_time) as shift_time,
+                    v.license_plate,
+                    v.capacity as remaining_capacity,
+                    1 as is_subscribed
+                FROM collection_schedules cs
+                INNER JOIN routes r ON cs.route_id = r.route_id
+                INNER JOIN collection_shifts s ON cs.shift_id = s.shift_id
+                INNER JOIN vehicles v ON r.vehicle_id = v.vehicle_id
+                INNER JOIN route_suppliers rs ON (r.route_id = rs.route_id)
+                WHERE cs.is_deleted = 0 
+                AND cs.is_active = 1
+                AND rs.is_deleted = 0
+                AND rs.supplier_id = :supplier_id
+                AND rs.is_active = 1
+                ORDER BY 
+                    CASE cs.day
+                        WHEN 'Monday' THEN 1
+                        WHEN 'Tuesday' THEN 2
+                        WHEN 'Wednesday' THEN 3
+                        WHEN 'Thursday' THEN 4
+                        WHEN 'Friday' THEN 5
+                        WHEN 'Saturday' THEN 6
+                        WHEN 'Sunday' THEN 7
+                    END,
+                    cs.week_number,
+                    s.start_time";
+
+        $this->db->query($sql);
+        $this->db->bind(':supplier_id', $supplierId);
+        return $this->db->resultSet();
+    }
+
+    public function getAvailableSchedules($supplierId) {
+        $sql = "SELECT 
+                    cs.schedule_id,
+                    cs.route_id,
+                    r.route_name,
+                    cs.week_number,
+                    cs.day,
+                    s.shift_name,
+                    CONCAT(s.start_time, ' - ', s.end_time) as shift_time,
+                    v.license_plate,
+                    v.capacity as remaining_capacity,
+                    0 as is_subscribed
+                FROM collection_schedules cs
+                INNER JOIN routes r ON cs.route_id = r.route_id
+                INNER JOIN collection_shifts s ON cs.shift_id = s.shift_id
+                INNER JOIN vehicles v ON r.vehicle_id = v.vehicle_id
+                WHERE cs.is_deleted = 0 
+                AND cs.is_active = 1
+                AND r.route_id NOT IN (
+                    SELECT route_id 
+                    FROM route_suppliers 
+                    WHERE supplier_id = :supplier_id 
+                    AND is_deleted = 0
+                    AND is_active = 1
+                )
+                ORDER BY 
+                    CASE cs.day
+                        WHEN 'Monday' THEN 1
+                        WHEN 'Tuesday' THEN 2
+                        WHEN 'Wednesday' THEN 3
+                        WHEN 'Thursday' THEN 4
+                        WHEN 'Friday' THEN 5
+                        WHEN 'Saturday' THEN 6
+                        WHEN 'Sunday' THEN 7
+                    END,
+                    cs.week_number,
+                    s.start_time";
+
+        $this->db->query($sql);
         $this->db->bind(':supplier_id', $supplierId);
         return $this->db->resultSet();
     }
