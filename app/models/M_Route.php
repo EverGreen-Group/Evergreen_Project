@@ -381,9 +381,9 @@ class M_Route {
                 CONCAT(s.latitude, ', ', s.longitude) as coordinates
             FROM suppliers s
             JOIN users u ON s.user_id = u.user_id
-            LEFT JOIN route_suppliers rs ON s.supplier_id = rs.supplier_id
-            LEFT JOIN routes r ON rs.route_id = r.route_id
-            WHERE (rs.supplier_id IS NULL OR r.route_id IS NULL OR r.is_deleted = 1)
+            LEFT JOIN route_suppliers rs ON s.supplier_id = rs.supplier_id AND rs.is_deleted = 0  -- Only consider active route associations
+            LEFT JOIN routes r ON rs.route_id = r.route_id AND r.is_deleted = 0  -- Only consider active routes
+            WHERE rs.supplier_id IS NULL  -- Supplier is not in any active route
             AND s.is_active = 1
             AND s.is_deleted = 0;
         ");

@@ -108,6 +108,22 @@ class Route extends Controller{
         echo json_encode(['success' => true, 'data' => $suppliers]);
     }
 
+
+    public function getUnallocatedSuppliers() {
+    
+        // Fetch unallocated suppliers for the given day
+        $suppliers = $this->routeModel->getUnallocatedSuppliers();
+        
+        // Check if the suppliers query was successful
+        if ($suppliers === false) {
+            echo json_encode(['success' => false, 'message' => 'Error fetching suppliers']);
+            return;
+        }
+    
+        // Return the response
+        echo json_encode(['success' => true, 'data' => $suppliers]);
+    }
+
     public function getRouteSuppliers($routeId) {
         // Fetch bag details from the model using the collection ID
         $routeSuppliers = $this->routeModel->getRouteSuppliersByRouteId($routeId);
