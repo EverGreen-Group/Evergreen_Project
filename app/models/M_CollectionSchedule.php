@@ -19,7 +19,6 @@ class M_CollectionSchedule {
                     s.shift_name,
                     s.start_time,
                     s.end_time,
-                    cs.week_number,
                     cs.day,
                     v.vehicle_id,
                     v.license_plate,
@@ -159,7 +158,8 @@ class M_CollectionSchedule {
         $this->db->query("
             SELECT 
                 r.*,
-                u.*,
+                u.first_name,
+                u.last_name,
                 cs.*,
                 v.*,
                 cs_shift.*
@@ -178,6 +178,12 @@ class M_CollectionSchedule {
 
         $this->db->bind(':schedule_id', $scheduleId);
         return $this->db->single();
+    }
+
+    public function getCollectionScheduleById($scheduleId) {
+        $this->db->query("SELECT * FROM collection_schedules WHERE schedule_id = :schedule_id");
+        $this->db->bind(':schedule_id', $scheduleId);
+        return $this->db->single(); // Return a single schedule record
     }
 
 
@@ -297,40 +303,6 @@ class M_CollectionSchedule {
         }
     }
 
-    public function checkAndCreateCollection($scheduleId) {
-        $this->db->query("
-            SELECT 
-                cs.*,
-                c.collection_id,
-                c.start_time,
-                c.driver_approved,
-                c.partner_approved
-            FROM collection_schedules cs
-            LEFT JOIN collections c ON cs.schedule_id = c.schedule_id
-            WHERE cs.schedule_id = :schedule_id
-        ");
-        $this->db->bind(':schedule_id', $scheduleId);
-        $schedule = $this->db->single();
-
-        // If collection doesn't exist, create it
-        if (!$schedule->collection_id) {
-            $this->createInitialCollection($scheduleId);
-            return;
-        }
-
-        // Check if it's time to start and both are ready
-        $currentTime = new DateTime();
-        $scheduleTime = new DateTime($schedule->start_time);
-        
-        if (($schedule->driver_approved && $schedule->partner_approved) || 
-            $currentTime >= $scheduleTime) {
-            
-            if (!$schedule->start_time) {
-                $this->startCollection($schedule->collection_id);
-            }
-        }
-    }
-
     public function startCollection($collectionId) {
         $this->db->query('UPDATE collections 
                           SET start_time = NOW(),
@@ -407,11 +379,11 @@ class M_CollectionSchedule {
     }
 
 
+
     public function checkConflict($data) {
         // Base query to check conflicts
         $sql = 'SELECT * FROM collection_schedules 
                 WHERE driver_id = :driver_id 
-                AND week_number = :week_number 
                 AND route_id = :route_id 
                 AND is_active = 1';
         
@@ -424,7 +396,6 @@ class M_CollectionSchedule {
         
         // Bind parameters
         $this->db->bind(':driver_id', $data['driver_id']);
-        $this->db->bind(':week_number', $data['week_number']);
         $this->db->bind(':route_id', $data['route_id']);
         
         // Only bind schedule_id if it exists (for updates)
@@ -436,22 +407,19 @@ class M_CollectionSchedule {
         return !empty($results);
     }
 
+
     public function create($data) {
         $this->db->query('INSERT INTO collection_schedules (
             driver_id, 
             route_id, 
-            -- vehicle_id, 
             shift_id, 
-            week_number, 
             day,
             is_active,
             created_at
         ) VALUES (
             :driver_id, 
             :route_id, 
-            -- :vehicle_id, 
             :shift_id, 
-            :week_number, 
             :day,
             1,
             CURRENT_TIMESTAMP
@@ -460,9 +428,7 @@ class M_CollectionSchedule {
         // Bind values
         $this->db->bind(':driver_id', $data['driver_id']);
         $this->db->bind(':route_id', $data['route_id']);
-        // $this->db->bind(':vehicle_id', $data['vehicle_id']);
         $this->db->bind(':shift_id', $data['shift_id']);
-        $this->db->bind(':week_number', $data['week_number']);
         $this->db->bind(':day', $data['day']);
 
         // Execute
@@ -504,21 +470,6 @@ class M_CollectionSchedule {
 
 
 
-    // public function getVehicleAssignedDays($vehicle_id) {
-    //     $this->db->query('SELECT days_of_week 
-    //                       FROM collection_schedules 
-    //                       WHERE vehicle_id = :vehicle_id 
-    //                       AND is_active = 1');
-    //     $this->db->bind(':vehicle_id', $vehicle_id);
-    //     $results = $this->db->resultSet();
-        
-    //     $days = [];
-    //     foreach ($results as $result) {
-    //         $days = array_merge($days, explode(',', $result->days_of_week));
-    //     }
-    //     return array_unique($days);
-    // }
-
     public function toggleActive($schedule_id) {
         // First get the current status
         $this->db->query('SELECT is_active FROM collection_schedules WHERE schedule_id = :schedule_id');
@@ -549,28 +500,18 @@ class M_CollectionSchedule {
     }
 
     public function update($data) {
-        $this->db->query('UPDATE collection_schedules 
-                          SET route_id = :route_id,
+        $this->db->query('UPDATE collection_schedules SET
                               driver_id = :driver_id,
-                              -- vehicle_id = :vehicle_id,
-                              shift_id = :shift_id,
-                              week_number = :week_number
+                              shift_id = :shift_id
                           WHERE schedule_id = :schedule_id');
     
         // Bind values
-        $this->db->bind(':route_id', $data['route_id']);
         $this->db->bind(':driver_id', $data['driver_id']);
-        // $this->db->bind(':vehicle_id', $data['vehicle_id']);
         $this->db->bind(':shift_id', $data['shift_id']);
-        $this->db->bind(':week_number', $data['week_number']);
         $this->db->bind(':schedule_id', $data['schedule_id']);
     
         // Execute
-        if ($this->db->execute()) {
-            return true;
-        } else {
-            return false;
-        }
+        return $this->db->execute();
     }
 
     public function getSchedulesByVehicleId($vehicleId) {
@@ -579,6 +520,7 @@ class M_CollectionSchedule {
         
         return $this->db->resultSet();
     }
+
 
     public function getSchedulesByShiftIdAndDate($shiftId, $startDate, $endDate) {
         $this->db->query("

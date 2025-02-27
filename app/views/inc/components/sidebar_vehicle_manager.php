@@ -7,7 +7,19 @@
     <li class="<?php echo (basename($_SERVER['REQUEST_URI']) == 'index') ? 'active' : ''; ?>">
       <a href="<?php echo URLROOT; ?>/vehiclemanager/index">
         <i class="bx bxs-dashboard"></i>
-        <span class="text">Dashboard</span>
+        <span class="text">Collection</span>
+      </a>
+    </li>
+    <li class="<?php echo (basename($_SERVER['REQUEST_URI']) == 'schedule') ? 'active' : ''; ?>">
+      <a href="<?php echo URLROOT; ?>/vehiclemanager/schedule">
+        <i class="bx bxs-calendar"></i>
+        <span class="text">Schedule</span>
+      </a>
+    </li>
+    <li class="<?php echo (basename($_SERVER['REQUEST_URI']) == 'route') ? 'active' : ''; ?>">
+      <a href="<?php echo URLROOT; ?>/route">
+        <i class="bx bx-trip"></i>
+        <span class="text">Route</span>
       </a>
     </li>
     <li class="<?php echo (basename($_SERVER['REQUEST_URI']) == 'vehicle') ? 'active' : ''; ?>">
@@ -22,12 +34,7 @@
         <span class="text">Driver</span>
       </a>
     </li>
-    <li class="<?php echo (basename($_SERVER['REQUEST_URI']) == 'route') ? 'active' : ''; ?>">
-      <a href="<?php echo URLROOT; ?>/route">
-        <i class="bx bx-trip"></i>
-        <span class="text">Route</span>
-      </a>
-    </li>
+
     <li class="<?php echo (basename($_SERVER['REQUEST_URI']) == 'shift') ? 'active' : ''; ?>">
       <a href="<?php echo URLROOT; ?>/vehiclemanager/shift">
         <i class="bx bxs-time-five"></i>

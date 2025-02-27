@@ -26,10 +26,8 @@ class Collectionschedules extends Controller {
         $data = [
             'route_id' => trim($_POST['route_id']),
             'driver_id' => trim($_POST['driver_id']),
-            // Removed vehicle_id since it's no longer used
             'shift_id' => trim($_POST['shift_id']),
-            'week_number' => trim($_POST['week_number']),
-            'day' => trim($_POST['day']) // Changed from days_of_week to day
+            'day' => trim($_POST['day'])
         ];
 
         // Debug: Print data
@@ -100,10 +98,7 @@ class Collectionschedules extends Controller {
                 'schedule_id' => $_POST['schedule_id'],
                 'route_id' => $_POST['route_id'],
                 'driver_id' => $_POST['driver_id'],
-                // Removed vehicle_id since it's no longer used
                 'shift_id' => $_POST['shift_id'],
-                'week_number' => $_POST['week_number'],
-                // Removed day since it's not necessary to update
             ];
     
             // Check for schedule conflicts (excluding current schedule)
@@ -151,5 +146,19 @@ class Collectionschedules extends Controller {
         ];
         
         $this->view('vehicle_manager/v_collection', $data);
+    }
+
+    public function getScheduleDetails($scheduleId) {
+        if ($_SERVER['REQUEST_METHOD'] === 'GET') {
+            $schedule = $this->collectionScheduleModel->getScheduleById($scheduleId);
+            
+            if ($schedule) {
+                echo json_encode(['success' => true, 'schedule' => $schedule]);
+            } else {
+                echo json_encode(['success' => false, 'message' => 'Schedule not found']);
+            }
+        } else {
+            echo json_encode(['success' => false, 'message' => 'Invalid request method']);
+        }
     }
 } 

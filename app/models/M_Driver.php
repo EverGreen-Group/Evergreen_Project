@@ -249,4 +249,25 @@ class M_Driver{
         return $this->db->resultSet();
     }
 
+    public function getUnallocatedDriversByDayAndShift($day, $shift_id) {
+        $this->db->query("
+            SELECT d.*, u.first_name, CONCAT(u.first_name, ' ', u.last_name) as full_name
+            FROM drivers d
+            JOIN users u ON u.user_id = d.user_id
+            WHERE d.is_deleted = 0
+            AND d.driver_id NOT IN (
+                SELECT cs.driver_id
+                FROM collection_schedules cs
+                WHERE cs.day = :day
+                AND cs.shift_id = :shift_id
+                AND cs.is_deleted = 0
+                AND cs.is_active = 1
+            )
+        ");
+        
+        $this->db->bind(':day', $day);
+        $this->db->bind(':shift_id', $shift_id);
+        return $this->db->resultSet();
+    }
+
 }

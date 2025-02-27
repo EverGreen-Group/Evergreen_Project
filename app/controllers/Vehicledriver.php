@@ -774,6 +774,19 @@ class VehicleDriver extends controller {
             echo json_encode(['success' => false, 'message' => 'Invalid collection ID.']);
         }
     }
+
+
+    public function getUnallocatedDriversByDayAndShift($day, $shiftId) {
+
+    
+            if ($day && $shiftId) {
+                $drivers = $this->driverModel->getUnallocatedDriversByDayAndShift($day, $shiftId);
+                echo json_encode(['drivers' => $drivers]);
+            } else {
+                echo json_encode(['drivers' => [], 'message' => 'Invalid parameters']);
+            }
+
+    }
 }
 
 ?>

@@ -257,16 +257,19 @@ class M_Route {
         $this->db->query("
             SELECT r.* 
             FROM routes r
-            LEFT JOIN collection_schedules cs ON r.route_id = cs.route_id 
-                AND cs.day = :day 
-                AND cs.is_active = 1
             WHERE r.day = :day 
             AND r.is_deleted = 0 
-            AND (cs.route_id IS NULL OR cs.is_deleted = 1)
+            AND r.route_id NOT IN (
+                SELECT cs.route_id 
+                FROM collection_schedules cs 
+                WHERE cs.day = :day
+                AND cs.is_deleted = 0
+                AND cs.is_active = 1
+            )
         ");
         
         $this->db->bind(':day', $day);
-        return $this->db->resultset();
+        return $this->db->resultSet();
     }
 
     /**
