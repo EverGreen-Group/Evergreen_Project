@@ -52,6 +52,7 @@ class Supplier extends Controller {
         try {
             // Get all schedules
             $allSchedules = $this->scheduleModel->getUpcomingSchedulesBySupplierId($supplierId);
+            $supplierStatus = $this->supplierModel->getSupplierStatus($supplierId);
             
             // Organize schedules by day
             $todaySchedules = [];
@@ -78,7 +79,8 @@ class Supplier extends Controller {
                 'lastUpdated' => date('Y-m-d H:i:s'),
                 'message' => '',
                 'error' => '',
-                'collectionId' => $collectionId
+                'collectionId' => $collectionId,
+                'is_active' => $supplierStatus
             ];
             
             if (empty($todaySchedules) && empty($upcomingSchedules)) {
@@ -596,11 +598,22 @@ class Supplier extends Controller {
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
             redirect('supplier/schedule');
         }
-
+    
         $routeId = $this->routeModel->getRouteIdByScheduleId($_POST['schedule_id']) ?? null;
         $supplierId = $_SESSION['supplier_id'];
-
+    
         try {
+            // Check if supplier is active
+            $isActive = $this->supplierModel->getSupplierStatus($supplierId);
+            
+            if ($isActive !== '1') {
+                echo json_encode([
+                    'success' => false, 
+                    'message' => 'Your account is currently inactive. Please activate your account to subscribe to routes.'
+                ]);
+                return;
+            }
+            
             // First, check if supplier is already subscribed to any route
             $currentRoute = $this->routeModel->getSupplierCurrentRoute($supplierId);
             
@@ -612,11 +625,11 @@ class Supplier extends Controller {
                 ]);
                 return;
             }
-
+    
             // Get the last stop order for the route
             $lastStopOrder = $this->routeModel->getLastStopOrder($routeId);
             $newStopOrder = $lastStopOrder + 1;
-
+    
             // Add supplier to route
             if ($this->routeModel->addSupplierToRoute($routeId, $supplierId, $newStopOrder)) {
                 // Update the remaining capacity
@@ -664,6 +677,56 @@ class Supplier extends Controller {
                 'success' => false, 
                 'message' => $e->getMessage()
             ]);
+        }
+    }
+
+    public function toggleAvailability() {
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            // Get the current status from the POST data
+            $currentStatus = isset($_POST['current_status']) ? $_POST['current_status'] : '0';
+            $supplierId = $_SESSION['supplier_id'];
+    
+            // Toggle the status
+            $newStatus = $currentStatus === '1' ? '0' : '1';
+            
+            // If supplier is becoming inactive, unsubscribe from all routes
+            if ($newStatus === '0') {
+                $subscribedSchedules = $this->scheduleModel->getSubscribedSchedules($supplierId);
+                
+                // Process each subscription
+                $unsubscribeResults = [];
+                foreach ($subscribedSchedules as $schedule) {
+                    $routeId = $schedule->route_id;
+                    
+                    try {
+                        // Remove supplier from route
+                        if ($this->routeModel->removeSupplierFromRoute($routeId, $supplierId)) {
+                            $this->routeModel->updateRemainingCapacity($routeId, 'remove');
+                            $unsubscribeResults[] = true;
+                        } else {
+                            $unsubscribeResults[] = false;
+                        }
+                    } catch (Exception $e) {
+                        $unsubscribeResults[] = false;
+                    }
+                }
+                
+                // If any unsubscriptions failed, you may want to handle that
+                $allUnsubscribesSuccessful = !in_array(false, $unsubscribeResults);
+                // You could decide whether to proceed based on this result
+            }
+    
+            // Update the supplier's availability in the model
+            if ($this->supplierModel->updateSupplierStatus($supplierId, $newStatus)) {
+                flash('message', 'Supplier availability updated successfully.', 'alert alert-success');
+            } else {
+                flash('message', 'Failed to update availability. Please try again.', 'alert alert-danger');
+            }
+    
+            // Redirect back to the dashboard
+            redirect('supplier/');
+        } else {
+            redirect('supplier/'); // Redirect if not a POST request
         }
     }
 }
