@@ -149,7 +149,6 @@ class Supplier extends Controller {
                     'schedule_id' => $schedule->schedule_id,
                     'route_name' => $schedule->route_name,
                     'day' => $schedule->day,
-                    'week_number' => $schedule->week_number,
                     'shift_time' => $schedule->shift_time,
                     'remaining_capacity' => $schedule->remaining_capacity,
                     'vehicle' => $schedule->license_plate,

@@ -79,7 +79,7 @@
             <?php endforeach; ?>
         <?php else: ?>
             <div class="no-schedule">
-                <p>You are not subscribed to any collection routes.</p>
+                <p class="no-routes-message">You are not subscribed to any collection routes.</p>
             </div>
         <?php endif; ?>
     </div>
@@ -455,5 +455,6 @@ function unsubscribeFromRoute(scheduleId, supplierId) {
     }
 }
 </script>
+<script src="<?php echo URLROOT; ?>/public/css/script.js"></script>
 
 <?php require APPROOT . '/views/inc/components/footer.php'; ?>

@@ -885,7 +885,6 @@ class M_CollectionSchedule {
                     cs.schedule_id,
                     cs.route_id,
                     r.route_name,
-                    cs.week_number,
                     cs.day,
                     s.shift_name,
                     CONCAT(s.start_time, ' - ', s.end_time) as shift_time,
@@ -912,7 +911,6 @@ class M_CollectionSchedule {
                         WHEN 'Saturday' THEN 6
                         WHEN 'Sunday' THEN 7
                     END,
-                    cs.week_number,
                     s.start_time";
 
         $this->db->query($sql);
@@ -925,7 +923,6 @@ class M_CollectionSchedule {
                     cs.schedule_id,
                     cs.route_id,
                     r.route_name,
-                    cs.week_number,
                     cs.day,
                     s.shift_name,
                     CONCAT(s.start_time, ' - ', s.end_time) as shift_time,
@@ -955,8 +952,8 @@ class M_CollectionSchedule {
                         WHEN 'Saturday' THEN 6
                         WHEN 'Sunday' THEN 7
                     END,
-                    cs.week_number,
-                    s.start_time";
+                    s.start_time
+                    ";
 
         $this->db->query($sql);
         $this->db->bind(':supplier_id', $supplierId);
