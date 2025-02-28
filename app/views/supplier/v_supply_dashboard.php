@@ -44,31 +44,45 @@
     </div>
 
 
-    <!-- Current Set Date Card -->
-    <div class="schedule-section">
+    <!-- Schedule Subscription Section -->
+
         
-        <div class="schedule-card current-schedule">
+        <div class="schedule-card subscription-schedule">
             <div class="card-content">
                 <div class="schedule-info">
                     <div class="info-item">
                         <i class='bx bx-calendar'></i>
-                        <span>Every Monday</span>
-                    </div>
-                    <div class="info-item">
-                        <i class='bx bx-time-five'></i>
-                        <span>08:00 AM</span>
+                        <span>Manage Your Schedule Subscription</span>
                     </div>
                 </div>
                 <div class="schedule-action">
-                    <button class="change-schedule-btn">
+                    <a href="<?php echo URLROOT; ?>/supplier/schedule" class="change-schedule-btn">
                         <i class='bx bx-calendar-edit'></i>
-                        <span>Request Schedule Change</span>
-                    </button>
+                        <span>Access Schedule Subscription</span>
+                    </a>
                 </div>
             </div>
         </div>
         
-    </div>
+
+
+        <div class="schedule-card past-collections">
+            <div class="card-content">
+                <div class="schedule-info">
+                    <div class="info-item">
+                        <i class='bx bx-history'></i>
+                        <span>View Past Collections</span>
+                    </div>
+                </div>
+                <div class="schedule-action">
+                    <a href="<?php echo URLROOT; ?>/supplier/pastCollections" class="change-schedule-btn">
+                        <i class='bx bx-list-ul'></i>
+                        <span>Access Past Collections</span>
+                    </a>
+                </div>
+            </div>
+        </div>
+
 
     <div class="section-divider"></div>
 
@@ -115,7 +129,7 @@
                                     <span>View Details</span>
                                 </a>
                             <?php else: ?>
-                                <span class="no-details">Collection hasnt started yet!</span>
+                                <span class="no-details">Collection hasn't started yet!</span>
                             <?php endif; ?>
                         </div>
                     </div>
@@ -258,53 +272,85 @@ main {
 
 /* Schedule Section */
 .schedule-section {
-  margin-bottom: var(--spacing-xl);
+  margin-bottom: 20px; /* Space between sections */
+  padding: 15px; /* Padding for the section */
+  background-color: #f9f9f9; /* Light background color */
+  border-radius: 8px; /* Rounded corners */
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1); /* Subtle shadow */
 }
 
 .section-header {
-  margin-bottom: var(--spacing-lg);
+  margin-bottom: 15px; /* Space below the header */
 }
 
 .section-header h3 {
-  color: var(--text-primary);
-  font-size: 1.25rem;
+  margin-bottom: 15px; /* Space below the header */
+  font-size: 24px; /* Header font size */
+  color: #333; /* Header color */
 }
 
 .schedule-card {
-  position: relative;
-  display: flex;
-  align-items: center;
-  gap: var(--spacing-md);
-  background-color: white;
-  padding: var(--spacing-lg);
-  border-radius: var(--border-radius-lg);
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  background: #fff; /* White background for cards */
+  border-radius: 8px; /* Rounded corners */
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1); /* Subtle shadow */
+  padding: 15px; /* Padding inside the card */
+  margin-bottom: 15px; /* Space between cards */
 }
 
-.card-content {
-  flex: 1;
+.card-header {
+  margin-bottom: 10px; /* Space below the header */
+}
+
+.status-badge {
+  background-color: #007bff; /* Badge color */
+  color: white; /* Text color */
+  padding: 5px 10px; /* Padding for badge */
+  border-radius: 5px; /* Rounded corners for badge */
+  font-weight: bold; /* Bold text */
+}
+
+.card-body {
+  display: flex; /* Flexbox for layout */
+  flex-direction: column; /* Stack items vertically */
 }
 
 .schedule-info {
-  display: flex;
-  gap: var(--spacing-xl);
-  margin-bottom: var(--spacing-md);
+  display: flex; /* Flexbox for info items */
+  flex-wrap: wrap; /* Allow wrapping */
+  margin-bottom: 10px; /* Space below info items */
 }
 
 .info-item {
-  display: flex;
-  align-items: center;
-  gap: var(--spacing-sm);
+  display: flex; /* Flexbox for icon and text */
+  align-items: center; /* Center icon and text */
+  margin-right: 15px; /* Space between info items */
 }
 
 .info-item i {
-  color: var(--primary-color);
+  font-size: 24px; /* Icon size */
+  margin-right: 5px; /* Space between icon and text */
+  color: #007bff; /* Icon color */
 }
 
 .schedule-action {
-  display: flex;
-  gap: var(--spacing-md);
-  align-items: center;
+  margin-top: 10px; /* Space above action */
+}
+
+.view-details-btn {
+  display: flex; /* Flexbox for button */
+  align-items: center; /* Center icon and text */
+  text-decoration: none; /* Remove underline */
+  color: #007bff; /* Link color */
+  font-weight: bold; /* Bold text */
+}
+
+.view-details-btn:hover {
+  color: #0056b3; /* Darker shade on hover */
+}
+
+.no-schedule {
+  text-align: center; /* Center text */
+  color: #888; /* Gray color for no schedule message */
 }
 
 /* Buttons and Controls */
@@ -321,7 +367,6 @@ main {
   color: var(--secondary-color);
 }
 
-.view-details-btn, 
 .change-schedule-btn {
   display: flex;
   align-items: center;
@@ -335,7 +380,6 @@ main {
   text-decoration: none;
 }
 
-.view-details-btn:hover,
 .change-schedule-btn:hover {
   background-color: var(--secondary-color);
 }
