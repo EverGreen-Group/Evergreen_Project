@@ -933,7 +933,8 @@ class M_CollectionSchedule {
                 INNER JOIN routes r ON cs.route_id = r.route_id
                 INNER JOIN collection_shifts s ON cs.shift_id = s.shift_id
                 INNER JOIN vehicles v ON r.vehicle_id = v.vehicle_id
-                WHERE cs.is_deleted = 0 
+                WHERE cs.is_deleted = 0
+                AND r.is_locked=0 
                 AND cs.is_active = 1
                 AND r.route_id NOT IN (
                     SELECT route_id 
