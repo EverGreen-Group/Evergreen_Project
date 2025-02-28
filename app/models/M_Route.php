@@ -587,5 +587,29 @@ class M_Route {
         // Check if result is valid and return the route_id or null
         return ($result && isset($result->route_id)) ? $result->route_id : null;
     }
+
+    /**
+     * Toggle the lock state of a route.
+     */
+    public function toggleLock($routeId) {
+        // First, get the current lock state
+        $sql = "SELECT is_locked FROM routes WHERE route_id = :route_id";
+        $this->db->query($sql);
+        $this->db->bind(':route_id', $routeId);
+        $currentLockState = $this->db->single()->is_locked;
+
+        // Toggle the lock state
+        $newLockState = !$currentLockState;
+
+        // Update the lock state in the database
+        $sql = "UPDATE routes SET is_locked = :is_locked WHERE route_id = :route_id";
+        $this->db->query($sql);
+        $this->db->bind(':is_locked', $newLockState);
+        $this->db->bind(':route_id', $routeId);
+
+        return $this->db->execute();
+    }
+
+
 }
 ?>

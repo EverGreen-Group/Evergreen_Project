@@ -249,6 +249,26 @@ class Route extends Controller{
         }
     }
 
+    public function toggleLock() {
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            $routeId = $_POST['route_id'];
+
+            // Call the model method to toggle the lock state
+            if ($this->routeModel->toggleLock($routeId)) {
+                // Redirect back to the route management page with a success message
+                flash('route_message', 'Route lock state toggled successfully');
+                redirect('route/');
+            } else {
+                // Handle error
+                flash('route_message', 'Failed to toggle route lock state', 'error');
+                redirect('route/');
+            }
+        } else {
+            // If not a POST request, redirect or handle accordingly
+            redirect('route/');
+        }
+    }
+
 
 
 
