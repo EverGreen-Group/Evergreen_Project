@@ -45,17 +45,20 @@ class M_User {
     }
 
     public function getUserById($user_id) {
-        $this->db->query("SELECT 
+        $this->db->query("SELECT
+            user_id, 
             email,
             first_name,
             last_name,
             nic,
-            gender,
             date_of_birth,
-            role_id,
+            u.role_id,
+            r.role_name,
             approval_status,
-            created_at
-            FROM users 
+            created_at,
+            nic
+            FROM users u
+            JOIN roles r ON r.role_id = u.role_id  
             WHERE user_id = :user_id");
         
         $this->db->bind(':user_id', $user_id);
@@ -66,19 +69,9 @@ class M_User {
         if (!$result) {
             return false;
         }
+
+        return $result;
         
-        // Convert to array for easier handling in views
-        return [
-            'email' => $result->email,
-            'first_name' => $result->first_name,
-            'last_name' => $result->last_name,
-            'nic' => $result->nic,
-            'gender' => $result->gender,
-            'date_of_birth' => $result->date_of_birth,
-            'role_id' => $result->role_id,
-            'approval_status' => $result->approval_status,
-            'created_at' => $result->created_at
-        ];
     }
 
     public function getAllUnassignedUsers() {
@@ -172,6 +165,96 @@ class M_User {
         $this->db->bind(':password', $newPassword);
         $this->db->bind(':token', $token);
         return $this->db->execute();
+    }
+
+    public function getAllUsers() {
+        $this->db->query("SELECT 
+            user_id,
+            email,
+            first_name,
+            last_name,
+            nic,
+            date_of_birth,
+            role_id,
+            approval_status,
+            created_at
+            FROM users");
+        
+        // Execute the query and return the result set
+        $results = $this->db->resultSet();
+        
+        return $results;
+    }
+
+    public function updateUser($data) {
+        $this->db->query("UPDATE users SET 
+            email = :email,
+            first_name = :first_name,
+            last_name = :last_name,
+            nic = :nic,
+            date_of_birth = :date_of_birth,
+            role_id = :role_id
+            WHERE user_id = :user_id");
+
+        // Bind parameters
+        $this->db->bind(':email', $data['email']);
+        $this->db->bind(':first_name', $data['first_name']);
+        $this->db->bind(':last_name', $data['last_name']);
+        $this->db->bind(':nic', $data['nic']);
+        $this->db->bind(':date_of_birth', $data['date_of_birth']);
+        $this->db->bind(':role_id', $data['role']);
+        $this->db->bind(':user_id', $data['user_id']);
+
+        // Execute the query
+        return $this->db->execute();
+    }
+
+    public function getFilteredUsers($email = null, $first_name = null, $last_name = null, $role_id = null) {
+        $sql = "SELECT 
+                    user_id,
+                    email,
+                    first_name,
+                    last_name,
+                    nic,
+                    date_of_birth,
+                    role_id,
+                    approval_status,
+                    created_at
+                FROM users WHERE 1=1"; // Start with a base query
+
+        // Build the query based on provided filters
+        if (!empty($email)) {
+            $sql .= " AND email LIKE :email";
+        }
+        if (!empty($first_name)) {
+            $sql .= " AND first_name LIKE :first_name";
+        }
+        if (!empty($last_name)) {
+            $sql .= " AND last_name LIKE :last_name";
+        }
+        if (!empty($role_id)) {
+            $sql .= " AND role_id = :role_id";
+        }
+
+        // Prepare the statement
+        $this->db->query($sql);
+
+        // Bind parameters if they were set
+        if (!empty($email)) {
+            $this->db->bind(':email', '%' . $email . '%'); // Use LIKE for partial matches
+        }
+        if (!empty($first_name)) {
+            $this->db->bind(':first_name', '%' . $first_name . '%'); // Use LIKE for partial matches
+        }
+        if (!empty($last_name)) {
+            $this->db->bind(':last_name', '%' . $last_name . '%'); // Use LIKE for partial matches
+        }
+        if (!empty($role_id)) {
+            $this->db->bind(':role_id', $role_id);
+        }
+
+        // Execute the query and return the results
+        return $this->db->resultSet();
     }
 }
 ?>

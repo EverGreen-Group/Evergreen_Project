@@ -41,12 +41,6 @@
         <span class="text">Shift</span>
       </a>
     </li>
-    <li class="<?php echo (basename($_SERVER['REQUEST_URI']) == 'team') ? 'active' : ''; ?>">
-      <a href="<?php echo URLROOT; ?>/distribution/">
-        <i class="bx bxs-truck"></i>
-        <span class="text">Distribution</span>
-      </a>
-    </li>
   </ul>
   <ul class="side-menu">
     <li class="<?php echo (basename($_SERVER['REQUEST_URI']) == 'settings') ? 'active' : ''; ?>">
