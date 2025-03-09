@@ -11,7 +11,7 @@
     const URLROOT = '<?php echo URLROOT; ?>';
     const UPLOADROOT = '<?php echo UPLOADROOT; ?>';
 </script>
-<script src="<?php echo URLROOT; ?>/public/js/vehicle_manager/collection.js"></script>
+<script defer src="<?php echo URLROOT; ?>/public/js/vehicle_manager/collection.js"></script>
 <script src="<?php echo URLROOT; ?>/public/js/vehicle_manager/collection_request_populate.js"></script>
 
 
@@ -20,40 +20,27 @@
 <main>
     <div class="head-title">
         <div class="left">
-            <h1>Collection Management</h1>
+            <h1>Schedule Management</h1>
             <ul class="breadcrumb">
                 <li><a href="#">Dashboard</a></li>
             </ul>
         </div>
 
-        <div class="datetime-display">
-            <div class="date">
-                <i class='bx bx-calendar'></i>
-                <span><?php echo date('l, F j, Y'); ?></span>
-            </div>
-            <div class="time" id="live-time">
-                <i class='bx bx-time-five'></i>
-                <span>Loading...</span>
-            </div>
-        </div>
 
     </div>
 
-
-    <!-- Next Schedule Alert -->
-    <div class="next-schedule-alert">
-        <i class='bx bx-time-five'></i>
-        <div class="schedule-info">
-            <h4>Next Collection Schedule</h4>
-            <p><?php 
-                if ($stats['next_schedule']) {
-                    echo $stats['next_schedule']->route_name . ' - ' . $stats['next_schedule']->start_time;
-                } else {
-                    echo 'No upcoming schedules for today';
-                }
-            ?></p>
-        </div>
+    <div class="action-buttons">
+        <a href="#" id="openCreateScheduleModal" class="btn btn-primary">
+            <i class='bx bx-plus'></i>
+            Create a Schedule
+        </a>
+        <a href="<?php echo URLROOT; ?>/reschedule/" class="btn btn-primary">
+            <i class='bx bx-calendar-edit'></i>
+            Manage Exceptions
+        </a>
     </div>
+
+
 
 
 
@@ -112,54 +99,88 @@
     <?php flash('schedule_error'); ?>
     <?php flash('schedule_success'); ?>
     
+    
+
+
 
     <div class="table-data">
-        <div class="order" style="max-width:500px;">
-            <div id="calendar"></div>  
-        </div>
+
         <div class="order">
             <div class="head">
-                <h3>Collection List</h3>
-                <script src="<?php echo URLROOT; ?>/public/js/vehicle_manager/calendar.js"></script>
+                <h3>Collection Schedules</h3>
             </div>
-            <table id="collection-table">
+            <table>
                 <thead>
                     <tr>
-                        <th>Collection ID</th>
+                        <th>Schedule ID</th>
                         <th>Route</th>
-                        <th>Shift Times</th>
                         <th>Driver</th>
+                        <th>Vehicle</th>
+                        <th>Shift</th>
+                        <th>Day</th>
+                        <th>Created At</th>
                         <th>Status</th>
-                        <th>Details</th>
+                        <th>Actions</th>
                     </tr>
                 </thead>
                 <tbody>
-                    <tr>
-                        <td colspan="6">No collections found. Please select a date.</td>
-                    </tr>
+                    <?php if(isset($data['schedules']) && !empty($data['schedules'])): ?>
+                        <?php foreach($data['schedules'] as $schedule): ?>
+                            <tr>
+                                <td>CS<?php echo str_pad($schedule->schedule_id, 3, '0', STR_PAD_LEFT); ?></td>
+                                <td><?php echo $schedule->route_name; ?></td>
+                                <td><?php echo $schedule->driver_name; ?></td>
+                                <td><?php echo $schedule->license_plate; ?></td>
+                                <td><?php echo $schedule->shift_name; ?> (<?php echo $schedule->start_time; ?> - <?php echo $schedule->end_time; ?>)</td>
+                                <td><?php echo $schedule->day; ?></td>
+                                <td><?php echo date('Y-m-d H:i', strtotime($schedule->created_at)); ?></td>
+                                <td>
+                                    <form action="<?php echo URLROOT; ?>/collectionschedules/toggleActive" method="POST" style="display: inline;">
+                                        <button type="submit" class="status-btn <?php echo $schedule->is_active ? 'active' : 'inactive'; ?>" style="background-color: var(--main)"> 
+                                            <?php echo $schedule->is_active ? 'Active' : 'Inactive'; ?>
+                                        </button>
+                                    </form>
+                                </td>
+                                <td>
+                                    <div style="display: flex; gap: 5px;">
+                                        <!-- Update button with icon only -->
+                                        <a 
+                                            href="<?php echo URLROOT; ?>/vehiclemanager/updateSchedule/<?php echo $schedule->schedule_id; ?>" 
+                                            class="btn btn-tertiary" 
+                                            style="display: flex; align-items: center; justify-content: center; width: 40px; height: 40px; border: none; background: none;"
+                                        >
+                                            <i class='bx bx-cog' style="font-size: 24px; color:green;"></i> <!-- Boxicon for settings -->
+                                        </a>
+                                        
+                                        <!-- Delete button with icon only -->
+                                        <form action="<?php echo URLROOT; ?>/collectionschedules/delete" method="POST" style="margin: 0;" 
+                                            onsubmit="return confirm('Are you sure you want to delete this schedule?');">
+                                            <input type="hidden" name="schedule_id" value="<?php echo $schedule->schedule_id; ?>">
+                                            <button type="submit" class="btn btn-tertiary" 
+                                                style="display: flex; align-items: center; justify-content: center; width: 40px; height: 40px; border: none; background: none;">
+                                                <i class='bx bx-trash' style="font-size: 24px; color:red;"></i> <!-- Boxicon for trash -->
+                                            </button>
+                                        </form>
+                                    </div>
+                                </td>
+                            </tr>
+                        <?php endforeach; ?>
+                    <?php else: ?>
+                        <tr>
+                            <td colspan="10" class="text-center">No schedules found</td>
+                        </tr>
+                    <?php endif; ?>
                 </tbody>
             </table>
         </div>
-
     </div>
-
-    <script>
-    document.addEventListener('DOMContentLoaded', function() {
-        const calendar = new Calendar('calendar', function(date) {
-            // Your date selection handler
-            fetchCollections(
-                date.getFullYear(),
-                date.getMonth() + 1,
-                date.getDate()
-            );
-        });
-    });
-</script>
 
 
 
 
 <script>
+
+
 
     
     function fetchCollections(year, month, day) {

@@ -159,7 +159,7 @@ document.addEventListener("DOMContentLoaded", function () {
     fetchRouteSuppliers(routeId);
 
     function fetchUnallocatedSuppliers(routeDay) {
-        fetch('<?php echo URLROOT; ?>/route/getUnallocatedSuppliersByDay/' + routeDay)
+        fetch('<?php echo URLROOT; ?>/route/getUnallocatedSuppliers/' + routeDay)
             .then(response => response.json())
             .then(data => {
                 const select = document.getElementById("employee-status");

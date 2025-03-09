@@ -108,6 +108,22 @@ class Route extends Controller{
         echo json_encode(['success' => true, 'data' => $suppliers]);
     }
 
+
+    public function getUnallocatedSuppliers() {
+    
+        // Fetch unallocated suppliers for the given day
+        $suppliers = $this->routeModel->getUnallocatedSuppliers();
+        
+        // Check if the suppliers query was successful
+        if ($suppliers === false) {
+            echo json_encode(['success' => false, 'message' => 'Error fetching suppliers']);
+            return;
+        }
+    
+        // Return the response
+        echo json_encode(['success' => true, 'data' => $suppliers]);
+    }
+
     public function getRouteSuppliers($routeId) {
         // Fetch bag details from the model using the collection ID
         $routeSuppliers = $this->routeModel->getRouteSuppliersByRouteId($routeId);
@@ -230,6 +246,26 @@ class Route extends Controller{
                 'message' => $e->getMessage()
             ]);
             exit;
+        }
+    }
+
+    public function toggleLock() {
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            $routeId = $_POST['route_id'];
+
+            // Call the model method to toggle the lock state
+            if ($this->routeModel->toggleLock($routeId)) {
+                // Redirect back to the route management page with a success message
+                flash('route_message', 'Route lock state toggled successfully');
+                redirect('route/');
+            } else {
+                // Handle error
+                flash('route_message', 'Failed to toggle route lock state', 'error');
+                redirect('route/');
+            }
+        } else {
+            // If not a POST request, redirect or handle accordingly
+            redirect('route/');
         }
     }
 

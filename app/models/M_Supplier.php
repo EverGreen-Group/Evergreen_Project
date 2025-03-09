@@ -95,4 +95,23 @@ class M_Supplier {
         return $result; // Return the supplier details along with user info
     }
 
+    public function getSupplierStatus($supplierId) {
+        $sql = "SELECT is_active FROM suppliers WHERE supplier_id = :supplier_id";
+        $this->db->query($sql);
+        $this->db->bind(':supplier_id', $supplierId);
+        $result = $this->db->single(); // Fetch the single record
+
+        // Return the actual is_active value
+        return $result ? $result->is_active : null; // Return the is_active value or null if not found
+    }
+
+    public function updateSupplierStatus($supplierId, $isActive) {
+        $sql = "UPDATE suppliers SET is_active = :is_active WHERE supplier_id = :supplier_id";
+        $this->db->query($sql);
+        $this->db->bind(':is_active', $isActive);
+        $this->db->bind(':supplier_id', $supplierId);
+        
+        return $this->db->execute(); // Returns true on success
+    }
+
 } 

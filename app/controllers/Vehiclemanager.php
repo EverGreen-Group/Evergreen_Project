@@ -2,33 +2,40 @@
 use Endroid\QrCode\QrCode;
 use Endroid\QrCode\Builder\Builder;
 use Endroid\QrCode\Writer\PngWriter;
+
+// Require all model files
 require_once '../app/models/M_VehicleManager.php';
-require_once '../app/models/M_Route.php';      // Add Route model
-require_once '../app/models/M_Team.php';       // Add Team model
-require_once '../app/models/M_Vehicle.php';    // Add Vehicle model
-require_once '../app/models/M_Shift.php';      // Add Shift model
-require_once '../app/models/M_CollectionSchedule.php';  // Add CollectionSchedule model
+require_once '../app/models/M_Route.php';
+require_once '../app/models/M_Team.php';
+require_once '../app/models/M_Vehicle.php';
+require_once '../app/models/M_Shift.php';
+require_once '../app/models/M_CollectionSchedule.php';
 require_once '../app/models/M_Staff.php';
 require_once '../app/models/M_Driver.php';
 require_once '../app/models/M_Partner.php';
-require_once '../app/helpers/auth_middleware.php';
-require_once '../app/helpers/UserHelper.php';
-require_once '../app/models/M_Collection.php';    // Add Collection model
+require_once '../app/models/M_Collection.php';
 require_once '../app/models/M_CollectionSupplierRecord.php';
-require_once '../app/models/M_User.php'; // Correctly include the M_User model
+require_once '../app/models/M_User.php';
 require_once '../app/models/M_Employee.php';
 require_once '../app/models/M_CollectionBag.php';
 
+// Require helper files
+require_once '../app/helpers/auth_middleware.php';
+require_once '../app/helpers/UserHelper.php';
+
 class VehicleManager extends Controller
 {
+    //----------------------------------------
+    // PROPERTIES
+    //----------------------------------------
     private $vehicleManagerModel;
-    private $routeModel;       // Declare a variable for Route model
-    private $teamModel;        // Declare a variable for Team model
-    private $vehicleModel;     // Declare a variable for Vehicle model
-    private $shiftModel;       // Declare a variable for Shift model
-    private $scheduleModel;     // Declare a variable for CollectionSchedule model
-    private $driverModel; // Declare a variable for Driver model
-    private $partnerModel; // Add this line
+    private $routeModel;
+    private $teamModel;
+    private $vehicleModel;
+    private $shiftModel;
+    private $scheduleModel;
+    private $driverModel;
+    private $partnerModel;
     private $staffModel;
     private $userHelper;
     private $collectionModel;
@@ -37,7 +44,9 @@ class VehicleManager extends Controller
     private $employeeModel;
     private $bagModel;
 
-
+    //----------------------------------------
+    // CONSTRUCTOR
+    //----------------------------------------
     public function __construct()
     {
         // Check if user is logged in
@@ -51,16 +60,15 @@ class VehicleManager extends Controller
             exit();
         }
 
-
         // Initialize models
         $this->vehicleManagerModel = new M_VehicleManager();
-        $this->routeModel = new M_Route();        // Instantiate Route model
-        $this->teamModel = new M_Team();          // Instantiate Team model
-        $this->vehicleModel = new M_Vehicle();    // Instantiate Vehicle model
-        $this->shiftModel = new M_Shift();        // Instantiate Shift model
-        $this->scheduleModel = new M_CollectionSchedule();  // Instantiate CollectionSchedule model
-        $this->driverModel = new M_Driver(); // Instantiate Driver model
-        $this->partnerModel = new M_Partner(); // Add this line
+        $this->routeModel = new M_Route();
+        $this->teamModel = new M_Team();
+        $this->vehicleModel = new M_Vehicle();
+        $this->shiftModel = new M_Shift();
+        $this->scheduleModel = new M_CollectionSchedule();
+        $this->driverModel = new M_Driver();
+        $this->partnerModel = new M_Partner();
         $this->staffModel = $this->model('M_Staff');
         $this->userHelper = new UserHelper();
         $this->collectionModel = $this->model('M_Collection');
@@ -70,11 +78,9 @@ class VehicleManager extends Controller
         $this->bagModel = $this->model('M_CollectionBag');
     }
 
-    // private function isAjaxRequest() { I added this in the controllr class
-    //     return isset($_SERVER['HTTP_X_REQUESTED_WITH']) && 
-    //            strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) === 'xmlhttprequest';
-    // }
-
+    //----------------------------------------
+    // DASHBOARD METHODS
+    //----------------------------------------
     public function index()
     {
         // Get dashboard stats from the model
@@ -104,6 +110,61 @@ class VehicleManager extends Controller
         ]);
     }
 
+    public function schedule()
+    {
+        // Get dashboard stats from the model
+        $stats = $this->vehicleManagerModel->getDashboardStats();
+
+        // Fetch all necessary data for the dropdowns
+        $routes = $this->routeModel->getAllRoutes();
+        $drivers = $this->driverModel->getUnassignedDrivers();
+        $vehicles = $this->vehicleModel->getAllVehicles();
+        $shifts = $this->shiftModel->getAllShifts();
+        $schedules = $this->scheduleModel->getAllSchedules();
+        $collectionSchedules = $this->scheduleModel->getSchedulesForNextWeek(); 
+        $ongoingCollections = $this->collectionModel->getOngoingCollections();
+        $todayRoutes = $this->routeModel->getTodayAssignedRoutes();
+
+        // Pass the stats and data for the dropdowns to the view
+        $this->view('vehicle_manager/v_collectionschedule', [
+            'stats' => $stats,
+            'routes' => $routes,
+            'drivers' => $drivers,
+            'vehicles' => $vehicles,
+            'shifts' => $shifts,
+            'schedules' => $schedules,
+            'ongoing_collections' => $ongoingCollections,
+            'collectionSchedules' => $collectionSchedules,
+            'todayRoutes' => $todayRoutes 
+        ]);
+    }
+
+
+// In your VehicleManager controller
+public function updateSchedule($scheduleId)
+{
+    // Fetch the specific schedule details
+    $schedule = $this->scheduleModel->getScheduleById($scheduleId);
+    
+    if (!$schedule) {
+        // Handle case where schedule doesn't exist
+        flash('schedule_message', 'Schedule not found', 'alert alert-danger');
+        redirect('vehiclemanager/schedule'); // Or wherever your schedules list is
+        return;
+    }
+    
+    $shifts = $this->shiftModel->getAllShifts();
+    
+    // Pass data to the view - notice we've removed routes
+    $this->view('vehicle_manager/v_schedule_update', [
+        'schedule' => $schedule,
+        'shifts' => $shifts
+    ]);
+}
+
+    //----------------------------------------
+    // SUPPLIER RECORD METHODS
+    //----------------------------------------
     public function getSupplierRecords($collectionId)
     {
         $records = $this->collectionSupplierRecordModel->getSupplierRecords($collectionId);
@@ -124,7 +185,9 @@ class VehicleManager extends Controller
         echo json_encode(['success' => $success]);
     }
 
-    // Add method to handle the assignment of collections
+    //----------------------------------------
+    // SCHEDULE METHODS
+    //----------------------------------------
     public function createSchedule()
     {
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
@@ -150,9 +213,9 @@ class VehicleManager extends Controller
         }
     }
 
-
-
-    // Other methods remain unchanged
+    //----------------------------------------
+    // VEHICLE METHODS
+    //----------------------------------------
     public function vehicle() {
         // Retrieve filter parameters from the GET request
         $license_plate = isset($_GET['license_plate']) ? $_GET['license_plate'] : null;
@@ -190,6 +253,109 @@ class VehicleManager extends Controller
         $this->view('vehicle_manager/v_vehicle', $data);
     }
 
+    public function updateVehicle() {
+        if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+            // Validate and sanitize input
+            $license_plate = htmlspecialchars(trim($_POST['license_plate'])); // Keep the license plate as is
+            $vehicle_type = htmlspecialchars(trim($_POST['vehicle_type']));
+            $make = htmlspecialchars(trim($_POST['make']));
+            $model = htmlspecialchars(trim($_POST['model']));
+            $manufacturing_year = htmlspecialchars(trim($_POST['manufacturing_year']));
+            $color = htmlspecialchars(trim($_POST['color']));
+            $capacity = htmlspecialchars(trim($_POST['capacity']));
+
+            // Check the current status of the vehicle
+            $currentVehicle = $this->vehicleModel->getVehicleByLicensePlate($license_plate);
+            if ($currentVehicle && $currentVehicle->status === 'In Use') {
+                // Handle the case where the vehicle is in use
+                echo "Cannot update vehicle. The vehicle is currently in use.";
+                return; // Exit the function if the vehicle is in use
+            }
+
+            // Initialize the data array for updating
+            $data = [
+                'license_plate' => $license_plate, // Keep the existing license plate
+                'vehicle_type' => $vehicle_type,
+                'make' => $make,
+                'model' => $model,
+                'manufacturing_year' => $manufacturing_year,
+                'color' => $color,
+                'capacity' => $capacity,
+            ];
+
+            // Handle file upload if a new image is provided
+            if (isset($_FILES['vehicle_image']) && $_FILES['vehicle_image']['error'] == 0) {
+                $image = $_FILES['vehicle_image'];
+                $target_dir = "/opt/lampp/htdocs/Evergreen_Project/public/uploads/vehicle_photos/";
+                $target_file = $target_dir . $license_plate . ".jpg"; // Save as {license_plate}.jpg
+
+                // Move the uploaded file to the target directory
+                if (move_uploaded_file($image['tmp_name'], $target_file)) {
+                    // Update the image path in the data array
+                    $data['image_path'] = $target_file; // Optional: store the new image path in the database
+                } else {
+                    // Handle file upload error
+                    echo "Error uploading file.";
+                    return; // Exit the function if the upload fails
+                }
+            }
+
+            // Update vehicle details in the database
+            $this->vehicleModel->updateVehicle($data);
+
+            // Redirect or show success message
+            header('Location: ' . URLROOT . '/vehiclemanager/vehicle');
+            exit();
+        }
+    }
+
+    public function getVehicleById($id)
+    {
+        $vehicle = $this->vehicleModel->getVehicleById($id);
+        if ($vehicle) {
+            echo json_encode(['success' => true, 'vehicle' => $vehicle]);
+        } else {
+            echo json_encode(['success' => false]);
+        }
+    }
+
+    public function deleteVehicle($id)
+    {
+        header('Content-Type: application/json');
+
+        try {
+            // Log the request method and ID
+            error_log("Delete request received for vehicle ID: " . $id);
+            error_log("Request method: " . $_SERVER['REQUEST_METHOD']);
+
+            if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+                throw new Exception('Invalid request method');
+            }
+
+            // Try to delete the vehicle
+            if ($this->vehicleModel->deleteVehicle($id)) {
+                error_log("Vehicle " . $id . " deleted successfully");
+                echo json_encode([
+                    'success' => true,
+                    'message' => 'Vehicle deleted successfully'
+                ]);
+            } else {
+                throw new Exception('Failed to delete vehicle from database');
+            }
+
+        } catch (Exception $e) {
+            error_log("Error in deleteVehicle: " . $e->getMessage());
+            echo json_encode([
+                'success' => false,
+                'message' => $e->getMessage()
+            ]);
+        }
+        exit;
+    }
+
+    //----------------------------------------
+    // DRIVER METHODS
+    //----------------------------------------
     public function driver() {
         // Initialize $data array first
         $data = [];
@@ -219,7 +385,6 @@ class VehicleManager extends Controller
         
         $this->view('vehicle_manager/v_driver_2', $data);
     }
-
 
     public function getDriverDetails($driverId) {
         // Set header to return JSON
@@ -325,7 +490,6 @@ class VehicleManager extends Controller
         }
     }
 
-
     public function updateDriver()
     {
         if ($_SERVER['REQUEST_METHOD'] == 'POST') {
@@ -364,6 +528,9 @@ class VehicleManager extends Controller
         }
     }
 
+    //----------------------------------------
+    // ROUTE METHODS
+    //----------------------------------------
     public function route() {
         $allRoutes = $this->routeModel->getAllUndeletedRoutes();
         $totalRoutes = $this->routeModel->getTotalRoutes();
@@ -397,252 +564,6 @@ class VehicleManager extends Controller
         ];
 
         $this->view('vehicle_manager/v_route', $data);
-    }
-
-    public function shift()
-    {
-        // Handle POST request for creating new shift
-        if ($_SERVER['REQUEST_METHOD'] == 'POST') {
-            try {
-                // Validate and sanitize input
-                $data = [
-                    'shift_name' => trim($_POST['shift_name']),
-                    'start_time' => trim($_POST['start_time']),
-                    'end_time' => trim($_POST['end_time'])
-                ];
-
-                // Check for duplicate shift name
-                if ($this->shiftModel->isShiftNameDuplicate($data['shift_name'])) {
-                    flash('shift_error', 'Shift name already exists', 'alert alert-danger');
-                    redirect('vehiclemanager/shift');
-                    return;
-                }
-
-                // Use addShift instead of createShift
-                if ($this->shiftModel->addShift($data)) {
-                    flash('shift_success', 'New shift created successfully');
-                } else {
-                    // Get specific error message from model
-                    flash('shift_error', $this->shiftModel->getError() ?? 'Failed to create shift');
-                }
-                redirect('vehiclemanager/shift');
-                return;
-            } catch (Exception $e) {
-                flash('shift_error', 'Error: ' . $e->getMessage());
-                redirect('vehiclemanager/shift');
-                return;
-            }
-        }
-
-        // GET request - display shifts page
-        $shifts = $this->shiftModel->getAllShifts();
-        $totalShifts = $this->shiftModel->getTotalShifts();
-        $totalTeamsInCollection = $this->teamModel->getTotalTeamsInCollection();
-
-        // Initialize the schedules array
-        $schedules = [];
-
-        // Define the date range for the next 7 days
-        $startDate = date('Y-m-d');
-        $endDate = date('Y-m-d', strtotime('+6 days'));
-
-        // Fetch schedules for each shift within the date range
-        foreach ($shifts as $shift) {
-            // Fetch schedules for the specific shift
-            $shiftSchedules = $this->scheduleModel->getSchedulesByShiftIdAndDate($shift->shift_id, $startDate, $endDate);
-
-            // Organize schedules by date
-            foreach ($shiftSchedules as $schedule) {
-                $date = date('Y-m-d', strtotime($schedule->created_at)); // Assuming schedule has a created_at field
-                if (!isset($schedules[$shift->shift_id][$date])) {
-                    $schedules[$shift->shift_id][$date] = [];
-                }
-                $schedules[$shift->shift_id][$date][] = $schedule; // Add the schedule to the appropriate date
-            }
-        }
-
-        // Prepare data to pass to the view
-        $data = [
-            'shifts' => $shifts,
-            'totalShifts' => $totalShifts,
-            'totalTeamsInCollection' => $totalTeamsInCollection,
-            'schedules' => $schedules // Pass the organized schedules to the view
-        ];
-
-        // Load the view with the data
-        $this->view('vehicle_manager/v_shift', $data);
-    }
-
-    // Add method for handling shift deletion
-    public function deleteShift($id)
-    {
-        if ($_SERVER['REQUEST_METHOD'] == 'POST') {
-            try {
-                if ($this->shiftModel->deleteShift($id)) {
-                    echo json_encode(['success' => true]);
-                } else {
-                    echo json_encode(['success' => false, 'error' => 'Failed to delete shift']);
-                }
-            } catch (Exception $e) {
-                echo json_encode(['success' => false, 'error' => $e->getMessage()]);
-            }
-            exit;
-        }
-    }
-
-    public function getShift($id)
-    {
-        header('Content-Type: application/json'); // Set the content type to JSON
-        try {
-            $shift = $this->shiftModel->getShiftById($id);
-            if ($shift) {
-                echo json_encode($shift);
-            } else {
-                echo json_encode(['error' => 'Shift not found']);
-            }
-        } catch (Exception $e) {
-            echo json_encode(['error' => $e->getMessage()]);
-        }
-        exit; // Ensure no additional output is sent
-    }
-
-    public function updateShift($id)
-    {
-        if ($_SERVER['REQUEST_METHOD'] == 'POST') {
-            $data = [
-                'shift_id' => $id,
-                'shift_name' => trim($_POST['shift_name']),
-                'start_time' => trim($_POST['start_time']),
-                'end_time' => trim($_POST['end_time'])
-            ];
-
-            try {
-                if ($this->shiftModel->updateShift($data)) {
-                    flash('shift_success', 'Shift updated successfully');
-                } else {
-                    flash('shift_error', $this->shiftModel->getError(), 'alert alert-danger');
-                }
-            } catch (Exception $e) {
-                flash('shift_error', $e->getMessage(), 'alert alert-danger');
-            }
-            redirect('vehiclemanager/shift');
-        }
-    }
-
-    public function settings()
-    {
-        $data = [];
-        $this->view('vehicle_manager/v_settings', $data);
-    }
-
-    public function personal_details()
-    {
-        $data = [];
-        $this->view('vehicle_manager/v_personal_details', $data);
-    }
-
-    public function logout()
-    {
-        // Handle logout functionality
-    }
-    public function updateVehicle() {
-        if ($_SERVER['REQUEST_METHOD'] == 'POST') {
-            // Validate and sanitize input
-            $license_plate = htmlspecialchars(trim($_POST['license_plate'])); // Keep the license plate as is
-            $vehicle_type = htmlspecialchars(trim($_POST['vehicle_type']));
-            $make = htmlspecialchars(trim($_POST['make']));
-            $model = htmlspecialchars(trim($_POST['model']));
-            $manufacturing_year = htmlspecialchars(trim($_POST['manufacturing_year']));
-            $color = htmlspecialchars(trim($_POST['color']));
-            $capacity = htmlspecialchars(trim($_POST['capacity']));
-
-            // Check the current status of the vehicle
-            $currentVehicle = $this->vehicleModel->getVehicleByLicensePlate($license_plate);
-            if ($currentVehicle && $currentVehicle->status === 'In Use') {
-                // Handle the case where the vehicle is in use
-                echo "Cannot update vehicle. The vehicle is currently in use.";
-                return; // Exit the function if the vehicle is in use
-            }
-
-            // Initialize the data array for updating
-            $data = [
-                'license_plate' => $license_plate, // Keep the existing license plate
-                'vehicle_type' => $vehicle_type,
-                'make' => $make,
-                'model' => $model,
-                'manufacturing_year' => $manufacturing_year,
-                'color' => $color,
-                'capacity' => $capacity,
-            ];
-
-            // Handle file upload if a new image is provided
-            if (isset($_FILES['vehicle_image']) && $_FILES['vehicle_image']['error'] == 0) {
-                $image = $_FILES['vehicle_image'];
-                $target_dir = "/opt/lampp/htdocs/Evergreen_Project/public/uploads/vehicle_photos/";
-                $target_file = $target_dir . $license_plate . ".jpg"; // Save as {license_plate}.jpg
-
-                // Move the uploaded file to the target directory
-                if (move_uploaded_file($image['tmp_name'], $target_file)) {
-                    // Update the image path in the data array
-                    $data['image_path'] = $target_file; // Optional: store the new image path in the database
-                } else {
-                    // Handle file upload error
-                    echo "Error uploading file.";
-                    return; // Exit the function if the upload fails
-                }
-            }
-
-            // Update vehicle details in the database
-            $this->vehicleModel->updateVehicle($data);
-
-            // Redirect or show success message
-            header('Location: ' . URLROOT . '/vehiclemanager/vehicle');
-            exit();
-        }
-    }
-
-    public function getVehicleById($id)
-    {
-        $vehicle = $this->vehicleModel->getVehicleById($id);
-        if ($vehicle) {
-            echo json_encode(['success' => true, 'vehicle' => $vehicle]);
-        } else {
-            echo json_encode(['success' => false]);
-        }
-    }
-
-    public function deleteVehicle($id)
-    {
-        header('Content-Type: application/json');
-
-        try {
-            // Log the request method and ID
-            error_log("Delete request received for vehicle ID: " . $id);
-            error_log("Request method: " . $_SERVER['REQUEST_METHOD']);
-
-            if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-                throw new Exception('Invalid request method');
-            }
-
-            // Try to delete the vehicle
-            if ($this->vehicleModel->deleteVehicle($id)) {
-                error_log("Vehicle " . $id . " deleted successfully");
-                echo json_encode([
-                    'success' => true,
-                    'message' => 'Vehicle deleted successfully'
-                ]);
-            } else {
-                throw new Exception('Failed to delete vehicle from database');
-            }
-
-        } catch (Exception $e) {
-            error_log("Error in deleteVehicle: " . $e->getMessage());
-            echo json_encode([
-                'success' => false,
-                'message' => $e->getMessage()
-            ]);
-        }
-        exit;
     }
 
     public function createRoute()
@@ -754,7 +675,157 @@ class VehicleManager extends Controller
         exit;
     }
 
+    //----------------------------------------
+    // SHIFT METHODS
+    //----------------------------------------
+    public function shift()
+    {
+        // Handle POST request for creating new shift
+        if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+            try {
+                // Validate and sanitize input
+                $data = [
+                    'shift_name' => trim($_POST['shift_name']),
+                    'start_time' => trim($_POST['start_time']),
+                    'end_time' => trim($_POST['end_time'])
+                ];
 
+                // Check for duplicate shift name
+                if ($this->shiftModel->isShiftNameDuplicate($data['shift_name'])) {
+                    flash('shift_error', 'Shift name already exists', 'alert alert-danger');
+                    redirect('vehiclemanager/shift');
+                    return;
+                }
+
+                // Use addShift instead of createShift
+                if ($this->shiftModel->addShift($data)) {
+                    flash('shift_success', 'New shift created successfully');
+                } else {
+                    // Get specific error message from model
+                    flash('shift_error', $this->shiftModel->getError() ?? 'Failed to create shift');
+                }
+                redirect('vehiclemanager/shift');
+                return;
+            } catch (Exception $e) {
+                flash('shift_error', 'Error: ' . $e->getMessage());
+                redirect('vehiclemanager/shift');
+                return;
+            }
+        }
+
+        // GET request - display shifts page
+        $shifts = $this->shiftModel->getAllShifts();
+        $totalShifts = $this->shiftModel->getTotalShifts();
+        $totalTeamsInCollection = $this->teamModel->getTotalTeamsInCollection();
+
+        // Initialize the schedules array
+        $schedules = [];
+
+        // Define the date range for the next 7 days
+        $startDate = date('Y-m-d');
+        $endDate = date('Y-m-d', strtotime('+6 days'));
+
+        // Fetch schedules for each shift within the date range
+        foreach ($shifts as $shift) {
+            // Fetch schedules for the specific shift
+            $shiftSchedules = $this->scheduleModel->getSchedulesByShiftIdAndDate($shift->shift_id, $startDate, $endDate);
+
+            // Organize schedules by date
+            foreach ($shiftSchedules as $schedule) {
+                $date = date('Y-m-d', strtotime($schedule->created_at)); // Assuming schedule has a created_at field
+                if (!isset($schedules[$shift->shift_id][$date])) {
+                    $schedules[$shift->shift_id][$date] = [];
+                }
+                $schedules[$shift->shift_id][$date][] = $schedule; // Add the schedule to the appropriate date
+            }
+        }
+
+        // Prepare data to pass to the view
+        $data = [
+            'shifts' => $shifts,
+            'totalShifts' => $totalShifts,
+            'totalTeamsInCollection' => $totalTeamsInCollection,
+            'schedules' => $schedules // Pass the organized schedules to the view
+        ];
+
+        // Load the view with the data
+        $this->view('vehicle_manager/v_shift', $data);
+    }
+
+    public function deleteShift($id)
+    {
+        if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+            try {
+                if ($this->shiftModel->deleteShift($id)) {
+                    echo json_encode(['success' => true]);
+                } else {
+                    echo json_encode(['success' => false, 'error' => 'Failed to delete shift']);
+                }
+            } catch (Exception $e) {
+                echo json_encode(['success' => false, 'error' => $e->getMessage()]);
+            }
+            exit;
+        }
+    }
+
+    public function getShift($id)
+    {
+        header('Content-Type: application/json'); // Set the content type to JSON
+        try {
+            $shift = $this->shiftModel->getShiftById($id);
+            if ($shift) {
+                echo json_encode($shift);
+            } else {
+                echo json_encode(['error' => 'Shift not found']);
+            }
+        } catch (Exception $e) {
+            echo json_encode(['error' => $e->getMessage()]);
+        }
+        exit; // Ensure no additional output is sent
+    }
+
+    public function updateShift($id)
+    {
+        if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+            $data = [
+                'shift_id' => $id,
+                'shift_name' => trim($_POST['shift_name']),
+                'start_time' => trim($_POST['start_time']),
+                'end_time' => trim($_POST['end_time'])
+            ];
+
+            try {
+                if ($this->shiftModel->updateShift($data)) {
+                    flash('shift_success', 'Shift updated successfully');
+                } else {
+                    flash('shift_error', $this->shiftModel->getError(), 'alert alert-danger');
+                }
+            } catch (Exception $e) {
+                flash('shift_error', $e->getMessage(), 'alert alert-danger');
+            }
+            redirect('vehiclemanager/shift');
+        }
+    }
+
+    //----------------------------------------
+    // PROFILE & SETTINGS METHODS
+    //----------------------------------------
+    public function settings()
+    {
+        $data = [];
+        $this->view('vehicle_manager/v_settings', $data);
+    }
+
+    public function personal_details()
+    {
+        $data = [];
+        $this->view('vehicle_manager/v_personal_details', $data);
+    }
+
+    public function logout()
+    {
+        // Handle logout functionality
+    }
 
 
     public function update_leave_status()
@@ -817,8 +888,14 @@ class VehicleManager extends Controller
         }
     }
 
-
-
+    //==============================================================================
+    // ROUTE MANAGEMENT
+    //==============================================================================
+    
+    /**
+     * Gets collection route details including suppliers
+     * @param int $collectionId The ID of the collection
+     */
     public function getCollectionRoute($collectionId)
     {
         // Get collection details
@@ -848,6 +925,11 @@ class VehicleManager extends Controller
         echo json_encode($data);
     }
 
+    /**
+     * Determines the current stop in the collection route
+     * @param array $supplierRecords The supplier collection records
+     * @return int The index of the current stop
+     */
     private function getCurrentStop($supplierRecords)
     {
         // Find the last collected supplier
@@ -859,6 +941,10 @@ class VehicleManager extends Controller
         return 0; // Return 0 if no collections yet
     }
 
+    /**
+     * Updates the status of a supplier in a collection
+     * @param int $recordId The ID of the supplier record
+     */
     public function updateSupplierStatus($recordId)
     {
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
@@ -872,6 +958,10 @@ class VehicleManager extends Controller
         }
     }
 
+    /**
+     * Removes a supplier from a collection
+     * @param int $recordId The ID of the supplier record
+     */
     public function removeCollectionSupplier($recordId)
     {
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
@@ -884,63 +974,10 @@ class VehicleManager extends Controller
         }
     }
 
-    public function addVehicle() {
-        if ($_SERVER['REQUEST_METHOD'] == 'POST') {
-            // Validate and sanitize input
-            $license_plate = htmlspecialchars(trim($_POST['license_plate']));
-            $vehicle_type = htmlspecialchars(trim($_POST['vehicle_type']));
-            $make = htmlspecialchars(trim($_POST['make']));
-            $model = htmlspecialchars(trim($_POST['model']));
-            $manufacturing_year = htmlspecialchars(trim($_POST['manufacturing_year']));
-            $color = htmlspecialchars(trim($_POST['color']));
-            $capacity = htmlspecialchars(trim($_POST['capacity']));
-
-            // Handle file upload
-            if (isset($_FILES['vehicle_image']) && $_FILES['vehicle_image']['error'] == 0) {
-                $image = $_FILES['vehicle_image'];
-                $target_dir = "/opt/lampp/htdocs/Evergreen_Project/public/uploads/vehicle_photos/";
-                $target_file = $target_dir . $license_plate . ".jpg"; // Save as {license_plate}.jpg
-
-                // Move the uploaded file to the target directory
-                if (move_uploaded_file($image['tmp_name'], $target_file)) {
-                    // File upload successful, now save vehicle details to the database
-                    $this->vehicleModel->addVehicle([
-                        'license_plate' => $license_plate,
-                        'vehicle_type' => $vehicle_type,
-                        'make' => $make,
-                        'model' => $model,
-                        'manufacturing_year' => $manufacturing_year,
-                        'color' => $color,
-                        'capacity' => $capacity,
-                        'image_path' => $target_file // Optional: store the image path in the database
-                    ]);
-
-                    // Redirect or show success message
-                    header('Location: ' . URLROOT . '/vehiclemanager/vehicle');
-                    exit();
-                } else {
-                    // Handle file upload error
-                    echo "Error uploading file.";
-                }
-            } else {
-                // Handle no file uploaded or other errors
-                echo "No file uploaded or there was an error.";
-            }
-        }
-    }
-
-    public function checkVehicleUsage($id)
-    {
-        $schedules = $this->scheduleModel->getSchedulesByVehicleId($id);
-        $collections = $this->collectionModel->getCollectionsByVehicleId($id);
-
-        echo json_encode([
-            'inUse' => !empty($schedules) || !empty($collections),
-            'schedules' => !empty($schedules),
-            'collections' => !empty($collections)
-        ]);
-    }
-
+    /**
+     * Gets details for a specific route
+     * @param int $routeId The ID of the route
+     */
     public function getRouteDetails($routeId)
     {
         // Clear any previous output
@@ -997,16 +1034,125 @@ class VehicleManager extends Controller
         exit;
     }
 
+    /**
+     * Gets routes scheduled for a specific day
+     * @param string $day The day to get routes for
+     */
+    public function getRoutesByDay($day)
+    {
+        $routes = $this->routeModel->getRoutesByDay($day);
+        echo json_encode(['routes' => $routes]);
+    }
 
+    //==============================================================================
+    // VEHICLE MANAGEMENT
+    //==============================================================================
+    
+    /**
+     * Adds a new vehicle to the system
+     */
+    public function addVehicle() {
+        if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+            // Validate and sanitize input
+            $license_plate = htmlspecialchars(trim($_POST['license_plate']));
+            $vehicle_type = htmlspecialchars(trim($_POST['vehicle_type']));
+            $make = htmlspecialchars(trim($_POST['make']));
+            $model = htmlspecialchars(trim($_POST['model']));
+            $manufacturing_year = htmlspecialchars(trim($_POST['manufacturing_year']));
+            $color = htmlspecialchars(trim($_POST['color']));
+            $capacity = htmlspecialchars(trim($_POST['capacity']));
 
+            // Handle file upload
+            if (isset($_FILES['vehicle_image']) && $_FILES['vehicle_image']['error'] == 0) {
+                $image = $_FILES['vehicle_image'];
+                $target_dir = "/opt/lampp/htdocs/Evergreen_Project/public/uploads/vehicle_photos/";
+                $target_file = $target_dir . $license_plate . ".jpg"; // Save as {license_plate}.jpg
 
+                // Move the uploaded file to the target directory
+                if (move_uploaded_file($image['tmp_name'], $target_file)) {
+                    // File upload successful, now save vehicle details to the database
+                    $this->vehicleModel->addVehicle([
+                        'license_plate' => $license_plate,
+                        'vehicle_type' => $vehicle_type,
+                        'make' => $make,
+                        'model' => $model,
+                        'manufacturing_year' => $manufacturing_year,
+                        'color' => $color,
+                        'capacity' => $capacity,
+                        'image_path' => $target_file // Optional: store the image path in the database
+                    ]);
+
+                    // Redirect or show success message
+                    header('Location: ' . URLROOT . '/vehiclemanager/vehicle');
+                    exit();
+                } else {
+                    // Handle file upload error
+                    echo "Error uploading file.";
+                }
+            } else {
+                // Handle no file uploaded or other errors
+                echo "No file uploaded or there was an error.";
+            }
+        }
+    }
+
+    /**
+     * Removes a vehicle from the system
+     */
+    public function removeVehicle() {
+        if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+            // Validate and sanitize input
+            $license_plate = htmlspecialchars(trim($_POST['license_plate']));
+
+            // Check if the vehicle exists
+            $vehicle = $this->vehicleModel->getVehicleByLicensePlate($license_plate);
+            if ($vehicle) {
+                // Remove the vehicle from the database
+                if ($this->vehicleModel->deleteVehicle($license_plate)) {
+                    // Optionally, remove the vehicle image file
+                    $imagePath = "/opt/lampp/htdocs/Evergreen_Project/public/uploads/vehicle_photos/" . $license_plate . ".jpg";
+                    if (file_exists($imagePath)) {
+                        unlink($imagePath); // Delete the image file
+                    }
+
+                    // Redirect or show success message
+                    header('Location: ' . URLROOT . '/vehiclemanager/vehicle');
+                    exit();
+                } else {
+                    echo "Error removing vehicle.";
+                }
+            } else {
+                echo "Vehicle not found.";
+            }
+        }
+    }
+
+    /**
+     * Checks if a vehicle is being used in schedules or collections
+     * @param int $id The vehicle ID
+     */
+    public function checkVehicleUsage($id)
+    {
+        $schedules = $this->scheduleModel->getSchedulesByVehicleId($id);
+        $collections = $this->collectionModel->getCollectionsByVehicleId($id);
+
+        echo json_encode([
+            'inUse' => !empty($schedules) || !empty($collections),
+            'schedules' => !empty($schedules),
+            'collections' => !empty($collections)
+        ]);
+    }
+
+    /**
+     * Gets details for a specific vehicle
+     * @param int $id The vehicle ID
+     */
     public function getVehicleDetails($id)
     {
         ob_clean();
 
         try {
             $vehicle = $this->vehicleModel->getVehicleById($id);
-
 
             header('Content-Type: application/json');
             echo json_encode([
@@ -1025,12 +1171,14 @@ class VehicleManager extends Controller
         }
     }
 
-    public function getRoutesByDay($day)
-    {
-        $routes = $this->routeModel->getRoutesByDay($day);
-        echo json_encode(['routes' => $routes]);
-    }
-
+    //==============================================================================
+    // EMPLOYEE/DRIVER MANAGEMENT
+    //==============================================================================
+    
+    /**
+     * Gets employee details by user ID
+     * @param int $user_id The user ID
+     */
     public function getEmployeeByUserId($user_id)
     {
         // Fetch employee data
@@ -1053,6 +1201,10 @@ class VehicleManager extends Controller
         exit;
     }
 
+    /**
+     * Removes a driver from the system
+     * @param int $user_id The user ID of the driver
+     */
     public function removeDriver($user_id)
     {
         if ($_SERVER['REQUEST_METHOD'] == 'POST') {
@@ -1074,6 +1226,13 @@ class VehicleManager extends Controller
         }
     }
 
+    //==============================================================================
+    // COLLECTION BAG MANAGEMENT
+    //==============================================================================
+    
+    /**
+     * Loads the collection bag management view
+     */
     public function bag()
     {
         $data = [
@@ -1086,6 +1245,9 @@ class VehicleManager extends Controller
         $this->view('vehicle_manager/collection_bags/index', $data);
     }
 
+    /**
+     * Creates a new collection bag
+     */
     public function createBag()
     {
         if ($_SERVER['REQUEST_METHOD'] == 'POST') {
@@ -1118,13 +1280,16 @@ class VehicleManager extends Controller
         }
     }
 
+    /**
+     * Generates a QR code for a collection bag
+     * @param int $bagId The bag ID
+     */
     private function generateQRCode($bagId)
     {
         try {
             $qrCode = new QrCode($bagId);
             $qrCode->setSize(300); // Set the size
             $qrCode->setMargin(10); // Set the margin
-
 
             $writer = new PngWriter();
 
@@ -1139,7 +1304,9 @@ class VehicleManager extends Controller
         }
     }
 
-
+    /**
+     * Gets all collection bags
+     */
     public function getBags()
     {
         // Fetch bags from the model
@@ -1149,6 +1316,10 @@ class VehicleManager extends Controller
         echo json_encode(['success' => true, 'bags' => $bags]);
     }
 
+    /**
+     * Gets details for a specific collection bag
+     * @param int $bagId The bag ID
+     */
     public function getBagDetails($bagId)
     {
         // Fetch bag details from the model
@@ -1162,6 +1333,9 @@ class VehicleManager extends Controller
         }
     }
 
+    /**
+     * Updates an existing collection bag
+     */
     public function updateBag()
     {
         if ($_SERVER['REQUEST_METHOD'] == 'POST') {
@@ -1190,6 +1364,9 @@ class VehicleManager extends Controller
         }
     }
 
+    /**
+     * Removes a collection bag
+     */
     public function removeBag()
     {
         if ($_SERVER['REQUEST_METHOD'] == 'DELETE') {
@@ -1221,6 +1398,9 @@ class VehicleManager extends Controller
         }
     }
 
+    /**
+     * Deletes a bag's QR code image
+     */
     public function deleteBagQR()
     {
         // Get the JSON input
@@ -1253,7 +1433,13 @@ class VehicleManager extends Controller
         }
     }
 
-
+    //==============================================================================
+    // COLLECTION MANAGEMENT
+    //==============================================================================
+    
+    /**
+     * Gets pending collection requests
+     */
     public function getCollectionRequests()
     {
         $collections = $this->collectionModel->getPendingCollections();
@@ -1261,10 +1447,12 @@ class VehicleManager extends Controller
         echo json_encode($collections);
     }
 
+    /**
+     * Gets details for a specific collection
+     * @param int $id The collection ID
+     */
     public function getCollectionDetails($id)
     {
-
-
         // Validate ID
         if (!$id || !is_numeric($id)) {
             http_response_code(400);
@@ -1313,6 +1501,9 @@ class VehicleManager extends Controller
         echo json_encode($response);
     }
 
+    /**
+     * Approves a collection request
+     */
     public function approveCollection()
     {
         // Check if it's an AJAX request
@@ -1349,6 +1540,9 @@ class VehicleManager extends Controller
         }
     }
 
+    /**
+     * Gets collections for a specific date
+     */
     public function getCollectionsByDate() {
         // Get the date from the request
         $date = $_GET['date'] ?? null;
@@ -1364,34 +1558,6 @@ class VehicleManager extends Controller
             // Handle the case where no date is provided
             header('Content-Type: application/json');
             echo json_encode([]);
-        }
-    }
-
-    public function removeVehicle() {
-        if ($_SERVER['REQUEST_METHOD'] == 'POST') {
-            // Validate and sanitize input
-            $license_plate = htmlspecialchars(trim($_POST['license_plate']));
-
-            // Check if the vehicle exists
-            $vehicle = $this->vehicleModel->getVehicleByLicensePlate($license_plate);
-            if ($vehicle) {
-                // Remove the vehicle from the database
-                if ($this->vehicleModel->deleteVehicle($license_plate)) {
-                    // Optionally, remove the vehicle image file
-                    $imagePath = "/opt/lampp/htdocs/Evergreen_Project/public/uploads/vehicle_photos/" . $license_plate . ".jpg";
-                    if (file_exists($imagePath)) {
-                        unlink($imagePath); // Delete the image file
-                    }
-
-                    // Redirect or show success message
-                    header('Location: ' . URLROOT . '/vehiclemanager/vehicle');
-                    exit();
-                } else {
-                    echo "Error removing vehicle.";
-                }
-            } else {
-                echo "Vehicle not found.";
-            }
         }
     }
 

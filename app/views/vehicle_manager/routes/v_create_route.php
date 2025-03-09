@@ -200,8 +200,18 @@
                                         <input type="hidden" name="route_id" value="<?php echo $route->route_id; ?>">
                                         <button type="submit" class="btn btn-tertiary" 
                                             style="display: flex; align-items: center; justify-content: center; width: 40px; height: 40px; border: none; background: none;" 
-                                            onsubmit="return confirm('Are you sure you want to delete this route?');">
+                                            onclick="return confirm('Are you sure you want to delete this route?');">
                                             <i class='bx bx-trash' style="font-size: 24px; color:red;"></i> <!-- Boxicon for trash -->
+                                        </button>
+                                    </form>
+
+                                    <!-- Lock/Unlock button with icon only -->
+                                    <form action="<?php echo URLROOT; ?>/route/toggleLock" method="POST" style="margin: 0;"> 
+                                        <input type="hidden" name="route_id" value="<?php echo $route->route_id; ?>">
+                                        <button type="submit" class="btn btn-tertiary" 
+                                            style="display: flex; align-items: center; justify-content: center; width: 40px; height: 40px; border: none; background: none;" 
+                                            onclick="return confirm('Are you sure you want to toggle the lock for this route?');">
+                                            <i class='bx <?= $route->is_locked ? 'bxs-lock' : 'bxs-lock-open' ?>' style="font-size: 24px; color: <?= $route->is_locked ? 'red' : 'green' ?>;"></i> <!-- Boxicon for lock -->
                                         </button>
                                     </form>
                                 </div>
