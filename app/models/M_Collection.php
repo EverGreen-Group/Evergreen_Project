@@ -983,7 +983,7 @@ class M_Collection {
 
             // Update the collection status, end_time, and bags used
             $this->db->query('UPDATE collections SET 
-                status = "Completed", 
+                status = "Awaiting Inventory Addition", 
                 end_time = NOW(), 
                 bags = :bags_used 
                 WHERE collection_id = :collection_id');
@@ -994,21 +994,21 @@ class M_Collection {
             // Execute the update for the collections table
             if ($this->db->execute()) {
                 // Check if there are any fertilizer records for this collection
-                $this->db->query('SELECT COUNT(*) as count FROM collection_fertilizer_records WHERE collection_id = :collection_id');
-                $this->db->bind(':collection_id', $collectionId);
-                $fertilizerCount = $this->db->single()->count;
+                // $this->db->query('SELECT COUNT(*) as count FROM collection_fertilizer_records WHERE collection_id = :collection_id');
+                // $this->db->bind(':collection_id', $collectionId);
+                // $fertilizerCount = $this->db->single()->count;
 
                 // Update the status of fertilizer items to "Delivered" if records exist
-                if ($fertilizerCount > 0) {
-                    $this->db->query('UPDATE collection_fertilizer_records SET status = "Delivered" WHERE collection_id = :collection_id');
-                    $this->db->bind(':collection_id', $collectionId);
-                    $this->db->execute(); // Execute the update for fertilizer items
-                }
+                // if ($fertilizerCount > 0) {
+                //     $this->db->query('UPDATE collection_fertilizer_records SET status = "Delivered" WHERE collection_id = :collection_id');
+                //     $this->db->bind(':collection_id', $collectionId);
+                //     $this->db->execute(); // Execute the update for fertilizer items
+                // }
 
                 // Update the status of fertilizer orders to "Delivered"
-                $this->db->query('UPDATE fertilizer_order_items SET status = "Delivered" WHERE item_id IN (SELECT item_id FROM collection_fertilizer_records WHERE collection_id = :collection_id)');
-                $this->db->bind(':collection_id', $collectionId);
-                $this->db->execute(); // Execute the update for fertilizer orders
+                // $this->db->query('UPDATE fertilizer_order_items SET status = "Delivered" WHERE item_id IN (SELECT item_id FROM collection_fertilizer_records WHERE collection_id = :collection_id)');
+                // $this->db->bind(':collection_id', $collectionId);
+                // $this->db->execute(); // Execute the update for fertilizer orders
 
                 return ['success' => true];
             } else {

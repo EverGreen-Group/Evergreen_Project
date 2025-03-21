@@ -119,21 +119,25 @@ class M_CollectionSchedule {
             LEFT JOIN collection_exceptions ce ON 
                 cs.schedule_id = ce.schedule_id 
                 AND ce.exception_date = CURDATE()
+            LEFT JOIN collections c ON 
+                cs.schedule_id = c.schedule_id 
+                AND DATE(c.start_time) = CURDATE()
             WHERE cs.driver_id = :driver_id
             AND cs.is_active = 1
             AND cs.is_deleted = 0
             AND r.is_deleted = 0
+            AND (
+                /* For today's schedules */
+                (cs.day = DATE_FORMAT(CURDATE(), '%W') AND c.collection_id IS NULL) 
+                OR 
+                /* For upcoming schedules */
+                (cs.day != DATE_FORMAT(CURDATE(), '%W'))
+            )
             AND NOT EXISTS (
                 SELECT 1 FROM collection_exceptions 
                 WHERE schedule_id = cs.schedule_id 
                 AND exception_date = CURDATE()
                 AND exception_type = 'SKIP'
-            )
-            AND NOT EXISTS (
-                SELECT 1 FROM collections 
-                WHERE schedule_id = cs.schedule_id 
-                AND DATE(end_time) = CURDATE() 
-                AND status = 'Completed'
             )
             ORDER BY 
                 FIELD(schedule_status, 'today', 'upcoming', 'upcoming_next_week'),
