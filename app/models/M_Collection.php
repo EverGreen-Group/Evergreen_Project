@@ -646,7 +646,6 @@ class M_Collection {
                 
                 cs.schedule_id,
                 cs.day,
-                cs.week_number,
                 
                 r.*,
                 
