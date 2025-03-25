@@ -35,12 +35,12 @@
       </a>
     </li>
 
-    <li class="<?php echo (basename($_SERVER['REQUEST_URI']) == 'shift') ? 'active' : ''; ?>">
+    <!-- <li class="<?php echo (basename($_SERVER['REQUEST_URI']) == 'shift') ? 'active' : ''; ?>">
       <a href="<?php echo URLROOT; ?>/vehiclemanager/shift">
         <i class="bx bxs-time-five"></i>
         <span class="text">Shift</span>
       </a>
-    </li>
+    </li> -->
   </ul>
   <ul class="side-menu">
     <li class="<?php echo (basename($_SERVER['REQUEST_URI']) == 'settings') ? 'active' : ''; ?>">

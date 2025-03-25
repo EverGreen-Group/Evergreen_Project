@@ -121,9 +121,6 @@ class VehicleManager extends Controller
         $vehicles = $this->vehicleModel->getAllVehicles();
         $shifts = $this->shiftModel->getAllShifts();
         $schedules = $this->scheduleModel->getAllSchedules();
-        $collectionSchedules = $this->scheduleModel->getSchedulesForNextWeek(); 
-        $ongoingCollections = $this->collectionModel->getOngoingCollections();
-        $todayRoutes = $this->routeModel->getTodayAssignedRoutes();
 
         // Pass the stats and data for the dropdowns to the view
         $this->view('vehicle_manager/v_collectionschedule', [
@@ -132,35 +129,12 @@ class VehicleManager extends Controller
             'drivers' => $drivers,
             'vehicles' => $vehicles,
             'shifts' => $shifts,
-            'schedules' => $schedules,
-            'ongoing_collections' => $ongoingCollections,
-            'collectionSchedules' => $collectionSchedules,
-            'todayRoutes' => $todayRoutes 
+            'schedules' => $schedules
         ]);
     }
 
 
-// In your VehicleManager controller
-public function updateSchedule($scheduleId)
-{
-    // Fetch the specific schedule details
-    $schedule = $this->scheduleModel->getScheduleById($scheduleId);
-    
-    if (!$schedule) {
-        // Handle case where schedule doesn't exist
-        flash('schedule_message', 'Schedule not found', 'alert alert-danger');
-        redirect('vehiclemanager/schedule'); // Or wherever your schedules list is
-        return;
-    }
-    
-    $shifts = $this->shiftModel->getAllShifts();
-    
-    // Pass data to the view - notice we've removed routes
-    $this->view('vehicle_manager/v_schedule_update', [
-        'schedule' => $schedule,
-        'shifts' => $shifts
-    ]);
-}
+
 
     //----------------------------------------
     // SUPPLIER RECORD METHODS
@@ -188,29 +162,232 @@ public function updateSchedule($scheduleId)
     //----------------------------------------
     // SCHEDULE METHODS
     //----------------------------------------
-    public function createSchedule()
-    {
+    public function createSchedule() {
+        if (!isLoggedIn()) {
+            redirect('users/login');
+        }
+
+        // Get data for the form
+        $drivers = $this->driverModel->getAllDrivers();
+        $routes = $this->routeModel->getAllUndeletedRoutes();
+
+        $data = [
+            'drivers' => $drivers,
+            'routes' => $routes,
+            'error' => ''
+        ];
+
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            // Sanitize and get POST data
+            $_POST = filter_input_array(INPUT_POST, FILTER_SANITIZE_STRING);
+
             $data = [
-                'route_id' => $_POST['route_id'],
-                'team_id' => $_POST['team_id'],
-                'vehicle_id' => $_POST['vehicle_id'],
-                'shift_id' => $_POST['shift_id'],
-                'week_number' => $_POST['week_number'],
-                'days_of_week' => isset($_POST['days_of_week']) ? implode(',', $_POST['days_of_week']) : ''
+                'day' => trim($_POST['day']),
+                'driver_id' => trim($_POST['driver_id']),
+                'route_id' => trim($_POST['route_id']),
+                'start_time' => trim($_POST['start_time']),
+                'end_time' => trim($_POST['end_time']),
+                'drivers' => $drivers,
+                'routes' => $routes,
+                'error' => ''
             ];
 
-            // Call the model to create a new schedule
-            $result = $this->scheduleModel->create($data);
-
-            if ($result) {
-                flash('schedule_success', 'Schedule created successfully');
-                redirect('vehiclemanager/index');
+            // Validate data
+            if (empty($data['day']) || 
+                empty($data['driver_id']) || empty($data['route_id']) || 
+                empty($data['start_time']) || empty($data['end_time'])) {
+                $data['error'] = 'Please fill in all fields';
             } else {
-                flash('schedule_error', 'Error creating schedule');
-                redirect('vehiclemanager/index');
+                // Validate time duration
+                $startTime = strtotime("2000-01-01 " . $data['start_time']);
+                $endTime = strtotime("2000-01-01 " . $data['end_time']);
+                
+                // If end time is earlier than start time, assume it's the next day
+                if ($endTime < $startTime) {
+                    $endTime = strtotime("2000-01-02 " . $data['end_time']);
+                }
+                
+                // Check if end time is before 10 PM
+                $tenPM = strtotime("2000-01-01 22:00:00");
+                if ($endTime > $tenPM) {
+                    $data['error'] = 'Shift end time cannot be after 10 PM.';
+                } else {
+                    // Check for a minimum gap of 2 hours between shifts
+                    $minGap = 2 * 60 * 60; // 2 hours in seconds
+                    if (($endTime - $startTime) < $minGap) {
+                        $data['error'] = 'There must be at least a 2-hour gap between shifts.';
+                    } else {
+                        // Check if the driver is already scheduled for this day and time
+                        $driverScheduleConflict = $this->scheduleModel->checkDriverScheduleConflict(
+                            $data['driver_id'],
+                            $data['day'],
+                            $data['start_time'],
+                            $data['end_time']
+                        );
+
+                        // Check if the route is already scheduled for this day and time
+                        $routeScheduleConflict = $this->scheduleModel->checkRouteScheduleConflict(
+                            $data['route_id'],
+                            $data['day'],
+                            $data['start_time'],
+                            $data['end_time']
+                        );
+
+                        if ($driverScheduleConflict) {
+                            $data['error'] = 'This driver is already scheduled during this time period.';
+                        } elseif ($routeScheduleConflict) {
+                            $data['error'] = 'This route is already scheduled during this time period.';
+                        } else {
+                            // Create schedule
+                            if ($this->scheduleModel->create($data)) {
+                                flash('schedule_success', 'Schedule created successfully');
+                                redirect('vehiclemanager/schedule');
+                            } else {
+                                $data['error'] = 'Something went wrong. Please try again. Debug info: ' . 
+                                'day: ' . $data['day'] . ', ' .
+                                'driver_id: ' . $data['driver_id'] . ', ' .
+                                'route_id: ' . $data['route_id'] . ', ' .
+                                'start_time: ' . $data['start_time'] . ', ' .
+                                'end_time: ' . $data['end_time'];
+                            }
+                        }
+                    }
+                }
             }
         }
+
+        // Load the view for creating a schedule
+        $this->view('vehicle_manager/v_create_schedule', $data);
+    }
+
+    public function updateSchedule($scheduleId = null) {
+        if (!isLoggedIn()) {
+            redirect('users/login');
+        }
+
+        // Check if schedule ID is provided
+        if (!$scheduleId) {
+            flash('schedule_error', 'Invalid schedule ID');
+            redirect('vehiclemanager/collectionschedule');
+        }
+
+        // Get the existing schedule
+        $schedule = $this->scheduleModel->getScheduleById($scheduleId);
+        
+        // Check if schedule exists
+        if (!$schedule) {
+            flash('schedule_error', 'Schedule not found');
+            redirect('vehiclemanager/collectionschedule');
+        }
+
+        // Get data for the form
+        $drivers = $this->driverModel->getAllDrivers();
+        $routes = $this->routeModel->getAllUndeletedRoutes();
+
+        $data = [
+            'schedule' => $schedule,
+            'drivers' => $drivers,
+            'routes' => $routes,
+            'error' => ''
+        ];
+
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            // Sanitize and get POST data
+            $_POST = filter_input_array(INPUT_POST, FILTER_SANITIZE_STRING);
+
+            $data = [
+                'schedule_id' => $scheduleId,
+                'day' => trim($_POST['day']),
+                'driver_id' => trim($_POST['driver_id']),
+                'route_id' => trim($_POST['route_id']),
+                'start_time' => trim($_POST['start_time']),
+                'end_time' => trim($_POST['end_time']),
+                'schedule' => $schedule,
+                'drivers' => $drivers,
+                'routes' => $routes,
+                'error' => ''
+            ];
+
+            // Validate data
+            if (empty($data['day']) || 
+                empty($data['driver_id']) || empty($data['route_id']) || 
+                empty($data['start_time']) || empty($data['end_time'])) {
+                $data['error'] = 'Please fill in all fields';
+            } else {
+                // Validate time duration
+                $startTime = strtotime("2000-01-01 " . $data['start_time']);
+                $endTime = strtotime("2000-01-01 " . $data['end_time']);
+                
+                // If end time is earlier than start time, assume it's the next day
+                if ($endTime < $startTime) {
+                    $endTime = strtotime("2000-01-02 " . $data['end_time']);
+                }
+                
+                $duration = $endTime - $startTime;
+                $maxDuration = 24 * 60 * 60; // 24 hours in seconds
+                
+                // Check if end time is before 10 PM
+                $tenPM = strtotime("2000-01-01 22:00:00");
+                if ($endTime > $tenPM) {
+                    $data['error'] = 'Shift end time cannot be after 10 PM.';
+                } elseif ($duration > $maxDuration) {
+                    $data['error'] = 'Schedule duration cannot exceed 24 hours.';
+                } elseif (($endTime - $startTime) < (2 * 60 * 60)) { // 2 hours in seconds
+                    $data['error'] = 'There must be at least a 2-hour gap between shifts.';
+                } else {
+                    // Check for conflicts only if the driver or day or time has changed
+                    $driverConflict = false;
+                    $routeConflict = false;
+                    
+                    if ($data['driver_id'] != $schedule->driver_id || 
+                        $data['day'] != $schedule->day || 
+                        $data['start_time'] != $schedule->start_time || 
+                        $data['end_time'] != $schedule->end_time) {
+                        
+                        // Check if the driver is already scheduled for this day and time
+                        $driverConflict = $this->scheduleModel->checkDriverScheduleConflictExcludingCurrent(
+                            $data['driver_id'],
+                            $data['day'],
+                            $data['start_time'],
+                            $data['end_time'],
+                            $scheduleId
+                        );
+                    }
+                    
+                    if ($data['route_id'] != $schedule->route_id || 
+                        $data['day'] != $schedule->day || 
+                        $data['start_time'] != $schedule->start_time || 
+                        $data['end_time'] != $schedule->end_time) {
+                        
+                        // Check if the route is already scheduled for this day and time
+                        $routeConflict = $this->scheduleModel->checkRouteScheduleConflictExcludingCurrent(
+                            $data['route_id'],
+                            $data['day'],
+                            $data['start_time'],
+                            $data['end_time'],
+                            $scheduleId
+                        );
+                    }
+
+                    if ($driverConflict) {
+                        $data['error'] = 'This driver is already scheduled during this time period.';
+                    } elseif ($routeConflict) {
+                        $data['error'] = 'This route is already scheduled during this time period.';
+                    } else {
+                        // Update schedule
+                        if ($this->scheduleModel->updateSchedule($data)) {
+                            flash('schedule_success', 'Schedule updated successfully');
+                            redirect('vehiclemanager/schedule');
+                        } else {
+                            $data['error'] = 'Something went wrong. Please try again.';
+                        }
+                    }
+                }
+            }
+        }
+
+        // Load the view for updating a schedule
+        $this->view('vehicle_manager/v_update_schedule', $data);
     }
 
     //----------------------------------------
@@ -253,7 +430,8 @@ public function updateSchedule($scheduleId)
         $this->view('vehicle_manager/v_vehicle', $data);
     }
 
-    public function updateVehicle() {
+    public function updateVehicle()
+    {
         if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             // Validate and sanitize input
             $license_plate = htmlspecialchars(trim($_POST['license_plate'])); // Keep the license plate as is

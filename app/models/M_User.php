@@ -120,52 +120,54 @@ class M_User {
         return $this->db->single();
     }
 
-    public function storeVerificationCode($email, $code)
-    {
-        $this->db->query("UPDATE users SET verification_code = :code WHERE email = :email");
-        $this->db->bind(':code', $code);
-        $this->db->bind(':email', $email);
-        return $this->db->execute();
-    }
 
-    public function verifyEmail($code)
-    {
-        $this->db->query("SELECT * FROM users WHERE verification_code = :code");
-        $this->db->bind(':code', $code);
-        $this->db->execute();
-        if ($this->db->rowCount() > 0) {
-            // Update user to set verified status
-            $this->db->query("UPDATE users SET verified = 1 WHERE verification_code = :code");
-            $this->db->bind(':code', $code);
-            $this->db->execute();
-            return true;
-        }
-        return false;
-    }
+    // NOT SURE IF WE SHOULD IMPLEMENT THIS, BECAUSE THE EMAIL IS WORKING BUT WHEN WE SEND THE LINK IT GOES TOO LOCALHOST, ALSO IT WOULD TAKE A LOT OF TIME IN THE PRESENTATION TO SHOW ALL OF THIS, SO IM COMMENTING THIS FEATURE.
+    // public function storeVerificationCode($email, $code)
+    // {
+    //     $this->db->query("UPDATE users SET verification_code = :code WHERE email = :email");
+    //     $this->db->bind(':code', $code);
+    //     $this->db->bind(':email', $email);
+    //     return $this->db->execute();
+    // }
 
-    public function storeResetToken($email, $token)
-    {
-        $this->db->query("UPDATE users SET reset_token = :token WHERE email = :email");
-        $this->db->bind(':token', $token);
-        $this->db->bind(':email', $email);
-        return $this->db->execute();
-    }
+    // public function verifyEmail($code)
+    // {
+    //     $this->db->query("SELECT * FROM users WHERE verification_code = :code");
+    //     $this->db->bind(':code', $code);
+    //     $this->db->execute();
+    //     if ($this->db->rowCount() > 0) {
+    //         // Update user to set verified status
+    //         $this->db->query("UPDATE users SET verified = 1 WHERE verification_code = :code");
+    //         $this->db->bind(':code', $code);
+    //         $this->db->execute();
+    //         return true;
+    //     }
+    //     return false;
+    // }
 
-    public function verifyResetToken($token)
-    {
-        $this->db->query("SELECT * FROM users WHERE reset_token = :token");
-        $this->db->bind(':token', $token);
-        $this->db->execute();
-        return $this->db->rowCount() > 0; // Returns true if token exists
-    }
+    // public function storeResetToken($email, $token)
+    // {
+    //     $this->db->query("UPDATE users SET reset_token = :token WHERE email = :email");
+    //     $this->db->bind(':token', $token);
+    //     $this->db->bind(':email', $email);
+    //     return $this->db->execute();
+    // }
 
-    public function updatePassword($token, $newPassword)
-    {
-        $this->db->query("UPDATE users SET password = :password, reset_token = NULL WHERE reset_token = :token");
-        $this->db->bind(':password', $newPassword);
-        $this->db->bind(':token', $token);
-        return $this->db->execute();
-    }
+    // public function verifyResetToken($token)
+    // {
+    //     $this->db->query("SELECT * FROM users WHERE reset_token = :token");
+    //     $this->db->bind(':token', $token);
+    //     $this->db->execute();
+    //     return $this->db->rowCount() > 0; // Returns true if token exists
+    // }
+
+    // public function updatePassword($token, $newPassword)
+    // {
+    //     $this->db->query("UPDATE users SET password = :password, reset_token = NULL WHERE reset_token = :token");
+    //     $this->db->bind(':password', $newPassword);
+    //     $this->db->bind(':token', $token);
+    //     return $this->db->execute();
+    // }
 
     public function getAllUsers() {
         $this->db->query("SELECT 

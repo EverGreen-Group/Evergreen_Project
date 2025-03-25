@@ -30,67 +30,11 @@
     </div>
 
     <div class="action-buttons">
-        <a href="#" id="openCreateScheduleModal" class="btn btn-primary">
+        <a href="<?php echo URLROOT; ?>/vehiclemanager/createSchedule" class="btn btn-primary">
             <i class='bx bx-plus'></i>
             Create a Schedule
         </a>
-        <a href="<?php echo URLROOT; ?>/reschedule/" class="btn btn-primary">
-            <i class='bx bx-calendar-edit'></i>
-            Manage Exceptions
-        </a>
     </div>
-
-
-
-
-
-
-    <!-- Replace the old box-info with new Statistics Cards -->
-    <ul class="dashboard-stats">
-        <!-- Vehicle Statistics -->
-        <li class="stat-card">
-            <div class="stat-content">
-                <i class='bx bxs-car'></i>
-                <div class="stat-info">
-                    <h3><?php echo $stats['vehicles']->total_vehicles; ?></h3>
-                    <p>Total Vehicles</p>
-                </div>
-            </div>
-            <div class="stat-details">
-                <span class="active"><?php echo $stats['vehicles']->in_use; ?> In Use</span>
-                <span class="available"><?php echo $stats['vehicles']->available_vehicles; ?> Available</span>
-            </div>
-        </li>
-
-        <!-- Driver Statistics -->
-        <li class="stat-card">
-            <div class="stat-content">
-                <i class='bx bxs-user'></i>
-                <div class="stat-info">
-                    <h3><?php echo $stats['drivers']->total_drivers; ?></h3>
-                    <p>Total Drivers</p>
-                </div>
-            </div>
-            <div class="stat-details">
-                <span class="active"><?php echo $stats['collections']->in_progress ?? 0; ?> On Duty</span>
-                <span class="available"><?php echo $stats['drivers']->available_drivers; ?> Available</span>
-            </div>
-        </li>
-
-        <!-- Collection Statistics -->
-        <li class="stat-card">
-            <div class="stat-content">
-                <i class='bx bxs-package'></i>
-                <div class="stat-info">
-                    <h3><?php echo (isset($stats['collections']->in_progress) ? ($stats['collections']->in_progress) : 0) ?></h3>
-                    <p>Collections in Progress</p>
-                </div>
-            </div>
-            <div class="stat-details">
-                <span class="completed"><?php echo $stats['collections']->completed_today; ?> Completed Today</span>
-            </div>
-        </li>
-    </ul>
 
 
 
@@ -104,74 +48,154 @@
 
 
     <div class="table-data">
-
         <div class="order">
             <div class="head">
                 <h3>Collection Schedules</h3>
+                <div class="view-toggle">
+                    <button class="view-btn active" data-view="day">Day View</button>
+                    <button class="view-btn" data-view="table">Table View</button>
+                </div>
             </div>
-            <table>
-                <thead>
-                    <tr>
-                        <th>Schedule ID</th>
-                        <th>Route</th>
-                        <th>Driver</th>
-                        <th>Vehicle</th>
-                        <th>Shift</th>
-                        <th>Day</th>
-                        <th>Created At</th>
-                        <th>Status</th>
-                        <th>Actions</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <?php if(isset($data['schedules']) && !empty($data['schedules'])): ?>
-                        <?php foreach($data['schedules'] as $schedule): ?>
-                            <tr>
-                                <td>CS<?php echo str_pad($schedule->schedule_id, 3, '0', STR_PAD_LEFT); ?></td>
-                                <td><?php echo $schedule->route_name; ?></td>
-                                <td><?php echo $schedule->driver_name; ?></td>
-                                <td><?php echo $schedule->license_plate; ?></td>
-                                <td><?php echo $schedule->shift_name; ?> (<?php echo $schedule->start_time; ?> - <?php echo $schedule->end_time; ?>)</td>
-                                <td><?php echo $schedule->day; ?></td>
-                                <td><?php echo date('Y-m-d H:i', strtotime($schedule->created_at)); ?></td>
-                                <td>
-                                    <form action="<?php echo URLROOT; ?>/collectionschedules/toggleActive" method="POST" style="display: inline;">
-                                        <button type="submit" class="status-btn <?php echo $schedule->is_active ? 'active' : 'inactive'; ?>" style="background-color: var(--main)"> 
-                                            <?php echo $schedule->is_active ? 'Active' : 'Inactive'; ?>
-                                        </button>
-                                    </form>
-                                </td>
-                                <td>
-                                    <div style="display: flex; gap: 5px;">
-                                        <!-- Update button with icon only -->
-                                        <a 
-                                            href="<?php echo URLROOT; ?>/vehiclemanager/updateSchedule/<?php echo $schedule->schedule_id; ?>" 
-                                            class="btn btn-tertiary" 
-                                            style="display: flex; align-items: center; justify-content: center; width: 40px; height: 40px; border: none; background: none;"
-                                        >
-                                            <i class='bx bx-cog' style="font-size: 24px; color:green;"></i> <!-- Boxicon for settings -->
+            
+            <!-- Day View -->
+            <div id="day-view" class="schedule-view active">
+                <div class="days-container">
+                    <?php
+                    $hasSchedules = false;
+                    $days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
+                    foreach ($days as $day) :
+                        $daySchedules = array_filter($data['schedules'] ?? [], function($schedule) use ($day) {
+                            return $schedule->day === $day;
+                        });
+                        
+                        // Skip days with no schedules
+                        if (empty($daySchedules)) continue;
+                        $hasSchedules = true;
+                    ?>
+                    <div class="day-card">
+                        <div class="day-header">
+                            <h4><?php echo $day; ?></h4>
+                            <span class="schedule-count"><?php echo count($daySchedules); ?> schedules</span>
+                        </div>
+                        <div class="day-schedules">
+                            <?php foreach ($daySchedules as $schedule) : ?>
+                                <div class="schedule-card" data-id="<?php echo $schedule->schedule_id; ?>">
+                                    <div class="schedule-info">
+                                        <div class="route-name"><?php echo $schedule->route_name; ?></div>
+                                        <div class="schedule-details">
+                                            <span class="shift-time">(<?php echo $schedule->start_time; ?> - <?php echo $schedule->end_time; ?>)</span>
+                                            <span class="driver-name"><i class='bx bxs-user'></i> <?php echo $schedule->driver_name; ?></span>
+                                            <span class="vehicle-info"><i class='bx bxs-car'></i> <?php echo $schedule->license_plate; ?></span>
+                                            <span class="supplier-count"><i class='bx bxs-store'></i> <?php echo $schedule->supplier_count; ?> suppliers</span>
+                                        </div>
+                                    </div>
+                                    <div class="schedule-actions">
+                                        <a href="<?php echo URLROOT; ?>/vehiclemanager/updateSchedule/<?php echo $schedule->schedule_id; ?>" class="action-btn edit">
+                                            <i class='bx bx-cog'></i>
                                         </a>
-                                        
-                                        <!-- Delete button with icon only -->
-                                        <form action="<?php echo URLROOT; ?>/collectionschedules/delete" method="POST" style="margin: 0;" 
+                                        <form action="<?php echo URLROOT; ?>/collectionschedules/delete" method="POST" style="display: inline;" 
                                             onsubmit="return confirm('Are you sure you want to delete this schedule?');">
                                             <input type="hidden" name="schedule_id" value="<?php echo $schedule->schedule_id; ?>">
-                                            <button type="submit" class="btn btn-tertiary" 
-                                                style="display: flex; align-items: center; justify-content: center; width: 40px; height: 40px; border: none; background: none;">
-                                                <i class='bx bx-trash' style="font-size: 24px; color:red;"></i> <!-- Boxicon for trash -->
+                                            <button type="submit" class="action-btn delete">
+                                                <i class='bx bx-trash'></i>
                                             </button>
                                         </form>
                                     </div>
-                                </td>
-                            </tr>
-                        <?php endforeach; ?>
-                    <?php else: ?>
-                        <tr>
-                            <td colspan="10" class="text-center">No schedules found</td>
-                        </tr>
+                                </div>
+                            <?php endforeach; ?>
+                        </div>
+                    </div>
+                    <?php endforeach; ?>
+                    
+                    <?php if (!$hasSchedules): ?>
+                        <div class="no-schedules-message">
+                            <i class='bx bx-calendar-x'></i>
+                            <p>No schedules have been created yet.</p>
+                            <a href="<?php echo URLROOT; ?>/vehiclemanager/createSchedule" class="btn btn-primary">Create A Collection Schedule</a>
+                        </div>
                     <?php endif; ?>
-                </tbody>
-            </table>
+                </div>
+            </div>
+            
+            <!-- Table View (original) - hidden by default -->
+            <div id="table-view" class="schedule-view" style="display: none;">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Schedule ID</th>
+                            <th>Route</th>
+                            <th>Driver</th>
+                            <th>Vehicle</th>
+                            <th>Shift</th>
+                            <th>Day</th>
+                            <th>Suppliers</th>
+                            <th>Created At</th>
+                            <th>Status</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <?php if(isset($data['schedules']) && !empty($data['schedules'])): ?>
+                            <?php foreach($data['schedules'] as $schedule): ?>
+                                <tr>
+                                    <td>CS<?php echo str_pad($schedule->schedule_id, 3, '0', STR_PAD_LEFT); ?></td>
+                                    <td><?php echo $schedule->route_name; ?></td>
+                                    <td><?php echo $schedule->driver_name; ?></td>
+                                    <td><?php echo $schedule->license_plate; ?></td>
+                                    <td>(<?php echo $schedule->start_time; ?> - <?php echo $schedule->end_time; ?>)</td>
+                                    <td><?php echo $schedule->day; ?></td>
+                                    <td><?php echo $schedule->supplier_count; ?></td>
+                                    <td><?php echo date('Y-m-d H:i', strtotime($schedule->created_at)); ?></td>
+                                    <td>
+                                        <form action="<?php echo URLROOT; ?>/collectionschedules/toggleActive" method="POST" style="display: inline;">
+                                            <button type="submit" class="status-btn <?php echo $schedule->is_active ? 'active' : 'inactive'; ?>" style="background-color: var(--main)"> 
+                                                <?php echo $schedule->is_active ? 'Active' : 'Inactive'; ?>
+                                            </button>
+                                        </form>
+                                    </td>
+                                    <td>
+                                        <div style="display: flex; gap: 5px;">
+                                            <!-- Update button with icon only -->
+                                            <a 
+                                                href="<?php echo URLROOT; ?>/vehiclemanager/updateSchedule/<?php echo $schedule->schedule_id; ?>" 
+                                                class="btn btn-tertiary" 
+                                                style="display: flex; align-items: center; justify-content: center; width: 40px; height: 40px; border: none; background: none;"
+                                            >
+                                                <i class='bx bx-cog' style="font-size: 24px; color:green;"></i>
+                                            </a>
+                                            
+                                            <!-- Delete button with icon only -->
+                                            <form action="<?php echo URLROOT; ?>/collectionschedules/delete" method="POST" style="margin: 0;" 
+                                                onsubmit="return confirm('Are you sure you want to delete this schedule?');">
+                                                <input type="hidden" name="schedule_id" value="<?php echo $schedule->schedule_id; ?>">
+                                                <button type="submit" class="btn btn-tertiary" 
+                                                    style="display: flex; align-items: center; justify-content: center; width: 40px; height: 40px; border: none; background: none;">
+                                                    <i class='bx bx-trash' style="font-size: 24px; color:red;"></i>
+                                                </button>
+                                            </form>
+                                        </div>
+                                    </td>
+                                </tr>
+                            <?php endforeach; ?>
+                        <?php else: ?>
+                            <tr>
+                                <td colspan="10" class="text-center">No schedules found</td>
+                            </tr>
+                        <?php endif; ?>
+                    </tbody>
+                </table>
+            </div>
+            
+            <!-- Schedule Details Modal -->
+            <div id="scheduleDetailsModal" class="modal">
+                <div class="modal-content" onclick="event.stopPropagation();">
+                    <span class="close" onclick="closeModal('scheduleDetailsModal')">&times;</span>
+                    <h2>Schedule Details</h2>
+                    <div id="schedule-details-content">
+                        <!-- Schedule details will be populated here -->
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 
@@ -179,116 +203,49 @@
 
 
 <script>
-
-
-
+    const schedules = <?php echo json_encode($data['schedules'] ?? []); ?>;
     
-    function fetchCollections(year, month, day) {
-        const date = `${year}-${month.toString().padStart(2, '0')}-${day.toString().padStart(2, '0')}`;
+    document.addEventListener('DOMContentLoaded', function() {
+        // View toggle functionality
+        const viewBtns = document.querySelectorAll('.view-btn');
+        const scheduleViews = document.querySelectorAll('.schedule-view');
         
-        // Make an AJAX call to fetch collections for the selected date
-        fetch(`<?php echo URLROOT; ?>/vehiclemanager/getCollectionsByDate?date=${date}`)
-            .then(response => {
-                if (!response.ok) {
-                    throw new Error('Network response was not ok');
+        viewBtns.forEach(btn => {
+            btn.addEventListener('click', function() {
+                const viewType = this.dataset.view;
+                
+                // Update active button
+                viewBtns.forEach(b => b.classList.remove('active'));
+                this.classList.add('active');
+                
+                // Show selected view
+                scheduleViews.forEach(view => {
+                    if (view.id === viewType + '-view') {
+                        view.style.display = 'block';
+                    } else {
+                        view.style.display = 'none';
+                    }
+                });
+            });
+        });
+        
+        // Schedule card click to show details (optional)
+        const scheduleCards = document.querySelectorAll('.schedule-card');
+        scheduleCards.forEach(card => {
+            card.addEventListener('click', function(e) {
+                // Prevent click when clicking on action buttons
+                if (e.target.closest('.schedule-actions')) {
+                    return;
                 }
-                return response.json();
-            })
-            .then(data => {
-                populateCollectionList(data);
-            })
-            .catch(error => {
-                console.error('Error fetching collections:', error);
-                const collectionListDiv = document.getElementById('collection-list');
-                collectionListDiv.innerHTML = '<p>Error fetching collections. Please try again later.</p>';
+                
+                const scheduleId = this.dataset.id;
+                // You could implement a modal or expand the card to show more details
+                console.log('Schedule clicked:', scheduleId);
             });
-    }
-    // Function to populate the collection list in table format
-    function populateCollectionList(collections) {
-        const tbody = document.querySelector('#collection-table tbody');
-        tbody.innerHTML = ''; // Clear previous data
-
-        if (collections.length === 0) {
-            const noDataRow = document.createElement('tr');
-            noDataRow.innerHTML = '<td colspan="6">No collections found for this date.</td>';
-            tbody.appendChild(noDataRow);
-        } else {
-            collections.forEach(collection => {
-                const row = document.createElement('tr');
-                row.innerHTML = `
-                    <td>${collection.collection_id}</td>
-                    <td>${collection.route_id || 'N/A'}</td>
-                    <td>${new Date(collection.start_time).toLocaleTimeString()} - ${new Date(collection.end_time).toLocaleTimeString()}</td>
-                    <td>${collection.driver_id || 'N/A'}</td>
-                    <td><span class="status ${collection.status.toLowerCase().replace(' ', '-')}">${collection.status}</span></td>
-                    <td><button class="btn btn-primary" onclick="window.location.href='<?php echo URLROOT; ?>/collection/details/' + ${collection.collection_id}">VIEW</button></td>
-                `;
-                tbody.appendChild(row);
-            });
-        }
-    }
+        });
+    });
+    
 </script>
-    <!-- Collection Schedules Section -->
-    <div class="table-data">
-
-    </div>
-
-    <?php flash('schedule_create_error'); ?>
-    <?php flash('schedule_create_success'); ?>
-
-
-<!-- Create Schedule Modal -->
-<div id="createScheduleModal" class="modal" onclick="event.stopPropagation(); closeModal('createScheduleModal')">
-    <div class="modal-content" style="width: 80%; max-width: 600px;" onclick="event.stopPropagation();">
-        <span class="close" onclick="closeModal('createScheduleModal')">&times;</span>
-        <h2 style="margin-bottom: 30px;">Create New Schedule</h2>
-
-        <!-- <img src="<?php echo URLROOT; ?>/public/img/schedule_banner.jpg" alt="Banner" style="width: 100%; height: auto; margin-bottom: 20px;"> -->
-
-        <form id="createScheduleForm" method="POST" action="<?php echo URLROOT; ?>/collectionschedules/create">
-            <div style="display: flex; flex-direction: column; gap: 20px;">
-                <div class="form-group">
-                    <label for="day">Select Day:</label>
-                    <select id="day" name="day" required>
-                        <option value="" disabled selected>Select a day</option>
-                        <option value="Monday">Monday</option>
-                        <option value="Tuesday">Tuesday</option>
-                        <option value="Wednesday">Wednesday</option>
-                        <option value="Thursday">Thursday</option>
-                        <option value="Friday">Friday</option>
-                        <option value="Saturday">Saturday</option>
-                        <option value="Sunday">Sunday</option>
-                    </select>
-                </div>
-                <div class="form-group">
-                    <label for="shift">Shift:</label>
-                    <select id="shift" name="shift_id" required>
-                        <?php foreach ($data['shifts'] as $shift): ?>
-                            <option value="<?= $shift->shift_id; ?>"><?= $shift->shift_name; ?></option>
-                        <?php endforeach; ?>
-                    </select>
-                </div>
-                <div class="form-group">
-                    <label for="route">Route:</label>
-                    <select id="route" name="route_id" required>
-                        <option value="" disabled selected>Select a day first</option>
-                    </select>
-                </div>
-                <div class="form-group">
-                    <label for="driver">Driver:</label>
-                    <select id="driver" name="driver_id" required>
-                        <?php foreach ($data['drivers'] as $driver): ?>
-                            <option value="<?= $driver->driver_id; ?>"><?= $driver->first_name; ?></option>
-                        <?php endforeach; ?>
-                    </select>
-                </div>
-
-            </div>
-            <button type="submit" class="btn-secondary">Create Schedule</button>
-        </form>
-    </div>
-</div>
-
 
 
 <style>
@@ -438,6 +395,160 @@
 
 .schedule-info p {
     color: #555;
+}
+
+/* Day View Styles */
+.view-toggle {
+    display: flex;
+    gap: 10px;
+}
+
+.view-btn {
+    padding: 5px 10px;
+    border: 1px solid var(--main);
+    background: transparent;
+    color: var(--main);
+    border-radius: 5px;
+    cursor: pointer;
+}
+
+.view-btn.active {
+    background: var(--main);
+    color: white;
+}
+
+.days-container {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 20px;
+    margin-top: 20px;
+}
+
+.day-card {
+    background: white;
+    border-radius: 10px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    overflow: hidden;
+}
+
+.day-header {
+    background: var(--main);
+    color: white;
+    padding: 15px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.day-header h4 {
+    margin: 0;
+    font-size: 1.1rem;
+}
+
+.schedule-count {
+    background: rgba(255,255,255,0.2);
+    padding: 3px 8px;
+    border-radius: 20px;
+    font-size: 0.8rem;
+}
+
+.day-schedules {
+    padding: 15px;
+    max-height: 400px;
+    overflow-y: auto;
+}
+
+.schedule-card {
+    background: #f9f9f9;
+    border-radius: 8px;
+    padding: 12px;
+    margin-bottom: 10px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.schedule-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+}
+
+.route-name {
+    font-weight: bold;
+    margin-bottom: 5px;
+    color: var(--dark);
+}
+
+.schedule-details {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    font-size: 0.85rem;
+    color: #555;
+}
+
+.schedule-actions {
+    display: flex;
+    gap: 5px;
+}
+
+.action-btn {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: none;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+
+.action-btn.edit {
+    background: rgba(39, 174, 96, 0.1);
+    color: #27ae60;
+}
+
+.action-btn.edit:hover {
+    background: rgba(39, 174, 96, 0.2);
+}
+
+.action-btn.delete {
+    background: rgba(231, 76, 60, 0.1);
+    color: #e74c3c;
+}
+
+.action-btn.delete:hover {
+    background: rgba(231, 76, 60, 0.2);
+}
+
+.no-schedules {
+    text-align: center;
+    padding: 20px;
+    color: #888;
+    font-style: italic;
+}
+
+.no-schedules-message {
+    grid-column: 1 / -1;
+    text-align: center;
+    padding: 50px 20px;
+    background: white;
+    border-radius: 10px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+}
+
+.no-schedules-message i {
+    font-size: 3rem;
+    color: var(--main);
+    margin-bottom: 15px;
+}
+
+.no-schedules-message p {
+    font-size: 1.2rem;
+    color: #555;
+    margin-bottom: 20px;
 }
 </style>
 

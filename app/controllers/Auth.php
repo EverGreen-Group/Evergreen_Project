@@ -87,40 +87,9 @@ class Auth extends Controller
 
                     // Register user
                     if ($this->userModel->register($data)) {
-                        // After successful registration
-                        $verificationCode = bin2hex(random_bytes(16)); // Generate a random verification code
-                        $this->userModel->storeVerificationCode($data['email'], $verificationCode); // Store the code in the database
-
-                        $verificationLink = URLROOT . "/auth/verify?code=" . $verificationCode; // Create verification link
-
-                        // Create a new PHPMailer instance
-                        $mail = new PHPMailer(true);
-                        try {
-                            //Server settings
-                            $mail->isSMTP();                                            // Send using SMTP
-                            $mail->Host       = 'smtp.gmail.com';                   // Set the SMTP server to send through
-                            $mail->SMTPAuth   = true;                                   // Enable SMTP authentication
-                            $mail->Username   = 'simaakniyaz@gmail.com';             // SMTP username
-                            $mail->Password   = 'yslhjwsnmozojika';                // SMTP password
-                            $mail->SMTPSecure = PHPMailer::ENCRYPTION_STARTTLS;       // Enable TLS encryption; `PHPMailer::ENCRYPTION_SMTPS` encouraged
-                            $mail->Port       = 587;                                   // TCP port to connect to
-
-                            //Recipients
-                            $mail->setFrom('your_email@example.com', 'Evergreen Verification Code');
-                            $mail->addAddress($data['email']);                         // Add a recipient
-
-                            // Content
-                            $mail->isHTML(true);                                       // Set email format to HTML
-                            $mail->Subject = 'Email Verification';
-                            $mail->Body    = "Please click the following link to verify your email: <a href='$verificationLink'>$verificationLink</a>";
-
-                            $mail->send();
-                            // Redirect to login with success message
-                            header('Location: ' . URLROOT . '/auth/login');
-                            exit();
-                        } catch (Exception $e) {
-                            $data['error'] = "Message could not be sent. Mailer Error: {$mail->ErrorInfo}";
-                        }
+                        // Redirect to login with success message
+                        flash('register_success', 'You are registered! Please log in');
+                        redirect('auth/login');
                     } else {
                         $data['error'] = 'Registration failed. Please try again.';
                     }
@@ -166,67 +135,63 @@ class Auth extends Controller
                 $user = $this->userModel->findUserByEmail($data['username']);
 
                 if ($user) {
-                    // Check if the user is verified
-                    if ($user->verified == 1) {
-                        if (password_verify($data['password'], $user->password)) {
-                            $_SESSION['user_id'] = $user->user_id;
-                            $_SESSION['first_name'] = $user->first_name;
-                            $_SESSION['last_name'] = $user->last_name;
-                            $_SESSION['email'] = $user->email;
-                            $_SESSION['role_id'] = $user->role_id;
+                    // Removed email verification check
+                    if (password_verify($data['password'], $user->password)) {
+                        $_SESSION['user_id'] = $user->user_id;
+                        $_SESSION['first_name'] = $user->first_name;
+                        $_SESSION['last_name'] = $user->last_name;
+                        $_SESSION['email'] = $user->email;
+                        $_SESSION['role_id'] = $user->role_id;
 
-                            // Retrieve additional IDs based on role
-                            if ($user->role_id == RoleHelper::DRIVER) {
-                                $driverId = $this->userModel->getDriverId($user->user_id);
-                                $employeeId = $this->userModel->getEmployeeId($user->user_id);
-                                if ($driverId) {
-                                    $_SESSION['driver_id'] = $driverId->driver_id;
-                                }
-                                if ($employeeId) {
-                                    $_SESSION['employee_id'] = $employeeId->employee_id;
-                                }
-                            } elseif (in_array($user->role_id, [RoleHelper::VEHICLE_MANAGER, RoleHelper::INVENTORY_MANAGER, RoleHelper::SUPPLIER_MANAGER])) {
-                                $managerId = $this->userModel->getManagerId($user->user_id);
-                                $employeeId = $this->userModel->getEmployeeId($user->user_id);
-                                if ($managerId) {
-                                    $_SESSION['manager_id'] = $managerId->manager_id;
-                                }
-                                if ($employeeId) {
-                                    $_SESSION['employee_id'] = $employeeId->employee_id;
-                                }
-                            } elseif ($user->role_id == RoleHelper::SUPPLIER) {
-                                $supplierId = $this->userModel->getSupplierId($user->user_id);
-                                if ($supplierId) {
-                                    $_SESSION['supplier_id'] = $supplierId->supplier_id;
-                                }
+                        // Retrieve additional IDs based on role
+                        if ($user->role_id == RoleHelper::DRIVER) {
+                            $driverId = $this->userModel->getDriverId($user->user_id);
+                            $employeeId = $this->userModel->getEmployeeId($user->user_id);
+                            if ($driverId) {
+                                $_SESSION['driver_id'] = $driverId->driver_id;
                             }
-
-                            // After successful login, redirect based on role
-                            switch (RoleHelper::getRole()) {
-                                case RoleHelper::DRIVER:
-                                    header('Location: ' . URLROOT . '/vehicledriver/');
-                                    break;
-                                case RoleHelper::VEHICLE_MANAGER:
-                                    header('Location: ' . URLROOT . '/vehiclemanager/');
-                                    break;
-                                case RoleHelper::SUPPLIER:
-                                    header('Location: ' . URLROOT . '/supplier/');
-                                    break;
-                                case RoleHelper::ADMIN:
-                                    header('Location: ' . URLROOT . '/vehiclemanager/');
-                                    break;
-                                case RoleHelper::INVENTORY_MANAGER:
-                                    header('Location: ' . URLROOT . '/inventory/');
-                                    break;
-                                default:
-                                    header('Location: ' . URLROOT . '/');
+                            if ($employeeId) {
+                                $_SESSION['employee_id'] = $employeeId->employee_id;
                             }
-                            exit();
-                        } else {
-                            $data['error'] = 'Invalid credentials';
+                        } elseif (in_array($user->role_id, [RoleHelper::VEHICLE_MANAGER, RoleHelper::INVENTORY_MANAGER, RoleHelper::SUPPLIER_MANAGER])) {
+                            $managerId = $this->userModel->getManagerId($user->user_id);
+                            $employeeId = $this->userModel->getEmployeeId($user->user_id);
+                            if ($managerId) {
+                                $_SESSION['manager_id'] = $managerId->manager_id;
+                            }
+                            if ($employeeId) {
+                                $_SESSION['employee_id'] = $employeeId->employee_id;
+                            }
+                        } elseif ($user->role_id == RoleHelper::SUPPLIER) {
+                            $supplierId = $this->userModel->getSupplierId($user->user_id);
+                            if ($supplierId) {
+                                $_SESSION['supplier_id'] = $supplierId->supplier_id;
+                            }
                         }
+
+                        // After successful login, redirect based on role
+                        switch (RoleHelper::getRole()) {
+                            case RoleHelper::DRIVER:
+                                header('Location: ' . URLROOT . '/vehicledriver/');
+                                break;
+                            case RoleHelper::VEHICLE_MANAGER:
+                                header('Location: ' . URLROOT . '/vehiclemanager/');
+                                break;
+                            case RoleHelper::SUPPLIER:
+                                header('Location: ' . URLROOT . '/supplier/');
+                                break;
+                            case RoleHelper::ADMIN:
+                                header('Location: ' . URLROOT . '/vehiclemanager/');
+                                break;
+                            case RoleHelper::INVENTORY_MANAGER:
+                                header('Location: ' . URLROOT . '/inventory/');
+                                break;
+                            default:
+                                header('Location: ' . URLROOT . '/');
+                        }
+                        exit();
                     } else {
-                        $data['error'] = 'Your email is not verified. Please check your email for the verification link.';
+                        $data['error'] = 'Invalid credentials';
                     }
                 } else {
                     $data['error'] = 'Invalid credentials';
