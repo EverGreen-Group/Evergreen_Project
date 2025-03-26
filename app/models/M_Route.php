@@ -23,29 +23,25 @@ class M_Route {
     /**
      * Create a new route.
      */
-    public function createRoute($routeName, $routeDay, $vehicleId) {
-        // Step 1: Get the capacity of the vehicle
+    public function createRoute($routeName,$vehicleId) {
         $this->db->query("SELECT capacity FROM vehicles WHERE vehicle_id = :vehicle_id");
         $this->db->bind(':vehicle_id', $vehicleId);
-        $vehicle = $this->db->single(); // Fetch the single vehicle record
+        $vehicle = $this->db->single();
 
-        // Check if the vehicle exists and has a capacity
         if ($vehicle) {
-            $remainingCapacity = $vehicle->capacity; // Assuming 'capacity' is the column name
+            $remainingCapacity = $vehicle->capacity; 
         } else {
-            // Handle the case where the vehicle does not exist
-            return false; // Or throw an exception, or handle as needed
+
+            return false;
         }
 
-        // Step 2: Insert the new route with the remaining capacity
-        $sql = "INSERT INTO routes (route_name, day, vehicle_id, number_of_suppliers, remaining_capacity) VALUES (:route_name, :day, :vehicle_id, 0, :remaining_capacity)";
+        $sql = "INSERT INTO routes (route_name,vehicle_id, number_of_suppliers, remaining_capacity) VALUES (:route_name, :vehicle_id, 0, :remaining_capacity)";
         $stmt = $this->db->prepare($sql);
         $stmt->bindParam(':route_name', $routeName);
-        $stmt->bindParam(':day', $routeDay);
         $stmt->bindParam(':vehicle_id', $vehicleId);
-        $stmt->bindParam(':remaining_capacity', $remainingCapacity); // Bind the remaining capacity
+        $stmt->bindParam(':remaining_capacity', $remainingCapacity); 
 
-        return $stmt->execute(); // Return true on success, false on failure
+        return $stmt->execute();
     }
 
     /**
@@ -164,11 +160,21 @@ class M_Route {
         return $this->db->resultset();
     }
 
+    public function getAllUnAssignedRoutes() {
+        $this->db->query("
+            SELECT r.* 
+            FROM routes r
+            LEFT JOIN collection_schedules cs ON r.route_id = cs.route_id AND cs.is_deleted = 0
+            WHERE cs.route_id IS NULL AND r.is_deleted = 0
+        ");
+        return $this->db->resultSet();
+    }
+
     /**
      * Get all undeleted routes.
      */
     public function getAllUndeletedRoutes() {
-        $this->db->query("SELECT r.*,(SELECT COUNT(*) FROM route_suppliers WHERE route_id = r.route_id) AS supplier_count FROM routes r WHERE r.is_deleted = 0");
+        $this->db->query("SELECT r.*,v.license_plate,(SELECT COUNT(*) FROM route_suppliers WHERE route_id = r.route_id) AS supplier_count FROM routes r INNER JOIN vehicles v on r.vehicle_id = v.vehicle_id WHERE r.is_deleted = 0");
         return $this->db->resultset();
     }
 
@@ -244,6 +250,7 @@ class M_Route {
             WHERE rs.route_id = :route_id
             AND rs.is_deleted = 0
             AND s.is_deleted = 0
+            ORDER BY rs.stop_order
         ");
         
         $this->db->bind(':route_id', $routeId);
@@ -422,31 +429,6 @@ class M_Route {
         return $result;
     }
 
-    /**
-     * Get unallocated suppliers filtered by their preferred day.
-     */
-    public function getUnallocatedSuppliersByDay($preferredDay) {
-        $this->db->query("
-            SELECT 
-                s.*,
-                u.first_name,
-                u.last_name,
-                CONCAT(u.first_name, ' ', u.last_name) as full_name,
-                CONCAT(s.latitude, ', ', s.longitude) as coordinates
-            FROM suppliers s
-            JOIN users u ON s.user_id = u.user_id
-            LEFT JOIN route_suppliers rs ON s.supplier_id = rs.supplier_id AND rs.is_deleted = 0
-            WHERE rs.supplier_id IS NULL 
-            AND s.is_active = 1
-            AND s.is_deleted = 0
-            AND s.preferred_day = :preferred_day
-        ");
-        
-        $this->db->bind(':preferred_day', $preferredDay);
-        $result = $this->db->resultSet();
-        error_log('Unallocated suppliers query result for day ' . $preferredDay . ': ' . print_r($result, true));
-        return $result;
-    }
 
     /**
      * Get unallocated supplier details including user info and coordinates.

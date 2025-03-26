@@ -81,7 +81,11 @@
                             <?php foreach ($daySchedules as $schedule) : ?>
                                 <div class="schedule-card" data-id="<?php echo $schedule->schedule_id; ?>">
                                     <div class="schedule-info">
-                                        <div class="route-name"><?php echo $schedule->route_name; ?></div>
+                                        <div class="route-name">
+                                            <a href="<?php echo URLROOT; ?>/route/manageRoute/<?php echo htmlspecialchars($schedule->route_id); ?>">
+                                                <?php echo htmlspecialchars($schedule->route_name); ?>
+                                            </a>
+                                        </div>
                                         <div class="schedule-details">
                                             <span class="shift-time">(<?php echo $schedule->start_time; ?> - <?php echo $schedule->end_time; ?>)</span>
                                             <span class="driver-name"><i class='bx bxs-user'></i> <?php echo $schedule->driver_name; ?></span>

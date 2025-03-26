@@ -7,8 +7,8 @@ class M_Vehicle {
         $this->db = new Database();
     }
 
-    public function getAllVehicles() {
-        $this->db->query("SELECT vehicle_id, license_plate, vehicle_type, capacity, status, owner_name, last_maintenance, next_maintenance, fuel_type FROM vehicles");
+    public function getAllAvailableVehicles() {
+        $this->db->query("SELECT v.* FROM vehicles v where status = 'Available'");
         return $this->db->resultSet();
     }
 

@@ -89,7 +89,7 @@ class VehicleManager extends Controller
         // Fetch all necessary data for the dropdowns
         $routes = $this->routeModel->getAllRoutes();
         $drivers = $this->driverModel->getUnassignedDrivers();
-        $vehicles = $this->vehicleModel->getAllVehicles();
+        $vehicles = $this->vehicleModel->getAllAvailableVehicles();
         $shifts = $this->shiftModel->getAllShifts();
         $schedules = $this->scheduleModel->getAllSchedules();
         $collectionSchedules = $this->scheduleModel->getSchedulesForNextWeek(); 
@@ -118,7 +118,7 @@ class VehicleManager extends Controller
         // Fetch all necessary data for the dropdowns
         $routes = $this->routeModel->getAllRoutes();
         $drivers = $this->driverModel->getUnassignedDrivers();
-        $vehicles = $this->vehicleModel->getAllVehicles();
+        $vehicles = $this->vehicleModel->getAllAvailableVehicles();
         $shifts = $this->shiftModel->getAllShifts();
         $schedules = $this->scheduleModel->getAllSchedules();
 
@@ -169,7 +169,7 @@ class VehicleManager extends Controller
 
         // Get data for the form
         $drivers = $this->driverModel->getAllDrivers();
-        $routes = $this->routeModel->getAllUndeletedRoutes();
+        $routes = $this->routeModel->getAllUnAssignedRoutes();
 
         $data = [
             'drivers' => $drivers,

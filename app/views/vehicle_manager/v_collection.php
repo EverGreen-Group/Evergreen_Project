@@ -69,10 +69,6 @@
                     <p>Total Vehicles</p>
                 </div>
             </div>
-            <div class="stat-details">
-                <span class="active"><?php echo $stats['vehicles']->in_use; ?> In Use</span>
-                <span class="available"><?php echo $stats['vehicles']->available_vehicles; ?> Available</span>
-            </div>
         </li>
 
         <!-- Driver Statistics -->
@@ -84,10 +80,6 @@
                     <p>Total Drivers</p>
                 </div>
             </div>
-            <div class="stat-details">
-                <span class="active"><?php echo $stats['collections']->in_progress ?? 0; ?> On Duty</span>
-                <span class="available"><?php echo $stats['drivers']->available_drivers; ?> Available</span>
-            </div>
         </li>
 
         <!-- Collection Statistics -->
@@ -98,9 +90,6 @@
                     <h3><?php echo (isset($stats['collections']->in_progress) ? ($stats['collections']->in_progress) : 0) ?></h3>
                     <p>Collections in Progress</p>
                 </div>
-            </div>
-            <div class="stat-details">
-                <span class="completed"><?php echo $stats['collections']->completed_today; ?> Completed Today</span>
             </div>
         </li>
     </ul>
