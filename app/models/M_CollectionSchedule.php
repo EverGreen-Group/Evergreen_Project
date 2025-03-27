@@ -181,45 +181,6 @@ class M_CollectionSchedule {
         return $this->db->single();
     }
 
-    public function getSupplierSchedule($supplierId) {
-        $sql = "SELECT 
-                    cs.schedule_id,
-                    cs.route_id,
-                    r.route_name,
-                    cs.week_number,
-                    cs.day,
-                    s.shift_name,
-                    CONCAT(s.start_time, ' - ', s.end_time) as shift_time,
-                    v.license_plate,
-                    v.capacity as remaining_capacity,
-                    rs.is_active as is_subscribed
-                FROM collection_schedules cs
-                INNER JOIN routes r ON cs.route_id = r.route_id
-                INNER JOIN collection_shifts s ON cs.shift_id = s.shift_id
-                INNER JOIN vehicles v ON r.vehicle_id = v.vehicle_id
-                LEFT JOIN route_suppliers rs ON (r.route_id = rs.route_id AND rs.supplier_id = :supplier_id)
-                WHERE cs.is_deleted = 0 
-                AND cs.is_active = 1
-                AND rs.is_deleted = 0
-                ORDER BY 
-                    CASE cs.day
-                        WHEN 'Monday' THEN 1
-                        WHEN 'Tuesday' THEN 2
-                        WHEN 'Wednesday' THEN 3
-                        WHEN 'Thursday' THEN 4
-                        WHEN 'Friday' THEN 5
-                        WHEN 'Saturday' THEN 6
-                        WHEN 'Sunday' THEN 7
-                    END,
-                    cs.week_number,
-                    s.start_time";
-
-        $this->db->query($sql);
-        $this->db->bind(':supplier_id', $supplierId);
-        return $this->db->resultSet();
-    }
-
-
 
 
     public function createCollectionAndSupplierRecords($scheduleId) {
@@ -514,14 +475,6 @@ class M_CollectionSchedule {
         ];
     }
 
-    public function setPartnerReady($scheduleId, $partnerId) {
-        // Only set partner_approved, don't start collection yet
-        $this->db->query('UPDATE collections 
-                          SET partner_approved = 1 
-                          WHERE schedule_id = :schedule_id');
-        $this->db->bind(':schedule_id', $scheduleId);
-        return $this->db->execute();
-    }
 
     public function assignBagsToCollection($collectionId, $bags) {
         $this->db->beginTransaction();
@@ -553,40 +506,7 @@ class M_CollectionSchedule {
         }
     }
 
-    // Add a method to check if collection can start
-    public function canStartCollection($collectionId) {
-        $this->db->query('SELECT partner_approved, vehicle_manager_approved, initial_weight_bridge, bags 
-                          FROM collections 
-                          WHERE collection_id = :collection_id');
-        $this->db->bind(':collection_id', $collectionId);
-        $collection = $this->db->single();
-        
-        return $collection &&
-               $collection->partner_approved == 1 &&
-               $collection->vehicle_manager_approved == 1 &&
-               $collection->initial_weight_bridge !== null &&
-               $collection->bags > 0;
-    }
 
-    public function getSupplierCollectionRecord($collectionId, $supplierId) {
-        $this->db->query('
-                        SELECT csr.*, 
-                             u.first_name, 
-                             u.last_name,
-                             s.contact_number,
-                             s.latitude,
-                             s.longitude
-                      FROM collection_supplier_records csr
-                      JOIN suppliers s ON csr.supplier_id = s.supplier_id
-                      JOIN users u ON u.user_id = s.user_id
-                      WHERE csr.collection_id = :collection_id
-                      AND csr.supplier_id = :supplier_id;');
-
-        $this->db->bind(':collection_id', $collectionId);
-        $this->db->bind(':supplier_id', $supplierId);
-
-        return $this->db->single();
-    }
 
     public function getCollectionBags($collectionId) {
         $this->db->query('
@@ -1130,12 +1050,7 @@ class M_CollectionSchedule {
         return false; // No conflict
     }
 
-    /**
-     * Update an existing schedule
-     * 
-     * @param array $data Schedule data
-     * @return bool True if successful, false otherwise
-     */
+
     public function updateSchedule($data) {
         $this->db->query("UPDATE collection_schedules 
                          SET route_id = :route_id, 
@@ -1153,6 +1068,31 @@ class M_CollectionSchedule {
         $this->db->bind(':end_time', $data['end_time']);
         
         return $this->db->execute();
+    }
+
+    public function getTotalSchedules() {
+        $this->db->query("SELECT COUNT(*) as total FROM collection_schedules WHERE is_deleted = 0");
+        return $this->db->single()->total; 
+    }
+
+    public function getActiveSchedulesCount() { // get the schedule if its in the current day and shift time
+        $currentDay = date('l'); 
+        $currentTime = date('H:i:s'); 
+
+        $this->db->query("
+            SELECT COUNT(*) as total 
+            FROM collection_schedules 
+            WHERE day = :currentDay 
+            AND is_active = 1 
+            AND is_deleted = 0 
+            AND start_time <= :currentTime 
+            AND end_time >= :currentTime
+        ");
+
+
+        $this->db->bind(':currentDay', $currentDay);
+        $this->db->bind(':currentTime', $currentTime);
+        return $this->db->single()->total; 
     }
 
 } 

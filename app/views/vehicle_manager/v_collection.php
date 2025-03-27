@@ -57,8 +57,6 @@
 
 
 
-
-    <!-- Replace the old box-info with new Statistics Cards -->
     <ul class="dashboard-stats">
         <!-- Vehicle Statistics -->
         <li class="stat-card">

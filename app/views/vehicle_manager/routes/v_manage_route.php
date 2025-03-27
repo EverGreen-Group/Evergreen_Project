@@ -36,7 +36,7 @@
             <div class="stat-content">
                 <i class='bx bxs-shopping-bag'></i>
                 <div class="stat-info">
-                    <h3><?php echo isset($data['vehicleDetails']->capacity) ? (int)$data['vehicleDetails']->capacity : 0; ?></h3>
+                    <h3><?php echo isset($data['remainingCapacity']) ? (int)$data['remainingCapacity'] : 0; ?></h3>
                     <p>Remaining Capacity</p>
                 </div>
             </div>

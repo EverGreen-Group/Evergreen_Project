@@ -4,6 +4,7 @@
 <?php require APPROOT . '/views/inc/components/sidebar_vehicle_manager.php'; ?>
 <!-- Top nav bar -->
 <?php require APPROOT . '/views/inc/components/topnavbar.php'; ?>
+<link rel="stylesheet" href="<?php echo URLROOT; ?>/css/vehicle_manager/vehicle/dashboard_stats.css">
 <link rel="stylesheet" href="<?php echo URLROOT; ?>/css/vehicle_manager/collection/collection.css">
 <link rel="stylesheet" href="<?php echo URLROOT; ?>/css/vehicle_manager/collection/calendar.css">
 <!-- <script async defer src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCdt_khahhXrKdrA8cLgKeQB2CZtde-_Vc&callback=initMap"></script> -->
@@ -35,6 +36,28 @@
             Create a Schedule
         </a>
     </div>
+
+    <ul class="dashboard-stats">
+        <li class="stat-card">
+            <div class="stat-content">
+                <i class='bx bxs-calendar'></i>
+                <div class="stat-info">
+                    <h3><?php echo $totalSchedules; ?></h3>
+                    <p>Total Schedules</p>
+                </div>
+            </div>
+        </li>
+
+        <li class="stat-card">
+            <div class="stat-content">
+                <i class='bx bx-time'></i>
+                <div class="stat-info">
+                    <h3><?php echo $availableSchedules; ?></h3>
+                    <p>Currently Ongoing</p>
+                </div>
+            </div>
+        </li>
+    </ul>
 
 
 
@@ -274,107 +297,7 @@
     color: blue; /* Color for Completed status */
 }
 
-/* Add more statuses as needed */
-
-/* Add more statuses as needed */
-
-.dashboard-stats {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-    gap: 20px;
-    margin: 20px 0;
-}
-
-.stat-card {
-    background: var(--light);
-    padding: 20px;
-    border-radius: 10px;
-    transition: transform 0.3s ease;
-    
-}
-
-.stat-card:hover {
-    transform: translateY(-5px);
-}
-
-.stat-content {
-    display: flex;
-    align-items: center;
-    gap: 15px;
-}
-
-.stat-content i {
-    font-size: 2.5rem;
-    color: var(--main);
-}
-
-.stat-info h3 {
-    font-size: 1.8rem;
-    margin-bottom: 5px;
-    color: var(--dark);
-}
-
-.stat-info p {
-    color: #555;
-    font-size: 0.9rem;
-    font-weight: 500;
-    margin: 0;
-    opacity: 1;
-}
-
-.stat-details {
-    margin-top: 15px;
-    display: flex;
-    justify-content: space-between;
-    font-size: 0.85rem;
-}
-
-.stat-details span {
-    padding: 4px 8px;
-    border-radius: 5px;
-}
-
-.stat-details .active {
-    background: rgba(var(--main-rgb), 0.1);
-    color: var(--main);
-}
-
-.stat-details .available {
-    background: rgba(39, 174, 96, 0.1);
-    color: #27ae60;
-}
-
-.stat-details .warning {
-    background: rgba(241, 196, 15, 0.1);
-    color: #f1c40f;
-}
-
-.stat-details .completed {
-    background: rgba(46, 204, 113, 0.1);
-    color: #2ecc71;
-}
-
-.dashboard-stats.secondary {
-    margin-top: 20px;
-}
-
-.dashboard-stats.secondary .stat-card {
-    background: #fff;
-    border: 1px solid rgba(var(--main-rgb), 0.1);
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
-}
-
-.dashboard-stats.secondary .stat-content i {
-    color: var(--main);
-}
-
-.dashboard-stats.secondary .stat-info h3 {
-    color: var(--dark);
-}
-
-.dashboard-stats.secondary .stat-info p {
-    color: #555;
-}
+/* FOR SCHEDULE CALEND */
 
 .next-schedule-alert {
     display: flex;

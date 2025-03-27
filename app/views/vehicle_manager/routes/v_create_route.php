@@ -26,6 +26,28 @@
         </div>
     </div>
 
+    <ul class="dashboard-stats">
+        <li class="stat-card">
+            <div class="stat-content">
+                <i class='bx bxs-calendar'></i>
+                <div class="stat-info">
+                    <h3><?php echo $totalRoutes; ?></h3>
+                    <p>Total Routes</p>
+                </div>
+            </div>
+        </li>
+
+        <li class="stat-card">
+            <div class="stat-content">
+                <i class='bx bx-time'></i>
+                <div class="stat-info">
+                    <h3><?php echo $unassignedRoutes; ?></h3>
+                    <p>Total Unassigned</p>
+                </div>
+            </div>
+        </li>
+    </ul>
+
 
     <div class="table-data">
         <div class="order">

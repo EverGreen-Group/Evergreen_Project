@@ -182,15 +182,9 @@ class M_Route {
      * Get the total count of undeleted routes.
      */
     public function getTotalRoutes() {
-        $sql = "SELECT COUNT(*) as total FROM routes WHERE is_deleted = 0";
-        $stmt = $this->db->query($sql);
-        if ($stmt) {
-            $count = $stmt->fetchColumn();
-            error_log("Total routes count: " . $count);
-            return (int)$count;
-        }
-        error_log("Error getting total routes: " . print_r($this->db->errorInfo(), true));
-        return 0;
+        $this->db->query("SELECT COUNT(*) as totalRoutes FROM routes WHERE is_deleted = 0");
+        $result = $this->db->single();
+        return $result ? $result->totalRoutes : 0;
     }
     
     /**
@@ -592,6 +586,19 @@ class M_Route {
         return $this->db->execute();
     }
 
+    /**
+     * Get the total count of unassigned routes.
+     */
+    public function getUnassignedRoutesCount() {
+        $this->db->query("
+            SELECT COUNT(*) as totalUnassigned 
+            FROM routes r 
+            LEFT JOIN collection_schedules cs ON r.route_id = cs.route_id 
+            WHERE r.is_deleted = 0 AND cs.route_id IS NULL
+        ");
+        $result = $this->db->single();
+        return $result ? $result->totalUnassigned : 0; 
+    }
 
 }
 ?>

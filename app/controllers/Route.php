@@ -22,6 +22,7 @@ class Route extends Controller{
     public function index(){
         $allRoutes = $this->routeModel->getAllUndeletedRoutes();
         $totalRoutes = $this->routeModel->getTotalRoutes();
+        $unassignedRoutes = $this->routeModel->getUnassignedRoutesCount();
         $totalActive = $this->routeModel->getTotalActiveRoutes();
         $totalInactive = $this->routeModel->getTotalInactiveRoutes();
 
@@ -32,6 +33,7 @@ class Route extends Controller{
             'totalRoutes' => $totalRoutes,
             'totalActive' => $totalActive,
             'totalInactive' => $totalInactive,
+            'unassignedRoutes' => $unassignedRoutes,
             'availableVehicles' => $availableVehicles
         ];
 
@@ -61,6 +63,7 @@ class Route extends Controller{
             'number_of_suppliers' => $routeDetails->number_of_suppliers,
             'vehicle_id' => $vehicleId,
             'vehicleDetails' => $vehicleDetails,
+            'remainingCapacity' => $routeDetails->remaining_capacity,
             'unassignedSuppliers' => $unassignedSuppliers, // Pass unassigned suppliers to the view
             'routeSuppliers' => $routeSuppliers // Pass route suppliers to the view
         ];
