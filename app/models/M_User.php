@@ -25,9 +25,16 @@ class M_User {
     }
 
     public function findUserByEmail($email) {
-        $this->db->query("SELECT * FROM users WHERE email = :email");
+        $this->db->query('SELECT * FROM users WHERE email = :email');
         $this->db->bind(':email', $email);
-        return $this->db->single();
+        
+        $row = $this->db->single();
+        
+        if($this->db->rowCount() > 0) {
+            return $row;
+        } else {
+            return false;
+        }
     }
 
     public function login($email, $password) {
@@ -257,6 +264,89 @@ class M_User {
 
         // Execute the query and return the results
         return $this->db->resultSet();
+    }
+
+    public function registerUser($data) {
+        $this->db->query('INSERT INTO users (email, password, role_id, account_status) VALUES (:email, :password, :role_id, :account_status)');
+        
+        $this->db->bind(':email', $data['email']);
+        $this->db->bind(':password', $data['password']);
+        $this->db->bind(':role_id', $data['role_id']);
+        $this->db->bind(':account_status', $data['account_status']);
+        
+        // Execute
+        if($this->db->execute()) {
+            return $this->db->lastInsertId();
+        } else {
+            return false;
+        }
+    }
+
+    public function createProfile($data) {
+        $this->db->query('INSERT INTO profiles (user_id, first_name, last_name, nic, date_of_birth, contact_number, emergency_contact, address_line1, address_line2, city) 
+                          VALUES (:user_id, :first_name, :last_name, :nic, :date_of_birth, :contact_number, :emergency_contact, :address_line1, :address_line2, :city)');
+        
+        $this->db->bind(':user_id', $data['user_id']);
+        $this->db->bind(':first_name', $data['first_name']);
+        $this->db->bind(':last_name', $data['last_name']);
+        $this->db->bind(':nic', $data['nic']);
+        $this->db->bind(':date_of_birth', $data['date_of_birth']);
+        $this->db->bind(':contact_number', $data['contact_number']);
+        $this->db->bind(':emergency_contact', $data['emergency_contact']);
+        $this->db->bind(':address_line1', $data['address_line1']);
+        $this->db->bind(':address_line2', $data['address_line2']);
+        $this->db->bind(':city', $data['city']);
+        
+        if($this->db->execute()) {
+            return $this->db->lastInsertId();
+        } else {
+            return false;
+        }
+    }
+    
+    public function findProfileByNIC($nic) {
+        $this->db->query('SELECT * FROM profiles WHERE nic = :nic');
+        $this->db->bind(':nic', $nic);
+        
+        $row = $this->db->single();
+        
+        if($this->db->rowCount() > 0) {
+            return $row;
+        } else {
+            return false;
+        }
+    }
+
+    public function getProfileById($id) {
+        $this->db->query('SELECT * FROM profiles WHERE profile_id = :id');
+        $this->db->bind(':id', $id);
+        
+        return $this->db->single();
+    }
+
+    public function updateProfile($data) {
+        $this->db->query('UPDATE profiles SET 
+                          first_name = :first_name, 
+                          last_name = :last_name,
+                          date_of_birth = :date_of_birth,
+                          contact_number = :contact_number,
+                          emergency_contact = :emergency_contact,
+                          address_line1 = :address_line1,
+                          address_line2 = :address_line2,
+                          city = :city
+                          WHERE profile_id = :profile_id');
+        
+        $this->db->bind(':first_name', $data['first_name']);
+        $this->db->bind(':last_name', $data['last_name']);
+        $this->db->bind(':date_of_birth', $data['date_of_birth']);
+        $this->db->bind(':contact_number', $data['contact_number']);
+        $this->db->bind(':emergency_contact', $data['emergency_contact']);
+        $this->db->bind(':address_line1', $data['address_line1']);
+        $this->db->bind(':address_line2', $data['address_line2']);
+        $this->db->bind(':city', $data['city']);
+        $this->db->bind(':profile_id', $data['profile_id']);
+        
+        return $this->db->execute();
     }
 }
 ?>

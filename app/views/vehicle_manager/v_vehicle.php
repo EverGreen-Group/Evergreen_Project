@@ -111,11 +111,7 @@
             <h3>Vehicles</h3>
             <a href="<?php echo URLROOT; ?>/vehiclemanager/createVehicle" class="btn btn-primary">
                 <i class='bx bx-show'></i>
-                View Inactive Vehicles
-            </a>
-            <a href="<?php echo URLROOT; ?>/vehiclemanager/createVehicle" class="btn btn-primary">
-                <i class='bx bx-show'></i>
-                View Deleted Vehicles
+                View Removed Vehicles
             </a>
         </div>
         <table>

@@ -101,8 +101,11 @@
                             <span class="schedule-count"><?php echo count($daySchedules); ?> schedules</span>
                         </div>
                         <div class="day-schedules">
-                            <?php foreach ($daySchedules as $schedule) : ?>
-                                <div class="schedule-card" data-id="<?php echo $schedule->schedule_id; ?>">
+                            <?php foreach ($daySchedules as $schedule) : 
+                                // Add a class if supplier count is 0
+                                $noSuppliersClass = ($schedule->supplier_count == 0) ? 'no-suppliers' : '';
+                            ?>
+                                <div class="schedule-card <?php echo $noSuppliersClass; ?>" data-id="<?php echo $schedule->schedule_id; ?>">
                                     <div class="schedule-info">
                                         <div class="route-name">
                                             <a href="<?php echo URLROOT; ?>/route/manageRoute/<?php echo htmlspecialchars($schedule->route_id); ?>">
@@ -113,7 +116,9 @@
                                             <span class="shift-time">(<?php echo $schedule->start_time; ?> - <?php echo $schedule->end_time; ?>)</span>
                                             <span class="driver-name"><i class='bx bxs-user'></i> <?php echo $schedule->driver_name; ?></span>
                                             <span class="vehicle-info"><i class='bx bxs-car'></i> <?php echo $schedule->license_plate; ?></span>
-                                            <span class="supplier-count"><i class='bx bxs-store'></i> <?php echo $schedule->supplier_count; ?> suppliers</span>
+                                            <span class="supplier-count <?php echo ($schedule->supplier_count == 0) ? 'warning' : ''; ?>">
+                                                <i class='bx bxs-store'></i> <?php echo $schedule->supplier_count; ?> suppliers
+                                            </span>
                                         </div>
                                     </div>
                                     <div class="schedule-actions">
@@ -477,6 +482,14 @@
     color: #555;
     margin-bottom: 20px;
 }
+
+/* Highlight schedules with 0 suppliers */
+.schedule-card.no-suppliers {
+    background-color: rgba(231, 76, 60, 0.1);
+    /* border-left: 3px solid #e74c3c; */
+}
+
+
 </style>
 
 

@@ -233,14 +233,14 @@ class M_Route {
         $this->db->query("
             SELECT 
                 s.*,
-                u.first_name,
-                u.last_name,
-                CONCAT(u.first_name, ' ', u.last_name) as full_name,
+                p.first_name,
+                p.last_name,
+                CONCAT(p.first_name, ' ', p.last_name) as full_name,
                 CONCAT(s.latitude, ', ', s.longitude) as coordinates,
                 rs.*
             FROM route_suppliers rs
             JOIN suppliers s ON rs.supplier_id = s.supplier_id
-            JOIN users u ON s.user_id = u.user_id
+            JOIN profiles p ON s.profile_id = p.profile_id
             WHERE rs.route_id = :route_id
             AND rs.is_deleted = 0
             AND s.is_deleted = 0
@@ -379,12 +379,12 @@ class M_Route {
         $this->db->query("
             SELECT DISTINCT
                 s.*,
-                u.first_name,
-                u.last_name,
-                CONCAT(u.first_name, ' ', u.last_name) as full_name,
+                p.first_name,
+                p.last_name,
+                CONCAT(p.first_name, ' ', p.last_name) as full_name,
                 CONCAT(s.latitude, ', ', s.longitude) as coordinates
             FROM suppliers s
-            JOIN users u ON s.user_id = u.user_id
+            JOIN profiles p ON s.profile_id = p.profile_id
             LEFT JOIN route_suppliers rs ON s.supplier_id = rs.supplier_id AND rs.is_deleted = 0  -- Only consider active route associations
             LEFT JOIN routes r ON rs.route_id = r.route_id AND r.is_deleted = 0  -- Only consider active routes
             WHERE rs.supplier_id IS NULL  -- Supplier is not in any active route

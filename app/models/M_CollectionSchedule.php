@@ -14,7 +14,7 @@ class M_CollectionSchedule {
                     cs.route_id,
                     r.route_name,
                     d.driver_id,
-                    CONCAT(u.first_name, ' ', u.last_name) AS driver_name,
+                    CONCAT(p.first_name, ' ', p.last_name) AS driver_name,
                     cs.start_time,
                     cs.end_time,
                     cs.day,
@@ -26,7 +26,7 @@ class M_CollectionSchedule {
                 FROM collection_schedules cs
                 LEFT JOIN routes r ON cs.route_id = r.route_id
                 LEFT JOIN drivers d ON cs.driver_id = d.driver_id
-                LEFT JOIN users u ON d.user_id = u.user_id
+                LEFT JOIN profiles p ON d.profile_id = p.profile_id
                 LEFT JOIN vehicles v ON r.vehicle_id = v.vehicle_id
                 WHERE cs.is_deleted = 0
                 ORDER BY cs.start_time ASC";
@@ -1093,6 +1093,23 @@ class M_CollectionSchedule {
         $this->db->bind(':currentDay', $currentDay);
         $this->db->bind(':currentTime', $currentTime);
         return $this->db->single()->total; 
+    }
+
+    public function getSchedulesByDriverId($driverId) {
+        $this->db->query('SELECT cs.*, r.route_name, 
+                          CONCAT(p.first_name, " ", p.last_name) as driver_name
+                          FROM collection_schedules cs
+                          LEFT JOIN routes r ON cs.route_id = r.route_id
+                          LEFT JOIN drivers d ON cs.driver_id = d.driver_id
+                          LEFT JOIN profiles p ON d.profile_id = p.profile_id
+                          WHERE cs.driver_id = :driver_id
+                          AND cs.is_active = 1
+                          AND cs.is_deleted = 0
+                          ');
+        
+        $this->db->bind(':driver_id', $driverId);
+        
+        return $this->db->resultSet();
     }
 
 } 

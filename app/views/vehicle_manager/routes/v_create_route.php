@@ -88,6 +88,10 @@
         <div class="order">
             <div class="head">
                 <h3>Routes</h3>
+                <a href="<?php echo URLROOT; ?>/vehiclemanager/viewInactiveDrivers" class="btn btn-primary">
+                    <i class='bx bx-show'></i>
+                    View Unassigned Suppliers
+                </a>
             </div>
             <table>
                 <thead>
