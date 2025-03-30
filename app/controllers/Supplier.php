@@ -38,8 +38,8 @@ class Supplier extends Controller {
         $this->collectionModel= new M_Collection();
         $this->scheduleModel= new M_CollectionSchedule();
         $this->bagModel = new M_Bag();
-        $this->supplierDetails = $this->supplierModel->getSupplierDetailsByUserId($_SESSION['user_id']);
-        $_SESSION['supplier_id'] = $this->supplierDetails->supplier_id;
+        $supplierDetails = $this->supplierModel->getSupplierDetailsByUserId($_SESSION['user_id']);
+        $_SESSION['supplier_id'] = $supplierDetails->supplier_id;
     }
 
     

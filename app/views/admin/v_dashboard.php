@@ -12,7 +12,7 @@
         <div class="card-title">Supplier Management</div>
       </a>
 
-      <a href="<?= URLROOT ?>/vehiclemanager" class="card">
+      <a href="<?= URLROOT ?>/manager" class="card">
         <div class="card-icon"><i class='bx bxs-truck'></i></div>
         <div class="card-title">Collection Management</div>
       </a>

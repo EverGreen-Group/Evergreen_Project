@@ -25,7 +25,7 @@
         <div class="left">
             <h1>Create Collection Schedule</h1>
             <ul class="breadcrumb">
-                <li><a href="<?= URLROOT ?>/vehiclemanager/collectionschedule">Schedules</a></li>
+                <li><a href="<?= URLROOT ?>/manager/collectionschedule">Schedules</a></li>
                 <li><i class='bx bx-chevron-right'></i></li>
                 <li><a class="active" href="#">Create Schedule</a></li>
             </ul>
@@ -39,7 +39,7 @@
         </div>
     <?php endif; ?>
     
-    <form id="createScheduleForm" method="POST" action="<?php echo URLROOT; ?>/vehiclemanager/createSchedule">
+    <form id="createScheduleForm" method="POST" action="<?php echo URLROOT; ?>/manager/createSchedule">
     
     <!-- Schedule Information -->
     <div class="table-data">

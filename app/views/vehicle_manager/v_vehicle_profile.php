@@ -13,13 +13,13 @@
         <div class="left">
             <h1>Vehicle Profile</h1>
             <ul class="breadcrumb">
-                <li><a href="<?php echo URLROOT; ?>/vehiclemanager">Dashboard</a></li>
-                <li><a href="<?php echo URLROOT; ?>/vehiclemanager/vehicle">Vehicles</a></li>
+                <li><a href="<?php echo URLROOT; ?>/manager">Dashboard</a></li>
+                <li><a href="<?php echo URLROOT; ?>/manager/vehicle">Vehicles</a></li>
                 <li>Vehicle Profile</li>
             </ul>
         </div>
         <div class="action-buttons">
-            <a href="<?php echo URLROOT; ?>/vehiclemanager/updateVehicle/<?php echo $vehicle->vehicle_id; ?>" class="btn btn-primary">
+            <a href="<?php echo URLROOT; ?>/manager/updateVehicle/<?php echo $vehicle->vehicle_id; ?>" class="btn btn-primary">
                 <i class='bx bx-edit'></i>
                 Edit Vehicle
             </a>

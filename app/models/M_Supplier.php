@@ -23,6 +23,26 @@ class M_Supplier {
         return $this->db->resultSet();
     }
 
+    /* CREATE SUPPLIER!!! THIS HAPPENS INSIDE THE APPLICATION */
+    public function createSupplier($data) {
+        $this->db->query('
+            INSERT INTO suppliers (profile_id, contact_number, application_id, latitude, longitude, is_active, is_deleted, number_of_collections, average_collection)
+            VALUES (:profile_id, :contact_number, :application_id, :latitude, :longitude, :is_active, :is_deleted, :number_of_collections, :average_collection)
+        ');
+    
+        $this->db->bind(':profile_id', $data['profile_id']);
+        $this->db->bind(':contact_number', $data['contact_number']);
+        $this->db->bind(':application_id', $data['application_id']);
+        $this->db->bind(':latitude', $data['latitude']);
+        $this->db->bind(':longitude', $data['longitude']);
+        $this->db->bind(':is_active', $data['is_active']);
+        $this->db->bind(':is_deleted', $data['is_deleted']);
+        $this->db->bind(':number_of_collections', $data['number_of_collections']);
+        $this->db->bind(':average_collection', $data['average_collection']);
+    
+        return $this->db->execute();
+    }
+
 
     public function confirmSupplierRole($applicationId) {
         // Step 1: Get the user_id from the supplier_applications table
@@ -84,10 +104,11 @@ class M_Supplier {
 
     public function getSupplierDetailsByUserId($userId) {
         $sql = "
-            SELECT s.*, u.first_name, u.last_name, u.email 
+            SELECT s.*, u.email 
             FROM suppliers s
-            JOIN users u ON s.user_id = u.user_id
-            WHERE s.user_id = :user_id AND s.is_deleted = 0
+            LEFT JOIN profiles p on s.profile_id = p.profile_id
+            JOIN users u ON p.user_id = u.user_id
+            WHERE p.user_id = :user_id AND s.is_deleted = 0
         ";
         $this->db->query($sql);
         $this->db->bind(':user_id', $userId);

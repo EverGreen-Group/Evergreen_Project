@@ -12,13 +12,13 @@
         <div class="left">
             <h1>Driver Profile</h1>
             <ul class="breadcrumb">
-                <li><a href="<?php echo URLROOT; ?>/vehiclemanager">Dashboard</a></li>
-                <li><a href="<?php echo URLROOT; ?>/vehiclemanager/driver">Drivers</a></li>
+                <li><a href="<?php echo URLROOT; ?>/manager">Dashboard</a></li>
+                <li><a href="<?php echo URLROOT; ?>/manager/driver">Drivers</a></li>
                 <li>Driver Profile</li>
             </ul>
         </div>
         <div class="action-buttons">
-            <a href="<?php echo URLROOT; ?>/vehiclemanager/updateDriver/<?php echo $driver->driver_id; ?>" class="btn btn-primary">
+            <a href="<?php echo URLROOT; ?>/manager/updateDriver/<?php echo $driver->driver_id; ?>" class="btn btn-primary">
                 <i class='bx bx-edit'></i>
                 Edit Driver
             </a>

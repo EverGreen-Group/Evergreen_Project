@@ -18,7 +18,7 @@
         <div class="left">
             <h1>Create Driver</h1>
             <ul class="breadcrumb">
-                <li><a href="<?= URLROOT ?>/vehiclemanager/driver">Drivers</a></li>
+                <li><a href="<?= URLROOT ?>/manager/driver">Drivers</a></li>
                 <li><i class='bx bx-chevron-right'></i></li>
                 <li><a class="active" href="#">Create Driver</a></li>
             </ul>
@@ -32,7 +32,7 @@
         </div>
     <?php endif; ?>
     
-    <form id="createDriverForm" method="POST" action="<?php echo URLROOT; ?>/vehiclemanager/createDriver" enctype="multipart/form-data">
+    <form id="createDriverForm" method="POST" action="<?php echo URLROOT; ?>/manager/createDriver" enctype="multipart/form-data">
     
     <!-- Account Information -->
     <div class="table-data">

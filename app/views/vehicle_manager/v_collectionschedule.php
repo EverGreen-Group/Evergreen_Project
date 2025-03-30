@@ -31,7 +31,7 @@
     </div>
 
     <div class="action-buttons">
-        <a href="<?php echo URLROOT; ?>/vehiclemanager/createSchedule" class="btn btn-primary">
+        <a href="<?php echo URLROOT; ?>/manager/createSchedule" class="btn btn-primary">
             <i class='bx bx-plus'></i>
             Create a Schedule
         </a>
@@ -122,7 +122,7 @@
                                         </div>
                                     </div>
                                     <div class="schedule-actions">
-                                        <a href="<?php echo URLROOT; ?>/vehiclemanager/updateSchedule/<?php echo $schedule->schedule_id; ?>" class="action-btn edit">
+                                        <a href="<?php echo URLROOT; ?>/manager/updateSchedule/<?php echo $schedule->schedule_id; ?>" class="action-btn edit">
                                             <i class='bx bx-cog'></i>
                                         </a>
                                         <form action="<?php echo URLROOT; ?>/collectionschedules/delete" method="POST" style="display: inline;" 
@@ -143,7 +143,7 @@
                         <div class="no-schedules-message">
                             <i class='bx bx-calendar-x'></i>
                             <p>No schedules have been created yet.</p>
-                            <a href="<?php echo URLROOT; ?>/vehiclemanager/createSchedule" class="btn btn-primary">Create A Collection Schedule</a>
+                            <a href="<?php echo URLROOT; ?>/manager/createSchedule" class="btn btn-primary">Create A Collection Schedule</a>
                         </div>
                     <?php endif; ?>
                 </div>
@@ -189,7 +189,7 @@
                                         <div style="display: flex; gap: 5px;">
                                             <!-- Update button with icon only -->
                                             <a 
-                                                href="<?php echo URLROOT; ?>/vehiclemanager/updateSchedule/<?php echo $schedule->schedule_id; ?>" 
+                                                href="<?php echo URLROOT; ?>/manager/updateSchedule/<?php echo $schedule->schedule_id; ?>" 
                                                 class="btn btn-tertiary" 
                                                 style="display: flex; align-items: center; justify-content: center; width: 40px; height: 40px; border: none; background: none;"
                                             >

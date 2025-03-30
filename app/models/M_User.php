@@ -54,25 +54,14 @@ class M_User {
     public function getUserById($user_id) {
         $this->db->query("SELECT
             user_id, 
-            email,
-            first_name,
-            last_name,
-            nic,
-            date_of_birth,
-            u.role_id,
-            r.role_name,
-            approval_status,
-            created_at,
-            nic
+            email
             FROM users u
-            JOIN roles r ON r.role_id = u.role_id  
             WHERE user_id = :user_id");
         
         $this->db->bind(':user_id', $user_id);
         
         $result = $this->db->single();
         
-        // Return false if no user found
         if (!$result) {
             return false;
         }
@@ -104,27 +93,50 @@ class M_User {
     }
 
     public function getDriverId($userId) {
-        $this->db->query("SELECT driver_id FROM drivers WHERE user_id = :user_id AND is_deleted = 0");
-        $this->db->bind(':user_id', $userId);
-        return $this->db->single();
-    }
 
-    public function getEmployeeId($userId) {
-        $this->db->query("SELECT employee_id FROM employees WHERE user_id = :user_id");
+        $this->db->query("SELECT profile_id FROM profiles WHERE user_id = :user_id");
         $this->db->bind(':user_id', $userId);
-        return $this->db->single();
+        $profile = $this->db->single();
+        
+
+        if ($profile) {
+            $this->db->query("SELECT driver_id FROM drivers WHERE profile_id = :profile_id AND is_deleted = 0");
+            $this->db->bind(':profile_id', $profile->profile_id);
+            return $this->db->single();
+        }
+        
+        return null; 
     }
 
     public function getManagerId($userId) {
-        $this->db->query("SELECT manager_id FROM managers WHERE employee_id = (SELECT employee_id FROM employees WHERE user_id = :user_id)");
+
+        $this->db->query("SELECT profile_id FROM profiles WHERE user_id = :user_id");
         $this->db->bind(':user_id', $userId);
-        return $this->db->single();
+        $profile = $this->db->single();
+        
+        if ($profile) {
+            $this->db->query("SELECT manager_id FROM managers WHERE profile_id = :profile_id");
+            $this->db->bind(':profile_id', $profile->profile_id);
+            return $this->db->single();
+        }
+        
+        return null; 
     }
 
     public function getSupplierId($userId) {
-        $this->db->query("SELECT supplier_id FROM suppliers WHERE user_id = :user_id");
+        // First, get the profile_id associated with the user_id
+        $this->db->query("SELECT profile_id FROM profiles WHERE user_id = :user_id");
         $this->db->bind(':user_id', $userId);
-        return $this->db->single();
+        $profile = $this->db->single();
+        
+        // If a profile is found, get the supplier_id using the profile_id
+        if ($profile) {
+            $this->db->query("SELECT supplier_id FROM suppliers WHERE profile_id = :profile_id");
+            $this->db->bind(':profile_id', $profile->profile_id);
+            return $this->db->single();
+        }
+        
+        return null; // Return null if no profile is found
     }
 
 
@@ -250,19 +262,18 @@ class M_User {
 
         // Bind parameters if they were set
         if (!empty($email)) {
-            $this->db->bind(':email', '%' . $email . '%'); // Use LIKE for partial matches
+            $this->db->bind(':email', '%' . $email . '%'); 
         }
         if (!empty($first_name)) {
-            $this->db->bind(':first_name', '%' . $first_name . '%'); // Use LIKE for partial matches
+            $this->db->bind(':first_name', '%' . $first_name . '%'); 
         }
         if (!empty($last_name)) {
-            $this->db->bind(':last_name', '%' . $last_name . '%'); // Use LIKE for partial matches
+            $this->db->bind(':last_name', '%' . $last_name . '%'); 
         }
         if (!empty($role_id)) {
             $this->db->bind(':role_id', $role_id);
         }
 
-        // Execute the query and return the results
         return $this->db->resultSet();
     }
 
@@ -274,7 +285,6 @@ class M_User {
         $this->db->bind(':role_id', $data['role_id']);
         $this->db->bind(':account_status', $data['account_status']);
         
-        // Execute
         if($this->db->execute()) {
             return $this->db->lastInsertId();
         } else {
@@ -324,6 +334,13 @@ class M_User {
         return $this->db->single();
     }
 
+    public function getProfileByUserId($user_id) {
+        $this->db->query('SELECT * FROM profiles WHERE user_id = :user_id');
+        $this->db->bind(':user_id', $user_id);
+        
+        return $this->db->single();
+    }
+
     public function updateProfile($data) {
         $this->db->query('UPDATE profiles SET 
                           first_name = :first_name, 
@@ -346,6 +363,16 @@ class M_User {
         $this->db->bind(':city', $data['city']);
         $this->db->bind(':profile_id', $data['profile_id']);
         
+        return $this->db->execute();
+    }
+
+    public function updateRole($userId, $roleId) {
+        $this->db->query("
+            UPDATE users SET role_id = :role_id WHERE user_id = :user_id
+        ");
+        $this->db->bind(':role_id', $userId);
+        $this->db->bind(':user_id', $roleId);
+
         return $this->db->execute();
     }
 }

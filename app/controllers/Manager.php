@@ -24,7 +24,7 @@ require_once '../app/helpers/auth_middleware.php';
 require_once '../app/helpers/UserHelper.php';
 require_once '../app/helpers/image_helper.php';
 
-class VehicleManager extends Controller
+class Manager extends Controller
 {
     //----------------------------------------
     // PROPERTIES
@@ -44,6 +44,7 @@ class VehicleManager extends Controller
     private $userModel;
     private $employeeModel;
     private $bagModel;
+    private $supplierModel;
 
     //----------------------------------------
     // CONSTRUCTOR
@@ -77,12 +78,14 @@ class VehicleManager extends Controller
         $this->userModel = $this->model('M_User');
         $this->employeeModel = $this->model('M_Employee');
         $this->bagModel = $this->model('M_CollectionBag');
+        $this->supplierApplicationModel = $this->model('M_SupplierApplication');
+        $this->supplierModel = $this->model('M_Supplier');
     }
 
     //----------------------------------------
     // DASHBOARD METHODS
     //----------------------------------------
-    public function index()
+    public function collection()
     {
         // Get dashboard stats from the model
         $stats = $this->vehicleManagerModel->getDashboardStats();
@@ -244,7 +247,7 @@ class VehicleManager extends Controller
                             // Create schedule
                             if ($this->scheduleModel->create($data)) {
                                 flash('schedule_success', 'Schedule created successfully');
-                                redirect('vehiclemanager/schedule');
+                                redirect('manager/schedule');
                             } else {
                                 $data['error'] = 'Something went wrong. Please try again. Debug info: ' . 
                                 'day: ' . $data['day'] . ', ' .
@@ -271,7 +274,7 @@ class VehicleManager extends Controller
         // Check if schedule ID is provided
         if (!$scheduleId) {
             flash('schedule_error', 'Invalid schedule ID');
-            redirect('vehiclemanager/collectionschedule');
+            redirect('manager/collectionschedule');
         }
 
         // Get the existing schedule
@@ -280,7 +283,7 @@ class VehicleManager extends Controller
         // Check if schedule exists
         if (!$schedule) {
             flash('schedule_error', 'Schedule not found');
-            redirect('vehiclemanager/collectionschedule');
+            redirect('manager/collectionschedule');
         }
 
         // Get data for the form
@@ -380,7 +383,7 @@ class VehicleManager extends Controller
                         // Update schedule
                         if ($this->scheduleModel->updateSchedule($data)) {
                             flash('schedule_success', 'Schedule updated successfully');
-                            redirect('vehiclemanager/schedule');
+                            redirect('manager/schedule');
                         } else {
                             $data['error'] = 'Something went wrong. Please try again.';
                         }
@@ -440,7 +443,7 @@ class VehicleManager extends Controller
         // Check if vehicle exists
         if (!$vehicle) {
             flash('vehicle_not_found', 'Vehicle not found.');
-            redirect('vehiclemanager/vehicle'); // Redirect to the vehicle list or another page
+            redirect('manager/vehicle'); // Redirect to the vehicle list or another page
         }
 
         // Fetch collection history
@@ -518,7 +521,7 @@ class VehicleManager extends Controller
                     if (empty($data['error'])) {
                         if ($this->vehicleModel->createVehicle($data)) {
                             flash('vehicle_success', 'Vehicle created successfully');
-                            redirect('vehiclemanager/vehicle'); // Redirect to the vehicle list or another page
+                            redirect('manager/vehicle'); // Redirect to the vehicle list or another page
                         } else {
                             $data['error'] = 'Something went wrong. Please try again.';
                         }
@@ -541,7 +544,7 @@ class VehicleManager extends Controller
         $vehicle = $this->vehicleModel->getVehicleById($vehicle_id);
         if (!$vehicle) {
             flash('vehicle_not_found', 'Vehicle not found.');
-            redirect('vehiclemanager/vehicle');
+            redirect('manager/vehicle');
         }
 
         if ($_SERVER['REQUEST_METHOD'] == 'POST') {
@@ -558,7 +561,7 @@ class VehicleManager extends Controller
             if ($vehicle->status === 'In Use') {
                 // Handle the case where the vehicle is in use
                 flash('update_error', 'Cannot update vehicle. The vehicle is currently in use.');
-                redirect('vehiclemanager/vehicle');
+                redirect('manager/vehicle');
             }
 
             // Initialize the data array for updating
@@ -582,17 +585,17 @@ class VehicleManager extends Controller
                 } else {
                     // Handle file upload error
                     flash('upload_error', $uploadResult['message']);
-                    redirect('vehiclemanager/vehicle');
+                    redirect('manager/vehicle');
                 }
             }
 
             // Update vehicle details in the database
             if ($this->vehicleModel->updateVehicle($data)) {
                 flash('update_success', 'Vehicle updated successfully.');
-                redirect('vehiclemanager/vehicle');
+                redirect('manager/vehicle');
             } else {
                 flash('update_error', 'Failed to update vehicle. Please try again.');
-                redirect('vehiclemanager/vehicle');
+                redirect('manager/vehicle');
             }
         }
 
@@ -641,7 +644,7 @@ class VehicleManager extends Controller
             flash('delete_error', 'Failed to mark vehicle as deleted');
         }
 
-        redirect('vehiclemanager/vehicle');
+        redirect('manager/vehicle');
     }
 
     //----------------------------------------
@@ -682,7 +685,7 @@ class VehicleManager extends Controller
         $driver = $this->driverModel->getDriverById($driver_id);
         if (!$driver) {
             flash('driver_not_found', 'Driver not found.');
-            redirect('vehiclemanager/driver'); 
+            redirect('manager/driver'); 
         }
 
         $collectionHistory = $this->driverModel->getDriverCollectionHistory($driver_id);
@@ -783,7 +786,7 @@ class VehicleManager extends Controller
                 ];
             }
 
-            redirect('vehiclemanager/driver'); // Redirect to the drivers page
+            redirect('manager/driver'); // Redirect to the drivers page
         } else {
             $data = [
                 'first_name' => '',
@@ -810,14 +813,14 @@ class VehicleManager extends Controller
         $driver = $this->driverModel->getDriverById($id);
         if (!$driver) {
             flash('driver_error', 'Driver not found', 'alert alert-danger');
-            redirect('vehiclemanager/driver');
+            redirect('manager/driver');
         }
         
         // Get the profile data
         $profile = $this->userModel->getProfileById($driver->profile_id);
         if (!$profile) {
             flash('driver_error', 'Profile not found', 'alert alert-danger');
-            redirect('vehiclemanager/driver');
+            redirect('manager/driver');
         }
         
         // Initialize data array
@@ -923,7 +926,7 @@ class VehicleManager extends Controller
                     
                     
                     flash('driver_success', 'Driver updated successfully');
-                    redirect('vehiclemanager/driver');
+                    redirect('manager/driver');
                     
                 } catch (Exception $e) {
                     $data['error'] = 'Error updating driver: ' . $e->getMessage();
@@ -1358,7 +1361,7 @@ class VehicleManager extends Controller
                     ]);
 
                     // Redirect or show success message
-                    header('Location: ' . URLROOT . '/vehiclemanager/vehicle');
+                    header('Location: ' . URLROOT . '/manager/vehicle');
                     exit();
                 } else {
                     // Handle file upload error
@@ -1391,7 +1394,7 @@ class VehicleManager extends Controller
                     }
 
                     // Redirect or show success message
-                    header('Location: ' . URLROOT . '/vehiclemanager/vehicle');
+                    header('Location: ' . URLROOT . '/manager/vehicle');
                     exit();
                 } else {
                     echo "Error removing vehicle.";
@@ -1494,10 +1497,10 @@ class VehicleManager extends Controller
                 flash('driver_message', 'Error: ' . $e->getMessage(), 'alert alert-danger');
             }
 
-            redirect('vehiclemanager/driver'); // Redirect to the driver management page
+            redirect('manager/driver'); // Redirect to the driver management page
         } else {
             // If not a POST request, redirect to the driver management page
-            redirect('vehiclemanager/driver');
+            redirect('manager/driver');
         }
     }
 
@@ -2029,7 +2032,7 @@ class VehicleManager extends Controller
                     
                     // Success - redirect with success message
                     flash('driver_success', 'Driver created successfully');
-                    redirect('vehiclemanager/driver');
+                    redirect('manager/driver');
                     
                 } catch (Exception $e) {
                     // Rollback transaction on error
@@ -2053,7 +2056,7 @@ class VehicleManager extends Controller
         $driver = $this->driverModel->getDriverById($id);
         if (!$driver) {
             flash('driver_error', 'Driver not found', 'alert alert-danger');
-            redirect('vehiclemanager/driver');
+            redirect('manager/driver');
         }
         
         // Check if the driver is assigned to any active schedules
@@ -2068,18 +2071,207 @@ class VehicleManager extends Controller
             
             $schedulesStr = implode("<br>", $scheduleNames);
             flash('driver_error', "Cannot delete this driver as they are currently assigned to the following schedules:<br>{$schedulesStr}<br>Please reassign these schedules before deleting the driver.", 'alert alert-danger');
-            redirect('vehiclemanager/driver');
+            redirect('manager/driver');
         }
         
         // Not in any schedules, so we can mark as deleted
         if ($this->driverModel->markDriverAsDeleted($id)) {
             flash('driver_success', 'Driver has been successfully marked as deleted');
-            redirect('vehiclemanager/driver');
+            redirect('manager/driver');
         } else {
             flash('driver_error', 'Something went wrong while trying to delete the driver', 'alert alert-danger');
-            redirect('vehiclemanager/driver');
+            redirect('manager/driver');
         }
     }
+
+
+    /*
+
+    THISARANIS
+    PART
+    FROM
+    HERE
+    LOL
+
+    */
+
+    public function index() {
+        // Get all applications
+        $applications = $this->model('M_SupplierApplication')->getAllApplications();
+        
+        // Get approved applications pending role assignment
+        $approvedPendingRole = $this->model('M_SupplierApplication')->getApprovedPendingRoleApplications();
+
+        $data = [
+            'applications' => $applications,
+            'approved_pending_role' => $approvedPendingRole
+        ];
+
+        // Load view
+        $this->view('supplier_manager/v_applications', $data);
+    }
+
+
+    public function viewApplication($applicationId) {
+        // Load the model
+        $supplierApplicationModel = $this->model('M_SupplierApplication');
+        
+        // Get application details using the model
+        $application = $supplierApplicationModel->getApplicationById($applicationId);
+    
+        // If application not found, redirect with error
+        if (!$application) {
+            redirect('manager/applications');
+        }
+    
+        $profile = $supplierApplicationModel->getProfileInfo($application->user_id);
+        $bankInfo = $supplierApplicationModel->getBankInfo($applicationId);
+        $documents = $supplierApplicationModel->getApplicationDocuments($applicationId);
+        
+        // Get cultivation data (appears to be part of the application in your view)
+        $cultivation = (object)[
+            'tea_cultivation_area' => $application->tea_cultivation_area,
+            'plant_age' => $application->plant_age,
+            'monthly_production' => $application->monthly_production
+        ];
+        
+        // Get location data
+        $location = (object)[
+            'latitude' => $application->latitude,
+            'longitude' => $application->longitude
+        ];
+        
+        // Get reviewer information if application is assigned
+        $reviewer = null;
+        if (!empty($application->reviewed_by)) {
+            $reviewer = $this->model('M_User')->getUserById($application->reviewed_by);
+        }
+    
+        // Prepare data array matching the view's expected structure
+        $data = [
+            'application' => (array)$application,
+            'profile' => $profile,
+            'bank_info' => $bankInfo,
+            'documents' => $documents,
+            'cultivation' => $cultivation,
+            'location' => $location,
+            'reviewer' => $reviewer
+        ];
+    
+        // Load the view
+        $this->view('supplier_manager/v_view_application', $data);
+    }
+
+    public function assignApplication($applicationId) {
+        if (!isLoggedIn()) {
+            redirect('users/login');
+        }
+    
+
+        $supplierApplicationModel = $this->model('M_SupplierApplication');
+    
+        $supplierApplicationModel->updateApplicationStatus($applicationId, $_SESSION['manager_id'], 'under_review');
+
+    
+        redirect('manager/');
+    }
+
+    public function approveApplication($applicationId) {
+        /* 
+        WE NEED TO FOLLOW THESE STEPS
+        1. we need to update the application status (that is already done)
+        2. we need to create a supplier account for this user
+        3. we need to copy the details from the application to suppliers entry
+        4. we need to change the users role to 5 for supplier accees
+        -simaak
+        */
+
+        $supplierApplicationModel = $this->model('M_SupplierApplication');
+        $userModel = $this->model('M_User');
+        $application = $supplierApplicationModel->getApplicationById($applicationId);
+
+        if (!$application) {
+            // small validation, but if we are here then ofc the application exists
+            redirect('manager/');
+        }
+
+        $userUpdated = $userModel->updateRole($application->user_id, 5);
+
+        if (!$userUpdated) {
+            redirect('manager/');
+        }
+
+        $profile = $userModel->getProfileByUserId($application->user_id);
+        $supplierExpectedAmount  = ($application->monthly_production)/4.0;
+
+
+        // Create supplier data array
+        $supplierData = [
+            'profile_id' => $profile->profile_id,
+            'contact_number' => $profile->contact_number, 
+            'application_id' => $applicationId,
+            'latitude' => $application->latitude,
+            'longitude' => $application->longitude,
+            'is_active' => 1,
+            'is_deleted' => 0,
+            'number_of_collections' => 0,
+            'average_collection' => $supplierExpectedAmount
+        ];
+
+        $supplierCreated = $this->supplierModel->createSupplier($supplierData);
+
+        if (!$supplierCreated) {
+            redirect('manager/');
+        }
+
+        $supplierApplicationModel->updateApplicationStatus($applicationId, $_SESSION['manager_id'], 'approved');
+
+        redirect('manager/');
+    }
+    
+    public function rejectApplication($applicationId) {
+        $supplierApplicationModel = $this->model('M_SupplierApplication');
+        $supplierApplicationModel->updateApplicationStatus($applicationId, $_SESSION['manager_id'], 'rejected');
+        redirect('manager/');
+    }
+
+
+    public function confirmSupplierRole() {
+        if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+            $data = json_decode(file_get_contents('php://input'), true);
+            $applicationId = $data['application_id'];
+
+            $result = $this->supplierModel->confirmSupplierRole($applicationId);
+            if ($result) {
+                echo json_encode(['success' => true]);
+            } else {
+                echo json_encode(['success' => false, 'message' => 'Failed to confirm role. Check application ID and user data.']);
+            }
+        } else {
+            http_response_code(400);
+            echo json_encode(['success' => false, 'message' => 'Invalid request.']);
+        }
+    }
+
+    public function suppliers() {
+        // Get all suppliers from the database
+        $suppliers = $this->supplierModel->getAllSuppliers();
+
+        $data = [
+            'suppliers' => $suppliers
+        ];
+
+        $this->view('supplier_manager/v_suppliers', $data);
+    }
+
+    public function complaints()
+    {
+        $data = [];
+
+        $this->view('supplier_manager/v_complaints', $data);
+    }
+
+
 
 }
 ?>

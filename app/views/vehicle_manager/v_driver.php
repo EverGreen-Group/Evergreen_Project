@@ -34,7 +34,7 @@ flash('error'); ?>
   </div>
 
   <div class="action-buttons">
-        <a href="<?php echo URLROOT; ?>/vehiclemanager/createDriver" class="btn btn-primary">
+        <a href="<?php echo URLROOT; ?>/manager/createDriver" class="btn btn-primary">
             <i class='bx bx-plus'></i>
             Add new driver
         </a>
@@ -70,7 +70,7 @@ flash('error'); ?>
             <i class='bx bx-search'></i>
         </div>
         <div class="filter-options">
-            <form action="<?php echo URLROOT; ?>/vehiclemanager/driver" method="GET">
+            <form action="<?php echo URLROOT; ?>/manager/driver" method="GET">
                 <div class="filter-group">
                     <label for="name">Name:</label>
                     <input type="text" id="name" name="name" placeholder="Enter driver name">
@@ -106,7 +106,7 @@ flash('error'); ?>
     <div class="order">
         <div class="head">
             <h3>Drivers</h3>
-            <a href="<?php echo URLROOT; ?>/vehiclemanager/viewInactiveDrivers" class="btn btn-primary">
+            <a href="<?php echo URLROOT; ?>/manager/viewInactiveDrivers" class="btn btn-primary">
                 <i class='bx bx-show'></i>
                 View Inactive Drivers
             </a>
@@ -142,7 +142,7 @@ flash('error'); ?>
                             <div style="display: flex; gap: 5px;">
                                 <!-- View button with icon -->
                                 <a 
-                                    href="<?php echo URLROOT; ?>/vehiclemanager/viewDriver/<?php echo $driver->driver_id; ?>" 
+                                    href="<?php echo URLROOT; ?>/manager/viewDriver/<?php echo $driver->driver_id; ?>" 
                                     class="btn btn-tertiary" 
                                     style="display: flex; align-items: center; justify-content: center; width: 40px; height: 40px; border: none; background: none;"
                                 >
@@ -151,7 +151,7 @@ flash('error'); ?>
 
                                 <!-- Manage button with icon only -->
                                 <a 
-                                    href="<?php echo URLROOT; ?>/vehiclemanager/updateDriver/<?php echo $driver->driver_id; ?>" 
+                                    href="<?php echo URLROOT; ?>/manager/updateDriver/<?php echo $driver->driver_id; ?>" 
                                     class="btn btn-tertiary" 
                                     style="display: flex; align-items: center; justify-content: center; width: 40px; height: 40px; border: none; background: none;"
                                 >
@@ -159,7 +159,7 @@ flash('error'); ?>
                                 </a>
                                 
                                 <!-- Delete button with icon only -->
-                                <a href="<?php echo URLROOT; ?>/vehiclemanager/deleteDriver/<?php echo $driver->driver_id; ?>" 
+                                <a href="<?php echo URLROOT; ?>/manager/deleteDriver/<?php echo $driver->driver_id; ?>" 
                                    class="btn btn-tertiary" 
                                    style="display: flex; align-items: center; justify-content: center; width: 40px; height: 40px; border: none; background: none;" 
                                    >

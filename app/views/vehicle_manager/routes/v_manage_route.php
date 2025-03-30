@@ -48,7 +48,7 @@
     <div class="order">
       <div class="head">
           <h3>Unassigned Suppliers</h3>
-        <a href="<?php echo URLROOT; ?>/vehiclemanager/unallocatedSuppliers" class="btn btn-primary">
+        <a href="<?php echo URLROOT; ?>/manager/unallocatedSuppliers" class="btn btn-primary">
             <i class='bx bx-search'></i>
             View All Unallocated Suppliers
         </a>
@@ -80,7 +80,7 @@
     <div class="order">
       <div class="head">
         <h3>Route Suppliers</h3>
-        <a href="<?php echo URLROOT; ?>/vehiclemanager/unallocatedSuppliers" class="btn btn-primary">
+        <a href="<?php echo URLROOT; ?>/manager/unallocatedSuppliers" class="btn btn-primary">
             <i class='bx bx-search'></i>
             View In Map
         </a>

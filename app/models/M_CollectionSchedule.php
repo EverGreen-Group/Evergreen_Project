@@ -721,74 +721,63 @@ class M_CollectionSchedule {
                 cs.schedule_id,
                 cs.day,
                 cs.driver_id,
+                CONCAT(p.first_name, ' ', p.last_name) AS driver_name,
                 r.route_name,
                 v.vehicle_type,
                 v.license_plate,
-                cs_shift.shift_name,
-                COALESCE(ce.new_time, cs_shift.start_time) as start_time,
-                cs_shift.end_time,
-                ce.exception_type,
-                ce.reason as exception_reason,
+                cs.start_time,
+                cs.end_time,
                 CASE 
                     WHEN cs.day = DATE_FORMAT(CURDATE(), '%W') THEN 'today'
                     WHEN FIELD(cs.day, 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday') 
                         > FIELD(DATE_FORMAT(CURDATE(), '%W'), 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday')
                     THEN 'upcoming'
                     ELSE 'upcoming_next_week'
-                END as schedule_status,
+                END AS schedule_status,
                 CASE 
                     WHEN cs.day = DATE_FORMAT(CURDATE(), '%W') THEN 1 
                     ELSE 0 
-                END as is_today
+                END AS is_today
             FROM collection_schedules cs
             JOIN routes r ON cs.route_id = r.route_id
             JOIN route_suppliers rs ON r.route_id = rs.route_id
             JOIN vehicles v ON r.vehicle_id = v.vehicle_id
-            JOIN collection_shifts cs_shift ON cs.shift_id = cs_shift.shift_id
-            LEFT JOIN collection_exceptions ce ON 
-                cs.schedule_id = ce.schedule_id 
-                AND ce.exception_date = CURDATE()
+            JOIN drivers d on d.driver_id = cs.driver_id
+            JOIN profiles p on d.profile_id = p.profile_id
             WHERE rs.supplier_id = :supplier_id
-            AND cs.is_active = 1
-            AND cs.is_deleted = 0
-            AND r.is_deleted = 0
-            AND NOT EXISTS (
-                SELECT 1 FROM collection_exceptions 
-                WHERE schedule_id = cs.schedule_id 
-                AND exception_date = CURDATE()
-                AND exception_type = 'SKIP'
-            )
+                AND cs.is_active = 1
+                AND cs.is_deleted = 0
+                AND r.is_deleted = 0
             ORDER BY 
                 FIELD(schedule_status, 'today', 'upcoming', 'upcoming_next_week'),
                 FIELD(cs.day, 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'),
-                COALESCE(ce.new_time, cs_shift.start_time)
+                cs.start_time
         ");
-
+    
         $this->db->bind(':supplier_id', $supplierId);
         return $this->db->resultSet();
     }
-
+    
+    
     public function getSubscribedSchedules($supplierId) {
         $sql = "SELECT 
                     cs.schedule_id,
                     cs.route_id,
                     r.route_name,
                     cs.day,
-                    s.shift_name,
-                    CONCAT(s.start_time, ' - ', s.end_time) as shift_time,
+                    CONCAT(cs.start_time, ' - ', cs.end_time) AS shift_time,
                     v.license_plate,
-                    v.capacity as remaining_capacity,
-                    1 as is_subscribed
+                    v.capacity AS remaining_capacity,
+                    1 AS is_subscribed
                 FROM collection_schedules cs
                 INNER JOIN routes r ON cs.route_id = r.route_id
-                INNER JOIN collection_shifts s ON cs.shift_id = s.shift_id
                 INNER JOIN vehicles v ON r.vehicle_id = v.vehicle_id
-                INNER JOIN route_suppliers rs ON (r.route_id = rs.route_id)
+                INNER JOIN route_suppliers rs ON r.route_id = rs.route_id
                 WHERE cs.is_deleted = 0 
-                AND cs.is_active = 1
-                AND rs.is_deleted = 0
-                AND rs.supplier_id = :supplier_id
-                AND rs.is_active = 1
+                  AND cs.is_active = 1
+                  AND rs.is_deleted = 0
+                  AND rs.supplier_id = :supplier_id
+                  AND rs.is_active = 1
                 ORDER BY 
                     CASE cs.day
                         WHEN 'Monday' THEN 1
@@ -799,12 +788,13 @@ class M_CollectionSchedule {
                         WHEN 'Saturday' THEN 6
                         WHEN 'Sunday' THEN 7
                     END,
-                    s.start_time";
-
+                    cs.start_time";
+    
         $this->db->query($sql);
         $this->db->bind(':supplier_id', $supplierId);
         return $this->db->resultSet();
     }
+    
 
     public function getAvailableSchedules($supplierId) {
         $sql = "SELECT 
@@ -812,25 +802,23 @@ class M_CollectionSchedule {
                     cs.route_id,
                     r.route_name,
                     cs.day,
-                    s.shift_name,
-                    CONCAT(s.start_time, ' - ', s.end_time) as shift_time,
+                    CONCAT(cs.start_time, ' - ', cs.end_time) AS shift_time,
                     v.license_plate,
-                    v.capacity as remaining_capacity,
-                    0 as is_subscribed
+                    v.capacity AS remaining_capacity,
+                    0 AS is_subscribed
                 FROM collection_schedules cs
                 INNER JOIN routes r ON cs.route_id = r.route_id
-                INNER JOIN collection_shifts s ON cs.shift_id = s.shift_id
                 INNER JOIN vehicles v ON r.vehicle_id = v.vehicle_id
                 WHERE cs.is_deleted = 0
-                AND r.is_locked=0 
-                AND cs.is_active = 1
-                AND r.route_id NOT IN (
-                    SELECT route_id 
-                    FROM route_suppliers 
-                    WHERE supplier_id = :supplier_id 
-                    AND is_deleted = 0
-                    AND is_active = 1
-                )
+                  AND r.is_locked = 0 
+                  AND cs.is_active = 1
+                  AND r.route_id NOT IN (
+                        SELECT route_id 
+                        FROM route_suppliers 
+                        WHERE supplier_id = :supplier_id 
+                          AND is_deleted = 0
+                          AND is_active = 1
+                  )
                 ORDER BY 
                     CASE cs.day
                         WHEN 'Monday' THEN 1
@@ -841,13 +829,13 @@ class M_CollectionSchedule {
                         WHEN 'Saturday' THEN 6
                         WHEN 'Sunday' THEN 7
                     END,
-                    s.start_time
-                    ";
-
+                    cs.start_time";
+    
         $this->db->query($sql);
         $this->db->bind(':supplier_id', $supplierId);
         return $this->db->resultSet();
     }
+    
 
     /**
      need this in creating collection schedules

@@ -18,7 +18,7 @@
         <div class="left">
             <h1>Update Driver</h1>
             <ul class="breadcrumb">
-                <li><a href="<?= URLROOT ?>/vehiclemanager/driver">Drivers</a></li>
+                <li><a href="<?= URLROOT ?>/manager/driver">Drivers</a></li>
                 <li><i class='bx bx-chevron-right'></i></li>
                 <li><a class="active" href="#">Update Driver</a></li>
             </ul>
@@ -32,7 +32,7 @@
         </div>
     <?php endif; ?>
     
-    <form method="POST" action="<?php echo URLROOT; ?>/vehiclemanager/updateDriver/<?php echo $data['driver']->driver_id; ?>" enctype="multipart/form-data">
+    <form method="POST" action="<?php echo URLROOT; ?>/manager/updateDriver/<?php echo $data['driver']->driver_id; ?>" enctype="multipart/form-data">
         
         <!-- Personal Information Section -->
         <div class="table-data">

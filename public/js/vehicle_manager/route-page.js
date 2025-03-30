@@ -156,7 +156,7 @@ async function handleVehicleSelect() {
   if (vehicleId) {
     try {
       const response = await fetch(
-        `${URLROOT}/vehiclemanager/getVehicleDetails/${vehicleId}`
+        `${URLROOT}/manager/getVehicleDetails/${vehicleId}`
       );
       const result = await response.json();
 
@@ -205,7 +205,7 @@ async function handleRouteFormSubmit(e) {
       })),
     };
 
-    const response = await fetch(`${URLROOT}/vehiclemanager/createRoute`, {
+    const response = await fetch(`${URLROOT}/manager/createRoute`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -373,7 +373,7 @@ function initializeRouteUpdate() {
   async function loadRouteDetails(routeId) {
     try {
       const response = await fetch(
-        `${URLROOT}/vehiclemanager/getRouteDetails/${routeId}`
+        `${URLROOT}/manager/getRouteDetails/${routeId}`
       );
       const result = await response.json();
 

@@ -11,13 +11,11 @@ class M_SupplierApplication {
         
         try {
             // 1. Insert main application
-            $this->db->query('INSERT INTO supplier_applications (user_id, primary_phone, secondary_phone, whatsapp_number) 
-                             VALUES (:user_id, :primary_phone, :secondary_phone, :whatsapp_number)');
+            $this->db->query('INSERT INTO supplier_applications (user_id, status) 
+                             VALUES (:user_id, :status)');
             
             $this->db->bind(':user_id', $data['user_id']);
-            $this->db->bind(':primary_phone', $data['primary_phone']);
-            $this->db->bind(':secondary_phone', $data['secondary_phone']);
-            $this->db->bind(':whatsapp_number', $data['whatsapp_number']);
+            $this->db->bind(':status', 'pending'); // Default status is pending
             
             if (!$this->db->execute()) {
                 throw new Exception("Failed to insert main application");
@@ -26,63 +24,47 @@ class M_SupplierApplication {
             $applicationId = $this->db->lastInsertId();
             error_log("Application ID generated: " . $applicationId);
 
-            // 2. Insert address
-            $this->db->query('INSERT INTO application_addresses 
-                (application_id, line1, line2, city, district, postal_code, latitude, longitude) 
-                VALUES 
-                (:application_id, :line1, :line2, :city, :district, :postal_code, :latitude, :longitude)');
+            // 2. Insert location data
+            $this->db->query('UPDATE supplier_applications 
+                             SET latitude = :latitude, longitude = :longitude,
+                                 tea_cultivation_area = :tea_cultivation_area,
+                                 plant_age = :plant_age,
+                                 monthly_production = :monthly_production
+                             WHERE application_id = :application_id');
             
             $this->db->bind(':application_id', $applicationId);
-            $this->db->bind(':line1', $data['address']['line1']);
-            $this->db->bind(':line2', $data['address']['line2']);
-            $this->db->bind(':city', $data['address']['city']);
-            $this->db->bind(':district', $data['address']['district']);
-            $this->db->bind(':postal_code', $data['address']['postal_code']);
-            $this->db->bind(':latitude', $data['address']['latitude']);
-            $this->db->bind(':longitude', $data['address']['longitude']);
+            $this->db->bind(':latitude', $data['location']['latitude']);
+            $this->db->bind(':longitude', $data['location']['longitude']);
+            $this->db->bind(':tea_cultivation_area', $data['cultivation']['tea_cultivation_area']);
+            $this->db->bind(':plant_age', $data['cultivation']['plant_age']);
+            $this->db->bind(':monthly_production', $data['cultivation']['monthly_production']);
             
             if (!$this->db->execute()) {
-                throw new Exception("Failed to insert address");
+                throw new Exception("Failed to insert location and cultivation data");
             }
 
-            // 3. Insert tea varieties (if present in the form data)
-            if (!empty($data['teaVarieties'])) {
-                $this->db->query('INSERT INTO application_tea_varieties (application_id, variety_name) 
-                                 VALUES (:application_id, :variety_name)');
-                
-                foreach ($data['teaVarieties'] as $variety) {
-                    $this->db->bind(':application_id', $applicationId);
-                    $this->db->bind(':variety_name', $variety);
-                    if (!$this->db->execute()) {
-                        throw new Exception("Failed to insert tea variety: " . $variety);
-                    }
-                }
+            // 4. Insert bank details
+            $this->db->query('INSERT INTO supplier_bank_info 
+                (application_id, account_holder_name, bank_name, branch_name, account_number, account_type) 
+                VALUES 
+                (:application_id, :account_holder_name, :bank_name, :branch_name, :account_number, :account_type)');
+            
+            $this->db->bind(':application_id', $applicationId);
+            $this->db->bind(':account_holder_name', $data['bank_info']['account_holder_name']);
+            $this->db->bind(':bank_name', $data['bank_info']['bank_name']);
+            $this->db->bind(':branch_name', $data['bank_info']['branch_name']);
+            $this->db->bind(':account_number', $data['bank_info']['account_number']);
+            $this->db->bind(':account_type', $data['bank_info']['account_type']);
+            
+            if (!$this->db->execute()) {
+                throw new Exception("Failed to insert bank details");
             }
 
-            // 4. Insert property details
-            if (!empty($data['property'])) {
-                $this->db->query('INSERT INTO application_property_details 
-                    (application_id, total_land_area, tea_cultivation_area, elevation, slope) 
-                    VALUES 
-                    (:application_id, :total_land_area, :tea_cultivation_area, :elevation, :slope)');
-                
-                $this->db->bind(':application_id', $applicationId);
-                $this->db->bind(':total_land_area', $data['property']['total_land_area']);
-                $this->db->bind(':tea_cultivation_area', $data['property']['tea_cultivation_area']);
-                $this->db->bind(':elevation', $data['property']['elevation']);
-                $this->db->bind(':slope', $data['property']['slope']);
-                
-                if (!$this->db->execute()) {
-                    throw new Exception("Failed to insert property details");
-                }
-            }
-
-            // 5. Handle document uploads with better error handling
+            // 5. Handle document uploads
             foreach ($documents as $type => $file) {
                 try {
                     // Log the document processing
                     error_log("Processing document: " . $type);
-                    error_log("File details: " . print_r($file, true));
                     
                     // Upload the document
                     $filePath = $this->uploadDocument($file, $type);
@@ -94,137 +76,18 @@ class M_SupplierApplication {
                         VALUES 
                         (:application_id, :document_type, :file_path)');
                     
-                    $params = [
-                        'application_id' => $applicationId,
-                        'document_type' => $type,
-                        'file_path' => $filePath
-                    ];
-                    
-                    // Log the SQL parameters
-                    error_log("SQL parameters: " . print_r($params, true));
-                    
-                    $this->db->bind(':application_id', $params['application_id']);
-                    $this->db->bind(':document_type', $params['document_type']);
-                    $this->db->bind(':file_path', $params['file_path']);
+                    $this->db->bind(':application_id', $applicationId);
+                    $this->db->bind(':document_type', $type);
+                    $this->db->bind(':file_path', $filePath);
                     
                     if (!$this->db->execute()) {
-                        $error = $this->db->getError();
-                        error_log("Database error while inserting document: " . print_r($error, true));
-                        throw new Exception("Failed to insert document record for: " . $type . 
-                                          " - DB Error: " . ($error ? json_encode($error) : 'Unknown error'));
+                        throw new Exception("Failed to insert document record for: " . $type);
                     }
-                    
-                    error_log("Document record inserted successfully for: " . $type);
                     
                 } catch (Exception $e) {
                     error_log("Error processing document {$type}: " . $e->getMessage());
                     throw $e;
                 }
-            }
-
-            // 6. Insert ownership details (if present in form data)
-            if (!empty($data['ownership'])) {
-                $this->db->query('INSERT INTO application_ownership_details (application_id, ownership_type, ownership_duration) 
-                                 VALUES (:application_id, :ownership_type, :ownership_duration)');
-                
-                $this->db->bind(':application_id', $applicationId);
-                $this->db->bind(':ownership_type', $data['ownership']['ownership_type']);
-                $this->db->bind(':ownership_duration', $data['ownership']['ownership_duration']);
-                
-                if (!$this->db->execute()) {
-                    throw new Exception("Failed to insert ownership details");
-                }
-            }
-
-            // 7. Insert tea details (if present in form data)
-            if (!empty($data['tea_details'])) {
-                $this->db->query('INSERT INTO application_tea_details (application_id, plant_age, monthly_production) 
-                                 VALUES (:application_id, :plant_age, :monthly_production)');
-                
-                $this->db->bind(':application_id', $applicationId);
-                $this->db->bind(':plant_age', $data['tea_details']['plant_age']);
-                $this->db->bind(':monthly_production', $data['tea_details']['monthly_production']);
-                
-                if (!$this->db->execute()) {
-                    throw new Exception("Failed to insert tea details");
-                }
-            }
-
-            // Insert infrastructure details
-            if (!empty($data['infrastructure'])) {
-                // Insert main infrastructure details
-                $this->db->query('INSERT INTO application_infrastructure 
-                    (application_id, access_road, vehicle_access) 
-                    VALUES (:application_id, :access_road, :vehicle_access)');
-                
-                $this->db->bind(':application_id', $applicationId);
-                $this->db->bind(':access_road', $data['infrastructure']['access_road']);
-                $this->db->bind(':vehicle_access', $data['infrastructure']['vehicle_access']);
-                
-                if (!$this->db->execute()) {
-                    throw new Exception("Failed to insert infrastructure details");
-                }
-
-                // Insert water sources
-                if (!empty($data['infrastructure']['water_source'])) {
-                    $this->db->query('INSERT INTO application_water_sources 
-                        (application_id, source_type) VALUES (:application_id, :source_type)');
-                    
-                    foreach ($data['infrastructure']['water_source'] as $source) {
-                        $this->db->bind(':application_id', $applicationId);
-                        $this->db->bind(':source_type', $source);
-                        if (!$this->db->execute()) {
-                            throw new Exception("Failed to insert water source: " . $source);
-                        }
-                    }
-                }
-
-                // Insert structures
-                if (!empty($data['infrastructure']['structures'])) {
-                    $this->db->query('INSERT INTO application_structures 
-                        (application_id, structure_type) VALUES (:application_id, :structure_type)');
-                    
-                    foreach ($data['infrastructure']['structures'] as $structure) {
-                        $this->db->bind(':application_id', $applicationId);
-                        $this->db->bind(':structure_type', $structure);
-                        if (!$this->db->execute()) {
-                            throw new Exception("Failed to insert structure: " . $structure);
-                        }
-                    }
-                }
-            }
-
-            // Insert bank details
-            if (!empty($data['bank_info'])) {
-                $this->db->query('INSERT INTO supplier_bank_info 
-                    (application_id, account_holder_name, bank_name, branch_name, account_number, account_type) 
-                    VALUES 
-                    (:application_id, :account_holder_name, :bank_name, :branch_name, :account_number, :account_type)');
-                
-                $this->db->bind(':application_id', $applicationId);
-                $this->db->bind(':account_holder_name', $data['bank_info']['account_holder_name']);
-                $this->db->bind(':bank_name', $data['bank_info']['bank_name']);
-                $this->db->bind(':branch_name', $data['bank_info']['branch_name']);
-                $this->db->bind(':account_number', $data['bank_info']['account_number']);
-                $this->db->bind(':account_type', $data['bank_info']['account_type']);
-                
-                if (!$this->db->execute()) {
-                    throw new Exception("Failed to insert bank details");
-                }
-            }
-
-            // Store documents
-            foreach ($documents as $docType => $docData) {
-                $sql = "INSERT INTO supplier_documents 
-                        (supplier_id, document_type, encrypted_data, original_name) 
-                        VALUES (:supplier_id, :doc_type, :encrypted_data, :original_name)";
-                
-                $this->db->query($sql);
-                $this->db->bind(':supplier_id', $applicationId);
-                $this->db->bind(':doc_type', $docType);
-                $this->db->bind(':encrypted_data', $docData['encrypted_data']);
-                $this->db->bind(':original_name', $docData['original_name']);
-                $this->db->execute();
             }
 
             $this->db->commit();
@@ -239,78 +102,41 @@ class M_SupplierApplication {
         }
     }
 
+    /**
+     * Upload document and return the file path
+     */
     private function uploadDocument($file, $type) {
-        try {
-            // Define upload directory relative to public folder
-            $uploadDir = dirname(dirname(__DIR__)) . '/public/uploads/supplier_documents/';
-            error_log("Upload directory: " . $uploadDir);
-            
-            // Create directory if it doesn't exist
-            if (!is_dir($uploadDir)) {
-                error_log("Creating directory: " . $uploadDir);
-                if (!mkdir($uploadDir, 0777, true)) {
-                    $error = error_get_last();
-                    error_log("Failed to create directory: " . ($error ? json_encode($error) : 'Unknown error'));
-                    throw new Exception("Failed to create upload directory");
-                }
-                chmod($uploadDir, 0777);
+        $uploadDir = APPROOT . '/../public/uploads/documents/' . $type . '/';
+        
+        error_log("Document upload directory: " . $uploadDir);
+        
+        if (!file_exists($uploadDir)) {
+            $success = mkdir($uploadDir, 0777, true);
+            if (!$success) {
+                error_log("Failed to create document directory: " . $uploadDir);
+                throw new Exception("Failed to create document upload directory");
             }
-            
-            // Validate directory is writable
-            if (!is_writable($uploadDir)) {
-                error_log("Directory not writable: " . $uploadDir);
-                throw new Exception("Upload directory is not writable");
-            }
-
-            // Sanitize filename
-            $originalName = basename($file['name']);
-            $extension = strtolower(pathinfo($originalName, PATHINFO_EXTENSION));
-            $safeFileName = time() . '_' . preg_replace('/[^a-z0-9]/', '_', strtolower($type)) . '_' . uniqid() . '.' . $extension;
-            $targetPath = $uploadDir . $safeFileName;
-            
-            error_log("Attempting to upload file: " . $originalName);
-            error_log("Target path: " . $targetPath);
-
-            // Move uploaded file
-            if (!move_uploaded_file($file['tmp_name'], $targetPath)) {
-                $uploadError = error_get_last();
-                error_log("Move upload failed. Error: " . ($uploadError ? json_encode($uploadError) : 'Unknown error'));
-                throw new Exception("Failed to move uploaded file");
-            }
-
-            // Verify file exists after upload
-            if (!file_exists($targetPath)) {
-                error_log("File not found after upload: " . $targetPath);
-                throw new Exception("File not found after upload");
-            }
-
-            // Return relative path for database
-            $relativePath = 'uploads/supplier_documents/' . $safeFileName;
-            error_log("Returning relative path: " . $relativePath);
-            return $relativePath;
-
-        } catch (Exception $e) {
-            error_log("Document upload error for {$type}: " . $e->getMessage());
-            throw new Exception("Failed to upload document: {$type} - " . $e->getMessage());
+            chmod($uploadDir, 0777);
         }
+        
+        $fileName = uniqid() . '_' . basename($file['name']);
+        $targetPath = $uploadDir . $fileName;
+        
+        if (!move_uploaded_file($file['tmp_name'], $targetPath)) {
+            error_log("Failed to move uploaded document. Error: " . error_get_last()['message']);
+            throw new Exception("Failed to upload document");
+        }
+        
+        return 'uploads/documents/' . $type . '/' . $fileName;
     }
 
+    // discontinued,, must ask thisarani to imprve it later
     public function getApplicationByUserId($userId) {
         $this->db->query('
             SELECT 
-                sa.*,
-                aa.line1, aa.line2, aa.city, aa.district, aa.postal_code,
-                ai.access_road, ai.vehicle_access,
-                GROUP_CONCAT(DISTINCT aws.source_type) as water_sources,
-                GROUP_CONCAT(DISTINCT ast.structure_type) as structures,
-                sbi.account_holder_name, sbi.bank_name, sbi.branch_name, 
-                sbi.account_number, sbi.account_type
+                sa.*
             FROM supplier_applications sa
-            LEFT JOIN application_addresses aa ON sa.application_id = aa.application_id
-            LEFT JOIN application_infrastructure ai ON sa.application_id = ai.application_id
-            LEFT JOIN application_water_sources aws ON sa.application_id = aws.application_id
-            LEFT JOIN application_structures ast ON sa.application_id = ast.application_id
-            LEFT JOIN supplier_bank_info sbi ON sa.application_id = sbi.application_id
+
             WHERE sa.user_id = :user_id
             GROUP BY sa.application_id
             ORDER BY sa.created_at DESC
@@ -320,15 +146,6 @@ class M_SupplierApplication {
         $this->db->bind(':user_id', $userId);
         $result = $this->db->single();
 
-        if ($result) {
-            // Convert comma-separated strings to arrays
-            if ($result->water_sources) {
-                $result->water_sources = explode(',', $result->water_sources);
-            }
-            if ($result->structures) {
-                $result->structures = explode(',', $result->structures);
-            }
-        }
 
         return $result;
     }
@@ -370,6 +187,16 @@ class M_SupplierApplication {
         return $this->db->single();
     }
 
+    public function getProfileInfo($userId) {
+        $this->db->query('
+            SELECT * FROM profiles 
+            WHERE user_id = :user_id
+        ');
+        
+        $this->db->bind(':user_id', $userId);
+        return $this->db->single();
+    }
+
 
     public function hasApplied($user_id) {
         // Add debug logging
@@ -389,15 +216,15 @@ class M_SupplierApplication {
 
     // Add this method to your existing class
     public function getAllApplications() {
-        $this->db->query('SELECT 
-            sa.application_id,
-            sa.user_id,
-            sa.status,
-            sa.created_at,
-            CONCAT(u.first_name, " ", u.last_name) as user_name
-            FROM supplier_applications sa
-            LEFT JOIN users u ON sa.user_id = u.user_id
-            ORDER BY sa.created_at DESC');
+        $this->db->query('
+        SELECT supplier_applications.*, users.email, managers.manager_id, 
+               CONCAT(profiles.first_name, \' \', profiles.last_name) AS manager_name,
+               profiles.image_path AS manager_image
+        FROM supplier_applications
+        LEFT JOIN users ON supplier_applications.user_id = users.user_id
+        LEFT JOIN managers ON managers.manager_id = supplier_applications.reviewed_by
+        LEFT JOIN profiles ON profiles.profile_id = managers.profile_id
+        ');
         
         return $this->db->resultSet();
     }
@@ -463,25 +290,29 @@ class M_SupplierApplication {
     }
 
     public function getApplicationById($applicationId) {
-        $this->db->query('SELECT * FROM supplier_applications WHERE application_id = :application_id');
+        $this->db->query("
+        SELECT supplier_applications.*, users.email, managers.manager_id, CONCAT(profiles.first_name, ' ', profiles.last_name) AS manager_name 
+        FROM supplier_applications
+        LEFT JOIN users ON supplier_applications.user_id = users.user_id
+        LEFT JOIN managers ON managers.manager_id = supplier_applications.reviewed_by
+        LEFT JOIN profiles ON profiles.profile_id = managers.profile_id
+        WHERE application_id = :application_id
+        ");
         $this->db->bind(':application_id', $applicationId);
         return $this->db->single();
     }
 
-    public function updateApplicationStatus($applicationId, $status) {
-        $this->db->query('UPDATE supplier_applications 
-                          SET status = :status 
-                          WHERE application_id = :application_id');
-                          
+    public function updateApplicationStatus($applicationId, $reviewedBy, $status) {
+        $this->db->query('
+            UPDATE supplier_applications 
+            SET reviewed_by = :reviewed_by, status = :status 
+            WHERE application_id = :application_id
+        ');
+        $this->db->bind(':reviewed_by', $reviewedBy);
         $this->db->bind(':status', $status);
         $this->db->bind(':application_id', $applicationId);
         
-        try {
-            return $this->db->execute();
-        } catch (Exception $e) {
-            error_log("Error updating application status: " . $e->getMessage());
-            return false;
-        }
+        return $this->db->execute();
     }
 
     public function approveApplication($applicationId) {
@@ -502,6 +333,191 @@ class M_SupplierApplication {
             flash('application_message', 'Something went wrong while rejecting the application', 'alert alert-danger');
         }
         redirect('suppliermanager/applications');
+    }
+
+    public function createProfileAndApplication($profileData, $applicationData, $profilePhoto, $documents) {
+        $this->db->beginTransaction();
+        
+        try {
+            // Debug data
+            error_log("Profile data: " . json_encode($profileData));
+            error_log("Application data: " . json_encode($applicationData));
+            
+            // 1. Create profile - Fix the SQL syntax
+            $this->db->query("INSERT INTO profiles (user_id, first_name, last_name, nic, date_of_birth, 
+                             contact_number, emergency_contact, address_line1, address_line2, city) 
+                             VALUES (:user_id, :first_name, :last_name, :nic, :date_of_birth, 
+                             :contact_number, :emergency_contact, :address_line1, :address_line2, :city)");
+            
+            $this->db->bind(':user_id', $profileData['user_id']);
+            $this->db->bind(':first_name', $profileData['first_name']);
+            $this->db->bind(':last_name', $profileData['last_name']);
+            $this->db->bind(':nic', $profileData['nic']);
+            $this->db->bind(':date_of_birth', $profileData['date_of_birth']);
+            $this->db->bind(':contact_number', $profileData['contact_number']);
+            $this->db->bind(':emergency_contact', $profileData['emergency_contact']);
+            $this->db->bind(':address_line1', $profileData['address_line1']);
+            $this->db->bind(':address_line2', $profileData['address_line2']);
+            $this->db->bind(':city', $profileData['city']);
+            
+
+            
+            if (!$this->db->execute()) {
+                throw new Exception("Failed to create profile");
+            }
+            
+            // 2. Upload profile photo
+            $profilePhotoPath = null;
+            if (isset($profilePhoto) && $profilePhoto['error'] === UPLOAD_ERR_OK) {
+                $profilePhotoPath = $this->uploadProfilePhoto($profilePhoto);
+            }
+            
+            // 3. Insert main application with profile photo
+            $this->db->query('INSERT INTO supplier_applications (user_id, status, profile_photo) 
+                             VALUES (:user_id, :status, :profile_photo)');
+            
+            $this->db->bind(':user_id', $applicationData['user_id']);
+            $this->db->bind(':status', 'pending');
+            $this->db->bind(':profile_photo', $profilePhotoPath);
+            
+            if (!$this->db->execute()) {
+                throw new Exception("Failed to insert main application");
+            }
+            
+            $applicationId = $this->db->lastInsertId();
+            
+            // 4. Update application with location and cultivation data
+            $this->db->query('UPDATE supplier_applications 
+                             SET latitude = :latitude, longitude = :longitude,
+                                 tea_cultivation_area = :tea_cultivation_area,
+                                 plant_age = :plant_age,
+                                 monthly_production = :monthly_production
+                             WHERE application_id = :application_id');
+            
+            $this->db->bind(':application_id', $applicationId);
+            $this->db->bind(':latitude', $applicationData['location']['latitude']);
+            $this->db->bind(':longitude', $applicationData['location']['longitude']);
+            $this->db->bind(':tea_cultivation_area', $applicationData['cultivation']['tea_cultivation_area']);
+            $this->db->bind(':plant_age', $applicationData['cultivation']['plant_age']);
+            $this->db->bind(':monthly_production', $applicationData['cultivation']['monthly_production']);
+            
+            if (!$this->db->execute()) {
+                throw new Exception("Failed to update application with location and cultivation data");
+            }
+            
+            // 5. Insert bank details
+            try {
+                // Debug bank info data
+                error_log("Bank info data: " . json_encode($applicationData['bank_info']));
+                error_log("Application ID: " . $applicationId);
+                
+                // Check if account number already exists
+                $this->db->query('SELECT COUNT(*) as count FROM supplier_bank_info WHERE account_number = :account_number');
+                $this->db->bind(':account_number', $applicationData['bank_info']['account_number']);
+                $result = $this->db->single();
+                
+                if ($result->count > 0) {
+                    throw new Exception("This bank account number is already registered in our system. Please use a different account.");
+                }
+                
+                $this->db->query('INSERT INTO supplier_bank_info 
+                    (application_id, account_holder_name, bank_name, branch_name, account_number, account_type) 
+                    VALUES 
+                    (:application_id, :account_holder_name, :bank_name, :branch_name, :account_number, :account_type)');
+                
+                $this->db->bind(':application_id', $applicationId);
+                $this->db->bind(':account_holder_name', $applicationData['bank_info']['account_holder_name']);
+                $this->db->bind(':bank_name', $applicationData['bank_info']['bank_name']);
+                $this->db->bind(':branch_name', $applicationData['bank_info']['branch_name']);
+                $this->db->bind(':account_number', $applicationData['bank_info']['account_number']);
+                $this->db->bind(':account_type', $applicationData['bank_info']['account_type']);
+                
+                if (!$this->db->execute()) {
+                    error_log("Database error inserting bank info");
+                    throw new Exception("Failed to insert bank details");
+                }
+                
+                error_log("Bank info inserted successfully");
+            } catch (Exception $e) {
+                error_log("Error inserting bank details: " . $e->getMessage());
+                throw $e;
+            }
+
+            // 6. Handle document uploads
+            foreach ($documents as $type => $file) {
+                try {
+                    $filePath = $this->uploadDocument($file, $type);
+                    error_log("Document uploaded successfully to: " . $filePath);
+                    
+     
+                    $safeApplicationId = (int)$applicationId; 
+                    $safeType = "'" . addslashes($type) . "'"; 
+                    $safeFilePath = "'" . addslashes($filePath) . "'";
+                    
+                    // using direct values, can chng later
+                    $sql = "INSERT INTO application_documents 
+                            (application_id, document_type, file_path) 
+                            VALUES 
+                            ($safeApplicationId, $safeType, $safeFilePath)";
+                    
+                    error_log("Executing raw SQL: " . $sql);
+                    
+                    // Execute the query directly
+                    $result = $this->db->executeRawQuery($sql);
+                    
+                    if (!$result) {
+                        error_log("Failed to insert document with raw SQL");
+                        throw new Exception("Failed to insert document record for: " . $type);
+                    }
+                    
+                    error_log("Document record inserted successfully with raw SQL for: " . $type);
+                } catch (Exception $e) {
+                    error_log("Error processing document " . $type . ": " . $e->getMessage());
+                    throw $e;
+                }
+            }
+        
+            
+            $this->db->commit();
+            return true;
+            
+        } catch (Exception $e) {
+            $this->db->rollBack();
+            error_log("Error in createProfileAndApplication: " . $e->getMessage());
+            throw $e;
+        }
+    }
+
+    // Helper method to upload profile photo
+    private function uploadProfilePhoto($file) {
+        // Use absolute path for uploads
+        $uploadDir = APPROOT . '/../public/uploads/profile_photos/';
+        
+        error_log("Upload directory: " . $uploadDir);
+        
+        // Create directory with proper permissions if it doesn't exist
+        if (!file_exists($uploadDir)) {
+            $success = mkdir($uploadDir, 0777, true);
+            if (!$success) {
+                error_log("Failed to create directory: " . $uploadDir);
+                throw new Exception("Failed to create upload directory");
+            }
+            // Set permissions explicitly after creation
+            chmod($uploadDir, 0777);
+        }
+        
+        $fileName = uniqid() . '_' . basename($file['name']);
+        $targetPath = $uploadDir . $fileName;
+        
+        error_log("Attempting to move uploaded file to: " . $targetPath);
+        
+        if (!move_uploaded_file($file['tmp_name'], $targetPath)) {
+            error_log("Failed to move uploaded file. Error: " . error_get_last()['message']);
+            throw new Exception("Failed to upload profile photo");
+        }
+        
+        // Return relative path for database storage
+        return 'uploads/profile_photos/' . $fileName;
     }
 
 }

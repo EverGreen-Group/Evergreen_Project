@@ -24,7 +24,7 @@
         <div class="left">
             <h1>Add Vehicle</h1>
             <ul class="breadcrumb">
-                <li><a href="<?= URLROOT ?>/vehiclemanager/v_new_vehicle">Vehicles</a></li>
+                <li><a href="<?= URLROOT ?>/manager/v_new_vehicle">Vehicles</a></li>
                 <li><i class='bx bx-chevron-right'></i></li>
                 <li><a class="active" href="#">Create Vehicle</a></li>
             </ul>
@@ -38,7 +38,7 @@
         </div>
     <?php endif; ?>
     
-    <form method="POST" action="<?php echo URLROOT; ?>/vehiclemanager/createVehicle" enctype="multipart/form-data">
+    <form method="POST" action="<?php echo URLROOT; ?>/manager/createVehicle" enctype="multipart/form-data">
         <div class="table-data">
             <div class="order">
                 <div class="head">

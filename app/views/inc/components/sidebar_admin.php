@@ -17,7 +17,7 @@
       </a>
     </li>
     <li class="<?php echo (basename($_SERVER['REQUEST_URI']) == 'collection') ? 'active' : ''; ?>">
-      <a href="<?php echo URLROOT; ?>/vehiclemanager/">
+      <a href="<?php echo URLROOT; ?>/manager/">
         <i class="bx bxs-truck"></i>
         <span class="text">Collection Management</span>
       </a>
@@ -31,13 +31,13 @@
   </ul>
   <ul class="side-menu">
     <li class="<?php echo (basename($_SERVER['REQUEST_URI']) == 'settings') ? 'active' : ''; ?>">
-      <a href="<?php echo URLROOT; ?>/vehiclemanager/settings">
+      <a href="<?php echo URLROOT; ?>/manager/settings">
         <i class="bx bxs-cog"></i>
         <span class="text">Settings</span>
       </a>
     </li>
     <li>
-      <a href="<?php echo URLROOT; ?>/vehiclemanager/personal-details" class="logout">
+      <a href="<?php echo URLROOT; ?>/manager/personal-details" class="logout">
         <i class="bx bxs-user-detail"></i>
         <span class="text">Personal Details</span>
       </a>

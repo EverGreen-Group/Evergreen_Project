@@ -18,7 +18,7 @@
         <div class="left">
             <h1>Update Collection Schedule</h1>
             <ul class="breadcrumb">
-                <li><a href="<?= URLROOT ?>/vehiclemanager/collectionschedule">Schedules</a></li>
+                <li><a href="<?= URLROOT ?>/manager/collectionschedule">Schedules</a></li>
                 <li><i class='bx bx-chevron-right'></i></li>
                 <li><a class="active" href="#">Update Schedule</a></li>
             </ul>
@@ -32,7 +32,7 @@
         </div>
     <?php endif; ?>
     
-    <form id="updateScheduleForm" method="POST" action="<?php echo URLROOT; ?>/vehiclemanager/updateSchedule/<?php echo $data['schedule']->schedule_id; ?>">
+    <form id="updateScheduleForm" method="POST" action="<?php echo URLROOT; ?>/manager/updateSchedule/<?php echo $data['schedule']->schedule_id; ?>">
     
     <!-- Schedule Information -->
     <div class="table-data">

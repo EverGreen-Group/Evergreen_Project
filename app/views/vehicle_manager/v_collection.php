@@ -153,7 +153,7 @@
         const date = `${year}-${month.toString().padStart(2, '0')}-${day.toString().padStart(2, '0')}`;
         
         // Make an AJAX call to fetch collections for the selected date
-        fetch(`<?php echo URLROOT; ?>/vehiclemanager/getCollectionsByDate?date=${date}`)
+        fetch(`<?php echo URLROOT; ?>/manager/getCollectionsByDate?date=${date}`)
             .then(response => {
                 if (!response.ok) {
                     throw new Error('Network response was not ok');

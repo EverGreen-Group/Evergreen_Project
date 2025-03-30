@@ -7,6 +7,7 @@
 </script>
 
 <main>
+<div id="toast" class="toast" style="display: none;"></div>
     <div class="head-title">
         <div class="left">
             <h1>Schedule Subscription</h1>
@@ -145,246 +146,307 @@
     </div>
 </main>
 
-<!-- Add this right after the <main> tag -->
-<div id="toast" class="toast" style="display: none;"></div>
-
 <style>
+:root {
+  /* Color Variables */
+  --primary-color: #27ae60;
+  --primary-light: rgba(39, 174, 96, 0.1);
+  --secondary-color: #2ecc71;
+  --text-primary: #2c3e50;
+  --text-secondary: #7f8c8d;
+  --background-light: #f8f9fa;
+  --card-bg: #ffffff;
+  --border-color: #e0e0e0;
+  --success-color: #27ae60;
+  --warning-color: #f39c12;
+  --danger-color: #e74c3c;
+  
+  /* Spacing */
+  --spacing-xs: 0.25rem;
+  --spacing-sm: 0.5rem;
+  --spacing-md: 1rem;
+  --spacing-lg: 1.5rem;
+  --spacing-xl: 2rem;
+  
+  /* Border Radius */
+  --border-radius-sm: 4px;
+  --border-radius-md: 8px;
+  --border-radius-lg: 12px;
+  --border-radius-xl: 16px;
+  
+  /* Shadow */
+  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.12);
+  --shadow-md: 0 4px 6px rgba(0, 0, 0, 0.1);
+  --shadow-lg: 0 10px 15px rgba(0, 0, 0, 0.07);
+}
+
+/* Layout & Common Styles */
+main {
+  padding: var(--spacing-lg);
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+/* Dashboard Header */
+.head-title {
+  margin-bottom: var(--spacing-xl);
+}
+
+.head-title h1 {
+  color: var(--text-primary);
+  font-size: 1.75rem;
+  margin-bottom: var(--spacing-sm);
+}
+
+.breadcrumb {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  list-style: none;
+  padding: 0;
+}
+
+.breadcrumb a {
+  color: var(--text-secondary);
+  text-decoration: none;
+}
+
+.breadcrumb i {
+  color: var(--primary-color);
+}
+
+/* Schedule Section */
 .schedule-section {
-    margin: 20px 0;
-    padding: 0 10px;
+  background-color: var(--card-bg);
+  border-radius: var(--border-radius-lg);
+  box-shadow: var(--shadow-md);
+  padding: var(--spacing-lg);
+  margin-bottom: var(--spacing-xl);
 }
 
 .section-header {
-    margin-bottom: 20px;
+  margin-bottom: var(--spacing-lg);
+  border-bottom: 1px solid var(--border-color);
+  padding-bottom: var(--spacing-md);
 }
 
 .section-header h3 {
-    color: var(--dark);
-    font-size: 1.1rem;
-    font-weight: 600;
+  font-size: 1.5rem;
+  color: var(--text-primary);
+  margin: 0;
 }
 
+/* Schedule Cards */
 .schedule-card {
-    background: var(--light);
-    padding: 20px;
-    border-radius: 10px;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-    margin-bottom: 15px;
-    transition: transform 0.2s ease;
-    border: 1px solid rgba(var(--main-rgb), 0.1);
+  background-color: var(--card-bg);
+  border-radius: var(--border-radius-lg);
+  border: 1px solid var(--border-color);
+  box-shadow: var(--shadow-sm);
+  margin-bottom: var(--spacing-md);
+  transition: transform 0.2s, box-shadow 0.2s;
+  overflow: hidden;
 }
 
 .schedule-card:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  transform: translateY(-3px);
+  box-shadow: var(--shadow-lg);
+}
+
+/* Your Current Subscriptions specific styling */
+.schedule-section:first-of-type .schedule-card {
+  border-left: 4px solid var(--primary-color);
+}
+
+/* Available Routes specific styling */
+.schedule-section:last-of-type .schedule-card {
+  border-left: 4px solid var(--text-secondary);
+}
+
+.card-content {
+  padding: var(--spacing-lg);
 }
 
 .card-body {
-    display: flex;
-    flex-direction: column;
-    gap: 15px;
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-md);
 }
 
-.schedule-info {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-    gap: 15px;
-}
-
+/* Information Layout */
 .info-row {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    gap: 15px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: var(--spacing-lg);
 }
 
 .info-group {
-    flex: 1;
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-    gap: 15px;
+  flex: 1;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: var(--spacing-md);
 }
 
 .info-item {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    padding: 8px;
-    border-radius: 6px;
-    background: rgba(var(--main-rgb), 0.05);
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  padding: var(--spacing-sm);
+  border-radius: var(--border-radius-sm);
+  background-color: var(--primary-light);
 }
 
 .info-item i {
-    font-size: 1.2rem;
-    color: var(--main);
-    min-width: 24px;
+  font-size: 1.2rem;
+  color: var(--primary-color);
+  min-width: 24px;
 }
 
 .info-item span {
-    color: var(--dark);
-    font-size: 0.95rem;
-    word-break: break-word;
+  color: var(--text-primary);
+  font-size: 0.95rem;
 }
 
 .info-item strong {
-    color: var(--main);
-    font-weight: 600;
+  color: var(--text-primary);
+  font-weight: 600;
 }
 
+/* Action Buttons */
 .action-buttons {
-    display: flex;
-    justify-content: flex-end;
-    min-width: 140px; /* Ensures consistent button width */
+  display: flex;
+  justify-content: flex-end;
+  min-width: 140px;
 }
 
 .btn-subscribe,
 .btn-unsubscribe {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    padding: 10px 20px;
-    border: none;
-    border-radius: 8px;
-    font-size: 0.9rem;
-    font-weight: 500;
-    cursor: pointer;
-    transition: all 0.3s ease;
-    white-space: nowrap;
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  padding: var(--spacing-sm) var(--spacing-md);
+  border: none;
+  border-radius: var(--border-radius-md);
+  font-size: 0.9rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.3s ease;
 }
 
 .btn-subscribe {
-    background: var(--main);
-    color: var(--light);
+  background-color: var(--primary-color);
+  color: white;
 }
 
 .btn-subscribe:hover {
-    background: var(--dark);
-    transform: translateY(-2px);
+  background-color: var(--secondary-color);
 }
 
 .btn-unsubscribe {
-    background: #dc3545;
-    color: var(--light);
+  background-color: var(--danger-color);
+  color: white;
 }
 
 .btn-unsubscribe:hover {
-    background: #c82333;
-    transform: translateY(-2px);
+  background-color: #c82333;
 }
 
+/* No Schedule Message */
 .no-schedule {
-    text-align: center;
-    padding: 30px;
-    color: var(--grey);
-    font-style: italic;
-    background: white;
-    border-radius: 10px;
-    border: 1px dashed rgba(var(--main-rgb), 0.2);
-}
-
-/* Your Current Subscriptions section specific styling */
-.schedule-section:first-of-type .schedule-card {
-    border-left: 4px solid var(--main);
-}
-
-/* Available Routes section specific styling */
-.schedule-section:last-of-type .schedule-card {
-    border-left: 4px solid var(--grey);
-}
-
-@media screen and (max-width: 768px) {
-    .info-row {
-        flex-direction: column;
-    }
-    
-    .action-buttons {
-        width: 100%;
-    }
-    
-    .btn-subscribe,
-    .btn-unsubscribe {
-        width: 100%;
-        justify-content: center;
-    }
-
-    .head-title {
-        padding: 0 10px;
-    }
-
-    .schedule-card {
-        padding: 15px;
-    }
-
-    .info-item {
-        padding: 10px;
-    }
-}
-
-@media screen and (max-width: 480px) {
-    .schedule-card {
-        padding: 12px;
-    }
-
-    .info-item {
-        padding: 8px;
-    }
-
-    .info-item span {
-        font-size: 0.9rem;
-    }
-
-    .btn-subscribe,
-    .btn-unsubscribe {
-        padding: 12px 20px;
-        font-size: 1rem;
-    }
-}
-
-.toast {
-    position: fixed;
-    top: 20px;
-    right: 20px;
-    padding: 15px 25px;
-    border-radius: 8px;
-    z-index: 1000;
-    display: none;
-    animation: slideIn 0.3s ease-in-out;
-    max-width: 350px;
-}
-
-.toast.success {
-    background-color: #28a745;
-    color: white;
-}
-
-.toast.error {
-    background-color: #dc3545;
-    color: white;
-}
-
-@keyframes slideIn {
-    from {
-        transform: translateX(100%);
-        opacity: 0;
-    }
-    to {
-        transform: translateX(0);
-        opacity: 1;
-    }
-}
-
-@keyframes fadeOut {
-    from {
-        opacity: 1;
-    }
-    to {
-        opacity: 0;
-    }
+  text-align: center;
+  padding: var(--spacing-xl);
+  color: var(--text-secondary);
+  background-color: white;
+  border-radius: var(--border-radius-md);
+  border: 1px dashed var(--border-color);
 }
 
 .no-routes-message {
-    color: black;
-    font-weight: bold;
+  color: var(--text-primary);
+  font-weight: 500;
+}
+
+/* Toast Notifications */
+.toast {
+  position: fixed;
+  top: var(--spacing-lg);
+  right: var(--spacing-lg);
+  padding: var(--spacing-md) var(--spacing-lg);
+  border-radius: var(--border-radius-md);
+  z-index: 1000;
+  display: none;
+  animation: slideIn 0.3s ease-in-out;
+  max-width: 350px;
+  box-shadow: var(--shadow-md);
+}
+
+.toast.success {
+  background-color: var(--success-color);
+  color: white;
+}
+
+.toast.error {
+  background-color: var(--danger-color);
+  color: white;
+}
+
+@keyframes slideIn {
+  from {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+@keyframes fadeOut {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+  }
+}
+
+/* Responsive Design */
+@media screen and (max-width: 768px) {
+  .info-row {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  
+  .action-buttons {
+    width: 100%;
+    justify-content: flex-start;
+    margin-top: var(--spacing-sm);
+  }
+  
+  .btn-subscribe,
+  .btn-unsubscribe {
+    width: 100%;
+    justify-content: center;
+    padding: var(--spacing-md);
+  }
+}
+
+@media screen and (max-width: 480px) {
+  .card-content {
+    padding: var(--spacing-md);
+  }
+  
+  .info-group {
+    grid-template-columns: 1fr;
+  }
+}
+
+.error-message {
+  background-color: var(--danger-color);
+  color: white;
+  padding: var(--spacing-md);
+  border-radius: var(--border-radius-md);
+  margin-bottom: var(--spacing-lg);
 }
 </style>
 

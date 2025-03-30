@@ -3,7 +3,6 @@
 <?php require APPROOT . '/views/inc/components/topnavbar.php'; ?>
 
 <main>
-    <!-- Dashboard Header -->
     <div class="head-title">
         <div class="left">
             <h1>Supplier Dashboard</h1>
@@ -64,42 +63,38 @@
         </div>
     </div>
 
-    <!-- Schedule Subscription Section -->
-    <div class="schedule-card subscription-schedule">
-        <div class="card-content">
-            <div class="schedule-info">
-                <div class="info-item">
+    <!-- Action Cards Section -->
+    <div class="action-cards-container">
+        <div class="action-card">
+            <div class="action-content">
+                <div class="action-icon">
                     <i class='bx bx-calendar'></i>
-                    <span>Manage Your Schedule Subscription</span>
                 </div>
-            </div>
-            <div class="schedule-action">
-                <a href="<?php echo URLROOT; ?>/supplier/schedule" class="change-schedule-btn">
-                    <i class='bx bx-calendar-edit'></i>
-                    <span>Access Schedule Subscription</span>
+                <div class="action-text">Manage Your Schedule Subscription</div>
+                <a href="<?php echo URLROOT; ?>/supplier/schedule" class="action-button">
+                    <div class="button-content">
+                        <i class='bx bx-calendar-edit'></i>
+                        <span>Access Schedule Subscription</span>
+                    </div>
                 </a>
             </div>
         </div>
-    </div>
-    
-    <div class="schedule-card past-collections">
-        <div class="card-content">
-            <div class="schedule-info">
-                <div class="info-item">
+        
+        <div class="action-card">
+            <div class="action-content">
+                <div class="action-icon">
                     <i class='bx bx-history'></i>
-                    <span>View Past Collections</span>
                 </div>
-            </div>
-            <div class="schedule-action">
-                <a href="<?php echo URLROOT; ?>/supplier/pastCollections" class="change-schedule-btn">
-                    <i class='bx bx-list-ul'></i>
-                    <span>Access Past Collections</span>
+                <div class="action-text">View Past Collections</div>
+                <a href="<?php echo URLROOT; ?>/supplier/pastCollections" class="action-button">
+                    <div class="button-content">
+                        <i class='bx bx-list-ul'></i>
+                        <span>Access Past Collections</span>
+                    </div>
                 </a>
             </div>
         </div>
     </div>
-
-    <div class="section-divider"></div>
 
     <!-- Schedule Section -->
     <div class="schedule-section">
@@ -107,57 +102,65 @@
             <h3>Upcoming Schedule</h3>
         </div>
 
-        <?php if (!empty($data['todaySchedules'])): ?>
-            <?php $schedule = $data['todaySchedules'][0]; // Access the first schedule ?>
-            <div class="schedule-card">
-                <div class="card-content">
-                    <div class="card-header">
-                        <div class="status-badge today">Collection Schedule #<?php echo $schedule->schedule_id; ?></div>
+        <div class="schedule-content">
+            <?php if (!empty($data['todaySchedules'])): ?>
+                <?php $schedule = $data['todaySchedules'][0]; // Access the first schedule ?>
+                <div class="collection-card">
+                    <div class="collection-header">
+                        <div class="collection-badge">Collection Schedule #<?php echo $schedule->schedule_id; ?></div>
                     </div>
-                    <div class="card-body">
-                        <div class="schedule-info">
-                            <div class="info-item">
+                    
+                    <div class="collection-details">
+                        <div class="details-row">
+                            <div class="detail-item">
                                 <i class='bx bx-calendar'></i>
                                 <span><?php echo date('m/d/Y', strtotime($schedule->start_time)); ?></span>
                             </div>
-                            <div class="info-item">
+                            
+                            <div class="detail-item">
                                 <i class='bx bx-time-five'></i>
                                 <span><?php echo date('h:i A', strtotime($schedule->start_time)); ?></span>
                             </div>
-                            <div class="info-item">
+                        </div>
+                        
+                        <div class="details-row">
+                            <div class="detail-item">
                                 <i class='bx bx-user'></i>
-                                <span>Driver: <?php echo $schedule->driver_id; ?></span>
+                                <span>Driver: <?php echo htmlspecialchars($schedule->driver_id); ?> - <?php echo htmlspecialchars($schedule->driver_name); ?></span>
                             </div>
-                            <div class="info-item">
+                            
+                            <div class="detail-item">
                                 <i class='bx bx-car'></i>
                                 <span>Vehicle: <?php echo $schedule->license_plate; ?></span>
                             </div>
-                            <div class="info-item">
+                        </div>
+                        
+                        <div class="details-row">
+                            <div class="detail-item">
                                 <i class='bx bx-check-circle'></i>
                                 <span>Current Status: <?php echo $schedule->schedule_status; ?></span>
                             </div>
                         </div>
-                        <div class="schedule-action">
-                            <?php if (!empty($data['collectionId'])): ?>
-                                <a href="<?php echo URLROOT; ?>/Supplier/collection/<?php echo $data['collectionId']; ?>" class="view-details-btn">
-                                    <i class='bx bx-info-circle'></i>
-                                    <span>View Details</span>
-                                </a>
-                            <?php else: ?>
-                                <span class="no-details">Collection hasn't started yet!</span>
-                            <?php endif; ?>
-                        </div>
+                    </div>
+                    
+                    <div class="collection-status">
+                        <?php if (!empty($data['collectionId'])): ?>
+                            <a href="<?php echo URLROOT; ?>/Supplier/collection/<?php echo $data['collectionId']; ?>" class="view-details-link">
+                                <i class='bx bx-info-circle'></i>
+                                <span>View Details</span>
+                            </a>
+                        <?php else: ?>
+                            <span class="collection-message">Collection hasn't started yet!</span>
+                        <?php endif; ?>
                     </div>
                 </div>
-            </div>
-        <?php else: ?>
-            <div class="no-schedule">
-                <p>No upcoming schedules for today.</p>
-            </div>
-        <?php endif; ?>
+            <?php else: ?>
+                <div class="no-schedule">
+                    <p>No upcoming schedules for today.</p>
+                </div>
+            <?php endif; ?>
+        </div>
     </div>
-
-    <div class="section-divider"></div>
 </main>
 
 <!-- Scripts -->
@@ -165,11 +168,13 @@
 <style>
 :root {
   /* Color Variables */
-  --primary-color: var(--mainn);
+  --primary-color: #27ae60;
+  --primary-light: rgba(39, 174, 96, 0.1);
   --secondary-color: #2ecc71;
   --text-primary: #2c3e50;
   --text-secondary: #7f8c8d;
   --background-light: #f8f9fa;
+  --card-bg: #ffffff;
   --border-color: #e0e0e0;
   --success-color: #27ae60;
   --warning-color: #f39c12;
@@ -186,6 +191,12 @@
   --border-radius-sm: 4px;
   --border-radius-md: 8px;
   --border-radius-lg: 12px;
+  --border-radius-xl: 16px;
+  
+  /* Shadow */
+  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.12);
+  --shadow-md: 0 4px 6px rgba(0, 0, 0, 0.1);
+  --shadow-lg: 0 10px 15px rgba(0, 0, 0, 0.07);
 }
 
 /* Layout & Common Styles */
@@ -193,12 +204,7 @@ main {
   padding: var(--spacing-lg);
   max-width: 1200px;
   margin: 0 auto;
-}
-
-.section-divider {
-  height: 1px;
-  background-color: var(--border-color);
-  margin: var(--spacing-xl) 0;
+  /* background-color: var(--background-light); */
 }
 
 /* Dashboard Header */
@@ -229,16 +235,15 @@ main {
   color: var(--primary-color);
 }
 
-
 /* Stats Container */
 .stats-container {
   display: grid;
   grid-template-columns: 1fr auto 1fr;
   gap: var(--spacing-lg);
-  background-color: white;
+  background-color: var(--card-bg);
   padding: var(--spacing-lg);
   border-radius: var(--border-radius-lg);
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  box-shadow: var(--shadow-md);
   margin-bottom: var(--spacing-xl);
 }
 
@@ -277,84 +282,83 @@ main {
   background-color: var(--border-color);
 }
 
-/* Schedule Cards */
-.schedule-card {
-  background: white;
+/* Action Cards */
+.action-cards-container {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: var(--spacing-lg);
+  margin-bottom: var(--spacing-xl);
+}
+
+.action-card {
+  background-color: var(--card-bg);
   border-radius: var(--border-radius-lg);
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  box-shadow: var(--shadow-md);
   padding: var(--spacing-lg);
-  margin-bottom: var(--spacing-lg);
+  transition: transform 0.2s, box-shadow 0.2s;
 }
 
-.card-content {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
+.action-card:hover {
+  transform: translateY(-3px);
+  box-shadow: var(--shadow-lg);
 }
 
-.schedule-info {
+.action-content {
   display: flex;
-  flex-wrap: wrap;
+  flex-direction: column;
+  align-items: flex-start;
   gap: var(--spacing-md);
+  height: 100%;
 }
 
-.info-item {
-  display: flex;
-  align-items: center;
-  gap: var(--spacing-sm);
-}
-
-.info-item i {
-  font-size: 1.25rem;
+.action-icon {
+  font-size: 1.5rem;
   color: var(--primary-color);
 }
 
-.schedule-action {
-  display: flex;
-  gap: var(--spacing-md);
+.action-text {
+  font-size: 1.1rem;
+  font-weight: 500;
+  color: var(--text-primary);
 }
 
-.change-schedule-btn {
-  display: flex;
-  align-items: center;
-  gap: var(--spacing-sm);
-  padding: var(--spacing-sm) var(--spacing-md);
-  border-radius: var(--border-radius-sm);
-  border: none;
+.action-button {
+  margin-top: auto;
+  display: inline-block;
+  text-decoration: none;
   background-color: var(--primary-color);
   color: white;
-  cursor: pointer;
-  text-decoration: none;
-  transition: background-color 0.3s;
+  padding: var(--spacing-sm) var(--spacing-md);
+  border-radius: var(--border-radius-md);
+  font-weight: 500;
+  transition: background-color 0.2s;
+  align-self: flex-end;
+  margin-left: auto;
 }
 
-.change-schedule-btn:hover {
+.action-button:hover {
   background-color: var(--secondary-color);
 }
 
-.view-details-btn {
+.button-content {
   display: flex;
   align-items: center;
   gap: var(--spacing-sm);
-  color: var(--primary-color);
-  text-decoration: none;
-  font-weight: 500;
-}
-
-.view-details-btn:hover {
-  color: var(--secondary-color);
 }
 
 /* Schedule Section */
 .schedule-section {
-  background-color: var(--background-light);
-  padding: var(--spacing-lg);
+  background-color: var(--card-bg);
   border-radius: var(--border-radius-lg);
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  box-shadow: var(--shadow-md);
+  padding: var(--spacing-lg);
+  margin-bottom: var(--spacing-xl);
 }
 
 .section-header {
   margin-bottom: var(--spacing-lg);
+  border-bottom: 1px solid var(--border-color);
+  padding-bottom: var(--spacing-md);
 }
 
 .section-header h3 {
@@ -363,30 +367,77 @@ main {
   margin: 0;
 }
 
-.card-header {
+.schedule-content {
+  padding: var(--spacing-md) 0;
+}
+
+.collection-card {
+  border-radius: var(--border-radius-lg);
+  overflow: hidden;
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.collection-header {
+  padding: var(--spacing-md);
   margin-bottom: var(--spacing-md);
 }
 
-.status-badge {
+.collection-badge {
   display: inline-block;
-  padding: var(--spacing-xs) var(--spacing-md);
-  border-radius: var(--border-radius-sm);
   background-color: var(--primary-color);
   color: white;
+  padding: var(--spacing-sm) var(--spacing-md);
+  border-radius: var(--border-radius-md);
   font-weight: 500;
 }
 
-.status-badge.today {
-  background-color: var(--primary-color);
+.collection-details {
+  padding: 0 var(--spacing-md);
 }
 
-.card-body {
+.details-row {
   display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
+  flex-wrap: wrap;
+  gap: var(--spacing-xl);
+  margin-bottom: var(--spacing-md);
 }
 
-.no-details {
+.detail-item {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  min-width: 200px;
+  flex: 1;
+}
+
+.detail-item i {
+  color: var(--primary-color);
+  font-size: 1.25rem;
+}
+
+.collection-status {
+  display: flex;
+  justify-content: flex-end;
+  padding: var(--spacing-md);
+  margin-top: var(--spacing-md);
+  border-top: 1px solid var(--border-color);
+}
+
+.view-details-link {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  color: var(--primary-color);
+  text-decoration: none;
+  font-weight: 500;
+  transition: color 0.2s;
+}
+
+.view-details-link:hover {
+  color: var(--secondary-color);
+}
+
+.collection-message {
   color: var(--text-secondary);
   font-style: italic;
 }
@@ -398,8 +449,23 @@ main {
 }
 
 /* Responsive Design */
+@media (max-width: 992px) {
+  .details-row {
+    flex-direction: column;
+    gap: var(--spacing-md);
+  }
+  
+  .detail-item {
+    min-width: auto;
+  }
+}
+
 @media (max-width: 768px) {
   .stats-container {
+    grid-template-columns: 1fr;
+  }
+  
+  .action-cards-container {
     grid-template-columns: 1fr;
   }
   
@@ -407,21 +473,9 @@ main {
     display: none;
   }
   
-  .card-content,
-  .card-body,
-  .availability-status {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: var(--spacing-md);
-  }
-  
-  .schedule-action {
-    margin-top: var(--spacing-md);
-  }
-  
-  .schedule-info {
-    flex-direction: column;
-    gap: var(--spacing-sm);
+  .action-button {
+    align-self: flex-start;
+    margin-left: 0;
   }
 }
 </style>
@@ -430,8 +484,8 @@ main {
 /* Availability Section Styles */
 .availability-section {
     background-color: white;
-    border-radius: 12px;
-    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+    border-radius: var(--border-radius-lg);
+    box-shadow: var(--shadow-md);
     padding: 20px;
     margin-bottom: 30px;
 }
@@ -449,14 +503,8 @@ main {
 }
 
 .availability-left i {
-    color: #2ecc71;
+    color: var(--success-color);
     font-size: 20px;
-}
-
-.availability-label {
-    font-weight: 600;
-    color: #333;
-    margin-right: 15px;
 }
 
 .status-pill {
@@ -468,12 +516,12 @@ main {
 
 .status-pill.available {
     background-color: rgba(46, 204, 113, 0.1);
-    color: #2ecc71;
+    color: var(--success-color);
 }
 
 .status-pill.unavailable {
     background-color: rgba(231, 76, 60, 0.1);
-    color: #e74c3c;
+    color: var(--danger-color);
 }
 
 /* Toggle Switch Styles */
@@ -481,13 +529,6 @@ main {
     display: flex;
     align-items: center;
     gap: 15px;
-}
-
-.toggle-description {
-    color: #888;
-    font-size: 14px;
-    margin: 0;
-    max-width: 350px;
 }
 
 .toggle-switch {
@@ -526,7 +567,7 @@ main {
 }
 
 input:checked + .slider {
-    background-color: #2ecc71;
+    background-color: var(--success-color);
 }
 
 input:checked + .slider:before {
@@ -549,11 +590,8 @@ input:checked + .slider:before {
   }
     
   .toggle-wrapper {
-    /* Remove width: 100% so it doesn’t force a line break */
-    /* width: 100%; */
-    margin-left: auto; /* pushes toggle-wrapper to the right */
-    justify-content: flex-end; /* aligns its contents to the right */
+    margin-left: auto;
+    justify-content: flex-end;
   }
 }
-
 </style>

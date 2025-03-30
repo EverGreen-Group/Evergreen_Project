@@ -29,7 +29,7 @@
   </div>
 
   <div class="action-buttons">
-        <a href="<?php echo URLROOT; ?>/vehiclemanager/createVehicle" class="btn btn-primary">
+        <a href="<?php echo URLROOT; ?>/manager/createVehicle" class="btn btn-primary">
             <i class='bx bx-plus'></i>
             Add new vehicle
         </a>
@@ -66,7 +66,7 @@
             <i class='bx bx-search'></i>
         </div>
         <div class="filter-options">
-            <form action="/Evergreen_Project/vehiclemanager/vehicle" method="GET">
+            <form action="/Evergreen_Project/manager/vehicle" method="GET">
                 <div class="filter-group">
                     <label for="license-plate">License Plate:</label>
                     <input type="text" id="license-plate" name="license_plate" placeholder="Enter license plate">
@@ -109,7 +109,7 @@
     <div class="order">
         <div class="head">
             <h3>Vehicles</h3>
-            <a href="<?php echo URLROOT; ?>/vehiclemanager/createVehicle" class="btn btn-primary">
+            <a href="<?php echo URLROOT; ?>/manager/createVehicle" class="btn btn-primary">
                 <i class='bx bx-show'></i>
                 View Removed Vehicles
             </a>
@@ -143,7 +143,7 @@
                             <div style="display: flex; gap: 5px;">
                                 <!-- View button with icon -->
                                 <a 
-                                    href="<?php echo URLROOT; ?>/vehiclemanager/viewVehicle/<?php echo $vehicle->vehicle_id; ?>" 
+                                    href="<?php echo URLROOT; ?>/manager/viewVehicle/<?php echo $vehicle->vehicle_id; ?>" 
                                     class="btn btn-tertiary" 
                                     style="display: flex; align-items: center; justify-content: center; width: 40px; height: 40px; border: none; background: none;"
                                 >
@@ -152,7 +152,7 @@
 
                                 <!-- Manage button with icon only -->
                                 <a 
-                                    href="<?php echo URLROOT; ?>/vehiclemanager/updateVehicle/<?php echo $vehicle->vehicle_id; ?>" 
+                                    href="<?php echo URLROOT; ?>/manager/updateVehicle/<?php echo $vehicle->vehicle_id; ?>" 
                                     class="btn btn-tertiary" 
                                     style="display: flex; align-items: center; justify-content: center; width: 40px; height: 40px; border: none; background: none;"
                                 >
@@ -160,7 +160,7 @@
                                 </a>
                                 
                                 <!-- Delete button with icon only -->
-                                <a href="<?php echo URLROOT; ?>/vehiclemanager/deleteVehicle/<?php echo $vehicle->vehicle_id; ?>" 
+                                <a href="<?php echo URLROOT; ?>/manager/deleteVehicle/<?php echo $vehicle->vehicle_id; ?>" 
                                    class="btn btn-tertiary" 
                                    style="display: flex; align-items: center; justify-content: center; width: 40px; height: 40px; border: none; background: none;" 
                                    >
