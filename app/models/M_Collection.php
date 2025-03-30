@@ -633,10 +633,10 @@ class M_Collection {
     }
 
     public function getCollectionDetails($id) {
-        $this->db->query('
+        $this->db->query("
             SELECT 
                 c.collection_id,
-                c.status as collection_status,
+                c.status AS collection_status,
                 c.created_at,
                 c.start_time,
                 c.end_time,
@@ -646,36 +646,33 @@ class M_Collection {
                 
                 cs.schedule_id,
                 cs.day,
+                cs.start_time AS schedule_start,
+                cs.end_time AS schedule_end,
                 
                 r.*,
                 
                 d.driver_id,
-                d.status as driver_status,
+                d.status AS driver_status,
                 
-                u.first_name,
-                u.last_name,
-                
-                s.shift_id,
-                s.start_time as shift_start,
-                s.end_time as shift_end,
-                s.shift_name,
-
+                p.first_name,
+                p.last_name,
+    
                 v.*
             FROM collections c
             JOIN collection_schedules cs ON c.schedule_id = cs.schedule_id
             JOIN routes r ON cs.route_id = r.route_id
             JOIN drivers d ON cs.driver_id = d.driver_id
-            JOIN users u ON d.user_id = u.user_id
-            JOIN collection_shifts s ON cs.shift_id = s.shift_id
+            JOIN profiles p ON d.profile_id = p.profile_id
             JOIN vehicles v ON r.vehicle_id = v.vehicle_id
             WHERE c.collection_id = :id
-            AND cs.is_deleted = 0
-            AND cs.is_active = 1
-        ');
+              AND cs.is_deleted = 0
+              AND cs.is_active = 1
+        ");
         
         $this->db->bind(':id', $id);
         return $this->db->single();
     }
+    
 
     public function approveCollection($collectionId) {
         try {
@@ -1056,39 +1053,39 @@ class M_Collection {
 
 
     public function checkCollectionExists($driverId) {
-        // Check for collections that are either "Pending" or "In Progress" for the given driver
-        $this->db->query('
+        // Check if it's pending or in progress
+        $this->db->query("
             SELECT c.collection_id 
             FROM collections c
             JOIN collection_schedules cs ON c.schedule_id = cs.schedule_id
             WHERE cs.driver_id = :driver_id 
-            AND c.status IN ("Pending", "In Progress") 
+              AND c.status IN ('Pending', 'In Progress') 
             LIMIT 1
-        '); // Limit to 1 to get the first matching collection
-
+        "); // Limit to 1 
+    
         $this->db->bind(':driver_id', $driverId);
         $result = $this->db->single();
-
-        return $result ? $result->collection_id : null; // Return collection_id or null if not found
+    
+        return $result ? $result->collection_id : null; 
     }
-
+    
 
     public function checkCollectionExistsUsingSupplierId($supplierId) {
-        // Check for collections that are either "Pending" or "In Progress" for the given driver
-        $this->db->query('
+        $this->db->query("
             SELECT c.collection_id 
             FROM collections c
             JOIN collection_supplier_records csr ON csr.collection_id = c.collection_id
             WHERE csr.supplier_id = :supplier_id
-            AND c.status IN ("Pending", "In Progress") 
+              AND c.status IN ('Pending', 'In Progress') 
             LIMIT 1
-        '); // Limit to 1 to get the first matching collection
-
+        "); 
+    
         $this->db->bind(':supplier_id', $supplierId);
         $result = $this->db->single();
-
-        return $result ? $result->collection_id : null; // Return collection_id or null if not found
+    
+        return $result ? $result['collection_id'] : null; 
     }
+    
 
 
     public function getCollectionItems($collectionId) {

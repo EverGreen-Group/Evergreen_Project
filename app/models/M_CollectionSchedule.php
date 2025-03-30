@@ -94,58 +94,44 @@ class M_CollectionSchedule {
                 r.route_name,
                 v.vehicle_type,
                 v.license_plate,
-                cs_shift.shift_name,
-                COALESCE(ce.new_time, cs_shift.start_time) as start_time,
-                cs_shift.end_time,
-                ce.exception_type,
-                ce.reason as exception_reason,
+                cs.start_time,
+                cs.end_time,
                 CASE 
                     WHEN cs.day = DATE_FORMAT(CURDATE(), '%W') THEN 'today'
                     WHEN FIELD(cs.day, 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday') 
                         > FIELD(DATE_FORMAT(CURDATE(), '%W'), 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday')
                     THEN 'upcoming'
                     ELSE 'upcoming_next_week'
-                END as schedule_status,
+                END AS schedule_status,
                 CASE 
                     WHEN cs.day = DATE_FORMAT(CURDATE(), '%W') THEN 1 
                     ELSE 0 
-                END as is_today
+                END as is_today,
+                (SELECT COUNT(*) 
+                 FROM collections c 
+                 WHERE c.schedule_id = cs.schedule_id 
+                 AND DATE(c.created_at) = CURDATE()
+                ) as collection_exists
             FROM collection_schedules cs
             JOIN routes r ON cs.route_id = r.route_id
             JOIN vehicles v ON r.vehicle_id = v.vehicle_id
-            JOIN collection_shifts cs_shift ON cs.shift_id = cs_shift.shift_id
-            LEFT JOIN collection_exceptions ce ON 
-                cs.schedule_id = ce.schedule_id 
-                AND ce.exception_date = CURDATE()
-            LEFT JOIN collections c ON 
-                cs.schedule_id = c.schedule_id 
-                AND DATE(c.start_time) = CURDATE()
             WHERE cs.driver_id = :driver_id
-            AND cs.is_active = 1
-            AND cs.is_deleted = 0
-            AND r.is_deleted = 0
-            AND (
-                /* For today's schedules */
-                (cs.day = DATE_FORMAT(CURDATE(), '%W') AND c.collection_id IS NULL) 
-                OR 
-                /* For upcoming schedules */
-                (cs.day != DATE_FORMAT(CURDATE(), '%W'))
-            )
-            AND NOT EXISTS (
-                SELECT 1 FROM collection_exceptions 
-                WHERE schedule_id = cs.schedule_id 
-                AND exception_date = CURDATE()
-                AND exception_type = 'SKIP'
-            )
+                AND cs.is_active = 1
+                AND cs.is_deleted = 0
+                AND r.is_deleted = 0
             ORDER BY 
                 FIELD(schedule_status, 'today', 'upcoming', 'upcoming_next_week'),
                 FIELD(cs.day, 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'),
-                COALESCE(ce.new_time, cs_shift.start_time)
+                cs.start_time
         ");
-
+        
         $this->db->bind(':driver_id', $driverId);
         return $this->db->resultSet();
     }
+    
+    
+    
+    
 
     public function getScheduleDetails($scheduleId) {
         $this->db->query("
@@ -737,7 +723,12 @@ class M_CollectionSchedule {
                 CASE 
                     WHEN cs.day = DATE_FORMAT(CURDATE(), '%W') THEN 1 
                     ELSE 0 
-                END AS is_today
+                END AS is_today,
+                (SELECT COUNT(*) 
+                 FROM collections c 
+                 WHERE c.schedule_id = cs.schedule_id 
+                 AND DATE(c.created_at) = CURDATE()
+                ) as collection_exists
             FROM collection_schedules cs
             JOIN routes r ON cs.route_id = r.route_id
             JOIN route_suppliers rs ON r.route_id = rs.route_id

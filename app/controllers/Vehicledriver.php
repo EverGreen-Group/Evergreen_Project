@@ -31,14 +31,14 @@ class VehicleDriver extends controller {
 
     public function index() {
         if (!isset($_SESSION['driver_id'])) {
-            redirect('login'); // Assuming you have a redirect helper
+            redirect('login'); 
             return;
         }
     
         $driverId = $_SESSION['driver_id'];
-
+    
         $collectionId = $this->collectionModel->checkCollectionExists($driverId);
-
+    
         if ($collectionId) {
             // Redirect to the collection details page if an ongoing collection exists
             header('Location: ' . URLROOT . '/vehicledriver/collection/' . $collectionId);
@@ -54,22 +54,21 @@ class VehicleDriver extends controller {
             $upcomingSchedules = [];
             
             foreach ($allSchedules as $schedule) {
+                // Skip schedules that already have collections for today
+                if ($schedule->is_today && $schedule->collection_exists > 0) {
+                    continue;
+                }
+                
                 if ($schedule->is_today) {
                     $todaySchedules[] = $schedule;
                 } else {
                     $upcomingSchedules[] = $schedule;
                 }
             }
-
-
-            
-            // Get driver details (assuming you have a driver model)
-            // $driverDetails = $this->driverModel->getDriverById($driverId);
             
             $data = [
                 'todaySchedules' => $todaySchedules,
                 'upcomingSchedules' => $upcomingSchedules,
-                // 'driverDetails' => $driverDetails,
                 'currentWeek' => date('W'),
                 'currentDay' => date('l'),
                 'lastUpdated' => date('Y-m-d H:i:s'),
@@ -295,18 +294,13 @@ class VehicleDriver extends controller {
 
     public function collection($collectionId) {
         $collection = $this->collectionModel->getCollectionDetails($collectionId);
-        // if (!$collection) {
-        //     redirect('vehicledriver/shift');
-        // }
 
-        // Replace hardcoded location with actual driver location
         $driverLocation = $this->getCurrentDriverLocation();
         $vehicleLocation = $this->vehicleModel->getVehicleLocation($collection->vehicle_id);
 
         // Get all suppliers for this collection
         $collectionSuppliers = $this->collectionScheduleModel->getCollectionSupplierRecords($collectionId);
 
-        $collectionFertilizer = $this->collectionModel->getCollectionItems($collectionId);
 
         $leafTypesResult = $this->collectionModel->getCollectionTeaLeafTypes();
         $leafTypes = $leafTypesResult['success'] ? $leafTypesResult['leafTypes'] : [];
@@ -314,7 +308,7 @@ class VehicleDriver extends controller {
         $currentSupplier = null;
         foreach ($collectionSuppliers as $record) {
             if (!$record->arrival_time && $record->status != 'Collected') {
-                // Convert the object to an associative array
+                // convert object to asoc
                 $currentSupplier = [
                     'id' => $record->supplier_id,
                     'supplierName' => $record->supplier_name,
@@ -370,8 +364,7 @@ class VehicleDriver extends controller {
             'collection' => $collection,
             'vehicleLocation' => $vehicleLocation,
             'currentSupplier' => $currentSupplier,
-            'leafTypes' => $leafTypes,
-            'fertilizers' => $collectionFertilizer
+            'leafTypes' => $leafTypes
         ];
 
         $this->view('vehicle_driver/v_collection_route', $data);
