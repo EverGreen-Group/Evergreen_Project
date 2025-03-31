@@ -1,10 +1,5 @@
 <?php require APPROOT . '/views/inc/components/header.php'; ?>
 
-<!-- Add Leaflet CSS and JS -->
-<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-
-
 
 <!-- Side bar -->
 <?php require APPROOT . '/views/inc/components/sidebar_vehicle_manager.php'; ?>
@@ -80,17 +75,18 @@
                 <h3>Select Route</h3>
             </div>
             <div class="section-content">
+
                 <div class="user-selection-container">
                     <select id="routeSelect" name="route_id" class="form-control" required>
                         <option value="">Select a Route</option>
                         <?php foreach ($data['routes'] as $route): ?>
                             <option value="<?= $route->route_id ?>" 
                                     data-route-name="<?= htmlspecialchars($route->route_name) ?>"
-                                    data-supplier-count="<?= isset($route->supplier_count) ? $route->supplier_count : '0' ?>"
+                                    data-supplier-count="<?= isset($route->number_of_suppliers) ? $route->number_of_suppliers : '0' ?>"
                             >
                                 R<?= str_pad($route->route_id, 3, '0', STR_PAD_LEFT) ?> - 
                                 <?= htmlspecialchars($route->route_name) ?> 
-                                (<?= isset($route->supplier_count) ? $route->supplier_count : '0' ?> suppliers)
+                                (<?= isset($route->number_of_suppliers) ? $route->number_of_suppliers : '0' ?> suppliers)
                             </option>
                         <?php endforeach; ?>
                     </select>

@@ -135,4 +135,19 @@ class M_Supplier {
         return $this->db->execute(); // Returns true on success
     }
 
+
+    public function getSupplierById($supplierId) {
+        $sql = "
+        SELECT s.*,p.*,u.email, CONCAT(p.first_name, ' ', p.last_name) AS supplier_name FROM suppliers s
+        INNER JOIN profiles p ON p.profile_id = s.profile_id
+        INNER JOIN users u ON p.user_id = u.user_id
+        WHERE s.supplier_id = :supplier_id;
+        ";
+
+        $this->db->query($sql);
+        $this->db->bind(':supplier_id', $supplierId);
+        return $this->db->single();
+        
+    }
+
 } 

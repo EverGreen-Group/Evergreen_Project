@@ -94,7 +94,6 @@ class Manager extends Controller
         $routes = $this->routeModel->getAllRoutes();
         $drivers = $this->driverModel->getUnassignedDrivers();
         $vehicles = $this->vehicleModel->getAllAvailableVehicles();
-        $shifts = $this->shiftModel->getAllShifts();
         $schedules = $this->scheduleModel->getAllSchedules();
         $collectionSchedules = $this->scheduleModel->getSchedulesForNextWeek(); 
         $ongoingCollections = $this->collectionModel->getOngoingCollections();
@@ -106,7 +105,6 @@ class Manager extends Controller
             'routes' => $routes,
             'drivers' => $drivers,
             'vehicles' => $vehicles,
-            'shifts' => $shifts,
             'schedules' => $schedules,
             'ongoing_collections' => $ongoingCollections,
             'collectionSchedules' => $collectionSchedules,
@@ -173,7 +171,6 @@ class Manager extends Controller
             redirect('users/login');
         }
 
-        // Get data for the form
         $drivers = $this->driverModel->getAllDrivers();
         $routes = $this->routeModel->getAllUnAssignedRoutes();
 

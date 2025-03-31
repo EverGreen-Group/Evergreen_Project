@@ -114,7 +114,7 @@
                     <tr>
                         <th>Collection ID</th>
                         <th>Route</th>
-                        <th>Shift Times</th>
+                        <th>Shift</th>
                         <th>Driver</th>
                         <th>Status</th>
                         <th>Details</th>
@@ -209,8 +209,6 @@
         <span class="close" onclick="closeModal('createScheduleModal')">&times;</span>
         <h2 style="margin-bottom: 30px;">Create New Schedule</h2>
 
-        <!-- <img src="<?php echo URLROOT; ?>/public/img/schedule_banner.jpg" alt="Banner" style="width: 100%; height: auto; margin-bottom: 20px;"> -->
-
         <form id="createScheduleForm" method="POST" action="<?php echo URLROOT; ?>/collectionschedules/create">
             <div style="display: flex; flex-direction: column; gap: 20px;">
                 <div class="form-group">
@@ -227,12 +225,12 @@
                     </select>
                 </div>
                 <div class="form-group">
-                    <label for="shift">Shift:</label>
-                    <select id="shift" name="shift_id" required>
-                        <?php foreach ($data['shifts'] as $shift): ?>
-                            <option value="<?= $shift->shift_id; ?>"><?= $shift->shift_name; ?></option>
-                        <?php endforeach; ?>
-                    </select>
+                    <label for="start_time">Start Time:</label>
+                    <input type="time" id="start_time" name="start_time" required>
+                </div>
+                <div class="form-group">
+                    <label for="end_time">End Time:</label>
+                    <input type="time" id="end_time" name="end_time" required>
                 </div>
                 <div class="form-group">
                     <label for="route">Route:</label>
@@ -248,7 +246,14 @@
                         <?php endforeach; ?>
                     </select>
                 </div>
-
+                <div class="form-group">
+                    <label for="vehicle">Vehicle:</label>
+                    <select id="vehicle" name="vehicle_id" required>
+                        <?php foreach ($data['vehicles'] as $vehicle): ?>
+                            <option value="<?= $vehicle->vehicle_id; ?>"><?= $vehicle->license_plate; ?></option>
+                        <?php endforeach; ?>
+                    </select>
+                </div>
             </div>
             <button type="submit" class="btn-secondary">Create Schedule</button>
         </form>

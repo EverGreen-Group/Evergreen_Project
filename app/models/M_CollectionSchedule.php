@@ -270,29 +270,32 @@ class M_CollectionSchedule {
     public function getCollectionSupplierRecords($collectionId) {
         $this->db->query("
             SELECT 
-                csr.*,
-                s.latitude,
-                s.longitude,
-                s.contact_number,
-                s.average_collection,
-                CONCAT(u.first_name, ' ', u.last_name) as supplier_name,
-                COALESCE(sp.profile_image, 'default.jpg') as profile_image,
+                csr.*, 
+                s.latitude, 
+                s.longitude, 
+                s.contact_number, 
+                s.average_collection, 
+                CONCAT(p.first_name, ' ', p.last_name) AS supplier_name,
+                p.image_path,
                 csr.arrival_time,
                 rs.stop_order
             FROM collection_supplier_records csr
             JOIN collections c ON csr.collection_id = c.collection_id
             JOIN collection_schedules cs ON c.schedule_id = cs.schedule_id
-            JOIN route_suppliers rs ON cs.route_id = rs.route_id AND csr.supplier_id = rs.supplier_id
+            JOIN route_suppliers rs ON cs.route_id = rs.route_id 
+                AND csr.supplier_id = rs.supplier_id
             JOIN suppliers s ON csr.supplier_id = s.supplier_id
-            JOIN users u ON s.user_id = u.user_id
+            JOIN profiles p ON s.profile_id = p.profile_id  -- Join profiles table for first_name and last_name
             LEFT JOIN supplier_photos sp ON s.supplier_id = sp.supplier_id
             WHERE csr.collection_id = :collection_id
             ORDER BY rs.stop_order ASC
         ");
         
         $this->db->bind(':collection_id', $collectionId);
+    
         return $this->db->resultSet();
     }
+    
 
     public function markSupplierArrival($collectionId, $supplierId) {
         $this->db->query("
