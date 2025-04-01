@@ -7,7 +7,7 @@
         <div class="left">
             <h1><?php echo isset($data['vehicle']) ? 'Edit Vehicle' : 'Add New Vehicle'; ?></h1>
             <ul class="breadcrumb">
-                <li><a href="<?php echo URLROOT; ?>/vehiclemanager">Vehicles</a></li>
+                <li><a href="<?php echo URLROOT; ?>/manager">Vehicles</a></li>
                 <li><i class='bx bx-chevron-right'></i></li>
                 <li><a class="active" href="#"><?php echo isset($data['vehicle']) ? 'Edit' : 'Add'; ?></a></li>
             </ul>

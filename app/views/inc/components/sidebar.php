@@ -11,7 +11,7 @@ $menuItems = [
     'collection' => [
         'icon' => 'bxs-collection',
         'text' => 'Collection',
-        'link' => '/vehiclemanager/collection',
+        'link' => '/manager/collection',
         'roles' => ['vehicle_manager'] // test
     ],
     // Vehicle Driver specific
@@ -25,13 +25,13 @@ $menuItems = [
     'vehicles' => [
         'icon' => 'bxs-car',
         'text' => 'Vehicles',
-        'link' => '/vehiclemanager/vehicles',
+        'link' => '/manager/vehicles',
         'roles' => ['vehicle_manager', 'admin']
     ],
     'drivers' => [
         'icon' => 'bxs-user-badge',
         'text' => 'Drivers',
-        'link' => '/vehiclemanager/drivers',
+        'link' => '/manager/drivers',
         'roles' => ['vehicle_manager']
     ],
     // Supplier specific
@@ -45,7 +45,7 @@ $menuItems = [
     'vehicle_staff' => [
       'icon' => 'bxs-group',
       'text' => 'Staff',
-      'link' => '/vehiclemanager/staff',
+      'link' => '/manager/staff',
         'roles' => ['vehicle_manager', 'admin']
     ],
     'staff' => [

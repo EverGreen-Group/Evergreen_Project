@@ -144,7 +144,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
     if (userId) {
       // Fetch existing driver data
-      fetch(`${URLROOT}/vehiclemanager/getEmployeeByUserId/${userId}`)
+      fetch(`${URLROOT}/manager/getEmployeeByUserId/${userId}`)
         .then((response) => response.json())
         .then((data) => {
           document.getElementById("updateAddressLine1").value =

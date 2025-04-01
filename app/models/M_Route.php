@@ -23,29 +23,25 @@ class M_Route {
     /**
      * Create a new route.
      */
-    public function createRoute($routeName, $routeDay, $vehicleId) {
-        // Step 1: Get the capacity of the vehicle
+    public function createRoute($routeName,$vehicleId) {
         $this->db->query("SELECT capacity FROM vehicles WHERE vehicle_id = :vehicle_id");
         $this->db->bind(':vehicle_id', $vehicleId);
-        $vehicle = $this->db->single(); // Fetch the single vehicle record
+        $vehicle = $this->db->single();
 
-        // Check if the vehicle exists and has a capacity
         if ($vehicle) {
-            $remainingCapacity = $vehicle->capacity; // Assuming 'capacity' is the column name
+            $remainingCapacity = $vehicle->capacity; 
         } else {
-            // Handle the case where the vehicle does not exist
-            return false; // Or throw an exception, or handle as needed
+
+            return false;
         }
 
-        // Step 2: Insert the new route with the remaining capacity
-        $sql = "INSERT INTO routes (route_name, day, vehicle_id, number_of_suppliers, remaining_capacity) VALUES (:route_name, :day, :vehicle_id, 0, :remaining_capacity)";
+        $sql = "INSERT INTO routes (route_name,vehicle_id, number_of_suppliers, remaining_capacity) VALUES (:route_name, :vehicle_id, 0, :remaining_capacity)";
         $stmt = $this->db->prepare($sql);
         $stmt->bindParam(':route_name', $routeName);
-        $stmt->bindParam(':day', $routeDay);
         $stmt->bindParam(':vehicle_id', $vehicleId);
-        $stmt->bindParam(':remaining_capacity', $remainingCapacity); // Bind the remaining capacity
+        $stmt->bindParam(':remaining_capacity', $remainingCapacity); 
 
-        return $stmt->execute(); // Return true on success, false on failure
+        return $stmt->execute();
     }
 
     /**
@@ -164,11 +160,21 @@ class M_Route {
         return $this->db->resultset();
     }
 
+    public function getAllUnAssignedRoutes() {
+        $this->db->query("
+            SELECT r.* 
+            FROM routes r
+            LEFT JOIN collection_schedules cs ON r.route_id = cs.route_id AND cs.is_deleted = 0
+            WHERE cs.route_id IS NULL AND r.is_deleted = 0
+        ");
+        return $this->db->resultSet();
+    }
+
     /**
      * Get all undeleted routes.
      */
     public function getAllUndeletedRoutes() {
-        $this->db->query("SELECT * FROM routes r WHERE r.is_deleted = 0");
+        $this->db->query("SELECT r.*,v.license_plate,(SELECT COUNT(*) FROM route_suppliers WHERE route_id = r.route_id) AS supplier_count FROM routes r INNER JOIN vehicles v on r.vehicle_id = v.vehicle_id WHERE r.is_deleted = 0");
         return $this->db->resultset();
     }
 
@@ -176,15 +182,9 @@ class M_Route {
      * Get the total count of undeleted routes.
      */
     public function getTotalRoutes() {
-        $sql = "SELECT COUNT(*) as total FROM routes WHERE is_deleted = 0";
-        $stmt = $this->db->query($sql);
-        if ($stmt) {
-            $count = $stmt->fetchColumn();
-            error_log("Total routes count: " . $count);
-            return (int)$count;
-        }
-        error_log("Error getting total routes: " . print_r($this->db->errorInfo(), true));
-        return 0;
+        $this->db->query("SELECT COUNT(*) as totalRoutes FROM routes WHERE is_deleted = 0");
+        $result = $this->db->single();
+        return $result ? $result->totalRoutes : 0;
     }
     
     /**
@@ -233,17 +233,18 @@ class M_Route {
         $this->db->query("
             SELECT 
                 s.*,
-                u.first_name,
-                u.last_name,
-                CONCAT(u.first_name, ' ', u.last_name) as full_name,
+                p.first_name,
+                p.last_name,
+                CONCAT(p.first_name, ' ', p.last_name) as full_name,
                 CONCAT(s.latitude, ', ', s.longitude) as coordinates,
                 rs.*
             FROM route_suppliers rs
             JOIN suppliers s ON rs.supplier_id = s.supplier_id
-            JOIN users u ON s.user_id = u.user_id
+            JOIN profiles p ON s.profile_id = p.profile_id
             WHERE rs.route_id = :route_id
             AND rs.is_deleted = 0
             AND s.is_deleted = 0
+            ORDER BY rs.stop_order
         ");
         
         $this->db->bind(':route_id', $routeId);
@@ -257,16 +258,19 @@ class M_Route {
         $this->db->query("
             SELECT r.* 
             FROM routes r
-            LEFT JOIN collection_schedules cs ON r.route_id = cs.route_id 
-                AND cs.day = :day 
-                AND cs.is_active = 1
             WHERE r.day = :day 
             AND r.is_deleted = 0 
-            AND (cs.route_id IS NULL OR cs.is_deleted = 1)
+            AND r.route_id NOT IN (
+                SELECT cs.route_id 
+                FROM collection_schedules cs 
+                WHERE cs.day = :day
+                AND cs.is_deleted = 0
+                AND cs.is_active = 1
+            )
         ");
         
         $this->db->bind(':day', $day);
-        return $this->db->resultset();
+        return $this->db->resultSet();
     }
 
     /**
@@ -375,15 +379,15 @@ class M_Route {
         $this->db->query("
             SELECT DISTINCT
                 s.*,
-                u.first_name,
-                u.last_name,
-                CONCAT(u.first_name, ' ', u.last_name) as full_name,
+                p.first_name,
+                p.last_name,
+                CONCAT(p.first_name, ' ', p.last_name) as full_name,
                 CONCAT(s.latitude, ', ', s.longitude) as coordinates
             FROM suppliers s
-            JOIN users u ON s.user_id = u.user_id
-            LEFT JOIN route_suppliers rs ON s.supplier_id = rs.supplier_id
-            LEFT JOIN routes r ON rs.route_id = r.route_id
-            WHERE (rs.supplier_id IS NULL OR r.route_id IS NULL OR r.is_deleted = 1)
+            JOIN profiles p ON s.profile_id = p.profile_id
+            LEFT JOIN route_suppliers rs ON s.supplier_id = rs.supplier_id AND rs.is_deleted = 0  -- Only consider active route associations
+            LEFT JOIN routes r ON rs.route_id = r.route_id AND r.is_deleted = 0  -- Only consider active routes
+            WHERE rs.supplier_id IS NULL  -- Supplier is not in any active route
             AND s.is_active = 1
             AND s.is_deleted = 0;
         ");
@@ -419,31 +423,6 @@ class M_Route {
         return $result;
     }
 
-    /**
-     * Get unallocated suppliers filtered by their preferred day.
-     */
-    public function getUnallocatedSuppliersByDay($preferredDay) {
-        $this->db->query("
-            SELECT 
-                s.*,
-                u.first_name,
-                u.last_name,
-                CONCAT(u.first_name, ' ', u.last_name) as full_name,
-                CONCAT(s.latitude, ', ', s.longitude) as coordinates
-            FROM suppliers s
-            JOIN users u ON s.user_id = u.user_id
-            LEFT JOIN route_suppliers rs ON s.supplier_id = rs.supplier_id AND rs.is_deleted = 0
-            WHERE rs.supplier_id IS NULL 
-            AND s.is_active = 1
-            AND s.is_deleted = 0
-            AND s.preferred_day = :preferred_day
-        ");
-        
-        $this->db->bind(':preferred_day', $preferredDay);
-        $result = $this->db->resultSet();
-        error_log('Unallocated suppliers query result for day ' . $preferredDay . ': ' . print_r($result, true));
-        return $result;
-    }
 
     /**
      * Get unallocated supplier details including user info and coordinates.
@@ -494,15 +473,18 @@ class M_Route {
      * Retrieve the vehicle capacity associated with a route.
      */
     private function getVehicleCapacityByRouteId($routeId) {
-        $sql = "SELECT v.capacity FROM routes r JOIN vehicles v ON r.vehicle_id = v.vehicle_id WHERE r.route_id = :route_id";
-        $stmt = $this->db->prepare($sql);
-        $stmt->bindParam(':route_id', $routeId);
+        $sql = "SELECT v.capacity 
+                FROM routes r 
+                JOIN vehicles v ON r.vehicle_id = v.vehicle_id 
+                WHERE r.route_id = :route_id";
+                
+        $this->db->query($sql);
+        $this->db->bind(':route_id', $routeId);
         
-        if ($stmt->execute()) {
-            $result = $stmt->fetch(PDO::FETCH_ASSOC);
-            return $result['capacity'] ? (float)$result['capacity'] : 0;
-        }
-        return 0;
+        $result = $this->db->single();
+        
+        // Check if result exists and has the capacity property
+        return $result->capacity;
     }
 
     /**
@@ -516,8 +498,14 @@ class M_Route {
         
         if ($stmt->execute()) {
             $result = $stmt->fetch(PDO::FETCH_ASSOC);
-            return $result['stop_order'] ? (int)$result['stop_order'] : 0;
+            
+            // Check if result is valid and contains the 'stop_order' key
+            if ($result && isset($result['stop_order'])) {
+                return (int)$result['stop_order'];
+            }
         }
+        
+        // Return a default value if no valid result is found
         return 0;
     }
 
@@ -533,5 +521,84 @@ class M_Route {
         
         return $stmt->execute();
     }
+
+    public function getSupplierCurrentRoute($supplierId) {
+        $sql = "SELECT route_id FROM route_suppliers 
+                WHERE supplier_id = :supplier_id 
+                AND is_active = 1 
+                AND is_deleted = 0";
+        
+        $this->db->query($sql);
+        $this->db->bind(':supplier_id', $supplierId);
+        return $this->db->single();
+    }
+
+    public function getSupplierStopOrder($routeId, $supplierId) {
+        $sql = "SELECT stop_order FROM route_suppliers 
+                WHERE route_id = :route_id 
+                AND supplier_id = :supplier_id 
+                AND is_active = 1 
+                AND is_deleted = 0";
+        
+        $this->db->query($sql);
+        $this->db->bind(':route_id', $routeId);
+        $this->db->bind(':supplier_id', $supplierId);
+        $result = $this->db->single();
+        return $result ? $result->stop_order : null;
+    }
+
+    public function getRouteIdByScheduleId($scheduleId) {
+        $sql = "SELECT r.route_id 
+                FROM collection_schedules cs 
+                JOIN routes r ON cs.route_id = r.route_id 
+                WHERE cs.schedule_id = :schedule_id 
+                AND r.is_deleted = 0";  // Ensure the route is not deleted
+
+        $this->db->query($sql);
+        $this->db->bind(':schedule_id', $scheduleId);
+        
+        // Execute the query and return the route_id
+        $result = $this->db->single();
+        
+        // Check if result is valid and return the route_id or null
+        return ($result && isset($result->route_id)) ? $result->route_id : null;
+    }
+
+    /**
+     * Toggle the lock state of a route.
+     */
+    public function toggleLock($routeId) {
+        // First, get the current lock state
+        $sql = "SELECT is_locked FROM routes WHERE route_id = :route_id";
+        $this->db->query($sql);
+        $this->db->bind(':route_id', $routeId);
+        $currentLockState = $this->db->single()->is_locked;
+
+        // Toggle the lock state
+        $newLockState = !$currentLockState;
+
+        // Update the lock state in the database
+        $sql = "UPDATE routes SET is_locked = :is_locked WHERE route_id = :route_id";
+        $this->db->query($sql);
+        $this->db->bind(':is_locked', $newLockState);
+        $this->db->bind(':route_id', $routeId);
+
+        return $this->db->execute();
+    }
+
+    /**
+     * Get the total count of unassigned routes.
+     */
+    public function getUnassignedRoutesCount() {
+        $this->db->query("
+            SELECT COUNT(*) as totalUnassigned 
+            FROM routes r 
+            LEFT JOIN collection_schedules cs ON r.route_id = cs.route_id 
+            WHERE r.is_deleted = 0 AND cs.route_id IS NULL
+        ");
+        $result = $this->db->single();
+        return $result ? $result->totalUnassigned : 0; 
+    }
+
 }
 ?>

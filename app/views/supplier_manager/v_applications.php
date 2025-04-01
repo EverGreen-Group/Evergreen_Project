@@ -1,460 +1,284 @@
 <?php require APPROOT . '/views/inc/components/header.php'; ?>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
 <!-- Side bar -->
-<?php require APPROOT . '/views/inc/components/sidebar_suppliermanager.php'; ?>
+<?php require APPROOT.'/views/inc/components/sidebar_vehicle_manager.php'; ?>
 <!-- Top nav bar -->
 <?php require APPROOT . '/views/inc/components/topnavbar.php'; ?>
 
+
+<link rel="stylesheet" href="<?php echo URLROOT; ?>/css/vehicle_manager/vehicle/vehicle.css">
+<link rel="stylesheet" href="<?php echo URLROOT; ?>/css/vehicle_manager/collection/collection.css">
+<link rel="stylesheet" href="<?php echo URLROOT; ?>/css/vehicle_manager/collection/calendar.css">
 <script>
     const URLROOT = '<?php echo URLROOT; ?>';
+    const UPLOADROOT = '<?php echo UPLOADROOT; ?>';
 </script>
 
 <!-- MAIN -->
 <main>
+  <!-- Supplier Applications Section -->
+  <div class="head-title">
+      <div class="left">
+          <h1>Supplier Applications</h1>
+          <ul class="breadcrumb">
+              <li><a href="#">Dashboard</a></li>
+              <li><i class='bx bx-chevron-right'></i></li>
+              <li><a class="active" href="#">Applications</a></li>
+          </ul>
+      </div>
+  </div>
 
-    
-    <div class="head-title">
-        <div class="left">
-            <h1>Supplier Applications</h1>
-            <ul class="breadcrumb">
-                <li><a href="#">Dashboard</a></li>
-                <li><a href="#">Applications</a></li>
-            </ul>
-        </div>
-    </div>
+  <ul class="dashboard-stats">
+        <li class="stat-card">
+            <div class="stat-content">
+                <i class='bx bxs-file-plus'></i>
+                <div class="stat-info">
+                    <h3><?php echo isset($totalApplications) ? $totalApplications : 0; ?></h3>
+                    <p>Total Applications</p>
+                </div>
+            </div>
+        </li>
 
-    <!-- Box Info -->
-    <ul class="box-info">
-        <li>
-            <i class='bx bxs-file'></i>
-            <span class="text">
-                <h3>10</h3>
-                <p>Total Applications</p>
-            </span>
+        <li class="stat-card">
+            <div class="stat-content">
+                <i class='bx bx-time'></i>
+                <div class="stat-info">
+                    <h3><?php echo isset($pendingApplications) ? $pendingApplications : 0; ?></h3>
+                    <p>Pending Review</p>
+                </div>
+            </div>
         </li>
-        <li>
-            <i class='bx bxs-check-circle'></i>
-            <span class="text">
-                <h3>5</h3>
-                <p>Approved</p>
-            </span>
+
+        <li class="stat-card">
+            <div class="stat-content">
+                <i class='bx bx-check-circle'></i>
+                <div class="stat-info">
+                    <h3><?php echo isset($approvedApplications) ? $approvedApplications : 0; ?></h3>
+                    <p>Approved</p>
+                </div>
+            </div>
         </li>
-        <li>
-            <i class='bx bxs-x-circle'></i>
-            <span class="text">
-                <h3>3</h3>
-                <p>Rejected</p>
-            </span>
+
+        <li class="stat-card">
+            <div class="stat-content">
+                <i class='bx bx-x-circle'></i>
+                <div class="stat-info">
+                    <h3><?php echo isset($rejectedApplications) ? $rejectedApplications : 0; ?></h3>
+                    <p>Rejected</p>
+                </div>
+            </div>
         </li>
     </ul>
 
-    <!-- Applications Table -->
-    <div class="table-data">
-        <div class="order">
-            <div class="head">
-                <h3>Applications</h3>
-            </div>
-            <table>
-                <thead>
-                    <tr>
-                        <th>Application ID</th>
-                        <th>User ID</th>
-                        <th>Status</th>
-                        <th>Created At</th>
-                        <th>Actions</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <?php foreach ($data['applications'] as $application): ?>
-                        <tr>
-                            <td>APP<?= str_pad($application->application_id, 4, '0', STR_PAD_LEFT) ?></td>
-                            <td><?= $application->user_id ?></td>
-                            <td>
-                                <span class="status-badge <?= strtolower($application->status) ?>">
-                                    <?= ucfirst($application->status) ?>
-                                </span>
-                            </td>
-                            <td><?= date('Y-m-d H:i', strtotime($application->created_at)) ?></td>
-                            <td>
-                                <a href="<?= URLROOT ?>/suppliermanager/viewApplication/<?= $application->application_id ?>" class="btn-view">View</a>
-                            </td>
-                        </tr>
-                    <?php endforeach; ?>
-                </tbody>
-            </table>
+  <div class="table-data">
+    <div class="order">
+        <div class="head">
+            <h3>Search Filters</h3>
+            <i class='bx bx-search'></i>
+        </div>
+        <div class="filter-options">
+            <form action="<?php echo URLROOT; ?>/suppliermanager/applications" method="GET">
+                <div class="filter-group">
+                    <label for="application-id">Application ID:</label>
+                    <input type="text" id="application-id" name="application_id" placeholder="Enter application ID">
+                </div>
+                <div class="filter-group">
+                    <label for="status">Status:</label>
+                    <select id="status" name="status">
+                        <option value="">All Statuses</option>
+                        <option value="pending">Pending</option>
+                        <option value="approved">Approved</option>
+                        <option value="rejected">Rejected</option>
+                        <option value="auto-rejected">Auto-Rejected</option>
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <label for="date-from">Date From:</label>
+                    <input type="date" id="date-from" name="date_from">
+                </div>
+                <div class="filter-group">
+                    <label for="date-to">Date To:</label>
+                    <input type="date" id="date-to" name="date_to">
+                </div>
+                <button type="submit" class="btn btn-primary">Search</button>
+            </form>
         </div>
     </div>
+</div>
 
-    <!-- Approved Applications without Supplier Role -->
-    <div class="table-data">
-        <div class="order">
-            <div class="head">
-                <h3>Approved Applications (Pending Role Assignment)</h3>
-            </div>
-            <table>
-                <thead>
-                    <tr>
-                        <th>Application ID</th>
-                        <th>User Name</th>
-                        <th>Actions</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <?php foreach ($data['approved_pending_role'] as $application): ?>
-                        <tr>
-                            <td>APP<?= str_pad($application->application_id, 4, '0', STR_PAD_LEFT) ?></td>
-                            <td><?= $application->user_name ?></td>
-                            <td>
-                                <a href="javascript:void(0);" 
-                                   class="btn-confirm"
-                                   onclick="confirmSupplierRole(<?php echo $application->application_id ?>)"
-                                   >
-                                    <i class='bx bx-user-check'></i> Confirm Role
-                                </a>
-                            </td>
-                        </tr>
-                    <?php endforeach; ?>
-                </tbody>
-            </table>
-        </div>
-    </div>
 
-    <script>
-    function confirmSupplierRole(applicationId) {
-        const data = { application_id: applicationId };
-        fetch('<?= URLROOT ?>/suppliermanager/confirmSupplierRole', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify(data)
-        })
-        .then(response => response.json()) // Corrected from respose to response
-        .then(data => {
-            if (data.success) {
-                location.reload(); // Corrected from location.refresh() to location.reload()
-            } else {
-                alert('Error confirming role: ' + (data.message || 'Unknown error')); // Added fallback for message
-            }
-        })
-        .catch(error => {
-            alert('Error confirming role: ' + error.message);
-        });
-    }
-</script>
 
-    <!-- Land Inspection Requests -->
+<!-- Applications Table -->
 <div class="table-data">
     <div class="order">
         <div class="head">
-            <h3>Land Inspection Requests</h3>
-            <div class="head-actions">
-                <select class="filter-select">
-                    <option value="all">All Requests</option>
-                    <option value="pending">Pending</option>
-                    <option value="scheduled">Scheduled</option>
-                    <option value="completed">Completed</option>
-                </select>
-            </div>
+            <h3>Supplier Applications</h3>
+            <a href="<?php echo URLROOT; ?>/manager/createVehicle" class="btn btn-primary">
+                <i class='bx bx-cog'></i>
+                Manage Application Constraints
+            </a>
         </div>
         <table>
             <thead>
                 <tr>
-                    <th>Request ID</th>
-                    <th>Supplier ID</th>
-                    <th>Land Area (Acres)</th>
-                    <th>Location</th>
-                    <th>Preferred Date</th>
-                    <th>Scheduled Date</th>
-                    <th>Scheduled Time</th>
+                    <th>Application ID</th>
+                    <th>User ID</th>
+                    <th>Submission Date</th>
                     <th>Status</th>
+                    <th>Reviewed By</th>
                     <th>Actions</th>
                 </tr>
             </thead>
             <tbody>
-                <tr>
-                    <td>INS001</td>
-                    <td>SUP001</td>
-                    <td>2.5</td>
-                    <td>Galle, Sri Lanka</td>
-                    <td>2024-03-15</td>
-                    <td>
-                        <input type="date" class="inline-date-input" id="scheduleDate-INS001">
-                    </td>
-                    <td>
-                        <input type="time" class="inline-time-input" id="scheduleTime-INS001">
-                    </td>
-                    <td><span class="status-badge pending">Pending</span></td>
-                    <td>
-                        <div class="action-buttons">
-                            <button class="btn-approve" onclick="scheduleInspection('INS001')">
-                                <i class='bx bx-calendar'></i> Schedule
-                            </button>
-                        </div>
-                    </td>
-                </tr>
-                <!-- More rows can be added similarly -->
+                <?php if(isset($applications) && !empty($applications)): ?>
+                    <?php foreach ($applications as $application): ?>
+                        <tr class="application-row" data-application-id="<?php echo htmlspecialchars($application->application_id); ?>">
+                            <td><?php echo htmlspecialchars($application->application_id); ?></td>
+                            <td><?php echo htmlspecialchars($application->user_id); ?></td>
+                            <td><?php echo htmlspecialchars(date('Y-m-d', strtotime($application->created_at))); ?></td>
+                            <td>
+                                <span class="status-badge <?php echo strtolower($application->status); ?>">
+                                    <?php echo htmlspecialchars(ucfirst($application->status)); ?>
+                                </span>
+                            </td>
+                            <td>
+                                <?php if (!empty($application->reviewed_by)): ?>
+                                    <a href="<?php echo URLROOT; ?>/managers/view/<?php echo htmlspecialchars($application->reviewed_by); ?>" class="manager-link">
+                                        <img src="<?php echo URLROOT . '/' . htmlspecialchars($application->manager_image); ?>" alt="Manager Photo" class="manager-photo">
+                                        <?php echo htmlspecialchars($application->manager_name); ?>
+                                    </a>
+                                <?php else: ?>
+                                    Not reviewed
+                                <?php endif; ?>
+                            </td>
+                            <td>
+                                <div style="display: flex; gap: 5px;">
+                                    <!-- View button with icon -->
+                                    <a 
+                                        href="<?php echo URLROOT; ?>/manager/viewApplication/<?php echo $application->application_id; ?>" 
+                                        class="btn btn-tertiary" 
+                                        style="display: flex; align-items: center; justify-content: center; width: 40px; height: 40px; border: none; background: none;"
+                                        title="View Application Details"
+                                    >
+                                        <i class='bx bx-show' style="font-size: 24px; color:blue;"></i>
+                                    </a>
+                                </div>
+                            </td>
+                        </tr>
+                    <?php endforeach; ?>
+                <?php else: ?>
+                    <tr>
+                        <td colspan="6" style="text-align: center;">No applications found</td>
+                    </tr>
+                <?php endif; ?>
             </tbody>
         </table>
     </div>
 </div>
 
-<style>
-.inline-date-input, .inline-time-input {
-    width: 100%;
-    padding: 5px;
-    border: 1px solid #ddd;
-    border-radius: 4px;
-    font-size: 0.8rem;
-}
-</style>
-
 <script>
-function scheduleInspection(requestId) {
-    const dateInput = document.getElementById(`scheduleDate-${requestId}`);
-    const timeInput = document.getElementById(`scheduleTime-${requestId}`);
+    // Toggle constraints form
+    document.getElementById('edit-constraints-btn').addEventListener('click', function() {
+        document.getElementById('constraints-form').style.display = 'block';
+        document.getElementById('constraints-display').style.display = 'none';
+    });
     
-    if (dateInput.value && timeInput.value) {
-        console.log('Scheduling inspection:', {
-            requestId: requestId,
-            date: dateInput.value,
-            time: timeInput.value
-        });
-        // Here you would typically make an AJAX call to save the scheduling
-    } else {
-        alert('Please select both date and time');
-    }
-}
+    document.getElementById('cancel-constraints-btn').addEventListener('click', function() {
+        document.getElementById('constraints-form').style.display = 'none';
+        document.getElementById('constraints-display').style.display = 'block';
+    });
 </script>
-</main>
 
-<?php require APPROOT . '/views/inc/components/footer.php'; ?>
+</main>
 
 <style>
     .status-badge {
-        padding: 6px 12px;
+        padding: 5px 10px;
         border-radius: 20px;
-        font-size: 0.9em;
+        font-size: 12px;
+        font-weight: bold;
+        text-transform: uppercase;
+    }
+    
+    .pending {
+        background-color: #FFF4DE;
+        color: #FFA800;
+    }
+    
+    .approved {
+        background-color: #E8FFF3;
+        color: #1BC5BD;
+    }
+    
+    .rejected, .auto-rejected {
+        background-color: #FFE2E5;
+        color: #F64E60;
+    }
+    
+    .constraint-group {
+        margin-bottom: 20px;
+    }
+    
+    .constraint-group h4 {
+        margin-bottom: 10px;
+        color: #333;
+    }
+    
+    .constraint-item {
+        display: flex;
+        align-items: center;
+        margin-bottom: 10px;
+    }
+    
+    .constraint-item label {
+        width: 250px;
         font-weight: 500;
     }
-
-    .status-badge.pending {
-        background-color: #ff9800;
-        color: white;
-    }
-
-    .status-badge.approved {
-        background-color: #4CAF50;
-        color: white;
-    }
-
-    .status-badge.rejected {
-        background-color: #f44336;
-        color: white;
-    }
-
-    .btn-view, .btn-approve, .btn-reject {
-        padding: 5px 10px;
-        border-radius: 4px;
-        margin: 0 2px;
-        text-decoration: none;
-        font-size: 0.9em;
-    }
-
-    .btn-view {
-        background-color: #007bff;
-        color: white;
-    }
-
-    .btn-approve {
-        background-color: #4CAF50;
-        color: white;
-    }
-
-    .btn-reject {
-        background-color: #f44336;
-        color: white;
-    }
-
-    .btn-view:hover, .btn-approve:hover, .btn-reject:hover {
-        opacity: 0.8;
-    }
-
-    .table-data .order {
-        background: var(--light);
-        padding: 24px;
-        border-radius: 8px;
-        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-    }
-
-    .table-data .head {
-        display: flex;
-        align-items: center;
-        margin-bottom: 24px;
-    }
-
-    .table-data .head h3 {
-        font-size: 1.1rem;
-        font-weight: 600;
-        color: var(--dark);
-    }
-
-    .table-data table {
-        width: 100%;
-        border-collapse: collapse;
-    }
-
-    .table-data table th {
-        padding: 12px;
-        font-size: 0.9rem;
-        font-weight: 600;
-        color: var(--dark);
-        text-align: left;
-        border-bottom: 1px solid #eee;
-        background: #f8f9fa;
-    }
-
-    .table-data table td {
-        padding: 12px;
-        font-size: 0.9rem;
-        color: var(--dark);
-        border-bottom: 1px solid #eee;
-    }
-
-    .table-data table tr:hover {
-        background: #f8f9fa;
-    }
-
-    .btn-confirm {
-        background-color: #007bff;
-        color: white;
-        padding: 5px 10px;
-        border-radius: 4px;
-        margin: 0 2px;
-        text-decoration: none;
-        font-size: 0.9em;
-        display: inline-flex;
-        align-items: center;
-        gap: 8px;
-        transition: all 0.3s ease;
-    }
-
-    .btn-confirm:hover {
-        opacity: 0.8;
-    }
-
-    .btn-confirm i {
-        font-size: 1.1rem;
-    }
-
-    .head-actions {
-        display: flex;
-        gap: 1rem;
-        align-items: center;
-    }
-
-    .filter-select {
-        padding: 0.5rem;
+    
+    .constraint-item input {
+        width: 150px;
+        padding: 8px;
         border: 1px solid #ddd;
         border-radius: 4px;
-        font-size: 0.9rem;
-        color: var(--dark);
     }
-
-    .action-buttons {
-        display: flex;
-        gap: 0.5rem;
-    }
-
-    .action-buttons button {
-        padding: 5px 10px;
+    
+    .constraint-display-item {
+        padding: 10px;
+        margin-bottom: 10px;
+        background-color: #f9f9f9;
         border-radius: 4px;
+    }
+    
+    .btn-secondary {
+        background-color: #6c757d;
+        color: white;
         border: none;
+        padding: 10px 20px;
+        border-radius: 4px;
         cursor: pointer;
-        font-size: 0.9em;
-        display: inline-flex;
+        margin-left: 10px;
+    }
+    
+    .btn-secondary:hover {
+        background-color: #5a6268;
+    }
+
+    .manager-link {
+        display: flex;
         align-items: center;
-        gap: 5px;
-        transition: all 0.3s ease;
+        text-decoration: none;
+        color: inherit; /* Inherit text color */
     }
 
-    .action-buttons .btn-view {
-        background-color: #007bff;
-        color: white;
-    }
-
-    .action-buttons .btn-approve {
-        background-color: #4CAF50;
-        color: white;
-    }
-
-    .action-buttons .btn-reject {
-        background-color: #f44336;
-        color: white;
-    }
-
-    .action-buttons button:hover {
-        opacity: 0.8;
-    }
-
-    .status-badge.scheduled {
-        background-color: #4CAF50;
-        color: white;
-    }
-
-    .status-badge.completed {
-        background-color: #4CAF50;
-        color: white;
+    .manager-photo {
+        width: 30px; /* Set the desired width */
+        height: 30px; /* Set the desired height */
+        border-radius: 50%; /* Make it circular */
+        margin-right: 8px; /* Space between image and name */
+        object-fit: cover; /* Ensure the image covers the area */
     }
 </style>
 
-<script>
-function scheduleInspection(requestId) {
-    // Set the request ID in the modal
-    document.getElementById('requestId').value = requestId;
-    
-    // Show the modal
-    document.getElementById('scheduleInspectionModal').style.display = 'block';
-}
+<?php require APPROOT . '/views/inc/components/footer.php'; ?>
 
-function closeModal() {
-    // Hide the modal
-    document.getElementById('scheduleInspectionModal').style.display = 'none';
-}
-
-document.getElementById('inspectionForm').addEventListener('submit', function(event) {
-    event.preventDefault(); // Prevent the default form submission
-
-    const requestId = document.getElementById('requestId').value;
-    const inspectionDate = document.getElementById('inspectionDate').value;
-    const inspectionTime = document.getElementById('inspectionTime').value;
-
-    // Add your scheduling logic here
-    console.log('Scheduling inspection for:', requestId, 'on', inspectionDate, 'at', inspectionTime);
-
-    // Close the modal after scheduling
-    closeModal();
-});
-
-// Close modal when clicking outside of it
-window.onclick = function(event) {
-    const modal = document.getElementById('scheduleInspectionModal');
-    if (event.target == modal) {
-        closeModal();
-    }
-};
-
-// Existing functions
-function markComplete(requestId) {
-    console.log('Marking inspection as complete:', requestId);
-}
-
-function viewDetails(requestId) {
-    console.log('Viewing details for:', requestId);
-}
-
-document.querySelector('.filter-select').addEventListener('change', function() {
-    const status = this.value;
-    console.log('Filtering by status:', status);
-});
-</script>

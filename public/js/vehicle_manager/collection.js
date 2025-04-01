@@ -16,29 +16,29 @@ document.addEventListener("DOMContentLoaded", function () {
   setInterval(updateTime, 1000);
 
   ///////////////////////////////
+});
 
-  document.getElementById("day").addEventListener("change", function () {
-    const selectedDay = this.value;
-    const routeSelect = document.getElementById("route");
+document.getElementById("day").addEventListener("change", function () {
+  const selectedDay = this.value;
+  const routeSelect = document.getElementById("route");
+  const driverSelect = document.getElementById("driver");
 
-    // Clear existing options
-    routeSelect.innerHTML =
-      '<option value="" disabled selected>Select a route</option>';
+  // Clear existing options
+  routeSelect.innerHTML =
+    '<option value="" disabled selected>Select a route</option>';
 
-    // Fetch routes based on the selected day
-    fetch(`${URLROOT}/routes/getRoutesByDay/${selectedDay}`)
-      .then((response) => response.json())
-      .then((data) => {
-        data.routes.forEach((route) => {
-          const option = document.createElement("option");
-          option.value = route.route_id;
-          option.textContent = route.route_name;
-          routeSelect.appendChild(option);
-        });
-      })
-      .catch((error) => console.error("Error fetching routes:", error));
-  });
-
+  // Fetch routes based on the selected day
+  fetch(`${URLROOT}/routes/getRoutesByDay/${selectedDay}`)
+    .then((response) => response.json())
+    .then((data) => {
+      data.routes.forEach((route) => {
+        const option = document.createElement("option");
+        option.value = route.route_id;
+        option.textContent = route.route_name;
+        routeSelect.appendChild(option);
+      });
+    })
+    .catch((error) => console.error("Error fetching routes:", error));
   /////////////////////////////////
 
   /////////////////////////////////////
@@ -96,3 +96,46 @@ document.addEventListener("DOMContentLoaded", function () {
 function closeModal(modalId) {
   document.getElementById(modalId).style.display = "none";
 }
+
+document.getElementById("shift").addEventListener("change", function () {
+  const selectedDay = document.getElementById("day").value;
+  const selectedShift = this.value;
+  const driverSelect = document.getElementById("driver");
+
+  // Clear existing options
+  driverSelect.innerHTML =
+    '<option value="" disabled selected>Select a driver</option>';
+
+  // Make sure day is selected
+  if (!selectedDay) {
+    console.error("Day not selected");
+    return;
+  }
+
+  // Fetch unallocated drivers based on the selected day and shift
+  fetch(
+    `${URLROOT}/vehicledriver/getUnallocatedDriversByDayAndShift/${selectedDay}/${selectedShift}`
+  )
+    .then((response) => response.json())
+    .then((data) => {
+      console.log("Driver data:", data); // Debug to see what's actually being returned
+
+      // Check if data is an array directly or wrapped in a 'drivers' property
+      const driversArray = Array.isArray(data) ? data : data.drivers || [];
+
+      if (driversArray.length > 0) {
+        driversArray.forEach((driver) => {
+          const option = document.createElement("option");
+          option.value = driver.driver_id;
+          option.textContent = driver.full_name || driver.first_name;
+          driverSelect.appendChild(option);
+        });
+      } else {
+        const option = document.createElement("option");
+        option.disabled = true;
+        option.textContent = "No available drivers";
+        driverSelect.appendChild(option);
+      }
+    })
+    .catch((error) => console.error("Error fetching drivers:", error));
+});

@@ -9,22 +9,21 @@ class M_Collection {
     }
     public function getOngoingCollections() {
         $sql = "SELECT 
-                    c.*,
-                    cs.schedule_id,
-                    r.route_name,
-                    t.team_name,
-                    v.license_plate,
-                    s.shift_name
-                FROM collections c
-                JOIN collection_schedules cs ON c.schedule_id = cs.schedule_id
-                JOIN routes r ON cs.route_id = r.route_id
-                JOIN teams t ON cs.team_id = t.team_id
-                JOIN vehicles v ON cs.vehicle_id = v.vehicle_id
-                JOIN collection_shifts s ON cs.shift_id = s.shift_id
-                WHERE c.status IN ('Pending', 'In Progress')
-                AND cs.is_active = 1
-                AND cs.is_deleted = 0
-                ORDER BY c.start_time ASC";
+                c.*,
+                cs.schedule_id,
+                r.route_name,
+                v.license_plate,
+                CONCAT(p.first_name, ' ', p.last_name) as driver_name
+            FROM collections c
+            JOIN collection_schedules cs ON c.schedule_id = cs.schedule_id
+            JOIN routes r ON cs.route_id = r.route_id
+            JOIN vehicles v ON r.vehicle_id = v.vehicle_id
+            JOIN drivers d ON cs.driver_id = d.driver_id
+            JOIN profiles p ON d.profile_id = p.profile_id
+            WHERE c.status IN ('Pending', 'In Progress')
+            AND cs.is_active = 1
+            AND cs.is_deleted = 0
+            ORDER BY c.start_time ASC";
         
         $this->db->query($sql);
         $result = $this->db->resultSet();
@@ -252,13 +251,6 @@ class M_Collection {
         }
     }
 
-    public function setPartnerReady($collectionId) {
-        $this->db->query('UPDATE collections 
-                          SET partner_approved = 1 
-                          WHERE collection_id = :collection_id');
-        $this->db->bind(':collection_id', $collectionId);
-        return $this->db->execute();
-    }
 
     public function setDriverReady($collectionId) {
         $this->db->beginTransaction();
@@ -584,6 +576,93 @@ class M_Collection {
         ];
     }
 
+
+    public function saveBag($bagData) {
+        $this->db->beginTransaction();
+        
+        try {
+            $this->db->query('SELECT * FROM collection_bags WHERE bag_id = :bag_id');
+            $this->db->bind(':bag_id', $bagData['bag_id']);
+            $existingBag = $this->db->single();
+            
+            if ($existingBag) {
+                // Check if bag is active
+                if ($existingBag->status === 'active') {
+                    // Check if actual weight exceeds capacity
+                    if ($bagData['actual_weight'] > $existingBag->capacity_kg) {
+                        $this->db->rollBack();
+                        return [
+                            'success' => false,
+                            'message' => 'Actual weight exceeds bag capacity'
+                        ];
+                    }
+                    
+                    $this->db->query('UPDATE collection_bags SET status = "inactive" WHERE bag_id = :bag_id');
+                    $this->db->bind(':bag_id', $bagData['bag_id']);
+                    
+                    if (!$this->db->execute()) {
+                        $this->db->rollBack();
+                        return [
+                            'success' => false,
+                            'message' => 'Failed to update bag status'
+                        ];
+                    }
+                } else {
+                    $this->db->rollBack();
+                    return [
+                        'success' => false,
+                        'message' => 'Bag is already in use'
+                    ];
+                }
+            } else {
+                $this->db->rollBack();
+                return [
+                    'success' => false,
+                    'message' => 'Bag not found in system'
+                ];
+            }
+            
+            $this->db->query('INSERT INTO bag_usage_history 
+                             (bag_id, collection_id, capacity_kg, actual_weight_kg, leaf_age, 
+                             moisture_level, deduction_notes, supplier_id, action, leaf_type_id) 
+                             VALUES 
+                             (:bag_id, :collection_id, :capacity_kg, :actual_weight_kg, :leaf_age, 
+                             :moisture_level, :deduction_notes, :supplier_id, :action, :leaf_type_id)');
+            
+            $this->db->bind(':bag_id', $bagData['bag_id']);
+            $this->db->bind(':collection_id', $bagData['collection_id']);
+            $this->db->bind(':capacity_kg', $existingBag->capacity_kg);
+            $this->db->bind(':actual_weight_kg', $bagData['actual_weight']);
+            $this->db->bind(':leaf_age', $bagData['leaf_age']);
+            $this->db->bind(':moisture_level', $bagData['moisture_level']);
+            $this->db->bind(':deduction_notes', $bagData['notes']);
+            $this->db->bind(':supplier_id', $bagData['supplier_id']);
+            $this->db->bind(':action', 'added');
+            $this->db->bind(':leaf_type_id', $bagData['leaf_type_id']);
+            
+            if (!$this->db->execute()) {
+                $this->db->rollBack();
+                return [
+                    'success' => false,
+                    'message' => 'Failed to record bag usage history'
+                ];
+            }
+            
+            $this->db->commit();
+            return [
+                'success' => true,
+                'message' => 'Bag added successfully'
+            ];
+        } catch (Exception $e) {
+            $this->db->rollBack();
+            error_log('Error in saveBag: ' . $e->getMessage());
+            return [
+                'success' => false,
+                'message' => 'System error occurred'
+            ];
+        }
+    }
+
     public function getPendingCollections() {
         $this->db->query('
             SELECT 
@@ -633,10 +712,10 @@ class M_Collection {
     }
 
     public function getCollectionDetails($id) {
-        $this->db->query('
+        $this->db->query("
             SELECT 
                 c.collection_id,
-                c.status as collection_status,
+                c.status AS collection_status,
                 c.created_at,
                 c.start_time,
                 c.end_time,
@@ -646,37 +725,33 @@ class M_Collection {
                 
                 cs.schedule_id,
                 cs.day,
-                cs.week_number,
+                cs.start_time AS schedule_start,
+                cs.end_time AS schedule_end,
                 
                 r.*,
                 
                 d.driver_id,
-                d.status as driver_status,
+                d.status AS driver_status,
                 
-                u.first_name,
-                u.last_name,
-                
-                s.shift_id,
-                s.start_time as shift_start,
-                s.end_time as shift_end,
-                s.shift_name,
-
+                p.first_name,
+                p.last_name,
+    
                 v.*
             FROM collections c
             JOIN collection_schedules cs ON c.schedule_id = cs.schedule_id
             JOIN routes r ON cs.route_id = r.route_id
             JOIN drivers d ON cs.driver_id = d.driver_id
-            JOIN users u ON d.user_id = u.user_id
-            JOIN collection_shifts s ON cs.shift_id = s.shift_id
+            JOIN profiles p ON d.profile_id = p.profile_id
             JOIN vehicles v ON r.vehicle_id = v.vehicle_id
             WHERE c.collection_id = :id
-            AND cs.is_deleted = 0
-            AND cs.is_active = 1
-        ');
+              AND cs.is_deleted = 0
+              AND cs.is_active = 1
+        ");
         
         $this->db->bind(':id', $id);
         return $this->db->single();
     }
+    
 
     public function approveCollection($collectionId) {
         try {
@@ -855,33 +930,19 @@ class M_Collection {
         }
     }
 
-    public function finalizeSupplierCollection($data) {
+
+    public function finalizeSupplierCollection($collectionId, $supplierId) {
         try {
             // Begin transaction
             $this->db->beginTransaction();
-
-            // Check if the supplier is approved
-            $this->db->query('SELECT supplier_approved FROM collection_supplier_records WHERE supplier_id = :supplier_id AND collection_id = :collection_id');
-            $this->db->bind(':supplier_id', $data->supplier_id);
-            $this->db->bind(':collection_id', $data->collection_id);
-            $result = $this->db->single();
-
-            // If supplier is not approved, return an error message
-            if (!$result || $result->supplier_approved != 1) {
-                return [
-                    'success' => false,
-                    'message' => 'Supplier is not approved. Cannot finalize collection.'
-                ];
-            }
 
             // Get total weight from assigned bags
             $this->db->query('SELECT COALESCE(SUM(actual_weight_kg), 0) as total_weight 
                 FROM bag_usage_history 
                 WHERE supplier_id = :supplier_id 
-                AND action = "added" 
                 AND collection_id = :collection_id');
-            $this->db->bind(':supplier_id', $data->supplier_id);
-            $this->db->bind(':collection_id', $data->collection_id);
+            $this->db->bind(':supplier_id', $supplierId);
+            $this->db->bind(':collection_id', $collectionId);
             $result = $this->db->single();
             $totalWeight = $result->total_weight;
 
@@ -889,21 +950,15 @@ class M_Collection {
             $this->db->query('UPDATE collection_supplier_records SET
                 status = :status,
                 quantity = :quantity,
-                collection_time = :collection_time,
-                notes = :notes
+                collection_time = NOW()
             WHERE supplier_id = :supplier_id AND collection_id = :collection_id');
 
-            $this->db->bind(':supplier_id', $data->supplier_id);
+            $this->db->bind(':supplier_id', $supplierId);
             $this->db->bind(':status', 'Collected');
             $this->db->bind(':quantity', $totalWeight);
-            $this->db->bind(':collection_time', date('Y-m-d H:i:s', strtotime($data->collection_time)));
-            $this->db->bind(':notes', $data->notes ?? null);
-            $this->db->bind(':collection_id', $data->collection_id);
+            $this->db->bind(':collection_id', $collectionId);
 
-            if (!$this->db->execute()) {
-                error_log('Failed to update collection supplier record: ' . implode(', ', $this->db->errorInfo()));
-                throw new Exception('Failed to update collection supplier record');
-            }
+            $this->db->execute();
 
             // Update total_quantity in collections table
             $this->db->query('UPDATE collections SET
@@ -911,31 +966,19 @@ class M_Collection {
             WHERE collection_id = :collection_id');
 
             $this->db->bind(':totalWeight', $totalWeight);
-            $this->db->bind(':collection_id', $data->collection_id);
+            $this->db->bind(':collection_id', $collectionId);
 
-            if (!$this->db->execute()) {
-                error_log('Failed to update total quantity in collections: ' . implode(', ', $this->db->errorInfo()));
-                throw new Exception('Failed to update total quantity in collections');
-            }
+            $this->db->execute();
 
             // Commit transaction
             $this->db->commit();
-
-            return [
-                'success' => true,
-                'message' => 'Collection finalized successfully',
-                'data' => [
-                    'total_weight' => $totalWeight
-                ]
-            ];
+            return true;
 
         } catch (Exception $e) {
             // Rollback on error
             $this->db->rollBack();
-            return [
-                'success' => false,
-                'message' => 'Failed to finalize collection: ' . $e->getMessage()
-            ];
+            error_log('Error in finalizeSupplierCollection: ' . $e->getMessage());
+            return false;
         }
     }
 
@@ -984,7 +1027,7 @@ class M_Collection {
 
             // Update the collection status, end_time, and bags used
             $this->db->query('UPDATE collections SET 
-                status = "Completed", 
+                status = "Awaiting Inventory Addition", 
                 end_time = NOW(), 
                 bags = :bags_used 
                 WHERE collection_id = :collection_id');
@@ -995,21 +1038,21 @@ class M_Collection {
             // Execute the update for the collections table
             if ($this->db->execute()) {
                 // Check if there are any fertilizer records for this collection
-                $this->db->query('SELECT COUNT(*) as count FROM collection_fertilizer_records WHERE collection_id = :collection_id');
-                $this->db->bind(':collection_id', $collectionId);
-                $fertilizerCount = $this->db->single()->count;
+                // $this->db->query('SELECT COUNT(*) as count FROM collection_fertilizer_records WHERE collection_id = :collection_id');
+                // $this->db->bind(':collection_id', $collectionId);
+                // $fertilizerCount = $this->db->single()->count;
 
                 // Update the status of fertilizer items to "Delivered" if records exist
-                if ($fertilizerCount > 0) {
-                    $this->db->query('UPDATE collection_fertilizer_records SET status = "Delivered" WHERE collection_id = :collection_id');
-                    $this->db->bind(':collection_id', $collectionId);
-                    $this->db->execute(); // Execute the update for fertilizer items
-                }
+                // if ($fertilizerCount > 0) {
+                //     $this->db->query('UPDATE collection_fertilizer_records SET status = "Delivered" WHERE collection_id = :collection_id');
+                //     $this->db->bind(':collection_id', $collectionId);
+                //     $this->db->execute(); // Execute the update for fertilizer items
+                // }
 
                 // Update the status of fertilizer orders to "Delivered"
-                $this->db->query('UPDATE fertilizer_order_items SET status = "Delivered" WHERE item_id IN (SELECT item_id FROM collection_fertilizer_records WHERE collection_id = :collection_id)');
-                $this->db->bind(':collection_id', $collectionId);
-                $this->db->execute(); // Execute the update for fertilizer orders
+                // $this->db->query('UPDATE fertilizer_order_items SET status = "Delivered" WHERE item_id IN (SELECT item_id FROM collection_fertilizer_records WHERE collection_id = :collection_id)');
+                // $this->db->bind(':collection_id', $collectionId);
+                // $this->db->execute(); // Execute the update for fertilizer orders
 
                 return ['success' => true];
             } else {
@@ -1057,39 +1100,39 @@ class M_Collection {
 
 
     public function checkCollectionExists($driverId) {
-        // Check for collections that are either "Pending" or "In Progress" for the given driver
-        $this->db->query('
+        // Check if it's pending or in progress
+        $this->db->query("
             SELECT c.collection_id 
             FROM collections c
             JOIN collection_schedules cs ON c.schedule_id = cs.schedule_id
             WHERE cs.driver_id = :driver_id 
-            AND c.status IN ("Pending", "In Progress") 
+              AND c.status IN ('Pending', 'In Progress') 
             LIMIT 1
-        '); // Limit to 1 to get the first matching collection
-
+        "); // Limit to 1 
+    
         $this->db->bind(':driver_id', $driverId);
         $result = $this->db->single();
-
-        return $result ? $result->collection_id : null; // Return collection_id or null if not found
+    
+        return $result ? $result->collection_id : null; 
     }
-
+    
 
     public function checkCollectionExistsUsingSupplierId($supplierId) {
-        // Check for collections that are either "Pending" or "In Progress" for the given driver
-        $this->db->query('
+        $this->db->query("
             SELECT c.collection_id 
             FROM collections c
             JOIN collection_supplier_records csr ON csr.collection_id = c.collection_id
             WHERE csr.supplier_id = :supplier_id
-            AND c.status IN ("Pending", "In Progress") 
+              AND c.status IN ('Pending', 'In Progress') 
             LIMIT 1
-        '); // Limit to 1 to get the first matching collection
-
+        "); 
+    
         $this->db->bind(':supplier_id', $supplierId);
         $result = $this->db->single();
-
-        return $result ? $result->collection_id : null; // Return collection_id or null if not found
+    
+        return $result ? $result->collection_id : null; 
     }
+    
 
 
     public function getCollectionItems($collectionId) {
@@ -1107,6 +1150,176 @@ class M_Collection {
         $this->db->query('SELECT * FROM collection_fertilizer_records WHERE supplier_id = :supplier_id');
         $this->db->bind(':supplier_id', $supplierId);
         return $this->db->resultSet(); // Return the result set
+    }
+
+    // get collection bags method
+
+    public function getCollectionBags($collectionId, $supplierId) {
+        $this->db->query('SELECT * FROM bag_usage_history WHERE supplier_id = :supplier_id AND collection_id = :collection_id');
+        $this->db->bind(':supplier_id', $supplierId);
+        $this->db->bind(':collection_id', $collectionId);
+        return $this->db->resultSet(); 
+    }
+
+    public function getBagCapacity($bagId) {
+        $this->db->query('SELECT capacity_kg FROM collection_bags WHERE bag_id = :bag_id');
+        $this->db->bind(':bag_id', $bagId);
+        $result = $this->db->single();
+        
+        if ($result) {
+            return [
+                'success' => true,
+                'capacity' => $result->capacity_kg
+            ];
+        } else {
+            return [
+                'success' => false,
+                'capacity' => 50.00 
+            ];
+        }
+    }
+
+
+    public function getBagById($bagId, $collectionId) {
+        $this->db->query('SELECT * FROM bag_usage_history 
+                         WHERE bag_id = :bag_id 
+                         AND collection_id = :collection_id 
+                         ORDER BY timestamp DESC 
+                         LIMIT 1');
+        
+        $this->db->bind(':bag_id', $bagId);
+        $this->db->bind(':collection_id', $collectionId);
+        $result = $this->db->single();
+        
+        if ($result) {
+            return $result;
+        } else {
+            return false;
+        }
+    }
+
+
+    public function updateBag($bagData) {
+        // Start transaction
+        $this->db->beginTransaction();
+        
+        try {
+            $this->db->query('SELECT * FROM bag_usage_history WHERE history_id = :history_id');
+            $this->db->bind(':history_id', $bagData['history_id']);
+            $existingBag = $this->db->single();
+            
+            if (!$existingBag) {
+                $this->db->rollBack();
+                return [
+                    'success' => false,
+                    'message' => 'Bag record not found'
+                ];
+            }
+            
+            // Check if the actual weight exceeds capacity
+            if ($bagData['actual_weight'] > $existingBag->capacity_kg) {
+                $this->db->rollBack();
+                return [
+                    'success' => false,
+                    'message' => 'Actual weight exceeds bag capacity'
+                ];
+            }
+            
+            // Update the bag record
+            $this->db->query('UPDATE bag_usage_history SET 
+                             actual_weight_kg = :actual_weight_kg,
+                             leaf_type_id = :leaf_type_id,
+                             leaf_age = :leaf_age,
+                             moisture_level = :moisture_level,
+                             deduction_notes = :deduction_notes
+                             WHERE history_id = :history_id');
+            
+            $this->db->bind(':actual_weight_kg', $bagData['actual_weight']);
+            $this->db->bind(':leaf_type_id', $bagData['leaf_type']);
+            $this->db->bind(':leaf_age', $bagData['leaf_age']);
+            $this->db->bind(':moisture_level', $bagData['moisture_level']);
+            $this->db->bind(':deduction_notes', $bagData['notes']);
+            $this->db->bind(':history_id', $bagData['history_id']);
+            
+            if (!$this->db->execute()) {
+                $this->db->rollBack();
+                return [
+                    'success' => false,
+                    'message' => 'Failed to update bag record'
+                ];
+            }
+            
+            // Commit the transaction
+            $this->db->commit();
+            return [
+                'success' => true,
+                'message' => 'Bag updated successfully'
+            ];
+        } catch (Exception $e) {
+            $this->db->rollBack();
+            error_log('Error in updateBag: ' . $e->getMessage());
+            return [
+                'success' => false,
+                'message' => 'System error occurred'
+            ];
+        }
+    }
+
+
+    public function deleteBag($bagId, $collectionId) {
+        // Start transaction
+        $this->db->beginTransaction();
+        
+        try {
+            // Get the bag record using bag_id and collection_id
+            $this->db->query('SELECT * FROM bag_usage_history WHERE bag_id = :bag_id AND collection_id = :collection_id');
+            $this->db->bind(':bag_id', $bagId);
+            $this->db->bind(':collection_id', $collectionId);
+            $bagRecord = $this->db->single();
+            
+            if (!$bagRecord) {
+                $this->db->rollBack();
+                return false;
+            }
+            
+            // Delete the bag record from bag_usage_history
+            $this->db->query('DELETE FROM bag_usage_history WHERE history_id = :history_id');
+            $this->db->bind(':history_id', $bagRecord->history_id);
+            
+            if (!$this->db->execute()) {
+                $this->db->rollBack();
+                return false;
+            }
+            
+            // Update the bag status in collection_bags back to active
+            $this->db->query('UPDATE collection_bags SET status = "active" WHERE bag_id = :bag_id');
+            $this->db->bind(':bag_id', $bagId);
+            
+            if (!$this->db->execute()) {
+                $this->db->rollBack();
+                return false;
+            }
+            
+            $this->db->commit();
+            return true;
+        } catch (Exception $e) {
+            $this->db->rollBack();
+            error_log('Error in deleteBag: ' . $e->getMessage());
+            return false;
+        }
+    }
+
+    public function completeCollection($collectionId) {
+        try {
+            $this->db->query('UPDATE collections SET status = :status, end_time = NOW() WHERE collection_id = :collection_id');
+            $this->db->bind(':status', 'Awaiting Inventory Addition');
+            $this->db->bind(':collection_id', $collectionId);
+            
+            return $this->db->execute();
+        } catch (Exception $e) {
+            error_log('Error in completeCollection: ' . $e->getMessage());
+            return false;
+        }
     }
 
 } 

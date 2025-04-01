@@ -187,7 +187,7 @@
                     </tr>
                 <?php else: ?>
                     <tr>
-                        <td colspan="5">No routes found</td>
+                        <td colspan="4">No routes found</td>
                     </tr>
                 <?php endif; ?>
                 </tbody>
@@ -212,7 +212,6 @@
                 <tbody>
                 <?php if ($data['driverDetails']):?>
                     <tr>
-                        <!-- <td colspan="6">No vehicles found</td> -->
                         <td><?php echo $data['driverDetails']->driver_id  ?></td>
                         <td><?php echo $data['driverDetails']->first_name  ?></td>
                         <td><?php echo $data['driverDetails']->last_name  ?></td>
@@ -220,7 +219,7 @@
                     </tr>
                     <?php else: ?>
                         <tr>
-                            <td colspan="5">No vehicle found</td>
+                            <td colspan="4">No driver found</td>
                         </tr>
                     <?php endif; ?>
                 </tbody>
@@ -242,7 +241,6 @@
                 <tbody>
                     <?php if ($data['vehicleDetails']):?>
                     <tr>
-                        <!-- <td colspan="6">No vehicles found</td> -->
                         <td><?php echo $data['vehicleDetails']->vehicle_id  ?></td>
                         <td><?php echo $data['vehicleDetails']->license_plate  ?></td>
                         <td><?php echo $data['vehicleDetails']->capacity  ?></td>
@@ -283,9 +281,7 @@
                     <th>Total Quantity</th>
                     <th>Arrival Time</th>
                     <th>Collected Time</th>
-                    <th>Fertilizer Deliveries</th>
                     <th>Approval Status</th>
-
                 </tr>
             </thead>
             <tbody>
@@ -298,7 +294,6 @@
                             <td><?php echo $supplier->quantity; ?> kg</td>
                             <td><?php echo $supplier->collection_time; ?></td>
                             <td><?php echo $supplier->collection_time; ?></td>
-                            <td>NO</td>
                             <td>
                                 <?php 
                                 if ($supplier->approval_status === 'APPROVED') {
@@ -314,52 +309,13 @@
                     <?php endforeach; ?>
                 <?php else: ?>
                     <tr>
-                        <td colspan="9">No suppliers found</td>
+                        <td colspan="7">No suppliers found</td>
                     </tr>
                 <?php endif; ?>
             </tbody>
         </table>
         </div>
     </div>
-
-     <div class="table-data">
-        <div class="order">
-            <div class="head">
-                <h3>Fertilizer Deliveries</h3>
-            </div>
-            <table id="driver-information">
-                <thead>
-                    <tr>
-                        <th>Fertilizer ID</th>
-                        <th>Fertilizer Name</th>
-                        <th>Fertilizer Type</th>
-                        <th>Total Quantity</th>
-                        <th>Number of Bags</th>
-                        <th>Supplier ID</th>
-                        <th>Status</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <tr>
-                        <!-- <td colspan="6">No drivers found</td> -->
-                            <td>F001</td>
-                            <td>Ishan</td>
-                            <td>CIC</td>
-                            <td>40 kg</td>
-                            <td>2</td>
-                            <td>S001</td>
-                            <td>Delivered</td>
-
-                    </tr>
-                </tbody>
-            </table>
-        </div>
-     </div>
-
-
-
-
-
 
 </main>
 

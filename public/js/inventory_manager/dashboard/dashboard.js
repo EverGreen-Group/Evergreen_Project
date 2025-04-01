@@ -1,8 +1,6 @@
 // SECTION 1
 //////////////////////////////////////////////////////////////////////////////////////////////////
 
-
-
 function reportModel() {
   const modal = document.getElementById("reportModal");
   const model2 = document.getElementById("reportModalContent");
@@ -39,7 +37,7 @@ function showCollectionBagDetails(collectionId) {
   showDummyData();
 
   // Fetch data from existing endpoint
-  fetch(`${URLROOT}/vehiclemanager/getCollectionDetails/${collectionId}`)
+  fetch(`${URLROOT}/manager/getCollectionDetails/${collectionId}`)
     .then((response) => {
       if (!response.ok) {
         throw new Error("Network response was not ok");
@@ -66,14 +64,14 @@ function showCollectionBagDetails(collectionId) {
                 <tr>
                     <td>${supplier}</td>
                     <td>${bags
-              .map(
-                (bag) => `
+                      .map(
+                        (bag) => `
                         <button class="tag-button">
                             Bag ${bag.bag_id} (Capacity: ${bag.capacity} kg, Filled: ${bag.filled_amount} kg)
                         </button>
                     `
-              )
-              .join(" ")}</td>
+                      )
+                      .join(" ")}</td>
                 </tr>
             `
         )

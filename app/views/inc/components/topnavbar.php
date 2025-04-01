@@ -32,10 +32,10 @@
             <li><a href="<?php echo URLROOT; ?>/profile">Profile</a></li>
 
             <?php if (RoleHelper::isAdmin()): ?>
-                <li><a href="<?php echo URLROOT; ?>/admin/dashboard">Admin Dashboard</a></li>
-                <li><a href="<?php echo URLROOT; ?>/admin/users">Supplier Manager Dashboard</a></li>
-                <li><a href="<?php echo URLROOT; ?>/admin/roles">Vehicle Manager Dashboard</a></li>
-                <li><a href="<?php echo URLROOT; ?>/admin/vehicles">Inventory Manager Dashboard</a></li>
+                <li><a href="<?php echo URLROOT; ?>/admin/">Admin Dashboard</a></li>
+                <li><a href="<?php echo URLROOT; ?>/suppliermanager/">Supplier Manager Dashboard</a></li>
+                <li><a href="<?php echo URLROOT; ?>/manager/">Vehicle Manager Dashboard</a></li>
+                <li><a href="<?php echo URLROOT; ?>/inventory/">Inventory Manager Dashboard</a></li>
             <?php endif; ?>
 
             <?php if (RoleHelper::hasRole(RoleHelper::SUPPLIER_MANAGER)): ?>
@@ -56,12 +56,8 @@
                 <li><a href="<?php echo URLROOT; ?>/user/dashboard">Orders</a></li>
             <?php endif; ?>
 
-            <?php if (RoleHelper::hasRole(RoleHelper::DRIVING_PARTNER)): ?>
-                <li><a href="<?php echo URLROOT; ?>/drivingpartner/dashboard">Partner Profile</a></li>
-            <?php endif; ?>
-
             <?php if (RoleHelper::hasRole(RoleHelper::VEHICLE_MANAGER)): ?>
-                <li><a href="<?php echo URLROOT; ?>/vehiclemanager/dashboard">Vehicle Manager Dashboard</a></li>
+                <li><a href="<?php echo URLROOT; ?>/manager/dashboard">Vehicle Manager Dashboard</a></li>
             <?php endif; ?>
 
             <?php if (RoleHelper::hasRole(RoleHelper::INVENTORY_MANAGER)): ?>

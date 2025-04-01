@@ -39,25 +39,6 @@
 
     </div>
 
-    <div class="action-buttons">
-        <a href="#" id="openCreateScheduleModal" class="btn btn-primary">
-            <i class='bx bx-plus'></i>
-            Create a Schedule
-        </a>
-        <a href="<?php echo URLROOT; ?>/reschedule/" class="btn btn-primary">
-            <i class='bx bx-calendar-edit'></i>
-            Manage Exceptions
-        </a>
-        <a href="#" id="openUpdateScheduleModal" class="btn btn-primary">
-            <i class='bx bx-analyse'></i>
-            Update Schedule
-        </a>
-        <a href="#" class="btn btn-primary">
-            <i class='bx bx-show'></i>
-            View Collection History
-        </a>
-    </div>
-
 
     <!-- Next Schedule Alert -->
     <div class="next-schedule-alert">
@@ -76,8 +57,6 @@
 
 
 
-
-    <!-- Replace the old box-info with new Statistics Cards -->
     <ul class="dashboard-stats">
         <!-- Vehicle Statistics -->
         <li class="stat-card">
@@ -87,10 +66,6 @@
                     <h3><?php echo $stats['vehicles']->total_vehicles; ?></h3>
                     <p>Total Vehicles</p>
                 </div>
-            </div>
-            <div class="stat-details">
-                <span class="active"><?php echo $stats['vehicles']->in_use; ?> In Use</span>
-                <span class="available"><?php echo $stats['vehicles']->available_vehicles; ?> Available</span>
             </div>
         </li>
 
@@ -103,10 +78,6 @@
                     <p>Total Drivers</p>
                 </div>
             </div>
-            <div class="stat-details">
-                <span class="active"><?php echo $stats['collections']->in_progress ?? 0; ?> On Duty</span>
-                <span class="available"><?php echo $stats['drivers']->available_drivers; ?> Available</span>
-            </div>
         </li>
 
         <!-- Collection Statistics -->
@@ -114,27 +85,9 @@
             <div class="stat-content">
                 <i class='bx bxs-package'></i>
                 <div class="stat-info">
-                    <h3><?php echo $stats['collections']->in_progress; ?></h3>
+                    <h3><?php echo (isset($stats['collections']->in_progress) ? ($stats['collections']->in_progress) : 0) ?></h3>
                     <p>Collections in Progress</p>
                 </div>
-            </div>
-            <div class="stat-details">
-                <span class="completed"><?php echo $stats['collections']->completed_today; ?> Completed Today</span>
-            </div>
-        </li>
-
-        <!-- Collection Bags Statistics -->
-        <li class="stat-card">
-            <div class="stat-content">
-                <i class='bx bx-shopping-bag'></i>
-                <div class="stat-info">
-                    <h3><?php echo $stats['bags']->total_bags; ?></h3>
-                    <p>Collection Bags</p>
-                </div>
-            </div>
-            <div class="stat-details">
-                <span class="active"><?php echo $stats['bags']->active_bags; ?> Active</span>
-                <span class="warning"><?php echo $stats['bags']->inactive_bags; ?> Inactive</span>
             </div>
         </li>
     </ul>
@@ -161,7 +114,7 @@
                     <tr>
                         <th>Collection ID</th>
                         <th>Route</th>
-                        <th>Shift Times</th>
+                        <th>Shift</th>
                         <th>Driver</th>
                         <th>Status</th>
                         <th>Details</th>
@@ -192,69 +145,6 @@
 
 
 
-    <div class="table-data">
-
-        <div class="order">
-            <div class="head">
-                <h3>Collection Schedules</h3>
-            </div>
-            <table>
-                <thead>
-                    <tr>
-                        <th>Schedule ID</th>
-                        <th>Route</th>
-                        <th>Driver</th>
-                        <th>Vehicle</th>
-                        <th>Shift</th>
-                        <th>Week</th>
-                        <th>Day</th>
-                        <th>Created At</th>
-                        <th>Status</th>
-                        <th>Actions</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <?php if(isset($data['schedules']) && !empty($data['schedules'])): ?>
-                        <?php foreach($data['schedules'] as $schedule): ?>
-                            <tr>
-                                <td>CS<?php echo str_pad($schedule->schedule_id, 3, '0', STR_PAD_LEFT); ?></td>
-                                <td><?php echo $schedule->route_name; ?></td>
-                                <td><?php echo $schedule->driver_name; ?></td>
-                                <td><?php echo $schedule->license_plate; ?></td>
-                                <td><?php echo $schedule->shift_name; ?> (<?php echo $schedule->start_time; ?> - <?php echo $schedule->end_time; ?>)</td>
-                                <td>Week <?php echo $schedule->week_number; ?></td>
-                                <td><?php echo $schedule->day; ?></td>
-                                <td><?php echo date('Y-m-d H:i', strtotime($schedule->created_at)); ?></td>
-                                <td>
-                                    <form action="<?php echo URLROOT; ?>/collectionschedules/toggleActive" method="POST" style="display: inline;">
-                                        <button type="submit" class="status-btn <?php echo $schedule->is_active ? 'active' : 'inactive'; ?>" style="background-color: var(--main)"> 
-                                            <?php echo $schedule->is_active ? 'Active' : 'Inactive'; ?>
-                                        </button>
-                                    </form>
-                                </td>
-                                <td>
-                                    <form action="<?php echo URLROOT; ?>/collectionschedules/delete" method="POST" style="display: inline;" 
-                                        onsubmit="return confirm('Are you sure you want to delete this schedule?');">
-                                        <input type="hidden" name="schedule_id" value="<?php echo $schedule->schedule_id; ?>">
-                                        <button type="submit" class="delete-btn">
-                                            <i class='bx bx-trash'></i>
-                                        </button>
-                                    </form>
-                                </td>
-                            </tr>
-                        <?php endforeach; ?>
-                    <?php else: ?>
-                        <tr>
-                            <td colspan="10" class="text-center">No schedules found</td>
-                        </tr>
-                    <?php endif; ?>
-                </tbody>
-            </table>
-        </div>
-    </div>
-
-
-
 
 <script>
 
@@ -263,7 +153,7 @@
         const date = `${year}-${month.toString().padStart(2, '0')}-${day.toString().padStart(2, '0')}`;
         
         // Make an AJAX call to fetch collections for the selected date
-        fetch(`<?php echo URLROOT; ?>/vehiclemanager/getCollectionsByDate?date=${date}`)
+        fetch(`<?php echo URLROOT; ?>/manager/getCollectionsByDate?date=${date}`)
             .then(response => {
                 if (!response.ok) {
                     throw new Error('Network response was not ok');
@@ -319,8 +209,6 @@
         <span class="close" onclick="closeModal('createScheduleModal')">&times;</span>
         <h2 style="margin-bottom: 30px;">Create New Schedule</h2>
 
-        <!-- <img src="<?php echo URLROOT; ?>/public/img/schedule_banner.jpg" alt="Banner" style="width: 100%; height: auto; margin-bottom: 20px;"> -->
-
         <form id="createScheduleForm" method="POST" action="<?php echo URLROOT; ?>/collectionschedules/create">
             <div style="display: flex; flex-direction: column; gap: 20px;">
                 <div class="form-group">
@@ -337,6 +225,14 @@
                     </select>
                 </div>
                 <div class="form-group">
+                    <label for="start_time">Start Time:</label>
+                    <input type="time" id="start_time" name="start_time" required>
+                </div>
+                <div class="form-group">
+                    <label for="end_time">End Time:</label>
+                    <input type="time" id="end_time" name="end_time" required>
+                </div>
+                <div class="form-group">
                     <label for="route">Route:</label>
                     <select id="route" name="route_id" required>
                         <option value="" disabled selected>Select a day first</option>
@@ -351,18 +247,11 @@
                     </select>
                 </div>
                 <div class="form-group">
-                    <label for="shift">Shift:</label>
-                    <select id="shift" name="shift_id" required>
-                        <?php foreach ($data['shifts'] as $shift): ?>
-                            <option value="<?= $shift->shift_id; ?>"><?= $shift->shift_name; ?></option>
+                    <label for="vehicle">Vehicle:</label>
+                    <select id="vehicle" name="vehicle_id" required>
+                        <?php foreach ($data['vehicles'] as $vehicle): ?>
+                            <option value="<?= $vehicle->vehicle_id; ?>"><?= $vehicle->license_plate; ?></option>
                         <?php endforeach; ?>
-                    </select>
-                </div>
-                <div class="form-group">
-                    <label for="week_number">Week:</label>
-                    <select style="margin-bottom: 30px;" id="week_number" name="week_number" required>
-                        <option value="1">Week 1</option>
-                        <option value="2">Week 2</option>
                     </select>
                 </div>
             </div>
@@ -371,65 +260,6 @@
     </div>
 </div>
 
-<!-- Update Schedule Modal -->
-<div id="updateScheduleModal" class="modal" onclick="event.stopPropagation(); closeModal('updateScheduleModal')">
-    <div class="modal-content" style="width: 80%; max-width: 600px;" onclick="event.stopPropagation();">
-        <span class="close" onclick="closeModal('updateScheduleModal')">&times;</span>
-        <h2 style="margin-bottom: 30px;">Update Schedule</h2>
-
-        <form id="editScheduleForm" method="POST" action="<?php echo URLROOT; ?>/collectionschedules/update">
-            <div style="display: flex; flex-direction: column; gap: 20px;">
-                <div class="form-group">
-                    <label for="schedule_id">Select Schedule:</label>
-                    <select id="schedule_id" name="schedule_id" required onchange="loadScheduleData(this.value)">
-                        <option value="">Select a schedule</option>
-                        <?php foreach ($data['schedules'] as $schedule): ?>
-                            <option value="<?= $schedule->schedule_id; ?>">
-                                Schedule <?= str_pad($schedule->schedule_id, 3, '0', STR_PAD_LEFT); ?>
-                            </option>
-                        <?php endforeach; ?>
-                    </select>
-                </div>
-
-                <!-- <div class="form-group">
-                    <label for="edit_route">Route:</label>
-                    <select id="edit_route" name="route_id" required>
-                        <?php foreach ($data['todayRoutes'] as $route): ?>
-                            <option value="<?= $route->route_id; ?>"><?= htmlspecialchars($route->route_name); ?></option>
-                        <?php endforeach; ?>
-                    </select>
-                </div> -->
-
-                <div class="form-group">
-                    <label for="edit_driver">Driver:</label>
-                    <select id="edit_driver" name="driver_id" required>
-                        <?php foreach ($data['drivers'] as $driver): ?>
-                            <option value="<?= $driver->driver_id; ?>"><?= htmlspecialchars($driver->first_name); ?></option>
-                        <?php endforeach; ?>
-                    </select>
-                </div>
-
-                <div class="form-group">
-                    <label for="edit_shift">Shift:</label>
-                    <select id="edit_shift" name="shift_id" required>
-                        <?php foreach ($data['shifts'] as $shift): ?>
-                            <option value="<?= $shift->shift_id; ?>"><?= $shift->shift_name; ?></option>
-                        <?php endforeach; ?>
-                    </select>
-                </div>
-
-                <div class="form-group">
-                    <label for="edit_week_number">Week:</label>
-                    <select id="edit_week_number" name="week_number" required>
-                        <option value="1">Week 1</option>
-                        <option value="2">Week 2</option>
-                    </select>
-                </div>
-            </div>
-            <button type="submit" class="btn-secondary">Update Schedule</button>
-        </form>
-    </div>
-</div>
 
 
 <style>

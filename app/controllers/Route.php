@@ -20,39 +20,21 @@ class Route extends Controller{
     }
 
     public function index(){
-
         $allRoutes = $this->routeModel->getAllUndeletedRoutes();
         $totalRoutes = $this->routeModel->getTotalRoutes();
+        $unassignedRoutes = $this->routeModel->getUnassignedRoutesCount();
         $totalActive = $this->routeModel->getTotalActiveRoutes();
         $totalInactive = $this->routeModel->getTotalInactiveRoutes();
-        $unallocatedSuppliers = $this->routeModel->getUnallocatedSuppliers();
 
-        $supplierCounts = $this->routeModel->getSupplierCountByDay();
-
-        // Prepare data for the chart
-        $supplierData = [
-            'Monday' => 0,
-            'Tuesday' => 0,
-            'Wednesday' => 0,
-            'Thursday' => 0,
-            'Friday' => 0,
-            'Saturday' => 0,
-            'Sunday' => 0,
-        ];
-
-        // Populate the supplier data based on the fetched results
-        foreach ($supplierCounts as $count) {
-            // Use the day name directly from the database
-            $supplierData[$count->day] = (int)$count->supplier_count;
-        }
+        $availableVehicles = $this->vehicleModel->getAllAvailableVehicles();
 
         $data = [
             'allRoutes' => $allRoutes,
             'totalRoutes' => $totalRoutes,
             'totalActive' => $totalActive,
             'totalInactive' => $totalInactive,
-            'unassignedSuppliersList' => $unallocatedSuppliers,
-            'supplierData' => $supplierData
+            'unassignedRoutes' => $unassignedRoutes,
+            'availableVehicles' => $availableVehicles
         ];
 
         $this->view('vehicle_manager/routes/v_create_route', $data);
@@ -68,19 +50,26 @@ class Route extends Controller{
         $vehicleId = $routeDetails->vehicle_id;
         $vehicleDetails = $this->vehicleModel->getVehicleByVehicleId($vehicleId);
         
+        // Fetch unassigned suppliers
+        $unassignedSuppliers = $this->routeModel->getUnallocatedSuppliers();
+
+        // Fetch route suppliers
+        $routeSuppliers = $this->routeModel->getRouteSuppliersByRouteId($routeId);
+
         // Prepare the data to be passed to the view
         $data = [
             'route_id' => $routeId,
             'route_name' => $routeDetails->route_name,
             'number_of_suppliers' => $routeDetails->number_of_suppliers,
             'vehicle_id' => $vehicleId,
-            'day' => $routeDetails->day,
-            'vehicleDetails' => $vehicleDetails
+            'vehicleDetails' => $vehicleDetails,
+            'remainingCapacity' => $routeDetails->remaining_capacity,
+            'unassignedSuppliers' => $unassignedSuppliers, // Pass unassigned suppliers to the view
+            'routeSuppliers' => $routeSuppliers // Pass route suppliers to the view
         ];
 
         // Load the view with the data
         $this->view('vehicle_manager/routes/v_manage_route', $data);
-
     }
 
 
@@ -88,25 +77,6 @@ class Route extends Controller{
     // JSON/AJAX FETCH METHODS HERE
     // ===================================================== 
 
-    public function getUnallocatedSuppliersByDay($day) {
-        // Ensure the day parameter is valid
-        if (!in_array($day, ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'])) {
-            echo json_encode(['success' => false, 'message' => 'Invalid day provided']);
-            return;
-        }
-    
-        // Fetch unallocated suppliers for the given day
-        $suppliers = $this->routeModel->getUnallocatedSuppliersByDay($day);
-        
-        // Check if the suppliers query was successful
-        if ($suppliers === false) {
-            echo json_encode(['success' => false, 'message' => 'Error fetching suppliers']);
-            return;
-        }
-    
-        // Return the response
-        echo json_encode(['success' => true, 'data' => $suppliers]);
-    }
 
     public function getRouteSuppliers($routeId) {
         // Fetch bag details from the model using the collection ID
@@ -116,6 +86,10 @@ class Route extends Controller{
         header('Content-Type: application/json');
         echo json_encode($routeSuppliers);
         exit();
+    }
+
+    public function getUnassignedSuppliers() {
+        
     }
 
 
@@ -152,40 +126,30 @@ class Route extends Controller{
             $supplierId = $_POST['supplier_id'];
             $routeId = $_POST['route_id'];
 
-            // Call the model method to remove the supplier from the route
             if ($this->routeModel->removeSupplierFromRoute($routeId, $supplierId)) {
                 $this->routeModel->updateRemainingCapacity($routeId, 'remove');
-                // Redirect or handle success
                 header('Location: ' . URLROOT . '/route/manageRoute/' . $routeId);
                 exit();
             } else {
-                // Handle error
-                // You can set an error message to display to the user
+
             }
         }
     }
 
     public function createRoute() {
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-            // Get the form data
             $routeName = trim($_POST['route_name']);
-            $routeDay = trim($_POST['route_day']);
             $vehicleId = trim($_POST['vehicle_id']);
 
-            // Validate the input
-            if (empty($routeName) || empty($routeDay) || empty($vehicleId)) {
-                // Handle validation error (e.g., set an error message)
-                // You can redirect back with an error message or set a session variable
+
+            if (empty($routeName) || empty($vehicleId)) {
                 return;
             }
 
-            // Call the model method to create the route
-            if ($this->routeModel->createRoute($routeName, $routeDay, $vehicleId)) {
-                // Redirect to the route management page or success page
-                header('Location: ' . URLROOT . '/route/'); // Adjust the redirect as needed
+            if ($this->routeModel->createRoute($routeName,$vehicleId)) {
+                header('Location: ' . URLROOT . '/route/'); 
                 exit();
             } else {
-                // Handle error (e.g., set an error message)
             }
         }
     }
@@ -230,6 +194,26 @@ class Route extends Controller{
                 'message' => $e->getMessage()
             ]);
             exit;
+        }
+    }
+
+    public function toggleLock() {
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            $routeId = $_POST['route_id'];
+
+            // Call the model method to toggle the lock state
+            if ($this->routeModel->toggleLock($routeId)) {
+                // Redirect back to the route management page with a success message
+                flash('route_message', 'Route lock state toggled successfully');
+                redirect('route/');
+            } else {
+                // Handle error
+                flash('route_message', 'Failed to toggle route lock state', 'error');
+                redirect('route/');
+            }
+        } else {
+            // If not a POST request, redirect or handle accordingly
+            redirect('route/');
         }
     }
 
