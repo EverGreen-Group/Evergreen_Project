@@ -60,8 +60,19 @@ class SupplierManager extends Controller {
     }
 
     public function index() {
+        $activeSuppliers = $this->chatModel->getActiveSuppliers(); // List of suppliers to chat with
+        $activeChats = $this->chatModel->getActiveChats($_SESSION['user_id']);
         // Get dashboard stats from the model
         // $stats = $this->vehicleManagerModel->getDashboardStats();
+
+        $data = [
+            'active_suppliers' => $activeSuppliers,
+            'active_chats' => $activeChats,
+            'user_id' => $_SESSION['user_id'],
+            'role' => 'supplier_manager',
+            'page_title' => 'Supplier Manager Dashboard'
+        ];
+        $this->view('supplier_manager/v_dashboard', $data);
 
         // // Fetch all necessary data for the dropdowns
         // $routes = $this->routeModel->getAllRoutes();

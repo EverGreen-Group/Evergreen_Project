@@ -56,27 +56,6 @@ class ChatServer implements MessageComponentInterface {
         }
     }
 
-    //new 
-    private function getUserName($userId) {
-        try {
-            $sql = "SELECT first_name, last_name, role_id FROM users WHERE user_id = :user_id";
-            $stmt = $this->chatModel->db->prepare($sql);
-            $stmt->bindValue(':user_id', $userId, PDO::PARAM_INT);
-            $stmt->execute();
-            $user = $stmt->fetch(PDO::FETCH_ASSOC);
-            
-            if ($user) {
-                $rolePrefix = ($user['role_id'] == 5) ? 'SUP' : 'MGR';
-                $userIdPadded = sprintf('%03d', $userId);
-                return htmlspecialchars($user['first_name'] . ' ' . $user['last_name']) . " ($rolePrefix$userIdPadded)";
-            }
-            return "User $userId";
-        } catch (PDOException $e) {
-            error_log("Error fetching user name for ID $userId: " . $e->getMessage());
-            return "User $userId";
-        }
-    }
-
     protected function handleInitialization(ConnectionInterface $conn, $data) {
         if (!isset($data['userId']) || !is_numeric($data['userId'])) {
             error_log("Missing or invalid userId in initialization");
@@ -113,7 +92,6 @@ class ChatServer implements MessageComponentInterface {
                 foreach ($messages as $message) {
                     $senderName = $this->getUserName($message->sender_id);
                     $receiverName = $this->getUserName($message->receiver_id);
-                    $isRead = $message->read_at ? 'Read: ' . $message->read_at : 'NULL';
                     $formattedMessages[] = [
                         'message_id' => $message->message_id,
                         'senderId' => $message->sender_id,
@@ -122,7 +100,7 @@ class ChatServer implements MessageComponentInterface {
                         'senderName' => $senderName,
                         'receiverName' => $receiverName,
                         'created_at' => $message->created_at,
-                        'read_at' => $isRead,
+                        'read_at' => $message->read_at ? 'Read: ' . $message->read_at : 'NULL',
                         'edited_at' => $message->edited_at ? 'Edited: ' . $message->edited_at : 'NULL',
                         'message_type' => $message->message_type ?? 'text'
                     ];
@@ -144,7 +122,7 @@ class ChatServer implements MessageComponentInterface {
             error_log("Error sending message history: " . $e->getMessage());
         }
     }
-    
+
     protected function handleChatMessage(ConnectionInterface $from, $data) {
         if (!isset($data['senderId']) || !isset($data['receiverId']) || !isset($data['message']) || 
             !is_numeric($data['senderId']) || !is_numeric($data['receiverId'])) {
@@ -171,7 +149,7 @@ class ChatServer implements MessageComponentInterface {
                     'message_id' => $result['message_id'],
                     'message_type' => 'text'
                 ];
-    
+
                 // Send to recipient if online
                 if (isset($this->userConnections[$receiverId])) {
                     $this->userConnections[$receiverId]->send(json_encode($messageData));
@@ -180,10 +158,10 @@ class ChatServer implements MessageComponentInterface {
                     // Log that the message was saved for an offline recipient
                     error_log("Message saved for offline recipient (Receiver ID: {$receiverId}, Message ID: {$result['message_id']})");
                 }
-    
+
                 // Send confirmation and history to sender with sender/receiver names and status
-                $senderName = $this->getUserName($senderId); // Helper method to get user name
-                $receiverName = $this->getUserName($receiverId); // Helper method to get user name
+                $senderName = $this->getUserName($senderId);
+                $receiverName = $this->getUserName($receiverId);
                 $isRead = isset($this->userConnections[$receiverId]) ? 'Read: ' . date('Y-m-d H:i:s') : 'NULL';
                 $from->send(json_encode([
                     'type' => 'sent',
@@ -212,32 +190,39 @@ class ChatServer implements MessageComponentInterface {
             $from->send(json_encode(['type' => 'error', 'message' => 'Invalid edit data']));
             return;
         }
-    
+
         try {
             $messageId = (int)$data['message_id'];
             $userId = (int)$data['user_id'];
             $newMessage = trim($data['new_message']);
-    
+
             $result = $this->chatModel->editMessage($messageId, $newMessage, $userId);
-    
+
             if ($result) {
                 $senderName = $this->getUserName($userId);
+                $editedAt = date('Y-m-d H:i:s');
+                
                 $from->send(json_encode([
                     'type' => 'edited',
                     'message_id' => $messageId,
                     'message' => $newMessage,
                     'senderName' => $senderName,
-                    'edited_at' => date('Y-m-d H:i:s')
+                    'edited_at' => $editedAt
                 ]));
+                
                 // Broadcast update to recipient if online
                 if (isset($this->userConnections[$userId])) {
-                    $this->userConnections[$userId]->send(json_encode([
-                        'type' => 'message_updated',
-                        'message_id' => $messageId,
-                        'message' => $newMessage,
-                        'senderName' => $senderName,
-                        'edited_at' => date('Y-m-d H:i:s')
-                    ]));
+                    $receiverId = $this->getReceiverIdForMessage($messageId, $userId);
+                    if (isset($this->userConnections[$receiverId])) {
+                        $this->userConnections[$receiverId]->send(json_encode([
+                            'type' => 'message_updated',
+                            'message_id' => $messageId,
+                            'message' => $newMessage,
+                            'senderName' => $senderName,
+                            'edited_at' => $editedAt
+                        ]));
+                        $this->sendMessageHistory($this->userConnections[$receiverId], $receiverId, $userId);
+                    }
                 }
             } else {
                 $from->send(json_encode(['type' => 'error', 'message' => 'Failed to edit message']));
@@ -255,27 +240,33 @@ class ChatServer implements MessageComponentInterface {
             $from->send(json_encode(['type' => 'error', 'message' => 'Invalid delete data']));
             return;
         }
-    
+
         try {
             $messageId = (int)$data['message_id'];
             $userId = (int)$data['user_id'];
-    
+
             $result = $this->chatModel->deleteMessage($messageId, $userId);
-    
+
             if ($result) {
                 $senderName = $this->getUserName($userId);
+                
                 $from->send(json_encode([
                     'type' => 'deleted',
                     'message_id' => $messageId,
                     'senderName' => $senderName
                 ]));
+                
                 // Broadcast deletion to recipient if online
                 if (isset($this->userConnections[$userId])) {
-                    $this->userConnections[$userId]->send(json_encode([
-                        'type' => 'message_deleted',
-                        'message_id' => $messageId,
-                        'senderName' => $senderName
-                    ]));
+                    $receiverId = $this->getReceiverIdForMessage($messageId, $userId);
+                    if (isset($this->userConnections[$receiverId])) {
+                        $this->userConnections[$receiverId]->send(json_encode([
+                            'type' => 'message_deleted',
+                            'message_id' => $messageId,
+                            'senderName' => $senderName
+                        ]));
+                        $this->sendMessageHistory($this->userConnections[$receiverId], $receiverId, $userId);
+                    }
                 }
             } else {
                 $from->send(json_encode(['type' => 'error', 'message' => 'Failed to delete message']));
@@ -318,5 +309,67 @@ class ChatServer implements MessageComponentInterface {
     public function onError(ConnectionInterface $conn, \Exception $e) {
         error_log("An error has occurred: {$e->getMessage()} (Resource ID: {$conn->resourceId})");
         $conn->close();
+    }
+
+    // Updated getUserName method to use only M_Chat data, removing PDO/Database dependency
+    private function getUserName($userId) {
+        try {
+            // Use M_Chat's existing methods to get user details
+            $messages = $this->chatModel->getMessages($userId, $userId); // Fetch any message involving the user
+            if (!empty($messages)) {
+                $user = $messages[0]; // Use the first message to get sender/receiver info
+                $roleId = $this->getRoleIdFromUserId($userId); // Helper method to get role
+                $name = $user->sender_name ?? $user->receiver_name; // Use sender or receiver name from M_Chat
+                if ($name) {
+                    $rolePrefix = ($roleId == 5) ? 'SUP' : 'MGR';
+                    $userIdPadded = sprintf('%03d', $userId);
+                    return htmlspecialchars($name) . " ($rolePrefix$userIdPadded)";
+                }
+            }
+
+            // Fallback: Use a default name if no messages are found (no Database/PDO needed)
+            return "User $userId";
+        } catch (\Exception $e) {
+            error_log("Error fetching user name for ID $userId: " . $e->getMessage());
+            return "User $userId";
+        }
+    }
+
+    // Updated getRoleIdFromUserId method to use only M_Chat data, removing PDO/Database dependency
+    private function getRoleIdFromUserId($userId) {
+        try {
+            // Use M_Chat's existing methods to infer role (e.g., from messages or supplier/manager lists)
+            $messages = $this->chatModel->getMessages($userId, $userId);
+            if (!empty($messages)) {
+                $user = $messages[0];
+                // Try to infer role from sender_name or receiver_name if possible
+                if (strpos($user->sender_name ?? '', 'SUP') !== false || strpos($user->receiver_name ?? '', 'SUP') !== false) {
+                    return 5; // SUPPLIER
+                }
+                return 1; // Default to MANAGER (role_id = 1) if not SUPPLIER
+            }
+
+            // Fallback: Default to SUPPLIER if no data is found
+            return 5; // Default to SUPPLIER (role_id = 5)
+        } catch (\Exception $e) {
+            error_log("Error fetching role for user ID $userId: " . $e->getMessage());
+            return 5; // Default to SUPPLIER
+        }
+    }
+
+    // Helper method to get the receiver ID for a message
+    private function getReceiverIdForMessage($messageId, $senderId) {
+        try {
+            $messages = $this->chatModel->getMessages($senderId, $senderId); // Fetch messages to find the receiver
+            foreach ($messages as $message) {
+                if ($message->message_id == $messageId) {
+                    return $message->receiver_id;
+                }
+            }
+            return $senderId; // Default to sender if receiver not found
+        } catch (\Exception $e) {
+            error_log("Error fetching receiver ID for message ID $messageId: " . $e->getMessage());
+            return $senderId; // Default to sender as fallback
+        }
     }
 }

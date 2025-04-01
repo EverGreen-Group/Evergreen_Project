@@ -3,17 +3,21 @@
   "description": "A tea factory collection management system",
   "config": {
     "platform": {
-      "php": "8.0.30"
+      "php": "8.2.12" 
+    },
+    "http": {
+        "timeout": 300
     }
   },
   "require": {
-    "endroid/qr-code": "2.0.*",
-    "cboden/ratchet": "0.4.*"
+    "endroid/qr-code": "^4.0", 
+    "bacon/bacon-qr-code": "^2.0",
+    "cboden/ratchet": "0.4.0"
   },
   "autoload": {
     "psr-4": {
-      "Simaak\\EvergreenProject\\": "src/",
-      "App\\": "app/"
+      "Simaak\\EvergreenProject\\": "app/",
+      "App\\": "app/" 
     }
   },
   "authors": [

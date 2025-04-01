@@ -44,6 +44,17 @@ class M_Chat {
         return $this->db->resultSet();
     }
 
+    public function getSupplierDetailsByUserId($user_id) {
+        $this->db->query("
+            SELECT * FROM users 
+            WHERE user_id = :user_id 
+            AND role_id = 5
+            LIMIT 1
+        ");
+        $this->db->bind(':user_id', $user_id);
+        return $this->db->single(); // Fetch one row as an object
+    }
+
     // Get messages between two users
     public function getMessages($senderId, $receiverId) {
         try {

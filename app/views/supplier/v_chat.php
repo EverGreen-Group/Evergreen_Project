@@ -3,6 +3,7 @@
 <?php require APPROOT . '/views/inc/components/topnavbar.php'; ?>
 
 <link rel="stylesheet" href="<?php echo URLROOT; ?>/css/chat.css">
+<link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
 
 <main>
     <div class="chat-container">
@@ -26,6 +27,10 @@
                 <?php endforeach; ?>
             </div>
         </div>
+        <?php
+var_dump($_SESSION['active_supplier']);
+var_dump($_SESSION['supplier_id']);
+?>
 
         <!-- Middle: Chat Area -->
         <div class="chat-area">
@@ -34,6 +39,7 @@
                 <i class='bx bx-message-square-dots'></i>
                 <p>Select a manager to start messaging</p>
             </div>
+            
 
             <!-- Chat Interface (Hidden initially) -->
             <div class="chat-interface" style="display: none;">
@@ -43,6 +49,7 @@
                         <span class="status">Active now</span>
                     </div>
                 </div>
+                
 
                 <!-- Chat Messages Section -->
                 <div class="messages" id="chat-messages">
@@ -135,6 +142,9 @@
                 case 'message_deleted':
                     deleteMessage(data.message_id);
                     break;
+                case 'error':
+                    console.error('WebSocket error:', data.message);
+                    break;
             }
         };
 
@@ -165,7 +175,7 @@
             console.log(`Reconnected to WebSocket server after attempt ${attempt}`);
             ws.send(JSON.stringify({
                 type: 'init',
-                userId: <?php echo $_SESSION['supplier_id']; ?>
+                userId: <?php echo $_SESSION['active_supplier']; ?>
             }));
         };
         ws.onclose = function() {
@@ -199,7 +209,7 @@
         const isSent = data.senderId == <?php echo $_SESSION['supplier_id']; ?>;
         const rowClass = isSent ? 'row justify-content-start' : 'row justify-content-end';
         const backgroundClass = isSent ? 'alert-primary' : 'alert-success';
-        const from = data.senderName || 'Me'; // Use 'Me' for sent, 'Manager' for received
+        const from = isSent ? 'Me' : 'Manager';
 
         messageDiv.className = `message ${isSent ? 'sent' : 'received'}`;
         messageDiv.dataset.msgId = data.message_id;
@@ -207,7 +217,7 @@
             <div class="${rowClass}">
                 <div class="col-sm-10">
                     <div class="shadow-sm alert ${backgroundClass}">
-                        <b>${isSent ? 'Me' : 'Manager'}: </b>${data.message}<br />
+                        <b>${from}: </b>${data.message}<br />
                         <div class="text-right">
                             <small><i>Sent: ${data.created_at} | ${data.read_at || 'NULL'} ${data.edited_at ? '| Edited: ' + data.edited_at : ''} (Type: ${data.message_type})</i></small>
                         </div>
@@ -218,6 +228,12 @@
         `;
         messagesDiv.appendChild(messageDiv);
         messagesDiv.scrollTop = messagesDiv.scrollHeight;
+
+        // Add event listeners for edit and delete buttons dynamically
+        const editBtn = messageDiv.querySelector('.edit-msg-btn');
+        const deleteBtn = messageDiv.querySelector('.delete-msg-btn');
+        if (editBtn) editBtn.addEventListener('click', handleEditClick);
+        if (deleteBtn) deleteBtn.addEventListener('click', handleDeleteClick);
     }
 
     // Update message in chat after editing
@@ -242,6 +258,12 @@
                     </div>
                 </div>
             `;
+
+            // Reattach event listeners after updating
+            const editBtn = messageDiv.querySelector('.edit-msg-btn');
+            const deleteBtn = messageDiv.querySelector('.delete-msg-btn');
+            if (editBtn) editBtn.addEventListener('click', handleEditClick);
+            if (deleteBtn) deleteBtn.addEventListener('click', handleDeleteClick);
         }
     }
 
@@ -280,6 +302,81 @@
             senderName: 'Me' // Placeholder; replace with actual name from server response
         });
         messageInput.value = '';
+    }
+
+    // Event Listeners for buttons
+    function handleEditClick(e) {
+        const messageDiv = e.target.closest('.alert');
+        const messageId = messageDiv.dataset.msgId;
+        const currentMessage = messageDiv.querySelector('b').nextSibling.textContent.trim(); // Fix: Target the message after <b>
+
+        document.getElementById('edit-message-text').value = currentMessage;
+        document.querySelector('.edit-message-modal').style.display = 'block';
+
+        document.getElementById('save-edit-btn').onclick = function() {
+            const newMessage = document.getElementById('edit-message-text').value;
+            if (!newMessage.trim()) {
+                alert('Message cannot be empty');
+                return;
+            }
+
+            fetch(`${URLROOT}/supplier/editMessage`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ message_id: messageId, new_message: newMessage })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    ws.send(JSON.stringify({
+                        type: 'edit',
+                        message_id: messageId,
+                        new_message: newMessage,
+                        user_id: <?php echo $_SESSION['supplier_id']; ?>
+                    }));
+                    document.querySelector('.edit-message-modal').style.display = 'none';
+                } else {
+                    alert('Failed to edit message: ' + (data.message || 'Server error'));
+                }
+            })
+            .catch(error => {
+                console.error('Error editing message:', error);
+                alert('Error editing message. Please try again.');
+            });
+        };
+
+        document.getElementById('cancel-edit-btn').onclick = function() {
+            document.querySelector('.edit-message-modal').style.display = 'none';
+        };
+    }
+
+    function handleDeleteClick(e) {
+        if (confirm('Are you sure you want to delete this message?')) {
+            const messageDiv = e.target.closest('.alert');
+            const messageId = messageDiv.dataset.msgId;
+            
+            fetch(`${URLROOT}/supplier/deleteMessage`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ message_id: messageId })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    ws.send(JSON.stringify({
+                        type: 'delete',
+                        message_id: messageId,
+                        user_id: <?php echo $_SESSION['supplier_id']; ?>
+                    }));
+                } else {
+                    alert('Failed to delete message: ' + (data.message || 'Server error'));
+                }
+            })
+            .catch(error => {
+                console.error('Error deleting message:', error);
+                alert('Error deleting message. Please try again.');
+            });
+        }
     }
 
     // Event Listeners
@@ -350,71 +447,6 @@
         });
         messagesContainer.scrollTop = messagesContainer.scrollHeight;
     }
-
-    // Edit message handler
-    document.addEventListener('click', function(e) {
-        if (e.target.closest('.edit-msg-btn')) {
-            const messageDiv = e.target.closest('.alert');
-            const messageId = messageDiv.dataset.msgId;
-            const currentMessage = messageDiv.querySelector('p').textContent.replace(/^[^:]+:\s*/, '');
-
-            document.getElementById('edit-message-text').value = currentMessage;
-            document.querySelector('.edit-message-modal').style.display = 'block';
-
-            document.getElementById('save-edit-btn').onclick = function() {
-                const newMessage = document.getElementById('edit-message-text').value;
-                fetch(`${URLROOT}/supplier/editMessage`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ message_id: messageId, new_message: newMessage })
-                })
-                .then(response => response.json())
-                .then(data => {
-                    if (data.success) {
-                        ws.send(JSON.stringify({
-                            type: 'edit',
-                            message_id: messageId,
-                            new_message: newMessage,
-                            user_id: <?php echo $_SESSION['supplier_id']; ?>
-                        }));
-                        document.querySelector('.edit-message-modal').style.display = 'none';
-                    }
-                })
-                .catch(error => console.error('Error editing message:', error));
-            };
-
-            document.getElementById('cancel-edit-btn').onclick = function() {
-                document.querySelector('.edit-message-modal').style.display = 'none';
-            };
-        }
-    });
-
-    // Delete message handler
-    document.addEventListener('click', function(e) {
-        if (e.target.closest('.delete-msg-btn')) {
-            if (confirm('Are you sure you want to delete this message?')) {
-                const messageDiv = e.target.closest('.alert');
-                const messageId = messageDiv.dataset.msgId;
-                
-                fetch(`${URLROOT}/supplier/deleteMessage`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ message_id: messageId })
-                })
-                .then(response => response.json())
-                .then(data => {
-                    if (data.success) {
-                        ws.send(JSON.stringify({
-                            type: 'delete',
-                            message_id: messageId,
-                            user_id: <?php echo $_SESSION['supplier_id']; ?>
-                        }));
-                    }
-                })
-                .catch(error => console.error('Error deleting message:', error));
-            }
-        }
-    });
 
     // Search functionality
     document.getElementById('manager-search')?.addEventListener('input', function(e) {
