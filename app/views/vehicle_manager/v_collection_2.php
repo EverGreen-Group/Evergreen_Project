@@ -4,6 +4,9 @@
 <?php require APPROOT . '/views/inc/components/sidebar_vehicle_manager.php'; ?>
 <!-- Top nav bar -->
 <?php require APPROOT . '/views/inc/components/topnavbar.php'; ?>
+<link rel="stylesheet" href="<?php echo URLROOT; ?>/css/vehicle_manager/vehicle/dashboard_stats.css">
+
+<link rel="stylesheet" href="<?php echo URLROOT; ?>/css/vehicle_manager/collection/collection.css">
 <script>
     const URLROOT = '<?php echo URLROOT; ?>';
     const UPLOADROOT = '<?php echo UPLOADROOT; ?>';
@@ -11,11 +14,13 @@
 
 <script async defer src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAC8AYYCYuMkIUAjQWsAwQDiqbMmLa-7eo&callback=initMap"></script>
 
-
-
-
-
-
+<script>
+function cancelSupplier(recordId) {
+    if (confirm('Are you sure you want to mark this supplier as No Show? This action cannot be undone.')) {
+        window.location.href = '<?php echo URLROOT; ?>/vehicledriver/cancelSupplierCollection/' + recordId;
+    }
+}
+</script>
 
 <!-- MAIN -->
 <main>
@@ -27,250 +32,81 @@
 
     </div>
 
+    <ul class="dashboard-stats">
+        <li class="stat-card">
+            <div class="stat-content">
+                <i class='bx bxs-group'></i>
+                <div class="stat-info">
+                    <h3><?php echo $data['totalSuppliers']; ?></h3>
+                    <p>Total Suppliers</p>
+                </div>
+            </div>
+        </li>
 
-    <!-- Box Info -->
-    <ul class="box-info">
-        <li>
-            <i class='bx bxs-car'></i>
-            <span class="text">
-                <h3 id="totalSuppliers"><?php echo $data['totalSuppliers']; ?></h3>
-                <p>Total Suppliers</p>
-                <small>Available</small>
-            </span>
+        <li class="stat-card">
+            <div class="stat-content">
+                <i class='bx bx-basket'></i>
+                <div class="stat-info">
+                    <h3><?php echo $data['vehicleRemainingCapacity']; ?></h3>
+                    <p>Remaining Capacity</p>
+                </div>
+            </div>
         </li>
-        <li>
-            <i class='bx bxs-user'></i>
-            <span class="text">
-                <h3 id="suppliersLeft"><?php echo $data['remainingSuppliers']; ?></h3>
-                <p>Suppliers Left</p>
-                <small>Available</small>
-            </span>
+
+        <li class="stat-card">
+            <div class="stat-content">
+                <i class='bx bx-map-pin'></i>
+                <div class="stat-info">
+                    <h3><?php echo $data['routeDetails']->route_id; ?></h3>
+                    <p>Route ID</p>
+                </div>
+            </div>
         </li>
-        <li>
-            <i class='bx bxs-car'></i>
-            <span class="text">
-                <h3 id="currentCapacity"><?php echo $data['vehicleRemainingCapacity']; ?> kg</h3>
-                <p>Capacity Left</p>
-                <small>Available</small>
-            </span>
+
+        <li class="stat-card">
+            <div class="stat-content">
+                <i class='bx bx-user'></i>
+                <div class="stat-info">
+                    <h3><?php echo $data['driverDetails']->driver_id; ?></h3>
+                    <p>Driver ID</p>
+                </div>
+            </div>
+        </li>
+
+        <li class="stat-card">
+            <div class="stat-content">
+                <i class='bx bx-car'></i>
+                <div class="stat-info">
+                    <h3><?php echo $data['vehicleDetails']->vehicle_id; ?></h3>
+                    <p>Vehicle ID</p>
+                </div>
+            </div>
         </li>
     </ul>
 
     <?php
-    // Check if latitude and longitude are not null and the collection status is either 'In Progress' or 'Pending'
-    if (!is_null($data['vehicleDetails']->latitude) && 
-        !is_null($data['vehicleDetails']->longitude && 
-        ($collectionDetails->status === 'In Progress' || $collectionDetails->status === 'Pending'))): 
+    // Check if latitude and longitude are not null
+    // and the collection status is either 'In Progress' or 'Pending'
+    //if (!is_null($data['vehicleDetails']->latitude) && 
+    //    !is_null($data['vehicleDetails']->longitude) &&
+    //   ($collectionDetails->status === 'In Progress' || $collectionDetails->status === 'Pending')): 
     ?>
 
-    <!-- Map Section -->
-    <div class="table-data">
-        <div class="order">
-            <div class="head">
-                <h3>Current Driver Location</h3>
-            </div>
-            <div id="map" style="height: 400px; width: 100%;"></div>
-        </div>
-    </div>
-
-    <script>
-
-    let map;
-    let directionsService;
-    let directionsRenderer;
-    let markers = [];
-
-    // Map related functions
-    function clearMarkers() {
-        markers.forEach((marker) => marker.setMap(null));
-        markers = [];
-    }
-
-    var suppliersForMap = <?= json_encode($data['suppliersForMap']) ?>;
-
-    function initMap() {
-        // Set the center of the map based on the vehicle's location
-        var vehicleLocation = {
-            lat: <?= $data['vehicleDetails']->latitude ?>,
-            lng: <?= $data['vehicleDetails']->longitude ?>
-        };
-
-        var factoryLocation = {
-            lat: 6.2178314,
-            lng: 80.2550494
-        };
-
-        // Initialize the map centered at the vehicle's location
-        var map = new google.maps.Map(document.getElementById('map'), {
-            zoom: 13, // Adjust zoom as needed
-            center: vehicleLocation
-        });
-
-        // Create a marker for the vehicle location with a custom color
-        var vehicleMarker = new google.maps.Marker({
-            position: vehicleLocation,
-            map: map,
-            title: 'Vehicle Location',
-            icon: {
-                url: "https://maps.google.com/mapfiles/kml/shapes/cabs.png",
-                scaledSize: new google.maps.Size(30, 30) 
-            }
-        });
-
-        // Create a marker for the factory location with a different color
-        var factoryMarker = new google.maps.Marker({
-            position: factoryLocation,
-            map: map,
-            title: 'Factory Location',
-            icon: {
-                url: "https://maps.google.com/mapfiles/kml/shapes/ranger_station.png", 
-                scaledSize: new google.maps.Size(30, 30) 
-            }
-        });
-
-        // Loop through suppliersForMap and create markers
-        suppliersForMap.forEach(function(supplier) {
-            // Determine the icon based on approval status
-            var iconUrl;
-            if (supplier.approval_status === 'APPROVED') {
-                iconUrl = "http://maps.google.com/mapfiles/ms/icons/orange-dot.png"; // Approved marker color
-            } else if (supplier.approval_status === 'PENDING') {
-                iconUrl = "http://maps.google.com/mapfiles/ms/icons/yellow-dot.png"; // Pending marker color
-            } else {
-                iconUrl = "http://maps.google.com/mapfiles/ms/icons/green-dot.png"; // Default marker color for other statuses
-            }
-
-            // Create a marker for each supplier
-            var marker = new google.maps.Marker({
-                position: supplier.location,
-                map: map,
-                title: supplier.name,
-                icon: {
-                    url: iconUrl 
-                }
-            });
-        });
-    }
-    </script>
-
-    <?php else: ?>
-        <div class="table-data">
-            <div class="order">
-            <p>Driver location is not available or the collection has ended.</p>
-            </div>
-        </div>
-    <?php endif; ?>
 
 
 
-     <div class="table-data">
-        <div class="order">
-            <div class="head">
-                <h3>Route Information</h3>
-            </div>
-            <table id="driver-information">
-                <thead>
-                    <tr>
-                        <th>Route ID</th>
-                        <th>Route Name</th>
-                        <th>Set Day</th>
-                        <th>Number of Suppliers</th>
-                    </tr>
-                </thead>
-                <tbody>
-                <?php if ($data['routeDetails']):?>
-                    <tr>
-                        <td><?php echo $data['routeDetails']->route_id  ?></td>
-                        <td><?php echo $data['routeDetails']->route_name  ?></td>
-                        <td><?php echo $data['routeDetails']->day  ?></td>
-                        <td><?php echo $data['routeDetails']->number_of_suppliers  ?></td>
-                    </tr>
-                <?php else: ?>
-                    <tr>
-                        <td colspan="4">No routes found</td>
-                    </tr>
-                <?php endif; ?>
-                </tbody>
-            </table>
-        </div>
-     </div>
-
-     <div class="table-data">
-        <div class="order">
-            <div class="head">
-                <h3>Driver Information</h3>
-            </div>
-            <table id="driver-information">
-                <thead>
-                    <tr>
-                        <th>Driver ID</th>
-                        <th>First Name</th>
-                        <th>Last Name</th>
-                        <th>Contact Number</th>
-                    </tr>
-                </thead>
-                <tbody>
-                <?php if ($data['driverDetails']):?>
-                    <tr>
-                        <td><?php echo $data['driverDetails']->driver_id  ?></td>
-                        <td><?php echo $data['driverDetails']->first_name  ?></td>
-                        <td><?php echo $data['driverDetails']->last_name  ?></td>
-                        <td><?php echo $data['driverDetails']->contact_number  ?></td>
-                    </tr>
-                    <?php else: ?>
-                        <tr>
-                            <td colspan="4">No driver found</td>
-                        </tr>
-                    <?php endif; ?>
-                </tbody>
-            </table>
-        </div>
-        <div class="order">
-            <div class="head">
-                <h3>Vehicle Information</h3>
-            </div>
-            <table id="vehicle-information">
-                <thead>
-                    <tr>
-                        <th>Vehicle ID</th>
-                        <th>License Plate</th>
-                        <th>Capacity</th>
-                        <th>Color</th>
-                        <th>Type</th>
-                </thead>
-                <tbody>
-                    <?php if ($data['vehicleDetails']):?>
-                    <tr>
-                        <td><?php echo $data['vehicleDetails']->vehicle_id  ?></td>
-                        <td><?php echo $data['vehicleDetails']->license_plate  ?></td>
-                        <td><?php echo $data['vehicleDetails']->capacity  ?></td>
-                        <td><?php echo $data['vehicleDetails']->color  ?></td>
-                        <td><?php echo $data['vehicleDetails']->vehicle_type  ?></td>
-                    </tr>
-                    <?php else: ?>
-                        <tr>
-                            <td colspan="5">No vehicle found</td>
-                        </tr>
-                    <?php endif; ?>
-                </tbody>
-            </table>
-        </div>
-
-     
-     </div>
-
-    
-    <div class="head-title">
-        <div class="left">
-            <h1 style="margin-top:40px;">Collection Information</h1>
-        </div>
-    </div>
-
-
-    <div class="table-data">
+<div class="table-data">
     <div class="order">
         <div class="head">
             <h3>Collection Supplier Record</h3>
+            <!-- <a href="<?php echo URLROOT; ?>/manager/viewInactiveDrivers" class="btn btn-primary">
+                <i class='bx bx-show'></i>
+                View Driver Location
+            </a> -->
+            <!-- <a href="<?php echo URLROOT; ?>/manager/endCollection" class="btn btn-tertiary">
+                <i class='bx bx-block'></i>
+                End Collection
+            </a> -->
         </div>
         <table id="driver-information">
             <thead>
@@ -280,8 +116,8 @@
                     <th>Contact Number</th>
                     <th>Total Quantity</th>
                     <th>Arrival Time</th>
-                    <th>Collected Time</th>
-                    <th>Approval Status</th>
+                    <th>Status</th>
+                    <th>Actions</th>
                 </tr>
             </thead>
             <tbody>
@@ -289,33 +125,66 @@
                     <?php foreach ($collectionSuppliersDetails as $supplier): ?>
                         <tr>
                             <td><?php echo $supplier->supplier_id; ?></td>
-                            <td><?php echo $supplier->supplier_name; ?></td>
+                            <td><?php echo $supplier->first_name . ' ' . $supplier->last_name; ?></td>
                             <td><?php echo $supplier->contact_number; ?></td>
                             <td><?php echo $supplier->quantity; ?> kg</td>
-                            <td><?php echo $supplier->collection_time; ?></td>
-                            <td><?php echo $supplier->collection_time; ?></td>
+                            <td><?php echo isset($supplier->collection_time) ? $supplier->collection_time : 'Not Collected Yet'; ?></td>
                             <td>
                                 <?php 
-                                if ($supplier->approval_status === 'APPROVED') {
+                                if ($supplier->status === 'Collected') {
                                     echo '<i class="bx bxs-check-circle" style="color: green;font-size:25px;"></i>';
-                                } elseif ($supplier->approval_status === 'PENDING') {
+                                } elseif ($supplier->status === 'Added') {
                                     echo '<i class="bx bxs-hourglass" style="color: orange;font-size:25px;"></i>';
                                 } else {
                                     echo '<i class="bx bxs-x-circle" style="color: red;font-size:25px;"></i>';
                                 }
                                 ?>
                             </td>
+                            <td>
+                                <div style="display: flex; gap: 5px;">
+                                    <!-- View Profile button with icon only -->
+                                    <a 
+                                        href="<?php echo URLROOT; ?>/suppliers/view/<?php echo $supplier->supplier_id; ?>" 
+                                        class="btn btn-tertiary" 
+                                        style="display: flex; align-items: center; justify-content: center; width: 40px; height: 40px; border: none; background: none;"
+                                    >
+                                        <i class='bx bxs-user-detail' style="font-size: 24px; color:#2196F3;"></i>
+                                    </a>
+                                    
+                                    <!-- Cancel button with icon only -->
+                                    <?php if ($supplier->status === 'Collected' || $supplier->status === 'No Show'): ?>
+                                        <button 
+                                            class="btn btn-tertiary" 
+                                            style="display: flex; align-items: center; justify-content: center; width: 40px; height: 40px; border: none; background: none; cursor: not-allowed;" 
+                                            disabled
+                                        >
+                                            <i class='bx bx-x-circle' style="font-size: 24px; color:#cccccc;"></i>
+                                        </button>
+                                    <?php else: ?>
+                                        <form action="<?php echo URLROOT; ?>/vehicledriver/cancelSupplierCollection/<?php echo $supplier->record_id; ?>" method="POST" style="margin: 0;"> 
+                                            <button 
+                                                type="submit" 
+                                                class="btn btn-tertiary" 
+                                                style="display: flex; align-items: center; justify-content: center; width: 40px; height: 40px; border: none; background: none;" 
+                                                onclick="return confirm('Are you sure you want to cancel this collection?');"
+                                            >
+                                                <i class='bx bx-x-circle' style="font-size: 24px; color:red;"></i>
+                                            </button>
+                                        </form>
+                                    <?php endif; ?>
+                                </div>
+                            </td>
                         </tr>
                     <?php endforeach; ?>
                 <?php else: ?>
                     <tr>
-                        <td colspan="7">No suppliers found</td>
+                        <td colspan="8">No suppliers found</td>
                     </tr>
                 <?php endif; ?>
             </tbody>
         </table>
-        </div>
     </div>
+</div>
 
 </main>
 
@@ -345,6 +214,12 @@
     transform: translateY(-2px); /* Slight lift effect on hover */
 }
 </style>
+
+
+
+<!-- TEST styles 
+MUST IMPORT IT LATER -->
+
 
 
 

@@ -44,22 +44,6 @@ class Collection extends Controller{
 
         // MAP SECTION
 
-        $suppliers = $this->routeModel->getSuppliersInCollection($collectionId);
-        
-        // Format suppliers for the map
-        $suppliersForMap = array_map(function($supplier) {
-            return [
-                'id' => $supplier->supplier_id,
-                'name' => $supplier->full_name, // Changed from supplier_name to full_name
-                'location' => [
-                    'lat' => (float)$supplier->latitude,
-                    'lng' => (float)$supplier->longitude
-                ],
-                'average_collection' => $supplier->average_collection,
-                'approval_status' => $supplier->approval_status
-
-            ];
-        }, $suppliers);
 
 
         $data = [
@@ -70,8 +54,7 @@ class Collection extends Controller{
             'totalSuppliers' => $totalSuppliers,
             'collectionDetails' => $collectionDetails,
             'remainingSuppliers' => $remainingSuppliers,
-            'vehicleRemainingCapacity' => $vehicleRemainingCapacity,
-            'suppliersForMap' => $suppliersForMap
+            'vehicleRemainingCapacity' => $vehicleRemainingCapacity
         ];
 
         $this->view('vehicle_manager/v_collection_2', $data);

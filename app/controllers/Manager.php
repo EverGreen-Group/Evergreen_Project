@@ -89,27 +89,61 @@ class Manager extends Controller
     {
         // Get dashboard stats from the model
         $stats = $this->vehicleManagerModel->getDashboardStats();
+        $stats['collections'] = (array)$stats['collections'];
+
+        // Retrieve filter parameters from the GET request
+        $collection_id = isset($_GET['collection_id']) ? $_GET['collection_id'] : null;
+        $schedule_id = isset($_GET['schedule_id']) ? $_GET['schedule_id'] : null;
+        $status = isset($_GET['status']) ? $_GET['status'] : null;
+        $start_date = isset($_GET['start_date']) ? $_GET['start_date'] : null;
+        $end_date = isset($_GET['end_date']) ? $_GET['end_date'] : null;
+        $min_quantity = isset($_GET['min_quantity']) ? $_GET['min_quantity'] : null;
+        $max_quantity = isset($_GET['max_quantity']) ? $_GET['max_quantity'] : null;
+        $bags_added = isset($_GET['bags_added']) ? $_GET['bags_added'] : null;
+
+        // Fetch collections based on filters
+        if ($collection_id || $schedule_id || $status || $start_date || $end_date || $min_quantity || $max_quantity || $bags_added !== null) {
+            $allCollections = $this->collectionModel->getFilteredCollections(
+                $collection_id, 
+                $schedule_id, 
+                $status, 
+                $start_date, 
+                $end_date, 
+                $min_quantity, 
+                $max_quantity, 
+                $bags_added
+            );
+        } else {
+            // Otherwise, fetch all collections
+            $allCollections = $this->collectionModel->getAllCollections();
+        }
 
         // Fetch all necessary data for the dropdowns
-        $routes = $this->routeModel->getAllRoutes();
-        $drivers = $this->driverModel->getUnassignedDrivers();
-        $vehicles = $this->vehicleModel->getAllAvailableVehicles();
         $schedules = $this->scheduleModel->getAllSchedules();
         $collectionSchedules = $this->scheduleModel->getSchedulesForNextWeek(); 
-        $ongoingCollections = $this->collectionModel->getOngoingCollections();
         $todayRoutes = $this->routeModel->getTodayAssignedRoutes();
 
-        // Pass the stats and data for the dropdowns to the view
-        $this->view('vehicle_manager/v_collection', [
+        $data = [
             'stats' => $stats,
-            'routes' => $routes,
-            'drivers' => $drivers,
-            'vehicles' => $vehicles,
             'schedules' => $schedules,
-            'ongoing_collections' => $ongoingCollections,
+            'all_collections' => $allCollections,
             'collectionSchedules' => $collectionSchedules,
-            'todayRoutes' => $todayRoutes 
-        ]);
+            'todayRoutes' => $todayRoutes,
+            // Pass the filter values back to the view to maintain state
+            'filters' => [
+                'collection_id' => $collection_id,
+                'schedule_id' => $schedule_id,
+                'status' => $status,
+                'start_date' => $start_date,
+                'end_date' => $end_date,
+                'min_quantity' => $min_quantity,
+                'max_quantity' => $max_quantity,
+                'bags_added' => $bags_added
+            ]
+        ];
+
+        // Pass the stats and data for the dropdowns to the view
+        $this->view('vehicle_manager/v_collection_0', $data);
     }
 
     public function schedule()

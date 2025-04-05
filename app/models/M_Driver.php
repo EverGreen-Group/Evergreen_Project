@@ -167,12 +167,11 @@ class M_Driver{
 
     public function getDriverDetails($driverId) {
         $this->db->query('
-            SELECT d.driver_id,d.employee_id,d.status AS availability,d.is_deleted,d.collections_count,d.deliveries_count,e.*,u.nic,u.date_of_birth,u.email,u.first_name,u.last_name
+            SELECT d.*,p.*
             FROM drivers d
+            JOIN profiles p on d.profile_id = p.profile_id
             JOIN users u ON
-            d.user_id = u.user_id
-            JOIN employees e ON
-            e.user_id = u.user_id
+            p.user_id = u.user_id
             WHERE d.driver_id = :driver_id
         ');
 
