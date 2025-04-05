@@ -34,6 +34,15 @@ table {
     margin-top: 20px;
 }
 
+.chart-container-2 {
+    width: 100%;
+    height: auto;
+    margin-top: 50px;
+    background-color: var(--light);
+    border-radius: 20px;
+    padding: 20px;
+}
+
 thead {
     background-color: #f8f8f8;
 }
