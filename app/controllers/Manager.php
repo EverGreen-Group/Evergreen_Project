@@ -45,6 +45,7 @@ class Manager extends Controller
     private $employeeModel;
     private $bagModel;
     private $supplierModel;
+    private $appointmentModel;
 
     //----------------------------------------
     // CONSTRUCTOR
@@ -80,6 +81,7 @@ class Manager extends Controller
         $this->bagModel = $this->model('M_CollectionBag');
         $this->supplierApplicationModel = $this->model('M_SupplierApplication');
         $this->supplierModel = $this->model('M_Supplier');
+        $this->appointmentModel = $this->model('M_Appointment');
     }
 
     //----------------------------------------
@@ -2284,6 +2286,57 @@ class Manager extends Controller
         }
     }
 
+
+
+
+    public function appointments() {
+        $this->requireLogin(); // Assuming session check
+        
+        $managerId = $_SESSION['manager_id'];
+    
+        $timeSlots = $this->appointmentModel->getManagerTimeSlots($managerId);
+        $incomingRequests = $this->appointmentModel->getIncomingRequests($managerId);
+        $acceptedAppointments = $this->appointmentModel->getAcceptedAppointments($managerId);
+    
+        $this->view('supplier_manager/v_appointments', [
+            'timeSlots' => $timeSlots,
+            'incomingRequests' => $incomingRequests,
+            'acceptedAppointments' => $acceptedAppointments
+        ]);
+    }
+
+
+    public function createSlot() {
+        if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+            $data = [
+                'manager_id' => $_SESSION['manager_id'],
+                'date' => trim($_POST['date']),
+                'start_time' => trim($_POST['start_time']),
+                'end_time' => trim($_POST['end_time'])
+            ];
+    
+            if ($this->appointmentModel->createSlot($data)) {
+                flash('slot_message', 'Time slot created successfully.');
+                redirect('manager/appointments');
+            } else {
+                redirect('manager/createSlot');
+            }
+        } else {
+            // Load the form view for creating a slot
+            $data = [
+                'date' => '',
+                'start_time' => '',
+                'end_time' => ''
+            ];
+    
+            $this->view('supplier_manager/v_create_slot', $data);
+        }
+    }
+    
+    
+
+    
+
     public function suppliers() {
         // Get all suppliers from the database
         $suppliers = $this->supplierModel->getAllSuppliers();
@@ -2302,7 +2355,27 @@ class Manager extends Controller
         $this->view('supplier_manager/v_complaints', $data);
     }
 
+    public function respondRequest() {
+        if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+            $requestId = trim($_POST['request_id']);
+            $action = trim($_POST['action']);
 
+            if ($action === 'accept') {
+                // Accept the request and log it
+                if ($this->appointmentModel->acceptRequest($requestId)) {
+                    flash('request_message', 'Request accepted successfully.');
+                } else {
+                    flash('request_message', 'Failed to accept the request.');
+                }
+            } elseif ($action === 'reject') {
+                // Reject the request
+                $this->appointmentModel->rejectRequest($requestId);
+                flash('request_message', 'Request rejected successfully.');
+            }
+
+            redirect('manager/appointments'); // Redirect back to appointments
+        }
+    }
 
 }
 ?>

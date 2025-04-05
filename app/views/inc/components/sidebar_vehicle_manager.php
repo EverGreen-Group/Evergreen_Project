@@ -11,6 +11,12 @@
 					<span class="text">Applications</span>
 				</a>
 			</li>
+      <li class="<?php echo (basename($_SERVER['REQUEST_URI']) == 'index') ? 'active' : ''; ?>">
+				<a href="<?php echo URLROOT; ?>/manager/appointments">
+        <i class='bx bxs-calendar-check' ></i>
+					<span class="text">Appointments</span>
+				</a>
+			</li>
 			<li class="<?php echo (basename($_SERVER['REQUEST_URI']) == 'suppliers') ? 'active' : ''; ?>">
 				<a href="<?php echo URLROOT; ?>/manager/suppliers">
 					<i class='bx bxs-network-chart'></i>
