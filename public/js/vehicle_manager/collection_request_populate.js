@@ -1,9 +1,9 @@
 // Constants
 const API_ENDPOINTS = {
-  GET_COLLECTIONS: `${URLROOT}/vehiclemanager/getCollectionRequests`,
+  GET_COLLECTIONS: `${URLROOT}/manager/getCollectionRequests`,
   GET_COLLECTION_DETAILS: (id) =>
-    `${URLROOT}/vehiclemanager/getCollectionDetails/${id}`,
-  APPROVE_COLLECTION: `${URLROOT}/vehiclemanager/approveCollection`,
+    `${URLROOT}/manager/getCollectionDetails/${id}`,
+  APPROVE_COLLECTION: `${URLROOT}/manager/approveCollection`,
 };
 
 // Utility functions
@@ -66,7 +66,7 @@ const createBagCard = (bag, urlRoot) => `
     </div>
     <div class="bag-card-actions">
       <button class="btn btn-small btn-outline-primary" 
-              onclick="window.location.href='${urlRoot}/vehiclemanager/bagDetails/${bag.bag_id}'">
+              onclick="window.location.href='${urlRoot}/manager/bagDetails/${bag.bag_id}'">
         <i class='bx bx-show'></i> View
       </button>
       <button class="btn btn-small btn-outline-danger" onclick="CollectionManager.removeBag(${bag.bag_id})">
@@ -147,7 +147,7 @@ class CollectionManager {
         <div class="detail-row">
           <span class="label">Route:</span>
           <span class="value">
-            <a href="${URLROOT}/vehiclemanager/routeDetails/${
+            <a href="${URLROOT}/manager/routeDetails/${
       collection.route_id
     }" class="detail-link">
               ${collection.route_name}
@@ -160,7 +160,7 @@ class CollectionManager {
         <div class="detail-row">
           <span class="label">Driver:</span>
           <span class="value">
-            <a href="${URLROOT}/vehiclemanager/driverDetails/${
+            <a href="${URLROOT}/manager/driverDetails/${
       collection.driver_id
     }" class="detail-link">
               ${collection.first_name} ${collection.last_name} (${

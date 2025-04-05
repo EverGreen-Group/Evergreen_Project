@@ -1,45 +1,18 @@
 <?php require APPROOT . '/views/inc/components/header.php'; ?>
 
-<!-- Add Leaflet CSS and JS -->
-<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-
-<!-- Add this JavaScript block right after header -->
-<script>
-    // Define URLROOT constant
-    const URLROOT = '<?= URLROOT ?>';
-
-    function approveApplication(applicationId) {
-        if (confirm('Are you sure you want to approve this application? This action cannot be undone.')) {
-            window.location.href = `${URLROOT}/suppliermanager/approveApplication/${applicationId}`;
-        }
-    }
-
-    function rejectApplication(applicationId) {
-        if (confirm('Are you sure you want to reject this application? This action cannot be undone.')) {
-            window.location.href = `${URLROOT}/suppliermanager/rejectApplication/${applicationId}`;
-        }
-    }
-
-    function confirmSupplierRole(applicationId) {
-        if (confirm('Are you sure you want to assign the supplier role to this user?')) {
-            window.location.href = `${URLROOT}/suppliermanager/confirmSupplierRole/${applicationId}`;
-        }
-    }
-</script>
-
 <!-- Side bar -->
-<?php require APPROOT . '/views/inc/components/sidebar_suppliermanager.php'; ?>
+<?php require APPROOT . '/views/inc/components/sidebar_vehicle_manager.php'; ?>
 <!-- Top nav bar -->
 <?php require APPROOT . '/views/inc/components/topnavbar.php'; ?>
 
 <!-- MAIN -->
 <main>
+    <!-- <?php print_r($_SESSION); print_r($data) ?> -->
     <div class="head-title">
         <div class="left">
             <h1>Application Details</h1>
             <ul class="breadcrumb">
-                <li><a href="<?= URLROOT ?>/suppliermanager/applications">Applications</a></li>
+                <li><a href="<?= URLROOT ?>/manager/applications">Applications</a></li>
                 <li><i class='bx bx-chevron-right'></i></li>
                 <li><a class="active" href="#">View Application</a></li>
             </ul>
@@ -51,6 +24,9 @@
         <div class="order">
             <div class="head">
                 <h3>Application #APP<?= str_pad($data['application']['application_id'], 4, '0', STR_PAD_LEFT) ?></h3>
+                <div class="status-badge <?= strtolower($data['application']['status']) ?>">
+                    <?= ucfirst(str_replace('_', ' ', $data['application']['status'])) ?>
+                </div>
             </div>
             <div class="section-content">
                 <div class="info-row">
@@ -58,41 +34,128 @@
                     <span class="value"><?= date('F j, Y', strtotime($data['application']['created_at'])) ?></span>
                 </div>
                 <div class="info-row">
-                    <span class="label">Status:</span>
-                    <span class="value"><?= ucfirst($data['application']['status']) ?></span>
+                    <span class="label">Email:</span>
+                    <span class="value"><?= $data['application']['email'] ?></span>
                 </div>
-                <?php if ($data['application']['status'] === 'pending'): ?>
-                    <div class="action-buttons">
-                        <button class="btn-approve" onclick="approveApplication('<?= $data['application']['application_id'] ?>')">
-                            <i class='bx bx-check'></i> Approve
+                
+                <div class="info-row">
+                    <?php if (!empty($data['application']['reviewed_by'])): ?>
+                        <span class="label">Assigned To:</span>
+                        <span class="value"><?= htmlspecialchars($data['application']['manager_name']) ?></span>
+                    <?php else: ?>
+                        <span class="label">Assigned To:</span>
+                        <span class="value">Not assigned</span>
+                    <?php endif; ?>
+                </div>
+                
+                <div class="action-buttons">
+                    <?php if ($data['application']['status'] === 'pending' && is_null($data['application']['reviewed_by'])): ?>
+                        <button class="btn-assign" onclick="window.location.href='<?php echo URLROOT; ?>/manager/assignApplication/<?php echo $data['application']['application_id']; ?>'">
+                            Assign to Me
                         </button>
-                        <button class="btn-reject" onclick="rejectApplication('<?= $data['application']['application_id'] ?>')">
-                            <i class='bx bx-x'></i> Reject
-                        </button>
-                    </div>
-                <?php endif; ?>
+                    <?php elseif ($data['application']['reviewed_by'] == $_SESSION['manager_id']): ?>
+                        <?php if ($data['application']['status'] === 'under_review'): ?>
+                            <button class="btn-primary" onclick="window.location.href='<?php echo URLROOT; ?>/manager/approveApplication/<?php echo $data['application']['application_id']; ?>'">
+                             <i class='bx bx-user-check'></i>Approve and Create a Supplier Profile
+                            </button>
+                            <button class="btn-tertiary" onclick="window.location.href='<?php echo URLROOT; ?>/manager/rejectApplication/<?php echo $data['application']['application_id']; ?>'">
+                            <i class='bx bx-user-x'></i>Reject
+                            </button>
+                        <?php endif; ?>
+                    <?php else: ?>
+                        <div class="info-message">
+                            <i class='bx bx-info-circle'></i>
+                            This application is assigned to another reviewer.
+                        </div>
+                    <?php endif; ?>
+                </div>
             </div>
         </div>
     </div>
 
-    <!-- Contact Information -->
+    <!-- Personal Information -->
     <div class="table-data">
         <div class="order">
             <div class="head">
-                <h3>Contact Information</h3>
+                <h3>Personal Information</h3>
             </div>
             <div class="section-content">
                 <div class="info-row">
-                    <span class="label">Primary Phone:</span>
-                    <span class="value"><?= $data['application']['primary_phone'] ?></span>
+                    <span class="label">Full Name:</span>
+                    <span class="value"><?= $data['profile']->first_name . ' ' . $data['profile']->last_name ?></span>
                 </div>
                 <div class="info-row">
-                    <span class="label">Secondary Phone:</span>
-                    <span class="value"><?= $data['application']['secondary_phone'] ?? 'Not provided' ?></span>
+                    <span class="label">NIC:</span>
+                    <span class="value"><?= $data['profile']->nic ?></span>
                 </div>
                 <div class="info-row">
-                    <span class="label">WhatsApp:</span>
-                    <span class="value"><?= $data['application']['whatsapp_number'] ?? 'Not provided' ?></span>
+                    <span class="label">Date of Birth:</span>
+                    <span class="value"><?= date('F j, Y', strtotime($data['profile']->date_of_birth)) ?></span>
+                </div>
+                <div class="info-row">
+                    <span class="label">Contact Number:</span>
+                    <span class="value"><?= $data['profile']->contact_number ?></span>
+                </div>
+                <?php if (!empty($data['profile']->emergency_contact)): ?>
+                <div class="info-row">
+                    <span class="label">Emergency Contact:</span>
+                    <span class="value"><?= $data['profile']->emergency_contact ?></span>
+                </div>
+                <?php endif; ?>
+                <div class="info-row">
+                    <span class="label">Address:</span>
+                    <span class="value">
+                        <?= $data['profile']->address_line1 ?><br>
+                        <?php if (!empty($data['profile']->address_line2)): ?>
+                            <?= $data['profile']->address_line2 ?><br>
+                        <?php endif; ?>
+                        <?= $data['profile']->city ?>
+                    </span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Cultivation Information -->
+    <div class="table-data">
+        <div class="order">
+            <div class="head">
+                <h3>Tea Cultivation Details</h3>
+            </div>
+            <div class="section-content">
+                <div class="info-row">
+                    <span class="label">Cultivation Area:</span>
+                    <span class="value"><?= $data['cultivation']->tea_cultivation_area ?> acres</span>
+                </div>
+                <div class="info-row">
+                    <span class="label">Plant Age:</span>
+                    <span class="value"><?= $data['cultivation']->plant_age ?> years</span>
+                </div>
+                <div class="info-row">
+                    <span class="label">Monthly Production:</span>
+                    <span class="value"><?= $data['cultivation']->monthly_production ?> kg</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Location Information -->
+    <div class="table-data">
+        <div class="order">
+            <div class="head">
+                <h3>Location Information</h3>
+            </div>
+            <div class="section-content">
+                <div class="info-row">
+                    <span class="label">Latitude:</span>
+                    <span class="value"><?= $data['location']->latitude ?></span>
+                </div>
+                <div class="info-row">
+                    <span class="label">Longitude:</span>
+                    <span class="value"><?= $data['location']->longitude ?></span>
+                </div>
+                <div class="map-container">
+                    <div id="map" style="height: 300px; width: 100%; border-radius: 8px;"></div>
                 </div>
             </div>
         </div>
@@ -114,7 +177,7 @@
                     <span class="value"><?= $data['bank_info']->bank_name ?></span>
                 </div>
                 <div class="info-row">
-                    <span class="label">Branch Name:</span>
+                    <span class="label">Branch:</span>
                     <span class="value"><?= $data['bank_info']->branch_name ?></span>
                 </div>
                 <div class="info-row">
@@ -129,330 +192,147 @@
         </div>
     </div>
 
-    <!-- Property Details -->
-    <div class="table-data">
-        <div class="order">
-            <div class="head">
-                <h3>Property Details</h3>
-            </div>
-            <div class="section-content">
-                <div class="info-row">
-                    <span class="label">Total Land Area:</span>
-                    <span class="value"><?= $data['property']->total_land_area ?> acres</span>
-                </div>
-                <div class="info-row">
-                    <span class="label">Tea Cultivation Area:</span>
-                    <span class="value"><?= $data['property']->tea_cultivation_area ?> acres</span>
-                </div>
-                <div class="info-row">
-                    <span class="label">Elevation:</span>
-                    <span class="value"><?= $data['property']->elevation ?> meters</span>
-                </div>
-                <div class="info-row">
-                    <span class="label">Slope:</span>
-                    <span class="value"><?= ucfirst($data['property']->slope) ?></span>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Water Sources -->
-    <div class="table-data">
-        <div class="order">
-            <div class="head">
-                <h3>Water Sources</h3>
-            </div>
-            <div class="section-content">
-                <?php foreach ($data['water_sources'] as $source): ?>
-                    <div class="info-row">
-                        <span class="value"><?= $source->source_type ?></span>
-                    </div>
-                <?php endforeach; ?>
-            </div>
-        </div>
-    </div>
-
-    <!-- Tea Information -->
-    <div class="table-data">
-        <div class="order">
-            <div class="head">
-                <h3>Tea Information</h3>
-            </div>
-            <div class="section-content">
-                <div class="info-row">
-                    <span class="label">Plant Age:</span>
-                    <span class="value"><?= $data['tea_details']->plant_age ?> years</span>
-                </div>
-                <div class="info-row">
-                    <span class="label">Monthly Production:</span>
-                    <span class="value"><?= $data['tea_details']->monthly_production ?> kg</span>
-                </div>
-                <div class="info-row">
-                    <span class="label">Tea Varieties:</span>
-                    <span class="value">
-                        <?php 
-                        $varieties = array_map(function($variety) {
-                            return $variety->variety_name;
-                        }, $data['tea_varieties']);
-                        echo implode(', ', $varieties);
-                        ?>
-                    </span>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Infrastructure -->
-    <div class="table-data">
-        <div class="order">
-            <div class="head">
-                <h3>Infrastructure</h3>
-            </div>
-            <div class="section-content">
-                <div class="info-row">
-                    <span class="label">Access Road:</span>
-                    <span class="value"><?= $data['infrastructure']->access_road ?></span>
-                </div>
-                <div class="info-row">
-                    <span class="label">Vehicle Access:</span>
-                    <span class="value"><?= $data['infrastructure']->vehicle_access ?></span>
-                </div>
-                <div class="info-row">
-                    <span class="label">Available Structures:</span>
-                    <span class="value">
-                        <?php 
-                        $structures = array_map(function($structure) {
-                            return $structure->structure_type;
-                        }, $data['structures']);
-                        echo implode(', ', $structures);
-                        ?>
-                    </span>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Address Information -->
-    <div class="table-data">
-        <div class="order">
-            <div class="head">
-                <h3>Address Information</h3>
-            </div>
-            <div class="section-content">
-                <div class="address-container">
-                    <div class="address-details">
-                        <div class="info-row">
-                            <span class="label">Address Line 1:</span>
-                            <span class="value"><?= $data['address']->line1 ?></span>
-                        </div>
-                        <?php if (!empty($data['address']->line2)): ?>
-                            <div class="info-row">
-                                <span class="label">Address Line 2:</span>
-                                <span class="value"><?= $data['address']->line2 ?></span>
-                            </div>
-                        <?php endif; ?>
-                        <div class="info-row">
-                            <span class="label">City:</span>
-                            <span class="value"><?= $data['address']->city ?></span>
-                        </div>
-                        <div class="info-row">
-                            <span class="label">District:</span>
-                            <span class="value"><?= $data['address']->district ?></span>
-                        </div>
-                        <div class="info-row">
-                            <span class="label">Postal Code:</span>
-                            <span class="value"><?= $data['address']->postal_code ?></span>
-                        </div>
-                        <div class="info-row">
-                            <span class="label">Coordinates:</span>
-                            <span class="value"><?= $data['address']->latitude ?>, <?= $data['address']->longitude ?></span>
-                        </div>
-                    </div>
-                    <div id="map"></div>
-                </div>
-            </div>
-        </div>
-    </div>
-
     <!-- Documents -->
     <div class="table-data">
         <div class="order">
             <div class="head">
                 <h3>Submitted Documents</h3>
             </div>
-            <div class="section-content">
-                <div class="documents-grid">
-                    <?php if (!empty($data['documents'])): ?>
-                        <?php foreach ($data['documents'] as $document): ?>
-                            <div class="document-card">
-                                <div class="document-content">
-                                    <?php 
-                                    $fileExtension = strtolower(pathinfo($document->file_path, PATHINFO_EXTENSION));
-                                    if (in_array($fileExtension, ['jpg', 'jpeg', 'png', 'gif'])): 
-                                    ?>
-                                        <img src="<?= URLROOT . '/' . $document->file_path ?>" alt="Document Preview" class="document-preview">
-                                    <?php else: ?>
-                                        <i class='bx bxs-file-pdf document-icon'></i>
-                                    <?php endif; ?>
-                                </div>
-                                <div class="document-info">
-                                    <span class="document-type"><?= ucwords(str_replace('_', ' ', $document->document_type)) ?></span>
-                                    <a href="<?= URLROOT . '/' . $document->file_path ?>" target="_blank" class="btn-view">
-                                        <i class='bx bx-show'></i> View
-                                    </a>
-                                </div>
+            <div class="documents-grid">
+                <?php if (!empty($data['documents'])): ?>
+                    <?php foreach ($data['documents'] as $document): ?>
+                        <div class="document-card">
+                            <div class="document-content">
+                                <?php 
+                                $fileExt = pathinfo($document->file_path, PATHINFO_EXTENSION);
+                                if (in_array(strtolower($fileExt), ['jpg', 'jpeg', 'png', 'gif'])): 
+                                ?>
+                                    <img src="<?= URLROOT . '/' . $document->file_path ?>" class="document-preview" alt="<?= ucfirst(str_replace('_', ' ', $document->document_type)) ?>">
+                                <?php else: ?>
+                                    <i class='bx bxs-file-pdf document-icon'></i>
+                                <?php endif; ?>
                             </div>
-                        <?php endforeach; ?>
-                    <?php else: ?>
-                        <div class="no-documents">
-                            <p>No documents have been submitted yet.</p>
+                            <div class="document-info">
+                                <span class="document-type"><?= ucfirst(str_replace('_', ' ', $document->document_type)) ?></span>
+                                <a href="<?= URLROOT . '/' . $document->file_path ?>" class="btn-view" target="_blank">
+                                    <i class='bx bx-show'></i> View Document
+                                </a>
+                            </div>
                         </div>
-                    <?php endif; ?>
-                </div>
+                    <?php endforeach; ?>
+                <?php else: ?>
+                    <div class="no-documents">
+                        <i class='bx bx-file'></i>
+                        <p>No documents found for this application.</p>
+                    </div>
+                <?php endif; ?>
             </div>
         </div>
     </div>
 </main>
 
 <script>
-// Define URLROOT if not already defined
-const URLROOT = '<?= URLROOT ?>';
-
-function approveApplication(applicationId) {
-    if (confirm('Are you sure you want to approve this application? This action cannot be undone.')) {
-        window.location.href = `${URLROOT}/suppliermanager/approveApplication/${applicationId}`;
+    // Initialize map when the page loads
+    function initMap() {
+        const lat = <?= $data['location']->latitude ?>;
+        const lng = <?= $data['location']->longitude ?>;
+        
+        const mapOptions = {
+            center: { lat: lat, lng: lng },
+            zoom: 20
+        };
+        
+        const map = new google.maps.Map(document.getElementById('map'), mapOptions);
+        
+        // Add marker for the supplier location
+        new google.maps.Marker({
+            position: { lat: lat, lng: lng },
+            map: map,
+            title: 'Supplier Location'
+        });
     }
-}
-
-function rejectApplication(applicationId) {
-    if (confirm('Are you sure you want to reject this application? This action cannot be undone.')) {
-        window.location.href = `${URLROOT}/suppliermanager/rejectApplication/${applicationId}`;
-    }
-}
-
-function confirmSupplierRole(applicationId) {
-    if (confirm('Are you sure you want to assign the supplier role to this user?')) {
-        window.location.href = `${URLROOT}/suppliermanager/confirmSupplierRole/${applicationId}`;
-    }
-}
-
-// Add this temporarily to debug
-<script>
-    console.log("Latitude:", <?= $data['address']->latitude ?>);
-    console.log("Longitude:", <?= $data['address']->longitude ?>);
 </script>
 
-// Map initialization
-<script>
-    // Add this before map initialization
-    if (typeof L === 'undefined') {
-        console.error('Leaflet is not loaded!');
-    } else {
-        console.log('Leaflet is loaded successfully');
-    }
-
-    // Initialize the map with Sri Lanka's center coordinates as default
-    const defaultLat = 7.8731;
-    const defaultLng = 80.7718;
-    
-    // Get coordinates from PHP, with fallback to default
-    const lat = <?= !empty($data['address']->latitude) ? $data['address']->latitude : 'defaultLat' ?>;
-    const lng = <?= !empty($data['address']->longitude) ? $data['address']->longitude : 'defaultLng' ?>;
-
-    // Initialize the map
-    const map = L.map('map').setView([lat, lng], 13);
-
-    // Add OpenStreetMap tiles
-    L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-    }).addTo(map);
-
-    // Add marker
-    const marker = L.marker([lat, lng]).addTo(map);
-    
-    // Add popup
-    marker.bindPopup(`<b>Property Location</b><br>${<?= json_encode($data['address']->line1) ?>}`).openPopup();
-
-    // Force map to update its size container
-    setTimeout(() => {
-        map.invalidateSize();
-    }, 100);
-</script>
+<script async defer
+    src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAC8AYYCYuMkIUAjQWsAwQDiqbMmLa-7eo&callback=initMap">
 </script>
 
 <style>
-    /* Table Data Container */
-    .table-data {
-        margin-bottom: 24px;
-    }
-
-    .order {
-        background: #fff;
-        border-radius: 8px;
-        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
-    }
-
-    /* Section Headers */
-    .head {
-        padding: 16px 20px;
-        border-bottom: 1px solid #f0f0f0;
-    }
-
-    .head h3 {
-        font-size: 16px;
-        font-weight: 600;
-        color: #2c3e50;
-    }
-
-    /* Content Sections */
+    /* Section Styles */
     .section-content {
-        padding: 8px 0;
+        padding: 20px;
     }
 
-    /* Info Rows */
     .info-row {
         display: flex;
-        align-items: center;
-        padding: 12px 20px;
-        transition: background-color 0.2s;
-    }
-
-    .info-row:hover {
-        background-color: #f8f9fa;
+        margin-bottom: 12px;
+        align-items: flex-start;
     }
 
     .info-row .label {
-        flex: 0 0 200px;
-        font-size: 14px;
-        color: #6c757d;
+        width: 150px;
+        font-weight: 500;
+        color: #4b5563;
     }
 
     .info-row .value {
         flex: 1;
-        font-size: 14px;
-        color: #2c3e50;
+        color: #1f2937;
+    }
+
+    .reviewer {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .reviewer-avatar {
+        width: 24px;
+        height: 24px;
+        border-radius: 50%;
+        object-fit: cover;
+    }
+
+    .rejection-reason {
+        color: #ef4444;
+        font-style: italic;
     }
 
     /* Action Buttons */
     .action-buttons {
         display: flex;
-        gap: 12px;
-        padding: 16px 20px;
-        border-top: 1px solid #f0f0f0;
+        gap: 10px;
+        margin-top: 20px;
     }
 
-    .btn-approve,
-    .btn-reject {
-        display: inline-flex;
+    .action-buttons button {
+        display: flex;
         align-items: center;
-        gap: 8px;
+        gap: 6px;
         padding: 8px 16px;
         border: none;
-        border-radius: 6px;
+        border-radius: 4px;
         font-size: 14px;
-        font-weight: 500;
         cursor: pointer;
-        transition: all 0.2s;
+        transition: background-color 0.2s;
+    }
+
+    .btn-assign {
+        background-color: #3b82f6;
+        color: white;
+    }
+
+    .btn-assign:hover {
+        background-color: #2563eb;
+    }
+
+    .btn-review {
+        background-color: #8b5cf6;
+        color: white;
+    }
+
+    .btn-review:hover {
+        background-color: #7c3aed;
     }
 
     .btn-approve {
@@ -471,6 +351,21 @@ function confirmSupplierRole(applicationId) {
 
     .btn-reject:hover {
         background-color: #dc2626;
+    }
+
+    .info-message {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 10px 16px;
+        background-color: #e0f2fe;
+        border-radius: 4px;
+        color: #0369a1;
+    }
+
+    .info-message i {
+        font-size: 18px;
+        color: #3498db;
     }
 
     /* Document Grid Styles */
@@ -570,138 +465,24 @@ function confirmSupplierRole(applicationId) {
         color: #92400e;
     }
 
+    .status-badge.under-review {
+        background-color: #e0f2fe;
+        color: #0369a1;
+    }
+
     .status-badge.approved {
         background-color: #d1fae5;
         color: #065f46;
     }
 
-    .status-badge.rejected {
+    .status-badge.rejected, .status-badge.auto-rejected {
         background-color: #fee2e2;
         color: #991b1b;
     }
 
-    /* Breadcrumb Refinements */
-    .breadcrumb {
-        display: flex;
-        align-items: center;
-        gap: 8px;
-        margin-top: 8px;
-    }
-
-    .breadcrumb a {
-        color: #6b7280;
-        text-decoration: none;
-        font-size: 14px;
-        transition: color 0.2s;
-    }
-
-    .breadcrumb a:hover {
-        color: #3b82f6;
-    }
-
-    .breadcrumb a.active {
-        color: #2c3e50;
-        pointer-events: none;
-    }
-
-    .breadcrumb i {
-        color: #9ca3af;
-        font-size: 14px;
-    }
-
-    /* Add to your existing style block */
-    .address-container {
-        display: flex;
-        gap: 20px;
-        padding: 20px;
-        min-height: 300px;
-    }
-
-    .address-details {
-        flex: 1;
-    }
-
-    #map {
-        flex: 1;
-        min-height: 300px;
-        height: 300px;
-        width: 100%;
-        border-radius: 8px;
-        border: 1px solid #e5e7eb;
-        z-index: 1;
-    }
-
-    /* Make it responsive */
-    @media (max-width: 768px) {
-        .address-container {
-            flex-direction: column;
-        }
-        
-        #map {
-            height: 250px;
-        }
-    }
-
-    /* Update these styles in your CSS section */
-
-    /* Table styles */
-    table {
-        width: 100%;
-        border-collapse: collapse;
-        margin-top: 1rem;
-        background-color: white;
-    }
-
-    thead tr {
-        background-color: #f8f9fa;
-        border-bottom: 2px solid #e9ecef;
-    }
-
-    th {
-        color: #2c3e50;
-        font-weight: 600;
-        padding: 12px 15px;
-        text-align: left;
-    }
-
-    td {
-        padding: 12px 15px;
-        text-align: left;
-        border-bottom: 1px solid #e9ecef;
-        color: #000000;
-    }
-
-    tbody tr {
-        background-color: white;
-    }
-
-    tbody tr:hover {
-        background-color: #f8f9fa;
-    }
-
-    /* Update button style to match approve button */
-    .btn-confirm {
-        display: inline-flex;
-        align-items: center;
-        gap: 8px;
-        padding: 8px 16px;
-        background-color: #10b981;
-        color: white;
-        border: none;
-        border-radius: 6px;
-        font-size: 14px;
-        font-weight: 500;
-        cursor: pointer;
-        text-decoration: none;
-        transition: background-color 0.2s;
-    }
-
-    .btn-confirm:hover {
-        background-color: #059669;
-    }
-
-    .btn-confirm i {
-        font-size: 16px;
+    /* Map container */
+    .map-container {
+        margin-top: 15px;
     }
 </style>
 

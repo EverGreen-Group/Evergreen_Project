@@ -22,11 +22,11 @@
 <main>
     <div class="head-title">
         <div class="left">
-            <h1>Update Vehicle</h1>
+            <h1>Add Vehicle</h1>
             <ul class="breadcrumb">
                 <li><a href="<?= URLROOT ?>/manager/v_new_vehicle">Vehicles</a></li>
                 <li><i class='bx bx-chevron-right'></i></li>
-                <li><a class="active" href="#">Update Vehicle</a></li>
+                <li><a class="active" href="#">Create Vehicle</a></li>
             </ul>
         </div>
     </div>
@@ -38,7 +38,7 @@
         </div>
     <?php endif; ?>
     
-    <form method="POST" action="<?php echo URLROOT; ?>/manager/updateVehicle/<?php echo $vehicle->vehicle_id; ?>" enctype="multipart/form-data">
+    <form method="POST" action="<?php echo URLROOT; ?>/manager/createVehicle" enctype="multipart/form-data">
         <div class="table-data">
             <div class="order">
                 <div class="head">
@@ -47,46 +47,54 @@
                 <div class="section-content">
                     <div class="info-row">
                         <label class="label" for="license_plate">License Plate:</label>
-                        <input type="text" id="license_plate" name="license_plate" class="form-control" value="<?php echo htmlspecialchars($vehicle->license_plate); ?>" readonly>
+                        <input type="text" id="license_plate" name="license_plate" class="form-control" required>
                     </div>
                     <div class="info-row">
                         <label class="label" for="status">Status:</label>
                         <select id="status" name="status" class="form-control" required>
-                            <option value="Available" <?php echo $vehicle->status == 'Available' ? 'selected' : ''; ?>>Available</option>
-                            <option value="In Use" <?php echo $vehicle->status == 'In Use' ? 'selected' : ''; ?>>In Use</option>
-                            <option value="Maintenance" <?php echo $vehicle->status == 'Maintenance' ? 'selected' : ''; ?>>Maintenance</option>
+                            <option value="Available">Available</option>
+                            <option value="In Use">In Use</option>
+                            <option value="Maintenance">Maintenance</option>
                         </select>
                     </div>
                     <div class="info-row">
                         <label class="label" for="capacity">Capacity:</label>
-                        <input type="number" id="capacity" name="capacity" class="form-control" value="<?php echo htmlspecialchars($vehicle->capacity); ?>" readonly>
+                        <input type="number" id="capacity" name="capacity" class="form-control" step="0.01" required>
                     </div>
                     <div class="info-row">
                         <label class="label" for="vehicle_type">Vehicle Type:</label>
-                        <input type="text" id="vehicle_type" name="vehicle_type" class="form-control" value="<?php echo htmlspecialchars($vehicle->vehicle_type); ?>" readonly>
+                        <select id="vehicle_type" name="vehicle_type" class="form-control" required>
+                            <option value="">Select Vehicle Type</option>
+                            <option value="Truck">Truck</option>
+                            <option value="Van">Van</option>
+                            <option value="Car">Car</option>
+                            <option value="Bus">Bus</option>
+                            <option value="Three-Wheeler">Three-Wheeler</option>
+                            <option value="Other">Other</option>
+                        </select>
                     </div>
                     <div class="info-row">
                         <label class="label" for="make">Make:</label>
-                        <input type="text" id="make" name="make" class="form-control" value="<?php echo htmlspecialchars($vehicle->make); ?>" readonly>
+                        <input type="text" id="make" name="make" class="form-control" required>
                     </div>
                     <div class="info-row">
                         <label class="label" for="model">Model:</label>
-                        <input type="text" id="model" name="model" class="form-control" value="<?php echo htmlspecialchars($vehicle->model); ?>" readonly>
+                        <input type="text" id="model" name="model" class="form-control" required>
                     </div>
                     <div class="info-row">
                         <label class="label" for="manufacturing_year">Manufacturing Year:</label>
-                        <input type="number" id="manufacturing_year" name="manufacturing_year" class="form-control" value="<?php echo htmlspecialchars($vehicle->manufacturing_year); ?>" readonly>
+                        <input type="number" id="manufacturing_year" name="manufacturing_year" class="form-control" min="1900" max="<?php echo date('Y'); ?>" required>
                     </div>
                     <div class="info-row">
-                        <label class="label" for="vehicle_image">Upload New Image:</label>
-                        <input type="file" id="vehicle_image" name="vehicle_image" class="form-control" accept="image/*">
+                        <label class="label" for="image">Vehicle Image:</label>
+                        <input type="file" id="image" name="image" class="form-control" accept="image/*" required>
                     </div>
                 </div>
             </div>
         </div>
 
         <!-- Submit Button -->
-        <button type="submit" class="btn btn-primary">Update Vehicle</button>
+        <button type="submit" class="btn btn-primary">Add Vehicle</button>
     </form>
 </main>
 

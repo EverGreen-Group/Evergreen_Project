@@ -16,26 +16,6 @@
                             <input type="email" id="email" name="email" required placeholder="username@email.com" pattern="[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}$">
                         </div>
                     </div>
-                    <div class="auth-form-row">
-                        <div class="auth-form-group">
-                            <label for="first_name">First Name</label>
-                            <input type="text" id="first_name" name="first_name" required>
-                        </div>
-                        <div class="auth-form-group">
-                            <label for="last_name">Last Name</label>
-                            <input type="text" id="last_name" name="last_name" required>
-                        </div>
-                    </div>
-                    <div class="auth-form-row">
-                        <div class="auth-form-group">
-                            <label for="nic">NIC</label>
-                            <input type="text" id="nic" name="nic" required>
-                        </div>
-                        <div class="auth-form-group">
-                            <label for="date_of_birth">Date of Birth</label>
-                            <input type="date" id="date_of_birth" name="date_of_birth" required placeholder="Select your date of birth" onfocus="this.showPicker()">
-                        </div>
-                    </div>
                     <div class="auth-form-group">
                         <label for="password">Password</label>
                         <div class="password-input">
@@ -86,7 +66,6 @@ function togglePasswordVisibility() {
         left: 0;
         right: 0;
         bottom: 0;
-        /* background-image: url('https://www.kalukandahouse.com/static/3b61ff11b8f19c6bb4e3e4ebfb50dac1/47498/tea.jpg');  */
         background-size: cover; /* Cover the entire background */
         background-position: center; /* Center the image */
         background-repeat: no-repeat; /* Prevent the image from repeating */
@@ -104,7 +83,7 @@ function togglePasswordVisibility() {
     }
 
     .auth-form-section {
-        margin-top:100px;
+        margin-top: 100px;
     }
 
     /* Optional: Style the date input for better visibility */

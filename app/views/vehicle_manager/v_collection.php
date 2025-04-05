@@ -57,8 +57,6 @@
 
 
 
-
-    <!-- Replace the old box-info with new Statistics Cards -->
     <ul class="dashboard-stats">
         <!-- Vehicle Statistics -->
         <li class="stat-card">
@@ -68,10 +66,6 @@
                     <h3><?php echo $stats['vehicles']->total_vehicles; ?></h3>
                     <p>Total Vehicles</p>
                 </div>
-            </div>
-            <div class="stat-details">
-                <span class="active"><?php echo $stats['vehicles']->in_use; ?> In Use</span>
-                <span class="available"><?php echo $stats['vehicles']->available_vehicles; ?> Available</span>
             </div>
         </li>
 
@@ -84,10 +78,6 @@
                     <p>Total Drivers</p>
                 </div>
             </div>
-            <div class="stat-details">
-                <span class="active"><?php echo $stats['collections']->in_progress ?? 0; ?> On Duty</span>
-                <span class="available"><?php echo $stats['drivers']->available_drivers; ?> Available</span>
-            </div>
         </li>
 
         <!-- Collection Statistics -->
@@ -98,9 +88,6 @@
                     <h3><?php echo (isset($stats['collections']->in_progress) ? ($stats['collections']->in_progress) : 0) ?></h3>
                     <p>Collections in Progress</p>
                 </div>
-            </div>
-            <div class="stat-details">
-                <span class="completed"><?php echo $stats['collections']->completed_today; ?> Completed Today</span>
             </div>
         </li>
     </ul>
@@ -127,7 +114,7 @@
                     <tr>
                         <th>Collection ID</th>
                         <th>Route</th>
-                        <th>Shift Times</th>
+                        <th>Shift</th>
                         <th>Driver</th>
                         <th>Status</th>
                         <th>Details</th>
@@ -166,7 +153,7 @@
         const date = `${year}-${month.toString().padStart(2, '0')}-${day.toString().padStart(2, '0')}`;
         
         // Make an AJAX call to fetch collections for the selected date
-        fetch(`<?php echo URLROOT; ?>/vehiclemanager/getCollectionsByDate?date=${date}`)
+        fetch(`<?php echo URLROOT; ?>/manager/getCollectionsByDate?date=${date}`)
             .then(response => {
                 if (!response.ok) {
                     throw new Error('Network response was not ok');
@@ -222,8 +209,6 @@
         <span class="close" onclick="closeModal('createScheduleModal')">&times;</span>
         <h2 style="margin-bottom: 30px;">Create New Schedule</h2>
 
-        <!-- <img src="<?php echo URLROOT; ?>/public/img/schedule_banner.jpg" alt="Banner" style="width: 100%; height: auto; margin-bottom: 20px;"> -->
-
         <form id="createScheduleForm" method="POST" action="<?php echo URLROOT; ?>/collectionschedules/create">
             <div style="display: flex; flex-direction: column; gap: 20px;">
                 <div class="form-group">
@@ -240,12 +225,12 @@
                     </select>
                 </div>
                 <div class="form-group">
-                    <label for="shift">Shift:</label>
-                    <select id="shift" name="shift_id" required>
-                        <?php foreach ($data['shifts'] as $shift): ?>
-                            <option value="<?= $shift->shift_id; ?>"><?= $shift->shift_name; ?></option>
-                        <?php endforeach; ?>
-                    </select>
+                    <label for="start_time">Start Time:</label>
+                    <input type="time" id="start_time" name="start_time" required>
+                </div>
+                <div class="form-group">
+                    <label for="end_time">End Time:</label>
+                    <input type="time" id="end_time" name="end_time" required>
                 </div>
                 <div class="form-group">
                     <label for="route">Route:</label>
@@ -261,7 +246,14 @@
                         <?php endforeach; ?>
                     </select>
                 </div>
-
+                <div class="form-group">
+                    <label for="vehicle">Vehicle:</label>
+                    <select id="vehicle" name="vehicle_id" required>
+                        <?php foreach ($data['vehicles'] as $vehicle): ?>
+                            <option value="<?= $vehicle->vehicle_id; ?>"><?= $vehicle->license_plate; ?></option>
+                        <?php endforeach; ?>
+                    </select>
+                </div>
             </div>
             <button type="submit" class="btn-secondary">Create Schedule</button>
         </form>

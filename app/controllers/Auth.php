@@ -8,6 +8,7 @@ use PHPMailer\PHPMailer\Exception;
 class Auth extends Controller
 {
     private $userModel;
+    private $applicationModel;
 
     public function __construct()
     {
@@ -21,11 +22,6 @@ class Auth extends Controller
 
         $data = [
             'email' => '',
-            'title' => '',
-            'first_name' => '',
-            'last_name' => '',
-            'nic' => '',
-            'date_of_birth' => '',
             'password' => '',
             'error' => ''
         ];
@@ -34,93 +30,37 @@ class Auth extends Controller
             // Sanitize POST data
             $_POST = filter_input_array(INPUT_POST, FILTER_SANITIZE_STRING);
 
-            $data = [
-                'email' => trim($_POST['email']),
-                'first_name' => trim($_POST['first_name']),
-                'last_name' => trim($_POST['last_name']),
-                'nic' => trim($_POST['nic']),
-                'date_of_birth' => trim($_POST['date_of_birth']),
-                'password' => trim($_POST['password']),
-                'error' => ''
-            ];
+            $data['email'] = trim($_POST['email']);
+            $data['password'] = trim($_POST['password']);
 
             // Validate data
-            if (
-                empty($data['email']) ||
-                empty($data['first_name']) || empty($data['last_name']) ||
-                empty($data['nic']) ||
-                empty($data['date_of_birth']) || empty($data['password'])
-            ) {
+            if (empty($data['email']) || empty($data['password'])) {
                 $data['error'] = 'Please fill in all fields';
             } elseif (!filter_var($data['email'], FILTER_VALIDATE_EMAIL)) {
                 $data['error'] = 'Please enter a valid email';
-            } elseif (strlen($data['first_name']) < 2) {
-                $data['error'] = 'First name must be at least 2 characters';
-            } elseif (strlen($data['last_name']) < 2) {
-                $data['error'] = 'Last name must be at least 2 characters';
-            } elseif (!preg_match('/^[0-9]{8,}[XxVv]?$/', $data['nic'])) { // NIC validation for more than 7 digits with optional ending X or V
-                $data['error'] = 'NIC must contain more than 7 digits and may optionally end with X, x, V, or v';
-            } elseif (strlen($data['password']) < 8) { // Password must be at least 8 characters
+            } elseif (strlen($data['password']) < 8) { // at least 8 characters
                 $data['error'] = 'Password must be at least 8 characters long';
-            } elseif (!preg_match('/[A-Z]/', $data['password'])) { // At least one uppercase letter
+            } elseif (!preg_match('/[A-Z]/', $data['password'])) { // at least one uppercase letter
                 $data['error'] = 'Password must contain at least one uppercase letter';
-            } elseif (!preg_match('/[a-z]/', $data['password'])) { // At least one lowercase letter
+            } elseif (!preg_match('/[a-z]/', $data['password'])) { // at least one lowercase letter
                 $data['error'] = 'Password must contain at least one lowercase letter';
-            } elseif (!preg_match('/[0-9]/', $data['password'])) { // At least one number
+            } elseif (!preg_match('/[0-9]/', $data['password'])) { // at least one number
                 $data['error'] = 'Password must contain at least one number';
-            } elseif (!preg_match('/[\W_]/', $data['password'])) { // At least one special character
+            } elseif (!preg_match('/[\W_]/', $data['password'])) { //at least one special character
                 $data['error'] = 'Password must contain at least one special character';
-            } elseif (!$this->isOlderThan18($data['date_of_birth'])) { // Check if user is older than 18
-                $data['error'] = 'You must be at least 18 years old to register.';
             } elseif ($this->userModel->findUserByEmail($data['email'])) {
                 $data['error'] = 'Email is already registered';
-            } elseif ($this->userModel->findUserByNIC($data['nic'])) {
-                $data['error'] = 'NIC is already registered';
             } else {
                 try {
-                    // Hash password
+                    // hashing
                     $data['password'] = password_hash($data['password'], PASSWORD_DEFAULT);
 
-                    // Set default role_id and approval_status
-                    $data['role_id'] = RoleHelper::getRoleByTitle('Website User'); // Website User role
-                    $data['approval_status'] = 'None'; // Default status
+                    $data['role_id'] = RoleHelper::getRoleByTitle('Website User'); 
+                    $data['account_status'] = 'Active'; // Default status
 
                     // Register user
-                    if ($this->userModel->register($data)) {
-                        // After successful registration
-                        $verificationCode = bin2hex(random_bytes(16)); // Generate a random verification code
-                        $this->userModel->storeVerificationCode($data['email'], $verificationCode); // Store the code in the database
-
-                        $verificationLink = URLROOT . "/auth/verify?code=" . $verificationCode; // Create verification link
-
-                        // Create a new PHPMailer instance
-                        $mail = new PHPMailer(true);
-                        try {
-                            //Server settings
-                            $mail->isSMTP();                                            // Send using SMTP
-                            $mail->Host       = 'smtp.gmail.com';                   // Set the SMTP server to send through
-                            $mail->SMTPAuth   = true;                                   // Enable SMTP authentication
-                            $mail->Username   = 'simaakniyaz@gmail.com';             // SMTP username
-                            $mail->Password   = 'yslhjwsnmozojika';                // SMTP password
-                            $mail->SMTPSecure = PHPMailer::ENCRYPTION_STARTTLS;       // Enable TLS encryption; `PHPMailer::ENCRYPTION_SMTPS` encouraged
-                            $mail->Port       = 587;                                   // TCP port to connect to
-
-                            //Recipients
-                            $mail->setFrom('your_email@example.com', 'Evergreen Verification Code');
-                            $mail->addAddress($data['email']);                         // Add a recipient
-
-                            // Content
-                            $mail->isHTML(true);                                       // Set email format to HTML
-                            $mail->Subject = 'Email Verification';
-                            $mail->Body    = "Please click the following link to verify your email: <a href='$verificationLink'>$verificationLink</a>";
-
-                            $mail->send();
-                            // Redirect to login with success message
-                            header('Location: ' . URLROOT . '/auth/login');
-                            exit();
-                        } catch (Exception $e) {
-                            $data['error'] = "Message could not be sent. Mailer Error: {$mail->ErrorInfo}";
-                        }
+                    if ($this->userModel->registerUser($data)) {
+                        redirect('auth/login');
                     } else {
                         $data['error'] = 'Registration failed. Please try again.';
                     }
@@ -133,18 +73,16 @@ class Auth extends Controller
         $this->view('auth/v_register', $data);
     }
 
-    // Helper function to check if the user is older than 18
     private function isOlderThan18($dateOfBirth)
     {
         $dob = new DateTime($dateOfBirth);
         $today = new DateTime();
-        $age = $today->diff($dob)->y; // Calculate age in years
-        return $age >= 18; // Return true if 18 or older
+        $age = $today->diff($dob)->y; 
+        return $age >= 18; 
     }
 
     public function login()
     {
-        // Redirect if already logged in
         $this->preventLoginAccess();
 
         $data = [
@@ -166,40 +104,48 @@ class Auth extends Controller
                 $user = $this->userModel->findUserByEmail($data['username']);
 
                 if ($user) {
-                    // Check if the user is verified
-                    if ($user->verified == 1) {
-                        if (password_verify($data['password'], $user->password)) {
+                    // Verify password
+                    if (password_verify($data['password'], $user->password)) {
+                        // Check role-specific conditions
+                        $canLogin = true;
+                        $loginErrorMessage = '';
+
+                        // For drivers, check if theyre marked as deleted
+                        if ($user->role_id == RoleHelper::DRIVER) {
+                            $driverId = $this->userModel->getDriverId($user->user_id);
+                            if (!$driverId) {
+                                $canLogin = false;
+                                $loginErrorMessage = 'This driver account is currently inactive. Please contact the administrator';
+                            } else {
+                                $_SESSION['driver_id'] = $driverId->driver_id;
+                            }
+                        } 
+                        elseif ($user->role_id == RoleHelper::MANAGER) {
+                            $managerId = $this->userModel->getManagerId($user->user_id);
+                            if ($managerId) {
+                                $_SESSION['manager_id'] = $managerId->manager_id;
+                            }
+                        } elseif ($user->role_id == RoleHelper::SUPPLIER) {
+                            $supplierId = $this->userModel->getSupplierId($user->user_id);
+                            if ($supplierId) {
+                                $_SESSION['supplier_id'] = $supplierId->supplier_id;
+                            } else {
+                                $canLogin = false;
+                                $loginErrorMessage = 'Supplier record not found.';
+                            }
+                        } elseif ($user->role_id == RoleHelper::ADMIN) {
+                            $managerId = $this->userModel->getManagerId($user->user_id);
+                            if ($managerId) {
+                                $_SESSION['manager_id'] = $managerId->manager_id;
+                            }  $loginErrorMessage = 'Supplier record not found.';
+                            
+                        }
+
+                        // If all checks pass, complete login
+                        if ($canLogin) {
                             $_SESSION['user_id'] = $user->user_id;
-                            $_SESSION['first_name'] = $user->first_name;
-                            $_SESSION['last_name'] = $user->last_name;
                             $_SESSION['email'] = $user->email;
                             $_SESSION['role_id'] = $user->role_id;
-
-                            // Retrieve additional IDs based on role
-                            if ($user->role_id == RoleHelper::DRIVER) {
-                                $driverId = $this->userModel->getDriverId($user->user_id);
-                                $employeeId = $this->userModel->getEmployeeId($user->user_id);
-                                if ($driverId) {
-                                    $_SESSION['driver_id'] = $driverId->driver_id;
-                                }
-                                if ($employeeId) {
-                                    $_SESSION['employee_id'] = $employeeId->employee_id;
-                                }
-                            } elseif (in_array($user->role_id, [RoleHelper::VEHICLE_MANAGER, RoleHelper::INVENTORY_MANAGER, RoleHelper::SUPPLIER_MANAGER])) {
-                                $managerId = $this->userModel->getManagerId($user->user_id);
-                                $employeeId = $this->userModel->getEmployeeId($user->user_id);
-                                if ($managerId) {
-                                    $_SESSION['manager_id'] = $managerId->manager_id;
-                                }
-                                if ($employeeId) {
-                                    $_SESSION['employee_id'] = $employeeId->employee_id;
-                                }
-                            } elseif ($user->role_id == RoleHelper::SUPPLIER) {
-                                $supplierId = $this->userModel->getSupplierId($user->user_id);
-                                if ($supplierId) {
-                                    $_SESSION['supplier_id'] = $supplierId->supplier_id;
-                                }
-                            }
 
                             // After successful login, redirect based on role
                             switch (RoleHelper::getRole()) {
@@ -207,13 +153,13 @@ class Auth extends Controller
                                     header('Location: ' . URLROOT . '/vehicledriver/');
                                     break;
                                 case RoleHelper::VEHICLE_MANAGER:
-                                    header('Location: ' . URLROOT . '/vehiclemanager/');
+                                    header('Location: ' . URLROOT . '/manager/');
                                     break;
                                 case RoleHelper::SUPPLIER:
                                     header('Location: ' . URLROOT . '/supplier/');
                                     break;
                                 case RoleHelper::ADMIN:
-                                    header('Location: ' . URLROOT . '/vehiclemanager/');
+                                    header('Location: ' . URLROOT . '/manager/');
                                     break;
                                 case RoleHelper::INVENTORY_MANAGER:
                                     header('Location: ' . URLROOT . '/inventory/');
@@ -223,10 +169,10 @@ class Auth extends Controller
                             }
                             exit();
                         } else {
-                            $data['error'] = 'Invalid credentials';
+                            $data['error'] = $loginErrorMessage;
                         }
                     } else {
-                        $data['error'] = 'Your email is not verified. Please check your email for the verification link.';
+                        $data['error'] = 'Invalid credentials';
                     }
                 } else {
                     $data['error'] = 'Invalid credentials';
@@ -250,90 +196,50 @@ class Auth extends Controller
         exit();
     }
 
-
     public function supplier_register()
     {
-        // First, check login status
+        // 1. Check if user is logged in
         if (!isLoggedIn()) {
             redirect('auth/login');
-            return; // Add return to ensure the function stops
+            return;
         }
 
-        // Move this up before any other processing
+        // 2. Check if user has already applied
         $supplierApplicationModel = $this->model('M_SupplierApplication');
-
-        // Add debug logging
-        error_log("Checking application status for user: " . $_SESSION['user_id']);
-
-        // Check if user has already applied and redirect if true
         if ($supplierApplicationModel->hasApplied($_SESSION['user_id'])) {
-            error_log("User has already applied, redirecting to status page");
             redirect('pages/supplier_application_status');
-            return; // Add return to ensure the function stops
+            return;
         }
 
-        // Start output buffering only if we're continuing with the registration
-        ob_start();
-
+        // 3. Process form submission if POST request
         if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             try {
-                // Clear any existing output
-                ob_clean();
+                // Collect profile data
+                $profileData = [
+                    'user_id' => $_SESSION['user_id'],
+                    'first_name' => trim($_POST['first_name']),
+                    'last_name' => trim($_POST['last_name']),
+                    'nic' => trim($_POST['nic_number']),
+                    'date_of_birth' => trim($_POST['date_of_birth']),
+                    'contact_number' => trim($_POST['contact_number']),
+                    'emergency_contact' => !empty($_POST['emergency_contact']) ? trim($_POST['emergency_contact']) : null,
+                    'address_line1' => trim($_POST['address_line1']),
+                    'address_line2' => !empty($_POST['address_line2']) ? trim($_POST['address_line2']) : null,
+                    'city' => trim($_POST['city'])
+                ];
 
-                // Temporarily disable error display
-                ini_set('display_errors', 0);
-                error_reporting(E_ALL);
-
-
-
-                // Validate postal code length 
-                if (strlen($_POST['postalCode']) > 6) {
-                    throw new Exception('Postal code must be between 5 and 10 characters');
-                }
-
-                // Prepare application data
+                // Collect application data
                 $applicationData = [
                     'user_id' => $_SESSION['user_id'],
-                    'primary_phone' => $_POST['primaryPhone'],
-                    'secondary_phone' => !empty($_POST['secondaryPhone']) ? $_POST['secondaryPhone'] : null,
-                    'whatsapp_number' => !empty($_POST['whatsappNumber']) ? $_POST['whatsappNumber'] : null,
-
-                    'address' => [
-                        'line1' => $_POST['line1'],
-                        'line2' => !empty($_POST['line2']) ? $_POST['line2'] : null,
-                        'city' => $_POST['city'],
-                        'district' => $_POST['district'],
-                        'postal_code' => $_POST['postalCode'],
+                    'location' => [
                         'latitude' => $_POST['latitude'],
                         'longitude' => $_POST['longitude']
                     ],
-
-                    'teaVarieties' => isset($_POST['tea_varieties']) ? $_POST['tea_varieties'] : [],
-
-                    'ownership' => [
-                        'ownership_type' => $_POST['ownership_type'],
-                        'ownership_duration' => $_POST['ownership_duration']
-                    ],
-
-                    'tea_details' => [
+                    'cultivation' => [
+                        'tea_cultivation_area' => $_POST['teaCultivationArea'],
                         'plant_age' => $_POST['plant_age'],
                         'monthly_production' => $_POST['monthly_production']
                     ],
-
-                    'property' => [
-                        'total_land_area' => $_POST['totalLandArea'],
-                        'tea_cultivation_area' => $_POST['teaCultivationArea'],
-                        'elevation' => $_POST['elevation'],
-                        'slope' => $_POST['slope']
-                    ],
-
-                    'infrastructure' => [
-                        'water_source' => isset($_POST['water_source']) ? $_POST['water_source'] : [],
-                        'access_road' => $_POST['access_road'],
-                        'vehicle_access' => $_POST['vehicle_access'],
-                        'structures' => isset($_POST['structures']) ? $_POST['structures'] : []
-                    ],
-
                     'bank_info' => [
                         'account_holder_name' => $_POST['accountHolderName'],
                         'bank_name' => $_POST['bankName'],
@@ -343,102 +249,58 @@ class Auth extends Controller
                     ]
                 ];
 
-                // Debug log to check the data
-                error_log("Application Data: " . print_r($applicationData, true));
+                // Basic validation
+                if (!isset($_FILES['profile_photo']) || $_FILES['profile_photo']['error'] !== UPLOAD_ERR_OK) {
+                    throw new Exception("Profile photo is required");
+                }
 
-                // Validate file uploads
+                // Process documents
                 $documents = [];
-                $requiredDocs = ['nic', 'ownership_proof', 'tax_receipts', 'bank_passbook', 'grama_cert'];
-
+                $requiredDocs = ['nic_document', 'ownership_proof'];
                 foreach ($requiredDocs as $doc) {
-                    // Check if file exists and there are no upload errors
-                    if (!isset($_FILES[$doc]) || !is_array($_FILES[$doc])) {
-                        throw new Exception("Missing upload for: {$doc}");
+                    if (!isset($_FILES[$doc]) || $_FILES[$doc]['error'] !== UPLOAD_ERR_OK) {
+                        throw new Exception("Document $doc is required");
                     }
-
-                    // Check for specific upload errors
-                    if ($_FILES[$doc]['error'] !== UPLOAD_ERR_OK) {
-                        $errorMessage = $this->getFileUploadError($_FILES[$doc]['error']);
-                        throw new Exception("Error uploading {$doc}: {$errorMessage}");
-                    }
-
-                    // Validate file type (add allowed types as needed)
-                    $allowedTypes = ['image/jpeg', 'image/png', 'application/pdf'];
-                    if (!in_array($_FILES[$doc]['type'], $allowedTypes)) {
-                        throw new Exception("{$doc} must be a JPG, PNG, or PDF file");
-                    }
-
-                    // Validate file size (e.g., 5MB limit)
-                    $maxSize = 5 * 1024 * 1024; // 5MB in bytes
-                    if ($_FILES[$doc]['size'] > $maxSize) {
-                        throw new Exception("{$doc} must be less than 5MB");
-                    }
-
                     $documents[$doc] = $_FILES[$doc];
                 }
 
-                // Add validation for latitude and longitude before the file validation
-                if (empty($_POST['latitude']) || empty($_POST['longitude'])) {
-                    throw new Exception('Location coordinates are required');
+                // Rename document keys for the model
+                $processedDocuments = [];
+                foreach ($documents as $key => $value) {
+                    $newKey = ($key === 'nic_document') ? 'nic' : $key;
+                    $processedDocuments[$newKey] = $value;
                 }
 
-                // Validate coordinate ranges for Sri Lanka
-                $lat = floatval($_POST['latitude']);
-                $lng = floatval($_POST['longitude']);
-
-                if ($lat < 5.9 || $lat > 9.9 || $lng < 79.5 || $lng > 81.9) {
-                    throw new Exception('Location must be within Sri Lanka');
-                }
-
-                // Try to save the application
-                $result = $supplierApplicationModel->createApplication($applicationData, $documents);
+                // Save application
+                $result = $supplierApplicationModel->createProfileAndApplication(
+                    $profileData,
+                    $applicationData,
+                    $_FILES['profile_photo'],
+                    $processedDocuments
+                );
 
                 if (!$result) {
                     throw new Exception('Failed to save application');
                 }
 
-                // Clear any output before sending JSON
-                ob_clean();
-
-                // Send JSON response
-                header('Content-Type: application/json');
-                echo json_encode([
-                    'success' => true,
-                    'message' => 'Application submitted successfully',
-                    'redirect' => URLROOT . '/pages/supplier_application_status?submitted=true'
-                ]);
-
-                // End output buffering and exit
-                ob_end_flush();
-                exit();
-
+                // Redirect to status page on success
+                redirect('pages/supplier_application_status?submitted=true');
+                
             } catch (Exception $e) {
-                // Log the error
-                error_log("Application submission error: " . $e->getMessage());
-
-                // Clear any output before sending JSON
-                ob_clean();
-
-                // Send JSON error response
-                header('Content-Type: application/json');
-                http_response_code(400);
-                echo json_encode([
-                    'success' => false,
-                    'message' => 'Server error: ' . $e->getMessage(),
-                    'debug_info' => [
-                        'time' => date('Y-m-d H:i:s'),
-                        'user_id' => $_SESSION['user_id']
-                    ]
-                ]);
-                exit();
+                // Set error message and continue to display the form
+                $data = [
+                    'title' => 'Supplier Registration',
+                    'error' => $e->getMessage()
+                ];
+                $this->view('auth/v_supplier_register', $data);
+                return;
             }
         }
 
-        // For GET requests
+        // 4. Display the form for GET requests
         $data = [
             'title' => 'Supplier Registration'
         ];
-
         $this->view('auth/v_supplier_register', $data);
     }
 
@@ -446,21 +308,21 @@ class Auth extends Controller
     {
         switch ($errorCode) {
             case UPLOAD_ERR_INI_SIZE:
-                return 'The uploaded file exceeds the upload_max_filesize directive in php.ini';
+                return "The uploaded file exceeds the upload_max_filesize directive in php.ini";
             case UPLOAD_ERR_FORM_SIZE:
-                return 'The uploaded file exceeds the MAX_FILE_SIZE directive in the HTML form';
+                return "The uploaded file exceeds the MAX_FILE_SIZE directive that was specified in the HTML form";
             case UPLOAD_ERR_PARTIAL:
-                return 'The uploaded file was only partially uploaded';
+                return "The uploaded file was only partially uploaded";
             case UPLOAD_ERR_NO_FILE:
-                return 'No file was uploaded';
+                return "No file was uploaded";
             case UPLOAD_ERR_NO_TMP_DIR:
-                return 'Missing a temporary folder';
+                return "Missing a temporary folder";
             case UPLOAD_ERR_CANT_WRITE:
-                return 'Failed to write file to disk';
+                return "Failed to write file to disk";
             case UPLOAD_ERR_EXTENSION:
-                return 'A PHP extension stopped the file upload';
+                return "A PHP extension stopped the file upload";
             default:
-                return 'Unknown upload error';
+                return "Unknown upload error";
         }
     }
 

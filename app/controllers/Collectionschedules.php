@@ -19,7 +19,7 @@ class Collectionschedules extends Controller {
     }    
     public function create() {
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-            redirect('vehiclemanager/dashboard');
+            redirect('manager/dashboard');
         }
 
         // Get and sanitize POST data
@@ -47,7 +47,7 @@ class Collectionschedules extends Controller {
             foreach ($errors as $error) {
                 flash('schedule_create_error', $error, 'alert alert-danger');
             }
-            redirect('vehiclemanager/');
+            redirect('manager/');
             return;
         }
 
@@ -56,12 +56,12 @@ class Collectionschedules extends Controller {
         // Create schedule for this day
         if (!$this->collectionScheduleModel->create($data)) {
             flash('schedule_create_error', "Failed to create schedule for {$data['day']}", 'alert alert-danger');
-            redirect('vehiclemanager/');
+            redirect('manager/');
             return;
         }
 
         flash('schedule_create_success', 'Collection schedule created successfully!', 'alert alert-success');
-        redirect('vehiclemanager/');
+        redirect('manager/');
     }
 
     public function toggleActive() {
@@ -74,7 +74,7 @@ class Collectionschedules extends Controller {
                 flash('schedule_error', 'Failed to update schedule status');
             }
             
-            redirect('vehiclemanager/');
+            redirect('manager/');
         }
     }
 
@@ -88,7 +88,7 @@ class Collectionschedules extends Controller {
                 flash('schedule_error', 'Failed to delete schedule');
             }
             
-            redirect('vehiclemanager/');
+            redirect('manager/');
         }
     }
 
@@ -104,7 +104,7 @@ class Collectionschedules extends Controller {
             // Check for schedule conflicts (excluding current schedule)
             if ($this->collectionScheduleModel->checkConflict($data)) {
                 flash('schedule_error', "Schedule conflict detected for the selected route", 'alert alert-danger');
-                redirect('vehiclemanager/');
+                redirect('manager/');
                 return;
             }
     
@@ -114,7 +114,7 @@ class Collectionschedules extends Controller {
                 flash('schedule_error', 'Failed to update collection schedule');
             }
     
-            redirect('vehiclemanager/');
+            redirect('manager/');
         }
     }
 

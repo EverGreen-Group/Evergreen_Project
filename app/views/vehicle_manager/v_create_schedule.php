@@ -1,9 +1,5 @@
 <?php require APPROOT . '/views/inc/components/header.php'; ?>
 
-<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-
-
 
 <!-- Side bar -->
 <?php require APPROOT . '/views/inc/components/sidebar_vehicle_manager.php'; ?>
@@ -22,11 +18,11 @@
 <main>
     <div class="head-title">
         <div class="left">
-            <h1>Update Vehicle</h1>
+            <h1>Create Collection Schedule</h1>
             <ul class="breadcrumb">
-                <li><a href="<?= URLROOT ?>/manager/v_new_vehicle">Vehicles</a></li>
+                <li><a href="<?= URLROOT ?>/manager/collectionschedule">Schedules</a></li>
                 <li><i class='bx bx-chevron-right'></i></li>
-                <li><a class="active" href="#">Update Vehicle</a></li>
+                <li><a class="active" href="#">Create Schedule</a></li>
             </ul>
         </div>
     </div>
@@ -38,56 +34,125 @@
         </div>
     <?php endif; ?>
     
-    <form method="POST" action="<?php echo URLROOT; ?>/manager/updateVehicle/<?php echo $vehicle->vehicle_id; ?>" enctype="multipart/form-data">
-        <div class="table-data">
-            <div class="order">
-                <div class="head">
-                    <h3>Vehicle Information</h3>
+    <form id="createScheduleForm" method="POST" action="<?php echo URLROOT; ?>/manager/createSchedule">
+    
+    <!-- Schedule Information -->
+    <div class="table-data">
+        <div class="order">
+            <div class="head">
+                <h3>Schedule Information</h3>
+            </div>
+            <div class="section-content">
+                <div class="info-row">
+                    <label class="label" for="day">Day of Week:</label>
+                    <select id="day" name="day" class="form-control" required>
+                        <option value="">Select Day</option>
+                        <option value="Monday">Monday</option>
+                        <option value="Tuesday">Tuesday</option>
+                        <option value="Wednesday">Wednesday</option>
+                        <option value="Thursday">Thursday</option>
+                        <option value="Friday">Friday</option>
+                        <option value="Saturday">Saturday</option>
+                        <option value="Sunday">Sunday</option>
+                    </select>
                 </div>
-                <div class="section-content">
-                    <div class="info-row">
-                        <label class="label" for="license_plate">License Plate:</label>
-                        <input type="text" id="license_plate" name="license_plate" class="form-control" value="<?php echo htmlspecialchars($vehicle->license_plate); ?>" readonly>
-                    </div>
-                    <div class="info-row">
-                        <label class="label" for="status">Status:</label>
-                        <select id="status" name="status" class="form-control" required>
-                            <option value="Available" <?php echo $vehicle->status == 'Available' ? 'selected' : ''; ?>>Available</option>
-                            <option value="In Use" <?php echo $vehicle->status == 'In Use' ? 'selected' : ''; ?>>In Use</option>
-                            <option value="Maintenance" <?php echo $vehicle->status == 'Maintenance' ? 'selected' : ''; ?>>Maintenance</option>
-                        </select>
-                    </div>
-                    <div class="info-row">
-                        <label class="label" for="capacity">Capacity:</label>
-                        <input type="number" id="capacity" name="capacity" class="form-control" value="<?php echo htmlspecialchars($vehicle->capacity); ?>" readonly>
-                    </div>
-                    <div class="info-row">
-                        <label class="label" for="vehicle_type">Vehicle Type:</label>
-                        <input type="text" id="vehicle_type" name="vehicle_type" class="form-control" value="<?php echo htmlspecialchars($vehicle->vehicle_type); ?>" readonly>
-                    </div>
-                    <div class="info-row">
-                        <label class="label" for="make">Make:</label>
-                        <input type="text" id="make" name="make" class="form-control" value="<?php echo htmlspecialchars($vehicle->make); ?>" readonly>
-                    </div>
-                    <div class="info-row">
-                        <label class="label" for="model">Model:</label>
-                        <input type="text" id="model" name="model" class="form-control" value="<?php echo htmlspecialchars($vehicle->model); ?>" readonly>
-                    </div>
-                    <div class="info-row">
-                        <label class="label" for="manufacturing_year">Manufacturing Year:</label>
-                        <input type="number" id="manufacturing_year" name="manufacturing_year" class="form-control" value="<?php echo htmlspecialchars($vehicle->manufacturing_year); ?>" readonly>
-                    </div>
-                    <div class="info-row">
-                        <label class="label" for="vehicle_image">Upload New Image:</label>
-                        <input type="file" id="vehicle_image" name="vehicle_image" class="form-control" accept="image/*">
-                    </div>
+                <div class="info-row">
+                    <label class="label" for="start_time">Start Time:</label>
+                    <input type="time" id="start_time" name="start_time" class="form-control" required>
+                </div>
+                <div class="info-row">
+                    <label class="label" for="end_time">End Time:</label>
+                    <input type="time" id="end_time" name="end_time" class="form-control" required>
                 </div>
             </div>
         </div>
+    </div>
 
-        <!-- Submit Button -->
-        <button type="submit" class="btn btn-primary">Update Vehicle</button>
+    <!-- Route Selection Section -->
+    <div class="table-data">
+        <div class="order">
+            <div class="head">
+                <h3>Select Route</h3>
+            </div>
+            <div class="section-content">
+
+                <div class="user-selection-container">
+                    <select id="routeSelect" name="route_id" class="form-control" required>
+                        <option value="">Select a Route</option>
+                        <?php foreach ($data['routes'] as $route): ?>
+                            <option value="<?= $route->route_id ?>" 
+                                    data-route-name="<?= htmlspecialchars($route->route_name) ?>"
+                                    data-supplier-count="<?= isset($route->number_of_suppliers) ? $route->number_of_suppliers : '0' ?>"
+                            >
+                                R<?= str_pad($route->route_id, 3, '0', STR_PAD_LEFT) ?> - 
+                                <?= htmlspecialchars($route->route_name) ?> 
+                                (<?= isset($route->number_of_suppliers) ? $route->number_of_suppliers : '0' ?> suppliers)
+                            </option>
+                        <?php endforeach; ?>
+                    </select>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Driver Selection Section -->
+    <div class="table-data">
+        <div class="order">
+            <div class="head">
+                <h3>Select Driver</h3>
+            </div>
+            <div class="section-content">
+                <div class="user-selection-container">
+                    <select id="driverSelect" name="driver_id" class="form-control" required>
+                        <option value="">Select a Driver</option>
+                        <?php foreach ($data['drivers'] as $driver): ?>
+                            <option value="<?= $driver->driver_id ?>" 
+                                    data-first-name="<?= htmlspecialchars($driver->first_name) ?>"
+                                    data-last-name="<?= htmlspecialchars($driver->last_name) ?>"
+                                    data-nic="<?= htmlspecialchars($driver->nic) ?>"
+                            >
+                                D<?= str_pad($driver->driver_id, 3, '0', STR_PAD_LEFT) ?> - 
+                                <?= htmlspecialchars($driver->first_name . ' ' . $driver->last_name) ?> 
+                                (NIC: <?= htmlspecialchars($driver->nic) ?>)
+                            </option>
+                        <?php endforeach; ?>
+                    </select>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Schedule Summary -->
+    <div class="table-data">
+        <div class="order">
+            <div class="head">
+                <h3>Schedule Summary</h3>
+            </div>
+            <div class="section-content">
+                <div class="info-row">
+                    <span class="label">Day:</span>
+                    <span class="value" id="summaryDay">Not specified</span>
+                </div>
+                <div class="info-row">
+                    <span class="label">Time:</span>
+                    <span class="value" id="summaryTime">Not specified</span>
+                </div>
+                <div class="info-row">
+                    <span class="label">Route:</span>
+                    <span class="value" id="summaryRoute">Not specified</span>
+                </div>
+                <div class="info-row">
+                    <span class="label">Driver:</span>
+                    <span class="value" id="summaryDriver">Not specified</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Submit Button -->
+    <button type="submit" class="btn btn-primary">Create Schedule</button>
     </form>
+    
 </main>
 
 <!-- Add JavaScript to handle selections and validation -->

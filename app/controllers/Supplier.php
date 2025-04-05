@@ -38,38 +38,40 @@ class Supplier extends Controller {
         $this->collectionModel= new M_Collection();
         $this->scheduleModel= new M_CollectionSchedule();
         $this->bagModel = new M_Bag();
-        $this->supplierDetails = $this->supplierModel->getSupplierDetailsByUserId($_SESSION['user_id']);
-        $_SESSION['supplier_id'] = $this->supplierDetails->supplier_id;
+        $supplierDetails = $this->supplierModel->getSupplierDetailsByUserId($_SESSION['user_id']);
+        $_SESSION['supplier_id'] = $supplierDetails->supplier_id;
     }
 
     
     public function index() {
-
         $supplierId = $_SESSION['supplier_id'];
-
         $collectionId = $this->collectionModel->checkCollectionExistsUsingSupplierId($supplierId);
-
+    
         try {
             // Get all schedules
             $allSchedules = $this->scheduleModel->getUpcomingSchedulesBySupplierId($supplierId);
             $supplierStatus = $this->supplierModel->getSupplierStatus($supplierId);
             
-            // Organize schedules by day
+            // Organize schedules by day, filtering out already collected schedules for today
             $todaySchedules = [];
             $upcomingSchedules = [];
+
+            /*
+            WE CAN SIMPLY OMIT THE SCHEDULES IF THERE EXISTS A COLLECTION FOR IT...
+            */
             
             foreach ($allSchedules as $schedule) {
+                // Skip schedules that already have collections for today
+                if ($schedule->is_today && $schedule->collection_exists > 0) {
+                    continue;
+                }
+                
                 if ($schedule->is_today) {
                     $todaySchedules[] = $schedule;
                 } else {
                     $upcomingSchedules[] = $schedule;
                 }
             }
-
-
-            
-            // Get driver details (assuming you have a driver model)
-            // $driverDetails = $this->driverModel->getDriverById($driverId);
             
             $data = [
                 'todaySchedules' => $todaySchedules,

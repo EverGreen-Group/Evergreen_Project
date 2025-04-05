@@ -34,7 +34,7 @@
             <?php if (RoleHelper::isAdmin()): ?>
                 <li><a href="<?php echo URLROOT; ?>/admin/">Admin Dashboard</a></li>
                 <li><a href="<?php echo URLROOT; ?>/suppliermanager/">Supplier Manager Dashboard</a></li>
-                <li><a href="<?php echo URLROOT; ?>/vehiclemanager/">Vehicle Manager Dashboard</a></li>
+                <li><a href="<?php echo URLROOT; ?>/manager/">Vehicle Manager Dashboard</a></li>
                 <li><a href="<?php echo URLROOT; ?>/inventory/">Inventory Manager Dashboard</a></li>
             <?php endif; ?>
 
@@ -57,7 +57,7 @@
             <?php endif; ?>
 
             <?php if (RoleHelper::hasRole(RoleHelper::VEHICLE_MANAGER)): ?>
-                <li><a href="<?php echo URLROOT; ?>/vehiclemanager/dashboard">Vehicle Manager Dashboard</a></li>
+                <li><a href="<?php echo URLROOT; ?>/manager/dashboard">Vehicle Manager Dashboard</a></li>
             <?php endif; ?>
 
             <?php if (RoleHelper::hasRole(RoleHelper::INVENTORY_MANAGER)): ?>

@@ -4,14 +4,34 @@
     <span class="text">EVERGREEN</span>
   </a>
   <ul class="side-menu top">
+
+			<li class="<?php echo (basename($_SERVER['REQUEST_URI']) == 'index') ? 'active' : ''; ?>">
+				<a href="<?php echo URLROOT; ?>/manager/">
+					<i class='bx bxs-envelope'></i>
+					<span class="text">Applications</span>
+				</a>
+			</li>
+			<li class="<?php echo (basename($_SERVER['REQUEST_URI']) == 'suppliers') ? 'active' : ''; ?>">
+				<a href="<?php echo URLROOT; ?>/manager/suppliers">
+					<i class='bx bxs-network-chart'></i>
+					<span class="text">Suppliers</span>
+				</a>
+			</li>		
+			<li>
+				<a href="<?php echo URLROOT; ?>/manager/complaints">
+					<i class='bx bxs-alarm-exclamation' ></i>
+					<span class="text">Complaints</span>
+				</a>
+			</li>
+
     <li class="<?php echo (basename($_SERVER['REQUEST_URI']) == 'index') ? 'active' : ''; ?>">
-      <a href="<?php echo URLROOT; ?>/vehiclemanager/index">
+      <a href="<?php echo URLROOT; ?>/manager/collection">
         <i class="bx bxs-dashboard"></i>
         <span class="text">Collection</span>
       </a>
     </li>
     <li class="<?php echo (basename($_SERVER['REQUEST_URI']) == 'schedule') ? 'active' : ''; ?>">
-      <a href="<?php echo URLROOT; ?>/vehiclemanager/schedule">
+      <a href="<?php echo URLROOT; ?>/manager/schedule">
         <i class="bx bxs-calendar"></i>
         <span class="text">Schedule</span>
       </a>
@@ -23,34 +43,34 @@
       </a>
     </li>
     <li class="<?php echo (basename($_SERVER['REQUEST_URI']) == 'vehicle') ? 'active' : ''; ?>">
-      <a href="<?php echo URLROOT; ?>/vehiclemanager/vehicle">
+      <a href="<?php echo URLROOT; ?>/manager/vehicle">
         <i class="bx bxs-car"></i>
         <span class="text">Vehicle</span>
       </a>
     </li>
     <li class="<?php echo (basename($_SERVER['REQUEST_URI']) == 'team') ? 'active' : ''; ?>">
-      <a href="<?php echo URLROOT; ?>/vehiclemanager/driver">
+      <a href="<?php echo URLROOT; ?>/manager/driver">
         <i class="bx bxs-group"></i>
         <span class="text">Driver</span>
       </a>
     </li>
 
-    <li class="<?php echo (basename($_SERVER['REQUEST_URI']) == 'shift') ? 'active' : ''; ?>">
-      <a href="<?php echo URLROOT; ?>/vehiclemanager/shift">
-        <i class="bx bxs-time-five"></i>
-        <span class="text">Shift</span>
-      </a>
-    </li>
+    <li>
+				<a href="<?php echo URLROOT; ?>/Suppliermanager/chat">
+					<i class='bx bxs-message-dots' ></i>
+					<span class="text">Chat</span>
+				</a>
+			</li>
   </ul>
   <ul class="side-menu">
     <li class="<?php echo (basename($_SERVER['REQUEST_URI']) == 'settings') ? 'active' : ''; ?>">
-      <a href="<?php echo URLROOT; ?>/vehiclemanager/settings">
+      <a href="<?php echo URLROOT; ?>/manager/settings">
         <i class="bx bxs-cog"></i>
         <span class="text">Settings</span>
       </a>
     </li>
     <li>
-      <a href="<?php echo URLROOT; ?>/vehiclemanager/personal-details" class="logout">
+      <a href="<?php echo URLROOT; ?>/manager/personal-details" class="logout">
         <i class="bx bxs-user-detail"></i>
         <span class="text">Personal Details</span>
       </a>

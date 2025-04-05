@@ -22,8 +22,9 @@ require_once '../app/models/M_CollectionBag.php';
 // Require helper files
 require_once '../app/helpers/auth_middleware.php';
 require_once '../app/helpers/UserHelper.php';
+require_once '../app/helpers/image_helper.php';
 
-class VehicleManager extends Controller
+class Manager extends Controller
 {
     //----------------------------------------
     // PROPERTIES
@@ -43,6 +44,7 @@ class VehicleManager extends Controller
     private $userModel;
     private $employeeModel;
     private $bagModel;
+    private $supplierModel;
 
     //----------------------------------------
     // CONSTRUCTOR
@@ -76,91 +78,101 @@ class VehicleManager extends Controller
         $this->userModel = $this->model('M_User');
         $this->employeeModel = $this->model('M_Employee');
         $this->bagModel = $this->model('M_CollectionBag');
+        $this->supplierApplicationModel = $this->model('M_SupplierApplication');
+        $this->supplierModel = $this->model('M_Supplier');
     }
 
     //----------------------------------------
     // DASHBOARD METHODS
     //----------------------------------------
-    public function index()
+    public function collection()
     {
         // Get dashboard stats from the model
         $stats = $this->vehicleManagerModel->getDashboardStats();
+        $stats['collections'] = (array)$stats['collections'];
+
+        // Retrieve filter parameters from the GET request
+        $collection_id = isset($_GET['collection_id']) ? $_GET['collection_id'] : null;
+        $schedule_id = isset($_GET['schedule_id']) ? $_GET['schedule_id'] : null;
+        $status = isset($_GET['status']) ? $_GET['status'] : null;
+        $start_date = isset($_GET['start_date']) ? $_GET['start_date'] : null;
+        $end_date = isset($_GET['end_date']) ? $_GET['end_date'] : null;
+        $min_quantity = isset($_GET['min_quantity']) ? $_GET['min_quantity'] : null;
+        $max_quantity = isset($_GET['max_quantity']) ? $_GET['max_quantity'] : null;
+        $bags_added = isset($_GET['bags_added']) ? $_GET['bags_added'] : null;
+
+        // Fetch collections based on filters
+        if ($collection_id || $schedule_id || $status || $start_date || $end_date || $min_quantity || $max_quantity || $bags_added !== null) {
+            $allCollections = $this->collectionModel->getFilteredCollections(
+                $collection_id, 
+                $schedule_id, 
+                $status, 
+                $start_date, 
+                $end_date, 
+                $min_quantity, 
+                $max_quantity, 
+                $bags_added
+            );
+        } else {
+            // Otherwise, fetch all collections
+            $allCollections = $this->collectionModel->getAllCollections();
+        }
 
         // Fetch all necessary data for the dropdowns
-        $routes = $this->routeModel->getAllRoutes();
-        $drivers = $this->driverModel->getUnassignedDrivers();
-        $vehicles = $this->vehicleModel->getAllVehicles();
-        $shifts = $this->shiftModel->getAllShifts();
         $schedules = $this->scheduleModel->getAllSchedules();
         $collectionSchedules = $this->scheduleModel->getSchedulesForNextWeek(); 
-        $ongoingCollections = $this->collectionModel->getOngoingCollections();
         $todayRoutes = $this->routeModel->getTodayAssignedRoutes();
 
-        // Pass the stats and data for the dropdowns to the view
-        $this->view('vehicle_manager/v_collection', [
+        $data = [
             'stats' => $stats,
-            'routes' => $routes,
-            'drivers' => $drivers,
-            'vehicles' => $vehicles,
-            'shifts' => $shifts,
             'schedules' => $schedules,
-            'ongoing_collections' => $ongoingCollections,
+            'all_collections' => $allCollections,
             'collectionSchedules' => $collectionSchedules,
-            'todayRoutes' => $todayRoutes 
-        ]);
+            'todayRoutes' => $todayRoutes,
+            // Pass the filter values back to the view to maintain state
+            'filters' => [
+                'collection_id' => $collection_id,
+                'schedule_id' => $schedule_id,
+                'status' => $status,
+                'start_date' => $start_date,
+                'end_date' => $end_date,
+                'min_quantity' => $min_quantity,
+                'max_quantity' => $max_quantity,
+                'bags_added' => $bags_added
+            ]
+        ];
+
+        // Pass the stats and data for the dropdowns to the view
+        $this->view('vehicle_manager/v_collection_0', $data);
     }
 
     public function schedule()
     {
         // Get dashboard stats from the model
-        $stats = $this->vehicleManagerModel->getDashboardStats();
+        $totalSchedules = $this->scheduleModel->getTotalSchedules();
+        $availableSchedules = $this->scheduleModel->getActiveSchedulesCount();
 
         // Fetch all necessary data for the dropdowns
         $routes = $this->routeModel->getAllRoutes();
         $drivers = $this->driverModel->getUnassignedDrivers();
-        $vehicles = $this->vehicleModel->getAllVehicles();
+        $vehicles = $this->vehicleModel->getAllAvailableVehicles();
         $shifts = $this->shiftModel->getAllShifts();
         $schedules = $this->scheduleModel->getAllSchedules();
-        $collectionSchedules = $this->scheduleModel->getSchedulesForNextWeek(); 
-        $ongoingCollections = $this->collectionModel->getOngoingCollections();
-        $todayRoutes = $this->routeModel->getTodayAssignedRoutes();
 
         // Pass the stats and data for the dropdowns to the view
         $this->view('vehicle_manager/v_collectionschedule', [
-            'stats' => $stats,
+            'totalSchedules' => $totalSchedules, // Total schedules
+            'availableSchedules' => $availableSchedules, // Currently ongoing schedules
             'routes' => $routes,
             'drivers' => $drivers,
             'vehicles' => $vehicles,
             'shifts' => $shifts,
-            'schedules' => $schedules,
-            'ongoing_collections' => $ongoingCollections,
-            'collectionSchedules' => $collectionSchedules,
-            'todayRoutes' => $todayRoutes 
+            'schedules' => $schedules
         ]);
     }
 
 
-// In your VehicleManager controller
-public function updateSchedule($scheduleId)
-{
-    // Fetch the specific schedule details
-    $schedule = $this->scheduleModel->getScheduleById($scheduleId);
-    
-    if (!$schedule) {
-        // Handle case where schedule doesn't exist
-        flash('schedule_message', 'Schedule not found', 'alert alert-danger');
-        redirect('vehiclemanager/schedule'); // Or wherever your schedules list is
-        return;
-    }
-    
-    $shifts = $this->shiftModel->getAllShifts();
-    
-    // Pass data to the view - notice we've removed routes
-    $this->view('vehicle_manager/v_schedule_update', [
-        'schedule' => $schedule,
-        'shifts' => $shifts
-    ]);
-}
+
 
     //----------------------------------------
     // SUPPLIER RECORD METHODS
@@ -188,29 +200,231 @@ public function updateSchedule($scheduleId)
     //----------------------------------------
     // SCHEDULE METHODS
     //----------------------------------------
-    public function createSchedule()
-    {
+    public function createSchedule() {
+        if (!isLoggedIn()) {
+            redirect('users/login');
+        }
+
+        $drivers = $this->driverModel->getAllDrivers();
+        $routes = $this->routeModel->getAllUnAssignedRoutes();
+
+        $data = [
+            'drivers' => $drivers,
+            'routes' => $routes,
+            'error' => ''
+        ];
+
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            // Sanitize and get POST data
+            $_POST = filter_input_array(INPUT_POST, FILTER_SANITIZE_STRING);
+
             $data = [
-                'route_id' => $_POST['route_id'],
-                'team_id' => $_POST['team_id'],
-                'vehicle_id' => $_POST['vehicle_id'],
-                'shift_id' => $_POST['shift_id'],
-                'week_number' => $_POST['week_number'],
-                'days_of_week' => isset($_POST['days_of_week']) ? implode(',', $_POST['days_of_week']) : ''
+                'day' => trim($_POST['day']),
+                'driver_id' => trim($_POST['driver_id']),
+                'route_id' => trim($_POST['route_id']),
+                'start_time' => trim($_POST['start_time']),
+                'end_time' => trim($_POST['end_time']),
+                'drivers' => $drivers,
+                'routes' => $routes,
+                'error' => ''
             ];
 
-            // Call the model to create a new schedule
-            $result = $this->scheduleModel->create($data);
-
-            if ($result) {
-                flash('schedule_success', 'Schedule created successfully');
-                redirect('vehiclemanager/index');
+            // Validate data
+            if (empty($data['day']) || 
+                empty($data['driver_id']) || empty($data['route_id']) || 
+                empty($data['start_time']) || empty($data['end_time'])) {
+                $data['error'] = 'Please fill in all fields';
             } else {
-                flash('schedule_error', 'Error creating schedule');
-                redirect('vehiclemanager/index');
+                // Validate time duration
+                $startTime = strtotime("2000-01-01 " . $data['start_time']);
+                $endTime = strtotime("2000-01-01 " . $data['end_time']);
+                
+                // If end time is earlier than start time, assume it's the next day
+                if ($endTime < $startTime) {
+                    $endTime = strtotime("2000-01-02 " . $data['end_time']);
+                }
+                
+                // Check if end time is before 10 PM
+                $tenPM = strtotime("2000-01-01 22:00:00");
+                if ($endTime > $tenPM) {
+                    $data['error'] = 'Shift end time cannot be after 10 PM.';
+                } else {
+                    // Check for a minimum gap of 2 hours between shifts
+                    $minGap = 2 * 60 * 60; // 2 hours in seconds
+                    if (($endTime - $startTime) < $minGap) {
+                        $data['error'] = 'There must be at least a 2-hour gap between shifts.';
+                    } else {
+                        // Check if the driver is already scheduled for this day and time
+                        $driverScheduleConflict = $this->scheduleModel->checkDriverScheduleConflict(
+                            $data['driver_id'],
+                            $data['day'],
+                            $data['start_time'],
+                            $data['end_time']
+                        );
+
+                        // Check if the route is already scheduled for this day and time
+                        $routeScheduleConflict = $this->scheduleModel->checkRouteScheduleConflict(
+                            $data['route_id'],
+                            $data['day'],
+                            $data['start_time'],
+                            $data['end_time']
+                        );
+
+                        if ($driverScheduleConflict) {
+                            $data['error'] = 'This driver is already scheduled during this time period.';
+                        } elseif ($routeScheduleConflict) {
+                            $data['error'] = 'This route is already scheduled during this time period.';
+                        } else {
+                            // Create schedule
+                            if ($this->scheduleModel->create($data)) {
+                                flash('schedule_success', 'Schedule created successfully');
+                                redirect('manager/schedule');
+                            } else {
+                                $data['error'] = 'Something went wrong. Please try again. Debug info: ' . 
+                                'day: ' . $data['day'] . ', ' .
+                                'driver_id: ' . $data['driver_id'] . ', ' .
+                                'route_id: ' . $data['route_id'] . ', ' .
+                                'start_time: ' . $data['start_time'] . ', ' .
+                                'end_time: ' . $data['end_time'];
+                            }
+                        }
+                    }
+                }
             }
         }
+
+        // Load the view for creating a schedule
+        $this->view('vehicle_manager/v_create_schedule', $data);
+    }
+
+    public function updateSchedule($scheduleId = null) {
+        if (!isLoggedIn()) {
+            redirect('users/login');
+        }
+
+        // Check if schedule ID is provided
+        if (!$scheduleId) {
+            flash('schedule_error', 'Invalid schedule ID');
+            redirect('manager/collectionschedule');
+        }
+
+        // Get the existing schedule
+        $schedule = $this->scheduleModel->getScheduleById($scheduleId);
+        
+        // Check if schedule exists
+        if (!$schedule) {
+            flash('schedule_error', 'Schedule not found');
+            redirect('manager/collectionschedule');
+        }
+
+        // Get data for the form
+        $drivers = $this->driverModel->getAllDrivers();
+        $routes = $this->routeModel->getAllUndeletedRoutes();
+
+        $data = [
+            'schedule' => $schedule,
+            'drivers' => $drivers,
+            'routes' => $routes,
+            'error' => ''
+        ];
+
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            // Sanitize and get POST data
+            $_POST = filter_input_array(INPUT_POST, FILTER_SANITIZE_STRING);
+
+            $data = [
+                'schedule_id' => $scheduleId,
+                'day' => trim($_POST['day']),
+                'driver_id' => trim($_POST['driver_id']),
+                'route_id' => trim($_POST['route_id']),
+                'start_time' => trim($_POST['start_time']),
+                'end_time' => trim($_POST['end_time']),
+                'schedule' => $schedule,
+                'drivers' => $drivers,
+                'routes' => $routes,
+                'error' => ''
+            ];
+
+            // Validate data
+            if (empty($data['day']) || 
+                empty($data['driver_id']) || empty($data['route_id']) || 
+                empty($data['start_time']) || empty($data['end_time'])) {
+                $data['error'] = 'Please fill in all fields';
+            } else {
+                // Validate time duration
+                $startTime = strtotime("2000-01-01 " . $data['start_time']);
+                $endTime = strtotime("2000-01-01 " . $data['end_time']);
+                
+                // If end time is earlier than start time, assume it's the next day
+                if ($endTime < $startTime) {
+                    $endTime = strtotime("2000-01-02 " . $data['end_time']);
+                }
+                
+                $duration = $endTime - $startTime;
+                $maxDuration = 24 * 60 * 60; // 24 hours in seconds
+                
+                // Check if end time is before 10 PM
+                $tenPM = strtotime("2000-01-01 22:00:00");
+                if ($endTime > $tenPM) {
+                    $data['error'] = 'Shift end time cannot be after 10 PM.';
+                } elseif ($duration > $maxDuration) {
+                    $data['error'] = 'Schedule duration cannot exceed 24 hours.';
+                } elseif (($endTime - $startTime) < (2 * 60 * 60)) { // 2 hours in seconds
+                    $data['error'] = 'There must be at least a 2-hour gap between shifts.';
+                } else {
+                    // Check for conflicts only if the driver or day or time has changed
+                    $driverConflict = false;
+                    $routeConflict = false;
+                    
+                    if ($data['driver_id'] != $schedule->driver_id || 
+                        $data['day'] != $schedule->day || 
+                        $data['start_time'] != $schedule->start_time || 
+                        $data['end_time'] != $schedule->end_time) {
+                        
+                        // Check if the driver is already scheduled for this day and time
+                        $driverConflict = $this->scheduleModel->checkDriverScheduleConflictExcludingCurrent(
+                            $data['driver_id'],
+                            $data['day'],
+                            $data['start_time'],
+                            $data['end_time'],
+                            $scheduleId
+                        );
+                    }
+                    
+                    if ($data['route_id'] != $schedule->route_id || 
+                        $data['day'] != $schedule->day || 
+                        $data['start_time'] != $schedule->start_time || 
+                        $data['end_time'] != $schedule->end_time) {
+                        
+                        // Check if the route is already scheduled for this day and time
+                        $routeConflict = $this->scheduleModel->checkRouteScheduleConflictExcludingCurrent(
+                            $data['route_id'],
+                            $data['day'],
+                            $data['start_time'],
+                            $data['end_time'],
+                            $scheduleId
+                        );
+                    }
+
+                    if ($driverConflict) {
+                        $data['error'] = 'This driver is already scheduled during this time period.';
+                    } elseif ($routeConflict) {
+                        $data['error'] = 'This route is already scheduled during this time period.';
+                    } else {
+                        // Update schedule
+                        if ($this->scheduleModel->updateSchedule($data)) {
+                            flash('schedule_success', 'Schedule updated successfully');
+                            redirect('manager/schedule');
+                        } else {
+                            $data['error'] = 'Something went wrong. Please try again.';
+                        }
+                    }
+                }
+            }
+        }
+
+        // Load the view for updating a schedule
+        $this->view('vehicle_manager/v_update_schedule', $data);
     }
 
     //----------------------------------------
@@ -227,33 +441,143 @@ public function updateSchedule($scheduleId)
     
         // Fetch vehicles based on filters
         if ($license_plate || $vehicle_type || $capacity || $make || $model || $manufacturing_year) {
-            $data['vehicles'] = $this->vehicleModel->getFilteredVehicles($license_plate, $vehicle_type, $capacity, $make, $model, $manufacturing_year);
+            $allVehicles = $this->vehicleModel->getFilteredVehicles($license_plate, $vehicle_type, $capacity, $make, $model, $manufacturing_year);
         } else {
             // Otherwise, fetch all vehicles
-            $data['vehicles'] = $this->vehicleModel->getVehicleDetails();
+            $allVehicles = $this->vehicleModel->getAllAvailableVehicles();
         }
     
-        // Additional data for the view
-        $data['totalVehicles'] = $this->vehicleModel->getTotalVehicles();
-        $data['availableVehicles'] = $this->vehicleModel->getAvailableVehicles();
-        $data['vehicleTypeStats'] = $this->vehicleModel->getVehicleTypeStats();
+        // Get total vehicles and available vehicles for display
+        $totalVehicles = count($allVehicles);
+        $availableVehicles = count(array_filter($allVehicles, function($vehicle) {
+            return $vehicle->status === 'Available';
+        }));
     
-        // Load the view and pass the data
-        $this->view('vehicle_manager/v_new_vehicle', $data);
-    }
-
-    public function vehiclez() {
+        // Prepare data to pass to the view
         $data = [
-            'totalVehicles' => $this->vehicleModel->getTotalVehicles(),
-            'availableVehicles' => $this->vehicleModel->getAvailableVehicles(),
-            'vehicles' => $this->vehicleModel->getVehicleDetails(),
-            'vehicleTypeStats' => $this->vehicleModel->getVehicleTypeStats()
+            'allVehicles' => $allVehicles,
+            'totalVehicles' => $totalVehicles,
+            'availableVehicles' => $availableVehicles
         ];
-
+    
         $this->view('vehicle_manager/v_vehicle', $data);
     }
 
-    public function updateVehicle() {
+    public function viewVehicle($vehicle_id) {
+        if (!isLoggedIn()) {
+            redirect('users/login');
+        }
+
+        // Fetch vehicle details from the model
+        $vehicle = $this->vehicleModel->getVehicleById($vehicle_id);
+
+        // Check if vehicle exists
+        if (!$vehicle) {
+            flash('vehicle_not_found', 'Vehicle not found.');
+            redirect('manager/vehicle'); // Redirect to the vehicle list or another page
+        }
+
+        // Fetch collection history
+        $collectionHistory = $this->vehicleModel->getVehicleCollectionHistory($vehicle_id);
+        
+        // Fetch upcoming schedules
+        $upcomingSchedules = $this->vehicleModel->getUpcomingSchedulesForVehicle($vehicle_id);
+
+        $this->view('vehicle_manager/v_vehicle_profile', [
+            'vehicle' => $vehicle,
+            'collectionHistory' => $collectionHistory,
+            'upcomingSchedules' => $upcomingSchedules
+        ]);
+    }
+
+
+    public function createVehicle() {
+        if (!isLoggedIn()) {
+            redirect('users/login');
+        }
+
+        // Get data for the form
+        $data = [
+            'license_plate' => '',
+            'status' => 'Available', // Default status
+            'capacity' => '',
+            'vehicle_type' => '',
+            'make' => '',
+            'model' => '',
+            'manufacturing_year' => '',
+            'error' => ''
+        ];
+
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            // Sanitize and get POST data
+            $_POST = filter_input_array(INPUT_POST, FILTER_SANITIZE_STRING);
+
+            $data = [
+                'license_plate' => trim($_POST['license_plate']),
+                'status' => trim($_POST['status']),
+                'capacity' => trim($_POST['capacity']),
+                'vehicle_type' => trim($_POST['vehicle_type']),
+                'make' => trim($_POST['make']),
+                'model' => trim($_POST['model']),
+                'manufacturing_year' => trim($_POST['manufacturing_year']),
+                'error' => ''
+            ];
+
+            // Validate data
+            if (empty($data['license_plate']) || 
+                empty($data['capacity']) || 
+                empty($data['vehicle_type']) || 
+                empty($data['make']) || 
+                empty($data['model']) || 
+                empty($data['manufacturing_year'])) {
+                $data['error'] = 'Please fill in all fields';
+            } else {
+                // Check if the license plate is unique
+                if ($this->vehicleModel->isLicensePlateTaken($data['license_plate'])) {
+                    $data['error'] = 'This license plate is already taken.';
+                } else {
+                    // Handle image upload
+                    if (isset($_FILES['image']) && $_FILES['image']['error'] == 0) {
+                        $uploadResult = uploadVehicleImage($_FILES['image'], $data['license_plate']);
+                        if ($uploadResult['success']) {
+                            $data['image_path'] = $uploadResult['path']; // Store the file path
+                        } else {
+                            $data['error'] = $uploadResult['message'];
+                        }
+                    } else {
+                        $data['error'] = 'Image file is required.';
+                    }
+
+                    // If no errors, create vehicle
+                    if (empty($data['error'])) {
+                        if ($this->vehicleModel->createVehicle($data)) {
+                            flash('vehicle_success', 'Vehicle created successfully');
+                            redirect('manager/vehicle'); // Redirect to the vehicle list or another page
+                        } else {
+                            $data['error'] = 'Something went wrong. Please try again.';
+                        }
+                    }
+                }
+            }
+        }
+
+        // Load the view for creating a vehicle
+        $this->view('vehicle_manager/v_create_vehicle', $data);
+    }
+
+
+    public function updateVehicle($vehicle_id) {
+        if (!isLoggedIn()) {
+            redirect('users/login');
+        }
+
+        // Fetch the current vehicle details
+        $vehicle = $this->vehicleModel->getVehicleById($vehicle_id);
+        if (!$vehicle) {
+            flash('vehicle_not_found', 'Vehicle not found.');
+            redirect('manager/vehicle');
+        }
+
         if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             // Validate and sanitize input
             $license_plate = htmlspecialchars(trim($_POST['license_plate'])); // Keep the license plate as is
@@ -265,15 +589,15 @@ public function updateSchedule($scheduleId)
             $capacity = htmlspecialchars(trim($_POST['capacity']));
 
             // Check the current status of the vehicle
-            $currentVehicle = $this->vehicleModel->getVehicleByLicensePlate($license_plate);
-            if ($currentVehicle && $currentVehicle->status === 'In Use') {
+            if ($vehicle->status === 'In Use') {
                 // Handle the case where the vehicle is in use
-                echo "Cannot update vehicle. The vehicle is currently in use.";
-                return; // Exit the function if the vehicle is in use
+                flash('update_error', 'Cannot update vehicle. The vehicle is currently in use.');
+                redirect('manager/vehicle');
             }
 
             // Initialize the data array for updating
             $data = [
+                'vehicle_id' => $vehicle_id,
                 'license_plate' => $license_plate, // Keep the existing license plate
                 'vehicle_type' => $vehicle_type,
                 'make' => $make,
@@ -285,29 +609,33 @@ public function updateSchedule($scheduleId)
 
             // Handle file upload if a new image is provided
             if (isset($_FILES['vehicle_image']) && $_FILES['vehicle_image']['error'] == 0) {
-                $image = $_FILES['vehicle_image'];
-                $target_dir = "/opt/lampp/htdocs/Evergreen_Project/public/uploads/vehicle_photos/";
-                $target_file = $target_dir . $license_plate . ".jpg"; // Save as {license_plate}.jpg
-
-                // Move the uploaded file to the target directory
-                if (move_uploaded_file($image['tmp_name'], $target_file)) {
+                $uploadResult = uploadVehicleImage($_FILES['vehicle_image'], $license_plate);
+                if ($uploadResult['success']) {
                     // Update the image path in the data array
-                    $data['image_path'] = $target_file; // Optional: store the new image path in the database
+                    $data['image_path'] = $uploadResult['path']; // Store relative path
                 } else {
                     // Handle file upload error
-                    echo "Error uploading file.";
-                    return; // Exit the function if the upload fails
+                    flash('upload_error', $uploadResult['message']);
+                    redirect('manager/vehicle');
                 }
             }
 
             // Update vehicle details in the database
-            $this->vehicleModel->updateVehicle($data);
-
-            // Redirect or show success message
-            header('Location: ' . URLROOT . '/vehiclemanager/vehicle');
-            exit();
+            if ($this->vehicleModel->updateVehicle($data)) {
+                flash('update_success', 'Vehicle updated successfully.');
+                redirect('manager/vehicle');
+            } else {
+                flash('update_error', 'Failed to update vehicle. Please try again.');
+                redirect('manager/vehicle');
+            }
         }
+
+        // Load the view for updating the vehicle
+        $this->view('vehicle_manager/v_update_vehicle', ['vehicle' => $vehicle]);
     }
+
+
+ 
 
     public function getVehicleById($id)
     {
@@ -321,36 +649,33 @@ public function updateSchedule($scheduleId)
 
     public function deleteVehicle($id)
     {
-        header('Content-Type: application/json');
 
-        try {
-            // Log the request method and ID
-            error_log("Delete request received for vehicle ID: " . $id);
-            error_log("Request method: " . $_SERVER['REQUEST_METHOD']);
+        // NEED TO DOUBLE CHECK THIS!!! A SIMPLE INSTRUCTION BUT ITS NOT DELETING. IDK ...
 
-            if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-                throw new Exception('Invalid request method');
-            }
+        // if ($this->vehicleModel->isVehicleInSchedule($id)) {
+        //     if ($this->vehicleModel->markAsDeleted($id)) {
+        //         error_log("Vehicle " . $id . " marked as deleted");
+        //         flash('delete_success', 'Vehicle marked as deleted');
+        //     } else {
+        //         flash('delete_error', 'Failed to mark vehicle as deleted');
+        //     }
+        // } else {
+        //     if ($this->vehicleModel->deleteVehicle($id)) {
+        //         error_log("Vehicle " . $id . " deleted successfully");
+        //         flash('delete_success', 'Vehicle deleted successfully');
+        //     } else {
+        //         flash('delete_error', 'Failed to delete vehicle from database');
+        //     }
+        // }
 
-            // Try to delete the vehicle
-            if ($this->vehicleModel->deleteVehicle($id)) {
-                error_log("Vehicle " . $id . " deleted successfully");
-                echo json_encode([
-                    'success' => true,
-                    'message' => 'Vehicle deleted successfully'
-                ]);
-            } else {
-                throw new Exception('Failed to delete vehicle from database');
-            }
-
-        } catch (Exception $e) {
-            error_log("Error in deleteVehicle: " . $e->getMessage());
-            echo json_encode([
-                'success' => false,
-                'message' => $e->getMessage()
-            ]);
+        if ($this->vehicleModel->markAsDeleted($id)) {
+            error_log("Vehicle " . $id . " marked as deleted");
+            flash('delete_success', 'Vehicle marked as deleted');
+        } else {
+            flash('delete_error', 'Failed to mark vehicle as deleted');
         }
-        exit;
+
+        redirect('manager/vehicle');
     }
 
     //----------------------------------------
@@ -365,25 +690,44 @@ public function updateSchedule($scheduleId)
         $name = isset($_GET['name']) ? $_GET['name'] : null;
         $nic = isset($_GET['nic']) ? $_GET['nic'] : null;
         $contact_number = isset($_GET['contact_number']) ? $_GET['contact_number'] : null;
+        $license_number = isset($_GET['license_number']) ? $_GET['license_number'] : null;
         $driver_status = isset($_GET['driver_status']) ? $_GET['driver_status'] : null;
-        $employee_status = isset($_GET['employee_status']) ? $_GET['employee_status'] : null;
 
         // Get filtered or all drivers
-        if ($driver_id || $name || $nic || $contact_number || $driver_status || $employee_status) {
-            $data['drivers'] = $this->driverModel->getFilteredDrivers($driver_id, $name, $nic, $contact_number, $driver_status, $employee_status);
+        if ($driver_id || $name || $nic || $contact_number || $license_number || $driver_status) {
+            $data['drivers'] = $this->driverModel->getFilteredDrivers($driver_id, $name, $nic, $contact_number, $license_number, $driver_status);
         } else {
             $data['drivers'] = $this->driverModel->getAllDrivers();
         }
 
         // Add other data to the array
-        $data['unassigned_drivers'] = $this->driverModel->getUnassignedDriversList();
         $data['total_drivers'] = $this->driverModel->getTotalDrivers();
         $data['on_duty_drivers'] = $this->driverModel->getDriversOnDuty();
-        $data['unassigned_drivers_count'] = $this->driverModel->getUnassignedDriversCount();
-        $data['users'] = $this->userModel->getAllUnassignedUsers();
-        $data['update_users'] = $this->userModel->getAllUserDrivers();
         
-        $this->view('vehicle_manager/v_driver_2', $data);
+        $this->view('vehicle_manager/v_driver', $data);
+    }
+
+
+    public function viewDriver($driver_id) {
+        if (!isLoggedIn()) {
+            redirect('users/login');
+        }
+
+        $driver = $this->driverModel->getDriverById($driver_id);
+        if (!$driver) {
+            flash('driver_not_found', 'Driver not found.');
+            redirect('manager/driver'); 
+        }
+
+        $collectionHistory = $this->driverModel->getDriverCollectionHistory($driver_id);
+        
+        $upcomingSchedules = $this->driverModel->getUpcomingSchedulesForDriver($driver_id);
+
+        $this->view('vehicle_manager/v_driver_profile', [
+            'driver' => $driver,
+            'collectionHistory' => $collectionHistory,
+            'upcomingSchedules' => $upcomingSchedules
+        ]);
     }
 
     public function getDriverDetails($driverId) {
@@ -473,7 +817,7 @@ public function updateSchedule($scheduleId)
                 ];
             }
 
-            redirect('vehiclemanager/driver'); // Redirect to the drivers page
+            redirect('manager/driver'); // Redirect to the drivers page
         } else {
             $data = [
                 'first_name' => '',
@@ -490,42 +834,138 @@ public function updateSchedule($scheduleId)
         }
     }
 
-    public function updateDriver()
-    {
-        if ($_SERVER['REQUEST_METHOD'] == 'POST') {
-            // Sanitize and retrieve the input data
-            $user_id = trim($_POST['user_id']);
-            $address_line1 = trim($_POST['address_line1']);
-            $address_line2 = trim($_POST['address_line2']);
-            $city = trim($_POST['city']);
-            $contact_number = trim($_POST['contact_number']);
-            $emergency_contact = trim($_POST['emergency_contact']);
-
-            // Validate the input data as needed
-
-            // Update the driver information in the database
-            $result = $this->employeeModel->updateDriverInfo($user_id, $address_line1, $address_line2, $city, $contact_number, $emergency_contact);
-
-            // Check if the update was successful
-            if ($result) {
-                // Redirect or provide feedback
-                flash('driver_update_success', 'Driver information updated successfully.');
-                header('Location: ' . URLROOT . '/vehiclemanager/driver'); // Redirect to a relevant page
-                exit;
-            } else {
-                // Handle the error
-                flash('driver_update_error', 'Failed to update driver information.');
-            }
-        } else {
-
-            // Prepare data to pass to the view
-            $data = [
-                'users' => $this->userModel->getAllUserDrivers() // Ensure you are passing the users as well
-            ];
-
-            // Load the view for updating a driver
-            $this->view('vehicle_manager/v_update_driver', $data);
+    public function updateDriver($id) {
+        // Check if user is logged in
+        if (!isLoggedIn()) {
+            redirect('users/login');
         }
+        
+        // Get the driver data
+        $driver = $this->driverModel->getDriverById($id);
+        if (!$driver) {
+            flash('driver_error', 'Driver not found', 'alert alert-danger');
+            redirect('manager/driver');
+        }
+        
+        // Get the profile data
+        $profile = $this->userModel->getProfileById($driver->profile_id);
+        if (!$profile) {
+            flash('driver_error', 'Profile not found', 'alert alert-danger');
+            redirect('manager/driver');
+        }
+        
+        // Initialize data array
+        $data = [
+            'driver' => $driver,
+            'profile' => $profile,
+            'error' => ''
+        ];
+        
+        // Process form submission
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            // Sanitize POST data
+            $_POST = filter_input_array(INPUT_POST, FILTER_SANITIZE_STRING);
+            
+            // Get submitted data
+            $data = [
+                'driver' => $driver,
+                'profile' => $profile,
+                'driver_id' => $id,
+                'profile_id' => $driver->profile_id,
+                'first_name' => trim($_POST['first_name']),
+                'last_name' => trim($_POST['last_name']),
+                'date_of_birth' => trim($_POST['date_of_birth']),
+                'contact_number' => trim($_POST['contact_number']),
+                'emergency_contact' => trim($_POST['emergency_contact']),
+                'address_line1' => trim($_POST['address_line1']),
+                'address_line2' => isset($_POST['address_line2']) ? trim($_POST['address_line2']) : '',
+                'city' => trim($_POST['city']),
+                'license_expiry_date' => trim($_POST['license_expiry_date']),
+                'status' => trim($_POST['status']),
+                'error' => ''
+            ];
+            
+            // Validate inputs
+            if (empty($data['first_name'])) {
+                $data['error'] = 'Please enter first name';
+            } elseif (empty($data['last_name'])) {
+                $data['error'] = 'Please enter last name';
+            } elseif (empty($data['date_of_birth'])) {
+                $data['error'] = 'Please enter date of birth';
+            } elseif (empty($data['contact_number'])) {
+                $data['error'] = 'Please enter contact number';
+            } elseif (empty($data['emergency_contact'])) {
+                $data['error'] = 'Please enter emergency contact';
+            } elseif (empty($data['address_line1'])) {
+                $data['error'] = 'Please enter address line 1';
+            } elseif (empty($data['city'])) {
+                $data['error'] = 'Please enter city';
+            } elseif (empty($data['license_expiry_date'])) {
+                $data['error'] = 'Please enter license expiry date';
+            } elseif (strtotime($data['license_expiry_date']) <= time()) {
+                $data['error'] = 'License expiry date must be in the future';
+            }
+            
+            // Handle image upload if a new image was provided
+            if (isset($_FILES['driver_image']) && $_FILES['driver_image']['error'] === 0) {
+                $uniqueId = $profile->nic . '_' . time();
+                $uploadResult = uploadDriverImage($_FILES['driver_image'], $uniqueId);
+                
+                if ($uploadResult['success']) {
+                    $data['image_path'] = $uploadResult['path'];
+                } else {
+                    $data['error'] = $uploadResult['message'];
+                }
+            }
+            
+            // Update records if no errors
+            if (empty($data['error'])) {
+                try {
+                    
+                    // Update profile information
+                    $profileData = [
+                        'profile_id' => $data['profile_id'],
+                        'first_name' => $data['first_name'],
+                        'last_name' => $data['last_name'],
+                        'date_of_birth' => $data['date_of_birth'],
+                        'contact_number' => $data['contact_number'],
+                        'emergency_contact' => $data['emergency_contact'],
+                        'address_line1' => $data['address_line1'],
+                        'address_line2' => $data['address_line2'],
+                        'city' => $data['city']
+                    ];
+                    
+                    if (!$this->userModel->updateProfile($profileData)) {
+                        throw new Exception('Failed to update profile');
+                    }
+                    
+                    // Update driver information
+                    $driverData = [
+                        'driver_id' => $data['driver_id'],
+                        'license_expiry_date' => $data['license_expiry_date'],
+                        'status' => $data['status']
+                    ];
+                    
+                    // Add image path if a new image was uploaded
+                    if (isset($data['image_path'])) {
+                        $driverData['image_path'] = $data['image_path'];
+                    }
+                    
+                    if (!$this->driverModel->updateDriver($driverData)) {
+                        throw new Exception('Failed to update driver');
+                    }
+                    
+                    
+                    flash('driver_success', 'Driver updated successfully');
+                    redirect('manager/driver');
+                    
+                } catch (Exception $e) {
+                    $data['error'] = 'Error updating driver: ' . $e->getMessage();
+                }
+            }
+        }
+        
+        $this->view('vehicle_manager/v_update_driver', $data);
     }
 
     //----------------------------------------
@@ -675,137 +1115,6 @@ public function updateSchedule($scheduleId)
         exit;
     }
 
-    //----------------------------------------
-    // SHIFT METHODS
-    //----------------------------------------
-    public function shift()
-    {
-        // Handle POST request for creating new shift
-        if ($_SERVER['REQUEST_METHOD'] == 'POST') {
-            try {
-                // Validate and sanitize input
-                $data = [
-                    'shift_name' => trim($_POST['shift_name']),
-                    'start_time' => trim($_POST['start_time']),
-                    'end_time' => trim($_POST['end_time'])
-                ];
-
-                // Check for duplicate shift name
-                if ($this->shiftModel->isShiftNameDuplicate($data['shift_name'])) {
-                    flash('shift_error', 'Shift name already exists', 'alert alert-danger');
-                    redirect('vehiclemanager/shift');
-                    return;
-                }
-
-                // Use addShift instead of createShift
-                if ($this->shiftModel->addShift($data)) {
-                    flash('shift_success', 'New shift created successfully');
-                } else {
-                    // Get specific error message from model
-                    flash('shift_error', $this->shiftModel->getError() ?? 'Failed to create shift');
-                }
-                redirect('vehiclemanager/shift');
-                return;
-            } catch (Exception $e) {
-                flash('shift_error', 'Error: ' . $e->getMessage());
-                redirect('vehiclemanager/shift');
-                return;
-            }
-        }
-
-        // GET request - display shifts page
-        $shifts = $this->shiftModel->getAllShifts();
-        $totalShifts = $this->shiftModel->getTotalShifts();
-        $totalTeamsInCollection = $this->teamModel->getTotalTeamsInCollection();
-
-        // Initialize the schedules array
-        $schedules = [];
-
-        // Define the date range for the next 7 days
-        $startDate = date('Y-m-d');
-        $endDate = date('Y-m-d', strtotime('+6 days'));
-
-        // Fetch schedules for each shift within the date range
-        foreach ($shifts as $shift) {
-            // Fetch schedules for the specific shift
-            $shiftSchedules = $this->scheduleModel->getSchedulesByShiftIdAndDate($shift->shift_id, $startDate, $endDate);
-
-            // Organize schedules by date
-            foreach ($shiftSchedules as $schedule) {
-                $date = date('Y-m-d', strtotime($schedule->created_at)); // Assuming schedule has a created_at field
-                if (!isset($schedules[$shift->shift_id][$date])) {
-                    $schedules[$shift->shift_id][$date] = [];
-                }
-                $schedules[$shift->shift_id][$date][] = $schedule; // Add the schedule to the appropriate date
-            }
-        }
-
-        // Prepare data to pass to the view
-        $data = [
-            'shifts' => $shifts,
-            'totalShifts' => $totalShifts,
-            'totalTeamsInCollection' => $totalTeamsInCollection,
-            'schedules' => $schedules // Pass the organized schedules to the view
-        ];
-
-        // Load the view with the data
-        $this->view('vehicle_manager/v_shift', $data);
-    }
-
-    public function deleteShift($id)
-    {
-        if ($_SERVER['REQUEST_METHOD'] == 'POST') {
-            try {
-                if ($this->shiftModel->deleteShift($id)) {
-                    echo json_encode(['success' => true]);
-                } else {
-                    echo json_encode(['success' => false, 'error' => 'Failed to delete shift']);
-                }
-            } catch (Exception $e) {
-                echo json_encode(['success' => false, 'error' => $e->getMessage()]);
-            }
-            exit;
-        }
-    }
-
-    public function getShift($id)
-    {
-        header('Content-Type: application/json'); // Set the content type to JSON
-        try {
-            $shift = $this->shiftModel->getShiftById($id);
-            if ($shift) {
-                echo json_encode($shift);
-            } else {
-                echo json_encode(['error' => 'Shift not found']);
-            }
-        } catch (Exception $e) {
-            echo json_encode(['error' => $e->getMessage()]);
-        }
-        exit; // Ensure no additional output is sent
-    }
-
-    public function updateShift($id)
-    {
-        if ($_SERVER['REQUEST_METHOD'] == 'POST') {
-            $data = [
-                'shift_id' => $id,
-                'shift_name' => trim($_POST['shift_name']),
-                'start_time' => trim($_POST['start_time']),
-                'end_time' => trim($_POST['end_time'])
-            ];
-
-            try {
-                if ($this->shiftModel->updateShift($data)) {
-                    flash('shift_success', 'Shift updated successfully');
-                } else {
-                    flash('shift_error', $this->shiftModel->getError(), 'alert alert-danger');
-                }
-            } catch (Exception $e) {
-                flash('shift_error', $e->getMessage(), 'alert alert-danger');
-            }
-            redirect('vehiclemanager/shift');
-        }
-    }
 
     //----------------------------------------
     // PROFILE & SETTINGS METHODS
@@ -1083,7 +1392,7 @@ public function updateSchedule($scheduleId)
                     ]);
 
                     // Redirect or show success message
-                    header('Location: ' . URLROOT . '/vehiclemanager/vehicle');
+                    header('Location: ' . URLROOT . '/manager/vehicle');
                     exit();
                 } else {
                     // Handle file upload error
@@ -1116,7 +1425,7 @@ public function updateSchedule($scheduleId)
                     }
 
                     // Redirect or show success message
-                    header('Location: ' . URLROOT . '/vehiclemanager/vehicle');
+                    header('Location: ' . URLROOT . '/manager/vehicle');
                     exit();
                 } else {
                     echo "Error removing vehicle.";
@@ -1219,10 +1528,10 @@ public function updateSchedule($scheduleId)
                 flash('driver_message', 'Error: ' . $e->getMessage(), 'alert alert-danger');
             }
 
-            redirect('vehiclemanager/driver'); // Redirect to the driver management page
+            redirect('manager/driver'); // Redirect to the driver management page
         } else {
             // If not a POST request, redirect to the driver management page
-            redirect('vehiclemanager/driver');
+            redirect('manager/driver');
         }
     }
 
@@ -1560,6 +1869,440 @@ public function updateSchedule($scheduleId)
             echo json_encode([]);
         }
     }
+
+    public function createDriver() {
+        // Check if user is logged in
+        if (!isLoggedIn()) {
+            redirect('users/login');
+        }
+        
+        // Initialize data array for the view
+        $data = [
+            'email' => '',
+            'password' => '',
+            'confirm_password' => '',
+            'first_name' => '',
+            'last_name' => '',
+            'nic' => '',
+            'date_of_birth' => '',
+            'contact_number' => '',
+            'emergency_contact' => '',
+            'address_line1' => '',
+            'address_line2' => '',
+            'city' => '',
+            'license_number' => '',
+            'license_expiry_date' => '',
+            'hire_date' => date('Y-m-d'), // Default to today
+            'status' => 'Active',
+            'error' => ''
+        ];
+        
+        // Process form submission
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            // Sanitize POST data
+            $_POST = filter_input_array(INPUT_POST, FILTER_SANITIZE_STRING);
+            
+            // Get submitted data
+            $data = [
+                'email' => trim($_POST['email']),
+                'password' => trim($_POST['password']),
+                'confirm_password' => trim($_POST['confirm_password']),
+                'first_name' => trim($_POST['first_name']),
+                'last_name' => trim($_POST['last_name']),
+                'nic' => trim($_POST['nic']),
+                'date_of_birth' => trim($_POST['date_of_birth']),
+                'contact_number' => trim($_POST['contact_number']),
+                'emergency_contact' => trim($_POST['emergency_contact']),
+                'address_line1' => trim($_POST['address_line1']),
+                'address_line2' => isset($_POST['address_line2']) ? trim($_POST['address_line2']) : '',
+                'city' => trim($_POST['city']),
+                'license_expiry_date' => trim($_POST['license_expiry_date']),
+                'hire_date' => trim($_POST['hire_date']),
+                'status' => trim($_POST['status']),
+                'error' => ''
+            ];
+            
+            // Validate email
+            if (empty($data['email'])) {
+                $data['error'] = 'Please enter an email address';
+            } elseif (!filter_var($data['email'], FILTER_VALIDATE_EMAIL)) {
+                $data['error'] = 'Please enter a valid email address';
+            } elseif ($this->userModel->findUserByEmail($data['email'])) {
+                $data['error'] = 'Email is already taken';
+            }
+            
+            // Validate password
+            if (empty($data['password'])) {
+                $data['error'] = 'Please enter a password';
+            } elseif (strlen($data['password']) < 6) {
+                $data['error'] = 'Password must be at least 6 characters';
+            } elseif ($data['password'] !== $data['confirm_password']) {
+                $data['error'] = 'Passwords do not match';
+            }
+            
+            // Validate personal information
+            if (empty($data['first_name'])) {
+                $data['error'] = 'Please enter a first name';
+            }
+            
+            if (empty($data['last_name'])) {
+                $data['error'] = 'Please enter a last name';
+            }
+            
+            if (empty($data['nic'])) {
+                $data['error'] = 'Please enter a NIC number';
+            } elseif ($this->userModel->findProfileByNIC($data['nic'])) {
+                $data['error'] = 'This NIC is already registered';
+            }
+            
+            if (empty($data['date_of_birth'])) {
+                $data['error'] = 'Please enter date of birth';
+            }
+            
+            if (empty($data['contact_number'])) {
+                $data['error'] = 'Please enter a contact number';
+            }
+            
+            if (empty($data['address_line1'])) {
+                $data['error'] = 'Please enter address line 1';
+            }
+            
+            if (empty($data['city'])) {
+                $data['error'] = 'Please enter city';
+            }
+            
+            // Validate driver information
+            if (empty($data['license_number'])) {
+                $data['error'] = 'Please enter a license number';
+            } elseif ($this->driverModel->findDriverByLicenseNumber($data['license_number'])) {
+                $data['error'] = 'This license number is already registered';
+            }
+            
+            if (empty($data['license_expiry_date'])) {
+                $data['error'] = 'Please enter license expiry date';
+            } elseif (strtotime($data['license_expiry_date']) <= time()) {
+                $data['error'] = 'License expiry date must be in the future';
+            }
+            
+            if (empty($data['hire_date'])) {
+                $data['error'] = 'Please enter hire date';
+            }
+            
+            // Handle image upload
+            if (isset($_FILES['driver_image']) && $_FILES['driver_image']['error'] == 0) {
+                $uniqueId = $data['nic'] . '_' . time(); // Create a unique identifier
+                $uploadResult = uploadDriverImage($_FILES['driver_image'], $uniqueId);
+                if ($uploadResult['success']) {
+                    $data['image_path'] = $uploadResult['path']; // Store the file path
+                } else {
+                    $data['error'] = $uploadResult['message'];
+                }
+            } else {
+                $data['error'] = 'Driver photo is required.';
+            }
+            
+            // If no errors, proceed with creating the driver
+            if (empty($data['error'])) {
+                // Hash password
+                $data['password'] = password_hash($data['password'], PASSWORD_DEFAULT);
+                
+                try {
+
+                    
+                    // 1. Create user account
+                    $userData = [
+                        'email' => $data['email'],
+                        'password' => $data['password'],
+                        'role_id' => 2, // Assuming role_id 2 is for drivers
+                        'account_status' => 'Active'
+                    ];
+                    
+                    $user_id = $this->userModel->registerUser($userData);
+                    
+                    if (!$user_id) {
+                        throw new Exception('Failed to create user account');
+                    }
+                    
+                    // 2. Create profile
+                    $profileData = [
+                        'user_id' => $user_id,
+                        'first_name' => $data['first_name'],
+                        'last_name' => $data['last_name'],
+                        'nic' => $data['nic'],
+                        'date_of_birth' => $data['date_of_birth'],
+                        'contact_number' => $data['contact_number'],
+                        'emergency_contact' => $data['emergency_contact'],
+                        'address_line1' => $data['address_line1'],
+                        'address_line2' => $data['address_line2'],
+                        'city' => $data['city']
+                    ];
+                    
+                    $profile_id = $this->userModel->createProfile($profileData);
+                    
+                    if (!$profile_id) {
+                        throw new Exception('Failed to create profile');
+                    }
+                    
+                    // 3. Create driver record
+                    $driverData = [
+                        'profile_id' => $profile_id,
+                        'license_number' => $data['license_number'],
+                        'license_expiry_date' => $data['license_expiry_date'],
+                        'hire_date' => $data['hire_date'],
+                        'status' => $data['status'],
+                        'image_path' => $data['image_path']
+                    ];
+                    
+                    $driver_id = $this->driverModel->createDriver($driverData);
+                    
+                    if (!$driver_id) {
+                        throw new Exception('Failed to create driver record');
+                    }
+                    
+
+                    
+                    // Success - redirect with success message
+                    flash('driver_success', 'Driver created successfully');
+                    redirect('manager/driver');
+                    
+                } catch (Exception $e) {
+                    // Rollback transaction on error
+                    $this->db->rollBack();
+                    $data['error'] = 'Error creating driver: ' . $e->getMessage();
+                }
+            }
+        }
+        
+        // Load view with data
+        $this->view('vehicle_manager/v_create_driver', $data);
+    }
+
+    public function deleteDriver($id) {
+        // Check if user is logged in
+        if (!isLoggedIn()) {
+            redirect('users/login');
+        }
+        
+        // Get the driver data
+        $driver = $this->driverModel->getDriverById($id);
+        if (!$driver) {
+            flash('driver_error', 'Driver not found', 'alert alert-danger');
+            redirect('manager/driver');
+        }
+        
+        // Check if the driver is assigned to any active schedules
+        $schedulesWithDriver = $this->scheduleModel->getSchedulesByDriverId($id);
+        
+        if ($schedulesWithDriver) {
+            // Driver is in one or more schedules, show error
+            $scheduleNames = [];
+            foreach ($schedulesWithDriver as $schedule) {
+                $scheduleNames[] = "Schedule ID: {$schedule->schedule_id} ({$schedule->day}, {$schedule->start_time} - {$schedule->end_time})";
+            }
+            
+            $schedulesStr = implode("<br>", $scheduleNames);
+            flash('driver_error', "Cannot delete this driver as they are currently assigned to the following schedules:<br>{$schedulesStr}<br>Please reassign these schedules before deleting the driver.", 'alert alert-danger');
+            redirect('manager/driver');
+        }
+        
+        // Not in any schedules, so we can mark as deleted
+        if ($this->driverModel->markDriverAsDeleted($id)) {
+            flash('driver_success', 'Driver has been successfully marked as deleted');
+            redirect('manager/driver');
+        } else {
+            flash('driver_error', 'Something went wrong while trying to delete the driver', 'alert alert-danger');
+            redirect('manager/driver');
+        }
+    }
+
+
+    /*
+
+    THISARANIS
+    PART
+    FROM
+    HERE
+    LOL
+
+    */
+
+    public function index() {
+        // Get all applications
+        $applications = $this->model('M_SupplierApplication')->getAllApplications();
+        
+        // Get approved applications pending role assignment
+        $approvedPendingRole = $this->model('M_SupplierApplication')->getApprovedPendingRoleApplications();
+
+        $data = [
+            'applications' => $applications,
+            'approved_pending_role' => $approvedPendingRole
+        ];
+
+        // Load view
+        $this->view('supplier_manager/v_applications', $data);
+    }
+
+
+    public function viewApplication($applicationId) {
+        // Load the model
+        $supplierApplicationModel = $this->model('M_SupplierApplication');
+        
+        // Get application details using the model
+        $application = $supplierApplicationModel->getApplicationById($applicationId);
+    
+        // If application not found, redirect with error
+        if (!$application) {
+            redirect('manager/applications');
+        }
+    
+        $profile = $supplierApplicationModel->getProfileInfo($application->user_id);
+        $bankInfo = $supplierApplicationModel->getBankInfo($applicationId);
+        $documents = $supplierApplicationModel->getApplicationDocuments($applicationId);
+        
+        // Get cultivation data (appears to be part of the application in your view)
+        $cultivation = (object)[
+            'tea_cultivation_area' => $application->tea_cultivation_area,
+            'plant_age' => $application->plant_age,
+            'monthly_production' => $application->monthly_production
+        ];
+        
+        // Get location data
+        $location = (object)[
+            'latitude' => $application->latitude,
+            'longitude' => $application->longitude
+        ];
+        
+        // Get reviewer information if application is assigned
+        $reviewer = null;
+        if (!empty($application->reviewed_by)) {
+            $reviewer = $this->model('M_User')->getUserById($application->reviewed_by);
+        }
+    
+        // Prepare data array matching the view's expected structure
+        $data = [
+            'application' => (array)$application,
+            'profile' => $profile,
+            'bank_info' => $bankInfo,
+            'documents' => $documents,
+            'cultivation' => $cultivation,
+            'location' => $location,
+            'reviewer' => $reviewer
+        ];
+    
+        // Load the view
+        $this->view('supplier_manager/v_view_application', $data);
+    }
+
+    public function assignApplication($applicationId) {
+        if (!isLoggedIn()) {
+            redirect('users/login');
+        }
+    
+
+        $supplierApplicationModel = $this->model('M_SupplierApplication');
+    
+        $supplierApplicationModel->updateApplicationStatus($applicationId, $_SESSION['manager_id'], 'under_review');
+
+    
+        redirect('manager/');
+    }
+
+    public function approveApplication($applicationId) {
+        /* 
+        WE NEED TO FOLLOW THESE STEPS
+        1. we need to update the application status (that is already done)
+        2. we need to create a supplier account for this user
+        3. we need to copy the details from the application to suppliers entry
+        4. we need to change the users role to 5 for supplier accees
+        -simaak
+        */
+
+        $supplierApplicationModel = $this->model('M_SupplierApplication');
+        $userModel = $this->model('M_User');
+        $application = $supplierApplicationModel->getApplicationById($applicationId);
+
+        if (!$application) {
+            // small validation, but if we are here then ofc the application exists
+            redirect('manager/');
+        }
+
+        $userUpdated = $userModel->updateRole($application->user_id, 5);
+
+        if (!$userUpdated) {
+            redirect('manager/');
+        }
+
+        $profile = $userModel->getProfileByUserId($application->user_id);
+        $supplierExpectedAmount  = ($application->monthly_production)/4.0;
+
+
+        // Create supplier data array
+        $supplierData = [
+            'profile_id' => $profile->profile_id,
+            'contact_number' => $profile->contact_number, 
+            'application_id' => $applicationId,
+            'latitude' => $application->latitude,
+            'longitude' => $application->longitude,
+            'is_active' => 1,
+            'is_deleted' => 0,
+            'number_of_collections' => 0,
+            'average_collection' => $supplierExpectedAmount
+        ];
+
+        $supplierCreated = $this->supplierModel->createSupplier($supplierData);
+
+        if (!$supplierCreated) {
+            redirect('manager/');
+        }
+
+        $supplierApplicationModel->updateApplicationStatus($applicationId, $_SESSION['manager_id'], 'approved');
+
+        redirect('manager/');
+    }
+    
+    public function rejectApplication($applicationId) {
+        $supplierApplicationModel = $this->model('M_SupplierApplication');
+        $supplierApplicationModel->updateApplicationStatus($applicationId, $_SESSION['manager_id'], 'rejected');
+        redirect('manager/');
+    }
+
+
+    public function confirmSupplierRole() {
+        if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+            $data = json_decode(file_get_contents('php://input'), true);
+            $applicationId = $data['application_id'];
+
+            $result = $this->supplierModel->confirmSupplierRole($applicationId);
+            if ($result) {
+                echo json_encode(['success' => true]);
+            } else {
+                echo json_encode(['success' => false, 'message' => 'Failed to confirm role. Check application ID and user data.']);
+            }
+        } else {
+            http_response_code(400);
+            echo json_encode(['success' => false, 'message' => 'Invalid request.']);
+        }
+    }
+
+    public function suppliers() {
+        // Get all suppliers from the database
+        $suppliers = $this->supplierModel->getAllSuppliers();
+
+        $data = [
+            'suppliers' => $suppliers
+        ];
+
+        $this->view('supplier_manager/v_suppliers', $data);
+    }
+
+    public function complaints()
+    {
+        $data = [];
+
+        $this->view('supplier_manager/v_complaints', $data);
+    }
+
+
 
 }
 ?>
