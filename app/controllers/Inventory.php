@@ -3,6 +3,7 @@ require_once APPROOT . '/models/M_Products.php';
 require_once APPROOT . '/models/M_Fertilizer.php';
 require_once APPROOT . '/models/M_Dashbord.php';
 require_once APPROOT . '/models/M_Machine.php';
+require_once APPROOT . '/models/M_Inventory_Config.php';
 
 require_once '../app/models/M_Products.php';
 class Inventory extends controller
@@ -12,6 +13,8 @@ class Inventory extends controller
 
     private $stockvalidate;
     private $machineModel;
+
+    private $inventoryConfigModel;
 
 
 
@@ -24,6 +27,7 @@ class Inventory extends controller
         $this->fertilizerModel = new M_Fertilizer();
         $this->stockvalidate = new M_stockvalidate();
         $this->machineModel = new M_Machine();
+        $this->inventoryConfigModel = new M_Inventory_Config();
 
     }
 
@@ -586,40 +590,42 @@ class Inventory extends controller
         redirect('inventory/fertilizerdashboard');
     }
 
+    
     public function payments()
-    {
-        $jsonData = file_get_contents("php://input");
-        $input = json_decode($jsonData, true);
+{
+    $jsonData = file_get_contents("php://input");
+    $input = json_decode($jsonData, true);
 
-        if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+    // Log the incoming data
+    error_log(print_r($input, true));
 
-            $existingData = this->machineModel->getleafprice();
-
-            
-            $data1 =[
+    // echo "Received data: " . $jsonData;  
+    if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+        // Check if required fields are present
+        if (isset($input['normalLeafRate'], $input['superLeafRate'], $input['fertilizerStockLower'], $input['fertilizerStockMidLow'], $input['fertilizerStockMidHigh'], $input['leafAge1'], $input['leafAge2'], $input['leafAge3'])) {
+            $data = [
                 'normalLeafRate' => $input['normalLeafRate'],
-                'superLeafRate'=> $input['superLeafRate']
-            ];
-
-            $data2=[
+                'superLeafRate' => $input['superLeafRate'],
                 'fertilizerStockLower' => $input['fertilizerStockLower'],
-                'fertilizerStockMidLow'=> $input['fertilizerStockMidLow'],
-                'fertilizerStockMidHigh'=> $input['fertilizerStockMidHigh']
+                'fertilizerStockMidLow' => $input['fertilizerStockMidLow'],
+                'fertilizerStockMidHigh' => $input['fertilizerStockMidHigh'],
+                'leafAge1' => $input['leafAge1'],
+                'leafAge2' => $input['leafAge2'],
+                'leafAge3' => $input['leafAge3']
             ];
 
-            $data3=[
-                'leafAge1'=> $input['leafAge1'],
-                'leafAge2'=> $input['leafAge2'],
-                'leafAge3'=> $input['leafAge3']
-            ];  
+            // Log the data array
+            error_log(print_r($data, true));
 
-
+            $this->inventoryConfigModel->add_inventory_config($data);
+        } else {
+            // Handle missing fields
+            echo "Error: Missing required fields.";
         }
-
-        
-
-        $this->view('inventory/v_payments');
     }
+
+    $this->view('inventory/v_payments');
+}
 
     public function getStockValidations()
     {
