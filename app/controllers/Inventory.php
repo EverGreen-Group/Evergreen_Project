@@ -624,7 +624,15 @@ class Inventory extends controller
         }
     }
 
-    $this->view('inventory/v_payments');
+
+    $fertilizer = $this->fertilizerModel->getfertilizer();
+    $data = [
+        'fertilizer' => $fertilizer
+    ];
+
+   
+
+    $this->view('inventory/v_payments',$data);
 }
 
     public function getStockValidations()
