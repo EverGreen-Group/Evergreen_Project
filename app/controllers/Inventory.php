@@ -29,32 +29,26 @@ class Inventory extends controller
 
     public function index()
     {
-        if ($_SERVER ['REQUEST_METHOD'] =='POST'){
+        if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             $report = ['report' => $_POST['report']];
-
-            
-            
         }
-        $totalstock = $this->stockvalidate->gettodaytotalstock();
-        $products = $this->productModel->getAllProducts();
-        $fertilizer = $this->fertilizerModel->getfertilizer();
+
         $stockvalidate = $this->stockvalidate->getvalidateStocks();
-        $machines = $this->machineModel->gettimesofmachine();
-        $validatedetails = $this->stockvalidate->getvalidatestockdetails();
+
+        // Dummy values for the new statistics
+        $awaitingInventory = 5; // Number of items awaiting inventory addition
+        $kgApprovedToday = 150; // Number of kg approved today
+        $fertilizerOrders = 3; // Number of fertilizer orders
 
         $data = [
-            'products' => $products,
-            'fertilizer' => $fertilizer,
             'stockvalidate' => $stockvalidate,
-            'machines' => $machines,
-            'totalstock' => $totalstock,
-            'validatedetails' => $validatedetails
-
+            'awaitingInventory' => $awaitingInventory,
+            'kgApprovedToday' => $kgApprovedToday,
+            'fertilizerOrders' => $fertilizerOrders,
+            'bagUsageCounts' => ['active' => 5, 'inactive' => 10]
         ];
 
-        
         $this->view('inventory/v_dashboard', $data);
-        //var_dump($data);
     }
 
     public function product()
@@ -74,7 +68,6 @@ class Inventory extends controller
 
         $this->view('inventory/v_product', $data);
     }
-
 
     public function order()
     {
@@ -104,8 +97,6 @@ class Inventory extends controller
                 "profit_err" => '',
                 "margin_err" => '',
                 "quantity_err" => '',
-
-
             ];
 
             // Handle image upload
@@ -128,9 +119,7 @@ class Inventory extends controller
                 }
             }
 
-
             //validate 
-
             if (empty($data['product-name'])) {
                 $data['product-name_err'] = 'Please enter product name';
             }
@@ -178,21 +167,15 @@ class Inventory extends controller
             ];
         }
 
-
         $this->view('inventory/v_create_product', $data);
     }
 
-
-
     public function fertilizerdashboard()
     {
-
         $fertilizer = $this->fertilizerModel->getfertilizer();
         $data = [
             'fertilizer' => $fertilizer
         ];
-
-
 
         $this->view('inventory/v_fertilizer_dashboard', $data);
 
@@ -228,7 +211,6 @@ class Inventory extends controller
                 'price_err' => '',
                 'quantity_err' => '',
                 'unit_err' => '',
-
             ];
 
             // Handle image upload
@@ -597,8 +579,96 @@ class Inventory extends controller
         exit();
     }
 
+    public function viewAwaitingInventory($collectionId)
+    {
+        $collectionDetails = $this->stockvalidate->getvalidateStocks($collectionId);
 
+
+        $bagsForCollection = $this->stockvalidate->getBagForCollection($collectionId);
+
+        if (empty($bagsForCollection)) {
+            redirect("inventory/"); 
+        }
+
+        $data = [
+            'collectionDetails' => $collectionDetails,
+            'collectionBags' => $bagsForCollection 
+        ];
+
+
+        $this->view('inventory/v_view_collection_bags', $data);
+    }  
+
+
+    // APPROVING BAG, MUST IMRPOVE IT FURTHER, LIKE DEDUCTIONS AND ALL
+    public function approveBag($historyId, $collectionId)
+    {
+        
+        // Call the model method to handle all logic and database operations
+        $result = $this->stockvalidate->processApproval($historyId);
+        
+        if ($result['success']) {
+            flash('inventory_message', $result['message'], 'alert alert-success');
+        } else {
+            flash('inventory_message', $result['message'], 'alert alert-danger');
+        }
+        
+        redirect("inventory/viewAwaitingInventory/$collectionId");
+    }
+
+
+    public function updateBag($historyId)
+    {
+        // Check if form is submitted
+        if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+            $data = [
+                'history_id' => $historyId,
+                'actual_weight_kg' => trim($_POST['actual_weight_kg']),
+                'leaf_age' => trim($_POST['leaf_age']),
+                'moisture_level' => trim($_POST['moisture_level']),
+                'deduction_notes' => trim($_POST['deduction_notes']),
+                'leaf_type_id' => trim($_POST['leaf_type_id']),
+                'error' => ''
+            ];
     
+            // Validate weight
+            if (empty($data['actual_weight_kg']) || !is_numeric($data['actual_weight_kg'])) {
+                $data['error'] = 'Please enter a valid weight';
+            }
+    
+            // If no errors, update the bag
+            if (empty($data['error'])) {
+                if ($this->stockvalidate->updateBag($data)) {
+                    // Get collection ID for redirect
+                    $collectionId = $this->stockvalidate->getBagCollectionId($historyId);
+                    flash('inventory_message', 'Bag updated successfully', 'alert alert-success');
+                    redirect("inventory/viewAwaitingInventory/$collectionId");
+                } else {
+                    $data['error'] = 'Something went wrong';
+                }
+            }
+        } else {
+            // Get existing bag data
+            $bag = $this->stockvalidate->getBagByHistoryId($historyId);
+            
+            // If bag not found, redirect
+            if (!$bag) {
+                flash('inventory_message', 'Bag not found', 'alert alert-danger');
+                redirect("inventory/");
+            }
+            
+            // Get leaf types for dropdown
+            $leafTypes = $this->stockvalidate->getLeafTypes();
+            
+            $data = [
+                'bag' => $bag,
+                'leaf_types' => $leafTypes,
+                'error' => ''
+            ];
+        }
+    
+        $this->view('inventory/v_update_bag', $data);
+    }
 
 
 
