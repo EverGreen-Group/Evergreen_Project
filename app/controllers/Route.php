@@ -72,6 +72,23 @@ class Route extends Controller{
         $this->view('vehicle_manager/routes/v_manage_route', $data);
     }
 
+    public function viewMap($routeId) {
+        $routeSuppliers = $this->routeModel->getRouteSuppliersByRouteId($routeId);
+    
+        // Sort by stop_order
+        usort($routeSuppliers, function($a, $b) {
+            return $a->stop_order - $b->stop_order;
+        });
+    
+        $data = [
+            'route_id' => $routeId,
+            'routeSuppliers' => $routeSuppliers
+        ];
+    
+        $this->view('vehicle_manager/routes/v_route_map', $data);
+    }
+    
+
 
     //  =====================================================
     // JSON/AJAX FETCH METHODS HERE
