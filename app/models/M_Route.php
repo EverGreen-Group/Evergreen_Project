@@ -174,7 +174,7 @@ class M_Route {
      * Get all undeleted routes.
      */
     public function getAllUndeletedRoutes() {
-        $this->db->query("SELECT r.*,v.license_plate,(SELECT COUNT(*) FROM route_suppliers WHERE route_id = r.route_id) AS supplier_count FROM routes r INNER JOIN vehicles v on r.vehicle_id = v.vehicle_id WHERE r.is_deleted = 0");
+        $this->db->query("SELECT r.*,v.*,(SELECT COUNT(*) FROM route_suppliers WHERE route_id = r.route_id) AS supplier_count FROM routes r INNER JOIN vehicles v on r.vehicle_id = v.vehicle_id WHERE r.is_deleted = 0");
         return $this->db->resultset();
     }
 

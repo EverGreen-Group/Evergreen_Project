@@ -28,16 +28,6 @@ class M_Employee {
         return $this->db->execute();
     }
 
-    public function getEmployeeByUserId($user_id) {
-        $this->db->query("
-            SELECT e.*, u.*
-            FROM employees e
-            JOIN users u ON e.user_id = u.user_id
-            WHERE e.user_id = :user_id
-        ");
-        $this->db->bind(':user_id', $user_id);
-        return $this->db->single(); // This should return a single employee object with user details or null
-    }
 
     public function updateDriverInfo($user_id, $address_line1, $address_line2, $city, $contact_number, $emergency_contact) {
         $sql = "UPDATE employees SET address_line1 = :address_line1, address_line2 = :address_line2, city = :city, contact_number = :contact_number, emergency_contact = :emergency_contact WHERE user_id = :user_id";
