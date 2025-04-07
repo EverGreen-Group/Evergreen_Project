@@ -166,9 +166,11 @@
 	document.addEventListener("DOMContentLoaded", function () {
 		const reportCtx = document.getElementById("reportTypesChart");
 		if (reportCtx) {
-			const labels = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
-			const normalLeafData = [12, 18, 25, 30, 22, 35, 40];
-			const superLeafData = [8, 15, 20, 25, 18, 30, 28];
+			const normalLeafData = <?php echo json_encode($data['normalLeafData']); ?>;
+			const superLeafData = <?php echo json_encode($data['superLeafData']); ?>;
+			const labels = <?php echo json_encode(array_map(function($date) {
+				return date('D', strtotime($date));
+			}, $data['chartDates'])); ?>;
 
 			new Chart(reportCtx, {
 				type: "line",

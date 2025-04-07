@@ -35,13 +35,46 @@ class Inventory extends controller
 
         $stockvalidate = $this->stockvalidate->getvalidateStocks();
 
-        // Dummy values for the new statistics
-        $awaitingInventory = 5; // Number of items awaiting inventory addition
-        $kgApprovedToday = 150; // Number of kg approved today
-        $fertilizerOrders = 3; // Number of fertilizer orders
-        $activeBags = $this->stockvalidate->getBagsByStatus('active');
+        // Get leaf quantities for the last 7 days
+        $leafQuantities = $this->stockvalidate->getLeafQuantitiesLast7Days();
         
-        // Get inactive bags (status = 'inactive')
+        // Process the leaf quantities data for the chart
+        $normalLeafData = [];
+        $superLeafData = [];
+        $dates = [];
+        
+        foreach ($leafQuantities as $record) {
+            $date = $record->date;
+            if (!in_array($date, $dates)) {
+                $dates[] = $date;
+            }
+            
+            if ($record->leaf_type_id == 1) {
+                $normalLeafData[$date] = $record->total_quantity;
+            } else if ($record->leaf_type_id == 2) {
+                $superLeafData[$date] = $record->total_quantity;
+            }
+        }
+
+        // Fill in missing dates with 0
+        for ($i = 6; $i >= 0; $i--) {
+            $date = date('Y-m-d', strtotime("-$i days"));
+            if (!isset($normalLeafData[$date])) {
+                $normalLeafData[$date] = 0;
+            }
+            if (!isset($superLeafData[$date])) {
+                $superLeafData[$date] = 0;
+            }
+        }
+        
+        // Sort by date
+        ksort($normalLeafData);
+        ksort($superLeafData);
+
+        $awaitingInventory = 5;
+        $kgApprovedToday = 150;
+        $fertilizerOrders = 3;
+        $activeBags = $this->stockvalidate->getBagsByStatus('active');
         $inactiveBags = $this->stockvalidate->getBagsByStatus('inactive');
 
         $activeBagsCount = count($activeBags);
@@ -52,7 +85,10 @@ class Inventory extends controller
             'awaitingInventory' => $awaitingInventory,
             'kgApprovedToday' => $kgApprovedToday,
             'fertilizerOrders' => $fertilizerOrders,
-            'bagUsageCounts' => ['active' => $activeBagsCount, 'inactive' => $inactiveBagsCount]
+            'bagUsageCounts' => ['active' => $activeBagsCount, 'inactive' => $inactiveBagsCount],
+            'normalLeafData' => array_values($normalLeafData),
+            'superLeafData' => array_values($superLeafData),
+            'chartDates' => array_keys($normalLeafData)
         ];
 
         $this->view('inventory/v_dashboard', $data);
@@ -786,7 +822,7 @@ class Inventory extends controller
             // Init data
             $data = [
                 'capacity_kg' => trim($_POST['capacity_kg']),
-                'status' => 'active'
+                'status' => 'inactive'
             ];
             
             // Validate capacity
