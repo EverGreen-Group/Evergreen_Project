@@ -592,6 +592,12 @@ class Inventory extends controller
 
 
         $bagsForCollection = $this->stockvalidate->getBagForCollection($collectionId);
+        $getTotalQuantityInACollection = $this->stockvalidate->getTotalQuantityInACollection($collectionId);
+        $totalQuantity = $getTotalQuantityInACollection->sum;
+        $totalBags = $getTotalQuantityInACollection->count;
+        $getBagCountsInCollection = $this->stockvalidate->getBagCountsInCollection($collectionId);
+        $bagsApproved = $getBagCountsInCollection->finalized_count;
+        $bagsNotApproved = $getBagCountsInCollection->not_finalized_count;
 
         if (empty($bagsForCollection)) {
             redirect("inventory/"); 
@@ -599,7 +605,12 @@ class Inventory extends controller
 
         $data = [
             'collectionDetails' => $collectionDetails,
-            'collectionBags' => $bagsForCollection 
+            'collectionBags' => $bagsForCollection,
+            'collection_id' => $collectionId,
+            'total_quantity' => $totalQuantity,
+            'total_bags' => $totalBags,
+            'bags_approved' => $bagsApproved,
+            'bags_not_approved' => $bagsNotApproved
         ];
 
 

@@ -315,6 +315,33 @@ class M_stockvalidate
     }
 
 
+    // TOTAL QUANTITY, BAGS, APPROVED, REMAINING BAGS IN A GIVEN COLLECTION FOR THE VALIDATION PAGE
+
+
+    public function getTotalQuantityInACollection($collectionId)
+    {
+        $this->db->query('SELECT COUNT(*) AS count, SUM(actual_weight_kg) as sum FROM bag_usage_history WHERE collection_id = :collection_id');
+        $this->db->bind(':collection_id', $collectionId);
+        
+        return $this->db->single();
+    }
+
+    public function getBagCountsInCollection($collectionId)
+    {
+        $this->db->query('SELECT COUNT(*) as finalized_count FROM bag_usage_history WHERE collection_id = :collection_id AND is_finalized = 1');
+        $this->db->bind(':collection_id', $collectionId);
+        $finalizedCount = $this->db->single()->finalized_count;
+    
+        $this->db->query('SELECT COUNT(*) as non_finalized_count FROM bag_usage_history WHERE collection_id = :collection_id AND is_finalized = 0');
+        $this->db->bind(':collection_id', $collectionId);
+        $notFinalizedCount = $this->db->single()->non_finalized_count;
+    
+        return (object)[
+            'finalized_count' => $finalizedCount,
+            'not_finalized_count' => $notFinalizedCount
+        ];
+    }
+
 
 
 }

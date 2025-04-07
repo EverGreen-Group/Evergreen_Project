@@ -1,11 +1,14 @@
 <?php require APPROOT . '/views/inc/components/header.php'; ?>
 <?php require APPROOT . '/views/inc/components/sidebar_inventory.php'; ?>
 <?php require APPROOT . '/views/inc/components/topnavbar.php'; ?>
+<link rel="stylesheet" href="<?php echo URLROOT; ?>/css/vehicle_manager/vehicle/vehicle.css">
+<link rel="stylesheet" href="<?php echo URLROOT; ?>/css/vehicle_manager/collection/collection.css">
+<link rel="stylesheet" href="<?php echo URLROOT; ?>/css/vehicle_manager/collection/calendar.css">
 
 <main>
   <div class="head-title">
     <div class="left">
-        <h1>Collection Bag Verification</h1>
+        <h1>Collection Bag Verification For Collection #<?php echo htmlspecialchars($collection_id) ?></h1>
         <ul class="breadcrumb">
             <li><a href="#">Dashboard</a></li>
             <li><i class='bx bx-chevron-right'></i></li>
@@ -13,6 +16,50 @@
         </ul>
     </div>
   </div>
+
+  <ul class="dashboard-stats">
+
+      <li class="stat-card">
+            <div class="stat-content">
+                <i class='bx bx-leaf'></i>
+                <div class="stat-info">
+                    <h3><?php echo isset($total_quantity) ? $total_quantity . ' kg' : 0 . ' kg'; ?></h3>
+                    <p>Total Quantity In Collection</p>
+                </div>
+            </div>
+        </li>
+        <li class="stat-card">
+            <div class="stat-content">
+                <i class='bx bx-time'></i>
+                <div class="stat-info">
+                    <h3><?php echo isset($total_bags) ? $total_bags : 0; ?></h3>
+                    <p>Total Bags In Collection</p>
+                </div>
+            </div>
+        </li>
+
+
+
+        <li class="stat-card">
+            <div class="stat-content">
+                <i class='bx bx-shopping-bag'></i>
+                <div class="stat-info">
+                    <h3><?php echo isset($bags_approved) ? $bags_approved : 0; ?></h3>
+                    <p>Bags Approved</p>
+                </div>
+            </div>
+        </li>
+
+        <li class="stat-card">
+            <div class="stat-content">
+                <i class='bx bx-shopping-bag'></i>
+                <div class="stat-info">
+                    <h3><?php echo isset($bags_not_approved) ? $bags_not_approved : 0; ?></h3>
+                    <p>Bags Remaining</p>
+                </div>
+            </div>
+        </li>
+    </ul>
 
   <!-- Section 1: Bags Awaiting Verification -->
   <div class="table-data">
