@@ -87,8 +87,55 @@ class M_stockvalidate
 
         return $this->db->single();
 
-
-
-        
+   
     }
+
+    public function getPaymentsData($startDate, $endDate)
+    {
+        $this->db->query("
+            SELECT 
+                buh.supplier_id,
+                CONCAT(p.first_name, ' ', p.last_name) AS supplier_name,
+                sbi.bank_name,
+                sbi.branch_name,
+                sbi.account_number,
+                sbi.account_holder_name,
+                SUM(buh.actual_weight_kg) AS total_weight,
+                COUNT(buh.bag_id) AS total_bags,
+                COUNT(DISTINCT buh.collection_id) AS unique_collections,
+                (SUM(buh.actual_weight_kg) * ltr.rate) 
+                    + (COUNT(DISTINCT buh.collection_id) * 150) AS total_payment
+            FROM bag_usage_history buh
+            JOIN suppliers s ON buh.supplier_id = s.supplier_id
+            JOIN profiles p ON s.profile_id = p.profile_id
+            LEFT JOIN supplier_bank_info sbi ON s.application_id = sbi.application_id
+            JOIN (
+                SELECT r1.leaf_type_id, r1.rate
+                FROM leaf_type_rates r1
+                INNER JOIN (
+                    SELECT leaf_type_id, MAX(effective_date) AS max_date
+                    FROM leaf_type_rates
+                    WHERE effective_date <= :endDate
+                    GROUP BY leaf_type_id
+                ) r2 
+                ON r1.leaf_type_id = r2.leaf_type_id 
+                AND r1.effective_date = r2.max_date
+            ) ltr ON buh.leaf_type_id = ltr.leaf_type_id
+            WHERE buh.action = 'approved'
+            AND buh.is_finalized = 1
+            AND buh.timestamp BETWEEN :startDate AND :endDate
+            GROUP BY buh.supplier_id
+        ");
+    
+        $this->db->bind(':startDate', $startDate);
+        $this->db->bind(':endDate', $endDate);
+    
+        return $this->db->resultSet();
+    }
+    
+    
+
+
+
+
 }

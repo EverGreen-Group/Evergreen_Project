@@ -592,48 +592,48 @@ class Inventory extends controller
 
     
     public function payments()
-{
-    $jsonData = file_get_contents("php://input");
-    $input = json_decode($jsonData, true);
+    {
+        $jsonData = file_get_contents("php://input");
+        $input = json_decode($jsonData, true);
 
-    // Log the incoming data
-    error_log(print_r($input, true));
+        // Log the incoming data
+        error_log(print_r($input, true));
 
-    // echo "Received data: " . $jsonData;  
-    if ($_SERVER['REQUEST_METHOD'] == 'POST') {
-        // Check if required fields are present
-        if (isset($input['normalLeafRate'], $input['superLeafRate'], $input['fertilizerStockLower'], $input['fertilizerStockMidLow'], $input['fertilizerStockMidHigh'], $input['leafAge1'], $input['leafAge2'], $input['leafAge3'])) {
-            $data = [
-                'normalLeafRate' => $input['normalLeafRate'],
-                'superLeafRate' => $input['superLeafRate'],
-                'fertilizerStockLower' => $input['fertilizerStockLower'],
-                'fertilizerStockMidLow' => $input['fertilizerStockMidLow'],
-                'fertilizerStockMidHigh' => $input['fertilizerStockMidHigh'],
-                'leafAge1' => $input['leafAge1'],
-                'leafAge2' => $input['leafAge2'],
-                'leafAge3' => $input['leafAge3']
-            ];
+        // echo "Received data: " . $jsonData;  
+        if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+            // Check if required fields are present
+            if (isset($input['normalLeafRate'], $input['superLeafRate'], $input['fertilizerStockLower'], $input['fertilizerStockMidLow'], $input['fertilizerStockMidHigh'], $input['leafAge1'], $input['leafAge2'], $input['leafAge3'])) {
+                $data = [
+                    'normalLeafRate' => $input['normalLeafRate'],
+                    'superLeafRate' => $input['superLeafRate'],
+                    'fertilizerStockLower' => $input['fertilizerStockLower'],
+                    'fertilizerStockMidLow' => $input['fertilizerStockMidLow'],
+                    'fertilizerStockMidHigh' => $input['fertilizerStockMidHigh'],
+                    'leafAge1' => $input['leafAge1'],
+                    'leafAge2' => $input['leafAge2'],
+                    'leafAge3' => $input['leafAge3']
+                ];
 
-            // Log the data array
-            error_log(print_r($data, true));
+                // Log the data array
+                error_log(print_r($data, true));
 
-            $this->inventoryConfigModel->add_inventory_config($data);
-        } else {
-            // Handle missing fields
-            echo "Error: Missing required fields.";
+                $this->inventoryConfigModel->add_inventory_config($data);
+            } else {
+                // Handle missing fields
+                echo "Error: Missing required fields.";
+            }
         }
+
+
+        $fertilizer = $this->fertilizerModel->getfertilizer();
+        $data = [
+            'fertilizer' => $fertilizer
+        ];
+
+    
+
+        $this->view('inventory/v_payments',$data);
     }
-
-
-    $fertilizer = $this->fertilizerModel->getfertilizer();
-    $data = [
-        'fertilizer' => $fertilizer
-    ];
-
-   
-
-    $this->view('inventory/v_payments',$data);
-}
 
     public function getStockValidations()
     {
@@ -648,6 +648,32 @@ class Inventory extends controller
         echo json_encode($stocks);
         exit();
     }
+
+
+    public function paymentsReport()
+    {
+        if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+            $selectedMonth = trim($_POST['month']);
+    
+            $startDate = date("Y-m-01", strtotime($selectedMonth));
+            $endDate   = date("Y-m-t", strtotime($selectedMonth));
+    
+            $paymentData = $this->stockvalidate->getPaymentsData($startDate, $endDate);
+    
+            $data = [
+                'payments'      => $paymentData,
+                'startDate'     => $startDate,
+                'endDate'       => $endDate,
+                'selectedMonth' => $selectedMonth
+            ];
+    
+            $this->view('inventory/v_payments_report', $data);
+        } else {
+            $this->view('inventory/v_payments_2');
+        }
+    }
+    
+
 
 
 
