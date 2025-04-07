@@ -45,7 +45,7 @@
             <i class='bx bx-package'></i>
             <span class="text">
                 <p>Total Products</p>
-                <h3><?php echo isset($data['totalProducts']) ? $data['totalProducts'] : 0; ?></h3>
+                <h3><?php echo count($data['products']); ?></h3>
             </span>
         </li>
         <li>
@@ -71,7 +71,7 @@
                 <h3><img src="<?php echo URLROOT; ?>/img/warehouse-svgrepo-com.svg" alt="Warehouse Icon"
                         style="width: 20px;"> Total Products</h3>
             </div>
-            <span class="product-info">(<?php echo count($data['products']); ?> products)</span>
+            
             <div class="product-grid">
                 <?php foreach ($data['products'] as $product): ?>
                     <div class="product-card"

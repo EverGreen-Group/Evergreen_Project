@@ -666,6 +666,40 @@ body {
   background: var(--red);
 }
 
+#content main .table-data table tr td .status {
+  font-size: 10px;
+  padding: 6px 16px;
+  color: var(--light);
+  border-radius: 20px;
+  font-weight: 700;
+}
+
+#content main .table-data  table tr td .status.completed {
+  background: var(--main);
+}
+#content main .table-data table tr td .status.awaiting-inventory {
+  background: #3092fc;
+}
+#content main .table-data table tr td .status.process {
+  background: var(--yellow);
+}
+
+#content main .table-data table tr td .status.pending {
+  background: var(--green);
+}
+
+#content main .table-data table tr td .status.error {
+  background: var(--red);
+}
+
+#content main .table-data table tr td .status.in-progress {
+  background: #ff9800;
+}
+
+#content main .table-data table tr td .status.cancelled {
+  background: var(--red);
+}
+
 #content main .table-data .todo {
   flex-grow: 1;
   flex-basis: 300px;
