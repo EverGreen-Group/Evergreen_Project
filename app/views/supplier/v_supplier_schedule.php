@@ -28,7 +28,7 @@
     <!-- Current Subscriptions Section -->
     <div class="schedule-section">
         <div class="section-header">
-            <h3>Your Current Subscriptions</h3>
+            <h3>Your Current Schedule</h3>
         </div>
 
         <?php if (!empty($data['subscribedSchedules'])): ?>
@@ -54,10 +54,6 @@
                                         <i class='bx bx-time-five'></i>
                                         <span>Time: <strong><?php echo $schedule['shift_time']; ?></strong></span>
                                     </div>
-                                    <div class="info-item">
-                                        <i class='bx bx-package'></i>
-                                        <span>Available Capacity: <strong><?php echo number_format($schedule['remaining_capacity'], 2); ?> kg</strong></span>
-                                    </div>
                                 </div>
                             </div>
                             <div class="info-row">
@@ -67,12 +63,12 @@
                                         <span>Vehicle: <strong><?php echo $schedule['vehicle']; ?></strong></span>
                                     </div>
                                 </div>
-                                <div class="action-buttons">
+                                <!-- <div class="action-buttons">
                                     <button class="btn-unsubscribe" onclick="unsubscribeFromRoute(<?php echo $schedule['schedule_id']; ?>, <?php echo $_SESSION['supplier_id']; ?>)">
                                         <i class='bx bx-x-circle'></i>
                                         Unsubscribe
                                     </button>
-                                </div>
+                                </div> -->
                             </div>
                         </div>
                     </div>
@@ -85,65 +81,7 @@
         <?php endif; ?>
     </div>
 
-    <!-- Available Schedules Section -->
-    <div class="schedule-section">
-        <div class="section-header">
-            <h3>Available Collection Routes</h3>
-        </div>
 
-        <?php if (!empty($data['availableSchedules'])): ?>
-            <?php foreach($data['availableSchedules'] as $schedule): ?>
-                <div class="schedule-card">
-                    <div class="card-content">
-                        <div class="card-body">
-                            <div class="info-row">
-                                <div class="info-group">
-                                    <div class="info-item">
-                                        <i class='bx bx-map'></i>
-                                        <span>Route: <strong><?php echo $schedule['route_name']; ?></strong></span>
-                                    </div>
-                                    <div class="info-item">
-                                        <i class='bx bx-calendar'></i>
-                                        <span>Collection Day: <strong><?php echo $schedule['day']; ?></strong></span>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="info-row">
-                                <div class="info-group">
-                                    <div class="info-item">
-                                        <i class='bx bx-time-five'></i>
-                                        <span>Time: <strong><?php echo $schedule['shift_time']; ?></strong></span>
-                                    </div>
-                                    <div class="info-item">
-                                        <i class='bx bx-package'></i>
-                                        <span>Available Capacity: <strong><?php echo number_format($schedule['remaining_capacity'], 2); ?> kg</strong></span>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="info-row">
-                                <div class="info-group">
-                                    <div class="info-item">
-                                        <i class='bx bx-car'></i>
-                                        <span>Vehicle: <strong><?php echo $schedule['vehicle']; ?></strong></span>
-                                    </div>
-                                </div>
-                                <div class="action-buttons">
-                                    <button class="btn-subscribe" onclick="subscribeToRoute(<?php echo $schedule['schedule_id']; ?>)">
-                                        <i class='bx bx-plus-circle'></i>
-                                        Subscribe
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            <?php endforeach; ?>
-        <?php else: ?>
-            <div class="no-schedule">
-                <p class="no-routes-message">No additional collection routes available at the moment.</p>
-            </div>
-        <?php endif; ?>
-    </div>
 </main>
 
 <style>
@@ -293,7 +231,6 @@ main {
   gap: var(--spacing-sm);
   padding: var(--spacing-sm);
   border-radius: var(--border-radius-sm);
-  background-color: var(--primary-light);
 }
 
 .info-item i {
