@@ -341,4 +341,21 @@ class M_stockvalidate
         return $this->db->resultSet();
     }
 
+    public function addLeafRate($data)
+    {
+        // Prepare query
+        $this->db->query('INSERT INTO leaf_type_rates (leaf_type_id, rate) VALUES (:leaf_type_id, :rate)');
+        
+        // Bind values
+        $this->db->bind(':leaf_type_id', $data['leaf_type_id']);
+        $this->db->bind(':rate', $data['rate']);
+
+        // Execute
+        if ($this->db->execute()) {
+            return true;
+        } else {
+            return false;
+        }
+    }
+
 }

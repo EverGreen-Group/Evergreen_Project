@@ -845,4 +845,60 @@ class Inventory extends controller
         $this->view('inventory/v_raw_leaf_history', $data);
     }
 
+    public function manageLeafRate()
+    {
+
+            
+            if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+                // Sanitize POST data
+                $_POST = filter_input_array(INPUT_POST, FILTER_SANITIZE_SPECIAL_CHARS);
+        
+                // Initialize data
+                $data = [
+                    'leaf_type_id' => trim($_POST['leaf_type_id']),
+                    'rate' => trim($_POST['rate']),
+                    'error' => ''
+                ];
+        
+                // Validate inputs
+                if (empty($data['leaf_type_id']) || empty($data['rate'])) {
+                    $data['error'] = 'Please fill in all fields';
+                    $this->view('inventory/v_manage_rate_form', $data);
+                    return;
+                }
+        
+                // Validate leaf_type_id is either 1 or 2
+                if (!in_array($data['leaf_type_id'], ['1', '2'])) {
+                    $data['error'] = 'Invalid leaf type selected';
+                    $this->view('inventory/v_manage_rate_form', $data);
+                    return;
+                }
+        
+                // Validate rate is a positive number
+                if (!is_numeric($data['rate']) || $data['rate'] <= 0) {
+                    $data['error'] = 'Rate must be a positive number';
+                    $this->view('inventory/v_manage_rate_form', $data);
+                    return;
+                }
+        
+                // Add leaf rate using model
+                if ($this->stockvalidate->addLeafRate($data)) {
+                    flash('leaf_rate_message', 'Tea leaf rate added successfully');
+                    redirect('inventory/');
+                } else {
+                    $data['error'] = 'Something went wrong';
+                    $this->view('inventory/v_manage_rate_form', $data);
+                }
+            } else {
+                // Initialize empty data
+                $data = [
+                    'leaf_type_id' => '',
+                    'rate' => '',
+                    'error' => ''
+                ];
+            
+            $this->view('inventory/v_manage_rate_form', $data);
+        }
+    }
+
 }

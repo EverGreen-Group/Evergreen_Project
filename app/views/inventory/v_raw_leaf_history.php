@@ -22,20 +22,10 @@
             <li><a class="active" href="#">Input History</a></li>
         </ul>
     </div>
-    <div class="header-actions">
-        <div class="search-box">
-            <form method="GET">
-                <input type="text" name="search" placeholder="Search by date...">
-                <button class="filter-btn">
-                    <i class='bx bx-search-alt-2'></i>
-                </button>
-            </form>
-        </div>
-        <button class="btn btn-primary" onclick="exportToExcel()">
-            <i class='bx bx-download'></i> Export
-        </button>
-    </div>
+
   </div>
+
+  
 
   <ul class="dashboard-stats">
         <li class="stat-card">

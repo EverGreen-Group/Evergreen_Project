@@ -26,6 +26,7 @@
       </div>
   </div>
 
+
 	<div class="table-data">
 		<div class="order">
 			<div class="head">
@@ -33,6 +34,10 @@
 				<a href="<?php echo URLROOT; ?>/inventory/rawLeafHistory" class="btn btn-primary">
 					<i class='bx bx-show'></i>
 					View Raw Leaf History
+				</a>
+				<a href="<?php echo URLROOT; ?>/inventory/manageLeafRate" class="btn btn-primary">
+					<i class='bx bx-cog'></i>
+					Manage Rates
 				</a>
 			</div>
 			<div class="chart-container-wrapper" style="position:relative; width:100%; height:300px; padding:20px;">

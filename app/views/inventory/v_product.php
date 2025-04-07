@@ -95,20 +95,20 @@
     <ul class="dashboard-stats">
         <li class="stat-card">
             <div class="stat-content">
-                <i class='bx bxs-user'></i>
+                <i class='bx bxs-basket'></i>
                 <div class="stat-info">
                     <h3><?php echo isset($data['totalProducts']) ? $data['totalProducts'] : 0; ?></h3>
-                    <p>Total Drivers</p>
+                    <p>Total Products</p>
                 </div>
             </div>
         </li>
 
         <li class="stat-card">
             <div class="stat-content">
-                <i class='bx bx-check'></i>
+                <i class='bx bx-basket'></i>
                 <div class="stat-info">
                     <h3><?php echo isset($data['totalInactive']) ? $data['totalInactive'] : 0;?></h3>
-                    <p>Currently On Duty</p>
+                    <p>Total Inactive</p>
                 </div>
             </div>
         </li>
