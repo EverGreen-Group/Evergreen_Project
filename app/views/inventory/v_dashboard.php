@@ -76,7 +76,7 @@
 		<div class="todo">
 			<div class="head">
 				<h3>Current Bag Usage</h3>
-				<a href="<?php echo URLROOT; ?>/manager/createVehicle" class="btn btn-primary">
+				<a href="<?php echo URLROOT; ?>/inventory/collectionBags" class="btn btn-primary">
 					<i class='bx bx-cog'></i>
 					Manage Collection Bags
 				</a>

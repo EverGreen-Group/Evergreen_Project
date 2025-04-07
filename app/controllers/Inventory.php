@@ -671,5 +671,119 @@ class Inventory extends controller
     }
 
 
+    public function collectionBags()
+    {
+        // Get active bags (status = 'active')
+        $activeBags = $this->stockvalidate->getBagsByStatus('active');
+        
+        // Get inactive bags (status = 'inactive')
+        $inactiveBags = $this->stockvalidate->getBagsByStatus('inactive');
+        
+        // Calculate statistics
+        $totalBags = count($activeBags) + count($inactiveBags);
+        $activeBagsCount = count($activeBags);
+        $inactiveBagsCount = count($inactiveBags);
+        
+        // Calculate total capacity
+        $totalCapacity = 0;
+        foreach ($activeBags as $bag) {
+            $totalCapacity += $bag->capacity_kg;
+        }
+        foreach ($inactiveBags as $bag) {
+            $totalCapacity += $bag->capacity_kg;
+        }
+        
+        $data = [
+            'activeBags' => $activeBags,
+            'inactiveBags' => $inactiveBags,
+            'totalBags' => $totalBags,
+            'activeBagsCount' => $activeBagsCount,
+            'inactiveBagsCount' => $inactiveBagsCount,
+            'totalCapacity' => $totalCapacity
+        ];
+        
+        $this->view('inventory/v_collection_bags', $data);
+    }
+
+
+    public function markAsInactive($id = null)
+    {
+
+        if (!$id) {
+            flash('bag_message', 'Invalid bag ID', 'alert alert-danger');
+            redirect('inventory/collectionBags');
+        }
+        
+        // Make sure the ID is numeric
+        if (!is_numeric($id)) {
+            flash('bag_message', 'Invalid bag ID format', 'alert alert-danger');
+            redirect('inventory/collectionBags');
+        }
+        
+
+        $bag = $this->stockvalidate->getBagById($id);
+        
+        if (!$bag) {
+            flash('bag_message', 'Bag not found', 'alert alert-danger');
+            redirect('inventory/collectionBags');
+        }
+        
+        if ($bag->status !== 'active') {
+            flash('bag_message', 'This bag is already inactive', 'alert alert-warning');
+            redirect('inventory/collectionBags');
+        }
+        
+        // Update bag status to inactive and reset weight
+        if ($this->stockvalidate->markAsInactive($id)) {
+            flash('bag_message', 'Bag has been emptied successfully', 'alert alert-success');
+        } else {
+            flash('bag_message', 'Failed to empty bag', 'alert alert-danger');
+        }
+        
+        redirect('inventory/collectionBags');
+    }
+
+    public function deleteBag($bagId)
+    {
+        // Call the model method to delete the bag
+        $result = $this->stockvalidate->deleteBag($bagId);
+        
+        if ($result) {
+            flash('inventory_message', 'Bag deleted successfully', 'alert alert-success');
+        } else {
+            flash('inventory_message', 'Failed to delete the bag', 'alert alert-danger');
+        }
+        
+        redirect("inventory/collectionBags");
+    }
+
+
+
+    public function createBag() {
+        // Check if form is submitted
+        if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+            // Sanitize POST data
+            $_POST = filter_input_array(INPUT_POST, FILTER_SANITIZE_STRING);
+            
+            // Init data
+            $data = [
+                'capacity_kg' => trim($_POST['capacity_kg']),
+                'status' => 'active'
+            ];
+            
+            // Validate capacity
+            if (empty($data['capacity_kg']) || !is_numeric($data['capacity_kg']) || $data['capacity_kg'] <= 0) {
+                flash('bag_message', 'Please enter a valid capacity greater than 0', 'alert alert-danger');
+                redirect('inventory/createBag');
+                exit;
+            }
+            
+            $this->stockvalidate->addBag($data);
+            redirect('inventory/collectionBags');
+
+        }
+            
+        $this->view('inventory/v_create_bag');
+    }
 
 }

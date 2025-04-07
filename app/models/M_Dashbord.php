@@ -272,6 +272,49 @@ class M_stockvalidate
     }
 
 
+    public function getBagById($id)
+    {
+        $this->db->query('SELECT * FROM collection_bags WHERE bag_id = :bag_id');
+        $this->db->bind(':bag_id', $id);
+        
+        return $this->db->single();
+    }
+
+
+
+    // BAGS PART HERE!!!!!
+
+    public function getBagsByStatus($status) {
+        $this->db->query('SELECT * FROM collection_bags WHERE status = :status AND is_deleted = 0');
+        $this->db->bind(':status', $status);
+        
+        return $this->db->resultSet();
+    }
+    
+    public function markAsInactive($bagId) {
+        $this->db->query('UPDATE collection_bags SET status = :status WHERE bag_id = :bag_id');
+        $this->db->bind(':status', 'inactive');
+        $this->db->bind(':bag_id', $bagId);
+        
+        return $this->db->execute();
+    }
+    
+    public function deleteBag($bagId) {
+        $this->db->query('UPDATE collection_bags SET is_deleted = 1 AND status = "inactive" WHERE bag_id = :bag_id');
+        $this->db->bind(':bag_id', $bagId);
+        
+        return $this->db->execute();
+    }
+    
+    public function addBag($data) {
+        $this->db->query('INSERT INTO collection_bags (capacity_kg, status) VALUES (:capacity_kg, :status)');
+        $this->db->bind(':capacity_kg', $data['capacity_kg']);
+        $this->db->bind(':status', $data['status']);
+        
+        return $this->db->execute();
+    }
+
+
 
 
 }
