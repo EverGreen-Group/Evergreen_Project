@@ -39,13 +39,20 @@ class Inventory extends controller
         $awaitingInventory = 5; // Number of items awaiting inventory addition
         $kgApprovedToday = 150; // Number of kg approved today
         $fertilizerOrders = 3; // Number of fertilizer orders
+        $activeBags = $this->stockvalidate->getBagsByStatus('active');
+        
+        // Get inactive bags (status = 'inactive')
+        $inactiveBags = $this->stockvalidate->getBagsByStatus('inactive');
+
+        $activeBagsCount = count($activeBags);
+        $inactiveBagsCount = count($inactiveBags);
 
         $data = [
             'stockvalidate' => $stockvalidate,
             'awaitingInventory' => $awaitingInventory,
             'kgApprovedToday' => $kgApprovedToday,
             'fertilizerOrders' => $fertilizerOrders,
-            'bagUsageCounts' => ['active' => 5, 'inactive' => 10]
+            'bagUsageCounts' => ['active' => $activeBagsCount, 'inactive' => $inactiveBagsCount]
         ];
 
         $this->view('inventory/v_dashboard', $data);
