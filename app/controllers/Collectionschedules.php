@@ -19,17 +19,15 @@ class Collectionschedules extends Controller {
     }    
     public function create() {
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-            redirect('vehiclemanager/dashboard');
+            redirect('manager/dashboard');
         }
 
         // Get and sanitize POST data
         $data = [
             'route_id' => trim($_POST['route_id']),
             'driver_id' => trim($_POST['driver_id']),
-            // Removed vehicle_id since it's no longer used
             'shift_id' => trim($_POST['shift_id']),
-            'week_number' => trim($_POST['week_number']),
-            'day' => trim($_POST['day']) // Changed from days_of_week to day
+            'day' => trim($_POST['day'])
         ];
 
         // Debug: Print data
@@ -49,7 +47,7 @@ class Collectionschedules extends Controller {
             foreach ($errors as $error) {
                 flash('schedule_create_error', $error, 'alert alert-danger');
             }
-            redirect('vehiclemanager/');
+            redirect('manager/');
             return;
         }
 
@@ -58,12 +56,12 @@ class Collectionschedules extends Controller {
         // Create schedule for this day
         if (!$this->collectionScheduleModel->create($data)) {
             flash('schedule_create_error', "Failed to create schedule for {$data['day']}", 'alert alert-danger');
-            redirect('vehiclemanager/');
+            redirect('manager/');
             return;
         }
 
         flash('schedule_create_success', 'Collection schedule created successfully!', 'alert alert-success');
-        redirect('vehiclemanager/');
+        redirect('manager/');
     }
 
     public function toggleActive() {
@@ -76,7 +74,7 @@ class Collectionschedules extends Controller {
                 flash('schedule_error', 'Failed to update schedule status');
             }
             
-            redirect('vehiclemanager/');
+            redirect('manager/');
         }
     }
 
@@ -90,7 +88,7 @@ class Collectionschedules extends Controller {
                 flash('schedule_error', 'Failed to delete schedule');
             }
             
-            redirect('vehiclemanager/');
+            redirect('manager/');
         }
     }
 
@@ -100,16 +98,13 @@ class Collectionschedules extends Controller {
                 'schedule_id' => $_POST['schedule_id'],
                 'route_id' => $_POST['route_id'],
                 'driver_id' => $_POST['driver_id'],
-                // Removed vehicle_id since it's no longer used
                 'shift_id' => $_POST['shift_id'],
-                'week_number' => $_POST['week_number'],
-                // Removed day since it's not necessary to update
             ];
     
             // Check for schedule conflicts (excluding current schedule)
             if ($this->collectionScheduleModel->checkConflict($data)) {
                 flash('schedule_error', "Schedule conflict detected for the selected route", 'alert alert-danger');
-                redirect('vehiclemanager/');
+                redirect('manager/');
                 return;
             }
     
@@ -119,7 +114,7 @@ class Collectionschedules extends Controller {
                 flash('schedule_error', 'Failed to update collection schedule');
             }
     
-            redirect('vehiclemanager/');
+            redirect('manager/');
         }
     }
 
@@ -151,5 +146,19 @@ class Collectionschedules extends Controller {
         ];
         
         $this->view('vehicle_manager/v_collection', $data);
+    }
+
+    public function getScheduleDetails($scheduleId) {
+        if ($_SERVER['REQUEST_METHOD'] === 'GET') {
+            $schedule = $this->collectionScheduleModel->getScheduleById($scheduleId);
+            
+            if ($schedule) {
+                echo json_encode(['success' => true, 'schedule' => $schedule]);
+            } else {
+                echo json_encode(['success' => false, 'message' => 'Schedule not found']);
+            }
+        } else {
+            echo json_encode(['success' => false, 'message' => 'Invalid request method']);
+        }
     }
 } 

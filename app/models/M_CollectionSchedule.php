@@ -14,25 +14,22 @@ class M_CollectionSchedule {
                     cs.route_id,
                     r.route_name,
                     d.driver_id,
-                    CONCAT(u.first_name, ' ', u.last_name) AS driver_name,
-                    cs.shift_id,
-                    s.shift_name,
-                    s.start_time,
-                    s.end_time,
-                    cs.week_number,
+                    CONCAT(p.first_name, ' ', p.last_name) AS driver_name,
+                    cs.start_time,
+                    cs.end_time,
                     cs.day,
                     v.vehicle_id,
                     v.license_plate,
                     cs.created_at,
-                    cs.is_active
+                    cs.is_active,
+                    (SELECT COUNT(*) FROM route_suppliers WHERE route_id = r.route_id) AS supplier_count
                 FROM collection_schedules cs
                 LEFT JOIN routes r ON cs.route_id = r.route_id
                 LEFT JOIN drivers d ON cs.driver_id = d.driver_id
-                LEFT JOIN users u ON d.user_id = u.user_id
-                LEFT JOIN collection_shifts s ON cs.shift_id = s.shift_id
+                LEFT JOIN profiles p ON d.profile_id = p.profile_id
                 LEFT JOIN vehicles v ON r.vehicle_id = v.vehicle_id
                 WHERE cs.is_deleted = 0
-                ORDER BY cs.created_at DESC";
+                ORDER BY cs.start_time ASC";
 
         $this->db->query($sql);
         return $this->db->resultSet();
@@ -97,54 +94,44 @@ class M_CollectionSchedule {
                 r.route_name,
                 v.vehicle_type,
                 v.license_plate,
-                cs_shift.shift_name,
-                COALESCE(ce.new_time, cs_shift.start_time) as start_time,
-                cs_shift.end_time,
-                ce.exception_type,
-                ce.reason as exception_reason,
+                cs.start_time,
+                cs.end_time,
                 CASE 
                     WHEN cs.day = DATE_FORMAT(CURDATE(), '%W') THEN 'today'
                     WHEN FIELD(cs.day, 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday') 
                         > FIELD(DATE_FORMAT(CURDATE(), '%W'), 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday')
                     THEN 'upcoming'
                     ELSE 'upcoming_next_week'
-                END as schedule_status,
+                END AS schedule_status,
                 CASE 
                     WHEN cs.day = DATE_FORMAT(CURDATE(), '%W') THEN 1 
                     ELSE 0 
-                END as is_today
+                END as is_today,
+                (SELECT COUNT(*) 
+                 FROM collections c 
+                 WHERE c.schedule_id = cs.schedule_id 
+                 AND DATE(c.created_at) = CURDATE()
+                ) as collection_exists
             FROM collection_schedules cs
             JOIN routes r ON cs.route_id = r.route_id
             JOIN vehicles v ON r.vehicle_id = v.vehicle_id
-            JOIN collection_shifts cs_shift ON cs.shift_id = cs_shift.shift_id
-            LEFT JOIN collection_exceptions ce ON 
-                cs.schedule_id = ce.schedule_id 
-                AND ce.exception_date = CURDATE()
             WHERE cs.driver_id = :driver_id
-            AND cs.is_active = 1
-            AND cs.is_deleted = 0
-            AND r.is_deleted = 0
-            AND NOT EXISTS (
-                SELECT 1 FROM collection_exceptions 
-                WHERE schedule_id = cs.schedule_id 
-                AND exception_date = CURDATE()
-                AND exception_type = 'SKIP'
-            )
-            AND NOT EXISTS (
-                SELECT 1 FROM collections 
-                WHERE schedule_id = cs.schedule_id 
-                AND DATE(end_time) = CURDATE() 
-                AND status = 'Completed'
-            )
+                AND cs.is_active = 1
+                AND cs.is_deleted = 0
+                AND r.is_deleted = 0
             ORDER BY 
                 FIELD(schedule_status, 'today', 'upcoming', 'upcoming_next_week'),
                 FIELD(cs.day, 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'),
-                COALESCE(ce.new_time, cs_shift.start_time)
+                cs.start_time
         ");
-
+        
         $this->db->bind(':driver_id', $driverId);
         return $this->db->resultSet();
     }
+    
+    
+    
+    
 
     public function getScheduleDetails($scheduleId) {
         $this->db->query("
@@ -156,63 +143,19 @@ class M_CollectionSchedule {
     }
 
     public function getScheduleById($scheduleId) {
-        $this->db->query("
-            SELECT 
-                r.*,
-                u.*,
-                cs.*,
-                v.*,
-                cs_shift.*
-            FROM collection_schedules cs
-            JOIN collection_shifts cs_shift ON cs.shift_id = cs_shift.shift_id
-            LEFT JOIN drivers d ON cs.driver_id = d.driver_id
-            LEFT JOIN users u ON d.user_id = u.user_id
-            JOIN routes r ON cs.route_id = r.route_id
-            LEFT JOIN vehicles v ON r.vehicle_id = v.vehicle_id
-            WHERE cs.schedule_id = :schedule_id
-            AND cs.is_active = 1
-            AND cs.is_deleted = 0
-            LIMIT 1;
-
-        ");
-
+        $this->db->query("SELECT * FROM collection_schedules WHERE schedule_id = :schedule_id AND is_deleted = 0");
         $this->db->bind(':schedule_id', $scheduleId);
+        
         return $this->db->single();
     }
 
-    public function isUserReady($scheduleId, $userId) {
-        $this->db->query("
-            SELECT 
-                c.*,
-                CASE 
-                    WHEN :user_id IN (
-                        SELECT e.user_id 
-                        FROM drivers d 
-                        JOIN employees e ON d.employee_id = e.employee_id 
-                        JOIN teams t ON d.driver_id = t.driver_id
-                        WHERE t.team_id = cs.team_id
-                    ) THEN c.driver_approved
-                    ELSE c.partner_approved
-                END as user_ready
-            FROM collection_schedules cs
-            LEFT JOIN collections c ON cs.schedule_id = c.schedule_id
-            WHERE cs.schedule_id = :schedule_id
-            LIMIT 1
-        ");
-        
+    public function getCollectionScheduleById($scheduleId) {
+        $this->db->query("SELECT * FROM collection_schedules WHERE schedule_id = :schedule_id");
         $this->db->bind(':schedule_id', $scheduleId);
-        $this->db->bind(':user_id', $userId);
-        
-        $result = $this->db->single();
-        
-        if (!$result) {
-            // Create a new collection entry if it doesn't exist
-            $this->createInitialCollection($scheduleId);
-            return false;
-        }
-        
-        return (bool)$result->user_ready;
+        return $this->db->single(); // Return a single schedule record
     }
+
+
 
     public function getCollectionByScheduleId($scheduleId) {
         $this->db->query("
@@ -224,132 +167,7 @@ class M_CollectionSchedule {
         return $this->db->single();
     }
 
-    public function createInitialCollection($scheduleId) {
-        $this->db->query("
-            INSERT INTO collections (
-                schedule_id,
-                status,
-                driver_approved,
-                partner_approved
-            ) VALUES (
-                :schedule_id,
-                'Pending',
-                0,
-                0
-            )
-        ");
-        $this->db->bind(':schedule_id', $scheduleId);
-        return $this->db->execute();
-    }
 
-    public function setUserReady($scheduleId, $userId) {
-        try {
-            $this->db->beginTransaction();
-
-            // First check if this user is a driver or partner
-            $userRole = RoleHelper::hasRole(RoleHelper::DRIVER) ? 'driver' : 
-                       (RoleHelper::hasRole(RoleHelper::DRIVING_PARTNER) ? 'driving_partner' : null);
-
-            // Get the collection record
-            $collection = $this->getCollectionByScheduleId($scheduleId);
-            
-            if (!$collection) {
-                // Create initial collection if it doesn't exist
-                $this->createInitialCollection($scheduleId);
-                $collection = $this->getCollectionByScheduleId($scheduleId);
-            }
-
-            // Update the appropriate approval field based on role
-            if ($userRole == 'driver') {
-                $sql = "UPDATE collections 
-                       SET driver_approved = 1,
-                           start_time = CASE 
-                               WHEN partner_approved = 1 THEN NOW() 
-                               ELSE start_time 
-                           END
-                       WHERE schedule_id = :schedule_id";
-            } elseif ($userRole == 'driving_partner') {
-                $sql = "UPDATE collections 
-                       SET partner_approved = 1,
-                           start_time = CASE 
-                               WHEN driver_approved = 1 THEN NOW() 
-                               ELSE start_time 
-                           END
-                       WHERE schedule_id = :schedule_id";
-            } else {
-                throw new Exception("Invalid user role");
-            }
-
-            $this->db->query($sql);
-            $this->db->bind(':schedule_id', $scheduleId);
-            
-            if (!$this->db->execute()) {
-                throw new Exception("Failed to update ready status");
-            }
-
-            // Get updated collection to check if both are ready
-            $updatedCollection = $this->getCollectionByScheduleId($scheduleId);
-            if ($updatedCollection->driver_approved && $updatedCollection->partner_approved) {
-                // Both are ready, initialize collection records for each supplier
-                $schedule = $this->getScheduleById($scheduleId);
-                
-                // Create model instances directly
-                $routeModel = new M_Route();
-                $routeSuppliers = $routeModel->getRouteSuppliers($schedule->route_id);
-                
-                // Create supplier records
-                foreach ($routeSuppliers as $supplier) {
-                    $this->db->query("INSERT INTO collection_supplier_records 
-                                    (collection_id, supplier_id, status, created_at) 
-                                    VALUES (:collection_id, :supplier_id, 'pending', NOW())");
-                    $this->db->bind(':collection_id', $updatedCollection->collection_id);
-                    $this->db->bind(':supplier_id', $supplier->supplier_id);
-                    $this->db->execute();
-                }
-
-                // Optimize the route
-                $route = $routeModel->getRouteById($schedule->route_id);
-                $currentLocation = $this->getCurrentLocation();
-                $this->optimizeRoute($route->route_id, $currentLocation['lat'], $currentLocation['lng']);
-            }
-
-            $this->db->commit();
-            return true;
-
-        } catch (Exception $e) {
-            $this->db->rollBack();
-            throw $e;
-        }
-    }
-
-    public function areBothTeamMembersReady($scheduleId) {
-        $this->db->query("
-            SELECT 
-                driver_approved,
-                partner_approved,
-                start_time
-            FROM collections
-            WHERE schedule_id = :schedule_id
-            LIMIT 1
-        ");
-        
-        $this->db->bind(':schedule_id', $scheduleId);
-        $result = $this->db->single();
-        
-        if ($result->driver_approved && $result->partner_approved && !$result->start_time) {
-            // Both are ready and collection hasn't started yet, set start time
-            $this->db->query("
-                UPDATE collections 
-                SET start_time = CURRENT_TIMESTAMP,
-                    status = 'In Progress'
-                WHERE schedule_id = :schedule_id
-            ");
-            $this->db->bind(':schedule_id', $scheduleId);
-            $this->db->execute();
-        }
-        
-        return $result->driver_approved && $result->partner_approved;
-    }
 
     public function createCollectionAndSupplierRecords($scheduleId) {
         // Start transaction
@@ -415,40 +233,6 @@ class M_CollectionSchedule {
         }
     }
 
-    public function checkAndCreateCollection($scheduleId) {
-        $this->db->query("
-            SELECT 
-                cs.*,
-                c.collection_id,
-                c.start_time,
-                c.driver_approved,
-                c.partner_approved
-            FROM collection_schedules cs
-            LEFT JOIN collections c ON cs.schedule_id = c.schedule_id
-            WHERE cs.schedule_id = :schedule_id
-        ");
-        $this->db->bind(':schedule_id', $scheduleId);
-        $schedule = $this->db->single();
-
-        // If collection doesn't exist, create it
-        if (!$schedule->collection_id) {
-            $this->createInitialCollection($scheduleId);
-            return;
-        }
-
-        // Check if it's time to start and both are ready
-        $currentTime = new DateTime();
-        $scheduleTime = new DateTime($schedule->start_time);
-        
-        if (($schedule->driver_approved && $schedule->partner_approved) || 
-            $currentTime >= $scheduleTime) {
-            
-            if (!$schedule->start_time) {
-                $this->startCollection($schedule->collection_id);
-            }
-        }
-    }
-
     public function startCollection($collectionId) {
         $this->db->query('UPDATE collections 
                           SET start_time = NOW(),
@@ -486,29 +270,32 @@ class M_CollectionSchedule {
     public function getCollectionSupplierRecords($collectionId) {
         $this->db->query("
             SELECT 
-                csr.*,
-                s.latitude,
-                s.longitude,
-                s.contact_number,
-                s.average_collection,
-                CONCAT(u.first_name, ' ', u.last_name) as supplier_name,
-                COALESCE(sp.profile_image, 'default.jpg') as profile_image,
+                csr.*, 
+                s.latitude, 
+                s.longitude, 
+                s.contact_number, 
+                s.average_collection, 
+                CONCAT(p.first_name, ' ', p.last_name) AS supplier_name,
+                p.image_path,
                 csr.arrival_time,
                 rs.stop_order
             FROM collection_supplier_records csr
             JOIN collections c ON csr.collection_id = c.collection_id
             JOIN collection_schedules cs ON c.schedule_id = cs.schedule_id
-            JOIN route_suppliers rs ON cs.route_id = rs.route_id AND csr.supplier_id = rs.supplier_id
+            JOIN route_suppliers rs ON cs.route_id = rs.route_id 
+                AND csr.supplier_id = rs.supplier_id
             JOIN suppliers s ON csr.supplier_id = s.supplier_id
-            JOIN users u ON s.user_id = u.user_id
+            JOIN profiles p ON s.profile_id = p.profile_id  -- Join profiles table for first_name and last_name
             LEFT JOIN supplier_photos sp ON s.supplier_id = sp.supplier_id
             WHERE csr.collection_id = :collection_id
             ORDER BY rs.stop_order ASC
         ");
         
         $this->db->bind(':collection_id', $collectionId);
+    
         return $this->db->resultSet();
     }
+    
 
     public function markSupplierArrival($collectionId, $supplierId) {
         $this->db->query("
@@ -524,29 +311,12 @@ class M_CollectionSchedule {
         return $this->db->execute();
     }
 
-    public function optimizeRoute($collectionId, $driverLat, $driverLng) {
-        // Get route_id for this collection
-        $this->db->query("
-            SELECT cs.route_id
-            FROM collections c
-            JOIN collection_schedules cs ON c.schedule_id = cs.schedule_id
-            WHERE c.collection_id = :collection_id
-        ");
-        $this->db->bind(':collection_id', $collectionId);
-        $result = $this->db->single();
-        
-        if ($result) {
-            $routeModel = new M_Route();
-            return $routeModel->updateRouteOrder($result->route_id, $driverLat, $driverLng);
-        }
-        return false;
-    }
+
 
     public function checkConflict($data) {
         // Base query to check conflicts
         $sql = 'SELECT * FROM collection_schedules 
                 WHERE driver_id = :driver_id 
-                AND week_number = :week_number 
                 AND route_id = :route_id 
                 AND is_active = 1';
         
@@ -559,7 +329,6 @@ class M_CollectionSchedule {
         
         // Bind parameters
         $this->db->bind(':driver_id', $data['driver_id']);
-        $this->db->bind(':week_number', $data['week_number']);
         $this->db->bind(':route_id', $data['route_id']);
         
         // Only bind schedule_id if it exists (for updates)
@@ -571,41 +340,21 @@ class M_CollectionSchedule {
         return !empty($results);
     }
 
+
     public function create($data) {
-        $this->db->query('INSERT INTO collection_schedules (
-            driver_id, 
-            route_id, 
-            -- vehicle_id, 
-            shift_id, 
-            week_number, 
-            day,
-            is_active,
-            created_at
-        ) VALUES (
-            :driver_id, 
-            :route_id, 
-            -- :vehicle_id, 
-            :shift_id, 
-            :week_number, 
-            :day,
-            1,
-            CURRENT_TIMESTAMP
-        )');
-
-        // Bind values
-        $this->db->bind(':driver_id', $data['driver_id']);
+        $this->db->query("INSERT INTO collection_schedules 
+                         (route_id, driver_id, day, start_time, end_time, is_active) 
+                         VALUES 
+                         (:route_id, :driver_id, :day, :start_time, :end_time, :is_active)");
+        
         $this->db->bind(':route_id', $data['route_id']);
-        // $this->db->bind(':vehicle_id', $data['vehicle_id']);
-        $this->db->bind(':shift_id', $data['shift_id']);
-        $this->db->bind(':week_number', $data['week_number']);
+        $this->db->bind(':driver_id', $data['driver_id']);
         $this->db->bind(':day', $data['day']);
-
-        // Execute
-        if ($this->db->execute()) {
-            return true;
-        } else {
-            return false;
-        }
+        $this->db->bind(':start_time', $data['start_time']);
+        $this->db->bind(':end_time', $data['end_time']);
+        $this->db->bind(':is_active', 1); // Default to active
+        
+        return $this->db->execute();
     }
 
     public function delete($schedule_id) {
@@ -637,55 +386,7 @@ class M_CollectionSchedule {
         }
     }
 
-    public function getTeamAssignmentCount($team_id) {
-        $this->db->query('SELECT COUNT(DISTINCT days_of_week) as day_count 
-                          FROM collection_schedules 
-                          WHERE team_id = :team_id 
-                          AND is_active = 1');
-        $this->db->bind(':team_id', $team_id);
-        $result = $this->db->single();
-        return $result->day_count ?? 0;
-    }
 
-    public function getVehicleAssignmentCount($vehicle_id) {
-        $this->db->query('SELECT COUNT(DISTINCT days_of_week) as day_count 
-                          FROM collection_schedules 
-                          WHERE vehicle_id = :vehicle_id 
-                          AND is_active = 1');
-        $this->db->bind(':vehicle_id', $vehicle_id);
-        $result = $this->db->single();
-        return $result->day_count ?? 0;
-    }
-
-    public function getTeamAssignedDays($team_id) {
-        $this->db->query('SELECT days_of_week 
-                          FROM collection_schedules 
-                          WHERE team_id = :team_id 
-                          AND is_active = 1');
-        $this->db->bind(':team_id', $team_id);
-        $results = $this->db->resultSet();
-        
-        $days = [];
-        foreach ($results as $result) {
-            $days = array_merge($days, explode(',', $result->days_of_week));
-        }
-        return array_unique($days);
-    }
-
-    // public function getVehicleAssignedDays($vehicle_id) {
-    //     $this->db->query('SELECT days_of_week 
-    //                       FROM collection_schedules 
-    //                       WHERE vehicle_id = :vehicle_id 
-    //                       AND is_active = 1');
-    //     $this->db->bind(':vehicle_id', $vehicle_id);
-    //     $results = $this->db->resultSet();
-        
-    //     $days = [];
-    //     foreach ($results as $result) {
-    //         $days = array_merge($days, explode(',', $result->days_of_week));
-    //     }
-    //     return array_unique($days);
-    // }
 
     public function toggleActive($schedule_id) {
         // First get the current status
@@ -717,28 +418,18 @@ class M_CollectionSchedule {
     }
 
     public function update($data) {
-        $this->db->query('UPDATE collection_schedules 
-                          SET route_id = :route_id,
+        $this->db->query('UPDATE collection_schedules SET
                               driver_id = :driver_id,
-                              -- vehicle_id = :vehicle_id,
-                              shift_id = :shift_id,
-                              week_number = :week_number
+                              shift_id = :shift_id
                           WHERE schedule_id = :schedule_id');
     
         // Bind values
-        $this->db->bind(':route_id', $data['route_id']);
         $this->db->bind(':driver_id', $data['driver_id']);
-        // $this->db->bind(':vehicle_id', $data['vehicle_id']);
         $this->db->bind(':shift_id', $data['shift_id']);
-        $this->db->bind(':week_number', $data['week_number']);
         $this->db->bind(':schedule_id', $data['schedule_id']);
     
         // Execute
-        if ($this->db->execute()) {
-            return true;
-        } else {
-            return false;
-        }
+        return $this->db->execute();
     }
 
     public function getSchedulesByVehicleId($vehicleId) {
@@ -747,6 +438,7 @@ class M_CollectionSchedule {
         
         return $this->db->resultSet();
     }
+
 
     public function getSchedulesByShiftIdAndDate($shiftId, $startDate, $endDate) {
         $this->db->query("
@@ -772,14 +464,6 @@ class M_CollectionSchedule {
         ];
     }
 
-    public function setPartnerReady($scheduleId, $partnerId) {
-        // Only set partner_approved, don't start collection yet
-        $this->db->query('UPDATE collections 
-                          SET partner_approved = 1 
-                          WHERE schedule_id = :schedule_id');
-        $this->db->bind(':schedule_id', $scheduleId);
-        return $this->db->execute();
-    }
 
     public function assignBagsToCollection($collectionId, $bags) {
         $this->db->beginTransaction();
@@ -811,40 +495,7 @@ class M_CollectionSchedule {
         }
     }
 
-    // Add a method to check if collection can start
-    public function canStartCollection($collectionId) {
-        $this->db->query('SELECT partner_approved, vehicle_manager_approved, initial_weight_bridge, bags 
-                          FROM collections 
-                          WHERE collection_id = :collection_id');
-        $this->db->bind(':collection_id', $collectionId);
-        $collection = $this->db->single();
-        
-        return $collection &&
-               $collection->partner_approved == 1 &&
-               $collection->vehicle_manager_approved == 1 &&
-               $collection->initial_weight_bridge !== null &&
-               $collection->bags > 0;
-    }
 
-    public function getSupplierCollectionRecord($collectionId, $supplierId) {
-        $this->db->query('
-                        SELECT csr.*, 
-                             u.first_name, 
-                             u.last_name,
-                             s.contact_number,
-                             s.latitude,
-                             s.longitude
-                      FROM collection_supplier_records csr
-                      JOIN suppliers s ON csr.supplier_id = s.supplier_id
-                      JOIN users u ON u.user_id = s.user_id
-                      WHERE csr.collection_id = :collection_id
-                      AND csr.supplier_id = :supplier_id;');
-
-        $this->db->bind(':collection_id', $collectionId);
-        $this->db->bind(':supplier_id', $supplierId);
-
-        return $this->db->single();
-    }
 
     public function getCollectionBags($collectionId) {
         $this->db->query('
@@ -1059,50 +710,387 @@ class M_CollectionSchedule {
                 cs.schedule_id,
                 cs.day,
                 cs.driver_id,
+                CONCAT(p.first_name, ' ', p.last_name) AS driver_name,
                 r.route_name,
                 v.vehicle_type,
                 v.license_plate,
-                cs_shift.shift_name,
-                COALESCE(ce.new_time, cs_shift.start_time) as start_time,
-                cs_shift.end_time,
-                ce.exception_type,
-                ce.reason as exception_reason,
+                cs.start_time,
+                cs.end_time,
                 CASE 
                     WHEN cs.day = DATE_FORMAT(CURDATE(), '%W') THEN 'today'
                     WHEN FIELD(cs.day, 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday') 
                         > FIELD(DATE_FORMAT(CURDATE(), '%W'), 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday')
                     THEN 'upcoming'
                     ELSE 'upcoming_next_week'
-                END as schedule_status,
+                END AS schedule_status,
                 CASE 
                     WHEN cs.day = DATE_FORMAT(CURDATE(), '%W') THEN 1 
                     ELSE 0 
-                END as is_today
+                END AS is_today,
+                (SELECT COUNT(*) 
+                 FROM collections c 
+                 WHERE c.schedule_id = cs.schedule_id 
+                 AND DATE(c.created_at) = CURDATE()
+                ) as collection_exists
             FROM collection_schedules cs
             JOIN routes r ON cs.route_id = r.route_id
             JOIN route_suppliers rs ON r.route_id = rs.route_id
             JOIN vehicles v ON r.vehicle_id = v.vehicle_id
-            JOIN collection_shifts cs_shift ON cs.shift_id = cs_shift.shift_id
-            LEFT JOIN collection_exceptions ce ON 
-                cs.schedule_id = ce.schedule_id 
-                AND ce.exception_date = CURDATE()
+            JOIN drivers d on d.driver_id = cs.driver_id
+            JOIN profiles p on d.profile_id = p.profile_id
             WHERE rs.supplier_id = :supplier_id
-            AND cs.is_active = 1
-            AND cs.is_deleted = 0
-            AND r.is_deleted = 0
-            AND NOT EXISTS (
-                SELECT 1 FROM collection_exceptions 
-                WHERE schedule_id = cs.schedule_id 
-                AND exception_date = CURDATE()
-                AND exception_type = 'SKIP'
-            )
+                AND cs.is_active = 1
+                AND cs.is_deleted = 0
+                AND r.is_deleted = 0
             ORDER BY 
                 FIELD(schedule_status, 'today', 'upcoming', 'upcoming_next_week'),
                 FIELD(cs.day, 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'),
-                COALESCE(ce.new_time, cs_shift.start_time)
+                cs.start_time
+        ");
+    
+        $this->db->bind(':supplier_id', $supplierId);
+        return $this->db->resultSet();
+    }
+    
+    
+    public function getSubscribedSchedules($supplierId) {
+        $sql = "SELECT 
+                    cs.schedule_id,
+                    cs.route_id,
+                    r.route_name,
+                    cs.day,
+                    CONCAT(cs.start_time, ' - ', cs.end_time) AS shift_time,
+                    v.license_plate,
+                    v.capacity AS remaining_capacity,
+                    1 AS is_subscribed
+                FROM collection_schedules cs
+                INNER JOIN routes r ON cs.route_id = r.route_id
+                INNER JOIN vehicles v ON r.vehicle_id = v.vehicle_id
+                INNER JOIN route_suppliers rs ON r.route_id = rs.route_id
+                WHERE cs.is_deleted = 0 
+                  AND cs.is_active = 1
+                  AND rs.is_deleted = 0
+                  AND rs.supplier_id = :supplier_id
+                  AND rs.is_active = 1
+                ORDER BY 
+                    CASE cs.day
+                        WHEN 'Monday' THEN 1
+                        WHEN 'Tuesday' THEN 2
+                        WHEN 'Wednesday' THEN 3
+                        WHEN 'Thursday' THEN 4
+                        WHEN 'Friday' THEN 5
+                        WHEN 'Saturday' THEN 6
+                        WHEN 'Sunday' THEN 7
+                    END,
+                    cs.start_time";
+    
+        $this->db->query($sql);
+        $this->db->bind(':supplier_id', $supplierId);
+        return $this->db->resultSet();
+    }
+    
+
+    public function getAvailableSchedules($supplierId) {
+        $sql = "SELECT 
+                    cs.schedule_id,
+                    cs.route_id,
+                    r.route_name,
+                    cs.day,
+                    CONCAT(cs.start_time, ' - ', cs.end_time) AS shift_time,
+                    v.license_plate,
+                    v.capacity AS remaining_capacity,
+                    0 AS is_subscribed
+                FROM collection_schedules cs
+                INNER JOIN routes r ON cs.route_id = r.route_id
+                INNER JOIN vehicles v ON r.vehicle_id = v.vehicle_id
+                WHERE cs.is_deleted = 0
+                  AND r.is_locked = 0 
+                  AND cs.is_active = 1
+                  AND r.route_id NOT IN (
+                        SELECT route_id 
+                        FROM route_suppliers 
+                        WHERE supplier_id = :supplier_id 
+                          AND is_deleted = 0
+                          AND is_active = 1
+                  )
+                ORDER BY 
+                    CASE cs.day
+                        WHEN 'Monday' THEN 1
+                        WHEN 'Tuesday' THEN 2
+                        WHEN 'Wednesday' THEN 3
+                        WHEN 'Thursday' THEN 4
+                        WHEN 'Friday' THEN 5
+                        WHEN 'Saturday' THEN 6
+                        WHEN 'Sunday' THEN 7
+                    END,
+                    cs.start_time";
+    
+        $this->db->query($sql);
+        $this->db->bind(':supplier_id', $supplierId);
+        return $this->db->resultSet();
+    }
+    
+
+    /**
+     need this in creating collection schedules
+     **/
+    public function checkDriverScheduleConflict($driverId, $day, $startTime, $endTime) {
+        // Convert times for comparison
+        $newStartTime = strtotime("2000-01-01 " . $startTime);
+        $newEndTime = strtotime("2000-01-01 " . $endTime);
+        
+        // If end time is earlier than start time, assume it's the next day
+        if ($newEndTime < $newStartTime) {
+            $newEndTime = strtotime("2000-01-02 " . $endTime);
+        }
+        
+        // Get all schedules for this driver on this day
+        $this->db->query("SELECT * FROM collection_schedules 
+                         WHERE driver_id = :driver_id 
+                         AND day = :day 
+                         AND is_deleted = 0");
+        
+        $this->db->bind(':driver_id', $driverId);
+        $this->db->bind(':day', $day);
+        
+        $schedules = $this->db->resultSet();
+        
+        // Check each schedule for time conflicts
+        foreach ($schedules as $schedule) {
+            $existingStartTime = strtotime("2000-01-01 " . $schedule->start_time);
+            $existingEndTime = strtotime("2000-01-01 " . $schedule->end_time);
+            
+            // If existing end time is earlier than existing start time, assume it's the next day
+            if ($existingEndTime < $existingStartTime) {
+                $existingEndTime = strtotime("2000-01-02 " . $schedule->end_time);
+            }
+            
+            // Check for overlap
+            // New start time falls within existing schedule
+            // or new end time falls within existing schedule
+            // or new schedule completely contains existing schedule
+            if (($newStartTime >= $existingStartTime && $newStartTime < $existingEndTime) ||
+                ($newEndTime > $existingStartTime && $newEndTime <= $existingEndTime) ||
+                ($newStartTime <= $existingStartTime && $newEndTime >= $existingEndTime)) {
+                return true; 
+            }
+        }
+        
+        return false; // No conflict
+    }
+
+
+    public function checkRouteScheduleConflict($routeId, $day, $startTime = null, $endTime = null, $checkTimeConflict = false) {
+        // First check if the route is already scheduled on this day
+        $this->db->query("SELECT COUNT(*) as count FROM collection_schedules 
+                         WHERE route_id = :route_id 
+                         AND day = :day 
+                         AND is_deleted = 0");
+        
+        $this->db->bind(':route_id', $routeId);
+        $this->db->bind(':day', $day);
+        
+        $result = $this->db->single();
+        
+        // If the route is already scheduled on this day, return conflict
+        if ($result->count > 0) {
+            return true;
+        }
+        
+        // If we're not checking time conflicts or times aren't provided, we're done
+        if (!$checkTimeConflict || !$startTime || !$endTime) {
+            return false;
+        }
+        
+        // Otherwise, proceed with time conflict check (which is now redundant since we're checking day-level)
+        // This is kept for future flexibility if requirements change
+        $newStartTime = strtotime("2000-01-01 " . $startTime);
+        $newEndTime = strtotime("2000-01-01 " . $endTime);
+        
+        // If end time is earlier than start time, assume it's the next day
+        if ($newEndTime < $newStartTime) {
+            $newEndTime = strtotime("2000-01-02 " . $endTime);
+        }
+        
+        // Get all schedules for this route on this day
+        $this->db->query("SELECT * FROM collection_schedules 
+                         WHERE route_id = :route_id 
+                         AND day = :day 
+                         AND is_deleted = 0");
+        
+        $this->db->bind(':route_id', $routeId);
+        $this->db->bind(':day', $day);
+        
+        $schedules = $this->db->resultSet();
+        
+        // Check each schedule for time conflicts
+        foreach ($schedules as $schedule) {
+            $existingStartTime = strtotime("2000-01-01 " . $schedule->start_time);
+            $existingEndTime = strtotime("2000-01-01 " . $schedule->end_time);
+            
+            // If existing end time is earlier than existing start time, assume it's the next day
+            if ($existingEndTime < $existingStartTime) {
+                $existingEndTime = strtotime("2000-01-02 " . $schedule->end_time);
+            }
+            
+            // Check for overlap
+            if (($newStartTime >= $existingStartTime && $newStartTime < $existingEndTime) ||
+                ($newEndTime > $existingStartTime && $newEndTime <= $existingEndTime) ||
+                ($newStartTime <= $existingStartTime && $newEndTime >= $existingEndTime)) {
+                return true; // Conflict found
+            }
+        }
+        
+        return false; // No conflict
+    }
+
+
+    public function checkDriverScheduleConflictExcludingCurrent($driverId, $day, $startTime, $endTime, $currentScheduleId) {
+        // Convert times for comparison
+        $newStartTime = strtotime("2000-01-01 " . $startTime);
+        $newEndTime = strtotime("2000-01-01 " . $endTime);
+        
+        // If end time is earlier than start time, assume it's the next day
+        if ($newEndTime < $newStartTime) {
+            $newEndTime = strtotime("2000-01-02 " . $endTime);
+        }
+        
+        // Get all schedules for this driver on this day, excluding the current one
+        $this->db->query("SELECT * FROM collection_schedules 
+                         WHERE driver_id = :driver_id 
+                         AND day = :day 
+                         AND schedule_id != :current_schedule_id
+                         AND is_deleted = 0");
+        
+        $this->db->bind(':driver_id', $driverId);
+        $this->db->bind(':day', $day);
+        $this->db->bind(':current_schedule_id', $currentScheduleId);
+        
+        $schedules = $this->db->resultSet();
+        
+        // Check each schedule for time conflicts
+        foreach ($schedules as $schedule) {
+            $existingStartTime = strtotime("2000-01-01 " . $schedule->start_time);
+            $existingEndTime = strtotime("2000-01-01 " . $schedule->end_time);
+            
+            // If existing end time is earlier than existing start time, assume it's the next day
+            if ($existingEndTime < $existingStartTime) {
+                $existingEndTime = strtotime("2000-01-02 " . $schedule->end_time);
+            }
+            
+            // Check for overlap
+            if (($newStartTime >= $existingStartTime && $newStartTime < $existingEndTime) ||
+                ($newEndTime > $existingStartTime && $newEndTime <= $existingEndTime) ||
+                ($newStartTime <= $existingStartTime && $newEndTime >= $existingEndTime)) {
+                return true; // Conflict found
+            }
+        }
+        
+        return false; // No conflict
+    }
+    public function checkRouteScheduleConflictExcludingCurrent($routeId, $day, $startTime, $endTime, $currentScheduleId) {
+        // Convert times for comparison
+        $newStartTime = strtotime("2000-01-01 " . $startTime);
+        $newEndTime = strtotime("2000-01-01 " . $endTime);
+        
+        // If end time is earlier than start time, assume it's the next day
+        if ($newEndTime < $newStartTime) {
+            $newEndTime = strtotime("2000-01-02 " . $endTime);
+        }
+        
+        // Get all schedules for this route on this day, excluding the current one
+        $this->db->query("SELECT * FROM collection_schedules 
+                         WHERE route_id = :route_id 
+                         AND day = :day 
+                         AND schedule_id != :current_schedule_id
+                         AND is_deleted = 0");
+        
+        $this->db->bind(':route_id', $routeId);
+        $this->db->bind(':day', $day);
+        $this->db->bind(':current_schedule_id', $currentScheduleId);
+        
+        $schedules = $this->db->resultSet();
+        
+        // Check each schedule for time conflicts
+        foreach ($schedules as $schedule) {
+            $existingStartTime = strtotime("2000-01-01 " . $schedule->start_time);
+            $existingEndTime = strtotime("2000-01-01 " . $schedule->end_time);
+            
+            // If existing end time is earlier than existing start time, assume it's the next day
+            if ($existingEndTime < $existingStartTime) {
+                $existingEndTime = strtotime("2000-01-02 " . $schedule->end_time);
+            }
+            
+            // Check for overlap
+            if (($newStartTime >= $existingStartTime && $newStartTime < $existingEndTime) ||
+                ($newEndTime > $existingStartTime && $newEndTime <= $existingEndTime) ||
+                ($newStartTime <= $existingStartTime && $newEndTime >= $existingEndTime)) {
+                return true; // Conflict found
+            }
+        }
+        
+        return false; // No conflict
+    }
+
+
+    public function updateSchedule($data) {
+        $this->db->query("UPDATE collection_schedules 
+                         SET route_id = :route_id, 
+                             driver_id = :driver_id, 
+                             day = :day, 
+                             start_time = :start_time, 
+                             end_time = :end_time
+                         WHERE schedule_id = :schedule_id");
+        
+        $this->db->bind(':schedule_id', $data['schedule_id']);
+        $this->db->bind(':route_id', $data['route_id']);
+        $this->db->bind(':driver_id', $data['driver_id']);
+        $this->db->bind(':day', $data['day']);
+        $this->db->bind(':start_time', $data['start_time']);
+        $this->db->bind(':end_time', $data['end_time']);
+        
+        return $this->db->execute();
+    }
+
+    public function getTotalSchedules() {
+        $this->db->query("SELECT COUNT(*) as total FROM collection_schedules WHERE is_deleted = 0");
+        return $this->db->single()->total; 
+    }
+
+    public function getActiveSchedulesCount() { // get the schedule if its in the current day and shift time
+        $currentDay = date('l'); 
+        $currentTime = date('H:i:s'); 
+
+        $this->db->query("
+            SELECT COUNT(*) as total 
+            FROM collection_schedules 
+            WHERE day = :currentDay 
+            AND is_active = 1 
+            AND is_deleted = 0 
+            AND start_time <= :currentTime 
+            AND end_time >= :currentTime
         ");
 
-        $this->db->bind(':supplier_id', $supplierId);
+
+        $this->db->bind(':currentDay', $currentDay);
+        $this->db->bind(':currentTime', $currentTime);
+        return $this->db->single()->total; 
+    }
+
+    public function getSchedulesByDriverId($driverId) {
+        $this->db->query('SELECT cs.*, r.route_name, 
+                          CONCAT(p.first_name, " ", p.last_name) as driver_name
+                          FROM collection_schedules cs
+                          LEFT JOIN routes r ON cs.route_id = r.route_id
+                          LEFT JOIN drivers d ON cs.driver_id = d.driver_id
+                          LEFT JOIN profiles p ON d.profile_id = p.profile_id
+                          WHERE cs.driver_id = :driver_id
+                          AND cs.is_active = 1
+                          AND cs.is_deleted = 0
+                          ');
+        
+        $this->db->bind(':driver_id', $driverId);
+        
         return $this->db->resultSet();
     }
 

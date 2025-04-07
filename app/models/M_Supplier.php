@@ -23,6 +23,26 @@ class M_Supplier {
         return $this->db->resultSet();
     }
 
+    /* CREATE SUPPLIER!!! THIS HAPPENS INSIDE THE APPLICATION */
+    public function createSupplier($data) {
+        $this->db->query('
+            INSERT INTO suppliers (profile_id, contact_number, application_id, latitude, longitude, is_active, is_deleted, number_of_collections, average_collection)
+            VALUES (:profile_id, :contact_number, :application_id, :latitude, :longitude, :is_active, :is_deleted, :number_of_collections, :average_collection)
+        ');
+    
+        $this->db->bind(':profile_id', $data['profile_id']);
+        $this->db->bind(':contact_number', $data['contact_number']);
+        $this->db->bind(':application_id', $data['application_id']);
+        $this->db->bind(':latitude', $data['latitude']);
+        $this->db->bind(':longitude', $data['longitude']);
+        $this->db->bind(':is_active', $data['is_active']);
+        $this->db->bind(':is_deleted', $data['is_deleted']);
+        $this->db->bind(':number_of_collections', $data['number_of_collections']);
+        $this->db->bind(':average_collection', $data['average_collection']);
+    
+        return $this->db->execute();
+    }
+
 
     public function confirmSupplierRole($applicationId) {
         // Step 1: Get the user_id from the supplier_applications table
@@ -84,15 +104,50 @@ class M_Supplier {
 
     public function getSupplierDetailsByUserId($userId) {
         $sql = "
-            SELECT s.*, u.first_name, u.last_name, u.email 
+            SELECT s.*, u.email 
             FROM suppliers s
-            JOIN users u ON s.user_id = u.user_id
-            WHERE s.user_id = :user_id AND s.is_deleted = 0
+            LEFT JOIN profiles p on s.profile_id = p.profile_id
+            JOIN users u ON p.user_id = u.user_id
+            WHERE p.user_id = :user_id AND s.is_deleted = 0
         ";
         $this->db->query($sql);
         $this->db->bind(':user_id', $userId);
         $result = $this->db->single(); // Fetch a single record
         return $result; // Return the supplier details along with user info
+    }
+
+    public function getSupplierStatus($supplierId) {
+        $sql = "SELECT is_active FROM suppliers WHERE supplier_id = :supplier_id";
+        $this->db->query($sql);
+        $this->db->bind(':supplier_id', $supplierId);
+        $result = $this->db->single(); // Fetch the single record
+
+        // Return the actual is_active value
+        return $result ? $result->is_active : null; // Return the is_active value or null if not found
+    }
+
+    public function updateSupplierStatus($supplierId, $isActive) {
+        $sql = "UPDATE suppliers SET is_active = :is_active WHERE supplier_id = :supplier_id";
+        $this->db->query($sql);
+        $this->db->bind(':is_active', $isActive);
+        $this->db->bind(':supplier_id', $supplierId);
+        
+        return $this->db->execute(); // Returns true on success
+    }
+
+
+    public function getSupplierById($supplierId) {
+        $sql = "
+        SELECT s.*,p.*,u.email, CONCAT(p.first_name, ' ', p.last_name) AS supplier_name FROM suppliers s
+        INNER JOIN profiles p ON p.profile_id = s.profile_id
+        INNER JOIN users u ON p.user_id = u.user_id
+        WHERE s.supplier_id = :supplier_id;
+        ";
+
+        $this->db->query($sql);
+        $this->db->bind(':supplier_id', $supplierId);
+        return $this->db->single();
+        
     }
 
 } 

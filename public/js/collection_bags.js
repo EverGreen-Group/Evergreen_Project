@@ -221,7 +221,7 @@ function showBagDetails(bagId) {
   const content = document.getElementById("collectionBagDetailsContent");
 
   // Fetch bag details from the server
-  fetch(`${URLROOT}/vehiclemanager/getBagDetails/${bagId}`)
+  fetch(`${URLROOT}/manager/getBagDetails/${bagId}`)
     .then((response) => response.json())
     .then((data) => {
       if (data.success) {
@@ -348,7 +348,7 @@ function addNewBag(event) {
   };
 
   // Construct the URL using URLROOT
-  const url = `${URLROOT}/vehiclemanager/createBag`; // Adjust the path as necessary
+  const url = `${URLROOT}/manager/createBag`; // Adjust the path as necessary
 
   // Send the data to the server
   fetch(url, {
@@ -383,7 +383,7 @@ document.addEventListener("DOMContentLoaded", function () {
 });
 
 function fetchBags() {
-  fetch(`${URLROOT}/vehiclemanager/getBags`) // Adjust the URL as necessary
+  fetch(`${URLROOT}/manager/getBags`) // Adjust the URL as necessary
     .then((response) => response.json())
     .then((data) => {
       if (data.success) {
@@ -421,7 +421,7 @@ function populateBagsTable(bags) {
 
 function openUpdateBagModal(bagId) {
   // Fetch the bag details from the server
-  fetch(`${URLROOT}/vehiclemanager/getBagDetails/${bagId}`)
+  fetch(`${URLROOT}/manager/getBagDetails/${bagId}`)
     .then((response) => response.json())
     .then((data) => {
       if (data.success) {
@@ -506,7 +506,7 @@ function updateBag(event, bagId) {
   };
 
   // Construct the URL using URLROOT
-  const url = `${URLROOT}/vehiclemanager/updateBag`; // Adjust the path as necessary
+  const url = `${URLROOT}/manager/updateBag`; // Adjust the path as necessary
 
   // Send the data to the server
   fetch(url, {
@@ -538,7 +538,7 @@ function updateBag(event, bagId) {
 function removeBag(bagId) {
   if (confirm("Are you sure you want to remove this bag?")) {
     // Construct the URL using URLROOT
-    const url = `${URLROOT}/vehiclemanager/removeBag`; // Adjust the path as necessary
+    const url = `${URLROOT}/manager/removeBag`; // Adjust the path as necessary
     const imagePath = `${UPLOADROOT}/qr_codes/${bagId}.png`; // Correct file path for the image
 
     // Prepare data to send to the server
@@ -562,7 +562,7 @@ function removeBag(bagId) {
           alert("Bag removed successfully!");
 
           // Now delete the image
-          return fetch(`${URLROOT}/vehiclemanager/deleteBagQR/`, {
+          return fetch(`${URLROOT}/manager/deleteBagQR/`, {
             method: "DELETE",
             headers: {
               "Content-Type": "application/json",

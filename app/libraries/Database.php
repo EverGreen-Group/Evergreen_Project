@@ -195,4 +195,23 @@ class Database
     public function lastInsertId() {
         return $this->dbh->lastInsertId();
     }
+
+    public function escapeString($string) {
+        return $this->dbh->quote($string);
+    }
+
+    public function executeRawQuery($sql) {
+        try {
+            // Execute the query directly without prepare/bind
+            $result = $this->dbh->exec($sql);
+            if ($result === false) {
+                error_log("Raw query error: " . json_encode($this->dbh->errorInfo()));
+                return false;
+            }
+            return true;
+        } catch (PDOException $e) {
+            error_log("PDO Exception in raw query: " . $e->getMessage());
+            return false;
+        }
+    }
 }

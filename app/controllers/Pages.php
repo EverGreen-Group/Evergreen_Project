@@ -40,13 +40,10 @@ class Pages extends Controller {
             redirect('auth/login');
         }
 
-        // Load the supplier application model
         $supplierApplicationModel = $this->model('M_SupplierApplication');
         
-        // Get application status for current user
         $application = $supplierApplicationModel->getApplicationByUserId($_SESSION['user_id']);
-        
-        // Check if we're coming from a form submission
+
         $justSubmitted = isset($_GET['submitted']) && $_GET['submitted'] === 'true';
         
         $data = [

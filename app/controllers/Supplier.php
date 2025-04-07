@@ -38,37 +38,40 @@ class Supplier extends Controller {
         $this->collectionModel= new M_Collection();
         $this->scheduleModel= new M_CollectionSchedule();
         $this->bagModel = new M_Bag();
-        $this->supplierDetails = $this->supplierModel->getSupplierDetailsByUserId($_SESSION['user_id']);
-        $_SESSION['supplier_id'] = $this->supplierDetails->supplier_id;
+        $supplierDetails = $this->supplierModel->getSupplierDetailsByUserId($_SESSION['user_id']);
+        $_SESSION['supplier_id'] = $supplierDetails->supplier_id;
     }
 
     
     public function index() {
-
         $supplierId = $_SESSION['supplier_id'];
-
         $collectionId = $this->collectionModel->checkCollectionExistsUsingSupplierId($supplierId);
-
+    
         try {
             // Get all schedules
             $allSchedules = $this->scheduleModel->getUpcomingSchedulesBySupplierId($supplierId);
+            $supplierStatus = $this->supplierModel->getSupplierStatus($supplierId);
             
-            // Organize schedules by day
+            // Organize schedules by day, filtering out already collected schedules for today
             $todaySchedules = [];
             $upcomingSchedules = [];
+
+            /*
+            WE CAN SIMPLY OMIT THE SCHEDULES IF THERE EXISTS A COLLECTION FOR IT...
+            */
             
             foreach ($allSchedules as $schedule) {
+                // Skip schedules that already have collections for today
+                if ($schedule->is_today && $schedule->collection_exists > 0) {
+                    continue;
+                }
+                
                 if ($schedule->is_today) {
                     $todaySchedules[] = $schedule;
                 } else {
                     $upcomingSchedules[] = $schedule;
                 }
             }
-
-
-            
-            // Get driver details (assuming you have a driver model)
-            // $driverDetails = $this->driverModel->getDriverById($driverId);
             
             $data = [
                 'todaySchedules' => $todaySchedules,
@@ -78,7 +81,8 @@ class Supplier extends Controller {
                 'lastUpdated' => date('Y-m-d H:i:s'),
                 'message' => '',
                 'error' => '',
-                'collectionId' => $collectionId
+                'collectionId' => $collectionId,
+                'is_active' => $supplierStatus
             ];
             
             if (empty($todaySchedules) && empty($upcomingSchedules)) {
@@ -130,9 +134,48 @@ class Supplier extends Controller {
 
     public function payments()
     {
-        $data = [];
 
-        $this->view('shared/supplier/v_view_monthly_statement', $data);
+
+        $this->view('supplier/v_supplier_payment', []);
+    }
+
+    public function schedule()
+    {
+        $supplierId = $_SESSION['supplier_id'];
+
+        try {
+            // Get subscribed and available schedules separately
+            $subscribedSchedules = $this->scheduleModel->getSubscribedSchedules($supplierId);
+            $availableSchedules = $this->scheduleModel->getAvailableSchedules($supplierId);
+            
+            $formatSchedule = function($schedule) {
+                return [
+                    'schedule_id' => $schedule->schedule_id,
+                    'route_name' => $schedule->route_name,
+                    'day' => $schedule->day,
+                    'shift_time' => $schedule->shift_time,
+                    'remaining_capacity' => $schedule->remaining_capacity,
+                    'vehicle' => $schedule->license_plate,
+                    'is_subscribed' => (bool)$schedule->is_subscribed
+                ];
+            };
+
+            $data = [
+                'subscribedSchedules' => array_map($formatSchedule, $subscribedSchedules),
+                'availableSchedules' => array_map($formatSchedule, $availableSchedules),
+                'error' => ''
+            ];
+        } catch (Exception $e) {
+            error_log($e->getMessage());
+            
+            $data = [
+                'subscribedSchedules' => [],
+                'availableSchedules' => [],
+                'error' => 'An error occurred while fetching schedules. Please try again later.'
+            ];
+        }
+
+        $this->view('supplier/v_supplier_schedule', $data);
     }
 
     public function paymentanalysis()
@@ -527,6 +570,166 @@ class Supplier extends Controller {
         header('Content-Type: application/json');
         echo json_encode($bagDetails);
         exit();
+    }
+
+    public function bag($bagId) {
+        // $collectionDetails = $this->collectionModel->getCollectionDetails($collectionId);
+
+        $data = [
+            'bagId' => $bagId,
+            // 'bagDetails' => $collectionDetails
+        ];
+
+        $this->view('supplier/v_bag', $data);
+    }
+
+    public function fertilizer($fertilizerId) {
+        // $collectionDetails = $this->collectionModel->getCollectionDetails($collectionId);
+
+        $data = [
+            'fertilizerId' => $fertilizerId,
+            // 'bagDetails' => $collectionDetails
+        ];
+
+        $this->view('supplier/v_fertilizer', $data);
+    }
+
+    // Add these methods for AJAX calls
+    public function subscribeToRoute()
+    {
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            redirect('supplier/schedule');
+        }
+    
+        $routeId = $this->routeModel->getRouteIdByScheduleId($_POST['schedule_id']) ?? null;
+        $supplierId = $_SESSION['supplier_id'];
+    
+        try {
+            // Check if supplier is active
+            $isActive = $this->supplierModel->getSupplierStatus($supplierId);
+            
+            if ($isActive !== '1') {
+                echo json_encode([
+                    'success' => false, 
+                    'message' => 'Your account is currently inactive. Please activate your account to subscribe to routes.'
+                ]);
+                return;
+            }
+            
+            // First, check if supplier is already subscribed to any route
+            $currentRoute = $this->routeModel->getSupplierCurrentRoute($supplierId);
+            
+            if ($currentRoute) {
+                // Need to unsubscribe from current route first
+                echo json_encode([
+                    'success' => false, 
+                    'message' => 'Please unsubscribe from your current route first.'
+                ]);
+                return;
+            }
+    
+            // Get the last stop order for the route
+            $lastStopOrder = $this->routeModel->getLastStopOrder($routeId);
+            $newStopOrder = $lastStopOrder + 1;
+    
+            // Add supplier to route
+            if ($this->routeModel->addSupplierToRoute($routeId, $supplierId, $newStopOrder)) {
+                // Update the remaining capacity
+                $this->routeModel->updateRemainingCapacity($routeId, 'add');
+                echo json_encode(['success' => true]);
+            } else {
+                echo json_encode([
+                    'success' => false, 
+                    'message' => 'Failed to subscribe to route'
+                ]);
+            }
+        } catch (Exception $e) {
+            echo json_encode([
+                'success' => false, 
+                'message' => $e->getMessage()
+            ]);
+        }
+    }
+
+    public function unsubscribeFromRoute()
+    {
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            redirect('supplier/schedule');
+        }
+
+        $routeId = $this->routeModel->getRouteIdByScheduleId($_POST['schedule_id']) ?? null;
+        $supplierId = $_SESSION['supplier_id'];
+
+        try {
+            
+            // Remove supplier from route
+            if ($this->routeModel->removeSupplierFromRoute($routeId, $supplierId)) {
+                $this->routeModel->updateRemainingCapacity($routeId, 'remove');
+                // Adjust stop orders for remaining suppliers
+                
+                echo json_encode(['success' => true]);
+            } else {
+                echo json_encode([
+                    'success' => false, 
+                    'message' => 'Failed to unsubscribe from route'
+                ]);
+            }
+        } catch (Exception $e) {
+            echo json_encode([
+                'success' => false, 
+                'message' => $e->getMessage()
+            ]);
+        }
+    }
+
+    public function toggleAvailability() {
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            // Get the current status from the POST data
+            $currentStatus = isset($_POST['current_status']) ? $_POST['current_status'] : '0';
+            $supplierId = $_SESSION['supplier_id'];
+    
+            // Toggle the status
+            $newStatus = $currentStatus === '1' ? '0' : '1';
+            
+            // If supplier is becoming inactive, unsubscribe from all routes
+            if ($newStatus === '0') {
+                $subscribedSchedules = $this->scheduleModel->getSubscribedSchedules($supplierId);
+                
+                // Process each subscription
+                $unsubscribeResults = [];
+                foreach ($subscribedSchedules as $schedule) {
+                    $routeId = $schedule->route_id;
+                    
+                    try {
+                        // Remove supplier from route
+                        if ($this->routeModel->removeSupplierFromRoute($routeId, $supplierId)) {
+                            $this->routeModel->updateRemainingCapacity($routeId, 'remove');
+                            $unsubscribeResults[] = true;
+                        } else {
+                            $unsubscribeResults[] = false;
+                        }
+                    } catch (Exception $e) {
+                        $unsubscribeResults[] = false;
+                    }
+                }
+                
+                // If any unsubscriptions failed, you may want to handle that
+                $allUnsubscribesSuccessful = !in_array(false, $unsubscribeResults);
+                // You could decide whether to proceed based on this result
+            }
+    
+            // Update the supplier's availability in the model
+            if ($this->supplierModel->updateSupplierStatus($supplierId, $newStatus)) {
+                flash('message', 'Supplier availability updated successfully.', 'alert alert-success');
+            } else {
+                flash('message', 'Failed to update availability. Please try again.', 'alert alert-danger');
+            }
+    
+            // Redirect back to the dashboard
+            redirect('supplier/');
+        } else {
+            redirect('supplier/'); // Redirect if not a POST request
+        }
     }
 }
 ?>
