@@ -72,10 +72,10 @@
 		<div class="order">
 			<div class="head">
 				<h3>Validate Stock</h3>
-				<a href="<?php echo URLROOT; ?>/manager/createVehicle" class="btn btn-primary">
+				<!-- <a href="<?php echo URLROOT; ?>/manager/createVehicle" class="btn btn-primary">
 					<i class='bx bx-show'></i>
 					View Stock Validation History
-				</a>
+				</a> -->
 			</div>
 
 			<table>

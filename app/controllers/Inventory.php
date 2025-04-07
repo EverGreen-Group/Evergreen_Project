@@ -112,13 +112,6 @@ class Inventory extends controller
         $this->view('inventory/v_product', $data);
     }
 
-    public function order()
-    {
-        $data = [];
-
-        $this->view('inventory/v_order', $data);
-    }
-
     public function createproduct()
     {
         if ($_SERVER['REQUEST_METHOD'] == 'POST') {

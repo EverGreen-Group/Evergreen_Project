@@ -6,7 +6,6 @@
     <title><?php echo SITENAME; ?></title>
     <link rel="stylesheet" href="<?php echo URLROOT; ?>/css/pages/f_available.css" />
     <link rel="stylesheet" href="<?php echo URLROOT; ?>/css/components/topnavbar_style.css" />
-    <link href="https://unpkg.com/boxicons@2.0.9/css/boxicons.min.css" rel="stylesheet" />
 
 </head>
 
