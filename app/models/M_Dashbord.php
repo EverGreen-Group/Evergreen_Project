@@ -104,32 +104,13 @@ class M_stockvalidate
                 return ['success' => false, 'message' => 'Bag not found'];
             }
             
-            // Get the current rate for this leaf type
-            $this->db->query('SELECT * FROM leaf_type_rates 
-                             WHERE leaf_type_id = :leaf_type_id 
-                             ORDER BY rate_id DESC 
-                             LIMIT 1');
-            $this->db->bind(':leaf_type_id', $bagDetails->leaf_type_id);
-            $currentRate = $this->db->single();
-            
-            if (!$currentRate) {
-                return ['success' => false, 'message' => 'Rate not found for this leaf type'];
-            }
-            
-            // Use actual weight if available, otherwise use capacity
-            $weight = $bagDetails->actual_weight_kg ? $bagDetails->actual_weight_kg : 0;
-            
-            // Calculate payment amount
-            $paymentAmount = $weight * $currentRate->rate;
             
             // Update bag record
             $this->db->query('UPDATE bag_usage_history 
-                            SET payment_amount = :payment_amount, 
-                                is_finalized = 1, 
+                            SET is_finalized = 1, 
                                 finalized_at = NOW(),
                                 action = "approved"
                             WHERE history_id = :history_id');
-            $this->db->bind(':payment_amount', $paymentAmount);
             $this->db->bind(':history_id', $historyId);
             
             if (!$this->db->execute()) {
