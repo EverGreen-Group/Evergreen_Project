@@ -840,4 +840,16 @@ class Inventory extends controller
         $this->view('inventory/v_create_bag');
     }
 
+    public function rawLeafHistory()
+    {
+        // Get leaf quantities data
+        $leafQuantities = $this->stockvalidate->getLeafQuantitiesLast7Days();
+        
+        $data = [
+            'leafQuantities' => $leafQuantities
+        ];
+        
+        $this->view('inventory/v_raw_leaf_history', $data);
+    }
+
 }

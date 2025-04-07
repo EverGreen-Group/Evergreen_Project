@@ -26,45 +26,13 @@
       </div>
   </div>
 
-  <ul class="dashboard-stats">
-        <li class="stat-card">
-            <div class="stat-content">
-                <i class='bx bx-time'></i>
-                <div class="stat-info">
-                    <h3><?php echo isset($awaitingInventory) ? $awaitingInventory : 0; ?></h3>
-                    <p>Awaiting Inventory Addition</p>
-                </div>
-            </div>
-        </li>
-
-        <li class="stat-card">
-            <div class="stat-content">
-                <i class='bx bx-leaf'></i>
-                <div class="stat-info">
-                    <h3><?php echo isset($kgApprovedToday) ? $kgApprovedToday : 0; ?></h3>
-                    <p>Kg Approved Today</p>
-                </div>
-            </div>
-        </li>
-
-        <li class="stat-card">
-            <div class="stat-content">
-                <i class='bx bx-shopping-bag'></i>
-                <div class="stat-info">
-                    <h3><?php echo isset($fertilizerOrders) ? $fertilizerOrders : 0; ?></h3>
-                    <p>Fertilizer Orders</p>
-                </div>
-            </div>
-        </li>
-    </ul>
-
 	<div class="table-data">
 		<div class="order">
 			<div class="head">
 				<h3>Raw Tea Leaves Supply</h3>
-				<a href="<?php echo URLROOT; ?>/manager/createVehicle" class="btn btn-primary">
+				<a href="<?php echo URLROOT; ?>/inventory/rawLeafHistory" class="btn btn-primary">
 					<i class='bx bx-show'></i>
-					View Addition History
+					View Raw Leaf History
 				</a>
 			</div>
 			<div class="chart-container-wrapper" style="position:relative; width:100%; height:300px; padding:20px;">
