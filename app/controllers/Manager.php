@@ -250,16 +250,130 @@ class Manager extends Controller
      * ------------------------------------------------------------
      */
 
-     public function suppliers() {
-        // Get all suppliers from the database
-        $suppliers = $this->supplierModel->getAllSuppliers();
+     public function supplier() {
 
-        $data = [
-            'suppliers' => $suppliers
-        ];
+        $data = [];
+    
+        $supplier_id = isset($_GET['supplier_id']) ? $_GET['supplier_id'] : null;
+        $name = isset($_GET['name']) ? $_GET['name'] : null;
+        $nic = isset($_GET['nic']) ? $_GET['nic'] : null;
+        $contact_number = isset($_GET['contact_number']) ? $_GET['contact_number'] : null;
+        $application_id = isset($_GET['application_id']) ? $_GET['application_id'] : null;
+        $supplier_status = isset($_GET['supplier_status']) ? $_GET['supplier_status'] : null;
+    
+        if ($supplier_id || $name || $nic || $contact_number || $application_id || $supplier_status) {
+            $data['suppliers'] = $this->supplierModel->getFilteredSuppliers($supplier_id, $name, $nic, $contact_number, $application_id, $supplier_status);
+        } else {
+            $data['suppliers'] = $this->supplierModel->getAllSuppliersDetails();
+        }
+    
 
-        $this->view('supplier_manager/v_suppliers', $data);
+        $data['total_suppliers'] = $this->supplierModel->getTotalSuppliers();
+        $data['active_suppliers'] = $this->supplierModel->getActiveSuppliers();
+        
+        $this->view('supplier_manager/v_supplier', $data);
     }
+
+
+    public function manageSupplier($id = null) {
+        if (!$id) {
+            flash('supplier_message', 'Supplier ID is required', 'alert alert-danger');
+            redirect('manager/supplier');
+        }
+    
+
+        if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+            $_POST = filter_input_array(INPUT_POST, FILTER_SANITIZE_STRING);
+            
+            $data = [
+                'supplier_id' => $id,
+                'first_name' => trim($_POST['first_name']),
+                'last_name' => trim($_POST['last_name']),
+                'email' => trim($_POST['email']),
+                'contact_number' => trim($_POST['contact_number']),
+                'address_line1' => trim($_POST['address_line1']),
+                'address_line2' => trim($_POST['address_line2']),
+                'city' => trim($_POST['city']),
+                'nic' => trim($_POST['nic']),
+                'is_active' => isset($_POST['is_active']) ? 1 : 0,
+            ];
+    
+            $errors = [];
+            
+            if (empty($data['first_name'])) {
+                $errors['first_name'] = 'First name is required';
+            }
+            
+            if (empty($data['last_name'])) {
+                $errors['last_name'] = 'Last name is required';
+            }
+            
+            if (empty($data['email'])) {
+                $errors['email'] = 'Email is required';
+            } elseif (!filter_var($data['email'], FILTER_VALIDATE_EMAIL)) {
+                $errors['email'] = 'Please enter a valid email';
+            }
+            
+
+            if (empty($errors)) {
+                if (!empty($_FILES['supplier_image']['name'])) {
+                    $file = $_FILES['supplier_image'];
+                    $upload_dir = 'uploads/suppliers/';
+                    
+
+                    if (!file_exists($upload_dir)) {
+                        mkdir($upload_dir, 0777, true);
+                    }
+                    
+                    $file_name = uniqid() . '_' . $file['name'];
+                    $destination = $upload_dir . $file_name;
+                    
+                    if (move_uploaded_file($file['tmp_name'], $destination)) {
+                        $data['image_path'] = $destination;
+                    } else {
+                        $errors['supplier_image'] = 'Failed to upload image';
+                    }
+                }
+                
+                if ($this->supplierModel->updateSupplier($data)) {
+                    flash('supplier_message', 'Supplier updated successfully');
+                    redirect('manager/manageSupplier/' . $id);
+                } else {
+                    flash('supplier_message', 'Failed to update supplier', 'alert alert-danger');
+                }
+            } else {
+                $data['errors'] = $errors;
+            }
+        }
+
+        $supplier = $this->supplierModel->getSupplierById($id);
+        
+
+        if (!$supplier) {
+            flash('supplier_message', 'Supplier not found', 'alert alert-danger');
+            redirect('manager/supplier');
+        }
+        
+
+        $upcomingSchedules = $this->scheduleModel->getUpcomingSchedulesBySupplierId($id);
+        $collectionHistory = $this->collectionModel->getSupplierCollections($id);
+        
+
+        $viewData = [
+            'supplier' => $supplier,
+            'upcomingSchedules' => $upcomingSchedules,
+            'collectionHistory' => $collectionHistory,
+            'errors' => $errors ?? []
+        ];
+        
+        if (isset($data) && isset($data['errors'])) {
+            $viewData = array_merge($viewData, $data);
+        }
+        
+
+        $this->view('supplier_manager/v_supplier_profile', $viewData);
+    }
+
 
 
     public function getSupplierRecords($collectionId){

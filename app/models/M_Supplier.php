@@ -245,6 +245,113 @@ class M_Supplier {
         return $this->db->execute();
     }
 
+
+    public function getAllSuppliersDetails() {
+        $this->db->query("
+            SELECT s.supplier_id, s.contact_number as supplier_contact, s.application_id, 
+                   s.is_active, s.number_of_collections, s.average_collection,
+                   p.first_name, p.last_name, p.nic, p.city, p.contact_number,
+                   u.email, u.account_status
+            FROM suppliers s
+            JOIN profiles p ON s.profile_id = p.profile_id
+            JOIN users u ON p.user_id = u.user_id
+            WHERE s.is_deleted = 0
+            ORDER BY s.supplier_id DESC
+        ");
+
+        return $this->db->resultSet();
+    }
+
+
+    public function getFilteredSuppliers($supplier_id, $name, $nic, $contact_number, $application_id, $supplier_status) {
+        $sql = "
+            SELECT s.supplier_id, s.contact_number as supplier_contact, s.application_id, 
+                   s.is_active, s.number_of_collections, s.average_collection,
+                   p.first_name, p.last_name, p.nic, p.city, p.contact_number,
+                   u.email, u.account_status
+            FROM suppliers s
+            JOIN profiles p ON s.profile_id = p.profile_id
+            JOIN users u ON p.user_id = u.user_id
+            WHERE s.is_deleted = 0
+        ";
+
+        $params = [];
+
+        if ($supplier_id) {
+            $sql .= " AND s.supplier_id = :supplier_id";
+            $params[':supplier_id'] = $supplier_id;
+        }
+
+        if ($name) {
+            $sql .= " AND (p.first_name LIKE :first_name OR p.last_name LIKE :last_name)";
+            $params[':first_name'] = '%' . $name . '%';
+            $params[':last_name'] = '%' . $name . '%';
+        }
+
+        if ($nic) {
+            $sql .= " AND p.nic LIKE :nic";
+            $params[':nic'] = '%' . $nic . '%';
+        }
+
+        if ($contact_number) {
+            $sql .= " AND (p.contact_number LIKE :contact_number OR s.contact_number LIKE :supplier_contact)";
+            $params[':contact_number'] = '%' . $contact_number . '%';
+            $params[':supplier_contact'] = '%' . $contact_number . '%';
+        }
+
+        if ($application_id) {
+            $sql .= " AND s.application_id = :application_id";
+            $params[':application_id'] = $application_id;
+        }
+
+        if ($supplier_status) {
+            if ($supplier_status == 'Active') {
+                $sql .= " AND s.is_active = 1";
+            } else if ($supplier_status == 'Inactive') {
+                $sql .= " AND s.is_active = 0";
+            }
+        }
+
+        $sql .= " ORDER BY s.supplier_id DESC";
+
+        $this->db->query($sql);
+
+        // Bind parameters
+        foreach ($params as $param => $value) {
+            $this->db->bind($param, $value);
+        }
+
+        return $this->db->resultSet();
+    }
+
+    public function getTotalSuppliers() {
+        $this->db->query("SELECT COUNT(*) as total FROM suppliers WHERE is_deleted = 0");
+        $row = $this->db->single();
+        return $row->total;
+    }
+
+    public function getActiveSuppliers() {
+        $this->db->query("SELECT COUNT(*) as active FROM suppliers WHERE is_active = 1 AND is_deleted = 0");
+        $row = $this->db->single();
+        return $row->active;
+    }
+
+    public function getInactiveSuppliers() {
+        $this->db->query("
+            SELECT s.supplier_id, s.contact_number as supplier_contact, s.application_id, 
+                   s.is_active, s.number_of_collections, s.average_collection,
+                   p.first_name, p.last_name, p.nic, p.city, p.contact_number,
+                   u.email, u.account_status
+            FROM suppliers s
+            JOIN profiles p ON s.profile_id = p.profile_id
+            JOIN users u ON p.user_id = u.user_id
+            WHERE s.is_active = 0 AND s.is_deleted = 0
+            ORDER BY s.supplier_id DESC
+        ");
+
+        return $this->db->resultSet();
+    }
+
     
 
 
