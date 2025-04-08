@@ -18,6 +18,7 @@ require_once '../app/models/M_CollectionSupplierRecord.php';
 require_once '../app/models/M_User.php';
 require_once '../app/models/M_Employee.php';
 require_once '../app/models/M_CollectionBag.php';
+require_once '../app/models/M_Chat.php'; //added by theekshana
 
 // Require helper files
 require_once '../app/helpers/auth_middleware.php';
@@ -45,6 +46,7 @@ class Manager extends Controller
     private $employeeModel;
     private $bagModel;
     private $supplierModel;
+    private $chatModel; // Add this line
 
     //----------------------------------------
     // CONSTRUCTOR
@@ -55,7 +57,7 @@ class Manager extends Controller
         requireAuth();
 
         // Check if user has Vehicle Manager OR Admin role
-        if (!RoleHelper::hasAnyRole([RoleHelper::ADMIN, RoleHelper::VEHICLE_MANAGER])) {
+        if (!RoleHelper::hasAnyRole([RoleHelper::ADMIN, RoleHelper::VEHICLE_MANAGER, RoleHelper::SUPPLIER_MANAGER])) {
             // Redirect unauthorized access
             flash('message', 'Unauthorized access', 'alert alert-danger');
             redirect('');
@@ -78,8 +80,9 @@ class Manager extends Controller
         $this->userModel = $this->model('M_User');
         $this->employeeModel = $this->model('M_Employee');
         $this->bagModel = $this->model('M_CollectionBag');
-        $this->supplierApplicationModel = $this->model('M_SupplierApplication');
+        //$this->supplierApplicationModel = $this->model('M_SupplierApplication');
         $this->supplierModel = $this->model('M_Supplier');
+        $this->chatModel = $this->model('M_Chat'); //added by theekshana
     }
 
     //----------------------------------------
@@ -2106,6 +2109,23 @@ class Manager extends Controller
 
         // Load view
         $this->view('supplier_manager/v_applications', $data);
+
+        // added by theekhana
+
+        $activeSuppliers = $this->chatModel->getActiveSuppliers(); // List of suppliers to chat with
+        $activeChats = $this->chatModel->getActiveChats($_SESSION['user_id']);
+        // Get dashboard stats from the model
+        // $stats = $this->vehicleManagerModel->getDashboardStats();
+
+        $data = [
+            'active_suppliers' => $activeSuppliers,
+            'active_chats' => $activeChats,
+            'user_id' => $_SESSION['user_id'],
+            'role' => 'supplier_manager',
+            'page_title' => 'Supplier Manager Dashboard'
+        ];
+        $this->view('supplier_manager/v_dashboard', $data);
+
     }
 
 
@@ -2266,6 +2286,363 @@ class Manager extends Controller
         $data = [];
 
         $this->view('supplier_manager/v_complaints', $data);
+    }
+
+    //added by theekshana from supplier manager
+
+    public function applications() {
+        // Get all applications
+        $applications = $this->model('M_SupplierApplication')->getAllApplications();
+        
+        // Get approved applications pending role assignment
+        $approvedPendingRole = $this->model('M_SupplierApplication')->getApprovedPendingRoleApplications();
+
+        $data = [
+            'applications' => $applications,
+            'approved_pending_role' => $approvedPendingRole
+        ];
+
+        // Load view
+        $this->view('supplier_manager/v_applications', $data);
+    }
+
+
+
+    public function supplierStatement() {
+        $data = [];
+        $this->view('shared/supplier/v_view_monthly_statement', $data);
+    }
+
+    public function allcomplaints()
+    {
+        $data = [];
+
+        $this->view('supplier_manager/v_all_complaints', $data);
+    }
+
+    
+
+    public function payments()
+    {
+        $data = [];
+
+        $this->view('supplier_manager/v_payments', $data);
+    }
+
+    public function profile()
+    {
+        $data = [];
+
+        $this->view('supplier_manager/v_profile', $data);
+    }
+
+    //Theekshana Chat part
+    public function chat() {
+        $activeSuppliers = $this->chatModel->getActiveSuppliers();
+        error_log("Suppliers in Manager chat(): " . print_r($activeSuppliers, true));
+
+        $data = [
+            'active_suppliers' => $activeSuppliers,
+            'page_title' => 'Chat with Suppliers',
+            'user_id' => $_SESSION['user_id']
+        ];
+        
+        $this->view('vehicle_manager/v_chat', $data);
+    }
+
+    public function sendMessage() {
+        header('Content-Type: application/json');
+        if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+            $data = json_decode(file_get_contents("php://input"), true);
+            
+            if (empty($data['receiver_id']) || empty($data['message'])) {
+                echo json_encode(['success' => false, 'message' => 'Missing required fields']);
+                exit();
+            }
+            
+            if (!isset($_SESSION['user_id']) || empty($_SESSION['user_id'])) {
+                echo json_encode(['success' => false, 'message' => 'User not logged in']);
+                exit();
+            }
+            
+            $result = $this->chatModel->saveMessage(
+                $_SESSION['user_id'],
+                $data['receiver_id'],
+                $data['message'],
+                'text'
+            );
+            
+            if ($result['success']) {
+                echo json_encode([
+                    'success' => true,
+                    'message' => 'Message sent successfully',
+                    'data' => $result
+                ]);
+            } else {
+                echo json_encode([
+                    'success' => false,
+                    'message' => $result['error'] ?? 'Failed to send message'
+                ]);
+            }
+            exit();
+        }
+        echo json_encode(['success' => false, 'message' => 'Invalid request method']);
+        exit();
+    }
+
+    // public function getMessages() {
+    //     if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+    //         http_response_code(405);
+    //         echo json_encode(['success' => false, 'message' => 'Method Not Allowed']);
+    //         return;
+    //     }
+    
+    //     $data = json_decode(file_get_contents('php://input'), true);
+    //     if (!isset($data['receiver_id']) || !is_numeric($data['receiver_id'])) {
+    //         http_response_code(400);
+    //         echo json_encode(['success' => false, 'message' => 'Invalid receiver ID']);
+    //         return;
+    //     }
+    
+    //     $userId = $_SESSION['user_id'];
+    //     $receiverId = (int)$data['receiver_id'];
+    
+    //     $messages = $this->chatModel->getMessages($userId, $receiverId);
+    //     if ($messages === false) {
+    //         http_response_code(500);
+    //         echo json_encode(['success' => false, 'message' => 'Error fetching messages']);
+    //         return;
+    //     }
+    
+    //     echo json_encode([
+    //         'success' => true,
+    //         'messages' => $messages
+    //     ]);
+    // }
+    //test
+    public function getMessages() {
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            error_log("getMessages: Method Not Allowed");
+            http_response_code(405);
+            echo json_encode(['success' => false, 'message' => 'Method Not Allowed']);
+            return;
+        }
+    
+        $data = json_decode(file_get_contents('php://input'), true);
+        if (!isset($data['receiver_id']) || !is_numeric($data['receiver_id'])) {
+            error_log("getMessages: Invalid receiver ID");
+            http_response_code(400);
+            echo json_encode(['success' => false, 'message' => 'Invalid receiver ID']);
+            return;
+        }
+    
+        $userId = $_SESSION['user_id'];
+        $receiverId = (int)$data['receiver_id'];
+        error_log("getMessages: Fetching messages for user $userId and receiver $receiverId");
+    
+        $messages = $this->chatModel->getMessages($userId, $receiverId);
+        if ($messages === false) {
+            error_log("getMessages: Error fetching messages for user $userId and receiver $receiverId");
+            http_response_code(500);
+            echo json_encode(['success' => false, 'message' => 'Error fetching messages']);
+            return;
+        }
+    
+        error_log("getMessages: Successfully fetched " . count($messages) . " messages");
+        echo json_encode([
+            'success' => true,
+            'messages' => $messages
+        ]);
+    }
+    
+    public function editMessage() {
+        header('Content-Type: application/json');
+        if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+            $data = json_decode(file_get_contents("php://input"), true);
+            
+            if (empty($data['message_id']) || empty($data['new_message'])) {
+                echo json_encode(['success' => false, 'message' => 'Missing required fields']);
+                exit();
+            }
+            
+            if (!isset($_SESSION['user_id']) || empty($_SESSION['user_id'])) {
+                echo json_encode(['success' => false, 'message' => 'User not logged in']);
+                exit();
+            }
+            
+            $result = $this->chatModel->editMessage(
+                $data['message_id'],
+                $data['new_message'],
+                $_SESSION['user_id']
+            );
+            
+            echo json_encode(['success' => $result]);
+            exit();
+        }
+        echo json_encode(['success' => false, 'message' => 'Invalid request method']);
+        exit();
+    }
+
+    public function deleteMessage() {
+        header('Content-Type: application/json');
+        if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+            $data = json_decode(file_get_contents("php://input"), true);
+            
+            if (empty($data['message_id'])) {
+                echo json_encode(['success' => false, 'message' => 'Missing message_id']);
+                exit();
+            }
+            
+            if (!isset($_SESSION['user_id']) || empty($_SESSION['user_id'])) {
+                echo json_encode(['success' => false, 'message' => 'User not logged in']);
+                exit();
+            }
+            
+            $result = $this->chatModel->deleteMessage(
+                $data['message_id'],
+                $_SESSION['user_id']
+            );
+            
+            echo json_encode(['success' => $result]);
+            exit();
+        }
+        echo json_encode(['success' => false, 'message' => 'Invalid request method']);
+        exit();
+    }
+
+    // Theekshana Announcements
+    public function announcements() {
+        $db = new Database();
+        
+        // Fetch all announcements
+        $db->query("SELECT * FROM announcements ORDER BY created_at DESC");
+        $announcements = $db->resultSet();
+
+        $data = [
+            'announcements' => $announcements,
+            'page_title' => 'Announcements'
+        ];
+
+        $this->view('vehicle_manager/v_announcements', $data);
+    }
+
+    public function createAnnouncement() {
+        header('Content-Type: application/json');
+        
+        if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+            $data = json_decode(file_get_contents("php://input"), true);
+            
+            if (empty($data['title']) || empty($data['content'])) {
+                echo json_encode(['success' => false, 'message' => 'Title and content are required']);
+                exit();
+            }
+
+            $db = new Database();
+            $query = "INSERT INTO announcements (title, content, created_by, created_at) 
+                     VALUES (:title, :content, :created_by, NOW())";
+            
+            $db->query($query);
+            $db->bind(':title', $data['title']);
+            $db->bind(':content', $data['content']);
+            $db->bind(':created_by', $_SESSION['user_id']);
+            
+            if ($db->execute()) {
+                echo json_encode([
+                    'success' => true,
+                    'message' => 'Announcement created successfully',
+                    'announcement_id' => $db->lastInsertId()
+                ]);
+            } else {
+                echo json_encode(['success' => false, 'message' => 'Failed to create announcement']);
+            }
+            exit();
+        }
+        
+        echo json_encode(['success' => false, 'message' => 'Invalid request method']);
+        exit();
+    }
+
+    public function getAnnouncement($id) {
+        header('Content-Type: application/json');
+        
+        $db = new Database();
+        $query = "SELECT * FROM announcements WHERE announcement_id = :id";
+        $db->query($query);
+        $db->bind(':id', $id);
+        
+        $announcement = $db->single();
+        
+        if ($announcement) {
+            echo json_encode(['success' => true, 'announcement' => $announcement]);
+        } else {
+            echo json_encode(['success' => false, 'message' => 'Announcement not found']);
+        }
+        exit();
+    }
+
+    public function updateAnnouncement() {
+        header('Content-Type: application/json');
+        
+        if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+            $data = json_decode(file_get_contents("php://input"), true);
+            
+            if (empty($data['announcement_id']) || empty($data['title']) || empty($data['content'])) {
+                echo json_encode(['success' => false, 'message' => 'Missing required fields']);
+                exit();
+            }
+
+            $db = new Database();
+            $query = "UPDATE announcements 
+                     SET title = :title, content = :content, updated_at = NOW()
+                     WHERE announcement_id = :id AND created_by = :user_id";
+            
+            $db->query($query);
+            $db->bind(':title', $data['title']);
+            $db->bind(':content', $data['content']);
+            $db->bind(':id', $data['announcement_id']);
+            $db->bind(':user_id', $_SESSION['user_id']);
+            
+            if ($db->execute()) {
+                echo json_encode(['success' => true, 'message' => 'Announcement updated successfully']);
+            } else {
+                echo json_encode(['success' => false, 'message' => 'Failed to update announcement']);
+            }
+            exit();
+        }
+        
+        echo json_encode(['success' => false, 'message' => 'Invalid request method']);
+        exit();
+    }
+
+    public function deleteAnnouncement() {
+        header('Content-Type: application/json');
+        
+        if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+            $data = json_decode(file_get_contents("php://input"), true);
+            
+            if (empty($data['announcement_id'])) {
+                echo json_encode(['success' => false, 'message' => 'Announcement ID is required']);
+                exit();
+            }
+
+            $db = new Database();
+            $query = "DELETE FROM announcements 
+                     WHERE announcement_id = :id AND created_by = :user_id";
+            
+            $db->query($query);
+            $db->bind(':id', $data['announcement_id']);
+            $db->bind(':user_id', $_SESSION['user_id']);
+            
+            if ($db->execute()) {
+                echo json_encode(['success' => true, 'message' => 'Announcement deleted successfully']);
+            } else {
+                echo json_encode(['success' => false, 'message' => 'Failed to delete announcement']);
+            }
+            exit();
+        }
+        
+        echo json_encode(['success' => false, 'message' => 'Invalid request method']);
+        exit();
     }
 
 

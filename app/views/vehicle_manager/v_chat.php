@@ -1,5 +1,5 @@
 <?php require APPROOT . '/views/inc/components/header.php'; ?>
-<?php require APPROOT . '/views/inc/components/sidebar_supplier.php'; ?>
+<?php require APPROOT . '/views/inc/components/sidebar_vehicle_manager.php'; ?>
 <?php require APPROOT . '/views/inc/components/topnavbar.php'; ?>
 
 <link rel="stylesheet" href="<?php echo URLROOT; ?>/css/chat.css">
@@ -9,15 +9,15 @@
     <div class="chat-container">
         <div class="suppliers-sidebar">
             <div class="search-box">
-                <input type="text" id="manager-search" placeholder="Search managers...">
+                <input type="text" id="supplier-search" placeholder="Search suppliers...">
                 <i class='bx bx-search'></i>
             </div>
             <div class="suppliers-list">
-                <?php foreach($data['managers'] as $manager): ?>
-                    <div class="manager-item" data-user-id="<?php echo $manager->user_id; ?>">
-                        <div class="manager-info">
-                            <h4><?php echo htmlspecialchars($manager->first_name . ' ' . $manager->last_name); ?></h4>
-                            <p>MGR<?php echo sprintf('%03d', $manager->user_id);?></p>
+                <?php foreach($data['active_suppliers'] as $supplier): ?>
+                    <div class="supplier-item" data-user-id="<?php echo $supplier->user_id; ?>">
+                        <div class="supplier-info">
+                            <h4><?php echo htmlspecialchars(($supplier->first_name && $supplier->last_name) ? $supplier->first_name . ' ' . $supplier->last_name : 'SUP' . sprintf('%03d', $supplier->user_id)); ?></h4>
+                            <p>SUP<?php echo sprintf('%03d', $supplier->user_id);?></p>
                         </div>
                         <div class="status-dot offline"></div>
                     </div>
@@ -27,7 +27,7 @@
         <div class="chat-area">
             <div class="no-chat-selected">
                 <i class='bx bx-message-square-dots'></i>
-                <p>Select a manager to start messaging</p>
+                <p>Select a supplier to start messaging</p>
             </div>
             <div class="chat-interface" style="display: none;">
                 <div class="chat-header">
@@ -78,8 +78,14 @@ function initWebSocket() {
         const data = JSON.parse(e.data);
         switch (data.type) {
             case 'message':
+                // Only append if the message is from the other user in the current chat
+                if (data.senderId == currentChatUserId && data.receiverId == <?php echo $_SESSION['user_id']; ?>) {
+                    appendMessage(data);
+                }
+                break;
             case 'sent':
-                if (data.receiverId == currentChatUserId || data.senderId == currentChatUserId) {
+                // Only append if the message is from the current user in the current chat
+                if (data.senderId == <?php echo $_SESSION['user_id']; ?> && data.receiverId == currentChatUserId) {
                     appendMessage(data);
                 }
                 break;
@@ -129,7 +135,7 @@ function reconnectWebSocket(attempt = 1) {
 }
 
 function updateUserStatus(userId, status) {
-    const userElement = document.querySelector(`.manager-item[data-user-id="${userId}"]`);
+    const userElement = document.querySelector(`.supplier-item[data-user-id="${userId}"]`);
     if (userElement) {
         const statusDot = userElement.querySelector('.status-dot');
         statusDot.classList.remove('online', 'offline');
@@ -148,7 +154,7 @@ function appendMessage(data) {
     const isSent = data.senderId == <?php echo $_SESSION['user_id']; ?>;
     const rowClass = isSent ? 'row justify-content-start' : 'row justify-content-end';
     const backgroundClass = isSent ? 'alert-primary' : 'alert-success';
-    const from = data.senderName || 'Manager';
+    const from = data.senderName || 'Supplier';
 
     messageDiv.className = `message ${isSent ? 'sent' : 'received'}`;
     messageDiv.dataset.msgId = data.message_id;
@@ -175,7 +181,7 @@ function updateMessage(data) {
         const isSent = data.senderId == <?php echo $_SESSION['user_id']; ?>;
         const rowClass = isSent ? 'row justify-content-start' : 'row justify-content-end';
         const backgroundClass = isSent ? 'alert-primary' : 'alert-success';
-        const from = data.senderName || 'Manager';
+        const from = data.senderName || 'Supplier';
 
         messageDiv.innerHTML = `
             <div class="${rowClass}">
@@ -209,6 +215,7 @@ function sendMessage() {
         return;
     }
     
+    // Send the message via WebSocket
     ws.send(JSON.stringify({
         type: 'chat',
         senderId: <?php echo $_SESSION['user_id']; ?>,
@@ -216,11 +223,19 @@ function sendMessage() {
         message: message
     }));
     
-    fetch(`${URLROOT}/supplier/sendMessage`, {
+    // Save the message to the database via fetch
+    fetch(`${URLROOT}/manager/sendMessage`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ receiver_id: currentChatUserId, message: message })
-    });
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (!data.success) {
+            console.error('Error saving message:', data.message);
+        }
+    })
+    .catch(error => console.error('Error saving message:', error));
     
     messageInput.value = '';
 }
@@ -234,9 +249,9 @@ document.getElementById('message-input')?.addEventListener('keypress', function(
     }
 });
 
-document.querySelectorAll('.manager-item').forEach(item => {
+document.querySelectorAll('.supplier-item').forEach(item => {
     item.addEventListener('click', function() {
-        document.querySelectorAll('.manager-item').forEach(i => i.classList.remove('active'));
+        document.querySelectorAll('.supplier-item').forEach(i => i.classList.remove('active'));
         this.classList.add('active');
         
         document.querySelector('.no-chat-selected').style.display = 'none';
@@ -253,22 +268,30 @@ document.querySelectorAll('.manager-item').forEach(item => {
 
 function fetchMessages(receiverId) {
     const data = { receiver_id: receiverId };
-    fetch(`${URLROOT}/supplier/getMessages`, {
+    fetch(`${URLROOT}/manager/getMessages`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(data)
     })
-    .then(response => response.json())
+    .then(response => {
+        console.log('Response status:', response.status);
+        console.log('Response headers:', response.headers.get('content-type'));
+        if (!response.ok) {
+            throw new Error(`HTTP error! Status: ${response.status}`);
+        }
+        return response.json();
+    })
     .then(data => {
+        console.log('Response data:', data);
         if (data.success) {
             displayMessages(data.messages);
         } else {
-            console.log('Error:', data.message);
+            console.log('Error from server:', data.message);
             document.getElementById('chat-messages').innerHTML = 'No messages found.';
         }
     })
     .catch(error => {
-        console.error('Error fetching messages:', error);
+        console.error('Error fetching messages:', error.message);
         document.getElementById('chat-messages').innerHTML = 'Error loading messages.';
     });
 }
@@ -276,6 +299,11 @@ function fetchMessages(receiverId) {
 function displayMessages(messages) {
     const messagesContainer = document.getElementById('chat-messages');
     messagesContainer.innerHTML = '';
+    
+    if (messages.length === 0) {
+        messagesContainer.innerHTML = 'No messages found.';
+        return;
+    }
     
     messages.forEach(message => {
         appendMessage({
@@ -295,16 +323,18 @@ function displayMessages(messages) {
 
 document.addEventListener('click', function(e) {
     if (e.target.classList.contains('edit-msg-btn')) {
+        console.log('Edit button clicked');
         const messageDiv = e.target.closest('.message');
         const messageId = messageDiv.dataset.msgId;
         const currentMessage = messageDiv.querySelector('b').nextSibling.textContent.trim();
 
         document.getElementById('edit-message-text').value = currentMessage;
         document.querySelector('.edit-message-modal').style.display = 'block';
+        console.log('Modal should be visible');
 
         document.getElementById('save-edit-btn').onclick = function() {
             const newMessage = document.getElementById('edit-message-text').value;
-            fetch(`${URLROOT}/supplier/editMessage`, {
+            fetch(`${URLROOT}/manager/editMessage`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ message_id: messageId, new_message: newMessage })
@@ -336,7 +366,7 @@ document.addEventListener('click', function(e) {
             const messageDiv = e.target.closest('.message');
             const messageId = messageDiv.dataset.msgId;
             
-            fetch(`${URLROOT}/supplier/deleteMessage`, {
+            fetch(`${URLROOT}/manager/deleteMessage`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ message_id: messageId })
@@ -356,13 +386,13 @@ document.addEventListener('click', function(e) {
     }
 });
 
-document.getElementById('manager-search')?.addEventListener('input', function(e) {
+document.getElementById('supplier-search')?.addEventListener('input', function(e) {
     const searchTerm = e.target.value.toLowerCase();
-    document.querySelectorAll('.manager-item').forEach(item => {
-        const managerName = item.querySelector('h4')?.textContent.toLowerCase() || '';
-        const managerId = item.querySelector('p')?.textContent.toLowerCase() || '';
+    document.querySelectorAll('.supplier-item').forEach(item => {
+        const supplierName = item.querySelector('h4')?.textContent.toLowerCase() || '';
+        const supplierId = item.querySelector('p')?.textContent.toLowerCase() || '';
         item.style.display = 
-            managerName.includes(searchTerm) || managerId.includes(searchTerm) 
+            supplierName.includes(searchTerm) || supplierId.includes(searchTerm) 
             ? 'flex' : 'none';
     });
 });
@@ -381,6 +411,7 @@ document.addEventListener('DOMContentLoaded', initWebSocket);
     display: flex;
     justify-content: center;
     align-items: center;
+    z-index: 1000;
 }
 
 .edit-message-modal .modal-content {
@@ -388,11 +419,13 @@ document.addEventListener('DOMContentLoaded', initWebSocket);
     padding: 20px;
     border-radius: 5px;
     width: 400px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
 }
 
 .edit-message-modal textarea {
     width: 100%;
     margin-bottom: 10px;
+    resize: vertical;
 }
 
 .edit-message-modal button {

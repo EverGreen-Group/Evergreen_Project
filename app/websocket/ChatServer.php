@@ -11,9 +11,8 @@ class ChatServer implements MessageComponentInterface {
 
     public function __construct() {
         $this->clients = new \SplObjectStorage;
-        // Include M_Chat model (manual include since we can't modify composer.json)
         require_once ROOTPATH . '/app/models/M_Chat.php';
-        $this->chatModel = new \M_Chat(); // Uses global M_Chat
+        $this->chatModel = new \M_Chat();
         
         error_log("Chat server initialized");
     }
@@ -25,7 +24,7 @@ class ChatServer implements MessageComponentInterface {
 
     public function onMessage(ConnectionInterface $from, $msg) {
         try {
-            $data = json_decode($msg, true); // Use true for associative array
+            $data = json_decode($msg, true);
             if ($data === null || !isset($data['type'])) {
                 error_log("Invalid message format received: " . $msg);
                 return;
@@ -68,16 +67,13 @@ class ChatServer implements MessageComponentInterface {
 
         $userId = (int)$data['userId'];
         
-        // Remove any existing connection for this user
         if (isset($this->userConnections[$userId])) {
             $this->userConnections[$userId]->close();
             unset($this->userConnections[$userId]);
         }
         
-        // Store the connection mapped to the user ID
         $this->userConnections[$userId] = $conn;
         
-        // Broadcast user's online status
         $this->broadcastUserStatus($userId, 'online');
         
         error_log("User {$userId} initialized connection (Resource ID: {$conn->resourceId})");
@@ -90,8 +86,8 @@ class ChatServer implements MessageComponentInterface {
             if (!empty($messages)) {
                 $formattedMessages = [];
                 foreach ($messages as $message) {
-                    $senderName = $this->getUserName($message->sender_id);
-                    $receiverName = $this->getUserName($message->receiver_id);
+                    $senderName = $message->sender_name;
+                    $receiverName = $message->receiver_name;
                     $formattedMessages[] = [
                         'message_id' => $message->message_id,
                         'senderId' => $message->sender_id,
@@ -111,7 +107,6 @@ class ChatServer implements MessageComponentInterface {
                     'messages' => $formattedMessages
                 ]));
                 
-                // Mark received messages as read
                 foreach ($messages as $message) {
                     if ($message->receiver_id == $userId && $message->read_at === null) {
                         $this->chatModel->markMessageAsRead($message->message_id, $userId);
@@ -136,7 +131,6 @@ class ChatServer implements MessageComponentInterface {
             $receiverId = (int)$data['receiverId'];
             $message = trim($data['message']);
             
-            // Save message to database with default message_type 'text'
             $result = $this->chatModel->saveMessage($senderId, $receiverId, $message, 'text');
             
             if ($result['success']) {
@@ -150,16 +144,13 @@ class ChatServer implements MessageComponentInterface {
                     'message_type' => 'text'
                 ];
 
-                // Send to recipient if online
                 if (isset($this->userConnections[$receiverId])) {
                     $this->userConnections[$receiverId]->send(json_encode($messageData));
                     $this->sendMessageHistory($this->userConnections[$receiverId], $receiverId, $senderId);
                 } else {
-                    // Log that the message was saved for an offline recipient
                     error_log("Message saved for offline recipient (Receiver ID: {$receiverId}, Message ID: {$result['message_id']})");
                 }
 
-                // Send confirmation and history to sender with sender/receiver names and status
                 $senderName = $this->getUserName($senderId);
                 $receiverName = $this->getUserName($receiverId);
                 $isRead = isset($this->userConnections[$receiverId]) ? 'Read: ' . date('Y-m-d H:i:s') : 'NULL';
@@ -210,7 +201,6 @@ class ChatServer implements MessageComponentInterface {
                     'edited_at' => $editedAt
                 ]));
                 
-                // Broadcast update to recipient if online
                 if (isset($this->userConnections[$userId])) {
                     $receiverId = $this->getReceiverIdForMessage($messageId, $userId);
                     if (isset($this->userConnections[$receiverId])) {
@@ -256,7 +246,6 @@ class ChatServer implements MessageComponentInterface {
                     'senderName' => $senderName
                 ]));
                 
-                // Broadcast deletion to recipient if online
                 if (isset($this->userConnections[$userId])) {
                     $receiverId = $this->getReceiverIdForMessage($messageId, $userId);
                     if (isset($this->userConnections[$receiverId])) {
@@ -311,65 +300,36 @@ class ChatServer implements MessageComponentInterface {
         $conn->close();
     }
 
-    // Updated getUserName method to use only M_Chat data, removing PDO/Database dependency
     private function getUserName($userId) {
-        try {
-            // Use M_Chat's existing methods to get user details
-            $messages = $this->chatModel->getMessages($userId, $userId); // Fetch any message involving the user
-            if (!empty($messages)) {
-                $user = $messages[0]; // Use the first message to get sender/receiver info
-                $roleId = $this->getRoleIdFromUserId($userId); // Helper method to get role
-                $name = $user->sender_name ?? $user->receiver_name; // Use sender or receiver name from M_Chat
-                if ($name) {
-                    $rolePrefix = ($roleId == 5) ? 'SUP' : 'MGR';
-                    $userIdPadded = sprintf('%03d', $userId);
-                    return htmlspecialchars($name) . " ($rolePrefix$userIdPadded)";
-                }
-            }
-
-            // Fallback: Use a default name if no messages are found (no Database/PDO needed)
-            return "User $userId";
-        } catch (\Exception $e) {
-            error_log("Error fetching user name for ID $userId: " . $e->getMessage());
-            return "User $userId";
-        }
+        return $this->chatModel->getUserName($userId);
     }
 
-    // Updated getRoleIdFromUserId method to use only M_Chat data, removing PDO/Database dependency
     private function getRoleIdFromUserId($userId) {
         try {
-            // Use M_Chat's existing methods to infer role (e.g., from messages or supplier/manager lists)
-            $messages = $this->chatModel->getMessages($userId, $userId);
-            if (!empty($messages)) {
-                $user = $messages[0];
-                // Try to infer role from sender_name or receiver_name if possible
-                if (strpos($user->sender_name ?? '', 'SUP') !== false || strpos($user->receiver_name ?? '', 'SUP') !== false) {
-                    return 5; // SUPPLIER
-                }
-                return 1; // Default to MANAGER (role_id = 1) if not SUPPLIER
-            }
-
-            // Fallback: Default to SUPPLIER if no data is found
-            return 5; // Default to SUPPLIER (role_id = 5)
+            $sql = "SELECT role_id FROM users WHERE user_id = :user_id LIMIT 1";
+            $stmt = $this->chatModel->db->prepare($sql);
+            $stmt->bindValue(':user_id', $userId, PDO::PARAM_INT);
+            $stmt->execute();
+            $result = $stmt->fetch(PDO::FETCH_OBJ);
+            return $result ? (int)$result->role_id : 5;
         } catch (\Exception $e) {
             error_log("Error fetching role for user ID $userId: " . $e->getMessage());
-            return 5; // Default to SUPPLIER
+            return 5;
         }
     }
 
-    // Helper method to get the receiver ID for a message
     private function getReceiverIdForMessage($messageId, $senderId) {
         try {
-            $messages = $this->chatModel->getMessages($senderId, $senderId); // Fetch messages to find the receiver
-            foreach ($messages as $message) {
-                if ($message->message_id == $messageId) {
-                    return $message->receiver_id;
-                }
-            }
-            return $senderId; // Default to sender if receiver not found
+            $sql = "SELECT receiver_id FROM messages WHERE message_id = :message_id AND sender_id = :sender_id LIMIT 1";
+            $stmt = $this->chatModel->db->prepare($sql);
+            $stmt->bindValue(':message_id', $messageId, PDO::PARAM_INT);
+            $stmt->bindValue(':sender_id', $senderId, PDO::PARAM_INT);
+            $stmt->execute();
+            $result = $stmt->fetch(PDO::FETCH_OBJ);
+            return $result ? (int)$result->receiver_id : $senderId;
         } catch (\Exception $e) {
             error_log("Error fetching receiver ID for message ID $messageId: " . $e->getMessage());
-            return $senderId; // Default to sender as fallback
+            return $senderId;
         }
     }
 }

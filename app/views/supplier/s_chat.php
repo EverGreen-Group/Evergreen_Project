@@ -13,10 +13,10 @@
                 <i class='bx bx-search'></i>
             </div>
             <div class="suppliers-list">
-                <?php foreach($data['managers'] as $manager): ?>
+                <?php foreach($data['active_managers'] as $manager): ?>
                     <div class="manager-item" data-user-id="<?php echo $manager->user_id; ?>">
                         <div class="manager-info">
-                            <h4><?php echo htmlspecialchars($manager->first_name . ' ' . $manager->last_name); ?></h4>
+                            <h4><?php echo htmlspecialchars(($manager->first_name && $manager->last_name) ? $manager->first_name . ' ' . $manager->last_name : 'MGR' . sprintf('%03d', $manager->user_id)); ?></h4>
                             <p>MGR<?php echo sprintf('%03d', $manager->user_id);?></p>
                         </div>
                         <div class="status-dot offline"></div>
@@ -51,7 +51,7 @@
 
     <div class="edit-message-modal" style="display: none;">
         <div class="modal-content">
-            <h3>Edit Message</h3>
+            <h3>Edit Message <span class="close-modal" style="float: right; cursor: pointer;">×</span></h3>
             <textarea id="edit-message-text" rows="3"></textarea>
             <button id="save-edit-btn" class="btn btn-primary">Save</button>
             <button id="cancel-edit-btn" class="btn btn-secondary">Cancel</button>
@@ -76,10 +76,15 @@ function initWebSocket() {
     };
     ws.onmessage = function(e) {
         const data = JSON.parse(e.data);
+        console.log('WebSocket message received:', data);
         switch (data.type) {
             case 'message':
+                if (data.senderId == currentChatUserId && data.receiverId == <?php echo $_SESSION['user_id']; ?>) {
+                    appendMessage(data);
+                }
+                break;
             case 'sent':
-                if (data.receiverId == currentChatUserId || data.senderId == currentChatUserId) {
+                if (data.senderId == <?php echo $_SESSION['user_id']; ?> && data.receiverId == currentChatUserId) {
                     appendMessage(data);
                 }
                 break;
@@ -87,10 +92,14 @@ function initWebSocket() {
                 updateUserStatus(data.userId, data.status);
                 break;
             case 'message_updated':
-                updateMessage(data);
+                if (data.senderId == currentChatUserId || data.receiverId == currentChatUserId) {
+                    updateMessage(data);
+                }
                 break;
             case 'message_deleted':
-                deleteMessage(data.message_id);
+                if (data.senderId == currentChatUserId || data.receiverId == currentChatUserId) {
+                    deleteMessage(data.message_id);
+                }
                 break;
         }
     };
@@ -170,26 +179,28 @@ function appendMessage(data) {
 }
 
 function updateMessage(data) {
-    const messageDiv = document.querySelector(`[data-msg-id="${data.message_id}"]`);
-    if (messageDiv) {
-        const isSent = data.senderId == <?php echo $_SESSION['user_id']; ?>;
-        const rowClass = isSent ? 'row justify-content-start' : 'row justify-content-end';
-        const backgroundClass = isSent ? 'alert-primary' : 'alert-success';
-        const from = data.senderName || 'Manager';
+    if (data.senderId == currentChatUserId || data.receiverId == currentChatUserId) {
+        const messageDiv = document.querySelector(`[data-msg-id="${data.message_id}"]`);
+        if (messageDiv) {
+            const isSent = data.senderId == <?php echo $_SESSION['user_id']; ?>;
+            const rowClass = isSent ? 'row justify-content-start' : 'row justify-content-end';
+            const backgroundClass = isSent ? 'alert-primary' : 'alert-success';
+            const from = data.senderName || 'Manager';
 
-        messageDiv.innerHTML = `
-            <div class="${rowClass}">
-                <div class="col-sm-10">
-                    <div class="shadow-sm alert ${backgroundClass}">
-                        <b>${from}: </b>${data.message}<br />
-                        <div class="text-right">
-                            <small><i>Sent: ${data.created_at} | ${data.read_at || 'NULL'} | Edited: ${data.edited_at} (Type: ${data.message_type})</i></small>
+            messageDiv.innerHTML = `
+                <div class="${rowClass}">
+                    <div class="col-sm-10">
+                        <div class="shadow-sm alert ${backgroundClass}">
+                            <b>${from}: </b>${data.message}<br />
+                            <div class="text-right">
+                                <small><i>Sent: ${data.created_at} | ${data.read_at || 'NULL'} | Edited: ${data.edited_at} (Type: ${data.message_type})</i></small>
+                            </div>
+                            ${isSent ? '<button class="edit-msg-btn btn btn-sm btn-warning mt-1">Edit</button><button class="delete-msg-btn btn btn-sm btn-danger mt-1">Delete</button>' : ''}
                         </div>
-                        ${isSent ? '<button class="edit-msg-btn btn btn-sm btn-warning mt-1">Edit</button><button class="delete-msg-btn btn btn-sm btn-danger mt-1">Delete</button>' : ''}
                     </div>
                 </div>
-            </div>
-        `;
+            `;
+        }
     }
 }
 
@@ -220,7 +231,14 @@ function sendMessage() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ receiver_id: currentChatUserId, message: message })
-    });
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (!data.success) {
+            console.error('Error saving message:', data.message);
+        }
+    })
+    .catch(error => console.error('Error saving message:', error));
     
     messageInput.value = '';
 }
@@ -258,17 +276,25 @@ function fetchMessages(receiverId) {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(data)
     })
-    .then(response => response.json())
+    .then(response => {
+        console.log('Response status:', response.status);
+        console.log('Response headers:', response.headers.get('content-type'));
+        if (!response.ok) {
+            throw new Error(`HTTP error! Status: ${response.status}`);
+        }
+        return response.json();
+    })
     .then(data => {
+        console.log('Response data:', data);
         if (data.success) {
             displayMessages(data.messages);
         } else {
-            console.log('Error:', data.message);
+            console.log('Error from server:', data.message);
             document.getElementById('chat-messages').innerHTML = 'No messages found.';
         }
     })
     .catch(error => {
-        console.error('Error fetching messages:', error);
+        console.error('Error fetching messages:', error.message);
         document.getElementById('chat-messages').innerHTML = 'Error loading messages.';
     });
 }
@@ -276,6 +302,11 @@ function fetchMessages(receiverId) {
 function displayMessages(messages) {
     const messagesContainer = document.getElementById('chat-messages');
     messagesContainer.innerHTML = '';
+    
+    if (messages.length === 0) {
+        messagesContainer.innerHTML = 'No messages found.';
+        return;
+    }
     
     messages.forEach(message => {
         appendMessage({
@@ -295,12 +326,15 @@ function displayMessages(messages) {
 
 document.addEventListener('click', function(e) {
     if (e.target.classList.contains('edit-msg-btn')) {
+        console.log('Edit button clicked');
         const messageDiv = e.target.closest('.message');
         const messageId = messageDiv.dataset.msgId;
         const currentMessage = messageDiv.querySelector('b').nextSibling.textContent.trim();
 
         document.getElementById('edit-message-text').value = currentMessage;
         document.querySelector('.edit-message-modal').style.display = 'block';
+        console.log('Modal should be visible');
+        console.log('Modal display style:', document.querySelector('.edit-message-modal').style.display);
 
         document.getElementById('save-edit-btn').onclick = function() {
             const newMessage = document.getElementById('edit-message-text').value;
@@ -316,7 +350,9 @@ document.addEventListener('click', function(e) {
                         type: 'edit',
                         message_id: messageId,
                         new_message: newMessage,
-                        user_id: <?php echo $_SESSION['user_id']; ?>
+                        user_id: <?php echo $_SESSION['user_id']; ?>,
+                        senderId: <?php echo $_SESSION['user_id']; ?>,
+                        receiverId: currentChatUserId
                     }));
                     document.querySelector('.edit-message-modal').style.display = 'none';
                 }
@@ -327,11 +363,17 @@ document.addEventListener('click', function(e) {
         document.getElementById('cancel-edit-btn').onclick = function() {
             document.querySelector('.edit-message-modal').style.display = 'none';
         };
+
+        document.querySelector('.close-modal').onclick = function() {
+            document.querySelector('.edit-message-modal').style.display = 'none';
+        };
     }
 });
 
 document.addEventListener('click', function(e) {
     if (e.target.classList.contains('delete-msg-btn')) {
+        console.log('Delete button clicked');
+        e.stopPropagation();
         if (confirm('Are you sure you want to delete this message?')) {
             const messageDiv = e.target.closest('.message');
             const messageId = messageDiv.dataset.msgId;
@@ -347,7 +389,9 @@ document.addEventListener('click', function(e) {
                     ws.send(JSON.stringify({
                         type: 'delete',
                         message_id: messageId,
-                        user_id: <?php echo $_SESSION['user_id']; ?>
+                        user_id: <?php echo $_SESSION['user_id']; ?>,
+                        senderId: <?php echo $_SESSION['user_id']; ?>,
+                        receiverId: currentChatUserId
                     }));
                 }
             })
@@ -381,6 +425,7 @@ document.addEventListener('DOMContentLoaded', initWebSocket);
     display: flex;
     justify-content: center;
     align-items: center;
+    z-index: 10000;
 }
 
 .edit-message-modal .modal-content {
@@ -388,11 +433,13 @@ document.addEventListener('DOMContentLoaded', initWebSocket);
     padding: 20px;
     border-radius: 5px;
     width: 400px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
 }
 
 .edit-message-modal textarea {
     width: 100%;
     margin-bottom: 10px;
+    resize: vertical;
 }
 
 .edit-message-modal button {
