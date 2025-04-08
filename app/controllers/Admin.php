@@ -6,13 +6,11 @@ use Endroid\QrCode\Writer\PngWriter;
 // Require all model files
 require_once '../app/models/M_VehicleManager.php';
 require_once '../app/models/M_Route.php';
-require_once '../app/models/M_Team.php';
 require_once '../app/models/M_Vehicle.php';
 require_once '../app/models/M_Shift.php';
 require_once '../app/models/M_CollectionSchedule.php';
 require_once '../app/models/M_Staff.php';
 require_once '../app/models/M_Driver.php';
-require_once '../app/models/M_Partner.php';
 require_once '../app/models/M_Collection.php';
 require_once '../app/models/M_CollectionSupplierRecord.php';
 require_once '../app/models/M_User.php';
@@ -30,12 +28,10 @@ class Admin extends Controller
     //----------------------------------------
     private $vehicleManagerModel;
     private $routeModel;
-    private $teamModel;
     private $vehicleModel;
     private $shiftModel;
     private $scheduleModel;
     private $driverModel;
-    private $partnerModel;
     private $staffModel;
     private $userHelper;
     private $collectionModel;
@@ -64,12 +60,10 @@ class Admin extends Controller
         // Initialize models
         $this->vehicleManagerModel = new M_VehicleManager();
         $this->routeModel = new M_Route();
-        $this->teamModel = new M_Team();
         $this->vehicleModel = new M_Vehicle();
         $this->shiftModel = new M_Shift();
         $this->scheduleModel = new M_CollectionSchedule();
         $this->driverModel = new M_Driver();
-        $this->partnerModel = new M_Partner();
         $this->staffModel = $this->model('M_Staff');
         $this->userHelper = new UserHelper();
         $this->collectionModel = $this->model('M_Collection');

@@ -17,12 +17,15 @@
                 <li>Supplier Profile</li>
             </ul>
         </div>
-        <div class="action-buttons">
-            <a href="<?php echo URLROOT; ?>/manager/updateSupplier/<?php echo $supplier->supplier_id; ?>" class="btn btn-primary">
-                <i class='bx bx-edit'></i>
-                Edit Supplier
-            </a>
-        </div>
+        <?php if (RoleHelper::hasAnyRole([RoleHelper::ADMIN])): ?>
+            <div class="action-buttons">
+                <a href="<?php echo URLROOT; ?>/manager/updateSupplier/<?php echo $supplier->supplier_id; ?>" class="btn btn-primary">
+                    <i class='bx bx-edit'></i>
+                    Edit Supplier
+                </a>
+            </div>
+        <?php endif; ?>
+
     </div>
 
     <div class="vehicle-profile-container">
