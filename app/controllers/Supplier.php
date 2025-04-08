@@ -23,6 +23,8 @@ class Supplier extends Controller {
     private $chatModel;
     private $supplierDetails;
 
+    private $appointmentModel;
+
     public function __construct() {
         // Check if the user is logged in
         requireAuth();
@@ -39,6 +41,7 @@ class Supplier extends Controller {
         $this->collectionModel = new M_Collection();
         $this->scheduleModel = new M_CollectionSchedule();
         $this->bagModel = new M_Bag();
+        $this->appointmentModel = $this->model('M_Appointment');
         $supplierDetails = $this->supplierModel->getSupplierDetailsByUserId($_SESSION['user_id']);
         //$_SESSION['supplier_id'] = $supplierDetails->supplier_id;
     }
@@ -104,6 +107,88 @@ class Supplier extends Controller {
             ];
         }
         $this->view('supplier/v_supply_dashboard', $data);
+    }
+
+    public function viewAppointments() {
+        // Fetch all required data for the view
+        $timeSlots = $this->appointmentModel->getAvailableTimeSlots();
+        $myRequests = $this->appointmentModel->getMyRequests($_SESSION['supplier_id']);
+        $confirmedAppointments = $this->appointmentModel->getConfirmedAppointments($_SESSION['supplier_id']);
+        
+        // Prepare data to pass to the view
+        $data = [
+            'time_slots' => $timeSlots,
+            'my_requests' => $myRequests,
+            'confirmed_appointments' => $confirmedAppointments
+        ];
+        
+        // Load the view with the data
+        $this->view('supplier/v_time_slots', $data);
+    }
+    
+    public function requestTimeSlot() {
+        if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+            // Validate the slot ID
+            if (!isset($_POST['slot_id']) || empty($_POST['slot_id'])) {
+                flash('request_message', 'Invalid time slot.', 'alert alert-error');
+                redirect('Supplier/viewAppointments');
+                return;
+            }
+            
+            // Check if the slot is still available
+            $slot = $this->appointmentModel->getSlotById($_POST['slot_id']);
+            if (!$slot || $slot->status !== 'Available') {
+                flash('request_message', 'This time slot is no longer available.', 'alert alert-error');
+                redirect('Supplier/viewAppointments');
+                return;
+            }
+            
+            // Prepare data for the request
+            $data = [
+                'supplier_id' => $_SESSION['supplier_id'],
+                'slot_id' => trim($_POST['slot_id']),
+                'status' => 'Pending',
+                'submitted_at' => date('Y-m-d H:i:s')
+            ];
+            
+            // Create the request
+            if ($this->appointmentModel->createRequest($data)) {
+                flash('request_message', 'Time slot requested successfully.');
+            } else {
+                flash('request_message', 'Failed to request time slot.', 'alert alert-error');
+            }
+            
+            redirect('Supplier/viewAppointments');
+        } else {
+            // Redirect if accessed directly without POST
+            redirect('Supplier/viewAppointments');
+        }
+    }
+    
+    public function cancelRequest($id = null) {
+        // Validate the request ID
+        if (!$id) {
+            flash('request_message', 'Invalid request.', 'alert alert-error');
+            redirect('Supplier/viewAppointments');
+            return;
+        }
+        
+        // Check if the request belongs to this supplier and is still pending
+        $request = $this->appointmentModel->getRequestById($id);
+        if (!$request || $request->supplier_id != $_SESSION['supplier_id'] || $request->status != 'Pending') {
+            flash('request_message', 'You cannot cancel this request.', 'alert alert-error');
+            redirect('Supplier/viewAppointments');
+            return;
+        }
+        
+        // Cancel the request
+        if ($this->appointmentModel->cancelRequest($id, $_SESSION['supplier_id'])) {
+            flash('request_message', 'Appointment request cancelled successfully.');
+        } else {
+            flash('request_message', 'Failed to cancel request.', 'alert alert-error');
+        }
+        
+        redirect('Supplier/viewAppointments');
     }
 
     public function notifications() {

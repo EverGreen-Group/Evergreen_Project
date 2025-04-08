@@ -14,13 +14,19 @@
         </a>
         <ul class="side-menu top">
 			<li class="<?php echo (basename($_SERVER['REQUEST_URI']) == 'index') ? 'active' : ''; ?>">
-				<a href="<?php echo URLROOT; ?>/suppliermanager/applications">
+				<a href="<?php echo URLROOT; ?>/manager/applications">
 					<i class='bx bxs-envelope'></i>
 					<span class="text">Applications</span>
 				</a>
 			</li>
+			<li class="<?php echo (basename($_SERVER['REQUEST_URI']) == 'index') ? 'active' : ''; ?>">
+				<a href="<?php echo URLROOT; ?>/manager/appointments">
+					<i class='bx bxs-calander'></i>
+					<span class="text">Appointments</span>
+				</a>
+			</li>
 			<li class="<?php echo (basename($_SERVER['REQUEST_URI']) == 'suppliers') ? 'active' : ''; ?>">
-				<a href="<?php echo URLROOT; ?>/suppliermanager/suppliers">
+				<a href="<?php echo URLROOT; ?>/manager/suppliers">
 					<i class='bx bxs-network-chart'></i>
 					<span class="text">Suppliers</span>
 				</a>

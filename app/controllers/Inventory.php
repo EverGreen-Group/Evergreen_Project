@@ -29,32 +29,69 @@ class Inventory extends controller
 
     public function index()
     {
-        if ($_SERVER ['REQUEST_METHOD'] =='POST'){
+        if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             $report = ['report' => $_POST['report']];
-
-            
-            
         }
-        $totalstock = $this->stockvalidate->gettodaytotalstock();
-        $products = $this->productModel->getAllProducts();
-        $fertilizer = $this->fertilizerModel->getfertilizer();
+
         $stockvalidate = $this->stockvalidate->getvalidateStocks();
-        $machines = $this->machineModel->gettimesofmachine();
-        $validatedetails = $this->stockvalidate->getvalidatestockdetails();
+
+        // Get leaf quantities for the last 7 days
+        $leafQuantities = $this->stockvalidate->getLeafQuantitiesLast7Days();
+        
+        // Process the leaf quantities data for the chart
+        $normalLeafData = [];
+        $superLeafData = [];
+        $dates = [];
+        
+        foreach ($leafQuantities as $record) {
+            $date = $record->date;
+            if (!in_array($date, $dates)) {
+                $dates[] = $date;
+            }
+            
+            if ($record->leaf_type_id == 1) {
+                $normalLeafData[$date] = $record->total_quantity;
+            } else if ($record->leaf_type_id == 2) {
+                $superLeafData[$date] = $record->total_quantity;
+            }
+        }
+
+        // Fill in missing dates with 0
+        for ($i = 6; $i >= 0; $i--) {
+            $date = date('Y-m-d', strtotime("-$i days"));
+            if (!isset($normalLeafData[$date])) {
+                $normalLeafData[$date] = 0;
+            }
+            if (!isset($superLeafData[$date])) {
+                $superLeafData[$date] = 0;
+            }
+        }
+        
+        // Sort by date
+        ksort($normalLeafData);
+        ksort($superLeafData);
+
+        $awaitingInventory = 5;
+        $kgApprovedToday = 150;
+        $fertilizerOrders = 3;
+        $activeBags = $this->stockvalidate->getBagsByStatus('active');
+        $inactiveBags = $this->stockvalidate->getBagsByStatus('inactive');
+
+        $activeBagsCount = count($activeBags);
+        $inactiveBagsCount = count($inactiveBags);
 
         $data = [
-            'products' => $products,
-            'fertilizer' => $fertilizer,
             'stockvalidate' => $stockvalidate,
-            'machines' => $machines,
-            'totalstock' => $totalstock,
-            'validatedetails' => $validatedetails
-
+            'awaitingInventory' => $awaitingInventory,
+            'kgApprovedToday' => $kgApprovedToday,
+            'fertilizerOrders' => $fertilizerOrders,
+            'bagUsageCounts' => ['active' => $activeBagsCount, 'inactive' => $inactiveBagsCount],
+            'normalLeafData' => array_values($normalLeafData),
+            'superLeafData' => array_values($superLeafData),
+            'chartDates' => array_keys($normalLeafData)
         ];
 
-        
         $this->view('inventory/v_dashboard', $data);
-        //var_dump($data);
     }
 
     public function product()
@@ -73,14 +110,6 @@ class Inventory extends controller
         }
 
         $this->view('inventory/v_product', $data);
-    }
-
-
-    public function order()
-    {
-        $data = [];
-
-        $this->view('inventory/v_order', $data);
     }
 
     public function createproduct()
@@ -104,8 +133,6 @@ class Inventory extends controller
                 "profit_err" => '',
                 "margin_err" => '',
                 "quantity_err" => '',
-
-
             ];
 
             // Handle image upload
@@ -128,9 +155,7 @@ class Inventory extends controller
                 }
             }
 
-
             //validate 
-
             if (empty($data['product-name'])) {
                 $data['product-name_err'] = 'Please enter product name';
             }
@@ -178,21 +203,15 @@ class Inventory extends controller
             ];
         }
 
-
         $this->view('inventory/v_create_product', $data);
     }
 
-
-
     public function fertilizerdashboard()
     {
-
         $fertilizer = $this->fertilizerModel->getfertilizer();
         $data = [
             'fertilizer' => $fertilizer
         ];
-
-
 
         $this->view('inventory/v_fertilizer_dashboard', $data);
 
@@ -228,7 +247,6 @@ class Inventory extends controller
                 'price_err' => '',
                 'quantity_err' => '',
                 'unit_err' => '',
-
             ];
 
             // Handle image upload
@@ -597,9 +615,290 @@ class Inventory extends controller
         exit();
     }
 
+    public function viewAwaitingInventory($collectionId)
+    {
+        $collectionDetails = $this->stockvalidate->getvalidateStocks($collectionId);
 
+
+        $bagsForCollection = $this->stockvalidate->getBagForCollection($collectionId);
+        $getTotalQuantityInACollection = $this->stockvalidate->getTotalQuantityInACollection($collectionId);
+        $totalQuantity = $getTotalQuantityInACollection->sum;
+        $totalBags = $getTotalQuantityInACollection->count;
+        $getBagCountsInCollection = $this->stockvalidate->getBagCountsInCollection($collectionId);
+        $bagsApproved = $getBagCountsInCollection->finalized_count;
+        $bagsNotApproved = $getBagCountsInCollection->not_finalized_count;
+
+        if (empty($bagsForCollection)) {
+            redirect("inventory/"); 
+        }
+
+        $data = [
+            'collectionDetails' => $collectionDetails,
+            'collectionBags' => $bagsForCollection,
+            'collection_id' => $collectionId,
+            'total_quantity' => $totalQuantity,
+            'total_bags' => $totalBags,
+            'bags_approved' => $bagsApproved,
+            'bags_not_approved' => $bagsNotApproved
+        ];
+
+
+        $this->view('inventory/v_view_collection_bags', $data);
+    }  
+
+
+    // APPROVING BAG, MUST IMRPOVE IT FURTHER, LIKE DEDUCTIONS AND ALL
+    public function approveBag($historyId, $collectionId)
+    {
+        
+        // Call the model method to handle all logic and database operations
+        $result = $this->stockvalidate->processApproval($historyId);
+        
+        if ($result['success']) {
+            flash('inventory_message', $result['message'], 'alert alert-success');
+        } else {
+            flash('inventory_message', $result['message'], 'alert alert-danger');
+        }
+        
+        redirect("inventory/viewAwaitingInventory/$collectionId");
+    }
+
+
+    public function updateBag($historyId)
+    {
+        // Check if form is submitted
+        if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+            $data = [
+                'history_id' => $historyId,
+                'actual_weight_kg' => trim($_POST['actual_weight_kg']),
+                'leaf_age' => trim($_POST['leaf_age']),
+                'moisture_level' => trim($_POST['moisture_level']),
+                'deduction_notes' => trim($_POST['deduction_notes']),
+                'leaf_type_id' => trim($_POST['leaf_type_id']),
+                'error' => ''
+            ];
     
+            // Validate weight
+            if (empty($data['actual_weight_kg']) || !is_numeric($data['actual_weight_kg'])) {
+                $data['error'] = 'Please enter a valid weight';
+            }
+    
+            // If no errors, update the bag
+            if (empty($data['error'])) {
+                if ($this->stockvalidate->updateBag($data)) {
+                    // Get collection ID for redirect
+                    $collectionId = $this->stockvalidate->getBagCollectionId($historyId);
+                    flash('inventory_message', 'Bag updated successfully', 'alert alert-success');
+                    redirect("inventory/viewAwaitingInventory/$collectionId");
+                } else {
+                    $data['error'] = 'Something went wrong';
+                }
+            }
+        } else {
+            // Get existing bag data
+            $bag = $this->stockvalidate->getBagByHistoryId($historyId);
+            
+            // If bag not found, redirect
+            if (!$bag) {
+                flash('inventory_message', 'Bag not found', 'alert alert-danger');
+                redirect("inventory/");
+            }
+            
+            // Get leaf types for dropdown
+            $leafTypes = $this->stockvalidate->getLeafTypes();
+            
+            $data = [
+                'bag' => $bag,
+                'leaf_types' => $leafTypes,
+                'error' => ''
+            ];
+        }
+    
+        $this->view('inventory/v_update_bag', $data);
+    }
 
 
+    public function collectionBags()
+    {
+        // Get active bags (status = 'active')
+        $activeBags = $this->stockvalidate->getBagsByStatus('active');
+        
+        // Get inactive bags (status = 'inactive')
+        $inactiveBags = $this->stockvalidate->getBagsByStatus('inactive');
+        
+        // Calculate statistics
+        $totalBags = count($activeBags) + count($inactiveBags);
+        $activeBagsCount = count($activeBags);
+        $inactiveBagsCount = count($inactiveBags);
+        
+        // Calculate total capacity
+        $totalCapacity = 0;
+        foreach ($activeBags as $bag) {
+            $totalCapacity += $bag->capacity_kg;
+        }
+        foreach ($inactiveBags as $bag) {
+            $totalCapacity += $bag->capacity_kg;
+        }
+        
+        $data = [
+            'activeBags' => $activeBags,
+            'inactiveBags' => $inactiveBags,
+            'totalBags' => $totalBags,
+            'activeBagsCount' => $activeBagsCount,
+            'inactiveBagsCount' => $inactiveBagsCount,
+            'totalCapacity' => $totalCapacity
+        ];
+        
+        $this->view('inventory/v_collection_bags', $data);
+    }
+
+
+    public function markAsInactive($id = null)
+    {
+
+        if (!$id) {
+            flash('bag_message', 'Invalid bag ID', 'alert alert-danger');
+            redirect('inventory/collectionBags');
+        }
+        
+        // Make sure the ID is numeric
+        if (!is_numeric($id)) {
+            flash('bag_message', 'Invalid bag ID format', 'alert alert-danger');
+            redirect('inventory/collectionBags');
+        }
+        
+
+        $bag = $this->stockvalidate->getBagById($id);
+        
+        if (!$bag) {
+            flash('bag_message', 'Bag not found', 'alert alert-danger');
+            redirect('inventory/collectionBags');
+        }
+        
+        if ($bag->status !== 'active') {
+            flash('bag_message', 'This bag is already inactive', 'alert alert-warning');
+            redirect('inventory/collectionBags');
+        }
+        
+        // Update bag status to inactive and reset weight
+        if ($this->stockvalidate->markAsInactive($id)) {
+            flash('bag_message', 'Bag has been emptied successfully', 'alert alert-success');
+        } else {
+            flash('bag_message', 'Failed to empty bag', 'alert alert-danger');
+        }
+        
+        redirect('inventory/collectionBags');
+    }
+
+    public function deleteBag($bagId)
+    {
+        // Call the model method to delete the bag
+        $result = $this->stockvalidate->deleteBag($bagId);
+        
+        if ($result) {
+            flash('inventory_message', 'Bag deleted successfully', 'alert alert-success');
+        } else {
+            flash('inventory_message', 'Failed to delete the bag', 'alert alert-danger');
+        }
+        
+        redirect("inventory/collectionBags");
+    }
+
+
+
+    public function createBag() {
+        // Check if form is submitted
+        if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+            // Sanitize POST data
+            $_POST = filter_input_array(INPUT_POST, FILTER_SANITIZE_STRING);
+            
+            // Init data
+            $data = [
+                'capacity_kg' => trim($_POST['capacity_kg']),
+                'status' => 'inactive'
+            ];
+            
+            // Validate capacity
+            if (empty($data['capacity_kg']) || !is_numeric($data['capacity_kg']) || $data['capacity_kg'] <= 0) {
+                flash('bag_message', 'Please enter a valid capacity greater than 0', 'alert alert-danger');
+                redirect('inventory/createBag');
+                exit;
+            }
+            
+            $this->stockvalidate->addBag($data);
+            redirect('inventory/collectionBags');
+
+        }
+            
+        $this->view('inventory/v_create_bag');
+    }
+
+    public function rawLeafHistory()
+    {
+        // Get leaf quantities data
+        $leafQuantities = $this->stockvalidate->getLeafQuantitiesLast7Days();
+        
+        $data = [
+            'leafQuantities' => $leafQuantities
+        ];
+        
+        $this->view('inventory/v_raw_leaf_history', $data);
+    }
+
+    public function manageLeafRate()
+    {
+
+            
+            if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+                // Sanitize POST data
+                $_POST = filter_input_array(INPUT_POST, FILTER_SANITIZE_SPECIAL_CHARS);
+        
+                // Initialize data
+                $data = [
+                    'leaf_type_id' => trim($_POST['leaf_type_id']),
+                    'rate' => trim($_POST['rate']),
+                    'error' => ''
+                ];
+        
+                // Validate inputs
+                if (empty($data['leaf_type_id']) || empty($data['rate'])) {
+                    $data['error'] = 'Please fill in all fields';
+                    $this->view('inventory/v_manage_rate_form', $data);
+                    return;
+                }
+        
+                // Validate leaf_type_id is either 1 or 2
+                if (!in_array($data['leaf_type_id'], ['1', '2'])) {
+                    $data['error'] = 'Invalid leaf type selected';
+                    $this->view('inventory/v_manage_rate_form', $data);
+                    return;
+                }
+        
+                // Validate rate is a positive number
+                if (!is_numeric($data['rate']) || $data['rate'] <= 0) {
+                    $data['error'] = 'Rate must be a positive number';
+                    $this->view('inventory/v_manage_rate_form', $data);
+                    return;
+                }
+        
+                // Add leaf rate using model
+                if ($this->stockvalidate->addLeafRate($data)) {
+                    flash('leaf_rate_message', 'Tea leaf rate added successfully');
+                    redirect('inventory/');
+                } else {
+                    $data['error'] = 'Something went wrong';
+                    $this->view('inventory/v_manage_rate_form', $data);
+                }
+            } else {
+                // Initialize empty data
+                $data = [
+                    'leaf_type_id' => '',
+                    'rate' => '',
+                    'error' => ''
+                ];
+            
+            $this->view('inventory/v_manage_rate_form', $data);
+        }
+    }
 
 }

@@ -945,6 +945,47 @@ class VehicleDriver extends controller {
         redirect('vehicledriver/');
     }
 
+    public function cancelSupplierCollection($recordId) {
+
+        // We have to follow some steps. 
+        // We intially need to check the bag_usage_history for that supplier_id and collection_id, 
+        // if its empty we may proceed to the next step.
+
+
+        // Check if there are any bags for this supplier in this collection
+        $collectionSupplierRecord = $this->collectionModel->getCollectionSupplierRecordById($recordId);
+        
+        if (!$collectionSupplierRecord) {
+            // Record not found
+            flash('collection_error', 'Collection supplier record not found', 'alert alert-danger');
+            redirect('vehicledriver/dashboard');
+            return;
+        }
+        
+        $collectionId = $collectionSupplierRecord->collection_id;
+        $supplierId = $collectionSupplierRecord->supplier_id;
+        
+        // Check if there are any bags for this supplier in this collection
+        $bags = $this->collectionModel->getBagsByCollectionAndSupplier($collectionId, $supplierId);
+        
+        if (!empty($bags)) {
+            // Cannot cancel if bags exist
+            flash('collection_error', 'Cannot cancel collection as bags have already been recorded', 'alert alert-danger');
+            redirect("vehicledriver/viewCollection/$collectionId");
+            return;
+        }
+        
+        // Update the status to 'No Show'
+        if ($this->collectionModel->updateSupplierCollectionStatus($recordId, 'No Show')) {
+            flash('collection_success', 'Supplier collection marked as No Show', 'alert alert-success');
+        } else {
+            flash('collection_error', 'Failed to update collection status', 'alert alert-danger');
+        }
+        
+        // Redirect back to the collection view
+        redirect("vehicledriver/viewCollection/$collectionId");
+    }
+
 }
 
 ?>

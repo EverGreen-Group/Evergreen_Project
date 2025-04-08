@@ -40,7 +40,7 @@
         </div>
     </div>
 
-    <div class="stats-container">
+    <!-- <div class="stats-container">
         <div class="stat-item">
             <div class="stat-header">
                 <i class='bx bxs-calendar-check'></i>
@@ -62,7 +62,7 @@
                 <small>kg this month</small>
             </div>
         </div>
-    </div>
+    </div> -->
 
     <!-- Action Cards Section -->
     <div class="action-cards-container">
@@ -75,7 +75,7 @@
                 <a href="<?php echo URLROOT; ?>/supplier/schedule" class="action-button">
                     <div class="button-content">
                         <i class='bx bx-calendar-edit'></i>
-                        <span>Access Schedule Subscription</span>
+                        <span>View Your Schedule</span>
                     </div>
                 </a>
             </div>

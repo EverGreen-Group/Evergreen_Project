@@ -1,243 +1,240 @@
-<?php
-// Dummy data for demonstration if not already provided by your controller.
-if (empty($data) || empty($data['collectionRecords']) || empty($data['fertilizerPurchases'])) {
-  $data['collectionsCount'] = 1;
-  $data['fertilizerCount']  = 1;
-  $data['totalIncome']      = 5000.00;
-  $data['collectionRecords'] = [
-    (object)[
-      'collection_id'         => 101,
-      'collection_date'       => '2025-02-01',
-      'bag_usage_history_id'  => 202,
-      'factory_payment'       => 3000.00,
-      'delivery_charges'      => 200.00
-    ]
-  ];
-  $data['fertilizerPurchases'] = [
-    (object)[
-      'order_id'      => 501,
-      'purchase_date' => '2025-02-03',
-      'price'         => 1500.00
-    ]
-  ];
-  $data['totalTeaLeaves']   = 120;      // in kg
-  $data['totalDeductions']  = 200.00;
-}
-
-// Dummy months for the dropdown navigation.
-// In a real scenario these might be generated dynamically.
-$months = [
-  '2025-02' => 'February 2025',
-  '2025-01' => 'January 2025',
-  '2024-12' => 'December 2024'
-];
-$currentMonth = '2025-02'; // assume current month is February 2025
-?>
-
 <?php require APPROOT . '/views/inc/components/header.php'; ?>
 <?php require APPROOT . '/views/inc/components/sidebar_supplier.php'; ?>
 <?php require APPROOT . '/views/inc/components/topnavbar.php'; ?>
-<link rel="stylesheet" href="<?php echo URLROOT; ?>/css/supplier/supplier_payment/styles.css">
+<link rel="stylesheet" href="<?php echo URLROOT; ?>/css/supplier/supplier_payment/paymentstyles.css">
+
 <main>
   <!-- Page Header -->
+
+  <?php
+  $data['all_payments'] = [
+    (object)[
+        'payment_id' => 'PAY001',
+        'supplier_id' => 'SUP123',
+        'payment_amount' => 25000.00,
+        'payment_date' => '2024-03-15'
+    ],
+    (object)[
+        'payment_id' => 'PAY002',
+        'supplier_id' => 'SUP456',
+        'payment_amount' => 18500.00,
+        'payment_date' => '2024-03-12'
+    ],
+    (object)[
+        'payment_id' => 'PAY003',
+        'supplier_id' => 'SUP789',
+        'payment_amount' => 32750.00,
+        'payment_date' => '2024-03-10'
+    ],
+    (object)[
+        'payment_id' => 'PAY004',
+        'supplier_id' => 'SUP234',
+        'payment_amount' => 15800.00,
+        'payment_date' => '2024-03-08'
+    ],
+    (object)[
+        'payment_id' => 'PAY005',
+        'supplier_id' => 'SUP567',
+        'payment_amount' => 42300.00,
+        'payment_date' => '2024-03-05'
+    ]
+];
+
+// Get the last 7 days data for normal and super leaf
+$normalLeafData = [
+    (object)[
+        'date' => '2024-03-15',
+        'quantity' => 120.50
+    ],
+    (object)[
+        'date' => '2024-03-14',
+        'quantity' => 145.75
+    ],
+    (object)[
+        'date' => '2024-03-13',
+        'quantity' => 98.25
+    ],
+    (object)[
+        'date' => '2024-03-12',
+        'quantity' => 156.00
+    ],
+    (object)[
+        'date' => '2024-03-11',
+        'quantity' => 134.50
+    ],
+    (object)[
+        'date' => '2024-03-10',
+        'quantity' => 167.25
+    ],
+    (object)[
+        'date' => '2024-03-09',
+        'quantity' => 143.75
+    ]
+];
+
+$superLeafData = [
+    (object)[
+        'date' => '2024-03-15',
+        'quantity' => 85.25
+    ],
+    (object)[
+        'date' => '2024-03-14',
+        'quantity' => 92.50
+    ],
+    (object)[
+        'date' => '2024-03-13',
+        'quantity' => 78.75
+    ],
+    (object)[
+        'date' => '2024-03-12',
+        'quantity' => 105.25
+    ],
+    (object)[
+        'date' => '2024-03-11',
+        'quantity' => 95.50
+    ],
+    (object)[
+        'date' => '2024-03-10',
+        'quantity' => 112.75
+    ],
+    (object)[
+        'date' => '2024-03-09',
+        'quantity' => 88.25
+    ]
+];
+?>
   <div class="head-title">
     <div class="left">
-      <h1>Supplier Payments</h1>
+      <h1>Payment History</h1>
       <ul class="breadcrumb">
         <li>
           <i class='bx bx-home'></i>
           <a href="<?php echo URLROOT; ?>/Supplier/dashboard/">Dashboard</a>
         </li>
         <li>
-          <span>Payments</span>
+          <span>Payment History</span>
         </li>
       </ul>
     </div>
-    <!-- Month Selector Dropdown -->
-    <div class="month-selector">
-      <label for="month">Select Month:</label>
-      <select id="month" onchange="location = this.value;">
-        <?php foreach($months as $monthValue => $monthName) : ?>
-          <option value="<?php echo URLROOT; ?>/Supplier/payments/<?php echo $monthValue; ?>" <?php echo ($monthValue == $currentMonth) ? 'selected' : ''; ?>>
-            <?php echo $monthName; ?>
-          </option>
-        <?php endforeach; ?>
-      </select>
-    </div>
   </div>
 
-  <!-- Quick Stats Container -->
-  <div class="stats-container">
-    <div class="stat-item">
-      <div class="stat-header">
-        <i class='bx bx-collection'></i>
-        <span>Collections</span>
-      </div>
-      <div class="stat-value">
-        <?php echo isset($data['collectionsCount']) ? $data['collectionsCount'] : '0'; ?>
-        <small>this month</small>
-      </div>
-    </div>
-    <div class="stat-divider"></div>
-    <div class="stat-item">
-      <div class="stat-header">
-        <i class='bx bx-purchase-tag'></i>
-        <span>Fertilizer Orders</span>
-      </div>
-      <div class="stat-value">
-        <?php echo isset($data['fertilizerCount']) ? $data['fertilizerCount'] : '0'; ?>
-        <small>this month</small>
-      </div>
-    </div>
-    <div class="stat-divider"></div>
-    <div class="stat-item">
-      <div class="stat-header">
-        <i>රු.</i>
-        <span>Total Income</span>
-      </div>
-      <div class="stat-value">
-        <?php 
-          echo isset($data['totalIncome']) 
-            ? 'රු.' . number_format($data['totalIncome'], 2) 
-            : 'රු.0.00'; 
-        ?>
-        <small>this month</small>
-      </div>
-    </div>
-  </div>
 
-  <!-- Tea Leaves Collection Records Section -->
-  <div class="schedule-section">
+  <!-- Payment Details Section -->
+  <div class="payment-details-section">
     <div class="section-header">
-      <h3>Tea Leaves Collection Records</h3>
+      <h3>Payment Details</h3>
     </div>
 
-    <?php if (!empty($data['collectionRecords'])): ?>
-      <?php foreach($data['collectionRecords'] as $record): ?>
-        <div class="schedule-card">
-          <div class="card-content">
-            <div class="card-header">
-              <div class="status-badge">
-                Collection #<?php echo $record->collection_id; ?>
-              </div>
-            </div>
-            <div class="card-body">
-              <div class="schedule-info">
-                <div class="info-item">
-                  <i class='bx bx-calendar'></i>
-                  <span><?php echo date('m/d/Y', strtotime($record->collection_date)); ?></span>
-                </div>
-                <div class="info-item">
-                  <i class='bx bx-box'></i>
-                  <span>
-                    Bag Usage: 
-                    <a href="<?php echo URLROOT; ?>/Supplier/bag/<?php echo $record->bag_usage_history_id; ?>">
-                      <?php echo $record->bag_usage_history_id; ?>
-                    </a>
-                  </span>
-                </div>
-                <div class="info-item">
-                  <i class='bx bx-money'></i>
-                  <span>Factory Payment: රු.<?php echo number_format($record->factory_payment, 2); ?></span>
-                </div>
-                <div class="info-item">
-                  <i class='bx bx-truck'></i>
-                  <span>Delivery Charges: රු.<?php echo number_format($record->delivery_charges, 2); ?></span>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      <?php endforeach; ?>
-    <?php else: ?>
-      <div class="no-schedule">
-        <p>No collection records for this month.</p>
+    <div class="tab-container">
+      <div class="tab-header">
+        <button class="tab-btn active" data-tab="all-payments">All Payments</button>
       </div>
-    <?php endif; ?>
-  </div>
 
-  <div class="section-divider"></div>
-
-  <!-- Fertilizer Purchases Section -->
-  <div class="schedule-section">
-    <div class="section-header">
-      <h3>Fertilizer Purchases</h3>
-    </div>
-
-    <?php if (!empty($data['fertilizerPurchases'])): ?>
-      <?php foreach($data['fertilizerPurchases'] as $purchase): ?>
-        <div class="schedule-card">
-          <div class="card-content">
-            <div class="card-header">
-              <div class="status-badge">
-                Purchase #<?php echo $purchase->order_id; ?>
-              </div>
-            </div>
-            <div class="card-body">
-              <div class="schedule-info">
-                <div class="info-item">
-                  <i class='bx bx-calendar'></i>
-                  <span><?php echo date('m/d/Y', strtotime($purchase->purchase_date)); ?></span>
-                </div>
-                <div class="info-item">
-                  <i class='bx bx-receipt'></i>
-                  <span>
-                    Order: 
-                    <a href="<?php echo URLROOT; ?>/Supplier/fertilizer/<?php echo $purchase->order_id; ?>">
-                      <?php echo $purchase->order_id; ?>
-                    </a>
-                  </span>
-                </div>
-                <div class="info-item">
-                  <i class='bx bx-money'></i>
-                  <span>Price: රු.<?php echo number_format($purchase->price, 2); ?></span>
-                </div>
-              </div>
-            </div>
+      <div class="tab-content">
+        <!-- All Payments Tab -->
+        <div class="tab-pane active" id="all-payments">
+        <?php if (isset($data['all_payments']) && !empty($data['all_payments'])): ?>
+          <div class="table-container">
+            <table class="payment-table">
+              <thead>
+                <tr>
+                  <th>Payment ID</th>
+                  <th>Amount</th>
+                  <th>Payment Date</th>
+                </tr>
+              </thead>
+              <tbody>
+                <?php foreach($data['all_payments'] as $payment): ?>
+                  <tr>
+                    <td><?php echo $payment->payment_id; ?></td>
+                    <td>Rs. <?php echo number_format($payment->payment_amount, 2); ?></td>
+                    <td><?php echo date('M d, Y', strtotime($payment->payment_date)); ?></td>
+                  </tr>
+                <?php endforeach; ?>
+              </tbody>
+            </table>
           </div>
+        <?php else: ?>
+          <div class="no-records">
+            <p>No payment records found!</p>
+          </div>
+        <?php endif; ?>
         </div>
-      <?php endforeach; ?>
-    <?php else: ?>
-      <div class="no-schedule">
-        <p>No fertilizer purchases for this month.</p>
-      </div>
-    <?php endif; ?>
-  </div>
 
-  <div class="section-divider"></div>
-
-  <!-- Monthly Summary Section -->
-  <div class="schedule-section">
-    <div class="section-header">
-      <h3>Monthly Summary</h3>
-    </div>
-    <div class="schedule-card">
-      <div class="card-content">
-        <div class="schedule-info">
-          <div class="info-item">
-            <i class='bx bx-leaf'></i>
-            <span>Total Tea Leaves Supplied: 
-              <strong><?php echo isset($data['totalTeaLeaves']) ? $data['totalTeaLeaves'] . ' kg' : '0 kg'; ?></strong>
-            </span>
-          </div>
-          <div class="info-item">
-            <i class='bx bx-dollar'></i>
-            <span>Total Income: 
-              <strong><?php echo isset($data['totalIncome']) ? 'රු.' . number_format($data['totalIncome'], 2) : 'රු.0.00'; ?></strong>
-            </span>
-          </div>
-          <div class="info-item">
-            <i class='bx bx-minus-circle'></i>
-            <span>Total Deductions: 
-              <strong><?php echo isset($data['totalDeductions']) ? 'රු.' . number_format($data['totalDeductions'], 2) : 'රු.0.00'; ?></strong>
-            </span>
-          </div>
-        </div>
       </div>
     </div>
   </div>
-
 </main>
 
-<!-- Scripts -->
+
+
+<style>
+
+</style>
+
+<?php require APPROOT . '/views/inc/components/footer.php'; ?>
+
 <script src="<?php echo URLROOT; ?>/public/css/script.js"></script>
+
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+    const reportCtx = document.getElementById("reportTypesChart");
+    if (reportCtx) {
+        const normalLeafData = <?php echo json_encode(array_column($normalLeafData, 'quantity')); ?>;
+        const superLeafData = <?php echo json_encode(array_column($superLeafData, 'quantity')); ?>;
+        const labels = <?php echo json_encode(array_map(function($date) {
+            return date('D', strtotime($date->date));
+        }, $normalLeafData)); ?>;
+
+        new Chart(reportCtx, {
+            type: "line",
+            data: {
+                labels: labels,
+                datasets: [
+                    {
+                        label: "Normal Leaf",
+                        data: normalLeafData,
+                        backgroundColor: "rgba(54, 162, 235, 0.2)",
+                        borderColor: "#36A2EB",
+                        borderWidth: 2,
+                        fill: false,
+                        tension: 0.4,
+                    },
+                    {
+                        label: "Super Leaf",
+                        data: superLeafData,
+                        backgroundColor: "rgba(255, 159, 64, 0.2)",
+                        borderColor: "#FF9F40",
+                        borderWidth: 2,
+                        fill: false,
+                        tension: 0.4,
+                    },
+                ],
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: "top",
+                        labels: { padding: 20, font: { size: 12 } },
+                    },
+                    title: { display: false }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        grid: { color: "rgba(0, 0, 0, 0.1)" },
+                        ticks: { callback: value => value + " kg" },
+                        title: { display: true, text: "Stock (kg)" },
+                    },
+                    x: {
+                        grid: { display: false },
+                        title: { display: true, text: "Days of the Week" },
+                    },
+                },
+            },
+        });
+    }
+});
+</script>

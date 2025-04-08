@@ -1,10 +1,5 @@
 <?php require APPROOT . '/views/inc/components/header.php'; ?>
 
-<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-
-
-
 <!-- Side bar -->
 <?php require APPROOT . '/views/inc/components/sidebar_vehicle_manager.php'; ?>
 <!-- Top nav bar -->

@@ -35,6 +35,33 @@ class M_Collection {
         return $result;
     }
 
+    public function getAllCollections() {
+        $sql = "SELECT 
+                c.*,
+                cs.schedule_id,
+                r.route_name,
+                v.license_plate,
+                CONCAT(p.first_name, ' ', p.last_name) as driver_name
+            FROM collections c
+            JOIN collection_schedules cs ON c.schedule_id = cs.schedule_id
+            JOIN routes r ON cs.route_id = r.route_id
+            JOIN vehicles v ON r.vehicle_id = v.vehicle_id
+            JOIN drivers d ON cs.driver_id = d.driver_id
+            JOIN profiles p ON d.profile_id = p.profile_id
+            WHERE cs.is_active = 1
+            AND cs.is_deleted = 0
+            ORDER BY c.start_time ASC";
+        
+        $this->db->query($sql);
+        $result = $this->db->resultSet();
+        
+        // test debug
+        // var_dump($sql);
+        // var_dump($result);
+        
+        return $result;
+    }
+
     public function getCollectionById($collectionId) {
         $sql = "SELECT 
                     c.* FROM collections c
@@ -70,10 +97,11 @@ class M_Collection {
             SELECT 
                 csr.*,
                 s.*,
-                CONCAT(u.first_name, ' ', u.last_name) as supplier_name
+                p.*
             FROM collection_supplier_records csr
             JOIN suppliers s ON csr.supplier_id = s.supplier_id
-            JOIN users u ON s.user_id = u.user_id
+            JOIN profiles p on s.profile_id = p.profile_id
+            JOIN users u ON p.user_id = u.user_id
             WHERE csr.collection_id = :collection_id
             ORDER BY csr.record_id
         ");
@@ -1320,6 +1348,96 @@ class M_Collection {
             error_log('Error in completeCollection: ' . $e->getMessage());
             return false;
         }
+    }
+
+    public function getCollectionSupplierRecordById($recordId) {
+        $this->db->query("SELECT * FROM collection_supplier_records WHERE record_id = :record_id");
+        $this->db->bind(':record_id', $recordId);
+        return $this->db->single();
+    }
+    
+    public function getBagsByCollectionAndSupplier($collectionId, $supplierId) {
+        $this->db->query("
+            SELECT * FROM bag_usage_history 
+            WHERE collection_id = :collection_id 
+            AND supplier_id = :supplier_id
+        ");
+        $this->db->bind(':collection_id', $collectionId);
+        $this->db->bind(':supplier_id', $supplierId);
+        return $this->db->resultSet();
+    }
+
+    public function getFilteredCollections($collection_id = null, $schedule_id = null, $status = null, 
+                                          $start_date = null, $end_date = null, $min_quantity = null, 
+                                          $max_quantity = null, $bags_added = null) {
+        $sql = "SELECT 
+                c.*,
+                cs.schedule_id,
+                r.route_name,
+                v.license_plate,
+                CONCAT(p.first_name, ' ', p.last_name) as driver_name
+            FROM collections c
+            JOIN collection_schedules cs ON c.schedule_id = cs.schedule_id
+            JOIN routes r ON cs.route_id = r.route_id
+            JOIN vehicles v ON r.vehicle_id = v.vehicle_id
+            JOIN drivers d ON cs.driver_id = d.driver_id
+            JOIN profiles p ON d.profile_id = p.profile_id
+            WHERE cs.is_active = 1
+            AND cs.is_deleted = 0";
+        
+        $params = [];
+        
+        // Add filter conditions
+        if ($collection_id) {
+            $sql .= " AND c.collection_id = :collection_id";
+            $params[':collection_id'] = $collection_id;
+        }
+        
+        if ($schedule_id) {
+            $sql .= " AND c.schedule_id = :schedule_id";
+            $params[':schedule_id'] = $schedule_id;
+        }
+        
+        if ($status) {
+            $sql .= " AND c.status = :status";
+            $params[':status'] = $status;
+        }
+        
+        if ($start_date) {
+            $sql .= " AND DATE(c.start_time) >= :start_date";
+            $params[':start_date'] = $start_date;
+        }
+        
+        if ($end_date) {
+            $sql .= " AND DATE(c.end_time) <= :end_date";
+            $params[':end_date'] = $end_date;
+        }
+        
+        if ($min_quantity) {
+            $sql .= " AND c.total_quantity >= :min_quantity";
+            $params[':min_quantity'] = $min_quantity;
+        }
+        
+        if ($max_quantity) {
+            $sql .= " AND c.total_quantity <= :max_quantity";
+            $params[':max_quantity'] = $max_quantity;
+        }
+        
+        if ($bags_added !== null) {
+            $sql .= " AND c.bags_added = :bags_added";
+            $params[':bags_added'] = $bags_added;
+        }
+        
+        $sql .= " ORDER BY c.start_time ASC";
+        
+        $this->db->query($sql);
+        
+        // Bind parameters
+        foreach ($params as $param => $value) {
+            $this->db->bind($param, $value);
+        }
+        
+        return $this->db->resultSet();
     }
 
 } 

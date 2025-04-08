@@ -24,6 +24,12 @@
 					<i class='bx bxs-shopping-bag-alt'></i>
 					<span class="text">Fertilizer Requests</span>
 				</a>
+			</li>
+			<li>
+				<a href="<?php echo URLROOT; ?>/supplier/viewAppointments">
+					<i class='bx bxs-shopping-bag-alt'></i>
+					<span class="text">Request Appointment</span>
+				</a>
 			</li>			
 			<li>
 					<a href="<?php echo URLROOT; ?>/supplier/payments">
