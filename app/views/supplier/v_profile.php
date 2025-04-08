@@ -4,7 +4,6 @@
 <link rel="stylesheet" href="<?php echo URLROOT; ?>/css/supplier/profile/styles.css">
 
 <main>
-  <!-- Page Header -->
   <div class="head-title">
     <div class="left">
       <h1>Supplier Profile</h1>

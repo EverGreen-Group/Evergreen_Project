@@ -147,6 +147,11 @@ class Auth extends Controller
                             $_SESSION['email'] = $user->email;
                             $_SESSION['role_id'] = $user->role_id;
 
+                            // Fetch profile
+                            $profile = $this->userModel->getProfileByUserId($user->user_id);
+
+                            $_SESSION['profile_image_path'] = ($profile && !empty($profile->image_path)) ? $profile->image_path : null;
+
                             // After successful login, redirect based on role
                             switch (RoleHelper::getRole()) {
                                 case RoleHelper::DRIVER:
@@ -190,6 +195,7 @@ class Auth extends Controller
         unset($_SESSION['last_name']);
         unset($_SESSION['email']);
         unset($_SESSION['role_id']);
+        unset($_SESSION['profile_image_path']);
         session_destroy();
 
         header('Location: ' . URLROOT);
