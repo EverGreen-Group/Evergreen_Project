@@ -46,6 +46,7 @@ class Manager extends Controller
     private $employeeModel;
     private $bagModel;
     private $supplierModel;
+    private $chatModel; // Add this line
     private $appointmentModel;
 
     //----------------------------------------
@@ -82,8 +83,64 @@ class Manager extends Controller
         $this->bagModel = $this->model('M_CollectionBag');
         //$this->supplierApplicationModel = $this->model('M_SupplierApplication');
         $this->supplierModel = $this->model('M_Supplier');
-        $this->appointmentModel = $this->model('M_Appointment');
+        $this->chatModel = $this->model('M_Chat'); //added by theekshana
     }
+
+    //----------------------------------------
+    // DASHBOARD METHODS
+    //----------------------------------------
+    // public function collection()
+    // {
+    //     // Get dashboard stats from the model
+    //     $stats = $this->vehicleManagerModel->getDashboardStats();
+
+    //     // Fetch all necessary data for the dropdowns
+    //     $routes = $this->routeModel->getAllRoutes();
+    //     $drivers = $this->driverModel->getUnassignedDrivers();
+    //     $vehicles = $this->vehicleModel->getAllAvailableVehicles();
+    //     $schedules = $this->scheduleModel->getAllSchedules();
+    //     $collectionSchedules = $this->scheduleModel->getSchedulesForNextWeek(); 
+    //     $ongoingCollections = $this->collectionModel->getOngoingCollections();
+    //     $todayRoutes = $this->routeModel->getTodayAssignedRoutes();
+
+    //     // Pass the stats and data for the dropdowns to the view
+    //     $this->view('vehicle_manager/v_collection', [
+    //         'stats' => $stats,
+    //         'routes' => $routes,
+    //         'drivers' => $drivers,
+    //         'vehicles' => $vehicles,
+    //         'schedules' => $schedules,
+    //         'ongoing_collections' => $ongoingCollections,
+    //         'collectionSchedules' => $collectionSchedules,
+    //         'todayRoutes' => $todayRoutes 
+    //     ]);
+    // }
+
+    // public function schedule()
+    // {
+    //     // Get dashboard stats from the model
+    //     $totalSchedules = $this->scheduleModel->getTotalSchedules();
+    //     $availableSchedules = $this->scheduleModel->getActiveSchedulesCount();
+
+    //     // Fetch all necessary data for the dropdowns
+    //     $routes = $this->routeModel->getAllRoutes();
+    //     $drivers = $this->driverModel->getUnassignedDrivers();
+    //     $vehicles = $this->vehicleModel->getAllAvailableVehicles();
+    //     $shifts = $this->shiftModel->getAllShifts();
+    //     $schedules = $this->scheduleModel->getAllSchedules();
+
+    //     // Pass the stats and data for the dropdowns to the view
+    //     $this->view('vehicle_manager/v_collectionschedule', [
+    //         'totalSchedules' => $totalSchedules, // Total schedules
+    //         'availableSchedules' => $availableSchedules, // Currently ongoing schedules
+    //         'routes' => $routes,
+    //         'drivers' => $drivers,
+    //         'vehicles' => $vehicles,
+    //         'shifts' => $shifts,
+    //         'schedules' => $schedules
+    //     ]);
+    //     $this->appointmentModel = $this->model('M_Appointment');
+    // }
 
 
 
@@ -1226,7 +1283,7 @@ class Manager extends Controller
             'unassignedSuppliersList' => $unallocatedSuppliers
         ];
 
-        $this->view('vehicle_manager/v_route', $data);
+        //$this->view('vehicle_manager/v_route', $data);
     }
 
     public function createRoute(){
@@ -1966,42 +2023,6 @@ class Manager extends Controller
          $this->view('supplier_manager/v_complaints', $data);
     }
 
-    public function respondRequest() {
-        if ($_SERVER['REQUEST_METHOD'] == 'POST') {
-            $requestId = trim($_POST['request_id']);
-            $action = trim($_POST['action']);
-
-            if ($action === 'accept') {
-                // Accept the request and log it
-                if ($this->appointmentModel->acceptRequest($requestId)) {
-                    flash('request_message', 'Request accepted successfully.');
-                } else {
-                    flash('request_message', 'Failed to accept the request.');
-                }
-            } elseif ($action === 'reject') {
-                // Reject the request
-                $this->appointmentModel->rejectRequest($requestId);
-                flash('request_message', 'Request rejected successfully.');
-            }
-
-            redirect('manager/appointments'); // Redirect back to appointments
-        }
-    }
-
-
-    /** 
-     * User Settings
-     **/
-    public function settings(){
-        $data = [];
-        $this->view('vehicle_manager/v_settings', $data);
-    }
-
-    public function personal_details(){
-        $data = [];
-        $this->view('vehicle_manager/v_personal_details', $data);
-    }
-
     //added by theekshana from supplier manager
 
     public function applications() {
@@ -2359,6 +2380,41 @@ class Manager extends Controller
         exit();
     }
 
+    public function respondRequest() {
+        if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+            $requestId = trim($_POST['request_id']);
+            $action = trim($_POST['action']);
+
+            if ($action === 'accept') {
+                // Accept the request and log it
+                if ($this->appointmentModel->acceptRequest($requestId)) {
+                    flash('request_message', 'Request accepted successfully.');
+                } else {
+                    flash('request_message', 'Failed to accept the request.');
+                }
+            } elseif ($action === 'reject') {
+                // Reject the request
+                $this->appointmentModel->rejectRequest($requestId);
+                flash('request_message', 'Request rejected successfully.');
+            }
+
+            redirect('manager/appointments'); // Redirect back to appointments
+        }
+    }
+
+
+    /** 
+     * User Settings
+     **/
+    public function settings(){
+        $data = [];
+        $this->view('vehicle_manager/v_settings', $data);
+    }
+
+    public function personal_details(){
+        $data = [];
+        $this->view('vehicle_manager/v_personal_details', $data);
+    }
 
 
 }
