@@ -6,7 +6,6 @@ use Endroid\QrCode\Writer\PngWriter;
 // Require all model files
 require_once '../app/models/M_VehicleManager.php';
 require_once '../app/models/M_Route.php';
-require_once '../app/models/M_Team.php';
 require_once '../app/models/M_Vehicle.php';
 require_once '../app/models/M_Shift.php';
 require_once '../app/models/M_CollectionSchedule.php';
@@ -31,7 +30,6 @@ class Manager extends Controller
     //----------------------------------------
     private $vehicleManagerModel;
     private $routeModel;
-    private $teamModel;
     private $vehicleModel;
     private $shiftModel;
     private $scheduleModel;
@@ -66,7 +64,6 @@ class Manager extends Controller
         // Initialize models
         $this->vehicleManagerModel = new M_VehicleManager();
         $this->routeModel = new M_Route();
-        $this->teamModel = new M_Team();
         $this->vehicleModel = new M_Vehicle();
         $this->shiftModel = new M_Shift();
         $this->scheduleModel = new M_CollectionSchedule();
@@ -1959,11 +1956,95 @@ class Manager extends Controller
      */
 
     public function complaints()
-     {
-         $data = [];
- 
-         $this->view('supplier_manager/v_complaints', $data);
+    {
+        // Get complaints data
+        $complaints = $this->supplierModel->getComplaints();
+    
+        // Get complaint statistics
+        $totalComplaints = $this->supplierModel->getTotalComplaints();
+        $resolvedComplaints = $this->supplierModel->getComplaintsByStatus('Resolved');
+        $pendingComplaints = $this->supplierModel->getComplaintsByStatus('Pending');
+    
+        // Set up data array for the view
+        $data = [
+            'complaints' => $complaints,
+            'totalComplaints' => $totalComplaints,
+            'resolvedComplaints' => count($resolvedComplaints),
+            'pendingComplaints' => count($pendingComplaints)
+        ];
+    
+        $this->view('supplier_manager/v_complaints', $data);
     }
+
+    public function viewComplaint($id = null)
+    {
+        if ($id === null) {
+            redirect('manager/complaints');
+        }
+    
+        $complaint = $this->supplierModel->getComplaintById($id);
+    
+        if (!$complaint) {
+            flash('complaint_message', 'Complaint not found', 'alert alert-danger');
+            redirect('manager/complaints');
+        }
+    
+        $data = [
+            'complaint' => $complaint
+        ];
+    
+        $this->view('supplier_manager/v_view_complaint', $data);
+    }
+    
+    public function resolveComplaint()
+    {
+        if ($_SERVER['REQUEST_METHOD'] != 'POST') {
+            redirect('manager/complaints');
+        }
+    
+        $data = [
+            'complaint_id' => trim($_POST['complaint_id']),
+            'resolution_notes' => trim($_POST['resolution_notes']),
+            'status' => 'Resolved'
+        ];
+    
+        if ($this->supplierModel->updateStatus($data)) {
+            flash('complaint_message', 'Complaint resolved successfully', 'alert alert-success');
+        } else {
+            flash('complaint_message', 'Error resolving complaint', 'alert alert-danger');
+        }
+    
+        redirect('manager/viewComplaint/' . $data['complaint_id']);
+    }
+    
+    public function reopenComplaint($id)
+    {
+        $data = [
+            'complaint_id' => $id,
+            'status' => 'Pending'
+        ];
+    
+        if ($this->supplierModel->updateStatus($data)) {
+            flash('complaint_message', 'Complaint reopened successfully', 'alert alert-success');
+        } else {
+            flash('complaint_message', 'Error reopening complaint', 'alert alert-danger');
+        }
+    
+        redirect('manager/viewComplaint/' . $id);
+    }
+    
+    public function deleteComplaint($id)
+    {
+        if ($this->supplierModel->deleteComplaint($id)) {
+            flash('complaint_message', 'Complaint deleted successfully', 'alert alert-success');
+            redirect('manager/complaints');
+        } else {
+            flash('complaint_message', 'Error deleting complaint', 'alert alert-danger');
+            redirect('manager/viewComplaint/' . $id);
+        }
+    }
+    
+     
 
     public function respondRequest() {
         if ($_SERVER['REQUEST_METHOD'] == 'POST') {

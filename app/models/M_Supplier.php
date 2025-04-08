@@ -150,4 +150,102 @@ class M_Supplier {
         
     }
 
+    public function addComplaint($data)
+    {
+        $this->db->query("INSERT INTO complaints (supplier_id, complaint_type, subject, description, priority, image_path) 
+                          VALUES (:supplier_id, :complaint_type, :subject, :description, :priority, :image_path)");
+    
+        $this->db->bind(':supplier_id', $data['supplier_id']);
+        $this->db->bind(':complaint_type', $data['complaint_type']);
+        $this->db->bind(':subject', $data['subject']);
+        $this->db->bind(':description', $data['description']);
+        $this->db->bind(':priority', $data['priority']);
+        $this->db->bind(':image_path', $data['image_path']);
+    
+        return $this->db->execute();
+    }
+    
+
+    public function getComplaints()
+    {
+        $this->db->query("SELECT c.*, CONCAT(p.first_name, ' ', p.last_name) as supplier_name, p.image_path
+                          FROM complaints c 
+                          JOIN suppliers s ON c.supplier_id = s.supplier_id 
+                          JOIN profiles p On s.profile_id = p.profile_id 
+                          WHERE c.status != 'Deleted' 
+                          ORDER BY 
+                              CASE c.priority 
+                                  WHEN 'high' THEN 1 
+                                  WHEN 'medium' THEN 2 
+                                  WHEN 'low' THEN 3 
+                              END,
+                              c.created_at DESC");
+        
+        return $this->db->resultSet();
+    }
+    
+    public function getComplaintById($id)
+    {
+        $this->db->query("SELECT c.*, CONCAT(p.first_name, ' ', p.last_name) as supplier_name, p.image_path, u.email, p.contact_number as phone 
+                          FROM complaints c 
+                          JOIN suppliers s ON c.supplier_id = s.supplier_id
+                          JOIN profiles p On s.profile_id = p.profile_id
+                          JOIN users u on p.user_id = u.user_id 
+                          WHERE c.complaint_id = :id AND c.status != 'Deleted'");
+        
+        $this->db->bind(':id', $id);
+        
+        return $this->db->single();
+    }
+    
+    public function getTotalComplaints()
+    {
+        $this->db->query("SELECT COUNT(*) as count FROM complaints WHERE status != 'Deleted'");
+        $result = $this->db->single();
+        return $result->count;
+    }
+
+    public function getComplaintsByStatus($status)
+    {
+        $this->db->query("SELECT c.*, CONCAT(p.first_name, ' ', p.last_name) as supplier_name, p.image_path 
+                          FROM complaints c 
+                          JOIN suppliers s ON c.supplier_id = s.supplier_id 
+                          JOIN profiles p On s.profile_id = p.profile_id 
+                          WHERE c.status = :status 
+                          ORDER BY 
+                              CASE c.priority 
+                                  WHEN 'high' THEN 1 
+                                  WHEN 'medium' THEN 2 
+                                  WHEN 'low' THEN 3 
+                              END,
+                              c.created_at DESC");
+        
+        $this->db->bind(':status', $status);
+        
+        return $this->db->resultSet();
+    }
+
+    public function updateStatus($data)
+    {
+        $this->db->query("UPDATE complaints SET status = :status WHERE complaint_id = :complaint_id");
+        
+        $this->db->bind(':complaint_id', $data['complaint_id']);
+        $this->db->bind(':status', $data['status']);
+        
+        return $this->db->execute();
+    }
+
+    public function deleteComplaint($id)
+    {
+        // Using soft delete by updating to delete
+        $this->db->query("UPDATE complaints SET status = 'Deleted' WHERE complaint_id = :id");
+        
+        $this->db->bind(':id', $id);
+        
+        return $this->db->execute();
+    }
+
+    
+
+
 } 

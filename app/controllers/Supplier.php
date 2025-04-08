@@ -301,6 +301,58 @@ class Supplier extends Controller {
         $this->view('supplier/v_complaint', $data);
     }
 
+    public function submitComplaint()
+    {
+        if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+            // Sanitize input
+            $_POST = filter_input_array(INPUT_POST, FILTER_SANITIZE_STRING);
+    
+            $supplierId = $_SESSION['supplier_id']; 
+    
+            $data = [
+                'supplier_id' => $supplierId,
+                'complaint_type' => trim($_POST['complaint_type']),
+                'subject' => trim($_POST['subject']),
+                'description' => trim($_POST['description']),
+                'priority' => trim($_POST['priority']),
+                'image_path' => null,
+            ];
+    
+            // Image upload handling
+            if (isset($_FILES['image']) && $_FILES['image']['error'] === UPLOAD_ERR_OK) {
+                $image = $_FILES['image'];
+    
+                $allowedTypes = ['image/jpeg', 'image/png', 'image/gif'];
+                if (in_array($image['type'], $allowedTypes)) {
+                    $imageExt = pathinfo($image['name'], PATHINFO_EXTENSION);
+                    $imageName = 'complaint_' . time() . '.' . $imageExt;
+                    $uploadDir = 'uploads/complaints/';
+                    $uploadPath = $uploadDir . $imageName;
+    
+                    // Ensure directory exists
+                    if (!is_dir($uploadDir)) {
+                        mkdir($uploadDir, 0777, true);
+                    }
+    
+                    if (move_uploaded_file($image['tmp_name'], $uploadPath)) {
+                        $data['image_path'] = $uploadPath;
+                    }
+                }
+            }
+    
+    
+            if ($this->supplierModel->addComplaint($data)) {
+                flash('complaint_success', 'Complaint submitted successfully');
+                redirect('supplier/complaints');
+            } else {
+                redirect('supplier/complaints');
+            }
+        } else {
+            redirect('supplier/complaints');
+        }
+    }
+    
+
     public function settings()
     {
         $data = [];
@@ -679,93 +731,7 @@ class Supplier extends Controller {
         $this->view('supplier/v_fertilizer', $data);
     }
 
-    // Add these methods for AJAX calls
-    public function subscribeToRoute()
-    {
-        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-            redirect('supplier/schedule');
-        }
-    
-        $routeId = $this->routeModel->getRouteIdByScheduleId($_POST['schedule_id']) ?? null;
-        $supplierId = $_SESSION['supplier_id'];
-    
-        try {
-            // Check if supplier is active
-            $isActive = $this->supplierModel->getSupplierStatus($supplierId);
-            
-            if ($isActive !== '1') {
-                echo json_encode([
-                    'success' => false, 
-                    'message' => 'Your account is currently inactive. Please activate your account to subscribe to routes.'
-                ]);
-                return;
-            }
-            
-            // First, check if supplier is already subscribed to any route
-            $currentRoute = $this->routeModel->getSupplierCurrentRoute($supplierId);
-            
-            if ($currentRoute) {
-                // Need to unsubscribe from current route first
-                echo json_encode([
-                    'success' => false, 
-                    'message' => 'Please unsubscribe from your current route first.'
-                ]);
-                return;
-            }
-    
-            // Get the last stop order for the route
-            $lastStopOrder = $this->routeModel->getLastStopOrder($routeId);
-            $newStopOrder = $lastStopOrder + 1;
-    
-            // Add supplier to route
-            if ($this->routeModel->addSupplierToRoute($routeId, $supplierId, $newStopOrder)) {
-                // Update the remaining capacity
-                $this->routeModel->updateRemainingCapacity($routeId, 'add');
-                echo json_encode(['success' => true]);
-            } else {
-                echo json_encode([
-                    'success' => false, 
-                    'message' => 'Failed to subscribe to route'
-                ]);
-            }
-        } catch (Exception $e) {
-            echo json_encode([
-                'success' => false, 
-                'message' => $e->getMessage()
-            ]);
-        }
-    }
 
-    public function unsubscribeFromRoute()
-    {
-        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-            redirect('supplier/schedule');
-        }
-
-        $routeId = $this->routeModel->getRouteIdByScheduleId($_POST['schedule_id']) ?? null;
-        $supplierId = $_SESSION['supplier_id'];
-
-        try {
-            
-            // Remove supplier from route
-            if ($this->routeModel->removeSupplierFromRoute($routeId, $supplierId)) {
-                $this->routeModel->updateRemainingCapacity($routeId, 'remove');
-                // Adjust stop orders for remaining suppliers
-                
-                echo json_encode(['success' => true]);
-            } else {
-                echo json_encode([
-                    'success' => false, 
-                    'message' => 'Failed to unsubscribe from route'
-                ]);
-            }
-        } catch (Exception $e) {
-            echo json_encode([
-                'success' => false, 
-                'message' => $e->getMessage()
-            ]);
-        }
-    }
 
     public function toggleAvailability() {
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
