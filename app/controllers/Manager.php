@@ -54,7 +54,7 @@ class Manager extends Controller
         requireAuth();
 
         // Check if user has Vehicle Manager OR Admin role
-        if (!RoleHelper::hasAnyRole([RoleHelper::ADMIN, RoleHelper::VEHICLE_MANAGER])) {
+        if (!RoleHelper::hasAnyRole([RoleHelper::ADMIN, RoleHelper::MANAGER])) {
             // Redirect unauthorized access
             flash('message', 'Unauthorized access', 'alert alert-danger');
             redirect('');

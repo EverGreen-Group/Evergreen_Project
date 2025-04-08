@@ -150,5 +150,13 @@ class M_Appointment {
         return $this->db->execute();
     }
 
+    public function hasAlreadyRequested($slotId, $supplierId) {
+        $this->db->query("SELECT * FROM appointment_requests WHERE slot_id = :slot_id AND supplier_id = :supplier_id");
+        $this->db->bind(':slot_id', $slotId);
+        $this->db->bind(':supplier_id', $supplierId);
+        return $this->db->single(); 
+    }
+    
+
 }
 ?>

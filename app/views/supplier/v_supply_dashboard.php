@@ -71,7 +71,7 @@
                 <div class="action-icon">
                     <i class='bx bx-calendar'></i>
                 </div>
-                <div class="action-text">Manage Your Schedule Subscription</div>
+                <div class="action-text">View Schedule</div>
                 <a href="<?php echo URLROOT; ?>/supplier/schedule" class="action-button">
                     <div class="button-content">
                         <i class='bx bx-calendar-edit'></i>
@@ -87,7 +87,7 @@
                     <i class='bx bx-history'></i>
                 </div>
                 <div class="action-text">View Past Collections</div>
-                <a href="<?php echo URLROOT; ?>/supplier/pastCollections" class="action-button">
+                <a href="<?php echo URLROOT; ?>/supplier/collections" class="action-button">
                     <div class="button-content">
                         <i class='bx bx-list-ul'></i>
                         <span>Access Past Collections</span>

@@ -117,6 +117,7 @@ class M_Collection {
         $this->db->query("
             SELECT 
                 c.collection_id,
+                c.status,
                 c.created_at,
                 cs.driver_id,
                 r.vehicle_id,
@@ -132,6 +133,20 @@ class M_Collection {
         ");
         
         $this->db->bind(':supplier_id', $supplierId);
+        return $this->db->resultSet();
+    }
+
+    public function getSupplierBagsForCollection($supplier_id, $collection_id) {
+        $this->db->query('SELECT bag_id, actual_weight_kg, leaf_age, moisture_level, 
+                          deduction_notes, timestamp, leaf_type_id, is_finalized 
+                          FROM bag_usage_history 
+                          WHERE collection_id = :collection_id 
+                          AND supplier_id = :supplier_id 
+                          ORDER BY timestamp DESC');
+        
+        $this->db->bind(':collection_id', $collection_id);
+        $this->db->bind(':supplier_id', $supplier_id);
+        
         return $this->db->resultSet();
     }
     

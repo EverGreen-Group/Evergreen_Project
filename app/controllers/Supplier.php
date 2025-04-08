@@ -126,42 +126,52 @@ class Supplier extends Controller {
     
     public function requestTimeSlot() {
         if ($_SERVER['REQUEST_METHOD'] == 'POST') {
-            // Validate the slot ID
+    
             if (!isset($_POST['slot_id']) || empty($_POST['slot_id'])) {
                 flash('request_message', 'Invalid time slot.', 'alert alert-error');
                 redirect('Supplier/viewAppointments');
                 return;
             }
-            
-            // Check if the slot is still available
-            $slot = $this->appointmentModel->getSlotById($_POST['slot_id']);
+    
+            $slotId = trim($_POST['slot_id']);
+            $supplierId = $_SESSION['supplier_id'];
+    
+            // Check if the slot is available
+            $slot = $this->appointmentModel->getSlotById($slotId);
             if (!$slot || $slot->status !== 'Available') {
                 flash('request_message', 'This time slot is no longer available.', 'alert alert-error');
                 redirect('Supplier/viewAppointments');
                 return;
             }
-            
-            // Prepare data for the request
+    
+            // Check if this supplier has already requested this slot
+            if ($this->appointmentModel->hasAlreadyRequested($slotId, $supplierId)) {
+                flash('request_message', 'You have already requested this time slot.', 'alert alert-warning');
+                redirect('Supplier/viewAppointments');
+                return;
+            }
+    
+            // Prepare request data
             $data = [
-                'supplier_id' => $_SESSION['supplier_id'],
-                'slot_id' => trim($_POST['slot_id']),
+                'supplier_id' => $supplierId,
+                'slot_id' => $slotId,
                 'status' => 'Pending',
                 'submitted_at' => date('Y-m-d H:i:s')
             ];
-            
-            // Create the request
+    
+            // Insert the request
             if ($this->appointmentModel->createRequest($data)) {
                 flash('request_message', 'Time slot requested successfully.');
             } else {
                 flash('request_message', 'Failed to request time slot.', 'alert alert-error');
             }
-            
+    
             redirect('Supplier/viewAppointments');
         } else {
-            // Redirect if accessed directly without POST
             redirect('Supplier/viewAppointments');
         }
     }
+    
     
     public function cancelRequest($id = null) {
         // Validate the request ID
@@ -273,9 +283,67 @@ class Supplier extends Controller {
 
     public function profile()
     {
-        $data = [];
-
+        $userId = $_SESSION['user_id'];
+        
+        $profileData = $this->supplierModel->getSupplierProfile($userId);
+        
+        if (!$profileData) {
+            flash('profile_message', 'Unable to load profile information', 'alert alert-error');
+            redirect('Supplier/dashboard');
+        }
+        
+        $data = $profileData;
+        
         $this->view('supplier/v_profile', $data);
+    }
+    
+    public function updateProfile()
+    {
+        if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+            $userId = $_SESSION['user_id'];
+            
+
+            $profileData = $this->supplierModel->getSupplierProfile($userId);
+            
+            $data = [
+                'supplier_id' => $profileData['supplier']->supplier_id,
+                'profile_id' => $profileData['profile']->profile_id,
+                'supplier_contact' => trim($_POST['supplier_contact']),
+                'account_holder_name' => trim($_POST['account_holder_name']),
+                'bank_name' => trim($_POST['bank_name']),
+                'branch_name' => trim($_POST['branch_name']),
+                'account_type' => $_POST['account_type'],
+                'image_path' => ''
+            ];
+            
+
+            if (!empty($_FILES['profile_image']['name'])) {
+                $uploadDir = 'uploads/profile_photos/';
+                
+                if (!file_exists($uploadDir)) {
+                    mkdir($uploadDir, 0777, true);
+                }
+                
+                $fileName = uniqid() . '_' . $_FILES['profile_image']['name'];
+                $uploadPath = $uploadDir . $fileName;
+                
+                if (move_uploaded_file($_FILES['profile_image']['tmp_name'], $uploadPath)) {
+                    $data['image_path'] = $uploadPath;
+                } else {
+                    flash('profile_message', 'Error uploading image', 'alert alert-error');
+                    redirect('Supplier/profile');
+                }
+            }
+            if ($this->supplierModel->updateSupplierProfile($data)) {
+                flash('profile_message', 'Profile updated successfully');
+                redirect('Supplier/profile');
+            } else {
+                flash('profile_message', 'Error updating profile', 'alert alert-error');
+                redirect('Supplier/profile');
+            }
+        } else {
+            redirect('Supplier/profile');
+        }
     }
 
     public function cancelpickup()
@@ -781,6 +849,36 @@ class Supplier extends Controller {
         } else {
             redirect('supplier/'); // Redirect if not a POST request
         }
+    }
+
+
+    public function collections() {
+        
+        $supplierId = $_SESSION['supplier_id'];
+
+        $collections = $this->collectionModel->getSupplierCollections($supplierId);
+        
+        $data = [
+            'collections' => $collections
+        ];
+        
+        $this->view('supplier/v_view_collection', $data);
+    }
+
+    public function collectionBags($collection_id) {
+
+
+        $supplier_id = $_SESSION['supplier_id'];
+        
+        // Get bags for this collection that belong to this supplier
+        $bags = $this->collectionModel->getSupplierBagsForCollection($supplier_id, $collection_id);
+        
+        $data = [
+            'collection_id' => $collection_id,
+            'bags' => $bags
+        ];
+        
+        $this->view('supplier/v_collection_bags', $data);
     }
 }
 ?>
