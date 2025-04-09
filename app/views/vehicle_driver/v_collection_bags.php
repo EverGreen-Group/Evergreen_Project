@@ -24,6 +24,8 @@
             </ul>
         </div>
     </div>
+
+
     
     <!-- Supplier Info -->
     <div class="panel">
@@ -42,6 +44,18 @@
             </div>
         </div>
     </div>
+
+    <?php if (isset($data['flash'])): ?>
+        <div class="alert alert-warning">
+            <strong>Error!</strong> <?php echo htmlspecialchars($data['flash']); ?>
+        </div>
+    <?php endif; ?>
+
+    <?php if (isset($data['flash_success'])): ?>
+        <div class="alert alert-success">
+            <strong>Success!</strong> <?php echo htmlspecialchars($data['flash_success']); ?>
+        </div>
+    <?php endif; ?>
 
     <!-- Bags List Section -->
     <div class="panel">
@@ -140,3 +154,28 @@
         }
     }
 </script> 
+
+
+<style>
+.alert {
+    padding: 15px;
+    border-radius: 5px;
+    background-color: #f8d7da;
+    color: #721c24; 
+    border: 1px solid #f5c6cb; 
+    margin-bottom: 20px; 
+}
+
+.alert-success {
+    padding: 15px;
+    border-radius: 5px;
+    background-color: #d4edda; 
+    color: #155724; 
+    border: 1px solid #c3e6cb; 
+    margin-bottom: 20px; 
+}
+
+.alert strong {
+    font-weight: bold; 
+}
+</style>

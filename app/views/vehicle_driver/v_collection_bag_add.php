@@ -5,7 +5,6 @@
 <script src="https://unpkg.com/@zxing/library@latest"></script>
 
 <main>
-    <!-- Page Header -->
     <div class="head-title">
         <div class="left">
             <h1>Add New Bag</h1>
@@ -30,6 +29,12 @@
         </div>
     </div>
     
+    <?php if (isset($data['flash'])): ?>
+        <div class="alert alert-warning">
+            <?php echo htmlspecialchars($data['flash']); ?>
+        </div>
+    <?php endif; ?>
+
     <!-- Bag Scanning Section -->
     <div id="bagScanningSection" class="panel">
         <div class="panel-header">
@@ -146,7 +151,6 @@
         }
     }
     
-    // Cancel bag details entry
     function cancelBagDetails() {
         window.location.href = `<?php echo URLROOT; ?>/vehicledriver/collectionBags/<?php echo $data['collection']->collection_id; ?>/<?php echo $data['supplier']['id']; ?>`;
     }

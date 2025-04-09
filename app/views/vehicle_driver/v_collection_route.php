@@ -8,10 +8,8 @@
     const collections = <?php echo json_encode($data['collections']); ?>;
     const collectionId = <?php echo $data['collection']->collection_id; ?>;
 </script>
-<script src="<?php echo URLROOT; ?>/public/js/vehicle_driver/collection_route_suppliers.js"></script>
 
 <main>
-    <?php print_r($data); ?>
     <div class="head-title">
         <div class="left">
             <h1>Collection Route</h1>
@@ -93,7 +91,7 @@
             </div>
         </div>
 
-        <!-- Remaining Suppliers Section -->
+        <!-- REMAINING SUPPLIERS -->
         <div class="panel">
             <div class="panel-header">
                 <h3>Remaining Suppliers</h3>
@@ -102,10 +100,12 @@
                     // Use collections array if remainingSuppliers is not set
                     $remainingCount = 0;
                     if (isset($data['collections'])) {
-                        // Count suppliers that aren't the current one
+                        // Count suppliers that aren't the current one and are not 'Collected' or 'No Show'
                         foreach ($data['collections'] as $supplier) {
                             if (!isset($data['currentSupplier']) || $supplier['id'] != $data['currentSupplier']['id']) {
-                                $remainingCount++;
+                                if ($supplier['status'] != 'Collected' && $supplier['status'] != 'No Show') {
+                                    $remainingCount++;
+                                }
                             }
                         }
                     }
@@ -123,12 +123,14 @@
                     <div class="suppliers-list">
                         <?php foreach ($data['collections'] as $supplier): ?>
                             <?php if (!isset($data['currentSupplier']) || $supplier['id'] != $data['currentSupplier']['id']): ?>
-                                <div class="supplier-item">
-                                    <div class="supplier-info">
-                                        <span class="supplier-name"><?php echo $supplier['supplierName']; ?></span>
-                                        <span class="supplier-estimate"><?php echo $supplier['estimatedCollection']; ?>kg</span>
+                                <?php if ($supplier['status'] != 'Collected' && $supplier['status'] != 'No Show'): ?>
+                                    <div class="supplier-item">
+                                        <div class="supplier-info">
+                                            <span class="supplier-name"><?php echo $supplier['supplierName']; ?></span>
+                                            <span class="supplier-estimate"><?php echo $supplier['estimatedCollection']; ?>kg</span>
+                                        </div>
                                     </div>
-                                </div>
+                                <?php endif; ?>
                             <?php endif; ?>
                         <?php endforeach; ?>
                     </div>

@@ -549,6 +549,8 @@ class M_Collection {
 
         // If bag is currently in use in another collection
         if ($bag->active_collection_id) {
+            // Set flash message for occupied bag
+            $_SESSION['flash'] = 'This bag is currently in use in collection #' . $bag->active_collection_id;
             return [
                 'success' => false,
                 'message' => 'This bag is currently in use in collection #' . $bag->active_collection_id

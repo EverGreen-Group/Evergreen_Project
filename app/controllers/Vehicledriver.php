@@ -323,7 +323,7 @@ class VehicleDriver extends controller {
         $currentSupplier = null;
         
         foreach ($collectionSuppliers as $supplier) {
-            if (!$currentSupplier && !$supplier->arrival_time && $supplier->status != 'Collected') {
+            if (!$currentSupplier && !$supplier->arrival_time && $supplier->status != 'Collected' && $supplier->status != 'No Show') {
                 $currentSupplier = $formatSupplier($supplier);
             }
             
@@ -721,6 +721,17 @@ class VehicleDriver extends controller {
             'supplier' => $formattedSupplier,
             'bags' => $bags
         ];
+
+        // simple flash implementation, must create function l8tr
+        if (isset($_SESSION['flash'])) {
+            $data['flash'] = $_SESSION['flash'];
+            unset($_SESSION['flash']); 
+        }
+        
+        if (isset($_SESSION['flash_success'])) {
+            $data['flash_success'] = $_SESSION['flash_success'];
+            unset($_SESSION['flash_success']); 
+        }
         
         $this->view('vehicle_driver/v_collection_bags', $data);
     }
@@ -729,17 +740,12 @@ class VehicleDriver extends controller {
      * Show add bag form
      */
     public function addBag($collectionId, $supplierId) {
-        // Get the collection details
         $collection = $this->collectionModel->getCollectionDetails($collectionId);
-        
-        // Get the supplier details
         $supplier = $this->supplierModel->getSupplierById($supplierId);
         
-        // Get leaf types for dropdown
         $leafTypesResult = $this->collectionModel->getCollectionTeaLeafTypes();
         $leafTypes = $leafTypesResult['success'] ? $leafTypesResult['leafTypes'] : [];
         
-        // Format supplier data
         $formattedSupplier = [
             'id' => $supplier->supplier_id,
             'supplierName' => $supplier->supplier_name,
@@ -754,6 +760,12 @@ class VehicleDriver extends controller {
             'supplier' => $formattedSupplier,
             'leafTypes' => $leafTypes
         ];
+
+        // Check for flash message
+        if (isset($_SESSION['flash'])) {
+            $data['flash'] = $_SESSION['flash'];
+            unset($_SESSION['flash']); 
+        }
         
         $this->view('vehicle_driver/v_collection_bag_add', $data);
     }
@@ -766,8 +778,7 @@ class VehicleDriver extends controller {
         if ($_SERVER['REQUEST_METHOD'] != 'POST') {
             redirect('vehicledriver/dashboard');
         }
-        
-        // Sanitize and validate POST data
+
         $collectionId = filter_input(INPUT_POST, 'collection_id', FILTER_SANITIZE_NUMBER_INT);
         $supplierId = filter_input(INPUT_POST, 'supplier_id', FILTER_SANITIZE_NUMBER_INT);
         $bagId = filter_input(INPUT_POST, 'bag_id', FILTER_SANITIZE_STRING);
@@ -776,6 +787,19 @@ class VehicleDriver extends controller {
         $leafAge = filter_input(INPUT_POST, 'leaf_age', FILTER_SANITIZE_STRING);
         $moistureLevel = filter_input(INPUT_POST, 'moisture_level', FILTER_SANITIZE_STRING);
         $notes = filter_input(INPUT_POST, 'notes', FILTER_SANITIZE_STRING);
+        
+        // Validation for actual weight
+        if ($actualWeight <= 0) {
+            $_SESSION['flash'] = 'Actual weight must be a positive value.';
+            redirect("vehicledriver/collectionBags/$collectionId/$supplierId");
+            return; 
+        }
+
+        if ($actualWeight > 40) {
+            $_SESSION['flash'] = 'Actual weight cannot exceeds bag weight';
+            redirect("vehicledriver/collectionBags/$collectionId/$supplierId");
+            return; 
+        }
         
         $bagData = [
             'collection_id' => $collectionId,
@@ -788,11 +812,15 @@ class VehicleDriver extends controller {
             'notes' => $notes
         ];
         
-        $this->collectionModel->saveBag($bagData);
+        $result = $this->collectionModel->saveBag($bagData);
 
-        
-        // Redirect back to bags list
-        redirect("vehicledriver/collectionBags/$collectionId/$supplierId");
+        if (!$result['success']) {
+            $_SESSION['flash'] = $result['message'];
+            redirect("vehicledriver/collectionBags/$collectionId/$supplierId");
+        } else {
+            $_SESSION['flash_success'] = 'Bag added successfully!';
+            redirect("vehicledriver/collectionBags/$collectionId/$supplierId");
+        }
     }
 
     /**
