@@ -265,13 +265,6 @@ class M_SupplierApplication {
         return $this->db->single();
     }
 
-    public function getAddress($applicationId) {
-        $this->db->query('SELECT * FROM application_addresses 
-                          WHERE application_id = :application_id');
-        $this->db->bind(':application_id', $applicationId);
-        return $this->db->single();
-    }
-
     public function getApplicationById($applicationId) {
         $this->db->query("
         SELECT supplier_applications.*, users.email, managers.manager_id, CONCAT(profiles.first_name, ' ', profiles.last_name) AS manager_name 
@@ -328,11 +321,11 @@ class M_SupplierApplication {
         $this->db->beginTransaction();
         
         try {
-
+            // Insert into profiles without emergency contact
             $this->db->query("INSERT INTO profiles (user_id, first_name, last_name, nic, date_of_birth, 
-                             contact_number, emergency_contact, address_line1, address_line2, city) 
+                             contact_number) 
                              VALUES (:user_id, :first_name, :last_name, :nic, :date_of_birth, 
-                             :contact_number, :emergency_contact, :address_line1, :address_line2, :city)");
+                             :contact_number)");
             
             $this->db->bind(':user_id', $profileData['user_id']);
             $this->db->bind(':first_name', $profileData['first_name']);
@@ -340,28 +333,25 @@ class M_SupplierApplication {
             $this->db->bind(':nic', $profileData['nic']);
             $this->db->bind(':date_of_birth', $profileData['date_of_birth']);
             $this->db->bind(':contact_number', $profileData['contact_number']);
-            $this->db->bind(':emergency_contact', $profileData['emergency_contact']);
-            $this->db->bind(':address_line1', $profileData['address_line1']);
-            $this->db->bind(':address_line2', $profileData['address_line2']);
-            $this->db->bind(':city', $profileData['city']);
             
             if (!$this->db->execute()) {
                 throw new Exception("Failed to create profile");
             }
             
-            // uploading the photo, must double check again
+            // Uploading the photo
             $profilePhotoPath = null;
             if (isset($profilePhoto) && $profilePhoto['error'] === UPLOAD_ERR_OK) {
                 $profilePhotoPath = $this->uploadProfilePhoto($profilePhoto);
             }
             
-            // inserting the path tot the application
-            $this->db->query('INSERT INTO supplier_applications (user_id, status, profile_photo) 
-                             VALUES (:user_id, :status, :profile_photo)');
+            // Inserting the path to the application with address
+            $this->db->query('INSERT INTO supplier_applications (user_id, status, profile_photo, address) 
+                             VALUES (:user_id, :status, :profile_photo, :address)');
             
             $this->db->bind(':user_id', $applicationData['user_id']);
             $this->db->bind(':status', 'pending');
             $this->db->bind(':profile_photo', $profilePhotoPath);
+            $this->db->bind(':address', $profileData['address']); // Insert address into supplier_applications
             
             if (!$this->db->execute()) {
                 throw new Exception("Failed to insert main application");
@@ -369,7 +359,7 @@ class M_SupplierApplication {
             
             $applicationId = $this->db->lastInsertId();
             
-            // tea cult and location
+            // Tea cultivation and location
             $this->db->query('UPDATE supplier_applications 
                              SET latitude = :latitude, longitude = :longitude,
                                  tea_cultivation_area = :tea_cultivation_area,
@@ -388,7 +378,7 @@ class M_SupplierApplication {
                 throw new Exception("Failed to update application with location and cultivation data");
             }
 
-            // uploads, must check the command to give permission.
+            // Document uploads
             foreach ($documents as $type => $file) {
                 try {
                     $filePath = $this->uploadDocument($file, $type);
@@ -403,7 +393,6 @@ class M_SupplierApplication {
                             VALUES 
                             ($safeApplicationId, $safeType, $safeFilePath)";
                     
-
                     $result = $this->db->executeRawQuery($sql);
                     
                     if (!$result) {

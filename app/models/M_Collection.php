@@ -668,7 +668,6 @@ class M_Collection {
                 c.end_time,
                 c.total_quantity,
                 c.bags,
-                c.fertilizer_distributed,
                 
                 cs.schedule_id,
                 cs.day,

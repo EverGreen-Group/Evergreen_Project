@@ -71,12 +71,6 @@
                                     <input type="text" id="contact_number" name="contact_number" required>
                                 </div>
                             </div>
-                            <div class="col-md-6">
-                                <div class="form-group">
-                                    <label for="emergency_contact">Emergency Contact:</label>
-                                    <input type="text" id="emergency_contact" name="emergency_contact">
-                                </div>
-                            </div>
                         </div>
                     </div>
                     
@@ -85,18 +79,8 @@
                         <h3>Address Information</h3>
                         
                         <div class="form-group">
-                            <label for="address_line1">Address Line 1:</label>
-                            <input type="text" id="address_line1" name="address_line1" required>
-                        </div>
-                        
-                        <div class="form-group">
-                            <label for="address_line2">Address Line 2:</label>
-                            <input type="text" id="address_line2" name="address_line2">
-                        </div>
-                        
-                        <div class="form-group">
-                            <label for="city">City:</label>
-                            <input type="text" id="city" name="city" required>
+                            <label for="address">Address:</label>
+                            <input type="text" id="address" name="address" required>
                         </div>
                     </div>
 

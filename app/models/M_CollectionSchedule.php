@@ -278,7 +278,8 @@ class M_CollectionSchedule {
                 CONCAT(p.first_name, ' ', p.last_name) AS supplier_name,
                 p.image_path,
                 csr.arrival_time,
-                rs.stop_order
+                rs.stop_order,
+                s.address
             FROM collection_supplier_records csr
             JOIN collections c ON csr.collection_id = c.collection_id
             JOIN collection_schedules cs ON c.schedule_id = cs.schedule_id

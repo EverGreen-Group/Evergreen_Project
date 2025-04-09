@@ -172,7 +172,7 @@ class Manager extends Controller
         1. we need to update the application status (that is already done)
         2. we need to create a supplier account for this user
         3. we need to copy the details from the application to suppliers entry
-        4. we need to change the users role to 5 for supplier accees
+        4. we need to change the users role to 5 for supplier access
         -simaak
         */
 
@@ -181,7 +181,7 @@ class Manager extends Controller
         $application = $supplierApplicationModel->getApplicationById($applicationId);
 
         if (!$application) {
-            // small validation, but if we are here then ofc the application exists
+            // small validation, but if we are here then of course the application exists
             redirect('manager/');
         }
 
@@ -192,8 +192,7 @@ class Manager extends Controller
         }
 
         $profile = $userModel->getProfileByUserId($application->user_id);
-        $supplierExpectedAmount  = ($application->monthly_production)/4.0;
-
+        $supplierExpectedAmount  = ($application->monthly_production) / 4.0;
 
         // Create supplier data array
         $supplierData = [
@@ -202,6 +201,7 @@ class Manager extends Controller
             'application_id' => $applicationId,
             'latitude' => $application->latitude,
             'longitude' => $application->longitude,
+            'address' => $application->address, // Include address from application
             'is_active' => 1,
             'is_deleted' => 0,
             'number_of_collections' => 0,

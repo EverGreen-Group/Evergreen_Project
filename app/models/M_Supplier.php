@@ -26,8 +26,8 @@ class M_Supplier {
     /* CREATE SUPPLIER!!! THIS HAPPENS INSIDE THE APPLICATION */
     public function createSupplier($data) {
         $this->db->query('
-            INSERT INTO suppliers (profile_id, contact_number, application_id, latitude, longitude, is_active, is_deleted, number_of_collections, average_collection)
-            VALUES (:profile_id, :contact_number, :application_id, :latitude, :longitude, :is_active, :is_deleted, :number_of_collections, :average_collection)
+            INSERT INTO suppliers (profile_id, contact_number, application_id, latitude, longitude, address, is_active, is_deleted, number_of_collections, average_collection)
+            VALUES (:profile_id, :contact_number, :application_id, :latitude, :longitude, :address, :is_active, :is_deleted, :number_of_collections, :average_collection)
         ');
     
         $this->db->bind(':profile_id', $data['profile_id']);
@@ -35,6 +35,7 @@ class M_Supplier {
         $this->db->bind(':application_id', $data['application_id']);
         $this->db->bind(':latitude', $data['latitude']);
         $this->db->bind(':longitude', $data['longitude']);
+        $this->db->bind(':address', $data['address']);
         $this->db->bind(':is_active', $data['is_active']);
         $this->db->bind(':is_deleted', $data['is_deleted']);
         $this->db->bind(':number_of_collections', $data['number_of_collections']);

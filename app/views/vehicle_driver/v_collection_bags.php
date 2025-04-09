@@ -38,10 +38,6 @@
                 </div>
                 <div class="supplier-details">
                     <h4><?php echo $data['supplier']['supplierName']; ?></h4>
-                    <p class="expected-amount">
-                        <i class='bx bx-leaf'></i>
-                        <?php echo $data['supplier']['estimatedCollection']; ?>kg expected
-                    </p>
                 </div>
             </div>
         </div>

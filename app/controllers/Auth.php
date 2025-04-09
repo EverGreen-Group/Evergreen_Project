@@ -228,10 +228,7 @@ class Auth extends Controller
                     'nic' => trim($_POST['nic_number']),
                     'date_of_birth' => trim($_POST['date_of_birth']),
                     'contact_number' => trim($_POST['contact_number']),
-                    'emergency_contact' => !empty($_POST['emergency_contact']) ? trim($_POST['emergency_contact']) : null,
-                    'address_line1' => trim($_POST['address_line1']),
-                    'address_line2' => !empty($_POST['address_line2']) ? trim($_POST['address_line2']) : null,
-                    'city' => trim($_POST['city'])
+                    'address' => trim($_POST['address'])
                 ];
 
                 $applicationData = [

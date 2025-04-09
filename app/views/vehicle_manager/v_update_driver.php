@@ -65,18 +65,6 @@
                         <label class="label" for="emergency_contact">Emergency Contact:</label>
                         <input type="tel" id="emergency_contact" name="emergency_contact" class="form-control" value="<?php echo htmlspecialchars($data['profile']->emergency_contact); ?>" required>
                     </div>
-                    <div class="info-row">
-                        <label class="label" for="address_line1">Address Line 1:</label>
-                        <input type="text" id="address_line1" name="address_line1" class="form-control" value="<?php echo htmlspecialchars($data['profile']->address_line1); ?>" required>
-                    </div>
-                    <div class="info-row">
-                        <label class="label" for="address_line2">Address Line 2:</label>
-                        <input type="text" id="address_line2" name="address_line2" class="form-control" value="<?php echo htmlspecialchars($data['profile']->address_line2); ?>">
-                    </div>
-                    <div class="info-row">
-                        <label class="label" for="city">City:</label>
-                        <input type="text" id="city" name="city" class="form-control" value="<?php echo htmlspecialchars($data['profile']->city); ?>" required>
-                    </div>
                 </div>
             </div>
         </div>

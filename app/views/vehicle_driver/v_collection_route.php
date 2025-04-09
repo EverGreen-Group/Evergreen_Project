@@ -11,7 +11,7 @@
 <script src="<?php echo URLROOT; ?>/public/js/vehicle_driver/collection_route_suppliers.js"></script>
 
 <main>
-    <!-- Page Header -->
+    <?php print_r($data); ?>
     <div class="head-title">
         <div class="left">
             <h1>Collection Route</h1>
@@ -54,20 +54,20 @@
                             </button>
                         </form>
                     </div>
-                <?php else: ?>
+                <?php else:?>
                     <div class="supplier-profile">
                         <div class="supplier-avatar">
                             <img src="<?php echo htmlspecialchars(URLROOT . '/' . $data['currentSupplier']['image']); ?>" alt="Supplier">
                         </div>
                         <div class="supplier-details">
                             <h4><?php echo $data['currentSupplier']['supplierName']; ?></h4>
-                            <p class="expected-amount">
-                                <i class='bx bx-leaf'></i>
-                                <?php echo $data['currentSupplier']['estimatedCollection']; ?>kg expected
-                            </p>
                             <p class="supplier-contact">
                                 <i class='bx bx-phone'></i>
                                 <?php echo $data['currentSupplier']['contact']; ?>
+                            </p>
+                            <p class="supplier-contact">
+                                <i class='bx bx-map-pin'></i>
+                                <?php echo $data['currentSupplier']['address']; ?>
                             </p>
                         </div>
                     </div>
@@ -76,10 +76,18 @@
                             <i class='bx bx-package'></i>
                             Manage Bags
                         </a>
-                        <a href="<?php echo URLROOT; ?>/vehicledriver/skipSupplier/<?php echo $data['collection']->collection_id; ?>/<?php echo $data['currentSupplier']['id']; ?>" class="action-btn">
-                            <i class='bx bx-skip-next'></i>
-                            Skip Supplier
+                        <a href="<?php echo URLROOT; ?>/vehicledriver/cancelSupplierCollection/<?php echo $data['collection']->collection_id; ?>/<?php echo $data['currentSupplier']['id']; ?>" class="btn btn-tertiary">
+                            <i class='bx bx-cross'></i>
+                            Cancel Supplier
                         </a>
+                        <button class="action-btn" onclick="window.location.href='tel:<?php echo $data['currentSupplier']['contact']; ?>'">
+                            <i class='bx bx-phone'></i>
+                            Call Supplier
+                        </button>
+                        <button class="action-btn" onclick="window.open('https://www.google.com/maps/dir/?api=1&destination=<?php echo $data['currentSupplier']['location']['lat']; ?>,<?php echo $data['currentSupplier']['location']['lng']; ?>', '_blank')">
+                            <i class='bx bx-map'></i>
+                            Get Directions
+                        </button>
                     </div>
                 <?php endif; ?>
             </div>

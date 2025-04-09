@@ -288,22 +288,18 @@ class VehicleDriver extends controller {
         $this->view('vehicle_driver/v_personal_details', $data);
     }
 
-    public function logout() {
-        // Handle logout functionality
-    }
+
 
     public function collection($collectionId) {
-        // Get the necessary data
         $collection = $this->collectionModel->getCollectionDetails($collectionId);
         $driverLocation = $this->getCurrentDriverLocation();
         $vehicleLocation = $this->vehicleModel->getVehicleLocation($collection->vehicle_id);
         $collectionSuppliers = $this->collectionScheduleModel->getCollectionSupplierRecords($collectionId);
         
-        // Process leaf types
         $leafTypesResult = $this->collectionModel->getCollectionTeaLeafTypes();
         $leafTypes = $leafTypesResult['success'] ? $leafTypesResult['leafTypes'] : [];
     
-        // Create a helper function to format supplier data
+
         $formatSupplier = function($supplier) {
             return [
                 'id' => $supplier->supplier_id,
@@ -323,17 +319,14 @@ class VehicleDriver extends controller {
             ];
         };
     
-        // Format all suppliers (excluding collected ones)
         $formattedSuppliers = [];
         $currentSupplier = null;
         
         foreach ($collectionSuppliers as $supplier) {
-            // If we haven't found a current supplier yet and this one qualifies
             if (!$currentSupplier && !$supplier->arrival_time && $supplier->status != 'Collected') {
                 $currentSupplier = $formatSupplier($supplier);
             }
             
-            // Add all non-collected suppliers to the formatted list
             if ($supplier->status !== 'Collected') {
                 $formattedSuppliers[] = $formatSupplier($supplier);
             }
@@ -943,25 +936,14 @@ class VehicleDriver extends controller {
         redirect('vehicledriver/');
     }
 
-    public function cancelSupplierCollection($recordId) {
+    public function cancelSupplierCollection($collectionId, $supplierId) {
 
         // We have to follow some steps. 
         // We intially need to check the bag_usage_history for that supplier_id and collection_id, 
         // if its empty we may proceed to the next step.
 
 
-        // Check if there are any bags for this supplier in this collection
-        $collectionSupplierRecord = $this->collectionModel->getCollectionSupplierRecordById($recordId);
-        
-        if (!$collectionSupplierRecord) {
-            // Record not found
-            flash('collection_error', 'Collection supplier record not found', 'alert alert-danger');
-            redirect('vehicledriver/dashboard');
-            return;
-        }
-        
-        $collectionId = $collectionSupplierRecord->collection_id;
-        $supplierId = $collectionSupplierRecord->supplier_id;
+
         
         // Check if there are any bags for this supplier in this collection
         $bags = $this->collectionModel->getBagsByCollectionAndSupplier($collectionId, $supplierId);
@@ -969,19 +951,18 @@ class VehicleDriver extends controller {
         if (!empty($bags)) {
             // Cannot cancel if bags exist
             flash('collection_error', 'Cannot cancel collection as bags have already been recorded', 'alert alert-danger');
-            redirect("vehicledriver/viewCollection/$collectionId");
+            redirect("vehicledriver/collectionBags/$collectionId/$supplierId");
             return;
         }
         
         // Update the status to 'No Show'
-        if ($this->collectionModel->updateSupplierCollectionStatus($recordId, 'No Show')) {
+        if ($this->collectionModel->updateSupplierCollectionStatus($collectionId, $supplierId, 'No Show')) {
             flash('collection_success', 'Supplier collection marked as No Show', 'alert alert-success');
         } else {
             flash('collection_error', 'Failed to update collection status', 'alert alert-danger');
         }
-        
-        // Redirect back to the collection view
-        redirect("vehicledriver/viewCollection/$collectionId");
+
+        redirect("vehicledriver/collection/$collectionId");
     }
 
 }

@@ -56,7 +56,6 @@
             <?php endif; ?>
 
             <?php if (RoleHelper::hasRole(RoleHelper::DRIVER)): ?>
-                <li><a href="<?php echo URLROOT; ?>/driver/trips">Driver Profile</a></li>
             <?php endif; ?>
 
             <?php if (RoleHelper::hasRole(RoleHelper::WEBSITE_USER)): ?>

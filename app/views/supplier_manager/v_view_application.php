@@ -96,21 +96,9 @@
                     <span class="label">Contact Number:</span>
                     <span class="value"><?= $data['profile']->contact_number ?></span>
                 </div>
-                <?php if (!empty($data['profile']->emergency_contact)): ?>
-                <div class="info-row">
-                    <span class="label">Emergency Contact:</span>
-                    <span class="value"><?= $data['profile']->emergency_contact ?></span>
-                </div>
-                <?php endif; ?>
                 <div class="info-row">
                     <span class="label">Address:</span>
-                    <span class="value">
-                        <?= $data['profile']->address_line1 ?><br>
-                        <?php if (!empty($data['profile']->address_line2)): ?>
-                            <?= $data['profile']->address_line2 ?><br>
-                        <?php endif; ?>
-                        <?= $data['profile']->city ?>
-                    </span>
+                    <span class="value"><?= $data['application']['address'] ?></span>
                 </div>
             </div>
         </div>
