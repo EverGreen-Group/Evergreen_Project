@@ -92,8 +92,7 @@ class M_CollectionSchedule {
                 cs.schedule_id,
                 cs.day,
                 r.route_name,
-                v.vehicle_type,
-                v.license_plate,
+                v.*,
                 cs.start_time,
                 cs.end_time,
                 CASE 

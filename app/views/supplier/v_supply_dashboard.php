@@ -39,8 +39,8 @@
             </div>
         </div>
     </div>
-
-    <!-- <div class="stats-container">
+<!-- 
+    <div class="stats-container">
         <div class="stat-item">
             <div class="stat-header">
                 <i class='bx bxs-calendar-check'></i>
@@ -105,11 +105,8 @@
 
         <div class="schedule-content">
             <?php if (!empty($data['todaySchedules'])): ?>
-                <?php $schedule = $data['todaySchedules'][0]; // Access the first schedule ?>
+                <?php $schedule = $data['todaySchedules'][0];?>
                 <div class="collection-card">
-                    <div class="collection-header">
-                        <div class="collection-badge">Collection Schedule #<?php echo $schedule->schedule_id; ?></div>
-                    </div>
                     
                     <div class="collection-details">
                         <div class="details-row">
@@ -136,19 +133,19 @@
                             </div>
                         </div>
                         
-                        <div class="details-row">
+                        <!-- <div class="details-row">
                             <div class="detail-item">
                                 <i class='bx bx-check-circle'></i>
                                 <span>Current Status: <?php echo $schedule->schedule_status; ?></span>
                             </div>
-                        </div>
+                        </div> -->
                     </div>
                     
                     <div class="collection-status">
                         <?php if (!empty($data['collectionId'])): ?>
-                            <a href="<?php echo URLROOT; ?>/Supplier/collection/<?php echo $data['collectionId']; ?>" class="view-details-link">
+                            <a href="<?php echo URLROOT; ?>/supplier/viewDriverLocation/<?php echo $data['collectionId']; ?>" class="view-details-link">
                                 <i class='bx bx-info-circle'></i>
-                                <span>View Details</span>
+                                <span>View Driver Location</span>
                             </a>
                         <?php else: ?>
                             <span class="collection-message">Collection hasn't started yet!</span>

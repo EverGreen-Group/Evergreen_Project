@@ -7,6 +7,30 @@
     const UPLOADROOT = '<?php echo UPLOADROOT; ?>';
     const collections = <?php echo json_encode($data['collections']); ?>;
     const collectionId = <?php echo $data['collection']->collection_id; ?>;
+    const vehicleId = <?php echo $data['collection']->vehicle_id; ?>;
+
+    async function updateVehicleLocation() {
+        if (navigator.geolocation) {
+            navigator.geolocation.getCurrentPosition(async (position) => {
+                const latitude = position.coords.latitude;
+                const longitude = position.coords.longitude;
+
+                const response = await fetch(`${URLROOT}/vehicledriver/updateVehicle/${vehicleId}/${latitude}/${longitude}`, {
+                    method: 'POST',
+                });
+
+                if (!response.ok) {
+                    console.error('Failed to update vehicle location');
+                }
+            }, (error) => {
+                console.error('Error getting location:', error);
+            });
+        } else {
+            console.error('Geolocation is not supported by this browser.');
+        }
+    }
+
+    setInterval(updateVehicleLocation, 0.5 * 60 * 1000); // I set every 5 minyts as the interval
 </script>
 
 <main>

@@ -59,6 +59,16 @@ class VehicleDriver extends controller {
                     continue;
                 }
                 
+                // Update vehicle location if needed
+                // if ($schedule->vehicle_id) {
+                //     // Assuming you have a way to get the current latitude and longitude
+                //     $currentLatitude = $_SESSION['current_latitude'] ?? null;
+                //     $currentLongitude = $_SESSION['current_longitude'] ?? null;
+                    
+                //     // Update the vehicle location
+                //     $this->collectionModel->updateVehicleLocation($schedule->vehicle_id, $currentLatitude, $currentLongitude);
+                // }
+
                 if ($schedule->is_today) {
                     $todaySchedules[] = $schedule;
                 } else {
@@ -107,83 +117,16 @@ class VehicleDriver extends controller {
         $this->view('pages/profile', $data);
     }
 
-    public function team() {
-        $data = [];
-        $this->view('vehicle_driver/v_team', $data);
-    }
-
-    public function route() {
-        $data = [];
-        $this->view('vehicle_driver/v_route', $data);
-    }
-
-    public function shift() {
-        $driverModel = $this->model('M_Driver');
-        $scheduleModel = $this->model('M_CollectionSchedule');
-        
-        // Get driver's team ID
-        $driverDetails = $driverModel->getDriverDetails($_SESSION['user_id']);
-        $teamId = $driverDetails->team_id ?? null;
-    
-        if (!$teamId) {
-            $data = [
-                'upcomingShifts' => [],
-                'message' => 'No team assigned'
-            ];
+    public function updateVehicle($vehicleId, $latitude, $longitude) {
+        // Ensure the parameters are valid
+        if (is_numeric($vehicleId) && is_numeric($latitude) && is_numeric($longitude)) {
+            $this->collectionModel->updateVehicleLocation($vehicleId, $latitude, $longitude);
         } else {
-            // Get upcoming schedules for the team
-            $upcomingShifts = $scheduleModel->getUpcomingSchedules($teamId);
-            $data = [
-                'upcomingShifts' => $upcomingShifts,
-                'currentTeam' => $driverDetails->current_team
-            ];
+
         }
-    
-        $this->view('shared/management/shift', $data);
     }
-    
-    public function scheduleDetails($id) {
-        // Get schedule details by ID
-        $schedule = $this->model('M_CollectionSchedule')->getScheduleById($id);
-        if (!$schedule) {
-            redirect('vehicledriver/shift');
-        }
-    
-        // Get related route and vehicle information
-        $route = $this->model('M_Route')->getRouteById($schedule->route_id);
-        $vehicle = $this->model('M_Vehicle')->getVehicleByRouteId($schedule->vehicle_id);
-    
-        // Get collection details for the schedule
-        $collectionId = $this->collectionModel->getUpcomingCollectionIdByScheduleId($id);
-        $collections = $collectionId ? $this->collectionModel->getUpcomingCollectionDetailsByScheduleId($id) : [];
-        // $collection = isset($collections[0]) ? $collections[0] : null;
-    
-        // Get route suppliers for the route
-        $routeSuppliers = $this->routeModel->getRouteSuppliersByRouteId($route->route_id);
-    
-        // Prepare default values for collection-related data
-        $collectionBags = $collections ? $this->collectionModel->getCollectionBagsByCollectionId($collectionId) : [];
-        $bagsAdded = $collection->bags_added ?? 0;
-        $fertilizerDistributed = $collection->fertilizer_distributed ?? 0;
-        $collectionCompleted = (is_object($collections) && isset($collection->end_time) && $collections->end_time !== null) ? true : false;
 
     
-        // Prepare data to pass to the view
-        $data = [
-            'schedule' => $schedule,
-            'route' => $route,
-            'vehicle' => $vehicle,
-            'collectionBags' => $collectionBags,
-            'collection' => (object) $collections,
-            'routeSuppliers' => $routeSuppliers,
-            'bagsAdded' => $bagsAdded,
-            'fertilizerDistributed' => $fertilizerDistributed,
-            'collectionCompleted' => $collectionCompleted
-        ];
-    
-        // Render the view with the data
-        $this->view('vehicle_driver/v_schedule_details', $data);
-    }
 
 
     // public function scheduleDetails($id) {
@@ -239,10 +182,6 @@ class VehicleDriver extends controller {
         }
     }
 
-    public function v_collection_route() {
-        $data = [];
-        $this->view('vehicle_driver/v_collection_route', $data);
-    }
 
     public function setReady($scheduleId) {
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
@@ -335,8 +274,6 @@ class VehicleDriver extends controller {
         $data = [
             'pageTitle' => 'Collection Route',
             'driverName' => $collection->first_name,
-            'vehicleInfo' => 'TEST VEHICLE',
-            'driverLocation' => $driverLocation,
             'collections' => $formattedSuppliers,
             'collection' => $collection,
             'vehicleLocation' => $vehicleLocation,
@@ -681,17 +618,6 @@ class VehicleDriver extends controller {
     }
 
 
-    public function getUnallocatedDriversByDayAndShift($day, $shiftId) {
-
-    
-            if ($day && $shiftId) {
-                $drivers = $this->driverModel->getUnallocatedDriversByDayAndShift($day, $shiftId);
-                echo json_encode(['drivers' => $drivers]);
-            } else {
-                echo json_encode(['drivers' => [], 'message' => 'Invalid parameters']);
-            }
-
-    }
 
     /**
      * Show collection bags for a specific supplier

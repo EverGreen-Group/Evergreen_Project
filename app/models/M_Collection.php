@@ -109,13 +109,25 @@ class M_Collection {
         return $this->db->resultSet();
     }
 
+    public function getCollectionSuppliersStatus($collectionId, $supplierId) {
+        $this->db->query("
+            SELECT DISTINCT
+                csr.status
+            FROM collection_supplier_records csr
+            WHERE csr.collection_id = :collection_id AND csr.supplier_id = :supplier_id
+        ");
+        $this->db->bind(':collection_id', $collectionId);
+        $this->db->bind(':supplier_id', $supplierId);
+        return $this->db->single();
+    }
+
 
     
 
 
     public function getSupplierCollections($supplierId) {
         $this->db->query("
-            SELECT 
+            SELECT DISTINCT
                 c.collection_id,
                 c.status,
                 c.created_at,
@@ -128,7 +140,7 @@ class M_Collection {
             JOIN collection_schedules cs on c.schedule_id = cs.schedule_id
             JOIN routes r on cs.route_id = r.route_id
             WHERE csr.supplier_id = :supplier_id
-            AND c.status = 'Completed'
+            AND c.status = 'Completed' OR c.status = 'Pending'
             ORDER BY c.collection_id DESC
         ");
         
@@ -444,11 +456,14 @@ class M_Collection {
     }
 
 
-    public function isDriverReady($scheduleId) {
-        $this->db->query('SELECT driver_approved FROM collections WHERE schedule_id = :schedule_id');
+
+    public function getCollectionByScheduleId($scheduleId) {
+        $this->db->query('SELECT * 
+                          FROM collections 
+                          WHERE schedule_id = :schedule_id');
         $this->db->bind(':schedule_id', $scheduleId);
-        $result = $this->db->single();
-        return $result ? $result->driver_approved : false;
+        return $this->db->single();
+
     }
 
     public function getUpcomingCollectionIdByScheduleId($scheduleId) {
@@ -1359,5 +1374,21 @@ class M_Collection {
         
         return $this->db->resultSet();
     }
+
+
+    public function updateVehicleLocation($vehicleId, $latitude, $longitude) {
+        $this->db->query('UPDATE vehicles
+                          SET latitude = :latitude, longitude = :longitude
+                          WHERE vehicle_id = :vehicle_id');
+        
+        $this->db->bind(':latitude', $latitude);
+        $this->db->bind(':longitude', $longitude);
+        $this->db->bind(':vehicle_id', $vehicleId);
+        
+        return $this->db->execute();
+    }
+
+
+
 
 } 

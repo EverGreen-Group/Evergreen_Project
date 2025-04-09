@@ -4,7 +4,6 @@
 <link rel="stylesheet" href="<?php echo URLROOT; ?>/css/supplier/collections/styles.css">
 
 <main>
-  <!-- Page Header -->
   <div class="head-title">
     <div class="left">
       <h1>My Collections</h1>
@@ -20,10 +19,9 @@
     </div>
   </div>
 
-  <!-- Collections Section -->
   <div class="collections-section">
     <div class="section-header">
-      <h3>Collection History</h3>
+
     </div>
     <?php flash('collection_message'); ?>
     <?php if (!empty($data['collections'])): ?>
@@ -47,7 +45,7 @@
                   <td data-label="Collection ID"><?php echo $collection->collection_id; ?></td>
                   <td data-label="Date"><?php echo date('M d, Y', strtotime($collection->created_at)); ?></td>
                   <td data-label="Status">
-                    <span class="status-badge completed">
+                    <span class="status-badge <?php echo $collection->status === 'Pending' ? 'pending' : 'completed'; ?>">
                       <?php echo $collection->status; ?>
                     </span>
                   </td>
@@ -75,7 +73,9 @@
                 <span class="value"><?php echo $collection->collection_id; ?></span>
               </div>
               <div class="card-status">
-                <span class="status-badge completed"><?php echo $collection->status; ?></span>
+                <span class="status-badge <?php echo $collection->status === 'Pending' ? 'pending' : 'completed'; ?>">
+                  <?php echo $collection->status; ?>
+                </span>
               </div>
             </div>
             <div class="card-body">
@@ -110,6 +110,33 @@
       </div>
     <?php endif; ?>
   </div>
+
+  <script>
+    // Add this before the closing </main> tag
+    document.addEventListener('DOMContentLoaded', function() {
+      // Add search input
+      const sectionHeader = document.querySelector('.section-header');
+      sectionHeader.innerHTML += '<input type="text" id="searchInput" placeholder="Search collections..." style="margin-left: 10px;">';
+      
+      // Simple search function
+      document.getElementById('searchInput').addEventListener('keyup', function() {
+        const searchText = this.value.toLowerCase();
+        const rows = document.querySelectorAll('.collections-table tbody tr');
+        const cards = document.querySelectorAll('.collection-card');
+        
+        // Filter table rows
+        rows.forEach(row => {
+          row.style.display = row.textContent.toLowerCase().includes(searchText) ? '' : 'none';
+        });
+        
+        // Filter cards
+        cards.forEach(card => {
+          card.style.display = card.textContent.toLowerCase().includes(searchText) ? '' : 'none';
+        });
+      });
+    });
+  </script>
+
 </main>
 
 <script src="<?php echo URLROOT; ?>/public/css/script.js"></script>
@@ -251,6 +278,10 @@
 
   .status-badge.completed {
     background-color: var(--completed-color);
+  }
+
+  .status-badge.pending {
+    background-color: #f39c12;
   }
 
   .view-btn {

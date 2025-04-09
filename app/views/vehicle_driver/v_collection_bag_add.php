@@ -2,7 +2,6 @@
 <?php require APPROOT . '/views/inc/components/sidebar_supplier.php'; ?>
 <?php require APPROOT . '/views/inc/components/topnavbar.php'; ?>
 <link rel="stylesheet" href="<?php echo URLROOT; ?>/css/supplier/collection_1.css">
-<script src="https://unpkg.com/@zxing/library@latest"></script>
 
 <main>
     <div class="head-title">
@@ -35,40 +34,25 @@
         </div>
     <?php endif; ?>
 
-    <!-- Bag Scanning Section -->
-    <div id="bagScanningSection" class="panel">
-        <div class="panel-header">
-            <h3>Scan Bag</h3>
-        </div>
-        <div class="panel-body">
-            <div class="form-group">
-                <label for="bagId">Bag ID</label>
-                <div style="display: flex; gap: var(--spacing-sm);">
-                    <input type="text" id="bagId" class="form-control" placeholder="Scan or enter bag ID">
-                    <button onclick="checkBag()" class="action-btn primary">Verify</button>
-                </div>
-            </div>
-            <div class="scanner-container">
-                <div id="reader" style="width: 100%;"></div>
-            </div>
-        </div>
-    </div>
 
-    <!-- Bag Details Section (Initially Hidden) -->
-    <div id="bagDetailsSection" class="panel" style="display: none;">
+    <div id="bagDetailsSection" class="panel">
         <div class="panel-header">
             <h3>Bag Details</h3>
             <div class="panel-badge">Bag #<span id="selectedBagId"></span></div>
         </div>
         <div class="panel-body">
             <form id="addBagForm" method="POST" action="<?php echo URLROOT; ?>/vehicledriver/saveBag">
-                <input type="hidden" id="bagIdInput" name="bag_id">
                 <input type="hidden" name="collection_id" value="<?php echo $data['collection']->collection_id; ?>">
                 <input type="hidden" name="supplier_id" value="<?php echo $data['supplier']['id']; ?>">
+
+                <div class="form-group">
+                    <label for="actualWeight">Bag ID</label>
+                    <input type="number" id="bagIdInput" name="bag_id" class="form-control" required>
+                </div>
                 
                 <div class="form-group">
-                    <label for="actualWeight">Actual Weight (kg)</label>
-                    <input type="number" id="actualWeight" name="actual_weight" class="form-control" step="0.01" required>
+                    <label for="actualWeight">Weight (kg)</label>
+                    <input type="number" id="actualWeight" name="actual_weight" class="form-control" required>
                 </div>
                 <div class="form-group">
                     <label>Leaf Quality Details</label>
@@ -119,26 +103,7 @@
 </main>
 
 <script>
-    // Initialize the QR scanner
-    document.addEventListener('DOMContentLoaded', function() {
-        initializeScanner();
-    });
     
-    // Initialize the QR scanner functionality
-    function initializeScanner() {
-        const html5QrCode = new Html5Qrcode("reader");
-        const qrCodeSuccessCallback = (decodedText, decodedResult) => {
-            document.getElementById('bagId').value = decodedText;
-            html5QrCode.stop();
-            checkBag();
-        };
-        const config = { fps: 10, qrbox: { width: 250, height: 250 } };
-        
-        // Start scanner with camera
-        html5QrCode.start({ facingMode: "environment" }, config, qrCodeSuccessCallback);
-    }
-    
-    // Verify bag code
     function checkBag() {
         const bagId = document.getElementById('bagId').value;
         if(bagId) {
