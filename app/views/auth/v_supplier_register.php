@@ -139,51 +139,6 @@
                         </div>
                     </div>
 
-                    <!-- Bank Details -->
-                    <div class="form-section">
-                        <h3>Bank Information</h3>
-                        <div class="form-desc">Please provide your bank account details for payments.</div>
-                        
-                        <div class="form-group">
-                            <label for="accountHolderName">Account Holder Name:</label>
-                            <input type="text" id="accountHolderName" name="accountHolderName" required>
-                        </div>
-                        
-                        <div class="row">
-                            <div class="col-md-6">
-                                <div class="form-group">
-                                    <label for="bankName">Bank Name:</label>
-                                    <input type="text" id="bankName" name="bankName" required>
-                                </div>
-                            </div>
-                            <div class="col-md-6">
-                                <div class="form-group">
-                                    <label for="branchName">Branch Name:</label>
-                                    <input type="text" id="branchName" name="branchName" required>
-                                </div>
-                            </div>
-                        </div>
-                        
-                        <div class="row">
-                            <div class="col-md-6">
-                                <div class="form-group">
-                                    <label for="accountNumber">Account Number:</label>
-                                    <input type="text" id="accountNumber" name="accountNumber" required>
-                                </div>
-                            </div>
-                            <div class="col-md-6">
-                                <div class="form-group">
-                                    <label for="accountType">Account Type:</label>
-                                    <select id="accountType" name="accountType" required>
-                                        <option value="">Select Account Type</option>
-                                        <option value="Savings">Savings</option>
-                                        <option value="Current">Current</option>
-                                    </select>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
                     <!-- Required Documents -->
                     <div class="form-section">
                         <h3>Required Documents</h3>

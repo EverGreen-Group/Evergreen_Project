@@ -379,20 +379,11 @@ class M_Supplier {
         $this->db->bind(':user_id', $userId);
         $user = $this->db->single();
         
-        $this->db->query("SELECT * FROM supplier_bank_info sbi
-        JOIN supplier_applications a on sbi.application_id = a.application_id
-        JOIN users u on u.user_id = a.user_id
-        JOIN profiles p on p.user_id = u.user_id
-        JOIN suppliers s on s.profile_id = p.profile_id
-        WHERE s.supplier_id = :supplier_id");
-        $this->db->bind(':supplier_id', $supplier->supplier_id);
-        $bankInfo = $this->db->single();
         
         return [
             'profile' => $profileData,
             'supplier' => $supplier,
-            'user' => $user,
-            'bank_info' => $bankInfo
+            'user' => $user
         ];
     }
     
@@ -402,19 +393,6 @@ class M_Supplier {
         try {
             $this->db->query("UPDATE suppliers SET contact_number = :contact_number WHERE supplier_id = :supplier_id");
             $this->db->bind(':contact_number', $data['supplier_contact']);
-            $this->db->bind(':supplier_id', $data['supplier_id']);
-            $this->db->execute();
-            
-            $this->db->query("UPDATE bank_information SET 
-                            account_holder_name = :account_holder_name,
-                            bank_name = :bank_name,
-                            branch_name = :branch_name,
-                            account_type = :account_type 
-                            WHERE supplier_id = :supplier_id");
-            $this->db->bind(':account_holder_name', $data['account_holder_name']);
-            $this->db->bind(':bank_name', $data['bank_name']);
-            $this->db->bind(':branch_name', $data['branch_name']);
-            $this->db->bind(':account_type', $data['account_type']);
             $this->db->bind(':supplier_id', $data['supplier_id']);
             $this->db->execute();
             

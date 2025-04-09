@@ -302,21 +302,15 @@ class Supplier extends Controller {
         if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             $userId = $_SESSION['user_id'];
             
-
             $profileData = $this->supplierModel->getSupplierProfile($userId);
             
             $data = [
                 'supplier_id' => $profileData['supplier']->supplier_id,
                 'profile_id' => $profileData['profile']->profile_id,
                 'supplier_contact' => trim($_POST['supplier_contact']),
-                'account_holder_name' => trim($_POST['account_holder_name']),
-                'bank_name' => trim($_POST['bank_name']),
-                'branch_name' => trim($_POST['branch_name']),
-                'account_type' => $_POST['account_type'],
                 'image_path' => ''
             ];
             
-
             if (!empty($_FILES['profile_image']['name'])) {
                 $uploadDir = 'uploads/profile_photos/';
                 

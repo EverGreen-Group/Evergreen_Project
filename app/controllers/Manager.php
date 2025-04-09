@@ -117,7 +117,6 @@ class Manager extends Controller
         }
     
         $profile = $supplierApplicationModel->getProfileInfo($application->user_id);
-        $bankInfo = $supplierApplicationModel->getBankInfo($applicationId);
         $documents = $supplierApplicationModel->getApplicationDocuments($applicationId);
         
         // Get cultivation data (appears to be part of the application in your view)
@@ -143,7 +142,6 @@ class Manager extends Controller
         $data = [
             'application' => (array)$application,
             'profile' => $profile,
-            'bank_info' => $bankInfo,
             'documents' => $documents,
             'cultivation' => $cultivation,
             'location' => $location,

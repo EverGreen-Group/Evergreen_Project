@@ -144,50 +144,6 @@
       </div>
     </div>
 
-    <!-- Bank Information Section (Read-only) -->
-    <div class="profile-section">
-      <div class="section-header">
-        <h3>Bank Information</h3>
-      </div>
-      <div class="profile-container">
-        <div class="table-wrapper">
-          <table class="profile-table">
-            <tbody>
-              <tr>
-                <td data-label="Account Holder">
-                  <label for="account_holder_name">Account Holder Name</label>
-                  <input type="text" id="account_holder_name" name="account_holder_name" class="form-control" value="<?php echo $data['bank_info']->account_holder_name; ?>" readonly>
-                </td>
-              </tr>
-              <tr>
-                <td data-label="Bank Name">
-                  <label for="bank_name">Bank Name</label>
-                  <input type="text" id="bank_name" name="bank_name" class="form-control" value="<?php echo $data['bank_info']->bank_name; ?>" readonly>
-                </td>
-              </tr>
-              <tr>
-                <td data-label="Branch Name">
-                  <label for="branch_name">Branch Name</label>
-                  <input type="text" id="branch_name" name="branch_name" class="form-control" value="<?php echo $data['bank_info']->branch_name; ?>" readonly>
-                </td>
-              </tr>
-              <tr>
-                <td data-label="Account Number">
-                  <label for="account_number">Account Number</label>
-                  <input type="text" id="account_number" name="account_number" class="form-control" value="<?php echo $data['bank_info']->account_number; ?>" readonly>
-                </td>
-              </tr>
-              <tr>
-                <td data-label="Account Type">
-                  <label for="account_type">Account Type</label>
-                  <input type="text" id="account_type" name="account_type" class="form-control" value="<?php echo $data['bank_info']->account_type; ?>" readonly>
-                </td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-      </div>
-    </div>
 
     <!-- Submit Button for Profile Update -->
     <div class="form-actions">

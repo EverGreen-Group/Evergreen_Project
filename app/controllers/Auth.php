@@ -234,7 +234,6 @@ class Auth extends Controller
                     'city' => trim($_POST['city'])
                 ];
 
-                // Collect application data
                 $applicationData = [
                     'user_id' => $_SESSION['user_id'],
                     'location' => [
@@ -245,13 +244,6 @@ class Auth extends Controller
                         'tea_cultivation_area' => $_POST['teaCultivationArea'],
                         'plant_age' => $_POST['plant_age'],
                         'monthly_production' => $_POST['monthly_production']
-                    ],
-                    'bank_info' => [
-                        'account_holder_name' => $_POST['accountHolderName'],
-                        'bank_name' => $_POST['bankName'],
-                        'branch_name' => $_POST['branchName'],
-                        'account_number' => $_POST['accountNumber'],
-                        'account_type' => $_POST['accountType']
                     ]
                 ];
 
