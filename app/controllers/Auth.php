@@ -259,7 +259,6 @@ class Auth extends Controller
                     $documents[$doc] = $_FILES[$doc];
                 }
 
-                // Rename document keys for the model
                 $processedDocuments = [];
                 foreach ($documents as $key => $value) {
                     $newKey = ($key === 'nic_document') ? 'nic' : $key;

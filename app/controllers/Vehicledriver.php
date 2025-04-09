@@ -458,93 +458,7 @@ class VehicleDriver extends controller {
         }
     }
 
-    public function assignBags() {
-        error_log('assignBags method called');
-        error_log('Request Method: ' . $_SERVER['REQUEST_METHOD']);
-        if ($_SERVER['REQUEST_METHOD'] == 'POST') {
-            // Get schedule_id and bags from POST data
-            $scheduleId = $_POST['schedule_id'] ?? null;
-            $bags = $_POST['bags'] ?? [];
-            
-            // Debug: Log the incoming data
-            error_log(print_r($_POST, true));
-            
-            if (!$scheduleId || empty($bags)) {
-                flash('schedule_message', 'Missing schedule ID or no bags were selected', 'alert alert-danger');
-                redirect('vehicledriver/scheduleDetails/' . $scheduleId);
-                return;
-            }
 
-            // Attempt to create collection with bags
-            if ($this->collectionModel->createCollectionWithBags($scheduleId, $bags)) {
-                flash('schedule_message', 'Bags assigned successfully', 'alert alert-success');
-            } else {
-                flash('schedule_message', 'Failed to assign bags', 'alert alert-danger');
-            }
-            
-            redirect('vehicledriver/scheduleDetails/' . $scheduleId);
-        } else {
-            redirect('vehicledriver');
-        }
-    }
-
-    public function checkBag($bagId) {
-        $result = $this->collectionModel->checkBag($bagId);
-        header('Content-Type: application/json');
-        echo json_encode($result);
-    }
-
-    public function updateVehicleLocation() {
-        if (!$this->isAjaxRequest()) {
-            redirect('pages/error');
-            return;
-        }
-
-        $data = json_decode(file_get_contents('php://input'));
-        
-        if (!$data || !isset($data->collection_id, $data->latitude, $data->longitude)) {
-            echo json_encode(['success' => false, 'message' => 'Invalid data']);
-            return;
-        }
-
-        try {
-            // Get vehicle ID from collection -> schedule -> route -> vehicle chain
-            $vehicleId = $this->collectionModel->getVehicleIdFromCollection($data->collection_id);
-            
-            if (!$vehicleId) {
-                throw new Exception('Vehicle not found');
-            }
-
-            // Update vehicle location
-            $result = $this->vehicleModel->updateLocation(
-                $vehicleId, 
-                $data->latitude, 
-                $data->longitude
-            );
-
-            echo json_encode([
-                'success' => $result,
-                'message' => $result ? 'Location updated' : 'Failed to update location'
-            ]);
-
-        } catch (Exception $e) {
-            echo json_encode(['success' => false, 'message' => $e->getMessage()]);
-        }
-    }
-
-    public function submitCollection() {
-        if (!$this->isAjaxRequest()) {
-            redirect('pages/error');
-            return;
-        }
-
-        $data = json_decode(file_get_contents('php://input'));
-        
-        $result = $this->collectionModel->addCollection($data);
-        
-        header('Content-Type: application/json');
-        echo json_encode($result);
-    }
 
 
     public function finalizeCollection($collectionId, $supplierId) {
@@ -562,30 +476,16 @@ class VehicleDriver extends controller {
         }
     }
 
-    public function getAssignedBags($supplierId, $collectionId) {
 
-        $result = $this->collectionModel->getAssignedBags($supplierId, $collectionId);
-        
-        header('Content-Type: application/json');
-        echo json_encode($result);
-    }
-
-
-    public function getFertilizerItems($supplierId) {
-        // if (!$this->isAjaxRequest()) {
-        //     redirect('pages/error');
-        //     return;
-        // }
-    
-        $result = $this->collectionModel->getFertilizerItems($supplierId);
-        
-        header('Content-Type: application/json');
-        echo json_encode($result);
-    }
 
     public function createCollection($scheduleId) {
         if ($_SERVER['REQUEST_METHOD'] == 'POST') {
-            // Logic to create a collection
+            
+            $supplierCount = $this->routeModel->getSupplierCountByScheduleId($scheduleId);
+            if($supplierCount < 1) {
+                redirect('vehicledriver/' . $scheduleId);
+
+            }
             $collectionId = $this->collectionModel->createCollection($scheduleId);
 
             if ($collectionId) {
@@ -594,8 +494,7 @@ class VehicleDriver extends controller {
                 redirect('vehicledriver/');
             }
         } else {
-            // If not a POST request, show the form or redirect
-            redirect('vehicledriver/scheduleDetails/' . $scheduleId);
+            redirect('vehicledriver//' . $scheduleId);
         }
     }
 
@@ -702,7 +601,7 @@ class VehicleDriver extends controller {
     public function saveBag() {
         // Check if it's a POST request
         if ($_SERVER['REQUEST_METHOD'] != 'POST') {
-            redirect('vehicledriver/dashboard');
+            redirect('vehicledriver/');
         }
 
         $collectionId = filter_input(INPUT_POST, 'collection_id', FILTER_SANITIZE_NUMBER_INT);
@@ -797,7 +696,7 @@ class VehicleDriver extends controller {
     public function updateBagSubmit() {
         // Check if it's a POST request
         if ($_SERVER['REQUEST_METHOD'] != 'POST') {
-            redirect('vehicledriver/dashboard');
+            redirect('vehicledriver/');
         }
         
         // Sanitize and validate POST data

@@ -7,24 +7,6 @@
     <div class="head-title">
         <div class="left">
             <h1>Add New Bag</h1>
-            <ul class="breadcrumb">
-                <li>
-                    <i class='bx bx-home'></i>
-                    <a href="<?php echo URLROOT; ?>/vehicledriver/dashboard">Dashboard</a>
-                </li>
-                <li>
-                    <i class='bx bx-chevron-right'></i>
-                    <a href="<?php echo URLROOT; ?>/vehicledriver/collectionRoute/<?php echo $data['collection']->collection_id; ?>">Collection Route</a>
-                </li>
-                <li>
-                    <i class='bx bx-chevron-right'></i>
-                    <a href="<?php echo URLROOT; ?>/vehicledriver/collectionBags/<?php echo $data['collection']->collection_id; ?>/<?php echo $data['supplier']['id']; ?>">Bags</a>
-                </li>
-                <li>
-                    <i class='bx bx-chevron-right'></i>
-                    <a href="#">Add Bag</a>
-                </li>
-            </ul>
         </div>
     </div>
     
@@ -119,4 +101,6 @@
     function cancelBagDetails() {
         window.location.href = `<?php echo URLROOT; ?>/vehicledriver/collectionBags/<?php echo $data['collection']->collection_id; ?>/<?php echo $data['supplier']['id']; ?>`;
     }
-</script> 
+</script>
+
+<script src="<?php echo URLROOT; ?>/public/css/script.js"></script>

@@ -290,7 +290,7 @@ class Supplier extends Controller {
         
         if (!$profileData) {
             flash('profile_message', 'Unable to load profile information', 'alert alert-error');
-            redirect('Supplier/dashboard');
+            redirect('supplier/');
         }
         
         $data = $profileData;

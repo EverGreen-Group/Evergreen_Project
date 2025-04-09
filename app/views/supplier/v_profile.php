@@ -75,21 +75,9 @@
                 </td>
               </tr>
               <tr>
-                <td data-label="Address Line 1">
-                  <label for="address_line1">Address Line 1</label>
-                  <input type="text" id="address_line1" name="address_line1" class="form-control" value="<?php echo $data['profile']->address_line1; ?>" readonly>
-                </td>
-              </tr>
-              <tr>
-                <td data-label="Address Line 2">
-                  <label for="address_line2">Address Line 2</label>
-                  <input type="text" id="address_line2" name="address_line2" class="form-control" value="<?php echo $data['profile']->address_line2; ?>" readonly>
-                </td>
-              </tr>
-              <tr>
-                <td data-label="City">
-                  <label for="city">City</label>
-                  <input type="text" id="city" name="city" class="form-control" value="<?php echo $data['profile']->city; ?>" readonly>
+                <td data-label="Address">
+                  <label for="address">Address</label>
+                  <input type="text" id="address" name="address" class="form-control" value="<?php echo $data['supplier']->address; ?>" readonly>
                 </td>
               </tr>
               <tr>

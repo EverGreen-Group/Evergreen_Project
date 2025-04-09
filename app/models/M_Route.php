@@ -232,6 +232,22 @@ class M_Route {
         return $this->db->resultSet();
     }
 
+
+    public function getSupplierCountByScheduleId($scheduleId) {
+        $this->db->query("
+            SELECT 
+                COUNT(*)
+                FROM route_suppliers rs
+                INNER JOIN routes r ON r.route_id = rs.route_id
+                INNER JOIN collection_schedules cs ON cs.route_id = rs.route_id
+                WHERE schedule_id = :schedule_id
+        ");
+        
+        $this->db->bind(':schedule_id', $scheduleId);
+        return $this->db->single();
+    }
+    
+
     /**
      * Get routes for a specific day that are not already assigned in collection schedules.
      */
@@ -294,20 +310,20 @@ class M_Route {
     /**
      * Get the last stop order number for a given route.
      */
-    public function getLastStopOrder($routeId) {
-        $sql = "SELECT MAX(stop_order) AS last_stop_order 
-                FROM route_suppliers 
-                WHERE route_id = :route_id AND is_deleted = 0";
-        $stmt = $this->db->prepare($sql);
-        $stmt->bindParam(':route_id', $routeId);
+    // public function getLastStopOrder($routeId) {
+    //     $sql = "SELECT MAX(stop_order) AS last_stop_order 
+    //             FROM route_suppliers 
+    //             WHERE route_id = :route_id AND is_deleted = 0";
+    //     $stmt = $this->db->prepare($sql);
+    //     $stmt->bindParam(':route_id', $routeId);
         
-        if ($stmt->execute()) {
-            $result = $stmt->fetch(PDO::FETCH_ASSOC);
-            // Explicitly check if last_stop_order is NULL and set it to 0
-            return isset($result['last_stop_order']) ? (int)$result['last_stop_order'] : 0;
-        }
-        return 0;
-    }
+    //     if ($stmt->execute()) {
+    //         $result = $stmt->fetch(PDO::FETCH_ASSOC);
+    //         // Explicitly check if last_stop_order is NULL and set it to 0
+    //         return isset($result['last_stop_order']) ? (int)$result['last_stop_order'] : 0;
+    //     }
+    //     return 0;
+    // }
 
     /**
      * Get supplier count grouped by day.
@@ -401,11 +417,6 @@ class M_Route {
         ");
         return $this->db->resultSet();
     }
-
-
-    /* ========================================================================
-       Helper Methods (Internal Utility Functions)
-       ======================================================================== */
 
     /**
      * Calculate the total average collection for a given route.

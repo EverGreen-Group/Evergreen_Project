@@ -113,12 +113,10 @@
 </main>
 
 <script>
-    // Calculate totals on page load
     document.addEventListener('DOMContentLoaded', function() {
         updateTotals();
     });
     
-    // Update totals
     function updateTotals() {
         const bagElements = document.querySelectorAll('.bag-item');
         let totalBags = bagElements.length;
@@ -142,7 +140,6 @@
         }
     }
     
-    // Finalize collection
     function finalizeCollection() {
         if (confirm('Are you sure you want to finalize this collection?')) {
             // Create a form and submit it
@@ -179,3 +176,5 @@
     font-weight: bold; 
 }
 </style>
+
+<script src="<?php echo URLROOT; ?>/public/css/script.js"></script>

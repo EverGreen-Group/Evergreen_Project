@@ -205,7 +205,8 @@ class Manager extends Controller
             'is_active' => 1,
             'is_deleted' => 0,
             'number_of_collections' => 0,
-            'average_collection' => $supplierExpectedAmount
+            'average_collection' => $supplierExpectedAmount,
+            'user_id' => $application->user_id
         ];
 
         $supplierCreated = $this->supplierModel->createSupplier($supplierData);

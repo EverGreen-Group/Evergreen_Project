@@ -49,7 +49,7 @@ class M_Collection {
             JOIN drivers d ON cs.driver_id = d.driver_id
             JOIN profiles p ON d.profile_id = p.profile_id
             WHERE cs.is_active = 1
-            AND cs.is_deleted = 0
+            -- AND cs.is_deleted = 0
             ORDER BY c.start_time ASC";
         
         $this->db->query($sql);
@@ -382,10 +382,8 @@ class M_Collection {
                 $startTime = $schedule ? $schedule->start_time : null; 
             
 
-            // Format the start time
             $formattedStartTime = date('Y-m-d H:i:s', strtotime($startTime));
 
-            // Create collection entry
             $this->db->query('INSERT INTO collections (schedule_id, status, start_time) 
                               VALUES (:schedule_id, "Pending", :start_time)');
             $this->db->bind(':schedule_id', $scheduleId);
@@ -446,12 +444,12 @@ class M_Collection {
             }
 
 
-            $this->db->commit(); // Commit the transaction
-            return $collectionId; // Return true if everything is successful
+            $this->db->commit(); 
+            return $collectionId; 
         } catch (Exception $e) {
             error_log('Error in createCollection: ' . $e->getMessage());
             $this->db->rollBack();
-            return false; // Return false if there was an error
+            return false; 
         }
     }
 
