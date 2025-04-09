@@ -17,7 +17,13 @@
             <span class="num" style="cursor: pointer;">8</span>
         </a>
         <a href="#" class="profile">
-            <img src="<?php echo URLROOT; ?>/uploads/supplier_photos/default-supplier.png">
+            <?php
+                $profileImageSrc = URLROOT . '/uploads/supplier_photos/default-supplier.png'; 
+                if (isset($_SESSION['profile_image_path']) && !empty($_SESSION['profile_image_path'])) {
+                    $profileImageSrc = URLROOT . '/' . $_SESSION['profile_image_path'];
+                }
+            ?>
+            <img src="<?php echo $profileImageSrc; ?>" alt="Profile Photo">
         </a>
     </nav>
 
@@ -29,7 +35,7 @@
 
     <div id="profileDropdown" class="profile-dropdown" style="display: none;">
         <ul>
-            <li><a href="<?php echo URLROOT; ?>/profile">Profile</a></li>
+            <!-- <li><a href="<?php echo URLROOT; ?>/profile">Profile</a></li> -->
 
             <?php if (RoleHelper::isAdmin()): ?>
                 <li><a href="<?php echo URLROOT; ?>/admin/">Admin Dashboard</a></li>
@@ -38,14 +44,15 @@
                 <li><a href="<?php echo URLROOT; ?>/inventory/">Inventory Manager Dashboard</a></li>
             <?php endif; ?>
 
-            <?php if (RoleHelper::hasRole(RoleHelper::SUPPLIER_MANAGER)): ?>
-                <li><a href="<?php echo URLROOT; ?>/supplier/dashboard">Supplier Manager Dashboard</a></li>
-                <li><a href="<?php echo URLROOT; ?>/supplier/orders">Chat</a></li>
+            <?php if (RoleHelper::hasRole(RoleHelper::MANAGER)): ?>
+                <li><a href="<?php echo URLROOT; ?>/manager/index">Dashboard</a></li>
+                <li><a href="<?php echo URLROOT; ?>/manager/collection">Collections</a></li>
+                <li><a href="<?php echo URLROOT; ?>/profile">Profile</a></li>
             <?php endif; ?>
 
             <?php if (RoleHelper::hasRole(RoleHelper::SUPPLIER)): ?>
-                <li><a href="<?php echo URLROOT; ?>/supplier/profile">Supplier Profile</a></li>
-                <li><a href="<?php echo URLROOT; ?>/supplier/profile">Supplier Dashboard</a></li>
+                <li><a href="<?php echo URLROOT; ?>/supplier/profile">Profile</a></li>
+                <li><a href="<?php echo URLROOT; ?>/supplier/index">Dashboard</a></li>
             <?php endif; ?>
 
             <?php if (RoleHelper::hasRole(RoleHelper::DRIVER)): ?>
@@ -54,10 +61,6 @@
 
             <?php if (RoleHelper::hasRole(RoleHelper::WEBSITE_USER)): ?>
                 <li><a href="<?php echo URLROOT; ?>/user/dashboard">Orders</a></li>
-            <?php endif; ?>
-
-            <?php if (RoleHelper::hasRole(RoleHelper::VEHICLE_MANAGER)): ?>
-                <li><a href="<?php echo URLROOT; ?>/manager/dashboard">Vehicle Manager Dashboard</a></li>
             <?php endif; ?>
 
             <?php if (RoleHelper::hasRole(RoleHelper::INVENTORY_MANAGER)): ?>

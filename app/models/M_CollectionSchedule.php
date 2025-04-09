@@ -712,8 +712,10 @@ class M_CollectionSchedule {
                 cs.driver_id,
                 CONCAT(p.first_name, ' ', p.last_name) AS driver_name,
                 r.route_name,
+                r.route_id,
                 v.vehicle_type,
                 v.license_plate,
+                v.vehicle_id,
                 cs.start_time,
                 cs.end_time,
                 CASE 

@@ -95,14 +95,6 @@
                     <label for="end-date">End Date:</label>
                     <input type="date" id="end-date" name="end_date" value="<?php echo isset($filters['end_date']) ? $filters['end_date'] : ''; ?>">
                 </div>
-                <div class="filter-group">
-                    <label for="min-quantity">Min Quantity (kg):</label>
-                    <input type="number" id="min-quantity" name="min_quantity" placeholder="Min quantity" step="0.01" value="<?php echo isset($filters['min_quantity']) ? $filters['min_quantity'] : ''; ?>">
-                </div>
-                <div class="filter-group">
-                    <label for="max-quantity">Max Quantity (kg):</label>
-                    <input type="number" id="max-quantity" name="max_quantity" placeholder="Max quantity" step="0.01" value="<?php echo isset($filters['max_quantity']) ? $filters['max_quantity'] : ''; ?>">
-                </div>
                 <button type="submit" class="btn btn-primary">Search</button>
             </form>
         </div>

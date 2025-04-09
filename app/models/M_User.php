@@ -54,7 +54,8 @@ class M_User {
     public function getUserById($user_id) {
         $this->db->query("SELECT
             user_id, 
-            email
+            email,
+            password
             FROM users u
             WHERE user_id = :user_id");
         
@@ -375,5 +376,14 @@ class M_User {
 
         return $this->db->execute();
     }
+
+    public function updatePasswordByUserId($userId, $hashedPassword)
+    {
+        $this->db->query("UPDATE users SET password = :password WHERE user_id = :id");
+        $this->db->bind(':password', $hashedPassword);
+        $this->db->bind(':id', $userId);
+        $this->db->execute();
+    }
+    
 }
 ?>

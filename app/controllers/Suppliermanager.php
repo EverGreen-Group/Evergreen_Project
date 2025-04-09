@@ -1,29 +1,26 @@
 <?php
 require_once '../app/models/M_VehicleManager.php';
-require_once '../app/models/M_Route.php';      // Add Route model
-require_once '../app/models/M_Team.php';       // Add Team model
-require_once '../app/models/M_Vehicle.php';    // Add Vehicle model
-require_once '../app/models/M_Shift.php';      // Add Shift model
-require_once '../app/models/M_CollectionSchedule.php';  // Add CollectionSchedule model
+require_once '../app/models/M_Route.php';
+require_once '../app/models/M_Vehicle.php';
+require_once '../app/models/M_Shift.php'; 
+require_once '../app/models/M_CollectionSchedule.php';  
 require_once '../app/models/M_Staff.php';
 require_once '../app/models/M_Driver.php';
-require_once '../app/models/M_Partner.php';
 require_once '../app/helpers/auth_middleware.php';
 require_once '../app/helpers/UserHelper.php';
-require_once '../app/models/M_Collection.php';    // Add Collection model
+require_once '../app/models/M_Collection.php';  
 require_once '../app/models/M_CollectionSupplierRecord.php';
 require_once '../app/models/M_SupplierApplication.php';
 require_once '../app/models/M_Supplier.php';
 
 class SupplierManager extends Controller {
     private $vehicleManagerModel;
-    private $routeModel;       // Declare a variable for Route model
-    private $teamModel;        // Declare a variable for Team model
-    private $vehicleModel;     // Declare a variable for Vehicle model
-    private $shiftModel;       // Declare a variable for Shift model
-    private $scheduleModel;     // Declare a variable for CollectionSchedule model
-    private $driverModel; // Declare a variable for Driver model
-    private $partnerModel; // Add this line
+    private $routeModel;  
+    private $teamModel;    
+    private $vehicleModel;   
+    private $shiftModel; 
+    private $scheduleModel;     
+    private $driverModel;
     private $staffModel;
     private $userHelper;
     private $collectionModel;
@@ -39,13 +36,12 @@ class SupplierManager extends Controller {
 
         // Initialize models
         $this->vehicleManagerModel = new M_VehicleManager();
-        $this->routeModel = new M_Route();        // Instantiate Route model
-        $this->teamModel = new M_Team();          // Instantiate Team model
-        $this->vehicleModel = new M_Vehicle();    // Instantiate Vehicle model
-        $this->shiftModel = new M_Shift();        // Instantiate Shift model
-        $this->scheduleModel = new M_CollectionSchedule();  // Instantiate CollectionSchedule model
-        $this->driverModel = new M_Driver(); // Instantiate Driver model
-        $this->partnerModel = new M_Partner(); // Add this line
+        $this->routeModel = new M_Route();        
+        $this->vehicleModel = new M_Vehicle(); 
+        $this->shiftModel = new M_Shift();  
+        $this->scheduleModel = new M_CollectionSchedule();  
+        $this->driverModel = new M_Driver();
+        $this->partnerModel = new M_Partner(); 
         $this->staffModel = $this->model('M_Staff');
         $this->userHelper = new UserHelper();
         $this->collectionModel = $this->model('M_Collection');

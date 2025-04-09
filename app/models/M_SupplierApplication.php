@@ -302,6 +302,12 @@ class M_SupplierApplication {
         return $this->db->single();
     }
 
+    public function getBankInfoByApplicationId($applicationId) {
+        $this->db->query("SELECT * FROM supplier_bank_info WHERE application_id = :application_id");
+        $this->db->bind(':application_id', $applicationId);
+        return $this->db->single();
+    }
+
     public function updateApplicationStatus($applicationId, $reviewedBy, $status) {
         $this->db->query('
             UPDATE supplier_applications 

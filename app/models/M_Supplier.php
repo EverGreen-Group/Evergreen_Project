@@ -87,10 +87,10 @@ class M_Supplier {
             $sql4 = "UPDATE users SET role_id = 5 WHERE user_id = :user_id";
             $this->db->query($sql4);
             $this->db->bind(':user_id', $userId);
-            return $this->db->execute(); // Returns true on success
+            return $this->db->execute();
         }
 
-        return false; // Return false if the insertion failed
+        return false; 
     }
 
     public function checkApplicationStatus($userId) {
@@ -149,5 +149,291 @@ class M_Supplier {
         return $this->db->single();
         
     }
+
+    public function addComplaint($data)
+    {
+        $this->db->query("INSERT INTO complaints (supplier_id, complaint_type, subject, description, priority, image_path) 
+                          VALUES (:supplier_id, :complaint_type, :subject, :description, :priority, :image_path)");
+    
+        $this->db->bind(':supplier_id', $data['supplier_id']);
+        $this->db->bind(':complaint_type', $data['complaint_type']);
+        $this->db->bind(':subject', $data['subject']);
+        $this->db->bind(':description', $data['description']);
+        $this->db->bind(':priority', $data['priority']);
+        $this->db->bind(':image_path', $data['image_path']);
+    
+        return $this->db->execute();
+    }
+    
+
+    public function getComplaints()
+    {
+        $this->db->query("SELECT c.*, CONCAT(p.first_name, ' ', p.last_name) as supplier_name, p.image_path
+                          FROM complaints c 
+                          JOIN suppliers s ON c.supplier_id = s.supplier_id 
+                          JOIN profiles p On s.profile_id = p.profile_id 
+                          WHERE c.status != 'Deleted' 
+                          ORDER BY 
+                              CASE c.priority 
+                                  WHEN 'high' THEN 1 
+                                  WHEN 'medium' THEN 2 
+                                  WHEN 'low' THEN 3 
+                              END,
+                              c.created_at DESC");
+        
+        return $this->db->resultSet();
+    }
+    
+    public function getComplaintById($id)
+    {
+        $this->db->query("SELECT c.*, CONCAT(p.first_name, ' ', p.last_name) as supplier_name, p.image_path, u.email, p.contact_number as phone 
+                          FROM complaints c 
+                          JOIN suppliers s ON c.supplier_id = s.supplier_id
+                          JOIN profiles p On s.profile_id = p.profile_id
+                          JOIN users u on p.user_id = u.user_id 
+                          WHERE c.complaint_id = :id AND c.status != 'Deleted'");
+        
+        $this->db->bind(':id', $id);
+        
+        return $this->db->single();
+    }
+    
+    public function getTotalComplaints()
+    {
+        $this->db->query("SELECT COUNT(*) as count FROM complaints WHERE status != 'Deleted'");
+        $result = $this->db->single();
+        return $result->count;
+    }
+
+    public function getComplaintsByStatus($status)
+    {
+        $this->db->query("SELECT c.*, CONCAT(p.first_name, ' ', p.last_name) as supplier_name, p.image_path 
+                          FROM complaints c 
+                          JOIN suppliers s ON c.supplier_id = s.supplier_id 
+                          JOIN profiles p On s.profile_id = p.profile_id 
+                          WHERE c.status = :status 
+                          ORDER BY 
+                              CASE c.priority 
+                                  WHEN 'high' THEN 1 
+                                  WHEN 'medium' THEN 2 
+                                  WHEN 'low' THEN 3 
+                              END,
+                              c.created_at DESC");
+        
+        $this->db->bind(':status', $status);
+        
+        return $this->db->resultSet();
+    }
+
+    public function updateStatus($data)
+    {
+        $this->db->query("UPDATE complaints SET status = :status WHERE complaint_id = :complaint_id");
+        
+        $this->db->bind(':complaint_id', $data['complaint_id']);
+        $this->db->bind(':status', $data['status']);
+        
+        return $this->db->execute();
+    }
+
+    public function deleteComplaint($id)
+    {
+        // Using soft delete by updating to delete
+        $this->db->query("UPDATE complaints SET status = 'Deleted' WHERE complaint_id = :id");
+        
+        $this->db->bind(':id', $id);
+        
+        return $this->db->execute();
+    }
+
+
+    public function getAllSuppliersDetails() {
+        $this->db->query("
+            SELECT s.supplier_id, s.contact_number as supplier_contact, s.application_id, 
+                   s.is_active, s.number_of_collections, s.average_collection,
+                   p.first_name, p.last_name, p.nic, p.city, p.contact_number,
+                   u.email, u.account_status
+            FROM suppliers s
+            JOIN profiles p ON s.profile_id = p.profile_id
+            JOIN users u ON p.user_id = u.user_id
+            WHERE s.is_deleted = 0
+            ORDER BY s.supplier_id DESC
+        ");
+
+        return $this->db->resultSet();
+    }
+
+
+    public function getFilteredSuppliers($supplier_id, $name, $nic, $contact_number, $application_id, $supplier_status) {
+        $sql = "
+            SELECT s.supplier_id, s.contact_number as supplier_contact, s.application_id, 
+                   s.is_active, s.number_of_collections, s.average_collection,
+                   p.first_name, p.last_name, p.nic, p.city, p.contact_number,
+                   u.email, u.account_status
+            FROM suppliers s
+            JOIN profiles p ON s.profile_id = p.profile_id
+            JOIN users u ON p.user_id = u.user_id
+            WHERE s.is_deleted = 0
+        ";
+
+        $params = [];
+
+        if ($supplier_id) {
+            $sql .= " AND s.supplier_id = :supplier_id";
+            $params[':supplier_id'] = $supplier_id;
+        }
+
+        if ($name) {
+            $sql .= " AND (p.first_name LIKE :first_name OR p.last_name LIKE :last_name)";
+            $params[':first_name'] = '%' . $name . '%';
+            $params[':last_name'] = '%' . $name . '%';
+        }
+
+        if ($nic) {
+            $sql .= " AND p.nic LIKE :nic";
+            $params[':nic'] = '%' . $nic . '%';
+        }
+
+        if ($contact_number) {
+            $sql .= " AND (p.contact_number LIKE :contact_number OR s.contact_number LIKE :supplier_contact)";
+            $params[':contact_number'] = '%' . $contact_number . '%';
+            $params[':supplier_contact'] = '%' . $contact_number . '%';
+        }
+
+        if ($application_id) {
+            $sql .= " AND s.application_id = :application_id";
+            $params[':application_id'] = $application_id;
+        }
+
+        if ($supplier_status) {
+            if ($supplier_status == 'Active') {
+                $sql .= " AND s.is_active = 1";
+            } else if ($supplier_status == 'Inactive') {
+                $sql .= " AND s.is_active = 0";
+            }
+        }
+
+        $sql .= " ORDER BY s.supplier_id DESC";
+
+        $this->db->query($sql);
+
+        // Bind parameters
+        foreach ($params as $param => $value) {
+            $this->db->bind($param, $value);
+        }
+
+        return $this->db->resultSet();
+    }
+
+    public function getTotalSuppliers() {
+        $this->db->query("SELECT COUNT(*) as total FROM suppliers WHERE is_deleted = 0");
+        $row = $this->db->single();
+        return $row->total;
+    }
+
+    public function getActiveSuppliers() {
+        $this->db->query("SELECT COUNT(*) as active FROM suppliers WHERE is_active = 1 AND is_deleted = 0");
+        $row = $this->db->single();
+        return $row->active;
+    }
+
+    public function getInactiveSuppliers() {
+        $this->db->query("
+            SELECT s.supplier_id, s.contact_number as supplier_contact, s.application_id, 
+                   s.is_active, s.number_of_collections, s.average_collection,
+                   p.first_name, p.last_name, p.nic, p.city, p.contact_number,
+                   u.email, u.account_status
+            FROM suppliers s
+            JOIN profiles p ON s.profile_id = p.profile_id
+            JOIN users u ON p.user_id = u.user_id
+            WHERE s.is_active = 0 AND s.is_deleted = 0
+            ORDER BY s.supplier_id DESC
+        ");
+
+        return $this->db->resultSet();
+    }
+
+    public function getSupplierProfile($userId) {
+        $this->db->query("SELECT profile_id FROM profiles WHERE user_id = :user_id");
+        $this->db->bind(':user_id', $userId);
+        $profile = $this->db->single();
+        
+        if (!$profile) {
+            return false;
+        }
+        
+        $profileId = $profile->profile_id;
+        
+        $this->db->query("SELECT * FROM suppliers WHERE profile_id = :profile_id");
+        $this->db->bind(':profile_id', $profileId);
+        $supplier = $this->db->single();
+        
+        if (!$supplier) {
+            return false;
+        }
+        
+        $this->db->query("SELECT * FROM profiles WHERE profile_id = :profile_id");
+        $this->db->bind(':profile_id', $profileId);
+        $profileData = $this->db->single();
+        
+        $this->db->query("SELECT email FROM users WHERE user_id = :user_id");
+        $this->db->bind(':user_id', $userId);
+        $user = $this->db->single();
+        
+        $this->db->query("SELECT * FROM supplier_bank_info sbi
+        JOIN supplier_applications a on sbi.application_id = a.application_id
+        JOIN users u on u.user_id = a.user_id
+        JOIN profiles p on p.user_id = u.user_id
+        JOIN suppliers s on s.profile_id = p.profile_id
+        WHERE s.supplier_id = :supplier_id");
+        $this->db->bind(':supplier_id', $supplier->supplier_id);
+        $bankInfo = $this->db->single();
+        
+        return [
+            'profile' => $profileData,
+            'supplier' => $supplier,
+            'user' => $user,
+            'bank_info' => $bankInfo
+        ];
+    }
+    
+    public function updateSupplierProfile($data) {
+        $this->db->beginTransaction();
+        
+        try {
+            $this->db->query("UPDATE suppliers SET contact_number = :contact_number WHERE supplier_id = :supplier_id");
+            $this->db->bind(':contact_number', $data['supplier_contact']);
+            $this->db->bind(':supplier_id', $data['supplier_id']);
+            $this->db->execute();
+            
+            $this->db->query("UPDATE bank_information SET 
+                            account_holder_name = :account_holder_name,
+                            bank_name = :bank_name,
+                            branch_name = :branch_name,
+                            account_type = :account_type 
+                            WHERE supplier_id = :supplier_id");
+            $this->db->bind(':account_holder_name', $data['account_holder_name']);
+            $this->db->bind(':bank_name', $data['bank_name']);
+            $this->db->bind(':branch_name', $data['branch_name']);
+            $this->db->bind(':account_type', $data['account_type']);
+            $this->db->bind(':supplier_id', $data['supplier_id']);
+            $this->db->execute();
+            
+            if (isset($data['image_path']) && !empty($data['image_path'])) {
+                $this->db->query("UPDATE profiles SET image_path = :image_path WHERE profile_id = :profile_id");
+                $this->db->bind(':image_path', $data['image_path']);
+                $this->db->bind(':profile_id', $data['profile_id']);
+                $this->db->execute();
+            }
+            
+            $this->db->commit();
+            return true;
+        } catch (Exception $e) {
+            $this->db->rollBack();
+            return false;
+        }
+    }
+
+    
+
 
 } 

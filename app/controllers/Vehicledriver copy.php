@@ -5,7 +5,6 @@ include_once APPROOT . '/services/GoogleMapsService.php';
 class VehicleDriver extends controller {
     private $collectionScheduleModel;
     private $driverModel;
-    private $teamModel;
     private $vehicleModel;
     private $routeModel;
     private $collectionModel;
@@ -22,7 +21,6 @@ class VehicleDriver extends controller {
         $this->collectionScheduleModel = $this->model('M_CollectionSchedule');
         $this->collectionModel = $this->model('M_Collection');
         $this->driverModel = $this->model('M_Driver');
-        $this->teamModel = $this->model('M_Team');
         $this->vehicleModel = $this->model('M_Vehicle');
         $this->routeModel = $this->model('M_Route');
         $this->googleMapsService = new GoogleMapsService();

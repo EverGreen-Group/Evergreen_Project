@@ -48,16 +48,17 @@
                 </div>
 
                 <div class="form-group">
-                    <label for="images">Attach Images (Optional)</label>
+                    <label for="image">Attach Image (Optional)</label>
                     <div class="file-upload">
-                        <input type="file" id="images" name="images[]" accept="image/*" multiple>
-                        <label for="images" class="file-label">
+                        <input type="file" id="image" name="image" accept="image/*">
+                        <label for="image" class="file-label">
                             <i class='bx bx-upload'></i>
-                            <span>Choose Files</span>
+                            <span>Choose File</span>
                         </label>
                         <div id="image-preview" class="image-preview"></div>
                     </div>
                 </div>
+
 
                 <div class="form-group">
                     <label for="priority">Priority Level</label>
@@ -69,7 +70,7 @@
                 </div>
 
                 <div class="form-actions">
-                    <button type="submit" class="btn-submit">Submit Complaint</button>
+                    <button type="submit" class="btn btn-secondary">Submit Complaint</button>
                     <button type="button" class="btn-cancel" onclick="window.location.href='<?php echo URLROOT; ?>/supplier'">Cancel</button>
                 </div>
             </form>
@@ -202,19 +203,21 @@
 </style>
 
 <script>
-    document.getElementById('images').addEventListener('change', function(e) {
+    document.getElementById('image').addEventListener('change', function(e) {
         const preview = document.getElementById('image-preview');
         preview.innerHTML = '';
-        
-        [...e.target.files].forEach(file => {
+
+        const file = e.target.files[0];
+        if (file) {
             const reader = new FileReader();
             reader.onload = function(e) {
                 const img = document.createElement('img');
                 img.src = e.target.result;
                 preview.appendChild(img);
-            }
+            };
             reader.readAsDataURL(file);
-        });
+        }
     });
+
 </script>
 <script src="<?php echo URLROOT; ?>/css/script.js"></script>

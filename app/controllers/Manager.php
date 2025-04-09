@@ -6,7 +6,6 @@ use Endroid\QrCode\Writer\PngWriter;
 // Require all model files
 require_once '../app/models/M_VehicleManager.php';
 require_once '../app/models/M_Route.php';
-require_once '../app/models/M_Team.php';
 require_once '../app/models/M_Vehicle.php';
 require_once '../app/models/M_Shift.php';
 require_once '../app/models/M_CollectionSchedule.php';
@@ -31,7 +30,6 @@ class Manager extends Controller
     //----------------------------------------
     private $vehicleManagerModel;
     private $routeModel;
-    private $teamModel;
     private $vehicleModel;
     private $shiftModel;
     private $scheduleModel;
@@ -45,6 +43,7 @@ class Manager extends Controller
     private $employeeModel;
     private $bagModel;
     private $supplierModel;
+    private $appointmentModel;
 
     //----------------------------------------
     // CONSTRUCTOR
@@ -55,7 +54,7 @@ class Manager extends Controller
         requireAuth();
 
         // Check if user has Vehicle Manager OR Admin role
-        if (!RoleHelper::hasAnyRole([RoleHelper::ADMIN, RoleHelper::VEHICLE_MANAGER])) {
+        if (!RoleHelper::hasAnyRole([RoleHelper::ADMIN, RoleHelper::MANAGER])) {
             // Redirect unauthorized access
             flash('message', 'Unauthorized access', 'alert alert-danger');
             redirect('');
@@ -65,7 +64,6 @@ class Manager extends Controller
         // Initialize models
         $this->vehicleManagerModel = new M_VehicleManager();
         $this->routeModel = new M_Route();
-        $this->teamModel = new M_Team();
         $this->vehicleModel = new M_Vehicle();
         $this->shiftModel = new M_Shift();
         $this->scheduleModel = new M_CollectionSchedule();
@@ -80,356 +78,341 @@ class Manager extends Controller
         $this->bagModel = $this->model('M_CollectionBag');
         $this->supplierApplicationModel = $this->model('M_SupplierApplication');
         $this->supplierModel = $this->model('M_Supplier');
+        $this->appointmentModel = $this->model('M_Appointment');
     }
 
-    //----------------------------------------
-    // DASHBOARD METHODS
-    //----------------------------------------
-    public function collection()
-    {
-        // Get dashboard stats from the model
-        $stats = $this->vehicleManagerModel->getDashboardStats();
-        $stats['collections'] = (array)$stats['collections'];
 
-        // Retrieve filter parameters from the GET request
-        $collection_id = isset($_GET['collection_id']) ? $_GET['collection_id'] : null;
-        $schedule_id = isset($_GET['schedule_id']) ? $_GET['schedule_id'] : null;
-        $status = isset($_GET['status']) ? $_GET['status'] : null;
-        $start_date = isset($_GET['start_date']) ? $_GET['start_date'] : null;
-        $end_date = isset($_GET['end_date']) ? $_GET['end_date'] : null;
-        $min_quantity = isset($_GET['min_quantity']) ? $_GET['min_quantity'] : null;
-        $max_quantity = isset($_GET['max_quantity']) ? $_GET['max_quantity'] : null;
-        $bags_added = isset($_GET['bags_added']) ? $_GET['bags_added'] : null;
 
-        // Fetch collections based on filters
-        if ($collection_id || $schedule_id || $status || $start_date || $end_date || $min_quantity || $max_quantity || $bags_added !== null) {
-            $allCollections = $this->collectionModel->getFilteredCollections(
-                $collection_id, 
-                $schedule_id, 
-                $status, 
-                $start_date, 
-                $end_date, 
-                $min_quantity, 
-                $max_quantity, 
-                $bags_added
-            );
-        } else {
-            // Otherwise, fetch all collections
-            $allCollections = $this->collectionModel->getAllCollections();
-        }
-
-        // Fetch all necessary data for the dropdowns
-        $schedules = $this->scheduleModel->getAllSchedules();
-        $collectionSchedules = $this->scheduleModel->getSchedulesForNextWeek(); 
-        $todayRoutes = $this->routeModel->getTodayAssignedRoutes();
+     public function index() {
+        // Get all applications
+        $applications = $this->model('M_SupplierApplication')->getAllApplications();
+        
+        // Get approved applications pending role assignment
+        $approvedPendingRole = $this->model('M_SupplierApplication')->getApprovedPendingRoleApplications();
 
         $data = [
-            'stats' => $stats,
-            'schedules' => $schedules,
-            'all_collections' => $allCollections,
-            'collectionSchedules' => $collectionSchedules,
-            'todayRoutes' => $todayRoutes,
-            // Pass the filter values back to the view to maintain state
-            'filters' => [
-                'collection_id' => $collection_id,
-                'schedule_id' => $schedule_id,
-                'status' => $status,
-                'start_date' => $start_date,
-                'end_date' => $end_date,
-                'min_quantity' => $min_quantity,
-                'max_quantity' => $max_quantity,
-                'bags_added' => $bags_added
-            ]
+            'applications' => $applications,
+            'approved_pending_role' => $approvedPendingRole
         ];
 
-        // Pass the stats and data for the dropdowns to the view
-        $this->view('vehicle_manager/v_collection_0', $data);
+        // Load view
+        $this->view('supplier_manager/v_applications', $data);
     }
 
-    public function schedule()
-    {
-        // Get dashboard stats from the model
-        $totalSchedules = $this->scheduleModel->getTotalSchedules();
-        $availableSchedules = $this->scheduleModel->getActiveSchedulesCount();
+    /** 
+     * Application Management
+     * ------------------------------------------------------------
+     */
 
-        // Fetch all necessary data for the dropdowns
-        $routes = $this->routeModel->getAllRoutes();
-        $drivers = $this->driverModel->getUnassignedDrivers();
-        $vehicles = $this->vehicleModel->getAllAvailableVehicles();
-        $shifts = $this->shiftModel->getAllShifts();
-        $schedules = $this->scheduleModel->getAllSchedules();
+     public function viewApplication($applicationId) {
+        // Load the model
+        $supplierApplicationModel = $this->model('M_SupplierApplication');
+        
+        // Get application details using the model
+        $application = $supplierApplicationModel->getApplicationById($applicationId);
+    
+        // If application not found, redirect with error
+        if (!$application) {
+            redirect('manager/applications');
+        }
+    
+        $profile = $supplierApplicationModel->getProfileInfo($application->user_id);
+        $bankInfo = $supplierApplicationModel->getBankInfo($applicationId);
+        $documents = $supplierApplicationModel->getApplicationDocuments($applicationId);
+        
+        // Get cultivation data (appears to be part of the application in your view)
+        $cultivation = (object)[
+            'tea_cultivation_area' => $application->tea_cultivation_area,
+            'plant_age' => $application->plant_age,
+            'monthly_production' => $application->monthly_production
+        ];
+        
+        // Get location data
+        $location = (object)[
+            'latitude' => $application->latitude,
+            'longitude' => $application->longitude
+        ];
+        
+        // Get reviewer information if application is assigned
+        $reviewer = null;
+        if (!empty($application->reviewed_by)) {
+            $reviewer = $this->model('M_User')->getUserById($application->reviewed_by);
+        }
+    
+        // Prepare data array matching the view's expected structure
+        $data = [
+            'application' => (array)$application,
+            'profile' => $profile,
+            'bank_info' => $bankInfo,
+            'documents' => $documents,
+            'cultivation' => $cultivation,
+            'location' => $location,
+            'reviewer' => $reviewer
+        ];
+    
+        // Load the view
+        $this->view('supplier_manager/v_view_application', $data);
+    }
 
-        // Pass the stats and data for the dropdowns to the view
-        $this->view('vehicle_manager/v_collectionschedule', [
-            'totalSchedules' => $totalSchedules, // Total schedules
-            'availableSchedules' => $availableSchedules, // Currently ongoing schedules
-            'routes' => $routes,
-            'drivers' => $drivers,
-            'vehicles' => $vehicles,
-            'shifts' => $shifts,
-            'schedules' => $schedules
-        ]);
+    public function assignApplication($applicationId) {
+        if (!isLoggedIn()) {
+            redirect('users/login');
+        }
+    
+
+        $supplierApplicationModel = $this->model('M_SupplierApplication');
+    
+        $supplierApplicationModel->updateApplicationStatus($applicationId, $_SESSION['manager_id'], 'under_review');
+
+    
+        redirect('manager/');
+    }
+
+    public function approveApplication($applicationId) {
+        /* 
+        WE NEED TO FOLLOW THESE STEPS
+        1. we need to update the application status (that is already done)
+        2. we need to create a supplier account for this user
+        3. we need to copy the details from the application to suppliers entry
+        4. we need to change the users role to 5 for supplier accees
+        -simaak
+        */
+
+        $supplierApplicationModel = $this->model('M_SupplierApplication');
+        $userModel = $this->model('M_User');
+        $application = $supplierApplicationModel->getApplicationById($applicationId);
+
+        if (!$application) {
+            // small validation, but if we are here then ofc the application exists
+            redirect('manager/');
+        }
+
+        $userUpdated = $userModel->updateRole($application->user_id, 5);
+
+        if (!$userUpdated) {
+            redirect('manager/');
+        }
+
+        $profile = $userModel->getProfileByUserId($application->user_id);
+        $supplierExpectedAmount  = ($application->monthly_production)/4.0;
+
+
+        // Create supplier data array
+        $supplierData = [
+            'profile_id' => $profile->profile_id,
+            'contact_number' => $profile->contact_number, 
+            'application_id' => $applicationId,
+            'latitude' => $application->latitude,
+            'longitude' => $application->longitude,
+            'is_active' => 1,
+            'is_deleted' => 0,
+            'number_of_collections' => 0,
+            'average_collection' => $supplierExpectedAmount
+        ];
+
+        $supplierCreated = $this->supplierModel->createSupplier($supplierData);
+
+        if (!$supplierCreated) {
+            redirect('manager/');
+        }
+
+        $supplierApplicationModel->updateApplicationStatus($applicationId, $_SESSION['manager_id'], 'approved');
+
+        redirect('manager/');
+    }
+
+    public function rejectApplication($applicationId) {
+        $supplierApplicationModel = $this->model('M_SupplierApplication');
+        $supplierApplicationModel->updateApplicationStatus($applicationId, $_SESSION['manager_id'], 'rejected');
+        redirect('manager/');
+    }
+
+    public function confirmSupplierRole() {
+        if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+            $data = json_decode(file_get_contents('php://input'), true);
+            $applicationId = $data['application_id'];
+
+            $result = $this->supplierModel->confirmSupplierRole($applicationId);
+            if ($result) {
+                echo json_encode(['success' => true]);
+            } else {
+                echo json_encode(['success' => false, 'message' => 'Failed to confirm role. Check application ID and user data.']);
+            }
+        } else {
+            http_response_code(400);
+            echo json_encode(['success' => false, 'message' => 'Invalid request.']);
+        }
+    }
+
+
+    /** 
+     * Supplier Management
+     * ------------------------------------------------------------
+     */
+
+     public function supplier() {
+
+        $data = [];
+    
+        $supplier_id = isset($_GET['supplier_id']) ? $_GET['supplier_id'] : null;
+        $name = isset($_GET['name']) ? $_GET['name'] : null;
+        $nic = isset($_GET['nic']) ? $_GET['nic'] : null;
+        $contact_number = isset($_GET['contact_number']) ? $_GET['contact_number'] : null;
+        $application_id = isset($_GET['application_id']) ? $_GET['application_id'] : null;
+        $supplier_status = isset($_GET['supplier_status']) ? $_GET['supplier_status'] : null;
+    
+        if ($supplier_id || $name || $nic || $contact_number || $application_id || $supplier_status) {
+            $data['suppliers'] = $this->supplierModel->getFilteredSuppliers($supplier_id, $name, $nic, $contact_number, $application_id, $supplier_status);
+        } else {
+            $data['suppliers'] = $this->supplierModel->getAllSuppliersDetails();
+        }
+    
+
+        $data['total_suppliers'] = $this->supplierModel->getTotalSuppliers();
+        $data['active_suppliers'] = $this->supplierModel->getActiveSuppliers();
+        
+        $this->view('supplier_manager/v_supplier', $data);
+    }
+
+
+    public function manageSupplier($id = null) {
+        if (!$id) {
+            flash('supplier_message', 'Supplier ID is required', 'alert alert-danger');
+            redirect('manager/supplier');
+        }
+    
+
+        if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+            $_POST = filter_input_array(INPUT_POST, FILTER_SANITIZE_STRING);
+            
+            $data = [
+                'supplier_id' => $id,
+                'first_name' => trim($_POST['first_name']),
+                'last_name' => trim($_POST['last_name']),
+                'email' => trim($_POST['email']),
+                'contact_number' => trim($_POST['contact_number']),
+                'address_line1' => trim($_POST['address_line1']),
+                'address_line2' => trim($_POST['address_line2']),
+                'city' => trim($_POST['city']),
+                'nic' => trim($_POST['nic']),
+                'is_active' => isset($_POST['is_active']) ? 1 : 0,
+            ];
+    
+            $errors = [];
+            
+            if (empty($data['first_name'])) {
+                $errors['first_name'] = 'First name is required';
+            }
+            
+            if (empty($data['last_name'])) {
+                $errors['last_name'] = 'Last name is required';
+            }
+            
+            if (empty($data['email'])) {
+                $errors['email'] = 'Email is required';
+            } elseif (!filter_var($data['email'], FILTER_VALIDATE_EMAIL)) {
+                $errors['email'] = 'Please enter a valid email';
+            }
+            
+
+            if (empty($errors)) {
+                if (!empty($_FILES['supplier_image']['name'])) {
+                    $file = $_FILES['supplier_image'];
+                    $upload_dir = 'uploads/suppliers/';
+                    
+
+                    if (!file_exists($upload_dir)) {
+                        mkdir($upload_dir, 0777, true);
+                    }
+                    
+                    $file_name = uniqid() . '_' . $file['name'];
+                    $destination = $upload_dir . $file_name;
+                    
+                    if (move_uploaded_file($file['tmp_name'], $destination)) {
+                        $data['image_path'] = $destination;
+                    } else {
+                        $errors['supplier_image'] = 'Failed to upload image';
+                    }
+                }
+                
+                if ($this->supplierModel->updateSupplier($data)) {
+                    flash('supplier_message', 'Supplier updated successfully');
+                    redirect('manager/manageSupplier/' . $id);
+                } else {
+                    flash('supplier_message', 'Failed to update supplier', 'alert alert-danger');
+                }
+            } else {
+                $data['errors'] = $errors;
+            }
+        }
+
+        $supplier = $this->supplierModel->getSupplierById($id);
+        
+
+        if (!$supplier) {
+            flash('supplier_message', 'Supplier not found', 'alert alert-danger');
+            redirect('manager/supplier');
+        }
+        
+
+        $upcomingSchedules = $this->scheduleModel->getUpcomingSchedulesBySupplierId($id);
+        $collectionHistory = $this->collectionModel->getSupplierCollections($id);
+        
+
+        $viewData = [
+            'supplier' => $supplier,
+            'upcomingSchedules' => $upcomingSchedules,
+            'collectionHistory' => $collectionHistory,
+            'errors' => $errors ?? []
+        ];
+        
+        if (isset($data) && isset($data['errors'])) {
+            $viewData = array_merge($viewData, $data);
+        }
+        
+
+        $this->view('supplier_manager/v_supplier_profile', $viewData);
     }
 
 
 
-
-    //----------------------------------------
-    // SUPPLIER RECORD METHODS
-    //----------------------------------------
-    public function getSupplierRecords($collectionId)
-    {
+    public function getSupplierRecords($collectionId){
         $records = $this->collectionSupplierRecordModel->getSupplierRecords($collectionId);
         echo json_encode($records);
     }
 
-    public function updateSupplierRecord()
-    {
+
+    public function updateSupplierRecord(){
         $data = json_decode(file_get_contents('php://input'));
         $success = $this->collectionSupplierRecordModel->updateSupplierRecord($data);
         echo json_encode(['success' => $success]);
     }
 
-    public function addSupplierRecord()
-    {
+
+    public function addSupplierRecord(){
         $data = json_decode(file_get_contents('php://input'));
         $success = $this->collectionSupplierRecordModel->addSupplierRecord($data);
         echo json_encode(['success' => $success]);
     }
 
-    //----------------------------------------
-    // SCHEDULE METHODS
-    //----------------------------------------
-    public function createSchedule() {
-        if (!isLoggedIn()) {
-            redirect('users/login');
-        }
-
-        $drivers = $this->driverModel->getAllDrivers();
-        $routes = $this->routeModel->getAllUnAssignedRoutes();
-
-        $data = [
-            'drivers' => $drivers,
-            'routes' => $routes,
-            'error' => ''
-        ];
-
+    public function updateSupplierStatus($recordId){
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-            // Sanitize and get POST data
-            $_POST = filter_input_array(INPUT_POST, FILTER_SANITIZE_STRING);
+            $data = json_decode(file_get_contents('php://input'));
 
-            $data = [
-                'day' => trim($_POST['day']),
-                'driver_id' => trim($_POST['driver_id']),
-                'route_id' => trim($_POST['route_id']),
-                'start_time' => trim($_POST['start_time']),
-                'end_time' => trim($_POST['end_time']),
-                'drivers' => $drivers,
-                'routes' => $routes,
-                'error' => ''
-            ];
-
-            // Validate data
-            if (empty($data['day']) || 
-                empty($data['driver_id']) || empty($data['route_id']) || 
-                empty($data['start_time']) || empty($data['end_time'])) {
-                $data['error'] = 'Please fill in all fields';
+            if ($this->collectionSupplierRecordModel->updateSupplierStatus($recordId, $data->status)) {
+                echo json_encode(['success' => true]);
             } else {
-                // Validate time duration
-                $startTime = strtotime("2000-01-01 " . $data['start_time']);
-                $endTime = strtotime("2000-01-01 " . $data['end_time']);
-                
-                // If end time is earlier than start time, assume it's the next day
-                if ($endTime < $startTime) {
-                    $endTime = strtotime("2000-01-02 " . $data['end_time']);
-                }
-                
-                // Check if end time is before 10 PM
-                $tenPM = strtotime("2000-01-01 22:00:00");
-                if ($endTime > $tenPM) {
-                    $data['error'] = 'Shift end time cannot be after 10 PM.';
-                } else {
-                    // Check for a minimum gap of 2 hours between shifts
-                    $minGap = 2 * 60 * 60; // 2 hours in seconds
-                    if (($endTime - $startTime) < $minGap) {
-                        $data['error'] = 'There must be at least a 2-hour gap between shifts.';
-                    } else {
-                        // Check if the driver is already scheduled for this day and time
-                        $driverScheduleConflict = $this->scheduleModel->checkDriverScheduleConflict(
-                            $data['driver_id'],
-                            $data['day'],
-                            $data['start_time'],
-                            $data['end_time']
-                        );
-
-                        // Check if the route is already scheduled for this day and time
-                        $routeScheduleConflict = $this->scheduleModel->checkRouteScheduleConflict(
-                            $data['route_id'],
-                            $data['day'],
-                            $data['start_time'],
-                            $data['end_time']
-                        );
-
-                        if ($driverScheduleConflict) {
-                            $data['error'] = 'This driver is already scheduled during this time period.';
-                        } elseif ($routeScheduleConflict) {
-                            $data['error'] = 'This route is already scheduled during this time period.';
-                        } else {
-                            // Create schedule
-                            if ($this->scheduleModel->create($data)) {
-                                flash('schedule_success', 'Schedule created successfully');
-                                redirect('manager/schedule');
-                            } else {
-                                $data['error'] = 'Something went wrong. Please try again. Debug info: ' . 
-                                'day: ' . $data['day'] . ', ' .
-                                'driver_id: ' . $data['driver_id'] . ', ' .
-                                'route_id: ' . $data['route_id'] . ', ' .
-                                'start_time: ' . $data['start_time'] . ', ' .
-                                'end_time: ' . $data['end_time'];
-                            }
-                        }
-                    }
-                }
+                echo json_encode(['success' => false]);
             }
         }
-
-        // Load the view for creating a schedule
-        $this->view('vehicle_manager/v_create_schedule', $data);
     }
 
-    public function updateSchedule($scheduleId = null) {
-        if (!isLoggedIn()) {
-            redirect('users/login');
-        }
 
-        // Check if schedule ID is provided
-        if (!$scheduleId) {
-            flash('schedule_error', 'Invalid schedule ID');
-            redirect('manager/collectionschedule');
-        }
+    /** 
+     * Vehicle Management
+     * ------------------------------------------------------------
+     */
 
-        // Get the existing schedule
-        $schedule = $this->scheduleModel->getScheduleById($scheduleId);
-        
-        // Check if schedule exists
-        if (!$schedule) {
-            flash('schedule_error', 'Schedule not found');
-            redirect('manager/collectionschedule');
-        }
-
-        // Get data for the form
-        $drivers = $this->driverModel->getAllDrivers();
-        $routes = $this->routeModel->getAllUndeletedRoutes();
-
-        $data = [
-            'schedule' => $schedule,
-            'drivers' => $drivers,
-            'routes' => $routes,
-            'error' => ''
-        ];
-
-        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-            // Sanitize and get POST data
-            $_POST = filter_input_array(INPUT_POST, FILTER_SANITIZE_STRING);
-
-            $data = [
-                'schedule_id' => $scheduleId,
-                'day' => trim($_POST['day']),
-                'driver_id' => trim($_POST['driver_id']),
-                'route_id' => trim($_POST['route_id']),
-                'start_time' => trim($_POST['start_time']),
-                'end_time' => trim($_POST['end_time']),
-                'schedule' => $schedule,
-                'drivers' => $drivers,
-                'routes' => $routes,
-                'error' => ''
-            ];
-
-            // Validate data
-            if (empty($data['day']) || 
-                empty($data['driver_id']) || empty($data['route_id']) || 
-                empty($data['start_time']) || empty($data['end_time'])) {
-                $data['error'] = 'Please fill in all fields';
-            } else {
-                // Validate time duration
-                $startTime = strtotime("2000-01-01 " . $data['start_time']);
-                $endTime = strtotime("2000-01-01 " . $data['end_time']);
-                
-                // If end time is earlier than start time, assume it's the next day
-                if ($endTime < $startTime) {
-                    $endTime = strtotime("2000-01-02 " . $data['end_time']);
-                }
-                
-                $duration = $endTime - $startTime;
-                $maxDuration = 24 * 60 * 60; // 24 hours in seconds
-                
-                // Check if end time is before 10 PM
-                $tenPM = strtotime("2000-01-01 22:00:00");
-                if ($endTime > $tenPM) {
-                    $data['error'] = 'Shift end time cannot be after 10 PM.';
-                } elseif ($duration > $maxDuration) {
-                    $data['error'] = 'Schedule duration cannot exceed 24 hours.';
-                } elseif (($endTime - $startTime) < (2 * 60 * 60)) { // 2 hours in seconds
-                    $data['error'] = 'There must be at least a 2-hour gap between shifts.';
-                } else {
-                    // Check for conflicts only if the driver or day or time has changed
-                    $driverConflict = false;
-                    $routeConflict = false;
-                    
-                    if ($data['driver_id'] != $schedule->driver_id || 
-                        $data['day'] != $schedule->day || 
-                        $data['start_time'] != $schedule->start_time || 
-                        $data['end_time'] != $schedule->end_time) {
-                        
-                        // Check if the driver is already scheduled for this day and time
-                        $driverConflict = $this->scheduleModel->checkDriverScheduleConflictExcludingCurrent(
-                            $data['driver_id'],
-                            $data['day'],
-                            $data['start_time'],
-                            $data['end_time'],
-                            $scheduleId
-                        );
-                    }
-                    
-                    if ($data['route_id'] != $schedule->route_id || 
-                        $data['day'] != $schedule->day || 
-                        $data['start_time'] != $schedule->start_time || 
-                        $data['end_time'] != $schedule->end_time) {
-                        
-                        // Check if the route is already scheduled for this day and time
-                        $routeConflict = $this->scheduleModel->checkRouteScheduleConflictExcludingCurrent(
-                            $data['route_id'],
-                            $data['day'],
-                            $data['start_time'],
-                            $data['end_time'],
-                            $scheduleId
-                        );
-                    }
-
-                    if ($driverConflict) {
-                        $data['error'] = 'This driver is already scheduled during this time period.';
-                    } elseif ($routeConflict) {
-                        $data['error'] = 'This route is already scheduled during this time period.';
-                    } else {
-                        // Update schedule
-                        if ($this->scheduleModel->updateSchedule($data)) {
-                            flash('schedule_success', 'Schedule updated successfully');
-                            redirect('manager/schedule');
-                        } else {
-                            $data['error'] = 'Something went wrong. Please try again.';
-                        }
-                    }
-                }
-            }
-        }
-
-        // Load the view for updating a schedule
-        $this->view('vehicle_manager/v_update_schedule', $data);
-    }
-
-    //----------------------------------------
-    // VEHICLE METHODS
-    //----------------------------------------
     public function vehicle() {
         // Retrieve filter parameters from the GET request
         $license_plate = isset($_GET['license_plate']) ? $_GET['license_plate'] : null;
@@ -461,8 +444,8 @@ class Manager extends Controller
         ];
     
         $this->view('vehicle_manager/v_vehicle', $data);
-    }
-
+    }   
+    
     public function viewVehicle($vehicle_id) {
         if (!isLoggedIn()) {
             redirect('users/login');
@@ -489,7 +472,6 @@ class Manager extends Controller
             'upcomingSchedules' => $upcomingSchedules
         ]);
     }
-
 
     public function createVehicle() {
         if (!isLoggedIn()) {
@@ -565,7 +547,6 @@ class Manager extends Controller
         $this->view('vehicle_manager/v_create_vehicle', $data);
     }
 
-
     public function updateVehicle($vehicle_id) {
         if (!isLoggedIn()) {
             redirect('users/login');
@@ -634,11 +615,7 @@ class Manager extends Controller
         $this->view('vehicle_manager/v_update_vehicle', ['vehicle' => $vehicle]);
     }
 
-
- 
-
-    public function getVehicleById($id)
-    {
+    public function getVehicleById($id){
         $vehicle = $this->vehicleModel->getVehicleById($id);
         if ($vehicle) {
             echo json_encode(['success' => true, 'vehicle' => $vehicle]);
@@ -647,8 +624,7 @@ class Manager extends Controller
         }
     }
 
-    public function deleteVehicle($id)
-    {
+    public function deleteVehicle($id){
 
         // NEED TO DOUBLE CHECK THIS!!! A SIMPLE INSTRUCTION BUT ITS NOT DELETING. IDK ...
 
@@ -678,9 +654,119 @@ class Manager extends Controller
         redirect('manager/vehicle');
     }
 
-    //----------------------------------------
-    // DRIVER METHODS
-    //----------------------------------------
+    public function addVehicle() {
+        if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+            // Validate and sanitize input
+            $license_plate = htmlspecialchars(trim($_POST['license_plate']));
+            $vehicle_type = htmlspecialchars(trim($_POST['vehicle_type']));
+            $make = htmlspecialchars(trim($_POST['make']));
+            $model = htmlspecialchars(trim($_POST['model']));
+            $manufacturing_year = htmlspecialchars(trim($_POST['manufacturing_year']));
+            $color = htmlspecialchars(trim($_POST['color']));
+            $capacity = htmlspecialchars(trim($_POST['capacity']));
+
+            // Handle file upload
+            if (isset($_FILES['vehicle_image']) && $_FILES['vehicle_image']['error'] == 0) {
+                $image = $_FILES['vehicle_image'];
+                $target_dir = "/opt/lampp/htdocs/Evergreen_Project/public/uploads/vehicle_photos/";
+                $target_file = $target_dir . $license_plate . ".jpg"; // Save as {license_plate}.jpg
+
+                // Move the uploaded file to the target directory
+                if (move_uploaded_file($image['tmp_name'], $target_file)) {
+                    // File upload successful, now save vehicle details to the database
+                    $this->vehicleModel->addVehicle([
+                        'license_plate' => $license_plate,
+                        'vehicle_type' => $vehicle_type,
+                        'make' => $make,
+                        'model' => $model,
+                        'manufacturing_year' => $manufacturing_year,
+                        'color' => $color,
+                        'capacity' => $capacity,
+                        'image_path' => $target_file // Optional: store the image path in the database
+                    ]);
+
+                    // Redirect or show success message
+                    header('Location: ' . URLROOT . '/manager/vehicle');
+                    exit();
+                } else {
+                    // Handle file upload error
+                    echo "Error uploading file.";
+                }
+            } else {
+                // Handle no file uploaded or other errors
+                echo "No file uploaded or there was an error.";
+            }
+        }
+    }
+
+    public function removeVehicle() {
+        if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+            // Validate and sanitize input
+            $license_plate = htmlspecialchars(trim($_POST['license_plate']));
+
+            // Check if the vehicle exists
+            $vehicle = $this->vehicleModel->getVehicleByLicensePlate($license_plate);
+            if ($vehicle) {
+                // Remove the vehicle from the database
+                if ($this->vehicleModel->deleteVehicle($license_plate)) {
+                    // Optionally, remove the vehicle image file
+                    $imagePath = "/opt/lampp/htdocs/Evergreen_Project/public/uploads/vehicle_photos/" . $license_plate . ".jpg";
+                    if (file_exists($imagePath)) {
+                        unlink($imagePath); // Delete the image file
+                    }
+
+                    // Redirect or show success message
+                    header('Location: ' . URLROOT . '/manager/vehicle');
+                    exit();
+                } else {
+                    echo "Error removing vehicle.";
+                }
+            } else {
+                echo "Vehicle not found.";
+            }
+        }
+    }
+
+    public function checkVehicleUsage($id){
+        $schedules = $this->scheduleModel->getSchedulesByVehicleId($id);
+        $collections = $this->collectionModel->getCollectionsByVehicleId($id);
+
+        echo json_encode([
+            'inUse' => !empty($schedules) || !empty($collections),
+            'schedules' => !empty($schedules),
+            'collections' => !empty($collections)
+        ]);
+    }
+
+    public function getVehicleDetails($id){
+        ob_clean();
+
+        try {
+            $vehicle = $this->vehicleModel->getVehicleById($id);
+
+            header('Content-Type: application/json');
+            echo json_encode([
+                'status' => 'success',
+                'data' => $vehicle,
+                'message' => 'Vehicle details retrieved successfully'
+            ]);
+            exit;
+        } catch (Exception $e) {
+            header('Content-Type: application/json');
+            echo json_encode([
+                'status' => 'error',
+                'message' => $e->getMessage()
+            ]);
+            exit;
+        }
+    }
+
+
+    /** 
+     * Driver Management
+     * ------------------------------------------------------------
+     */
+
     public function driver() {
         // Initialize $data array first
         $data = [];
@@ -706,7 +792,6 @@ class Manager extends Controller
         
         $this->view('vehicle_manager/v_driver', $data);
     }
-
 
     public function viewDriver($driver_id) {
         if (!isLoggedIn()) {
@@ -968,908 +1053,6 @@ class Manager extends Controller
         $this->view('vehicle_manager/v_update_driver', $data);
     }
 
-    //----------------------------------------
-    // ROUTE METHODS
-    //----------------------------------------
-    public function route() {
-        $allRoutes = $this->routeModel->getAllUndeletedRoutes();
-        $totalRoutes = $this->routeModel->getTotalRoutes();
-        $totalActive = $this->routeModel->getTotalActiveRoutes();
-        $totalInactive = $this->routeModel->getTotalInactiveRoutes();
-        $unallocatedSuppliers = $this->routeModel->getUnallocatedSuppliers();
-
-        // Format suppliers for the map/dropdown
-        $suppliersForMap = array_map(function ($supplier) {
-            return [
-                'id' => $supplier->supplier_id,
-                'name' => $supplier->full_name, // Changed from supplier_name to full_name
-                'preferred_day' => $supplier->preferred_day, // Include preferred_day
-                'location' => [
-                    'lat' => (float) $supplier->latitude,
-                    'lng' => (float) $supplier->longitude
-                ],
-                'average_collection' => $supplier->average_collection,
-                'number_of_collections' => $supplier->number_of_collections
-
-            ];
-        }, $unallocatedSuppliers);
-
-        $data = [
-            'allRoutes' => $allRoutes,
-            'totalRoutes' => $totalRoutes,
-            'totalActive' => $totalActive,
-            'totalInactive' => $totalInactive,
-            'unallocatedSuppliers' => $suppliersForMap,
-            'unassignedSuppliersList' => $unallocatedSuppliers
-        ];
-
-        $this->view('vehicle_manager/v_route', $data);
-    }
-
-    public function createRoute()
-    {
-        // Clear any previous output
-        ob_clean();
-
-        // Set JSON headers
-        header('Content-Type: application/json');
-
-        try {
-            // Get and validate JSON input
-            $json = file_get_contents('php://input');
-            error_log("Received data: " . $json); // Debug log
-
-            $data = json_decode($json);
-
-            if (!$data) {
-                throw new Exception('Invalid JSON data received');
-            }
-
-            // Create the route
-            $result = $this->routeModel->createRoute($data);
-
-            $response = [
-                'success' => true,
-                'message' => 'Route created successfully',
-                'routeId' => $result // Assuming createRoute returns the new route ID
-            ];
-
-            error_log("Sending response: " . json_encode($response)); // Debug log
-            echo json_encode($response);
-
-        } catch (Exception $e) {
-            error_log("Error in createRoute: " . $e->getMessage());
-            echo json_encode([
-                'success' => false,
-                'message' => $e->getMessage()
-            ]);
-        }
-        exit;
-    }
-
-    public function getRouteSuppliers($routeId)
-    {
-        // Clear any previous output and set JSON header
-        ob_clean();
-        header('Content-Type: application/json');
-
-        if (!$routeId) {
-            echo json_encode(['error' => 'Route ID is required']);
-            return;
-        }
-
-        try {
-            // Get route details
-            $route = $this->routeModel->getRouteById($routeId);
-            if (!$route) {
-                throw new Exception('Route not found');
-            }
-
-            // Get suppliers for this route
-            $suppliers = $this->routeModel->getRouteSuppliers($routeId);
-
-            // Combine the data
-            $response = [
-                'success' => true,
-                'data' => [
-                    'route' => [
-                        'id' => $route->route_id,
-                        'name' => $route->route_name,
-                        'status' => $route->status,
-                        'start_location' => [
-                            'lat' => $route->start_location_lat,
-                            'lng' => $route->start_location_long
-                        ],
-                        'end_location' => [
-                            'lat' => $route->end_location_lat,
-                            'lng' => $route->end_location_long
-                        ],
-                        'date' => $route->date,
-                        'number_of_suppliers' => $route->number_of_suppliers
-                    ],
-                    'suppliers' => array_map(function ($supplier) {
-                        return [
-                            'id' => $supplier->supplier_id,
-                            'name' => $supplier->full_name,
-                            'location' => [
-                                'lat' => $supplier->latitude,
-                                'lng' => $supplier->longitude
-                            ],
-                            'stop_order' => $supplier->stop_order,
-                            'supplier_order' => $supplier->supplier_order
-                        ];
-                    }, $suppliers)
-                ]
-            ];
-
-            error_log('Sending response: ' . json_encode($response));
-            echo json_encode($response);
-
-        } catch (Exception $e) {
-            error_log('Error in getRouteSuppliers: ' . $e->getMessage());
-            echo json_encode([
-                'success' => false,
-                'error' => $e->getMessage()
-            ]);
-        }
-        exit;
-    }
-
-
-    //----------------------------------------
-    // PROFILE & SETTINGS METHODS
-    //----------------------------------------
-    public function settings()
-    {
-        $data = [];
-        $this->view('vehicle_manager/v_settings', $data);
-    }
-
-    public function personal_details()
-    {
-        $data = [];
-        $this->view('vehicle_manager/v_personal_details', $data);
-    }
-
-    public function logout()
-    {
-        // Handle logout functionality
-    }
-
-
-    public function update_leave_status()
-    {
-        header('Content-Type: application/json');
-
-        if ($_SERVER['REQUEST_METHOD'] != 'POST') {
-            echo json_encode(['success' => false, 'message' => 'Invalid request method']);
-            return;
-        }
-
-        try {
-            $rawInput = file_get_contents("php://input");
-            error_log("Received raw input: " . $rawInput);
-
-            $data = json_decode($rawInput);
-
-            if (!$data || !isset($data->requestId) || !isset($data->status) || !isset($data->vehicle_manager_id)) {
-                echo json_encode([
-                    'success' => false,
-                    'message' => 'Missing required data',
-                    'received' => $data
-                ]);
-                return;
-            }
-
-            // Validate status value
-            if (!in_array($data->status, ['approved', 'rejected'])) {
-                echo json_encode([
-                    'success' => false,
-                    'message' => 'Invalid status value'
-                ]);
-                return;
-            }
-
-            $result = $this->staffModel->updateLeaveStatus(
-                (int) $data->requestId,
-                $data->status,
-                (int) $data->vehicle_manager_id
-            );
-
-            if ($result) {
-                echo json_encode([
-                    'success' => true,
-                    'message' => 'Leave status updated successfully'
-                ]);
-            } else {
-                echo json_encode([
-                    'success' => false,
-                    'message' => 'Failed to update leave status'
-                ]);
-            }
-
-        } catch (Exception $e) {
-            error_log("Exception in update_leave_status: " . $e->getMessage());
-            echo json_encode([
-                'success' => false,
-                'message' => 'Server error: ' . $e->getMessage()
-            ]);
-        }
-    }
-
-    //==============================================================================
-    // ROUTE MANAGEMENT
-    //==============================================================================
-    
-    /**
-     * Gets collection route details including suppliers
-     * @param int $collectionId The ID of the collection
-     */
-    public function getCollectionRoute($collectionId)
-    {
-        // Get collection details
-        $collection = $this->collectionModel->getCollectionById($collectionId);
-
-        // Get route and supplier details
-        $routeData = $this->routeModel->getRouteWithSuppliers($collection->route_id);
-
-        // Get current progress from supplier records
-        $supplierRecords = $this->collectionSupplierRecordModel->getSupplierRecords($collectionId);
-
-        $data = [
-            'team_name' => $collection->team_name,
-            'route_name' => $collection->route_name,
-            'start_location' => [
-                'latitude' => $routeData->start_location_lat,
-                'longitude' => $routeData->start_location_long
-            ],
-            'end_location' => [
-                'latitude' => $routeData->end_location_lat,
-                'longitude' => $routeData->end_location_long
-            ],
-            'suppliers' => $routeData->suppliers,
-            'current_stop' => $this->getCurrentStop($supplierRecords)
-        ];
-
-        echo json_encode($data);
-    }
-
-    /**
-     * Determines the current stop in the collection route
-     * @param array $supplierRecords The supplier collection records
-     * @return int The index of the current stop
-     */
-    private function getCurrentStop($supplierRecords)
-    {
-        // Find the last collected supplier
-        foreach ($supplierRecords as $index => $record) {
-            if ($record->status === 'Collected') {
-                return $index;
-            }
-        }
-        return 0; // Return 0 if no collections yet
-    }
-
-    /**
-     * Updates the status of a supplier in a collection
-     * @param int $recordId The ID of the supplier record
-     */
-    public function updateSupplierStatus($recordId)
-    {
-        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-            $data = json_decode(file_get_contents('php://input'));
-
-            if ($this->collectionSupplierRecordModel->updateSupplierStatus($recordId, $data->status)) {
-                echo json_encode(['success' => true]);
-            } else {
-                echo json_encode(['success' => false]);
-            }
-        }
-    }
-
-    /**
-     * Removes a supplier from a collection
-     * @param int $recordId The ID of the supplier record
-     */
-    public function removeCollectionSupplier($recordId)
-    {
-        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-            $data = json_decode(file_get_contents('php://input'));
-            if ($this->collectionSupplierRecordModel->removeCollectionSupplier($recordId)) {
-                echo json_encode(['success' => true]);
-            } else {
-                echo json_encode(['success' => false]);
-            }
-        }
-    }
-
-    /**
-     * Gets details for a specific route
-     * @param int $routeId The ID of the route
-     */
-    public function getRouteDetails($routeId)
-    {
-        // Clear any previous output
-        ob_clean();
-
-        // Set JSON headers
-        header('Content-Type: application/json');
-
-        try {
-            if (!$routeId) {
-                throw new Exception('Route ID is required');
-            }
-
-            // Get route details from model
-            $routeDetails = $this->routeModel->getRouteById($routeId);
-
-            if (!$routeDetails) {
-                throw new Exception('Route not found');
-            }
-
-            // Get route suppliers
-            $routeSuppliers = $this->routeModel->getRouteSuppliers($routeId);
-
-            // Combine route details with suppliers
-            $response = [
-                'success' => true,
-                'route' => [
-                    'id' => $routeId,
-                    'name' => $routeDetails->route_name,
-                    'status' => $routeDetails->status,
-                    'suppliers' => array_map(function ($supplier) {
-                        return [
-                            'id' => $supplier->supplier_id,
-                            'name' => $supplier->full_name,
-                            'coordinates' => [
-                                'lat' => (float) $supplier->latitude,
-                                'lng' => (float) $supplier->longitude
-                            ]
-                        ];
-                    }, $routeSuppliers)
-                ]
-            ];
-
-            error_log("Sending route details: " . json_encode($response)); // Debug log
-            echo json_encode($response);
-
-        } catch (Exception $e) {
-            error_log("Error in getRouteDetails: " . $e->getMessage());
-            echo json_encode([
-                'success' => false,
-                'message' => $e->getMessage()
-            ]);
-        }
-        exit;
-    }
-
-    /**
-     * Gets routes scheduled for a specific day
-     * @param string $day The day to get routes for
-     */
-    public function getRoutesByDay($day)
-    {
-        $routes = $this->routeModel->getRoutesByDay($day);
-        echo json_encode(['routes' => $routes]);
-    }
-
-    //==============================================================================
-    // VEHICLE MANAGEMENT
-    //==============================================================================
-    
-    /**
-     * Adds a new vehicle to the system
-     */
-    public function addVehicle() {
-        if ($_SERVER['REQUEST_METHOD'] == 'POST') {
-            // Validate and sanitize input
-            $license_plate = htmlspecialchars(trim($_POST['license_plate']));
-            $vehicle_type = htmlspecialchars(trim($_POST['vehicle_type']));
-            $make = htmlspecialchars(trim($_POST['make']));
-            $model = htmlspecialchars(trim($_POST['model']));
-            $manufacturing_year = htmlspecialchars(trim($_POST['manufacturing_year']));
-            $color = htmlspecialchars(trim($_POST['color']));
-            $capacity = htmlspecialchars(trim($_POST['capacity']));
-
-            // Handle file upload
-            if (isset($_FILES['vehicle_image']) && $_FILES['vehicle_image']['error'] == 0) {
-                $image = $_FILES['vehicle_image'];
-                $target_dir = "/opt/lampp/htdocs/Evergreen_Project/public/uploads/vehicle_photos/";
-                $target_file = $target_dir . $license_plate . ".jpg"; // Save as {license_plate}.jpg
-
-                // Move the uploaded file to the target directory
-                if (move_uploaded_file($image['tmp_name'], $target_file)) {
-                    // File upload successful, now save vehicle details to the database
-                    $this->vehicleModel->addVehicle([
-                        'license_plate' => $license_plate,
-                        'vehicle_type' => $vehicle_type,
-                        'make' => $make,
-                        'model' => $model,
-                        'manufacturing_year' => $manufacturing_year,
-                        'color' => $color,
-                        'capacity' => $capacity,
-                        'image_path' => $target_file // Optional: store the image path in the database
-                    ]);
-
-                    // Redirect or show success message
-                    header('Location: ' . URLROOT . '/manager/vehicle');
-                    exit();
-                } else {
-                    // Handle file upload error
-                    echo "Error uploading file.";
-                }
-            } else {
-                // Handle no file uploaded or other errors
-                echo "No file uploaded or there was an error.";
-            }
-        }
-    }
-
-    /**
-     * Removes a vehicle from the system
-     */
-    public function removeVehicle() {
-        if ($_SERVER['REQUEST_METHOD'] == 'POST') {
-            // Validate and sanitize input
-            $license_plate = htmlspecialchars(trim($_POST['license_plate']));
-
-            // Check if the vehicle exists
-            $vehicle = $this->vehicleModel->getVehicleByLicensePlate($license_plate);
-            if ($vehicle) {
-                // Remove the vehicle from the database
-                if ($this->vehicleModel->deleteVehicle($license_plate)) {
-                    // Optionally, remove the vehicle image file
-                    $imagePath = "/opt/lampp/htdocs/Evergreen_Project/public/uploads/vehicle_photos/" . $license_plate . ".jpg";
-                    if (file_exists($imagePath)) {
-                        unlink($imagePath); // Delete the image file
-                    }
-
-                    // Redirect or show success message
-                    header('Location: ' . URLROOT . '/manager/vehicle');
-                    exit();
-                } else {
-                    echo "Error removing vehicle.";
-                }
-            } else {
-                echo "Vehicle not found.";
-            }
-        }
-    }
-
-    /**
-     * Checks if a vehicle is being used in schedules or collections
-     * @param int $id The vehicle ID
-     */
-    public function checkVehicleUsage($id)
-    {
-        $schedules = $this->scheduleModel->getSchedulesByVehicleId($id);
-        $collections = $this->collectionModel->getCollectionsByVehicleId($id);
-
-        echo json_encode([
-            'inUse' => !empty($schedules) || !empty($collections),
-            'schedules' => !empty($schedules),
-            'collections' => !empty($collections)
-        ]);
-    }
-
-    /**
-     * Gets details for a specific vehicle
-     * @param int $id The vehicle ID
-     */
-    public function getVehicleDetails($id)
-    {
-        ob_clean();
-
-        try {
-            $vehicle = $this->vehicleModel->getVehicleById($id);
-
-            header('Content-Type: application/json');
-            echo json_encode([
-                'status' => 'success',
-                'data' => $vehicle,
-                'message' => 'Vehicle details retrieved successfully'
-            ]);
-            exit;
-        } catch (Exception $e) {
-            header('Content-Type: application/json');
-            echo json_encode([
-                'status' => 'error',
-                'message' => $e->getMessage()
-            ]);
-            exit;
-        }
-    }
-
-    //==============================================================================
-    // EMPLOYEE/DRIVER MANAGEMENT
-    //==============================================================================
-    
-    /**
-     * Gets employee details by user ID
-     * @param int $user_id The user ID
-     */
-    public function getEmployeeByUserId($user_id)
-    {
-        // Fetch employee data
-        $employeeData = $this->employeeModel->getEmployeeByUserId($user_id);
-
-        // Ensure all expected keys exist
-        $response = [
-            'employee_id' => $employeeData->employee_id ?? null,
-            'user_id' => $employeeData->user_id ?? null,
-            'hire_date' => $employeeData->hire_date ?? null,
-            'contact_number' => $employeeData->contact_number ?? '',
-            'emergency_contact' => $employeeData->emergency_contact ?? '',
-            'status' => $employeeData->status ?? 'Active',
-            'address_line1' => $employeeData->address_line1 ?? '',
-            'address_line2' => $employeeData->address_line2 ?? '',
-            'city' => $employeeData->city ?? ''
-        ];
-
-        echo json_encode($response);
-        exit;
-    }
-
-    /**
-     * Removes a driver from the system
-     * @param int $user_id The user ID of the driver
-     */
-    public function removeDriver($user_id)
-    {
-        if ($_SERVER['REQUEST_METHOD'] == 'POST') {
-            try {
-                // Call the model method to remove the driver
-                if ($this->driverModel->removeDriver($user_id)) {
-                    flash('driver_message', 'Driver removed successfully', 'alert alert-success');
-                } else {
-                    flash('driver_message', 'Failed to remove driver', 'alert alert-danger');
-                }
-            } catch (Exception $e) {
-                flash('driver_message', 'Error: ' . $e->getMessage(), 'alert alert-danger');
-            }
-
-            redirect('manager/driver'); // Redirect to the driver management page
-        } else {
-            // If not a POST request, redirect to the driver management page
-            redirect('manager/driver');
-        }
-    }
-
-    //==============================================================================
-    // COLLECTION BAG MANAGEMENT
-    //==============================================================================
-    
-    /**
-     * Loads the collection bag management view
-     */
-    public function bag()
-    {
-        $data = [
-            // 'totalVehicles' => $this->vehicleModel->getTotalVehicles(),
-            // 'availableVehicles' => $this->vehicleModel->getAvailableVehicles(),
-            // 'vehicles' => $this->vehicleModel->getVehicleDetails(),
-            // 'vehicleTypeStats' => $this->vehicleModel->getVehicleTypeStats()
-        ];
-
-        $this->view('vehicle_manager/collection_bags/index', $data);
-    }
-
-    /**
-     * Creates a new collection bag
-     */
-    public function createBag()
-    {
-        if ($_SERVER['REQUEST_METHOD'] == 'POST') {
-            // Get the raw POST data
-            $input = file_get_contents("php://input");
-            $data = json_decode($input, true); // Decode the JSON payload
-
-            // Log the received data
-            error_log("Received data: " . print_r($data, true));
-
-            // Convert to appropriate types
-            $data['capacity_kg'] = (float) ($data['capacity_kg'] ?? 50.00); // Default value
-            $data['bag_weight_kg'] = isset($data['bag_weight_kg']) ? (float) $data['bag_weight_kg'] : null; // Convert to float or null
-
-            // Call the model method to create the collection bag
-            $bagId = $this->bagModel->createCollectionBag($data);
-
-            if ($bagId) {
-                // Generate QR Code
-                $this->generateQRCode($bagId);
-
-                // Return success response
-                echo json_encode(['success' => true, 'lastInsertedId' => $bagId]);
-            } else {
-                // Handle error
-                echo json_encode(['success' => false, 'message' => 'Failed to create collection bag.']);
-            }
-        } else {
-            echo json_encode(['success' => false, 'message' => 'Invalid request method.']);
-        }
-    }
-
-    /**
-     * Generates a QR code for a collection bag
-     * @param int $bagId The bag ID
-     */
-    private function generateQRCode($bagId)
-    {
-        try {
-            $qrCode = new QrCode($bagId);
-            $qrCode->setSize(300); // Set the size
-            $qrCode->setMargin(10); // Set the margin
-
-            $writer = new PngWriter();
-
-            // Define the path to save the QR code image
-            $filePath = UPLOADROOT . '/qr_codes/' . $bagId . '.png';
-
-            // Save the generated QR code to a file
-            $writer->writeFile($qrCode, $filePath); // Directly write to file
-
-        } catch (\Exception $e) {
-            error_log('QR Code generation failed: ' . $e->getMessage());
-        }
-    }
-
-    /**
-     * Gets all collection bags
-     */
-    public function getBags()
-    {
-        // Fetch bags from the model
-        $bags = $this->bagModel->getAllBags(); // Assuming this method exists in your model
-
-        // Return the bags as a JSON response
-        echo json_encode(['success' => true, 'bags' => $bags]);
-    }
-
-    /**
-     * Gets details for a specific collection bag
-     * @param int $bagId The bag ID
-     */
-    public function getBagDetails($bagId)
-    {
-        // Fetch bag details from the model
-        $bag = $this->bagModel->getBagDetails($bagId); // Assuming this method exists in your model
-
-        // Check if bag exists and return as JSON response
-        if ($bag) {
-            echo json_encode(['success' => true, 'bag' => $bag]);
-        } else {
-            echo json_encode(['success' => false, 'message' => 'Bag not found.']);
-        }
-    }
-
-    /**
-     * Updates an existing collection bag
-     */
-    public function updateBag()
-    {
-        if ($_SERVER['REQUEST_METHOD'] == 'POST') {
-            // Get the raw POST data
-            $input = file_get_contents("php://input");
-            $data = json_decode($input, true); // Decode the JSON payload
-
-            // Validate and sanitize input
-            $bagId = $data['bag_id'] ?? null;
-            $capacityKg = (float) ($data['capacity_kg'] ?? 0);
-            $bagWeightKg = (float) ($data['bag_weight_kg'] ?? 0);
-            $status = $data['status'] ?? 'inactive'; // Default to inactive if not provided
-
-            // Call the model method to update the collection bag
-            $result = $this->bagModel->updateCollectionBag($bagId, $capacityKg, $bagWeightKg, $status);
-
-            if ($result) {
-                // Return success response
-                echo json_encode(['success' => true]);
-            } else {
-                // Handle error
-                echo json_encode(['success' => false, 'message' => 'Failed to update collection bag.']);
-            }
-        } else {
-            echo json_encode(['success' => false, 'message' => 'Invalid request method.']);
-        }
-    }
-
-    /**
-     * Removes a collection bag
-     */
-    public function removeBag()
-    {
-        if ($_SERVER['REQUEST_METHOD'] == 'DELETE') {
-            // Get the raw POST data
-            $input = file_get_contents("php://input");
-            $data = json_decode($input, true); // Decode the JSON payload
-
-            // Validate and sanitize input
-            $bagId = $data['bag_id'] ?? null;
-
-            // Check if the bag is in use
-            if ($this->bagModel->isBagInUse($bagId)) {
-                echo json_encode(['success' => false, 'message' => 'Cannot remove bag. It is currently in use.']);
-                return;
-            }
-
-            // Call the model method to remove the collection bag
-            $result = $this->bagModel->removeCollectionBag($bagId);
-
-            if ($result) {
-                // Return success response
-                echo json_encode(['success' => true]);
-            } else {
-                // Handle error
-                echo json_encode(['success' => false, 'message' => 'Failed to remove collection bag.']);
-            }
-        } else {
-            echo json_encode(['success' => false, 'message' => 'Invalid request method.']);
-        }
-    }
-
-    /**
-     * Deletes a bag's QR code image
-     */
-    public function deleteBagQR()
-    {
-        // Get the JSON input
-        $input = json_decode(file_get_contents('php://input'), true);
-
-        // Check if the image path is provided
-        if (isset($input['image_path'])) {
-            $imagePath = $input['image_path'];
-
-            // Debugging: Log the full path
-            error_log("Full path to image: " . $imagePath);
-
-            // Check if the file exists
-            if (file_exists($imagePath)) {
-                // Attempt to delete the file
-                if (unlink($imagePath)) {
-                    // File deleted successfully
-                    echo json_encode(['success' => true, 'message' => 'Image deleted successfully.']);
-                } else {
-                    // Failed to delete the file
-                    echo json_encode(['success' => false, 'message' => 'Failed to delete the image.']);
-                }
-            } else {
-                // File does not exist
-                echo json_encode(['success' => false, 'message' => 'Image file not found.']);
-            }
-        } else {
-            // No image path provided
-            echo json_encode(['success' => false, 'message' => 'No image path provided.']);
-        }
-    }
-
-    //==============================================================================
-    // COLLECTION MANAGEMENT
-    //==============================================================================
-    
-    /**
-     * Gets pending collection requests
-     */
-    public function getCollectionRequests()
-    {
-        $collections = $this->collectionModel->getPendingCollections();
-        header('Content-Type: application/json');
-        echo json_encode($collections);
-    }
-
-    /**
-     * Gets details for a specific collection
-     * @param int $id The collection ID
-     */
-    public function getCollectionDetails($id)
-    {
-        // Validate ID
-        if (!$id || !is_numeric($id)) {
-            http_response_code(400);
-            echo json_encode(['error' => 'Invalid collection ID']);
-            return;
-        }
-
-        // Get collection details
-        $collection = $this->collectionModel->getCollectionDetails($id);
-
-        if (!$collection) {
-            http_response_code(404);
-            echo json_encode(['error' => 'Collection not found']);
-            return;
-        }
-
-        // Get bags associated with the collection
-        $bags = $this->collectionModel->getBagsByCollectionId($id);
-
-        // Format the response
-        $response = [
-            'collection_id' => $collection->collection_id,
-            'collection_status' => $collection->collection_status,
-            'created_at' => $collection->created_at,
-            'start_time' => $collection->start_time,
-            'end_time' => $collection->end_time,
-            'total_quantity' => $collection->total_quantity,
-            'fertilizer_distributed' => $collection->fertilizer_distributed,
-            'schedule_id' => $collection->schedule_id,
-            'day' => $collection->day,
-            'route_id' => $collection->route_id,
-            'route_name' => $collection->route_name,
-            'number_of_suppliers' => $collection->number_of_suppliers,
-            'driver_id' => $collection->driver_id,
-            'driver_status' => $collection->driver_status,
-            'first_name' => $collection->first_name,
-            'last_name' => $collection->last_name,
-            'shift_id' => $collection->shift_id,
-            'shift_start' => $collection->shift_start,
-            'shift_end' => $collection->shift_end,
-            'shift_name' => $collection->shift_name,
-            'bags' => $bags  // Include the bags in the response
-        ];
-
-        header('Content-Type: application/json');
-        echo json_encode($response);
-    }
-
-    /**
-     * Approves a collection request
-     */
-    public function approveCollection()
-    {
-        // Check if it's an AJAX request
-        if (!$this->isAjaxRequest()) {
-            redirect('pages/error');
-            return;
-        }
-
-        // Get the input data
-        $data = json_decode(file_get_contents("php://input"), true);
-
-        // Validate input
-        if (!isset($data['collection_id']) || !is_numeric($data['collection_id'])) {
-            http_response_code(400);
-            echo json_encode(['success' => false, 'message' => 'Invalid collection ID']);
-            return;
-        }
-
-        // Prepare the data for updating
-        $collectionId = $data['collection_id'];
-        // $startTime = $data['start_time'];
-        // $vehicleManagerId = $_SESSION['user_id'];
-        // $vehicleManagerApprovedAt = $data['vehicle_manager_approved_at'];
-        // $bags = $data['bags']; 
-        // $bagsAdded = $data['bags_added'];
-
-        // Update the collection in the model
-        $result = $this->collectionModel->approveCollection($collectionId);
-
-        if ($result) {
-            echo json_encode(['success' => true]);
-        } else {
-            echo json_encode(['success' => false, 'message' => 'Failed to approve collection']);
-        }
-    }
-
-    /**
-     * Gets collections for a specific date
-     */
-    public function getCollectionsByDate() {
-        // Get the date from the request
-        $date = $_GET['date'] ?? null;
-    
-        if ($date) {
-            // Fetch collections for the specified date
-            $collections = $this->collectionModel->getCollectionsByDate($date);
-            
-            // Return the collections as JSON
-            header('Content-Type: application/json');
-            echo json_encode($collections);
-        } else {
-            // Handle the case where no date is provided
-            header('Content-Type: application/json');
-            echo json_encode([]);
-        }
-    }
-
     public function createDriver() {
         // Check if user is logged in
         if (!isLoggedIn()) {
@@ -2116,192 +1299,902 @@ class Manager extends Controller
     }
 
 
-    /*
+    /** 
+     * Route Management
+     * ------------------------------------------------------------
+     */
 
-    THISARANIS
-    PART
-    FROM
-    HERE
-    LOL
+    public function route() {
+        $allRoutes = $this->routeModel->getAllUndeletedRoutes();
+        $totalRoutes = $this->routeModel->getTotalRoutes();
+        $totalActive = $this->routeModel->getTotalActiveRoutes();
+        $totalInactive = $this->routeModel->getTotalInactiveRoutes();
+        $unallocatedSuppliers = $this->routeModel->getUnallocatedSuppliers();
 
-    */
+        // Format suppliers for the map/dropdown
+        $suppliersForMap = array_map(function ($supplier) {
+            return [
+                'id' => $supplier->supplier_id,
+                'name' => $supplier->full_name, // Changed from supplier_name to full_name
+                'preferred_day' => $supplier->preferred_day, // Include preferred_day
+                'location' => [
+                    'lat' => (float) $supplier->latitude,
+                    'lng' => (float) $supplier->longitude
+                ],
+                'average_collection' => $supplier->average_collection,
+                'number_of_collections' => $supplier->number_of_collections
 
-    public function index() {
-        // Get all applications
-        $applications = $this->model('M_SupplierApplication')->getAllApplications();
-        
-        // Get approved applications pending role assignment
-        $approvedPendingRole = $this->model('M_SupplierApplication')->getApprovedPendingRoleApplications();
+            ];
+        }, $unallocatedSuppliers);
 
         $data = [
-            'applications' => $applications,
-            'approved_pending_role' => $approvedPendingRole
+            'allRoutes' => $allRoutes,
+            'totalRoutes' => $totalRoutes,
+            'totalActive' => $totalActive,
+            'totalInactive' => $totalInactive,
+            'unallocatedSuppliers' => $suppliersForMap,
+            'unassignedSuppliersList' => $unallocatedSuppliers
         ];
 
-        // Load view
-        $this->view('supplier_manager/v_applications', $data);
+        $this->view('vehicle_manager/v_route', $data);
+    }
+
+    public function createRoute(){
+        // Clear any previous output
+        ob_clean();
+
+        // Set JSON headers
+        header('Content-Type: application/json');
+
+        try {
+            // Get and validate JSON input
+            $json = file_get_contents('php://input');
+            error_log("Received data: " . $json); // Debug log
+
+            $data = json_decode($json);
+
+            if (!$data) {
+                throw new Exception('Invalid JSON data received');
+            }
+
+            // Create the route
+            $result = $this->routeModel->createRoute($data);
+
+            $response = [
+                'success' => true,
+                'message' => 'Route created successfully',
+                'routeId' => $result // Assuming createRoute returns the new route ID
+            ];
+
+            error_log("Sending response: " . json_encode($response)); // Debug log
+            echo json_encode($response);
+
+        } catch (Exception $e) {
+            error_log("Error in createRoute: " . $e->getMessage());
+            echo json_encode([
+                'success' => false,
+                'message' => $e->getMessage()
+            ]);
+        }
+        exit;
+    }
+
+    public function getRouteSuppliers($routeId){
+        // Clear any previous output and set JSON header
+        ob_clean();
+        header('Content-Type: application/json');
+
+        if (!$routeId) {
+            echo json_encode(['error' => 'Route ID is required']);
+            return;
+        }
+
+        try {
+            // Get route details
+            $route = $this->routeModel->getRouteById($routeId);
+            if (!$route) {
+                throw new Exception('Route not found');
+            }
+
+            // Get suppliers for this route
+            $suppliers = $this->routeModel->getRouteSuppliers($routeId);
+
+            // Combine the data
+            $response = [
+                'success' => true,
+                'data' => [
+                    'route' => [
+                        'id' => $route->route_id,
+                        'name' => $route->route_name,
+                        'status' => $route->status,
+                        'start_location' => [
+                            'lat' => $route->start_location_lat,
+                            'lng' => $route->start_location_long
+                        ],
+                        'end_location' => [
+                            'lat' => $route->end_location_lat,
+                            'lng' => $route->end_location_long
+                        ],
+                        'date' => $route->date,
+                        'number_of_suppliers' => $route->number_of_suppliers
+                    ],
+                    'suppliers' => array_map(function ($supplier) {
+                        return [
+                            'id' => $supplier->supplier_id,
+                            'name' => $supplier->full_name,
+                            'location' => [
+                                'lat' => $supplier->latitude,
+                                'lng' => $supplier->longitude
+                            ],
+                            'stop_order' => $supplier->stop_order,
+                            'supplier_order' => $supplier->supplier_order
+                        ];
+                    }, $suppliers)
+                ]
+            ];
+
+            error_log('Sending response: ' . json_encode($response));
+            echo json_encode($response);
+
+        } catch (Exception $e) {
+            error_log('Error in getRouteSuppliers: ' . $e->getMessage());
+            echo json_encode([
+                'success' => false,
+                'error' => $e->getMessage()
+            ]);
+        }
+        exit;
+    }
+
+    public function getRouteDetails($routeId){
+        // Clear any previous output
+        ob_clean();
+
+        // Set JSON headers
+        header('Content-Type: application/json');
+
+        try {
+            if (!$routeId) {
+                throw new Exception('Route ID is required');
+            }
+
+            // Get route details from model
+            $routeDetails = $this->routeModel->getRouteById($routeId);
+
+            if (!$routeDetails) {
+                throw new Exception('Route not found');
+            }
+
+            // Get route suppliers
+            $routeSuppliers = $this->routeModel->getRouteSuppliers($routeId);
+
+            // Combine route details with suppliers
+            $response = [
+                'success' => true,
+                'route' => [
+                    'id' => $routeId,
+                    'name' => $routeDetails->route_name,
+                    'status' => $routeDetails->status,
+                    'suppliers' => array_map(function ($supplier) {
+                        return [
+                            'id' => $supplier->supplier_id,
+                            'name' => $supplier->full_name,
+                            'coordinates' => [
+                                'lat' => (float) $supplier->latitude,
+                                'lng' => (float) $supplier->longitude
+                            ]
+                        ];
+                    }, $routeSuppliers)
+                ]
+            ];
+
+            error_log("Sending route details: " . json_encode($response)); // Debug log
+            echo json_encode($response);
+
+        } catch (Exception $e) {
+            error_log("Error in getRouteDetails: " . $e->getMessage());
+            echo json_encode([
+                'success' => false,
+                'message' => $e->getMessage()
+            ]);
+        }
+        exit;
+    }
+
+    public function getRoutesByDay($day){
+        $routes = $this->routeModel->getRoutesByDay($day);
+        echo json_encode(['routes' => $routes]);
+    }
+
+    public function removeCollectionSupplier($recordId){
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            $data = json_decode(file_get_contents('php://input'));
+            if ($this->collectionSupplierRecordModel->removeCollectionSupplier($recordId)) {
+                echo json_encode(['success' => true]);
+            } else {
+                echo json_encode(['success' => false]);
+            }
+        }
+    }
+
+    private function getCurrentStop($supplierRecords){
+        // Find the last collected supplier
+        foreach ($supplierRecords as $index => $record) {
+            if ($record->status === 'Collected') {
+                return $index;
+            }
+        }
+        return 0; // Return 0 if no collections yet
     }
 
 
-    public function viewApplication($applicationId) {
-        // Load the model
-        $supplierApplicationModel = $this->model('M_SupplierApplication');
-        
-        // Get application details using the model
-        $application = $supplierApplicationModel->getApplicationById($applicationId);
-    
-        // If application not found, redirect with error
-        if (!$application) {
-            redirect('manager/applications');
+    /** 
+     * Collection Management
+     * ------------------------------------------------------------
+     */
+
+    public function collection(){
+        // Get dashboard stats from the model
+        $stats = $this->vehicleManagerModel->getDashboardStats();
+        $stats['collections'] = (array)$stats['collections'];
+
+        // Retrieve filter parameters from the GET request
+        $collection_id = isset($_GET['collection_id']) ? $_GET['collection_id'] : null;
+        $schedule_id = isset($_GET['schedule_id']) ? $_GET['schedule_id'] : null;
+        $status = isset($_GET['status']) ? $_GET['status'] : null;
+        $start_date = isset($_GET['start_date']) ? $_GET['start_date'] : null;
+        $end_date = isset($_GET['end_date']) ? $_GET['end_date'] : null;
+        $min_quantity = isset($_GET['min_quantity']) ? $_GET['min_quantity'] : null;
+        $max_quantity = isset($_GET['max_quantity']) ? $_GET['max_quantity'] : null;
+        $bags_added = isset($_GET['bags_added']) ? $_GET['bags_added'] : null;
+
+        // Fetch collections based on filters
+        if ($collection_id || $schedule_id || $status || $start_date || $end_date || $min_quantity || $max_quantity || $bags_added !== null) {
+            $allCollections = $this->collectionModel->getFilteredCollections(
+                $collection_id, 
+                $schedule_id, 
+                $status, 
+                $start_date, 
+                $end_date, 
+                $min_quantity, 
+                $max_quantity, 
+                $bags_added
+            );
+        } else {
+            // Otherwise, fetch all collections
+            $allCollections = $this->collectionModel->getAllCollections();
         }
-    
-        $profile = $supplierApplicationModel->getProfileInfo($application->user_id);
-        $bankInfo = $supplierApplicationModel->getBankInfo($applicationId);
-        $documents = $supplierApplicationModel->getApplicationDocuments($applicationId);
-        
-        // Get cultivation data (appears to be part of the application in your view)
-        $cultivation = (object)[
-            'tea_cultivation_area' => $application->tea_cultivation_area,
-            'plant_age' => $application->plant_age,
-            'monthly_production' => $application->monthly_production
-        ];
-        
-        // Get location data
-        $location = (object)[
-            'latitude' => $application->latitude,
-            'longitude' => $application->longitude
-        ];
-        
-        // Get reviewer information if application is assigned
-        $reviewer = null;
-        if (!empty($application->reviewed_by)) {
-            $reviewer = $this->model('M_User')->getUserById($application->reviewed_by);
-        }
-    
-        // Prepare data array matching the view's expected structure
+
+        // Fetch all necessary data for the dropdowns
+        $schedules = $this->scheduleModel->getAllSchedules();
+        $collectionSchedules = $this->scheduleModel->getSchedulesForNextWeek(); 
+        $todayRoutes = $this->routeModel->getTodayAssignedRoutes();
+
         $data = [
-            'application' => (array)$application,
-            'profile' => $profile,
-            'bank_info' => $bankInfo,
-            'documents' => $documents,
-            'cultivation' => $cultivation,
-            'location' => $location,
-            'reviewer' => $reviewer
+            'stats' => $stats,
+            'schedules' => $schedules,
+            'all_collections' => $allCollections,
+            'collectionSchedules' => $collectionSchedules,
+            'todayRoutes' => $todayRoutes,
+            // Pass the filter values back to the view to maintain state
+            'filters' => [
+                'collection_id' => $collection_id,
+                'schedule_id' => $schedule_id,
+                'status' => $status,
+                'start_date' => $start_date,
+                'end_date' => $end_date,
+                'min_quantity' => $min_quantity,
+                'max_quantity' => $max_quantity,
+                'bags_added' => $bags_added
+            ]
         ];
-    
-        // Load the view
-        $this->view('supplier_manager/v_view_application', $data);
+
+        // Pass the stats and data for the dropdowns to the view
+        $this->view('vehicle_manager/v_collection_0', $data);
     }
 
-    public function assignApplication($applicationId) {
+
+    /** 
+     * Schedule Management
+     * ------------------------------------------------------------
+     */
+
+    public function schedule()
+    {
+        // Get dashboard stats from the model
+        $totalSchedules = $this->scheduleModel->getTotalSchedules();
+        $availableSchedules = $this->scheduleModel->getActiveSchedulesCount();
+
+        // Fetch all necessary data for the dropdowns
+        $routes = $this->routeModel->getAllRoutes();
+        $drivers = $this->driverModel->getUnassignedDrivers();
+        $vehicles = $this->vehicleModel->getAllAvailableVehicles();
+        $shifts = $this->shiftModel->getAllShifts();
+        $schedules = $this->scheduleModel->getAllSchedules();
+
+        // Pass the stats and data for the dropdowns to the view
+        $this->view('vehicle_manager/v_collectionschedule', [
+            'totalSchedules' => $totalSchedules, // Total schedules
+            'availableSchedules' => $availableSchedules, // Currently ongoing schedules
+            'routes' => $routes,
+            'drivers' => $drivers,
+            'vehicles' => $vehicles,
+            'shifts' => $shifts,
+            'schedules' => $schedules
+        ]);
+    }
+
+    public function createSchedule() {
         if (!isLoggedIn()) {
             redirect('users/login');
         }
-    
 
-        $supplierApplicationModel = $this->model('M_SupplierApplication');
-    
-        $supplierApplicationModel->updateApplicationStatus($applicationId, $_SESSION['manager_id'], 'under_review');
-
-    
-        redirect('manager/');
-    }
-
-    public function approveApplication($applicationId) {
-        /* 
-        WE NEED TO FOLLOW THESE STEPS
-        1. we need to update the application status (that is already done)
-        2. we need to create a supplier account for this user
-        3. we need to copy the details from the application to suppliers entry
-        4. we need to change the users role to 5 for supplier accees
-        -simaak
-        */
-
-        $supplierApplicationModel = $this->model('M_SupplierApplication');
-        $userModel = $this->model('M_User');
-        $application = $supplierApplicationModel->getApplicationById($applicationId);
-
-        if (!$application) {
-            // small validation, but if we are here then ofc the application exists
-            redirect('manager/');
-        }
-
-        $userUpdated = $userModel->updateRole($application->user_id, 5);
-
-        if (!$userUpdated) {
-            redirect('manager/');
-        }
-
-        $profile = $userModel->getProfileByUserId($application->user_id);
-        $supplierExpectedAmount  = ($application->monthly_production)/4.0;
-
-
-        // Create supplier data array
-        $supplierData = [
-            'profile_id' => $profile->profile_id,
-            'contact_number' => $profile->contact_number, 
-            'application_id' => $applicationId,
-            'latitude' => $application->latitude,
-            'longitude' => $application->longitude,
-            'is_active' => 1,
-            'is_deleted' => 0,
-            'number_of_collections' => 0,
-            'average_collection' => $supplierExpectedAmount
-        ];
-
-        $supplierCreated = $this->supplierModel->createSupplier($supplierData);
-
-        if (!$supplierCreated) {
-            redirect('manager/');
-        }
-
-        $supplierApplicationModel->updateApplicationStatus($applicationId, $_SESSION['manager_id'], 'approved');
-
-        redirect('manager/');
-    }
-    
-    public function rejectApplication($applicationId) {
-        $supplierApplicationModel = $this->model('M_SupplierApplication');
-        $supplierApplicationModel->updateApplicationStatus($applicationId, $_SESSION['manager_id'], 'rejected');
-        redirect('manager/');
-    }
-
-
-    public function confirmSupplierRole() {
-        if ($_SERVER['REQUEST_METHOD'] == 'POST') {
-            $data = json_decode(file_get_contents('php://input'), true);
-            $applicationId = $data['application_id'];
-
-            $result = $this->supplierModel->confirmSupplierRole($applicationId);
-            if ($result) {
-                echo json_encode(['success' => true]);
-            } else {
-                echo json_encode(['success' => false, 'message' => 'Failed to confirm role. Check application ID and user data.']);
-            }
-        } else {
-            http_response_code(400);
-            echo json_encode(['success' => false, 'message' => 'Invalid request.']);
-        }
-    }
-
-    public function suppliers() {
-        // Get all suppliers from the database
-        $suppliers = $this->supplierModel->getAllSuppliers();
+        $drivers = $this->driverModel->getAllDrivers();
+        $routes = $this->routeModel->getAllUnAssignedRoutes();
 
         $data = [
-            'suppliers' => $suppliers
+            'drivers' => $drivers,
+            'routes' => $routes,
+            'error' => ''
         ];
 
-        $this->view('supplier_manager/v_suppliers', $data);
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            // Sanitize and get POST data
+            $_POST = filter_input_array(INPUT_POST, FILTER_SANITIZE_STRING);
+
+            $data = [
+                'day' => trim($_POST['day']),
+                'driver_id' => trim($_POST['driver_id']),
+                'route_id' => trim($_POST['route_id']),
+                'start_time' => trim($_POST['start_time']),
+                'end_time' => trim($_POST['end_time']),
+                'drivers' => $drivers,
+                'routes' => $routes,
+                'error' => ''
+            ];
+
+            // Validate data
+            if (empty($data['day']) || 
+                empty($data['driver_id']) || empty($data['route_id']) || 
+                empty($data['start_time']) || empty($data['end_time'])) {
+                $data['error'] = 'Please fill in all fields';
+            } else {
+                // Validate time duration
+                $startTime = strtotime("2000-01-01 " . $data['start_time']);
+                $endTime = strtotime("2000-01-01 " . $data['end_time']);
+                
+                // If end time is earlier than start time, assume it's the next day
+                if ($endTime < $startTime) {
+                    $endTime = strtotime("2000-01-02 " . $data['end_time']);
+                }
+                
+                // Check if end time is before 10 PM
+                $tenPM = strtotime("2000-01-01 22:00:00");
+                if ($endTime > $tenPM) {
+                    $data['error'] = 'Shift end time cannot be after 10 PM.';
+                } else {
+                    // Check for a minimum gap of 2 hours between shifts
+                    $minGap = 2 * 60 * 60; // 2 hours in seconds
+                    if (($endTime - $startTime) < $minGap) {
+                        $data['error'] = 'There must be at least a 2-hour gap between shifts.';
+                    } else {
+                        // Check if the driver is already scheduled for this day and time
+                        $driverScheduleConflict = $this->scheduleModel->checkDriverScheduleConflict(
+                            $data['driver_id'],
+                            $data['day'],
+                            $data['start_time'],
+                            $data['end_time']
+                        );
+
+                        // Check if the route is already scheduled for this day and time
+                        $routeScheduleConflict = $this->scheduleModel->checkRouteScheduleConflict(
+                            $data['route_id'],
+                            $data['day'],
+                            $data['start_time'],
+                            $data['end_time']
+                        );
+
+                        if ($driverScheduleConflict) {
+                            $data['error'] = 'This driver is already scheduled during this time period.';
+                        } elseif ($routeScheduleConflict) {
+                            $data['error'] = 'This route is already scheduled during this time period.';
+                        } else {
+                            // Create schedule
+                            if ($this->scheduleModel->create($data)) {
+                                flash('schedule_success', 'Schedule created successfully');
+                                redirect('manager/schedule');
+                            } else {
+                                $data['error'] = 'Something went wrong. Please try again. Debug info: ' . 
+                                'day: ' . $data['day'] . ', ' .
+                                'driver_id: ' . $data['driver_id'] . ', ' .
+                                'route_id: ' . $data['route_id'] . ', ' .
+                                'start_time: ' . $data['start_time'] . ', ' .
+                                'end_time: ' . $data['end_time'];
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        // Load the view for creating a schedule
+        $this->view('vehicle_manager/v_create_schedule', $data);
     }
+
+    public function updateSchedule($scheduleId = null) {
+        if (!isLoggedIn()) {
+            redirect('users/login');
+        }
+
+        // Check if schedule ID is provided
+        if (!$scheduleId) {
+            flash('schedule_error', 'Invalid schedule ID');
+            redirect('manager/collectionschedule');
+        }
+
+        // Get the existing schedule
+        $schedule = $this->scheduleModel->getScheduleById($scheduleId);
+        
+        // Check if schedule exists
+        if (!$schedule) {
+            flash('schedule_error', 'Schedule not found');
+            redirect('manager/collectionschedule');
+        }
+
+        // Get data for the form
+        $drivers = $this->driverModel->getAllDrivers();
+        $routes = $this->routeModel->getAllUndeletedRoutes();
+
+        $data = [
+            'schedule' => $schedule,
+            'drivers' => $drivers,
+            'routes' => $routes,
+            'error' => ''
+        ];
+
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            // Sanitize and get POST data
+            $_POST = filter_input_array(INPUT_POST, FILTER_SANITIZE_STRING);
+
+            $data = [
+                'schedule_id' => $scheduleId,
+                'day' => trim($_POST['day']),
+                'driver_id' => trim($_POST['driver_id']),
+                'route_id' => trim($_POST['route_id']),
+                'start_time' => trim($_POST['start_time']),
+                'end_time' => trim($_POST['end_time']),
+                'schedule' => $schedule,
+                'drivers' => $drivers,
+                'routes' => $routes,
+                'error' => ''
+            ];
+
+            // Validate data
+            if (empty($data['day']) || 
+                empty($data['driver_id']) || empty($data['route_id']) || 
+                empty($data['start_time']) || empty($data['end_time'])) {
+                $data['error'] = 'Please fill in all fields';
+            } else {
+                // Validate time duration
+                $startTime = strtotime("2000-01-01 " . $data['start_time']);
+                $endTime = strtotime("2000-01-01 " . $data['end_time']);
+                
+                // If end time is earlier than start time, assume it's the next day
+                if ($endTime < $startTime) {
+                    $endTime = strtotime("2000-01-02 " . $data['end_time']);
+                }
+                
+                $duration = $endTime - $startTime;
+                $maxDuration = 24 * 60 * 60; // 24 hours in seconds
+                
+                // Check if end time is before 10 PM
+                $tenPM = strtotime("2000-01-01 22:00:00");
+                if ($endTime > $tenPM) {
+                    $data['error'] = 'Shift end time cannot be after 10 PM.';
+                } elseif ($duration > $maxDuration) {
+                    $data['error'] = 'Schedule duration cannot exceed 24 hours.';
+                } elseif (($endTime - $startTime) < (2 * 60 * 60)) { // 2 hours in seconds
+                    $data['error'] = 'There must be at least a 2-hour gap between shifts.';
+                } else {
+                    // Check for conflicts only if the driver or day or time has changed
+                    $driverConflict = false;
+                    $routeConflict = false;
+                    
+                    if ($data['driver_id'] != $schedule->driver_id || 
+                        $data['day'] != $schedule->day || 
+                        $data['start_time'] != $schedule->start_time || 
+                        $data['end_time'] != $schedule->end_time) {
+                        
+                        // Check if the driver is already scheduled for this day and time
+                        $driverConflict = $this->scheduleModel->checkDriverScheduleConflictExcludingCurrent(
+                            $data['driver_id'],
+                            $data['day'],
+                            $data['start_time'],
+                            $data['end_time'],
+                            $scheduleId
+                        );
+                    }
+                    
+                    if ($data['route_id'] != $schedule->route_id || 
+                        $data['day'] != $schedule->day || 
+                        $data['start_time'] != $schedule->start_time || 
+                        $data['end_time'] != $schedule->end_time) {
+                        
+                        // Check if the route is already scheduled for this day and time
+                        $routeConflict = $this->scheduleModel->checkRouteScheduleConflictExcludingCurrent(
+                            $data['route_id'],
+                            $data['day'],
+                            $data['start_time'],
+                            $data['end_time'],
+                            $scheduleId
+                        );
+                    }
+
+                    if ($driverConflict) {
+                        $data['error'] = 'This driver is already scheduled during this time period.';
+                    } elseif ($routeConflict) {
+                        $data['error'] = 'This route is already scheduled during this time period.';
+                    } else {
+                        // Update schedule
+                        if ($this->scheduleModel->updateSchedule($data)) {
+                            flash('schedule_success', 'Schedule updated successfully');
+                            redirect('manager/schedule');
+                        } else {
+                            $data['error'] = 'Something went wrong. Please try again.';
+                        }
+                    }
+                }
+            }
+        }
+
+        // Load the view for updating a schedule
+        $this->view('vehicle_manager/v_update_schedule', $data);
+    }
+
+    /** 
+     * Appointment Management
+     * ------------------------------------------------------------
+     */
+
+    public function appointments() {
+        $this->requireLogin(); // Assuming session check
+        
+        $managerId = $_SESSION['manager_id'];
+    
+        $timeSlots = $this->appointmentModel->getManagerTimeSlots($managerId);
+        $incomingRequests = $this->appointmentModel->getIncomingRequests($managerId);
+        $acceptedAppointments = $this->appointmentModel->getAcceptedAppointments($managerId);
+    
+        $this->view('supplier_manager/v_appointments', [
+            'timeSlots' => $timeSlots,
+            'incomingRequests' => $incomingRequests,
+            'acceptedAppointments' => $acceptedAppointments
+        ]);
+    }
+
+    public function createSlot() {
+        if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+            $data = [
+                'manager_id' => $_SESSION['manager_id'],
+                'date' => trim($_POST['date']),
+                'start_time' => trim($_POST['start_time']),
+                'end_time' => trim($_POST['end_time'])
+            ];
+    
+            if ($this->appointmentModel->createSlot($data)) {
+                flash('slot_message', 'Time slot created successfully.');
+                redirect('manager/appointments');
+            } else {
+                redirect('manager/createSlot');
+            }
+        } else {
+            // Load the form view for creating a slot
+            $data = [
+                'date' => '',
+                'start_time' => '',
+                'end_time' => ''
+            ];
+    
+            $this->view('supplier_manager/v_create_slot', $data);
+        }
+    }
+
+
+    /** 
+     * Bag Management
+     * ------------------------------------------------------------
+     */
+
+    public function createBag(){
+         if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+             // Get the raw POST data
+             $input = file_get_contents("php://input");
+             $data = json_decode($input, true); // Decode the JSON payload
+ 
+             // Log the received data
+             error_log("Received data: " . print_r($data, true));
+ 
+             // Convert to appropriate types
+             $data['capacity_kg'] = (float) ($data['capacity_kg'] ?? 50.00); // Default value
+             $data['bag_weight_kg'] = isset($data['bag_weight_kg']) ? (float) $data['bag_weight_kg'] : null; // Convert to float or null
+ 
+             // Call the model method to create the collection bag
+             $bagId = $this->bagModel->createCollectionBag($data);
+ 
+             if ($bagId) {
+                 // Generate QR Code
+                 $this->generateQRCode($bagId);
+ 
+                 // Return success response
+                 echo json_encode(['success' => true, 'lastInsertedId' => $bagId]);
+             } else {
+                 // Handle error
+                 echo json_encode(['success' => false, 'message' => 'Failed to create collection bag.']);
+             }
+         } else {
+             echo json_encode(['success' => false, 'message' => 'Invalid request method.']);
+         }
+    }
+
+    private function generateQRCode($bagId){
+        try {
+            $qrCode = new QrCode($bagId);
+            $qrCode->setSize(300); // Set the size
+            $qrCode->setMargin(10); // Set the margin
+
+            $writer = new PngWriter();
+
+            // Define the path to save the QR code image
+            $filePath = UPLOADROOT . '/qr_codes/' . $bagId . '.png';
+
+            // Save the generated QR code to a file
+            $writer->writeFile($qrCode, $filePath); // Directly write to file
+
+        } catch (\Exception $e) {
+            error_log('QR Code generation failed: ' . $e->getMessage());
+        }
+    }
+    
+    public function getBags()
+    {
+        // Fetch bags from the model
+        $bags = $this->bagModel->getAllBags(); // Assuming this method exists in your model
+
+        // Return the bags as a JSON response
+        echo json_encode(['success' => true, 'bags' => $bags]);
+    }
+
+    public function getBagDetails($bagId){
+        // Fetch bag details from the model
+        $bag = $this->bagModel->getBagDetails($bagId); // Assuming this method exists in your model
+
+        // Check if bag exists and return as JSON response
+        if ($bag) {
+            echo json_encode(['success' => true, 'bag' => $bag]);
+        } else {
+            echo json_encode(['success' => false, 'message' => 'Bag not found.']);
+        }
+    }
+
+    public function updateBag(){
+        if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+            // Get the raw POST data
+            $input = file_get_contents("php://input");
+            $data = json_decode($input, true); // Decode the JSON payload
+
+            // Validate and sanitize input
+            $bagId = $data['bag_id'] ?? null;
+            $capacityKg = (float) ($data['capacity_kg'] ?? 0);
+            $bagWeightKg = (float) ($data['bag_weight_kg'] ?? 0);
+            $status = $data['status'] ?? 'inactive'; // Default to inactive if not provided
+
+            // Call the model method to update the collection bag
+            $result = $this->bagModel->updateCollectionBag($bagId, $capacityKg, $bagWeightKg, $status);
+
+            if ($result) {
+                // Return success response
+                echo json_encode(['success' => true]);
+            } else {
+                // Handle error
+                echo json_encode(['success' => false, 'message' => 'Failed to update collection bag.']);
+            }
+        } else {
+            echo json_encode(['success' => false, 'message' => 'Invalid request method.']);
+        }
+    }
+
+    public function removeBag(){
+        if ($_SERVER['REQUEST_METHOD'] == 'DELETE') {
+            // Get the raw POST data
+            $input = file_get_contents("php://input");
+            $data = json_decode($input, true); // Decode the JSON payload
+
+            // Validate and sanitize input
+            $bagId = $data['bag_id'] ?? null;
+
+            // Check if the bag is in use
+            if ($this->bagModel->isBagInUse($bagId)) {
+                echo json_encode(['success' => false, 'message' => 'Cannot remove bag. It is currently in use.']);
+                return;
+            }
+
+            // Call the model method to remove the collection bag
+            $result = $this->bagModel->removeCollectionBag($bagId);
+
+            if ($result) {
+                // Return success response
+                echo json_encode(['success' => true]);
+            } else {
+                // Handle error
+                echo json_encode(['success' => false, 'message' => 'Failed to remove collection bag.']);
+            }
+        } else {
+            echo json_encode(['success' => false, 'message' => 'Invalid request method.']);
+        }
+    }
+
+    public function deleteBagQR(){
+        // Get the JSON input
+        $input = json_decode(file_get_contents('php://input'), true);
+
+        // Check if the image path is provided
+        if (isset($input['image_path'])) {
+            $imagePath = $input['image_path'];
+
+            // Debugging: Log the full path
+            error_log("Full path to image: " . $imagePath);
+
+            // Check if the file exists
+            if (file_exists($imagePath)) {
+                // Attempt to delete the file
+                if (unlink($imagePath)) {
+                    // File deleted successfully
+                    echo json_encode(['success' => true, 'message' => 'Image deleted successfully.']);
+                } else {
+                    // Failed to delete the file
+                    echo json_encode(['success' => false, 'message' => 'Failed to delete the image.']);
+                }
+            } else {
+                // File does not exist
+                echo json_encode(['success' => false, 'message' => 'Image file not found.']);
+            }
+        } else {
+            // No image path provided
+            echo json_encode(['success' => false, 'message' => 'No image path provided.']);
+        }
+    }
+
+    /** 
+     * Complaint Management
+     * ------------------------------------------------------------
+     */
 
     public function complaints()
     {
-        $data = [];
-
+        // Get complaints data
+        $complaints = $this->supplierModel->getComplaints();
+    
+        // Get complaint statistics
+        $totalComplaints = $this->supplierModel->getTotalComplaints();
+        $resolvedComplaints = $this->supplierModel->getComplaintsByStatus('Resolved');
+        $pendingComplaints = $this->supplierModel->getComplaintsByStatus('Pending');
+    
+        // Set up data array for the view
+        $data = [
+            'complaints' => $complaints,
+            'totalComplaints' => $totalComplaints,
+            'resolvedComplaints' => count($resolvedComplaints),
+            'pendingComplaints' => count($pendingComplaints)
+        ];
+    
         $this->view('supplier_manager/v_complaints', $data);
     }
 
+    public function viewComplaint($id = null)
+    {
+        if ($id === null) {
+            redirect('manager/complaints');
+        }
+    
+        $complaint = $this->supplierModel->getComplaintById($id);
+    
+        if (!$complaint) {
+            flash('complaint_message', 'Complaint not found', 'alert alert-danger');
+            redirect('manager/complaints');
+        }
+    
+        $data = [
+            'complaint' => $complaint
+        ];
+    
+        $this->view('supplier_manager/v_view_complaint', $data);
+    }
+    
+    public function resolveComplaint()
+    {
+        if ($_SERVER['REQUEST_METHOD'] != 'POST') {
+            redirect('manager/complaints');
+        }
+    
+        $data = [
+            'complaint_id' => trim($_POST['complaint_id']),
+            'resolution_notes' => trim($_POST['resolution_notes']),
+            'status' => 'Resolved'
+        ];
+    
+        if ($this->supplierModel->updateStatus($data)) {
+            flash('complaint_message', 'Complaint resolved successfully', 'alert alert-success');
+        } else {
+            flash('complaint_message', 'Error resolving complaint', 'alert alert-danger');
+        }
+    
+        redirect('manager/viewComplaint/' . $data['complaint_id']);
+    }
+    
+    public function reopenComplaint($id)
+    {
+        $data = [
+            'complaint_id' => $id,
+            'status' => 'Pending'
+        ];
+    
+        if ($this->supplierModel->updateStatus($data)) {
+            flash('complaint_message', 'Complaint reopened successfully', 'alert alert-success');
+        } else {
+            flash('complaint_message', 'Error reopening complaint', 'alert alert-danger');
+        }
+    
+        redirect('manager/viewComplaint/' . $id);
+    }
+    
+    public function deleteComplaint($id)
+    {
+        if ($this->supplierModel->deleteComplaint($id)) {
+            flash('complaint_message', 'Complaint deleted successfully', 'alert alert-success');
+            redirect('manager/complaints');
+        } else {
+            flash('complaint_message', 'Error deleting complaint', 'alert alert-danger');
+            redirect('manager/viewComplaint/' . $id);
+        }
+    }
+    
+     
+
+    public function respondRequest() {
+        if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+            $requestId = trim($_POST['request_id']);
+            $action = trim($_POST['action']);
+
+            if ($action === 'accept') {
+                // Accept the request and log it
+                if ($this->appointmentModel->acceptRequest($requestId)) {
+                    flash('request_message', 'Request accepted successfully.');
+                } else {
+                    flash('request_message', 'Failed to accept the request.');
+                }
+            } elseif ($action === 'reject') {
+                // Reject the request
+                $this->appointmentModel->rejectRequest($requestId);
+                flash('request_message', 'Request rejected successfully.');
+            }
+
+            redirect('manager/appointments'); // Redirect back to appointments
+        }
+    }
+
+
+    /** 
+     * User Settings
+     **/
+    public function settings(){
+        $data = [];
+        $this->view('vehicle_manager/v_settings', $data);
+    }
+
+    public function personal_details(){
+        $data = [];
+        $this->view('vehicle_manager/v_personal_details', $data);
+    }
 
 
 }
