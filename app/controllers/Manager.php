@@ -960,10 +960,6 @@ class Manager extends Controller
                 'last_name' => trim($_POST['last_name']),
                 'date_of_birth' => trim($_POST['date_of_birth']),
                 'contact_number' => trim($_POST['contact_number']),
-                'emergency_contact' => trim($_POST['emergency_contact']),
-                'address_line1' => trim($_POST['address_line1']),
-                'address_line2' => isset($_POST['address_line2']) ? trim($_POST['address_line2']) : '',
-                'city' => trim($_POST['city']),
                 'license_expiry_date' => trim($_POST['license_expiry_date']),
                 'status' => trim($_POST['status']),
                 'error' => ''
@@ -978,12 +974,6 @@ class Manager extends Controller
                 $data['error'] = 'Please enter date of birth';
             } elseif (empty($data['contact_number'])) {
                 $data['error'] = 'Please enter contact number';
-            } elseif (empty($data['emergency_contact'])) {
-                $data['error'] = 'Please enter emergency contact';
-            } elseif (empty($data['address_line1'])) {
-                $data['error'] = 'Please enter address line 1';
-            } elseif (empty($data['city'])) {
-                $data['error'] = 'Please enter city';
             } elseif (empty($data['license_expiry_date'])) {
                 $data['error'] = 'Please enter license expiry date';
             } elseif (strtotime($data['license_expiry_date']) <= time()) {
@@ -1012,11 +1002,7 @@ class Manager extends Controller
                         'first_name' => $data['first_name'],
                         'last_name' => $data['last_name'],
                         'date_of_birth' => $data['date_of_birth'],
-                        'contact_number' => $data['contact_number'],
-                        'emergency_contact' => $data['emergency_contact'],
-                        'address_line1' => $data['address_line1'],
-                        'address_line2' => $data['address_line2'],
-                        'city' => $data['city']
+                        'contact_number' => $data['contact_number']
                     ];
                     
                     if (!$this->userModel->updateProfile($profileData)) {

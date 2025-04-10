@@ -61,10 +61,6 @@
                         <label class="label" for="contact_number">Contact Number:</label>
                         <input type="tel" id="contact_number" name="contact_number" class="form-control" value="<?php echo htmlspecialchars($data['profile']->contact_number); ?>" required>
                     </div>
-                    <div class="info-row">
-                        <label class="label" for="emergency_contact">Emergency Contact:</label>
-                        <input type="tel" id="emergency_contact" name="emergency_contact" class="form-control" value="<?php echo htmlspecialchars($data['profile']->emergency_contact); ?>" required>
-                    </div>
                 </div>
             </div>
         </div>

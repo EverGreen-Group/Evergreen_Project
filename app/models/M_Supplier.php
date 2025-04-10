@@ -211,10 +211,7 @@ class M_Supplier {
 
     public function getAllSuppliersDetails() {
         $this->db->query("
-            SELECT s.supplier_id, s.contact_number as supplier_contact, s.application_id, 
-                   s.is_active, s.number_of_collections, s.average_collection,
-                   p.first_name, p.last_name, p.nic, p.city, p.contact_number,
-                   u.email, u.account_status
+            SELECT s.*,p.*,u.email
             FROM suppliers s
             JOIN profiles p ON s.profile_id = p.profile_id
             JOIN users u ON p.user_id = u.user_id
@@ -228,10 +225,7 @@ class M_Supplier {
 
     public function getFilteredSuppliers($supplier_id, $name, $nic, $contact_number, $application_id, $supplier_status) {
         $sql = "
-            SELECT s.supplier_id, s.contact_number as supplier_contact, s.application_id, 
-                   s.is_active, s.number_of_collections, s.average_collection,
-                   p.first_name, p.last_name, p.nic, p.city, p.contact_number,
-                   u.email, u.account_status
+            SELECT s.*,p.*,u.email
             FROM suppliers s
             JOIN profiles p ON s.profile_id = p.profile_id
             JOIN users u ON p.user_id = u.user_id

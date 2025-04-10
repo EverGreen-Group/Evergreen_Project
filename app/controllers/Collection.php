@@ -42,7 +42,6 @@ class Collection extends Controller{
 
         $vehicleRemainingCapacity = $vehicleDetails->capacity - $collectionDetails->total_quantity;
 
-        // MAP SECTION
 
 
 

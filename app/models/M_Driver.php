@@ -225,8 +225,7 @@ class M_Driver{
 
     public function getDriverById($driver_id) {
         $this->db->query('
-            SELECT d.*, p.first_name, p.last_name, p.nic, p.date_of_birth, p.contact_number, 
-                   p.emergency_contact, p.address_line1, p.address_line2, p.city, u.email
+            SELECT d.*, p.*,u.email
             FROM drivers d
             JOIN profiles p ON d.profile_id = p.profile_id
             JOIN users u ON p.user_id = u.user_id
