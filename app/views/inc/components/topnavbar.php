@@ -47,11 +47,11 @@
             <?php if (RoleHelper::hasRole(RoleHelper::MANAGER)): ?>
                 <li><a href="<?php echo URLROOT; ?>/manager/index">Dashboard</a></li>
                 <li><a href="<?php echo URLROOT; ?>/manager/collection">Collections</a></li>
-                <li><a href="<?php echo URLROOT; ?>/profile">Profile</a></li>
+                <li><a href="<?php echo URLROOT; ?>/auth/profile">Profile</a></li>
             <?php endif; ?>
 
             <?php if (RoleHelper::hasRole(RoleHelper::SUPPLIER)): ?>
-                <li><a href="<?php echo URLROOT; ?>/supplier/profile">Profile</a></li>
+                <li><a href="<?php echo URLROOT; ?>/auth/profile">Profile</a></li>
                 <li><a href="<?php echo URLROOT; ?>/supplier/index">Dashboard</a></li>
             <?php endif; ?>
 

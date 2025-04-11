@@ -321,22 +321,6 @@ class M_SupplierApplication {
         $this->db->beginTransaction();
         
         try {
-            // Insert into profiles without emergency contact
-            $this->db->query("INSERT INTO profiles (user_id, first_name, last_name, nic, date_of_birth, 
-                             contact_number) 
-                             VALUES (:user_id, :first_name, :last_name, :nic, :date_of_birth, 
-                             :contact_number)");
-            
-            $this->db->bind(':user_id', $profileData['user_id']);
-            $this->db->bind(':first_name', $profileData['first_name']);
-            $this->db->bind(':last_name', $profileData['last_name']);
-            $this->db->bind(':nic', $profileData['nic']);
-            $this->db->bind(':date_of_birth', $profileData['date_of_birth']);
-            $this->db->bind(':contact_number', $profileData['contact_number']);
-            
-            if (!$this->db->execute()) {
-                throw new Exception("Failed to create profile");
-            }
             
             // Uploading the photo
             $profilePhotoPath = null;
@@ -351,7 +335,7 @@ class M_SupplierApplication {
             $this->db->bind(':user_id', $applicationData['user_id']);
             $this->db->bind(':status', 'pending');
             $this->db->bind(':profile_photo', $profilePhotoPath);
-            $this->db->bind(':address', $profileData['address']); // Insert address into supplier_applications
+            $this->db->bind(':address', $profileData['address']); 
             
             if (!$this->db->execute()) {
                 throw new Exception("Failed to insert main application");
