@@ -22,12 +22,6 @@
         <span class="text">Fertilizer</span>
       </a>
     </li>
-    <li class="<?php echo (basename($_SERVER['REQUEST_URI']) == 'order') ? 'active' : ''; ?>">
-      <a href="../inventory/order">
-        <i class="bx bx-trip"></i>
-        <span class="text">Order</span>
-      </a>
-    </li>
     <li class="<?php echo (basename($_SERVER['REQUEST_URI']) == 'machine') ? 'active' : ''; ?>">
       <a href="<?php echo URLROOT; ?>/inventory/machine">
         <i class="bx bxs-time-five"></i>

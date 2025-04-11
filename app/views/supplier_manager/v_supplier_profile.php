@@ -5,36 +5,39 @@
 <!-- Top nav bar -->
 <?php require APPROOT . '/views/inc/components/topnavbar.php'; ?>
 
-<link rel="stylesheet" href="<?php echo URLROOT; ?>/css/vehicle_manager/driver/driver.css">
+<link rel="stylesheet" href="<?php echo URLROOT; ?>/css/vehicle_manager/supplier/supplier.css">
 
 <main>
     <div class="head-title">
         <div class="left">
-            <h1>Driver Profile</h1>
+            <h1>Supplier Profile</h1>
             <ul class="breadcrumb">
                 <li><a href="<?php echo URLROOT; ?>/manager">Dashboard</a></li>
-                <li><a href="<?php echo URLROOT; ?>/manager/driver">Drivers</a></li>
-                <li>Driver Profile</li>
+                <li><a href="<?php echo URLROOT; ?>/manager/supplier">Suppliers</a></li>
+                <li>Supplier Profile</li>
             </ul>
         </div>
-        <div class="action-buttons">
-            <a href="<?php echo URLROOT; ?>/manager/updateDriver/<?php echo $driver->driver_id; ?>" class="btn btn-primary">
-                <i class='bx bx-edit'></i>
-                Edit Driver
-            </a>
-        </div>
+        <?php if (RoleHelper::hasAnyRole([RoleHelper::ADMIN])): ?>
+            <div class="action-buttons">
+                <a href="<?php echo URLROOT; ?>/manager/updateSupplier/<?php echo $supplier->supplier_id; ?>" class="btn btn-primary">
+                    <i class='bx bx-edit'></i>
+                    Edit Supplier
+                </a>
+            </div>
+        <?php endif; ?>
+
     </div>
 
     <div class="vehicle-profile-container">
         <div class="table-data">
             <div class="order">
                 <div class="head">
-                    <h3>Driver Details</h3>
+                    <h3>Supplier Details</h3>
                 </div>
                 <div class="vehicle-profile-content">
                     <div class="vehicle-profile-image">
-                        <?php if (!empty($driver->image_path)): ?>
-                            <img src="<?php echo URLROOT . '/' . htmlspecialchars($driver->image_path); ?>" alt="Driver Image">
+                        <?php if (!empty($supplier->image_path)): ?>
+                            <img src="<?php echo URLROOT . '/' . htmlspecialchars($supplier->image_path); ?>" alt="Supplier Image">
                         <?php else: ?>
                             <div class="placeholder-image">
                                 <i class='bx bxs-user'></i>
@@ -46,38 +49,62 @@
                     <div class="vehicle-profile-info">
                         <div class="info-grid">
                             <div class="info-item">
-                                <span class="label">Driver ID</span>
-                                <span class="value"><?php echo htmlspecialchars($driver->driver_id); ?></span>
+                                <span class="label">Supplier ID</span>
+                                <span class="value"><?php echo htmlspecialchars($supplier->supplier_id); ?></span>
                             </div>
                             <div class="info-item">
                                 <span class="label">First Name</span>
-                                <span class="value"><?php echo htmlspecialchars($driver->first_name); ?></span>
+                                <span class="value"><?php echo htmlspecialchars($supplier->first_name); ?></span>
                             </div>
                             <div class="info-item">
                                 <span class="label">Last Name</span>
-                                <span class="value"><?php echo htmlspecialchars($driver->last_name); ?></span>
+                                <span class="value"><?php echo htmlspecialchars($supplier->last_name); ?></span>
                             </div>
                             <div class="info-item">
                                 <span class="label">Status</span>
-                                <span class="value <?php echo strtolower($driver->status); ?>">
-                                    <?php echo htmlspecialchars($driver->status); ?>
+                                <span class="value <?php echo $supplier->is_active ? 'active' : 'inactive'; ?>">
+                                    <?php echo $supplier->is_active ? 'Active' : 'Inactive'; ?>
                                 </span>
                             </div>
                             <div class="info-item">
                                 <span class="label">Email</span>
-                                <span class="value"><?php echo htmlspecialchars($driver->email); ?></span>
+                                <span class="value"><?php echo htmlspecialchars($supplier->email); ?></span>
                             </div>
                             <div class="info-item">
                                 <span class="label">Phone</span>
-                                <span class="value"><?php echo htmlspecialchars($driver->contact_number); ?></span>
+                                <span class="value"><?php echo htmlspecialchars($supplier->contact_number); ?></span>
                             </div>
                             <div class="info-item">
-                                <span class="label">Hire Date</span>
-                                <span class="value"><?php echo !empty($driver->hire_date) ? date('d M Y', strtotime($driver->hire_date)) : 'N/A'; ?></span>
+                                <span class="label">Address</span>
+                                <span class="value">
+                                    <?php 
+                                    $address = [];
+                                    if (!empty($supplier->address_line1)) $address[] = htmlspecialchars($supplier->address_line1);
+                                    if (!empty($supplier->address_line2)) $address[] = htmlspecialchars($supplier->address_line2);
+                                    if (!empty($supplier->city)) $address[] = htmlspecialchars($supplier->city);
+                                    echo !empty($address) ? implode(', ', $address) : 'N/A';
+                                    ?>
+                                </span>
                             </div>
                             <div class="info-item">
-                                <span class="label">License Number</span>
-                                <span class="value"><?php echo htmlspecialchars($driver->license_number); ?></span>
+                                <span class="label">Approved Date</span>
+                                <span class="value"><?php echo !empty($supplier->approved_at) ? date('d M Y', strtotime($supplier->approved_at)) : 'N/A'; ?></span>
+                            </div>
+                            <div class="info-item">
+                                <span class="label">Collections Count</span>
+                                <span class="value"><?php echo htmlspecialchars($supplier->number_of_collections); ?></span>
+                            </div>
+                            <div class="info-item">
+                                <span class="label">Average Collection</span>
+                                <span class="value"><?php echo htmlspecialchars($supplier->average_collection); ?> kg</span>
+                            </div>
+                            <div class="info-item">
+                                <span class="label">NIC</span>
+                                <span class="value"><?php echo htmlspecialchars($supplier->nic); ?></span>
+                            </div>
+                            <div class="info-item">
+                                <span class="label">Application ID</span>
+                                <span class="value"><?php echo htmlspecialchars($supplier->application_id); ?></span>
                             </div>
                         </div>
                     </div>
@@ -100,6 +127,7 @@
                                     <th>Start Time</th>
                                     <th>End Time</th>
                                     <th>Route</th>
+                                    <th>Driver</th>
                                     <th>Vehicle</th>
                                 </tr>
                             </thead>
@@ -111,13 +139,14 @@
                                         <td><?php echo !empty($schedule->start_time) ? date('H:i', strtotime($schedule->start_time)) : 'N/A'; ?></td>
                                         <td><?php echo !empty($schedule->end_time) ? date('H:i', strtotime($schedule->end_time)) : 'N/A'; ?></td>
                                         <td><?php echo htmlspecialchars($schedule->route_id ?? 'N/A'); ?></td>
+                                        <td><?php echo htmlspecialchars($schedule->driver_name ?? 'N/A'); ?></td>
                                         <td><?php echo htmlspecialchars($schedule->vehicle_id ?? 'N/A'); ?></td>
                                     </tr>
                                 <?php endforeach; ?>
                             </tbody>
                         </table>
                     <?php else: ?>
-                        <p class="no-data">No upcoming schedules available for this driver.</p>
+                        <p class="no-data">No upcoming schedules available for this supplier.</p>
                     <?php endif; ?>
                 </div>
             </div>
@@ -134,33 +163,69 @@
                             <thead>
                                 <tr>
                                     <th>Collection ID</th>
-                                    <th>Status</th>
-                                    <th>Start Time</th>
-                                    <th>End Time</th>
-                                    <th>Total Quantity</th>
-
+                                    <th>Date</th>
+                                    <th>Quantity</th>
+                                    <th>Driver</th>
+                                    <th>Vehicle</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 <?php foreach ($collectionHistory as $collection): ?>
                                     <tr>
                                         <td><?php echo htmlspecialchars($collection->collection_id); ?></td>
-                                        <td class="status-cell <?php echo strtolower($collection->status); ?>">
-                                            <?php echo htmlspecialchars($collection->status); ?>
-                                        </td>
-                                        <td><?php echo !empty($collection->start_time) ? date('d M Y H:i', strtotime($collection->start_time)) : 'N/A'; ?></td>
-                                        <td><?php echo !empty($collection->end_time) ? date('d M Y H:i', strtotime($collection->end_time)) : 'N/A'; ?></td>
-                                        <td><?php echo htmlspecialchars($collection->total_quantity); ?> kg</td>
+                                        <td><?php echo !empty($collection->created_at) ? date('d M Y', strtotime($collection->created_at)) : 'N/A'; ?></td>
+
+                                        <td><?php echo htmlspecialchars($collection->total_quantity ?? '0.00'); ?> kg</td>
+                                        <td><?php echo htmlspecialchars($collection->driver_id ?? 'N/A'); ?></td>
+                                        <td><?php echo htmlspecialchars($collection->vehicle_id ?? 'N/A'); ?></td>
+
                                     </tr>
                                 <?php endforeach; ?>
                             </tbody>
                         </table>
                     <?php else: ?>
-                        <p class="no-data">No collection history available for this driver.</p>
+                        <p class="no-data">No collection history available for this supplier.</p>
                     <?php endif; ?>
                 </div>
             </div>
         </div>
+        
+        <div class="table-data">
+            <div class="order">
+                <div class="head">
+                    <h3>Supplier Location</h3>
+                </div>
+                <div class="supplier-map">
+                    <?php if (!empty($supplier->latitude) && !empty($supplier->longitude)): ?>
+                        <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+                        <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+                        <div id="map" style="height: 400px; width: 100%; border-radius: 10px;"></div>
+                        <script>
+                            document.addEventListener("DOMContentLoaded", function () {
+                                const supplierLat = <?php echo $supplier->latitude; ?>;
+                                const supplierLng = <?php echo $supplier->longitude; ?>;
+                                const supplierName = "<?php echo htmlspecialchars($supplier->first_name . ' ' . $supplier->last_name); ?>";
+
+                                const map = L.map('map').setView([supplierLat, supplierLng], 25);
+
+                                L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                                    attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+                                }).addTo(map);
+
+                                L.marker([supplierLat, supplierLng])
+                                    .addTo(map)
+                                    .bindPopup(supplierName)
+                                    .openPopup();
+                            });
+                        </script>
+                    <?php else: ?>
+                        <p class="no-data">No location information available for this supplier.</p>
+                    <?php endif; ?>
+                </div>
+            </div>
+        </div>
+
     </div>
 </main>
 
@@ -245,26 +310,6 @@
     .info-item .value.inactive {
         color: red;
     }
-/* 
-    .collection-history table,
-    .upcoming-schedules table {
-        width: 100%;
-        border-collapse: collapse;
-    }
-
-    .collection-history table th,
-    .upcoming-schedules table th {
-        background-color: #f1f1f1;
-        border: 1px solid #ddd;
-        padding: 8px;
-        text-align: left;
-    }
-
-    .collection-history table td,
-    .upcoming-schedules table td {
-        border: 1px solid #ddd;
-        padding: 8px;
-    } */
 
     .status-cell.pending {
         color: orange;

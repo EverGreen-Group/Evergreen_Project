@@ -20,6 +20,8 @@ class Supplier extends Controller {
 
     private $scheduleModel;
     private $bagModel;
+    private $appointmentModel;
+
     public function __construct() {
         // Check if the user is logged in
         requireAuth();
@@ -38,6 +40,7 @@ class Supplier extends Controller {
         $this->collectionModel= new M_Collection();
         $this->scheduleModel= new M_CollectionSchedule();
         $this->bagModel = new M_Bag();
+        $this->appointmentModel = $this->model('M_Appointment');
         $supplierDetails = $this->supplierModel->getSupplierDetailsByUserId($_SESSION['user_id']);
         $_SESSION['supplier_id'] = $supplierDetails->supplier_id;
     }
@@ -62,9 +65,10 @@ class Supplier extends Controller {
             
             foreach ($allSchedules as $schedule) {
                 // Skip schedules that already have collections for today
-                if ($schedule->is_today && $schedule->collection_exists > 0) {
+                if ($schedule->is_today && $schedule->collection_exists > 0 && ($this->collectionModel->getCollectionSuppliersStatus($collectionId,$supplierId) == 'Completed')) {
                     continue;
                 }
+                
                 
                 if ($schedule->is_today) {
                     $todaySchedules[] = $schedule;
@@ -102,6 +106,98 @@ class Supplier extends Controller {
             ];
         }
         $this->view('supplier/v_supply_dashboard', $data);
+    }
+
+    public function viewAppointments() {
+        // Fetch all required data for the view
+        $timeSlots = $this->appointmentModel->getAvailableTimeSlots();
+        $myRequests = $this->appointmentModel->getMyRequests($_SESSION['supplier_id']);
+        $confirmedAppointments = $this->appointmentModel->getConfirmedAppointments($_SESSION['supplier_id']);
+        
+        // Prepare data to pass to the view
+        $data = [
+            'time_slots' => $timeSlots,
+            'my_requests' => $myRequests,
+            'confirmed_appointments' => $confirmedAppointments
+        ];
+        
+        // Load the view with the data
+        $this->view('supplier/v_time_slots', $data);
+    }
+    
+    public function requestTimeSlot() {
+        if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+    
+            if (!isset($_POST['slot_id']) || empty($_POST['slot_id'])) {
+                flash('request_message', 'Invalid time slot.', 'alert alert-error');
+                redirect('Supplier/viewAppointments');
+                return;
+            }
+    
+            $slotId = trim($_POST['slot_id']);
+            $supplierId = $_SESSION['supplier_id'];
+    
+            // Check if the slot is available
+            $slot = $this->appointmentModel->getSlotById($slotId);
+            if (!$slot || $slot->status !== 'Available') {
+                flash('request_message', 'This time slot is no longer available.', 'alert alert-error');
+                redirect('Supplier/viewAppointments');
+                return;
+            }
+    
+            // Check if this supplier has already requested this slot
+            if ($this->appointmentModel->hasAlreadyRequested($slotId, $supplierId)) {
+                flash('request_message', 'You have already requested this time slot.', 'alert alert-warning');
+                redirect('Supplier/viewAppointments');
+                return;
+            }
+    
+            // Prepare request data
+            $data = [
+                'supplier_id' => $supplierId,
+                'slot_id' => $slotId,
+                'status' => 'Pending',
+                'submitted_at' => date('Y-m-d H:i:s')
+            ];
+    
+            // Insert the request
+            if ($this->appointmentModel->createRequest($data)) {
+                flash('request_message', 'Time slot requested successfully.');
+            } else {
+                flash('request_message', 'Failed to request time slot.', 'alert alert-error');
+            }
+    
+            redirect('Supplier/viewAppointments');
+        } else {
+            redirect('Supplier/viewAppointments');
+        }
+    }
+    
+    
+    public function cancelRequest($id = null) {
+        // Validate the request ID
+        if (!$id) {
+            flash('request_message', 'Invalid request.', 'alert alert-error');
+            redirect('Supplier/viewAppointments');
+            return;
+        }
+        
+        // Check if the request belongs to this supplier and is still pending
+        $request = $this->appointmentModel->getRequestById($id);
+        if (!$request || $request->supplier_id != $_SESSION['supplier_id'] || $request->status != 'Pending') {
+            flash('request_message', 'You cannot cancel this request.', 'alert alert-error');
+            redirect('Supplier/viewAppointments');
+            return;
+        }
+        
+        // Cancel the request
+        if ($this->appointmentModel->cancelRequest($id, $_SESSION['supplier_id'])) {
+            flash('request_message', 'Appointment request cancelled successfully.');
+        } else {
+            flash('request_message', 'Failed to cancel request.', 'alert alert-error');
+        }
+        
+        redirect('Supplier/viewAppointments');
     }
 
     public function notifications()
@@ -186,11 +282,49 @@ class Supplier extends Controller {
     }
 
 
-    public function profile()
-    {
-        $data = [];
 
-        $this->view('supplier/v_profile', $data);
+    
+    public function updateProfile()
+    {
+        if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+            $userId = $_SESSION['user_id'];
+            
+            $profileData = $this->supplierModel->getSupplierProfile($userId);
+            
+            $data = [
+                'supplier_id' => $profileData['supplier']->supplier_id,
+                'profile_id' => $profileData['profile']->profile_id,
+                'supplier_contact' => trim($_POST['supplier_contact']),
+                'image_path' => ''
+            ];
+            
+            if (!empty($_FILES['profile_image']['name'])) {
+                $uploadDir = 'uploads/profile_photos/';
+                
+                if (!file_exists($uploadDir)) {
+                    mkdir($uploadDir, 0777, true);
+                }
+                
+                $fileName = uniqid() . '_' . $_FILES['profile_image']['name'];
+                $uploadPath = $uploadDir . $fileName;
+                
+                if (move_uploaded_file($_FILES['profile_image']['tmp_name'], $uploadPath)) {
+                    $data['image_path'] = $uploadPath;
+                } else {
+                    flash('profile_message', 'Error uploading image', 'alert alert-error');
+                    redirect('Supplier/profile');
+                }
+            }
+            if ($this->supplierModel->updateSupplierProfile($data)) {
+                flash('profile_message', 'Profile updated successfully');
+                redirect('Supplier/profile');
+            } else {
+                flash('profile_message', 'Error updating profile', 'alert alert-error');
+                redirect('Supplier/profile');
+            }
+        } else {
+            redirect('Supplier/profile');
+        }
     }
 
     public function cancelpickup()
@@ -215,6 +349,57 @@ class Supplier extends Controller {
 
         $this->view('supplier/v_complaint', $data);
     }
+
+    public function submitComplaint()
+    {
+        if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+            $_POST = filter_input_array(INPUT_POST, FILTER_SANITIZE_STRING);
+    
+            $supplierId = $_SESSION['supplier_id']; 
+    
+            $data = [
+                'supplier_id' => $supplierId,
+                'complaint_type' => trim($_POST['complaint_type']),
+                'subject' => trim($_POST['subject']),
+                'description' => trim($_POST['description']),
+                'priority' => trim($_POST['priority']),
+                'image_path' => null,
+            ];
+    
+            // Image upload handling
+            if (isset($_FILES['image']) && $_FILES['image']['error'] === UPLOAD_ERR_OK) {
+                $image = $_FILES['image'];
+    
+                $allowedTypes = ['image/jpeg', 'image/png', 'image/gif'];
+                if (in_array($image['type'], $allowedTypes)) {
+                    $imageExt = pathinfo($image['name'], PATHINFO_EXTENSION);
+                    $imageName = 'complaint_' . time() . '.' . $imageExt;
+                    $uploadDir = 'uploads/complaints/';
+                    $uploadPath = $uploadDir . $imageName;
+    
+                    // Ensure directory exists
+                    if (!is_dir($uploadDir)) {
+                        mkdir($uploadDir, 0777, true);
+                    }
+    
+                    if (move_uploaded_file($image['tmp_name'], $uploadPath)) {
+                        $data['image_path'] = $uploadPath;
+                    }
+                }
+            }
+    
+    
+            if ($this->supplierModel->addComplaint($data)) {
+                flash('complaint_success', 'Complaint submitted successfully');
+                redirect('supplier/complaints');
+            } else {
+                redirect('supplier/complaints');
+            }
+        } else {
+            redirect('supplier/complaints');
+        }
+    }
+    
 
     public function settings()
     {
@@ -594,93 +779,7 @@ class Supplier extends Controller {
         $this->view('supplier/v_fertilizer', $data);
     }
 
-    // Add these methods for AJAX calls
-    public function subscribeToRoute()
-    {
-        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-            redirect('supplier/schedule');
-        }
-    
-        $routeId = $this->routeModel->getRouteIdByScheduleId($_POST['schedule_id']) ?? null;
-        $supplierId = $_SESSION['supplier_id'];
-    
-        try {
-            // Check if supplier is active
-            $isActive = $this->supplierModel->getSupplierStatus($supplierId);
-            
-            if ($isActive !== '1') {
-                echo json_encode([
-                    'success' => false, 
-                    'message' => 'Your account is currently inactive. Please activate your account to subscribe to routes.'
-                ]);
-                return;
-            }
-            
-            // First, check if supplier is already subscribed to any route
-            $currentRoute = $this->routeModel->getSupplierCurrentRoute($supplierId);
-            
-            if ($currentRoute) {
-                // Need to unsubscribe from current route first
-                echo json_encode([
-                    'success' => false, 
-                    'message' => 'Please unsubscribe from your current route first.'
-                ]);
-                return;
-            }
-    
-            // Get the last stop order for the route
-            $lastStopOrder = $this->routeModel->getLastStopOrder($routeId);
-            $newStopOrder = $lastStopOrder + 1;
-    
-            // Add supplier to route
-            if ($this->routeModel->addSupplierToRoute($routeId, $supplierId, $newStopOrder)) {
-                // Update the remaining capacity
-                $this->routeModel->updateRemainingCapacity($routeId, 'add');
-                echo json_encode(['success' => true]);
-            } else {
-                echo json_encode([
-                    'success' => false, 
-                    'message' => 'Failed to subscribe to route'
-                ]);
-            }
-        } catch (Exception $e) {
-            echo json_encode([
-                'success' => false, 
-                'message' => $e->getMessage()
-            ]);
-        }
-    }
 
-    public function unsubscribeFromRoute()
-    {
-        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-            redirect('supplier/schedule');
-        }
-
-        $routeId = $this->routeModel->getRouteIdByScheduleId($_POST['schedule_id']) ?? null;
-        $supplierId = $_SESSION['supplier_id'];
-
-        try {
-            
-            // Remove supplier from route
-            if ($this->routeModel->removeSupplierFromRoute($routeId, $supplierId)) {
-                $this->routeModel->updateRemainingCapacity($routeId, 'remove');
-                // Adjust stop orders for remaining suppliers
-                
-                echo json_encode(['success' => true]);
-            } else {
-                echo json_encode([
-                    'success' => false, 
-                    'message' => 'Failed to unsubscribe from route'
-                ]);
-            }
-        } catch (Exception $e) {
-            echo json_encode([
-                'success' => false, 
-                'message' => $e->getMessage()
-            ]);
-        }
-    }
 
     public function toggleAvailability() {
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
@@ -730,6 +829,36 @@ class Supplier extends Controller {
         } else {
             redirect('supplier/'); // Redirect if not a POST request
         }
+    }
+
+
+    public function collections() {
+        
+        $supplierId = $_SESSION['supplier_id'];
+
+        $collections = $this->collectionModel->getSupplierCollections($supplierId);
+        
+        $data = [
+            'collections' => $collections
+        ];
+        
+        $this->view('supplier/v_view_collection', $data);
+    }
+
+    public function collectionBags($collection_id) {
+
+
+        $supplier_id = $_SESSION['supplier_id'];
+        
+        // Get bags for this collection that belong to this supplier
+        $bags = $this->collectionModel->getSupplierBagsForCollection($supplier_id, $collection_id);
+        
+        $data = [
+            'collection_id' => $collection_id,
+            'bags' => $bags
+        ];
+        
+        $this->view('supplier/v_collection_bags', $data);
     }
 }
 ?>

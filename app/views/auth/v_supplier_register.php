@@ -5,7 +5,7 @@
     <div class="container mt-5 pt-5">
         <div class="auth-form-section">
             <div class="auth-form-container">
-                <h2>Complete Your Supplier Profile</h2>
+                <h2>Submit an Application</h2>
                 <?php if (isset($data['error']) && !empty($data['error'])): ?>
                     <div class="auth-error"><?php echo $data['error']; ?></div>
                 <?php endif; ?>
@@ -34,50 +34,7 @@
                             </div>
                         </div>
                         
-                        <div class="row">
-                            <div class="col-md-6">
-                                <div class="form-group">
-                                    <label for="first_name">First Name:</label>
-                                    <input type="text" id="first_name" name="first_name" required>
-                                </div>
-                            </div>
-                            <div class="col-md-6">
-                                <div class="form-group">
-                                    <label for="last_name">Last Name:</label>
-                                    <input type="text" id="last_name" name="last_name" required>
-                                </div>
-                            </div>
-                        </div>
-                        
-                        <div class="row">
-                            <div class="col-md-6">
-                                <div class="form-group">
-                                    <label for="nic">NIC Number:</label>
-                                    <input type="text" id="nic" name="nic_number" required>
-                                </div>
-                            </div>
-                            <div class="col-md-6">
-                                <div class="form-group">
-                                    <label for="date_of_birth">Date of Birth:</label>
-                                    <input type="date" id="date_of_birth" name="date_of_birth" required>
-                                </div>
-                            </div>
-                        </div>
-                        
-                        <div class="row">
-                            <div class="col-md-6">
-                                <div class="form-group">
-                                    <label for="contact_number">Contact Number:</label>
-                                    <input type="text" id="contact_number" name="contact_number" required>
-                                </div>
-                            </div>
-                            <div class="col-md-6">
-                                <div class="form-group">
-                                    <label for="emergency_contact">Emergency Contact:</label>
-                                    <input type="text" id="emergency_contact" name="emergency_contact">
-                                </div>
-                            </div>
-                        </div>
+                    
                     </div>
                     
                     <!-- Address Information -->
@@ -85,18 +42,8 @@
                         <h3>Address Information</h3>
                         
                         <div class="form-group">
-                            <label for="address_line1">Address Line 1:</label>
-                            <input type="text" id="address_line1" name="address_line1" required>
-                        </div>
-                        
-                        <div class="form-group">
-                            <label for="address_line2">Address Line 2:</label>
-                            <input type="text" id="address_line2" name="address_line2">
-                        </div>
-                        
-                        <div class="form-group">
-                            <label for="city">City:</label>
-                            <input type="text" id="city" name="city" required>
+                            <label for="address">Address:</label>
+                            <input type="text" id="address" name="address" required>
                         </div>
                     </div>
 
@@ -136,51 +83,6 @@
                         <div class="form-group">
                             <label for="monthly_production">Estimated Monthly Production (kg):</label>
                             <input type="number" id="monthly_production" name="monthly_production" min="1" required>
-                        </div>
-                    </div>
-
-                    <!-- Bank Details -->
-                    <div class="form-section">
-                        <h3>Bank Information</h3>
-                        <div class="form-desc">Please provide your bank account details for payments.</div>
-                        
-                        <div class="form-group">
-                            <label for="accountHolderName">Account Holder Name:</label>
-                            <input type="text" id="accountHolderName" name="accountHolderName" required>
-                        </div>
-                        
-                        <div class="row">
-                            <div class="col-md-6">
-                                <div class="form-group">
-                                    <label for="bankName">Bank Name:</label>
-                                    <input type="text" id="bankName" name="bankName" required>
-                                </div>
-                            </div>
-                            <div class="col-md-6">
-                                <div class="form-group">
-                                    <label for="branchName">Branch Name:</label>
-                                    <input type="text" id="branchName" name="branchName" required>
-                                </div>
-                            </div>
-                        </div>
-                        
-                        <div class="row">
-                            <div class="col-md-6">
-                                <div class="form-group">
-                                    <label for="accountNumber">Account Number:</label>
-                                    <input type="text" id="accountNumber" name="accountNumber" required>
-                                </div>
-                            </div>
-                            <div class="col-md-6">
-                                <div class="form-group">
-                                    <label for="accountType">Account Type:</label>
-                                    <select id="accountType" name="accountType" required>
-                                        <option value="">Select Account Type</option>
-                                        <option value="Savings">Savings</option>
-                                        <option value="Current">Current</option>
-                                    </select>
-                                </div>
-                            </div>
                         </div>
                     </div>
 

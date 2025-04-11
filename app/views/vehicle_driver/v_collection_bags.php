@@ -24,6 +24,8 @@
             </ul>
         </div>
     </div>
+
+
     
     <!-- Supplier Info -->
     <div class="panel">
@@ -38,14 +40,22 @@
                 </div>
                 <div class="supplier-details">
                     <h4><?php echo $data['supplier']['supplierName']; ?></h4>
-                    <p class="expected-amount">
-                        <i class='bx bx-leaf'></i>
-                        <?php echo $data['supplier']['estimatedCollection']; ?>kg expected
-                    </p>
                 </div>
             </div>
         </div>
     </div>
+
+    <?php if (isset($data['flash'])): ?>
+        <div class="alert alert-warning">
+            <strong>Error!</strong> <?php echo htmlspecialchars($data['flash']); ?>
+        </div>
+    <?php endif; ?>
+
+    <?php if (isset($data['flash_success'])): ?>
+        <div class="alert alert-success">
+            <strong>Success!</strong> <?php echo htmlspecialchars($data['flash_success']); ?>
+        </div>
+    <?php endif; ?>
 
     <!-- Bags List Section -->
     <div class="panel">
@@ -103,12 +113,10 @@
 </main>
 
 <script>
-    // Calculate totals on page load
     document.addEventListener('DOMContentLoaded', function() {
         updateTotals();
     });
     
-    // Update totals
     function updateTotals() {
         const bagElements = document.querySelectorAll('.bag-item');
         let totalBags = bagElements.length;
@@ -132,7 +140,6 @@
         }
     }
     
-    // Finalize collection
     function finalizeCollection() {
         if (confirm('Are you sure you want to finalize this collection?')) {
             // Create a form and submit it
@@ -144,3 +151,30 @@
         }
     }
 </script> 
+
+
+<style>
+.alert {
+    padding: 15px;
+    border-radius: 5px;
+    background-color: #f8d7da;
+    color: #721c24; 
+    border: 1px solid #f5c6cb; 
+    margin-bottom: 20px; 
+}
+
+.alert-success {
+    padding: 15px;
+    border-radius: 5px;
+    background-color: #d4edda; 
+    color: #155724; 
+    border: 1px solid #c3e6cb; 
+    margin-bottom: 20px; 
+}
+
+.alert strong {
+    font-weight: bold; 
+}
+</style>
+
+<script src="<?php echo URLROOT; ?>/public/css/script.js"></script>

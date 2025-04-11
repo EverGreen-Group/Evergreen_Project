@@ -72,6 +72,23 @@ class Route extends Controller{
         $this->view('vehicle_manager/routes/v_manage_route', $data);
     }
 
+    public function viewMap($routeId) {
+        $routeSuppliers = $this->routeModel->getRouteSuppliersByRouteId($routeId);
+    
+        // Sort by stop_order
+        usort($routeSuppliers, function($a, $b) {
+            return $a->stop_order - $b->stop_order;
+        });
+    
+        $data = [
+            'route_id' => $routeId,
+            'routeSuppliers' => $routeSuppliers
+        ];
+    
+        $this->view('vehicle_manager/routes/v_route_map', $data);
+    }
+    
+
 
     //  =====================================================
     // JSON/AJAX FETCH METHODS HERE
@@ -82,7 +99,6 @@ class Route extends Controller{
         // Fetch bag details from the model using the collection ID
         $routeSuppliers = $this->routeModel->getRouteSuppliersByRouteId($routeId);
 
-        // Return the bag details as JSON
         header('Content-Type: application/json');
         echo json_encode($routeSuppliers);
         exit();
@@ -97,44 +113,6 @@ class Route extends Controller{
     // CONTROLLER CRUDS
     // ===================================================== 
 
-    public function addSupplier() {
-        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-            $supplierId = $_POST['supplier_id'];
-            $routeId = $_POST['route_id']; // Ensure you pass the route ID as well
-
-            // Get the last stop order for the route
-            $lastStopOrder = $this->routeModel->getLastStopOrder($routeId);
-            $newStopOrder = $lastStopOrder + 1; // Increment for the new supplier
-
-            // Call the model method to add the supplier to the route with the new stop order
-            if ($this->routeModel->addSupplierToRoute($routeId, $supplierId, $newStopOrder)) {
-                // Update the remaining capacity after adding the supplier
-                $this->routeModel->updateRemainingCapacity($routeId, 'add');
-
-                // Redirect or handle success
-                header('Location: ' . URLROOT . '/route/manageRoute/' . $routeId);
-                exit();
-            } else {
-                // Handle error
-                // You can set an error message to display to the user
-            }
-        }
-    }
-
-    public function removeSupplier() {
-        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-            $supplierId = $_POST['supplier_id'];
-            $routeId = $_POST['route_id'];
-
-            if ($this->routeModel->removeSupplierFromRoute($routeId, $supplierId)) {
-                $this->routeModel->updateRemainingCapacity($routeId, 'remove');
-                header('Location: ' . URLROOT . '/route/manageRoute/' . $routeId);
-                exit();
-            } else {
-
-            }
-        }
-    }
 
     public function createRoute() {
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
@@ -159,13 +137,11 @@ class Route extends Controller{
         if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             $route_id = $_POST['route_id'];
 
-            // Call model method to delete route
+
             if ($this->routeModel->deleteRoute($route_id)) {
-                // Redirect with success message
                 flash('route_message', 'Route deleted successfully');
                 redirect('route/');
             } else {
-                // Redirect with error message
                 flash('route_message', 'Failed to delete route', 'error');
                 redirect('route/');
             }
@@ -174,8 +150,8 @@ class Route extends Controller{
 
     public function getAvailableVehicles($day)
     {
-        // Make sure nothing is output before this
-        ob_clean(); // Clear any previous output
+
+        ob_clean(); 
 
         try {
             $vehicles = $this->vehicleModel->getAvailableVehiclesByDay($day);
@@ -186,7 +162,7 @@ class Route extends Controller{
                 'data' => $vehicles,
                 'message' => 'Vehicles retrieved successfully'
             ]);
-            exit; // End the script after sending JSON
+            exit;
         } catch (Exception $e) {
             header('Content-Type: application/json');
             echo json_encode([
@@ -197,25 +173,45 @@ class Route extends Controller{
         }
     }
 
-    public function toggleLock() {
-        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-            $routeId = $_POST['route_id'];
 
-            // Call the model method to toggle the lock state
-            if ($this->routeModel->toggleLock($routeId)) {
-                // Redirect back to the route management page with a success message
-                flash('route_message', 'Route lock state toggled successfully');
-                redirect('route/');
-            } else {
-                // Handle error
-                flash('route_message', 'Failed to toggle route lock state', 'error');
-                redirect('route/');
+    public function addSupplier() {
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            $supplierId = $_POST['supplier_id'];
+            $routeId = $_POST['route_id'];
+    
+            // Fjust a temp value, can use null also, used my index number here.
+            $tempStopOrder = 22001913;
+            if ($this->routeModel->addSupplierToRoute($routeId, $supplierId, $tempStopOrder)) {
+                $this->routeModel->updateRemainingCapacity($routeId, 'add');
+                $this->routeModel->optimizeRouteStopOrders($routeId);
+                
+                header('Location: ' . URLROOT . '/route/manageRoute/' . $routeId);
+                exit();
             }
-        } else {
-            // If not a POST request, redirect or handle accordingly
-            redirect('route/');
         }
     }
+    
+    public function removeSupplier() {
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            $routeId = $_POST['route_id'];
+            $supplierId = $_POST['supplier_id'];
+            
+            if ($this->routeModel->removeSupplierFromRoute($routeId, $supplierId)) {
+                $this->routeModel->updateRemainingCapacity($routeId, 'remove');
+                $this->routeModel->optimizeRouteStopOrders($routeId);
+                
+                header('Location: ' . URLROOT . '/route/manageRoute/' . $routeId);
+                exit();
+            }
+        }
+        
+        header('Location: ' . URLROOT . '/route/manageRoute/' . $_POST['route_id']);
+        exit();
+    }
+
+    
+
+
 
 
 

@@ -15,7 +15,7 @@ class M_SupplierApplication {
                              VALUES (:user_id, :status)');
             
             $this->db->bind(':user_id', $data['user_id']);
-            $this->db->bind(':status', 'pending'); // Default status is pending
+            $this->db->bind(':status', 'pending'); // default is pending!! 
             
             if (!$this->db->execute()) {
                 throw new Exception("Failed to insert main application");
@@ -41,23 +41,6 @@ class M_SupplierApplication {
             
             if (!$this->db->execute()) {
                 throw new Exception("Failed to insert location and cultivation data");
-            }
-
-            // 4. Insert bank details
-            $this->db->query('INSERT INTO supplier_bank_info 
-                (application_id, account_holder_name, bank_name, branch_name, account_number, account_type) 
-                VALUES 
-                (:application_id, :account_holder_name, :bank_name, :branch_name, :account_number, :account_type)');
-            
-            $this->db->bind(':application_id', $applicationId);
-            $this->db->bind(':account_holder_name', $data['bank_info']['account_holder_name']);
-            $this->db->bind(':bank_name', $data['bank_info']['bank_name']);
-            $this->db->bind(':branch_name', $data['bank_info']['branch_name']);
-            $this->db->bind(':account_number', $data['bank_info']['account_number']);
-            $this->db->bind(':account_type', $data['bank_info']['account_type']);
-            
-            if (!$this->db->execute()) {
-                throw new Exception("Failed to insert bank details");
             }
 
             // 5. Handle document uploads
@@ -282,13 +265,6 @@ class M_SupplierApplication {
         return $this->db->single();
     }
 
-    public function getAddress($applicationId) {
-        $this->db->query('SELECT * FROM application_addresses 
-                          WHERE application_id = :application_id');
-        $this->db->bind(':application_id', $applicationId);
-        return $this->db->single();
-    }
-
     public function getApplicationById($applicationId) {
         $this->db->query("
         SELECT supplier_applications.*, users.email, managers.manager_id, CONCAT(profiles.first_name, ' ', profiles.last_name) AS manager_name 
@@ -298,6 +274,12 @@ class M_SupplierApplication {
         LEFT JOIN profiles ON profiles.profile_id = managers.profile_id
         WHERE application_id = :application_id
         ");
+        $this->db->bind(':application_id', $applicationId);
+        return $this->db->single();
+    }
+
+    public function getBankInfoByApplicationId($applicationId) {
+        $this->db->query("SELECT * FROM supplier_bank_info WHERE application_id = :application_id");
         $this->db->bind(':application_id', $applicationId);
         return $this->db->single();
     }
@@ -339,46 +321,21 @@ class M_SupplierApplication {
         $this->db->beginTransaction();
         
         try {
-            // Debug data
-            error_log("Profile data: " . json_encode($profileData));
-            error_log("Application data: " . json_encode($applicationData));
             
-            // 1. Create profile - Fix the SQL syntax
-            $this->db->query("INSERT INTO profiles (user_id, first_name, last_name, nic, date_of_birth, 
-                             contact_number, emergency_contact, address_line1, address_line2, city) 
-                             VALUES (:user_id, :first_name, :last_name, :nic, :date_of_birth, 
-                             :contact_number, :emergency_contact, :address_line1, :address_line2, :city)");
-            
-            $this->db->bind(':user_id', $profileData['user_id']);
-            $this->db->bind(':first_name', $profileData['first_name']);
-            $this->db->bind(':last_name', $profileData['last_name']);
-            $this->db->bind(':nic', $profileData['nic']);
-            $this->db->bind(':date_of_birth', $profileData['date_of_birth']);
-            $this->db->bind(':contact_number', $profileData['contact_number']);
-            $this->db->bind(':emergency_contact', $profileData['emergency_contact']);
-            $this->db->bind(':address_line1', $profileData['address_line1']);
-            $this->db->bind(':address_line2', $profileData['address_line2']);
-            $this->db->bind(':city', $profileData['city']);
-            
-
-            
-            if (!$this->db->execute()) {
-                throw new Exception("Failed to create profile");
-            }
-            
-            // 2. Upload profile photo
+            // Uploading the photo
             $profilePhotoPath = null;
             if (isset($profilePhoto) && $profilePhoto['error'] === UPLOAD_ERR_OK) {
                 $profilePhotoPath = $this->uploadProfilePhoto($profilePhoto);
             }
             
-            // 3. Insert main application with profile photo
-            $this->db->query('INSERT INTO supplier_applications (user_id, status, profile_photo) 
-                             VALUES (:user_id, :status, :profile_photo)');
+            // Inserting the path to the application with address
+            $this->db->query('INSERT INTO supplier_applications (user_id, status, profile_photo, address) 
+                             VALUES (:user_id, :status, :profile_photo, :address)');
             
             $this->db->bind(':user_id', $applicationData['user_id']);
             $this->db->bind(':status', 'pending');
             $this->db->bind(':profile_photo', $profilePhotoPath);
+            $this->db->bind(':address', $profileData['address']); 
             
             if (!$this->db->execute()) {
                 throw new Exception("Failed to insert main application");
@@ -386,7 +343,7 @@ class M_SupplierApplication {
             
             $applicationId = $this->db->lastInsertId();
             
-            // 4. Update application with location and cultivation data
+            // Tea cultivation and location
             $this->db->query('UPDATE supplier_applications 
                              SET latitude = :latitude, longitude = :longitude,
                                  tea_cultivation_area = :tea_cultivation_area,
@@ -404,65 +361,22 @@ class M_SupplierApplication {
             if (!$this->db->execute()) {
                 throw new Exception("Failed to update application with location and cultivation data");
             }
-            
-            // 5. Insert bank details
-            try {
-                // Debug bank info data
-                error_log("Bank info data: " . json_encode($applicationData['bank_info']));
-                error_log("Application ID: " . $applicationId);
-                
-                // Check if account number already exists
-                $this->db->query('SELECT COUNT(*) as count FROM supplier_bank_info WHERE account_number = :account_number');
-                $this->db->bind(':account_number', $applicationData['bank_info']['account_number']);
-                $result = $this->db->single();
-                
-                if ($result->count > 0) {
-                    throw new Exception("This bank account number is already registered in our system. Please use a different account.");
-                }
-                
-                $this->db->query('INSERT INTO supplier_bank_info 
-                    (application_id, account_holder_name, bank_name, branch_name, account_number, account_type) 
-                    VALUES 
-                    (:application_id, :account_holder_name, :bank_name, :branch_name, :account_number, :account_type)');
-                
-                $this->db->bind(':application_id', $applicationId);
-                $this->db->bind(':account_holder_name', $applicationData['bank_info']['account_holder_name']);
-                $this->db->bind(':bank_name', $applicationData['bank_info']['bank_name']);
-                $this->db->bind(':branch_name', $applicationData['bank_info']['branch_name']);
-                $this->db->bind(':account_number', $applicationData['bank_info']['account_number']);
-                $this->db->bind(':account_type', $applicationData['bank_info']['account_type']);
-                
-                if (!$this->db->execute()) {
-                    error_log("Database error inserting bank info");
-                    throw new Exception("Failed to insert bank details");
-                }
-                
-                error_log("Bank info inserted successfully");
-            } catch (Exception $e) {
-                error_log("Error inserting bank details: " . $e->getMessage());
-                throw $e;
-            }
 
-            // 6. Handle document uploads
+            // Document uploads
             foreach ($documents as $type => $file) {
                 try {
                     $filePath = $this->uploadDocument($file, $type);
                     error_log("Document uploaded successfully to: " . $filePath);
                     
-     
                     $safeApplicationId = (int)$applicationId; 
                     $safeType = "'" . addslashes($type) . "'"; 
                     $safeFilePath = "'" . addslashes($filePath) . "'";
                     
-                    // using direct values, can chng later
                     $sql = "INSERT INTO application_documents 
                             (application_id, document_type, file_path) 
                             VALUES 
                             ($safeApplicationId, $safeType, $safeFilePath)";
                     
-                    error_log("Executing raw SQL: " . $sql);
-                    
-                    // Execute the query directly
                     $result = $this->db->executeRawQuery($sql);
                     
                     if (!$result) {
@@ -477,7 +391,6 @@ class M_SupplierApplication {
                 }
             }
         
-            
             $this->db->commit();
             return true;
             
