@@ -138,9 +138,7 @@
                                     <th>Start Time</th>
                                     <th>End Time</th>
                                     <th>Total Quantity</th>
-                                    <th>Bags Collected</th>
-                                    <th>Route</th>
-                                    <th>Vehicle</th>
+
                                 </tr>
                             </thead>
                             <tbody>
@@ -153,17 +151,6 @@
                                         <td><?php echo !empty($collection->start_time) ? date('d M Y H:i', strtotime($collection->start_time)) : 'N/A'; ?></td>
                                         <td><?php echo !empty($collection->end_time) ? date('d M Y H:i', strtotime($collection->end_time)) : 'N/A'; ?></td>
                                         <td><?php echo htmlspecialchars($collection->total_quantity); ?> kg</td>
-                                        <td><?php echo htmlspecialchars($collection->bags ?? 'N/A'); ?></td>
-                                        <td><?php echo htmlspecialchars($collection->route_name ?? 'N/A'); ?></td>
-                                        <td>
-                                            <?php 
-                                            if (!empty($collection->vehicle_make) && !empty($collection->vehicle_model)) {
-                                                echo htmlspecialchars($collection->vehicle_make . ' ' . $collection->vehicle_model . ' (' . $collection->license_plate . ')');
-                                            } else {
-                                                echo 'N/A';
-                                            }
-                                            ?>
-                                        </td>
                                     </tr>
                                 <?php endforeach; ?>
                             </tbody>

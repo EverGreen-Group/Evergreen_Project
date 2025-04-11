@@ -54,7 +54,8 @@ class M_User {
     public function getUserById($user_id) {
         $this->db->query("SELECT
             user_id, 
-            email
+            email,
+            password
             FROM users u
             WHERE user_id = :user_id");
         
@@ -346,21 +347,13 @@ class M_User {
                           first_name = :first_name, 
                           last_name = :last_name,
                           date_of_birth = :date_of_birth,
-                          contact_number = :contact_number,
-                          emergency_contact = :emergency_contact,
-                          address_line1 = :address_line1,
-                          address_line2 = :address_line2,
-                          city = :city
+                          contact_number = :contact_number
                           WHERE profile_id = :profile_id');
         
         $this->db->bind(':first_name', $data['first_name']);
         $this->db->bind(':last_name', $data['last_name']);
         $this->db->bind(':date_of_birth', $data['date_of_birth']);
         $this->db->bind(':contact_number', $data['contact_number']);
-        $this->db->bind(':emergency_contact', $data['emergency_contact']);
-        $this->db->bind(':address_line1', $data['address_line1']);
-        $this->db->bind(':address_line2', $data['address_line2']);
-        $this->db->bind(':city', $data['city']);
         $this->db->bind(':profile_id', $data['profile_id']);
         
         return $this->db->execute();
@@ -375,5 +368,14 @@ class M_User {
 
         return $this->db->execute();
     }
+
+    public function updatePasswordByUserId($userId, $hashedPassword)
+    {
+        $this->db->query("UPDATE users SET password = :password WHERE user_id = :id");
+        $this->db->bind(':password', $hashedPassword);
+        $this->db->bind(':id', $userId);
+        $this->db->execute();
+    }
+    
 }
 ?>

@@ -71,12 +71,6 @@
                                     <input type="text" id="contact_number" name="contact_number" required>
                                 </div>
                             </div>
-                            <div class="col-md-6">
-                                <div class="form-group">
-                                    <label for="emergency_contact">Emergency Contact:</label>
-                                    <input type="text" id="emergency_contact" name="emergency_contact">
-                                </div>
-                            </div>
                         </div>
                     </div>
                     
@@ -85,18 +79,8 @@
                         <h3>Address Information</h3>
                         
                         <div class="form-group">
-                            <label for="address_line1">Address Line 1:</label>
-                            <input type="text" id="address_line1" name="address_line1" required>
-                        </div>
-                        
-                        <div class="form-group">
-                            <label for="address_line2">Address Line 2:</label>
-                            <input type="text" id="address_line2" name="address_line2">
-                        </div>
-                        
-                        <div class="form-group">
-                            <label for="city">City:</label>
-                            <input type="text" id="city" name="city" required>
+                            <label for="address">Address:</label>
+                            <input type="text" id="address" name="address" required>
                         </div>
                     </div>
 
@@ -136,51 +120,6 @@
                         <div class="form-group">
                             <label for="monthly_production">Estimated Monthly Production (kg):</label>
                             <input type="number" id="monthly_production" name="monthly_production" min="1" required>
-                        </div>
-                    </div>
-
-                    <!-- Bank Details -->
-                    <div class="form-section">
-                        <h3>Bank Information</h3>
-                        <div class="form-desc">Please provide your bank account details for payments.</div>
-                        
-                        <div class="form-group">
-                            <label for="accountHolderName">Account Holder Name:</label>
-                            <input type="text" id="accountHolderName" name="accountHolderName" required>
-                        </div>
-                        
-                        <div class="row">
-                            <div class="col-md-6">
-                                <div class="form-group">
-                                    <label for="bankName">Bank Name:</label>
-                                    <input type="text" id="bankName" name="bankName" required>
-                                </div>
-                            </div>
-                            <div class="col-md-6">
-                                <div class="form-group">
-                                    <label for="branchName">Branch Name:</label>
-                                    <input type="text" id="branchName" name="branchName" required>
-                                </div>
-                            </div>
-                        </div>
-                        
-                        <div class="row">
-                            <div class="col-md-6">
-                                <div class="form-group">
-                                    <label for="accountNumber">Account Number:</label>
-                                    <input type="text" id="accountNumber" name="accountNumber" required>
-                                </div>
-                            </div>
-                            <div class="col-md-6">
-                                <div class="form-group">
-                                    <label for="accountType">Account Type:</label>
-                                    <select id="accountType" name="accountType" required>
-                                        <option value="">Select Account Type</option>
-                                        <option value="Savings">Savings</option>
-                                        <option value="Current">Current</option>
-                                    </select>
-                                </div>
-                            </div>
                         </div>
                     </div>
 

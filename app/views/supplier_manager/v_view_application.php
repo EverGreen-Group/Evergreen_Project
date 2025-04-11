@@ -96,21 +96,9 @@
                     <span class="label">Contact Number:</span>
                     <span class="value"><?= $data['profile']->contact_number ?></span>
                 </div>
-                <?php if (!empty($data['profile']->emergency_contact)): ?>
-                <div class="info-row">
-                    <span class="label">Emergency Contact:</span>
-                    <span class="value"><?= $data['profile']->emergency_contact ?></span>
-                </div>
-                <?php endif; ?>
                 <div class="info-row">
                     <span class="label">Address:</span>
-                    <span class="value">
-                        <?= $data['profile']->address_line1 ?><br>
-                        <?php if (!empty($data['profile']->address_line2)): ?>
-                            <?= $data['profile']->address_line2 ?><br>
-                        <?php endif; ?>
-                        <?= $data['profile']->city ?>
-                    </span>
+                    <span class="value"><?= $data['application']['address'] ?></span>
                 </div>
             </div>
         </div>
@@ -161,36 +149,6 @@
         </div>
     </div>
 
-    <!-- Bank Information -->
-    <div class="table-data">
-        <div class="order">
-            <div class="head">
-                <h3>Bank Information</h3>
-            </div>
-            <div class="section-content">
-                <div class="info-row">
-                    <span class="label">Account Holder:</span>
-                    <span class="value"><?= $data['bank_info']->account_holder_name ?></span>
-                </div>
-                <div class="info-row">
-                    <span class="label">Bank Name:</span>
-                    <span class="value"><?= $data['bank_info']->bank_name ?></span>
-                </div>
-                <div class="info-row">
-                    <span class="label">Branch:</span>
-                    <span class="value"><?= $data['bank_info']->branch_name ?></span>
-                </div>
-                <div class="info-row">
-                    <span class="label">Account Number:</span>
-                    <span class="value"><?= $data['bank_info']->account_number ?></span>
-                </div>
-                <div class="info-row">
-                    <span class="label">Account Type:</span>
-                    <span class="value"><?= $data['bank_info']->account_type ?></span>
-                </div>
-            </div>
-        </div>
-    </div>
 
     <!-- Documents -->
     <div class="table-data">
@@ -232,7 +190,7 @@
 </main>
 
 <script>
-    // Initialize map when the page loads
+
     function initMap() {
         const lat = <?= $data['location']->latitude ?>;
         const lng = <?= $data['location']->longitude ?>;

@@ -131,14 +131,6 @@ require APPROOT . '/views/inc/components/topnavbar.php';
     font-size: 1.2rem;
 }
 
-.btn-primary {
-    background-color: var(--secondary-color);
-    color: white;
-    border: none;
-    padding: 10px 15px;
-    border-radius: var(--border-radius-md);
-    cursor: pointer;
-}
 
 .btn-primary:hover {
     background-color: darkgreen; /* Darker shade for hover effect */
@@ -182,34 +174,15 @@ require APPROOT . '/views/inc/components/topnavbar.php';
                             <span class="value"><?= htmlspecialchars($schedule->day) ?></span>
                         </div>
                         <div class="info-row">
-                            <span class="label">Status:</span>
-                            <span class="value">
-                                <?php 
-                                // Determine the status based on the current time
-                                $currentTime = time();
-                                $startTime = strtotime($schedule->start_time);
-                                $endTime = strtotime($schedule->end_time);
-
-                                if ($schedule->is_today == 1 && $currentTime >= $startTime && $currentTime <= $endTime) {
-                                    echo "Started"; // Schedule is currently active
-                                } elseif ($schedule->is_today == 1 && $currentTime < $startTime) {
-                                    echo "Upcoming"; // Schedule is yet to start
-                                } elseif ($currentTime > $endTime) {
-                                    echo "Completed"; // Schedule has ended
-                                } else {
-                                    echo htmlspecialchars($schedule->schedule_status); // Default status
-                                }
-                                ?>
-                            </span>
-                        </div>
-                        <div class="info-row">
                             <span class="label">Actions:</span>
                             <span class="value">
                                 <?php 
-                                // Check if the schedule is today and if the current time is past the start time
+                                $currentTime = time();
+                                $startTime = strtotime($schedule->start_time);
+                                $endTime = strtotime($schedule->end_time);
                                 if ($schedule->is_today == 1 && $currentTime >= $startTime && $currentTime < $endTime): ?>
                                     <form action="<?php echo URLROOT; ?>/vehicledriver/createCollection/<?php echo htmlspecialchars($schedule->schedule_id); ?>" method="POST">
-                                        <button type="submit" class="btn-primary">Start Collection</button>
+                                        <button type="submit" class="btn btn-secondary">Start Collection</button>
                                     </form>
                                 <?php else: ?>
                                     <button class="btn-primary" disabled>Not Available</button>

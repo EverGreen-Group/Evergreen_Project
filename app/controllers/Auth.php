@@ -147,12 +147,17 @@ class Auth extends Controller
                             $_SESSION['email'] = $user->email;
                             $_SESSION['role_id'] = $user->role_id;
 
+                            // Fetch profile
+                            $profile = $this->userModel->getProfileByUserId($user->user_id);
+
+                            $_SESSION['profile_image_path'] = ($profile && !empty($profile->image_path)) ? $profile->image_path : null;
+
                             // After successful login, redirect based on role
                             switch (RoleHelper::getRole()) {
                                 case RoleHelper::DRIVER:
                                     header('Location: ' . URLROOT . '/vehicledriver/');
                                     break;
-                                case RoleHelper::VEHICLE_MANAGER:
+                                case RoleHelper::MANAGER:
                                     header('Location: ' . URLROOT . '/manager/');
                                     break;
                                 case RoleHelper::SUPPLIER:
@@ -190,6 +195,7 @@ class Auth extends Controller
         unset($_SESSION['last_name']);
         unset($_SESSION['email']);
         unset($_SESSION['role_id']);
+        unset($_SESSION['profile_image_path']);
         session_destroy();
 
         header('Location: ' . URLROOT);
@@ -222,13 +228,9 @@ class Auth extends Controller
                     'nic' => trim($_POST['nic_number']),
                     'date_of_birth' => trim($_POST['date_of_birth']),
                     'contact_number' => trim($_POST['contact_number']),
-                    'emergency_contact' => !empty($_POST['emergency_contact']) ? trim($_POST['emergency_contact']) : null,
-                    'address_line1' => trim($_POST['address_line1']),
-                    'address_line2' => !empty($_POST['address_line2']) ? trim($_POST['address_line2']) : null,
-                    'city' => trim($_POST['city'])
+                    'address' => trim($_POST['address'])
                 ];
 
-                // Collect application data
                 $applicationData = [
                     'user_id' => $_SESSION['user_id'],
                     'location' => [
@@ -239,13 +241,6 @@ class Auth extends Controller
                         'tea_cultivation_area' => $_POST['teaCultivationArea'],
                         'plant_age' => $_POST['plant_age'],
                         'monthly_production' => $_POST['monthly_production']
-                    ],
-                    'bank_info' => [
-                        'account_holder_name' => $_POST['accountHolderName'],
-                        'bank_name' => $_POST['bankName'],
-                        'branch_name' => $_POST['branchName'],
-                        'account_number' => $_POST['accountNumber'],
-                        'account_type' => $_POST['accountType']
                     ]
                 ];
 
@@ -264,7 +259,6 @@ class Auth extends Controller
                     $documents[$doc] = $_FILES[$doc];
                 }
 
-                // Rename document keys for the model
                 $processedDocuments = [];
                 foreach ($documents as $key => $value) {
                     $newKey = ($key === 'nic_document') ? 'nic' : $key;
@@ -400,58 +394,126 @@ class Auth extends Controller
         $this->view('auth/v_forgot_password', $data);
     }
 
+    // public function resetPassword()
+    // {
+    //     $data = [
+    //         'token' => '',
+    //         'password' => '',
+    //         'confirm_password' => '',
+    //         'error' => ''
+    //     ];
+
+    //     if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    //         $_POST = filter_input_array(INPUT_POST);
+    //         $data['token'] = trim($_POST['token']);
+    //         $data['password'] = trim($_POST['password']);
+    //         $data['confirm_password'] = trim($_POST['confirm_password']);
+
+    //         // Validate token and passwords
+    //         if (empty($data['token']) || empty($data['password']) || empty($data['confirm_password'])) {
+    //             $data['error'] = 'Please fill in all fields.';
+    //         } elseif ($data['password'] !== $data['confirm_password']) {
+    //             $data['error'] = 'Passwords do not match.';
+    //         } elseif (strlen($data['password']) < 8) { // Minimum length check
+    //             $data['error'] = 'Password must be at least 8 characters long.';
+    //         } elseif (!preg_match('/[A-Za-z]/', $data['password'])) { // Check for letters
+    //             $data['error'] = 'Password must contain at least one letter.';
+    //         } elseif (!preg_match('/[0-9]/', $data['password'])) { // Check for numbers
+    //             $data['error'] = 'Password must contain at least one number.';
+    //         } elseif (!preg_match('/[!@#$%^&*(),.?":{}|<>]/', $data['password'])) { // Check for special characters
+    //             $data['error'] = 'Password must contain at least one special character.';
+    //         } else {
+    //             // Verify the token
+    //             if ($this->userModel->verifyResetToken($data['token'])) {
+    //                 // Hash the new password
+    //                 $hashedPassword = password_hash($data['password'], PASSWORD_DEFAULT);
+    //                 // Update the password in the database
+    //                 $this->userModel->updatePassword($data['token'], $hashedPassword);
+                    
+    //                 // Redirect to login page after successful password reset
+    //                 header('Location: ' . URLROOT . '/auth/login');
+    //                 exit();
+    //             } else {
+    //                 $data['error'] = 'Invalid or expired token.';
+    //             }
+    //         }
+    //     } else {
+    //         // If GET request, retrieve the token from the URL
+    //         if (isset($_GET['token'])) {
+    //             $data['token'] = $_GET['token'];
+    //         }
+    //     }
+
+    //     $this->view('auth/v_reset_password', $data);
+    // }
+
+
+
+    // MY VERSION, removed that token part because im not sure if the smtp will work very well
     public function resetPassword()
     {
-        $data = [
-            'token' => '',
-            'password' => '',
-            'confirm_password' => '',
-            'error' => ''
-        ];
-
-        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-            $_POST = filter_input_array(INPUT_POST);
-            $data['token'] = trim($_POST['token']);
-            $data['password'] = trim($_POST['password']);
-            $data['confirm_password'] = trim($_POST['confirm_password']);
-
-            // Validate token and passwords
-            if (empty($data['token']) || empty($data['password']) || empty($data['confirm_password'])) {
-                $data['error'] = 'Please fill in all fields.';
-            } elseif ($data['password'] !== $data['confirm_password']) {
-                $data['error'] = 'Passwords do not match.';
-            } elseif (strlen($data['password']) < 8) { // Minimum length check
-                $data['error'] = 'Password must be at least 8 characters long.';
-            } elseif (!preg_match('/[A-Za-z]/', $data['password'])) { // Check for letters
-                $data['error'] = 'Password must contain at least one letter.';
-            } elseif (!preg_match('/[0-9]/', $data['password'])) { // Check for numbers
-                $data['error'] = 'Password must contain at least one number.';
-            } elseif (!preg_match('/[!@#$%^&*(),.?":{}|<>]/', $data['password'])) { // Check for special characters
-                $data['error'] = 'Password must contain at least one special character.';
-            } else {
-                // Verify the token
-                if ($this->userModel->verifyResetToken($data['token'])) {
-                    // Hash the new password
-                    $hashedPassword = password_hash($data['password'], PASSWORD_DEFAULT);
-                    // Update the password in the database
-                    $this->userModel->updatePassword($data['token'], $hashedPassword);
-                    
-                    // Redirect to login page after successful password reset
-                    header('Location: ' . URLROOT . '/auth/login');
-                    exit();
-                } else {
-                    $data['error'] = 'Invalid or expired token.';
-                }
-            }
-        } else {
-            // If GET request, retrieve the token from the URL
-            if (isset($_GET['token'])) {
-                $data['token'] = $_GET['token'];
-            }
+        if (!isLoggedIn()) {
+            redirect('auth/login');
+            return;
         }
 
-        $this->view('auth/v_reset_password', $data);
-    }
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            $_POST = filter_input_array(INPUT_POST, FILTER_SANITIZE_STRING);
+
+            $currentPassword = trim($_POST['current_password']);
+            $newPassword = trim($_POST['new_password']);
+            $confirmPassword = trim($_POST['confirm_password']);
+
+
+            if (empty($currentPassword) || empty($newPassword) || empty($confirmPassword)) {
+                flash('profile_message', 'Please fill in all password fields.', 'alert alert-danger');
+
+            } elseif ($newPassword !== $confirmPassword) {
+                flash('profile_message', 'New passwords do not match.', 'alert alert-danger');
+
+            } elseif (strlen($newPassword) < 8) {
+                flash('profile_message', 'Password must be at least 8 characters long.', 'alert alert-danger');
+            } elseif (!preg_match('/[A-Z]/', $newPassword)) { // At least one uppercase letter
+                flash('profile_message', 'Password must contain at least one uppercase letter.', 'alert alert-danger');
+            } elseif (!preg_match('/[a-z]/', $newPassword)) { // At least one lowercase letter
+                 flash('profile_message', 'Password must contain at least one lowercase letter.', 'alert alert-danger');
+            } elseif (!preg_match('/[0-9]/', $newPassword)) { // At least one number
+                flash('profile_message', 'Password must contain at least one number.', 'alert alert-danger');
+             } elseif (!preg_match('/[\W_]/', $newPassword)) { // At least one special character (matches registration)
+                flash('profile_message', 'Password must contain at least one special character.', 'alert alert-danger');
+            } else {
+
+                $userId = $_SESSION['user_id'];
+                $user = $this->userModel->getUserById($userId);
+
+                if (!$user || !password_verify($currentPassword, $user->password)) {
+
+                    flash('profile_message', 'Current password is incorrect.', 'alert alert-danger');
+                } else {
+
+                    $hashedPassword = password_hash($newPassword, PASSWORD_DEFAULT);
+                    if ($this->userModel->updatePasswordByUserId($userId, $hashedPassword)) {
+
+                        flash('profile_message', 'Password updated successfully.', 'alert alert-success');
+                    } else {
+
+                         flash('profile_message', 'Failed to update password. Please try again.', 'alert alert-danger');
+
+                    }
+                }
+            }
+
+
+            redirect('/');
+            return; 
+
+        } else {
+
+            flash('profile_message', 'Invalid request method for password reset.', 'alert alert-warning');
+            redirect('/'); 
+            return; 
+        }
+    } 
 
 }
 ?>

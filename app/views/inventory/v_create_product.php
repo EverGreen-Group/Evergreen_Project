@@ -1,132 +1,280 @@
-<!DOCTYPE html>
-<html lang="en">
+<?php require APPROOT . '/views/inc/components/header.php'; ?>
 
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title><?php echo SITENAME; ?></title>
-    <link rel="stylesheet" href="<?php echo URLROOT; ?>/css/pages/create_product.css" />
-    <link rel="stylesheet" href="<?php echo URLROOT; ?>/css/components/topnavbar_style.css" />
-    <link href="https://unpkg.com/boxicons@2.0.9/css/boxicons.min.css" rel="stylesheet" />
+<!-- Side bar -->
+<?php require APPROOT . '/views/inc/components/sidebar_inventory.php'; ?>
+<!-- Top nav bar -->
+<?php require APPROOT . '/views/inc/components/topnavbar.php'; ?>
+<link rel="stylesheet" href="<?php echo URLROOT; ?>/css/vehicle_manager/vehicle/vehicle_card.css">
+<link rel="stylesheet" href="<?php echo URLROOT; ?>/css/vehicle_manager/vehicle/vehicle.css">
+<link rel="stylesheet" href="<?php echo URLROOT; ?>/css/vehicle_manager/driver/driver.css">
+<script>
+    const URLROOT = '<?php echo URLROOT; ?>';
+    const UPLOADROOT = '<?php echo UPLOADROOT; ?>';
+</script>
 
-</head>
-
-<body>
-    <main>
-
-        <!-- Top nav bar -->
-        <?php require APPROOT . '/views/inc/components/topnavbar.php' ?>
-        <!-- Side bar -->
-        <?php require APPROOT . '/views/inc/components/sidebar_inventory.php' ?>
-        <div class="screen">
-            <div class="form-container">
-                <form class="create-product-form" action="<?php echo URLROOT; ?>/Inventory/createproduct" method="POST"
-                    enctype="multipart/form-data">
-                    <div class="form-header">
-                        <h2>Create New Product</h2>
+<!-- MAIN -->
+<main>
+    <div class="head-title">
+        <div class="left">
+            <h1>Create Product</h1>
+            <ul class="breadcrumb">
+                <li><a href="<?= URLROOT ?>/Inventory">Products</a></li>
+                <li><i class='bx bx-chevron-right'></i></li>
+                <li><a class="active" href="#">Create Product</a></li>
+            </ul>
+        </div>
+    </div>
+    
+    <!-- Error Messages -->
+    <?php if(!empty($data['error'])): ?>
+        <div class="alert alert-danger">
+            <?php echo $data['error']; ?>
+        </div>
+    <?php endif; ?>
+    
+    <form id="createProductForm" method="POST" action="<?php echo URLROOT; ?>/Inventory/createproduct" enctype="multipart/form-data">
+    
+        <!-- Basic Information -->
+        <div class="table-data">
+            <div class="order">
+                <div class="head">
+                    <h3>Basic Information</h3>
+                </div>
+                <div class="section-content">
+                    <div class="info-row">
+                        <label class="label" for="product_name">Product Name:</label>
+                        <input type="text" id="product_name" name="product_name" class="form-control" required value="<?php echo isset($data['product_name']) ? $data['product_name'] : ''; ?>">
                     </div>
-
-                    <div class="form-section">
-                        <h3>Basic information</h3>
-                        <div class="form-row">
-                            <div class="form-group">
-                                <label for="product-name">Product name</label>
-                                <input type="text" id="product-name" name="product-name"
-                                    value="<?php echo isset($data['product-name']) ? $data['product-name'] : ''; ?>">
-                            </div>
-                            <div class="form-group">
-                                <label for="location">Location</label>
-                                <select id="location" name="location">
-                                    <option value="warehouse-a" <?php echo (isset($data['location']) && $data['location'] == 'warehouse-a') ? 'selected' : ''; ?>>Warehouse A</option>
-                                    <option value="warehouse-b" <?php echo (isset($data['location']) && $data['location'] == 'warehouse-b') ? 'selected' : ''; ?>>Warehouse B</option>
-                                    <option value="warehouse-c" <?php echo (isset($data['location']) && $data['location'] == 'warehouse-c') ? 'selected' : ''; ?>>Warehouse C</option>
-                                </select>
-                            </div>
-                        </div>
-                        <div class="form-row">
-                            <div class="form-group">
-                                <label for="details">Details</label>
-                                <input type="text" id="details" name="details"
-                                    value="<?php echo isset($data['details']) ? $data['details'] : ''; ?>">
-                            </div>
-                            <div class="form-group">
-                                <label for="code">Grade</label>
-                                <input type="text" id="grade" name="grade" placeholder="Enter Code">
-                            </div>
-                        </div>
+                    <div class="info-row">
+                        <label class="label" for="location">Location:</label>
+                        <select id="location" name="location" class="form-control" required>
+                            <option value="warehouse-a" <?php echo (isset($data['location']) && $data['location'] == 'warehouse-a') ? 'selected' : ''; ?>>Warehouse A</option>
+                            <option value="warehouse-b" <?php echo (isset($data['location']) && $data['location'] == 'warehouse-b') ? 'selected' : ''; ?>>Warehouse B</option>
+                            <option value="warehouse-c" <?php echo (isset($data['location']) && $data['location'] == 'warehouse-c') ? 'selected' : ''; ?>>Warehouse C</option>
+                        </select>
                     </div>
-
-                    <div class="form-section">
-                        <h3>Media (Images)</h3>
-                        <div class="media-upload-area">
-                            <input type="file" id="product_image" name="product_image" accept="image/*"
-                                onchange="previewImage(this)">
-                            <div class="image-preview" id="imagePreview">
-                                <img src="" alt="Image Preview" id="preview" style="display: none;">
-                                <div class="upload-placeholder" id="placeholder">
-                                    <span>+</span>
-                                </div>
-                            </div>
-                        </div>
+                    <div class="info-row">
+                        <label class="label" for="details">Details:</label>
+                        <input type="text" id="details" name="details" class="form-control" value="<?php echo isset($data['details']) ? $data['details'] : ''; ?>">
                     </div>
-
-                    <div class="form-section">
-                        <h3>Sale information</h3>
-                        <div class="form-row">
-                            <div class="form-group">
-                                <label for="price">Price</label>
-                                <div class="input-with-prefix">
-                                    <span class="prefix">$</span>
-                                    <input type="number" id="price" name="price"
-                                        value="<?php echo isset($data['price']) ? $data['price'] : ''; ?>">
-                                </div>
-                            </div>
-                           
-                        </div>
+                    <div class="info-row">
+                        <label class="label" for="grade">Grade:</label>
+                        <input type="text" id="grade" name="grade" class="form-control" placeholder="Enter Grade" required value="<?php echo isset($data['grade']) ? $data['grade'] : ''; ?>">
                     </div>
-
-                    <div class="form-section">
-                        <h3>Inventory</h3>
-                        <div class="form-row">
-                            <div class="form-group">
-                                <label for="quantity">Quantity</label>
-                                <input type="number" id="quantity" name="quantity"
-                                    value="<?php echo isset($data['quantity']) ? $data['quantity'] : ''; ?>">
-                            </div>
-                            <div class="form-group">
-                                <label for="unit">Unit</label>
-                                <select id="unit" name="unit">
-                                    <option value="kg" <?php echo (isset($data['unit']) && $data['unit'] == 'kg') ? 'selected' : ''; ?>>Kg</option>
-                                    <option value="box" <?php echo (isset($data['unit']) && $data['unit'] == 'box') ? 'selected' : ''; ?>>Box(100kg)</option>
-                                </select>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="form-actions">
-
-                        <button type="submit" class="button-primary">Save</button>
-                    </div>
-                </form>
+                </div>
             </div>
         </div>
-    </main>
-    <?php require APPROOT . '/views/inc/components/footer.php' ?>
-    <script>
-        function previewImage(input) {
-            const preview = document.getElementById('preview');
-            const placeholder = document.getElementById('placeholder');
+        
+        <!-- Media Section -->
+        <div class="table-data">
+            <div class="order">
+                <div class="head">
+                    <h3>Media (Images)</h3>
+                </div>
+                <div class="section-content">
+                    <div class="info-row">
+                        <label class="label" for="product_image">Product Image:</label>
+                        <input type="file" id="product_image" name="product_image" class="form-control" accept="image/*" onchange="previewImage(this)">
+                    </div>
+                    <div class="info-row">
+                        <div id="imagePreview" style="width:100%; text-align:center;">
+                            <img src="" alt="Image Preview" id="preview" style="max-width:300px; display:none;">
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Sale Information -->
+        <div class="table-data">
+            <div class="order">
+                <div class="head">
+                    <h3>Sale Information</h3>
+                </div>
+                <div class="section-content">
+                    <div class="info-row">
+                        <label class="label" for="price">Price:</label>
+                        <div class="input-with-prefix" style="display:flex; align-items:center;">
+                            <span class="prefix" style="margin-right:5px;">$</span>
+                            <input type="number" id="price" name="price" class="form-control" required value="<?php echo isset($data['price']) ? $data['price'] : ''; ?>">
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Inventory Information -->
+        <div class="table-data">
+            <div class="order">
+                <div class="head">
+                    <h3>Inventory Information</h3>
+                </div>
+                <div class="section-content">
+                    <div class="info-row">
+                        <label class="label" for="quantity">Quantity:</label>
+                        <input type="number" id="quantity" name="quantity" class="form-control" required value="<?php echo isset($data['quantity']) ? $data['quantity'] : ''; ?>">
+                    </div>
+                    <div class="info-row">
+                        <label class="label" for="unit">Unit:</label>
+                        <select id="unit" name="unit" class="form-control" required>
+                            <option value="kg" <?php echo (isset($data['unit']) && $data['unit'] == 'kg') ? 'selected' : ''; ?>>Kg</option>
+                            <option value="box" <?php echo (isset($data['unit']) && $data['unit'] == 'box') ? 'selected' : ''; ?>>Box (100kg)</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Submit Button -->
+        <button type="submit" class="btn btn-primary">Create Product</button>
+    </form>
+</main>
 
-            if (input.files && input.files[0]) {
-                const reader = new FileReader();
-
-                reader.onload = function (e) {
-                    preview.src = e.target.result;
-                    preview.style.display = 'block';
-                    placeholder.style.display = 'none';
-                }
-
-                reader.readAsDataURL(input.files[0]);
-            }
+<script>
+function previewImage(input) {
+    const preview = document.getElementById('preview');
+    if (input.files && input.files[0]) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            preview.src = e.target.result;
+            preview.style.display = 'block';
         }
-    </script>
+        reader.readAsDataURL(input.files[0]);
+    }
+}
+</script>
+
+<style>
+    /* Table Data Container */
+    .table-data {
+        margin-bottom: 24px;
+    }
+
+    .order {
+        background: #fff;
+        border-radius: 8px;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+    }
+
+    /* Section Headers */
+    .head {
+        padding: 16px 20px;
+        border-bottom: 1px solid #f0f0f0;
+    }
+
+    .head h3 {
+        font-size: 16px;
+        font-weight: 600;
+        color: #2c3e50;
+    }
+
+    /* Content Sections */
+    .section-content {
+        padding: 8px 0;
+    }
+
+    /* Info Rows */
+    .info-row {
+        display: flex;
+        align-items: center;
+        padding: 12px 20px;
+        transition: background-color 0.2s;
+    }
+
+    .info-row:hover {
+        background-color: #f8f9fa;
+    }
+
+    .info-row .label {
+        flex: 0 0 200px;
+        font-size: 14px;
+        color: #6c757d;
+    }
+
+    .info-row .value {
+        flex: 1;
+        font-size: 14px;
+        color: #2c3e50;
+    }
+
+    /* Alert styling */
+    .alert {
+        padding: 12px 20px;
+        margin-bottom: 20px;
+        border-radius: 4px;
+        font-size: 14px;
+    }
+
+    .alert-danger {
+        background-color: #f8d7da;
+        color: #721c24;
+        border: 1px solid #f5c6cb;
+    }
+
+    /* Breadcrumb Refinements */
+    .breadcrumb {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        margin-top: 8px;
+    }
+
+    .breadcrumb a {
+        color: #6b7280;
+        text-decoration: none;
+        font-size: 14px;
+        transition: color 0.2s;
+    }
+
+    .breadcrumb a:hover {
+        color: #3b82f6;
+    }
+
+    .breadcrumb a.active {
+        color: #2c3e50;
+        pointer-events: none;
+    }
+
+    .breadcrumb i {
+        color: #9ca3af;
+        font-size: 14px;
+    }
+
+    /* Form controls */
+    .form-control {
+        width: 100%;
+        padding: 10px;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+        font-size: 16px;
+        transition: border-color 0.3s;
+    }
+
+    .form-control:focus {
+        border-color: #007bff;
+        outline: none;
+    }
+
+    /* Submit button styling */
+    .btn-primary {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 10px 20px;
+        background-color: #10b981;
+        color: white;
+        border: none;
+        border-radius: 6px;
+        font-size: 14px;
+        font-weight: 500;
+        cursor: pointer;
+        transition: background-color 0.2s;
+        margin: 0 0 20px 20px;
+    }
+
+    .btn-primary:hover {
+        background-color: #059669;
+    }
+</style>
+
+<?php require APPROOT . '/views/inc/components/footer.php'; ?>

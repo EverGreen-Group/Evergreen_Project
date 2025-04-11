@@ -127,25 +127,6 @@ class M_Route {
         return $stmt->execute();
     }
 
-    /**
-     * Remove a supplier from a route and adjust the supplier stop orders accordingly.
-     */
-    public function removeSupplierFromRoute($routeId, $supplierId) {
-        // First, get the stop_order of the supplier being removed
-        $stopOrder = $this->getStopOrder($routeId, $supplierId);
-
-        // Remove the supplier from the route
-        $sql = "DELETE FROM route_suppliers WHERE route_id = :route_id AND supplier_id = :supplier_id";
-        $stmt = $this->db->prepare($sql);
-        $stmt->bindParam(':route_id', $routeId);
-        $stmt->bindParam(':supplier_id', $supplierId);
-        $stmt->execute();
-
-        // Adjust the stop orders for remaining suppliers
-        $this->adjustStopOrders($routeId, $stopOrder);
-
-        return true; // Return true on success
-    }
 
 
     /* ========================================================================
@@ -174,7 +155,7 @@ class M_Route {
      * Get all undeleted routes.
      */
     public function getAllUndeletedRoutes() {
-        $this->db->query("SELECT r.*,v.license_plate,(SELECT COUNT(*) FROM route_suppliers WHERE route_id = r.route_id) AS supplier_count FROM routes r INNER JOIN vehicles v on r.vehicle_id = v.vehicle_id WHERE r.is_deleted = 0");
+        $this->db->query("SELECT r.*,v.*,(SELECT COUNT(*) FROM route_suppliers WHERE route_id = r.route_id) AS supplier_count FROM routes r INNER JOIN vehicles v on r.vehicle_id = v.vehicle_id WHERE r.is_deleted = 0");
         return $this->db->resultset();
     }
 
@@ -251,6 +232,22 @@ class M_Route {
         return $this->db->resultSet();
     }
 
+
+    public function getSupplierCountByScheduleId($scheduleId) {
+        $this->db->query("
+            SELECT 
+                COUNT(*)
+                FROM route_suppliers rs
+                INNER JOIN routes r ON r.route_id = rs.route_id
+                INNER JOIN collection_schedules cs ON cs.route_id = rs.route_id
+                WHERE schedule_id = :schedule_id
+        ");
+        
+        $this->db->bind(':schedule_id', $scheduleId);
+        return $this->db->single();
+    }
+    
+
     /**
      * Get routes for a specific day that are not already assigned in collection schedules.
      */
@@ -308,48 +305,25 @@ class M_Route {
         return $this->db->resultSet();
     }
 
-    /**
-     * Get basic supplier details for a route (for maps or lists).
-     */
-    public function getRouteSuppliers($routeId) {
-        $this->db->query("
-            SELECT 
-                s.supplier_id, 
-                CONCAT(u.first_name, ' ', u.last_name) AS full_name, 
-                s.latitude, 
-                s.longitude 
-            FROM 
-                route_suppliers rs 
-            JOIN 
-                suppliers s ON rs.supplier_id = s.supplier_id 
-            JOIN 
-                users u ON s.user_id = u.user_id 
-            WHERE 
-                rs.route_id = :route_id 
-                AND rs.is_active = 1 
-                AND rs.is_deleted = 0
-        ");
-        $this->db->bind(':route_id', $routeId);
-        return $this->db->resultSet();
-    }
+
 
     /**
      * Get the last stop order number for a given route.
      */
-    public function getLastStopOrder($routeId) {
-        $sql = "SELECT MAX(stop_order) AS last_stop_order 
-                FROM route_suppliers 
-                WHERE route_id = :route_id AND is_deleted = 0";
-        $stmt = $this->db->prepare($sql);
-        $stmt->bindParam(':route_id', $routeId);
+    // public function getLastStopOrder($routeId) {
+    //     $sql = "SELECT MAX(stop_order) AS last_stop_order 
+    //             FROM route_suppliers 
+    //             WHERE route_id = :route_id AND is_deleted = 0";
+    //     $stmt = $this->db->prepare($sql);
+    //     $stmt->bindParam(':route_id', $routeId);
         
-        if ($stmt->execute()) {
-            $result = $stmt->fetch(PDO::FETCH_ASSOC);
-            // Explicitly check if last_stop_order is NULL and set it to 0
-            return isset($result['last_stop_order']) ? (int)$result['last_stop_order'] : 0;
-        }
-        return 0;
-    }
+    //     if ($stmt->execute()) {
+    //         $result = $stmt->fetch(PDO::FETCH_ASSOC);
+    //         // Explicitly check if last_stop_order is NULL and set it to 0
+    //         return isset($result['last_stop_order']) ? (int)$result['last_stop_order'] : 0;
+    //     }
+    //     return 0;
+    // }
 
     /**
      * Get supplier count grouped by day.
@@ -444,11 +418,6 @@ class M_Route {
         return $this->db->resultSet();
     }
 
-
-    /* ========================================================================
-       Helper Methods (Internal Utility Functions)
-       ======================================================================== */
-
     /**
      * Calculate the total average collection for a given route.
      */
@@ -487,40 +456,7 @@ class M_Route {
         return $result->capacity;
     }
 
-    /**
-     * Get the stop order for a supplier within a route.
-     */
-    private function getStopOrder($routeId, $supplierId) {
-        $sql = "SELECT stop_order FROM route_suppliers WHERE route_id = :route_id AND supplier_id = :supplier_id";
-        $stmt = $this->db->prepare($sql);
-        $stmt->bindParam(':route_id', $routeId);
-        $stmt->bindParam(':supplier_id', $supplierId);
-        
-        if ($stmt->execute()) {
-            $result = $stmt->fetch(PDO::FETCH_ASSOC);
-            
-            // Check if result is valid and contains the 'stop_order' key
-            if ($result && isset($result['stop_order'])) {
-                return (int)$result['stop_order'];
-            }
-        }
-        
-        // Return a default value if no valid result is found
-        return 0;
-    }
 
-    /**
-     * Adjust the stop orders for remaining suppliers after one is removed.
-     */
-    private function adjustStopOrders($routeId, $removedStopOrder) {
-        // Update the stop_order for suppliers with a higher stop_order
-        $sql = "UPDATE route_suppliers SET stop_order = stop_order - 1 WHERE route_id = :route_id AND stop_order > :removed_stop_order";
-        $stmt = $this->db->prepare($sql);
-        $stmt->bindParam(':route_id', $routeId);
-        $stmt->bindParam(':removed_stop_order', $removedStopOrder);
-        
-        return $stmt->execute();
-    }
 
     public function getSupplierCurrentRoute($supplierId) {
         $sql = "SELECT route_id FROM route_suppliers 
@@ -533,19 +469,6 @@ class M_Route {
         return $this->db->single();
     }
 
-    public function getSupplierStopOrder($routeId, $supplierId) {
-        $sql = "SELECT stop_order FROM route_suppliers 
-                WHERE route_id = :route_id 
-                AND supplier_id = :supplier_id 
-                AND is_active = 1 
-                AND is_deleted = 0";
-        
-        $this->db->query($sql);
-        $this->db->bind(':route_id', $routeId);
-        $this->db->bind(':supplier_id', $supplierId);
-        $result = $this->db->single();
-        return $result ? $result->stop_order : null;
-    }
 
     public function getRouteIdByScheduleId($scheduleId) {
         $sql = "SELECT r.route_id 
@@ -564,27 +487,7 @@ class M_Route {
         return ($result && isset($result->route_id)) ? $result->route_id : null;
     }
 
-    /**
-     * Toggle the lock state of a route.
-     */
-    public function toggleLock($routeId) {
-        // First, get the current lock state
-        $sql = "SELECT is_locked FROM routes WHERE route_id = :route_id";
-        $this->db->query($sql);
-        $this->db->bind(':route_id', $routeId);
-        $currentLockState = $this->db->single()->is_locked;
 
-        // Toggle the lock state
-        $newLockState = !$currentLockState;
-
-        // Update the lock state in the database
-        $sql = "UPDATE routes SET is_locked = :is_locked WHERE route_id = :route_id";
-        $this->db->query($sql);
-        $this->db->bind(':is_locked', $newLockState);
-        $this->db->bind(':route_id', $routeId);
-
-        return $this->db->execute();
-    }
 
     /**
      * Get the total count of unassigned routes.
@@ -599,6 +502,153 @@ class M_Route {
         $result = $this->db->single();
         return $result ? $result->totalUnassigned : 0; 
     }
+
+
+    // I MADE THIS FOR OPTIMIZATIOn, REMOVED THE SEQUENTIAL LINKED LIST LIKE APPROACH!!
+
+    public function optimizeRouteStopOrders($routeId) {
+        $suppliers = $this->getRouteSuppliersByRouteId($routeId);
+        
+        // if empty nothing to update
+        if (empty($suppliers)) {
+            return true;
+        }
+        
+        // if only 1 supplier then its simply set to 1
+        if (count($suppliers) == 1) {
+            // Assuming $suppliers is an array of objects
+            $sql = "UPDATE route_suppliers SET stop_order = 1 
+                    WHERE route_id = :route_id 
+                      AND supplier_id = :supplier_id";
+            $this->db->query($sql);
+            $this->db->bind(':route_id', $routeId);
+            $this->db->bind(':supplier_id', $suppliers[0]->supplier_id);
+            return $this->db->execute();
+        }
+        
+        
+        $factory = $this->getFactoryLocation();
+        $optimizedOrder = $this->calculateOptimalOrder($factory, $suppliers);
+
+        $this->db->beginTransaction();
+        try {
+            foreach ($optimizedOrder as $index => $supplierId) {
+                $stopOrder = $index + 1; 
+                $sql = "UPDATE route_suppliers SET stop_order = :stop_order 
+                        WHERE route_id = :route_id AND supplier_id = :supplier_id";
+                $stmt = $this->db->prepare($sql);
+                $stmt->bindParam(':stop_order', $stopOrder);
+                $stmt->bindParam(':route_id', $routeId);
+                $stmt->bindParam(':supplier_id', $supplierId);
+                $stmt->execute();
+            }
+            $this->db->commit();
+            return true;
+        } catch (Exception $e) {
+            $this->db->rollBack();
+            return false;
+        }
+    }
+    
+    
+    
+    private function calculateOptimalOrder($factory, $suppliers) {
+        $currentPoint = $factory;
+        $remaining = $suppliers; 
+        $route = [];
+        
+        while (count($remaining) > 0) {
+            // Find the closest supplier from the current point.
+            $nearestIndex = $this->findNearest($currentPoint, $remaining);
+            $nearest = $remaining[$nearestIndex];
+            
+            $route[] = $nearest->supplier_id;
+
+            unset($remaining[$nearestIndex]);
+            // re-iindexing the array so that the index are ordered again
+            $remaining = array_values($remaining);
+        }
+        
+        return $route;
+    }
+    
+    private function findNearest($point, $suppliers) {
+        $minDistance=PHP_FLOAT_MAX;
+        $nearestIndex=0;
+
+        // simple short value finding
+        
+        foreach ($suppliers as $index =>$supplier){
+            // frp, current point to the supplier
+            $distance = $this->calculateDistance($point->latitude, $point->longitude,$supplier->latitude, $supplier->longitude
+            );
+            
+            if ($distance <$minDistance) {
+                $minDistance=$distance;
+                $nearestIndex =$index;
+            }
+        }
+        return $nearestIndex;
+    }
+    
+
+
+    public function removeSupplierFromRoute($routeId, $supplierId) {
+
+        $sql = "DELETE FROM route_suppliers WHERE route_id = :route_id AND supplier_id = :supplier_id";
+        $stmt = $this->db->prepare($sql);
+        $stmt->bindParam(':route_id', $routeId);
+        $stmt->bindParam(':supplier_id', $supplierId);
+        return $stmt->execute();
+        
+
+    }
+    
+
+
+    private function getFactoryLocation() {
+        $this->db->query("SELECT latitude, longitude FROM factory_location LIMIT 1");
+        $result = $this->db->single();
+        
+        // use default if nt available
+        if (!$result) {
+            return (object)[
+                'latitude' => 6.9497,
+                'longitude' => 80.7891,
+                'supplier_id' => 0 
+            ];
+        }
+        
+        return $result;
+    }
+
+    private function calculateDistance($lat1, $lon1, $lat2, $lon2) {
+        // Convert degrees to radians
+        $lat1 = $lat1 * (pi() / 180);
+        $lon1 = $lon1 * (pi() / 180);
+        $lat2 = $lat2 * (pi() / 180);
+        $lon2 = $lon2 * (pi() / 180);
+    
+        // Earth's radius in kilometers
+        $earthRadius = 6371;
+    
+        // Differences in coordinates
+        $diffLat = $lat2 - $lat1;
+        $diffLon = $lon2 - $lon1;
+    
+        // Haversine formula
+        $a = sin($diffLat / 2) * sin($diffLat / 2) +
+             cos($lat1) * cos($lat2) *
+             sin($diffLon / 2) * sin($diffLon / 2);
+    
+        $c = 2 * atan2(sqrt($a), sqrt(1 - $a));
+    
+        // Final distance
+        $distance = $earthRadius * $c;
+    
+        return $distance;
+    }
+    
 
 }
 ?>

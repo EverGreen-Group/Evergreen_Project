@@ -149,7 +149,9 @@
                                         <?php echo htmlspecialchars($application->manager_name); ?>
                                     </a>
                                 <?php else: ?>
-                                    Not reviewed
+                                    <span class="status-badge pending">
+                                    Unassigned
+                                </span>
                                 <?php endif; ?>
                             </td>
                             <td>
@@ -202,18 +204,23 @@
     }
     
     .pending {
-        background-color: #FFF4DE;
-        color: #FFA800;
+        background-color: #FFF4DE; /* Light background */
+        color: #A65E00; /* Darker text for better contrast */
+    }
+
+    .under_review {
+        background-color: rgb(253, 204, 106); /* Light yellow */
+        color: rgb(100, 50, 50); /* Darker red for better contrast */
     }
     
     .approved {
-        background-color: #E8FFF3;
-        color: #1BC5BD;
+        background-color:var(--mainn); /* Light green */
+        color:rgb(255, 255, 255); /* Darker green for better contrast */
     }
     
-    .rejected, .auto-rejected {
-        background-color: #FFE2E5;
-        color: #F64E60;
+    .rejected, .auto_rejected {
+        background-color: var(--red); /* Light red */
+        color:rgb(255, 255, 255); /* Darker red for better contrast */
     }
     
     .constraint-group {
