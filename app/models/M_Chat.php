@@ -11,7 +11,7 @@ class M_Chat {
             $sql = "SELECT u.user_id, p.first_name, p.last_name
                     FROM users u
                     LEFT JOIN profiles p ON u.user_id = p.user_id
-                    WHERE u.role_id = 5";
+                    WHERE u.role_id = 7";
             $stmt = $this->db->prepare($sql);
             $stmt->execute();
             return $stmt->fetchAll(PDO::FETCH_OBJ);
@@ -26,7 +26,7 @@ class M_Chat {
             $sql = "SELECT u.user_id, p.first_name, p.last_name
                     FROM users u
                     LEFT JOIN profiles p ON u.user_id = p.user_id
-                    WHERE u.role_id = 4";
+                    WHERE u.role_id = 4 OR u.role_id = 1";
             $stmt = $this->db->prepare($sql);
             $stmt->execute();
             return $stmt->fetchAll(PDO::FETCH_OBJ);
@@ -158,5 +158,33 @@ class M_Chat {
             error_log("Error deleting message: " . $e->getMessage());
             return false;
         }
+    }
+    
+
+    public function getAnnouncementsForSupplier($supplierId) {
+        $this->db->query("
+            SELECT a.announcement_id, a.title, a.content, a.created_at, a.updated_at, 
+                   CONCAT(p.first_name, ' ', p.last_name) AS sender_name,
+                   u.user_id
+            FROM announcements a
+            JOIN users u ON a.created_by = u.user_id
+            JOIN profiles p ON u.user_id = p.user_id
+        ");
+
+        $announcements = $this->db->resultSet();
+
+        // Ensure the data matches the expected format for the view
+        foreach ($announcements as $announcement) {
+            // Truncate content for display if needed (to match the table display)
+            if (strlen($announcement->content) > 50) {
+                $announcement->content = substr($announcement->content, 0, 47) . '...';
+            }
+            // Fallback for sender_name if first_name and last_name are missing
+            if (empty($announcement->sender_name) || $announcement->sender_name === ' ') {
+                $announcement->sender_name = 'MGR' . sprintf('%03d', $announcement->user_id);
+            }
+        }
+
+        return $announcements;
     }
 }

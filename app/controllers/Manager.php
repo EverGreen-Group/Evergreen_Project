@@ -2106,6 +2106,9 @@ class Manager extends Controller
                 $data['message'],
                 'text'
             );
+
+            // var_dump($result);
+            // die;
             
             if ($result['success']) {
                 echo json_encode([

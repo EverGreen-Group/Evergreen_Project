@@ -49,12 +49,31 @@
         </div>
     </div>
 
+    <!-- Edit Message Modal -->
     <div class="edit-message-modal" style="display: none;">
         <div class="modal-content">
-            <h3>Edit Message</h3>
+            <h3>Edit Message <span class="close-modal" style="float: right; cursor: pointer;">×</span></h3>
             <textarea id="edit-message-text" rows="3"></textarea>
-            <button id="save-edit-btn" class="btn btn-primary">Save</button>
-            <button id="cancel-edit-btn" class="btn btn-secondary">Cancel</button>
+            <div class="button-row">
+                <button id="save-edit-btn" class="btn btn-primary">Save</button>
+                <button id="cancel-edit-btn" class="btn btn-secondary">Cancel</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- View Details Modal -->
+    <div class="view-details-modal" style="display: none;">
+        <div class="modal-content">
+            <h3>Message Details <span class="close-modal" style="float: right; cursor: pointer;">×</span></h3>
+            <div id="message-details-content">
+                <p><strong>Sent:</strong> <span id="detail-sent-time"></span></p>
+                <p><strong>Read:</strong> <span id="detail-read-time"></span></p>
+                <p><strong>Edited:</strong> <span id="detail-edited-time"></span></p>
+                <p><strong>Type:</strong> <span id="detail-message-type"></span></p>
+            </div>
+            <div class="button-row">
+                <button id="close-details-btn" class="btn btn-secondary">Close</button>
+            </div>
         </div>
     </div>
 </main>
@@ -64,6 +83,7 @@ const URLROOT = '<?php echo URLROOT; ?>';
 let ws;
 let currentChatUserId = null;
 const onlineUsers = new Set();
+let pendingMessages = new Set(); // To track messages that are being sent
 
 function initWebSocket() {
     ws = new WebSocket('ws://localhost:8080');
@@ -84,19 +104,26 @@ function initWebSocket() {
                 }
                 break;
             case 'sent':
-                // Only append if the message is from the current user in the current chat
+                // Only append if the message is from the current user and not already appended
                 if (data.senderId == <?php echo $_SESSION['user_id']; ?> && data.receiverId == currentChatUserId) {
-                    appendMessage(data);
+                    if (!pendingMessages.has(data.message_id)) {
+                        appendMessage(data);
+                    }
+                    pendingMessages.delete(data.message_id); // Remove from pending
                 }
                 break;
             case 'status':
                 updateUserStatus(data.userId, data.status);
                 break;
             case 'message_updated':
-                updateMessage(data);
+                if (data.senderId == currentChatUserId || data.receiverId == currentChatUserId) {
+                    updateMessage(data);
+                }
                 break;
             case 'message_deleted':
-                deleteMessage(data.message_id);
+                if (data.senderId == currentChatUserId || data.receiverId == currentChatUserId) {
+                    deleteMessage(data.message_id);
+                }
                 break;
         }
     };
@@ -158,14 +185,16 @@ function appendMessage(data) {
 
     messageDiv.className = `message ${isSent ? 'sent' : 'received'}`;
     messageDiv.dataset.msgId = data.message_id;
+    messageDiv.dataset.sentTime = data.created_at || 'N/A';
+    messageDiv.dataset.readTime = data.read_at || 'NULL';
+    messageDiv.dataset.editedTime = data.edited_at || 'NULL';
+    messageDiv.dataset.messageType = data.message_type || 'chat';
     messageDiv.innerHTML = `
         <div class="${rowClass}">
             <div class="col-sm-10">
                 <div class="shadow-sm alert ${backgroundClass}">
                     <b>${from}: </b>${data.message}<br />
-                    <div class="text-right">
-                        <small><i>Sent: ${data.created_at} | ${data.read_at || 'NULL'} ${data.edited_at ? '| Edited: ' + data.edited_at : ''} (Type: ${data.message_type})</i></small>
-                    </div>
+                    ${isSent ? '<button class="btn btn-info view-details-btn" style="padding: 4px 10px; font-size: 12px;">View Details</button>' : ''}
                     ${isSent ? '<button class="edit-msg-btn btn btn-sm btn-warning mt-1">Edit</button><button class="delete-msg-btn btn btn-sm btn-danger mt-1">Delete</button>' : ''}
                 </div>
             </div>
@@ -183,14 +212,16 @@ function updateMessage(data) {
         const backgroundClass = isSent ? 'alert-primary' : 'alert-success';
         const from = data.senderName || 'Supplier';
 
+        messageDiv.dataset.sentTime = data.created_at || 'N/A';
+        messageDiv.dataset.readTime = data.read_at || 'NULL';
+        messageDiv.dataset.editedTime = data.edited_at || 'NULL';
+        messageDiv.dataset.messageType = data.message_type || 'chat';
         messageDiv.innerHTML = `
             <div class="${rowClass}">
                 <div class="col-sm-10">
                     <div class="shadow-sm alert ${backgroundClass}">
                         <b>${from}: </b>${data.message}<br />
-                        <div class="text-right">
-                            <small><i>Sent: ${data.created_at} | ${data.read_at || 'NULL'} | Edited: ${data.edited_at} (Type: ${data.message_type})</i></small>
-                        </div>
+                        ${isSent ? '<button class="btn btn-info view-details-btn" style="padding: 4px 10px; font-size: 12px;">View Details</button>' : ''}
                         ${isSent ? '<button class="edit-msg-btn btn btn-sm btn-warning mt-1">Edit</button><button class="delete-msg-btn btn btn-sm btn-danger mt-1">Delete</button>' : ''}
                     </div>
                 </div>
@@ -214,16 +245,8 @@ function sendMessage() {
         console.log('Cannot send message:', { message, currentChatUserId, wsState: ws?.readyState });
         return;
     }
-    
-    // Send the message via WebSocket
-    ws.send(JSON.stringify({
-        type: 'chat',
-        senderId: <?php echo $_SESSION['user_id']; ?>,
-        receiverId: currentChatUserId,
-        message: message
-    }));
-    
-    // Save the message to the database via fetch
+
+    // Save the message to the database via AJAX
     fetch(`${URLROOT}/manager/sendMessage`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -231,7 +254,33 @@ function sendMessage() {
     })
     .then(response => response.json())
     .then(data => {
-        if (!data.success) {
+        if (data.success) {
+            // Add the message ID to pending messages to avoid duplication
+            pendingMessages.add(data.message_id);
+
+            // Append the message to the chat without reloading
+            appendMessage({
+                message_id: data.message_id, // Returned from the server
+                senderId: <?php echo $_SESSION['user_id']; ?>,
+                receiverId: currentChatUserId,
+                message: message,
+                created_at: new Date().toISOString(), // Current timestamp
+                read_at: null,
+                edited_at: null,
+                message_type: 'chat',
+                senderName: 'Me' // Display as "Me" for the sender
+            });
+
+            // Send the message via WebSocket
+            const messageData = {
+                type: 'chat',
+                senderId: <?php echo $_SESSION['user_id']; ?>,
+                receiverId: currentChatUserId,
+                message: message,
+                message_id: data.message_id
+            };
+            ws.send(JSON.stringify(messageData));
+        } else {
             console.error('Error saving message:', data.message);
         }
     })
@@ -323,17 +372,20 @@ function displayMessages(messages) {
 
 document.addEventListener('click', function(e) {
     if (e.target.classList.contains('edit-msg-btn')) {
-        console.log('Edit button clicked');
         const messageDiv = e.target.closest('.message');
         const messageId = messageDiv.dataset.msgId;
         const currentMessage = messageDiv.querySelector('b').nextSibling.textContent.trim();
 
         document.getElementById('edit-message-text').value = currentMessage;
         document.querySelector('.edit-message-modal').style.display = 'block';
-        console.log('Modal should be visible');
 
         document.getElementById('save-edit-btn').onclick = function() {
-            const newMessage = document.getElementById('edit-message-text').value;
+            const newMessage = document.getElementById('edit-message-text').value.trim();
+            if (!newMessage) {
+                alert('Message cannot be empty.');
+                return;
+            }
+
             fetch(`${URLROOT}/manager/editMessage`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -342,16 +394,39 @@ document.addEventListener('click', function(e) {
             .then(response => response.json())
             .then(data => {
                 if (data.success) {
+                    // Update the message locally
+                    updateMessage({
+                        message_id: messageId,
+                        senderId: <?php echo $_SESSION['user_id']; ?>,
+                        receiverId: currentChatUserId,
+                        message: newMessage,
+                        created_at: messageDiv.dataset.sentTime,
+                        read_at: messageDiv.dataset.readTime,
+                        edited_at: new Date().toISOString(),
+                        message_type: messageDiv.dataset.messageType,
+                        senderName: 'Me'
+                    });
+
+                    // Notify via WebSocket
                     ws.send(JSON.stringify({
                         type: 'edit',
                         message_id: messageId,
                         new_message: newMessage,
-                        user_id: <?php echo $_SESSION['user_id']; ?>
+                        user_id: <?php echo $_SESSION['user_id']; ?>,
+                        senderId: <?php echo $_SESSION['user_id']; ?>,
+                        receiverId: currentChatUserId
                     }));
+
                     document.querySelector('.edit-message-modal').style.display = 'none';
+                } else {
+                    console.error('Error editing message:', data.message);
+                    alert('Failed to edit message: ' + (data.message || 'Unknown error'));
                 }
             })
-            .catch(error => console.error('Error editing message:', error));
+            .catch(error => {
+                console.error('Error editing message:', error);
+                alert('An error occurred while editing the message.');
+            });
         };
 
         document.getElementById('cancel-edit-btn').onclick = function() {
@@ -374,16 +449,57 @@ document.addEventListener('click', function(e) {
             .then(response => response.json())
             .then(data => {
                 if (data.success) {
+                    // Remove the message locally
+                    deleteMessage(messageId);
+
+                    // Notify via WebSocket
                     ws.send(JSON.stringify({
                         type: 'delete',
                         message_id: messageId,
-                        user_id: <?php echo $_SESSION['user_id']; ?>
+                        user_id: <?php echo $_SESSION['user_id']; ?>,
+                        senderId: <?php echo $_SESSION['user_id']; ?>,
+                        receiverId: currentChatUserId
                     }));
+                } else {
+                    console.error('Error deleting message:', data.message);
+                    alert('Failed to delete message: ' + (data.message || 'Unknown error'));
                 }
             })
-            .catch(error => console.error('Error deleting message:', error));
+            .catch(error => {
+                console.error('Error deleting message:', error);
+                alert('An error occurred while deleting the message.');
+            });
         }
     }
+});
+
+document.addEventListener('click', function(e) {
+    if (e.target.classList.contains('view-details-btn')) {
+        const messageDiv = e.target.closest('.message');
+        const sentTime = messageDiv.dataset.sentTime || 'N/A';
+        const readTime = messageDiv.dataset.readTime || 'Not read';
+        const editedTime = messageDiv.dataset.editedTime || 'Not edited';
+        const messageType = messageDiv.dataset.messageType || 'chat';
+
+        document.getElementById('detail-sent-time').textContent = sentTime;
+        document.getElementById('detail-read-time').textContent = readTime;
+        document.getElementById('detail-edited-time').textContent = editedTime;
+        document.getElementById('detail-message-type').textContent = messageType;
+
+        document.querySelector('.view-details-modal').style.display = 'block';
+    }
+});
+
+// Close modals
+document.querySelectorAll('.close-modal').forEach(button => {
+    button.addEventListener('click', function() {
+        document.querySelector('.edit-message-modal').style.display = 'none';
+        document.querySelector('.view-details-modal').style.display = 'none';
+    });
+});
+
+document.getElementById('close-details-btn')?.addEventListener('click', function() {
+    document.querySelector('.view-details-modal').style.display = 'none';
 });
 
 document.getElementById('supplier-search')?.addEventListener('input', function(e) {
@@ -401,7 +517,8 @@ document.addEventListener('DOMContentLoaded', initWebSocket);
 </script>
 
 <style>
-.edit-message-modal {
+.edit-message-modal,
+.view-details-modal {
     position: fixed;
     top: 0;
     left: 0;
@@ -411,10 +528,11 @@ document.addEventListener('DOMContentLoaded', initWebSocket);
     display: flex;
     justify-content: center;
     align-items: center;
-    z-index: 1000;
+    z-index: 10000;
 }
 
-.edit-message-modal .modal-content {
+.edit-message-modal .modal-content,
+.view-details-modal .modal-content {
     background: white;
     padding: 20px;
     border-radius: 5px;
@@ -428,8 +546,17 @@ document.addEventListener('DOMContentLoaded', initWebSocket);
     resize: vertical;
 }
 
-.edit-message-modal button {
-    margin-right: 10px;
+.edit-message-modal .button-row,
+.view-details-modal .button-row {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+    margin-top: 15px;
+}
+
+.view-details-modal #message-details-content p {
+    margin: 10px 0;
+    font-size: 14px;
 }
 </style>
 
