@@ -62,9 +62,15 @@
     </li>
 
     <li>
-				<a href="<?php echo URLROOT; ?>/Suppliermanager/chat">
+				<a href="<?php echo URLROOT; ?>/manager/chat">
 					<i class='bx bxs-message-dots' ></i>
 					<span class="text">Chat</span>
+				</a>
+			</li>
+      <li>
+				<a href="<?php echo URLROOT; ?>/manager/announcements">
+          <i class='bx bxs-megaphone'></i>
+					<span class="text">Create Announcement</span>
 				</a>
 			</li>
   </ul>
