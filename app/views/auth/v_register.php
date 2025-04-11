@@ -4,31 +4,96 @@
     <div class="auth-container">
         <div class="auth-form-section">
             <div class="auth-form-container">
-                <h2>Create Account</h2>
+                <h2><?php echo isset($data['otp_sent']) && $data['otp_sent'] ? 'Verify OTP' : 'Create Account'; ?></h2>
+                
                 <?php if (isset($data['error']) && !empty($data['error'])): ?>
                     <div class="auth-error"><?php echo $data['error']; ?></div>
                 <?php endif; ?>
-                <form action="<?php echo URLROOT; ?>/auth/register" method="POST">
-
-                    <div class="auth-form-row">
-                        <div class="auth-form-group">
-                            <label for="email">Email</label>
-                            <input type="email" id="email" name="email" required placeholder="username@email.com" pattern="[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}$">
-                        </div>
-                    </div>
-                    <div class="auth-form-group">
-                        <label for="password">Password</label>
-                        <div class="password-input">
-                            <input type="password" id="password" name="password" required placeholder="••••••••">
-                            <i class='bx bx-hide password-toggle' onclick="togglePasswordVisibility()"></i>
-                        </div>
-                    </div>
-                    <button type="submit" class="auth-button">Create Account</button>
+                
+                <?php if (isset($data['otp_sent']) && $data['otp_sent']): ?>
+                    <!-- OTP Verification Form -->
+                    <p class="otp-message">We've sent a verification code to your email address. Please enter the 6-digit code below.</p>
                     
-                    <div class="auth-footer">
-                        Already have an account? <a href="<?php echo URLROOT; ?>/auth/login">Sign In</a>
-                    </div>
-                </form>
+                    <form action="<?php echo URLROOT; ?>/auth/register" method="POST">
+                        <div class="auth-form-group">
+                            <label for="otp">Verification Code</label>
+                            <input type="text" id="otp" name="otp" required placeholder="Enter 6-digit code" 
+                                   pattern="[0-9]{6}" maxlength="6">
+                        </div>
+                        
+                        <button type="submit" class="auth-button">Verify & Complete Registration</button>
+                        
+                        <div class="auth-footer">
+                            <a href="<?php echo URLROOT; ?>/auth/register">Start over</a>
+                        </div>
+                    </form>
+                <?php else: ?>
+                    <!-- Registration Form -->
+                    <form action="<?php echo URLROOT; ?>/auth/register" method="POST">
+                        <div class="auth-form-row">
+                            <div class="auth-form-group">
+                                <label for="first_name">First Name</label>
+                                <input type="text" id="first_name" name="first_name" required 
+                                       placeholder="First Name" value="<?php echo isset($data['first_name']) ? $data['first_name'] : ''; ?>">
+                            </div>
+                            <div class="auth-form-group">
+                                <label for="last_name">Last Name</label>
+                                <input type="text" id="last_name" name="last_name" required 
+                                       placeholder="Last Name" value="<?php echo isset($data['last_name']) ? $data['last_name'] : ''; ?>">
+                            </div>
+                        </div>
+                        
+                        <div class="auth-form-row">
+                            <div class="auth-form-group">
+                                <label for="email">Email</label>
+                                <input type="email" id="email" name="email" required 
+                                       placeholder="username@email.com" 
+                                       pattern="[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}$"
+                                       value="<?php echo isset($data['email']) ? $data['email'] : ''; ?>">
+                            </div>
+                        </div>
+                        
+                        <div class="auth-form-row">
+                            <div class="auth-form-group">
+                                <label for="nic">NIC Number</label>
+                                <input type="text" id="nic" name="nic" required 
+                                       placeholder="National ID Number" 
+                                       value="<?php echo isset($data['nic']) ? $data['nic'] : ''; ?>">
+                            </div>
+                        </div>
+                        
+                        <div class="auth-form-row">
+                            <div class="auth-form-group">
+                                <label for="date_of_birth">Date of Birth</label>
+                                <input type="date" id="date_of_birth" name="date_of_birth" required
+                                       value="<?php echo isset($data['date_of_birth']) ? $data['date_of_birth'] : ''; ?>">
+                            </div>
+                        </div>
+                        
+                        <div class="auth-form-row">
+                            <div class="auth-form-group">
+                                <label for="contact_number">Contact Number</label>
+                                <input type="tel" id="contact_number" name="contact_number" required 
+                                       placeholder="Contact Number" 
+                                       value="<?php echo isset($data['contact_number']) ? $data['contact_number'] : ''; ?>">
+                            </div>
+                        </div>
+                        
+                        <div class="auth-form-group">
+                            <label for="password">Password</label>
+                            <div class="password-input">
+                                <input type="password" id="password" name="password" required placeholder="••••••••">
+                                <i class='bx bx-hide password-toggle' onclick="togglePasswordVisibility()"></i>
+                            </div>
+                        </div>
+                        
+                        <button type="submit" class="auth-button">Continue</button>
+                        
+                        <div class="auth-footer">
+                            Already have an account? <a href="<?php echo URLROOT; ?>/auth/login">Sign In</a>
+                        </div>
+                    </form>
+                <?php endif; ?>
             </div>
         </div>
     </div>
@@ -53,12 +118,11 @@ function togglePasswordVisibility() {
 
 <style>
     body {
-        position: relative; /* Position relative for the pseudo-element */
-        overflow: hidden; /* Prevent overflow */
-        color: #fff; /* Change text color to white for better contrast */
+        position: relative; 
+        overflow: hidden; 
+        color: #fff; 
     }
 
-    /* Pseudo-element for the background blur */
     body::before {
         content: '';
         position: absolute;
@@ -66,32 +130,46 @@ function togglePasswordVisibility() {
         left: 0;
         right: 0;
         bottom: 0;
-        background-size: cover; /* Cover the entire background */
-        background-position: center; /* Center the image */
-        background-repeat: no-repeat; /* Prevent the image from repeating */
-        filter: blur(8px); /* Apply blur effect */
-        z-index: -1; /* Place behind other content */
+        background-size: cover; 
+        background-position: center; 
+        background-repeat: no-repeat;
+        filter: blur(8px); 
+        z-index: -1; 
     }
 
-    /* Optional: Style the form container for better visibility */
     .auth-container {
-        background-color: rgba(0, 0, 0, 0.4); /* Semi-transparent background for the form */
+        /* background-color: rgba(0, 0, 0, 0.4);  */
         padding: 0px;
         border-radius: 0px;
-        position: relative; /* Ensure it is above the blurred background */
-        z-index: 1; /* Bring it above the blurred background */
+        position: relative; 
+        z-index: 1; 
     }
 
     .auth-form-section {
         margin-top: 100px;
     }
 
-    /* Optional: Style the date input for better visibility */
     input[type="date"] {
         padding: 10px;
         border: 1px solid #ccc;
         border-radius: 4px;
         width: 100%;
         font-size: 16px;
+    }
+    
+    /* Ensure two column layout for name fields */
+    .auth-form-row {
+        display: flex;
+        gap: 10px;
+    }
+    
+    .auth-form-row .auth-form-group {
+        flex: 1;
+    }
+    
+    .otp-message {
+        margin-bottom: 20px;
+        text-align: center;
+        color: #fff;
     }
 </style>

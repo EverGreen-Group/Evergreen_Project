@@ -282,21 +282,7 @@ class Supplier extends Controller {
     }
 
 
-    public function profile()
-    {
-        $userId = $_SESSION['user_id'];
-        
-        $profileData = $this->supplierModel->getSupplierProfile($userId);
-        
-        if (!$profileData) {
-            flash('profile_message', 'Unable to load profile information', 'alert alert-error');
-            redirect('supplier/');
-        }
-        
-        $data = $profileData;
-        
-        $this->view('supplier/v_profile', $data);
-    }
+
     
     public function updateProfile()
     {

@@ -6,10 +6,6 @@
       "php": "8.0.30"
     }
   },
-  "require": {
-    "endroid/qr-code": "2.0.*",
-    "cboden/ratchet": "0.4.*"
-  },
   "autoload": {
     "psr-4": {
       "Simaak\\EvergreenProject\\": "src/",
@@ -21,5 +17,8 @@
       "name": "SW33TSTUFF",
       "email": "simaakniyaz@gmail.com"
     }
-  ]
+  ],
+  "require": {
+    "phpmailer/phpmailer": "^6.9"
+  }
 }

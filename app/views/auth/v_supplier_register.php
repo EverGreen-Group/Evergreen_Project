@@ -5,7 +5,7 @@
     <div class="container mt-5 pt-5">
         <div class="auth-form-section">
             <div class="auth-form-container">
-                <h2>Complete Your Supplier Profile</h2>
+                <h2>Submit an Application</h2>
                 <?php if (isset($data['error']) && !empty($data['error'])): ?>
                     <div class="auth-error"><?php echo $data['error']; ?></div>
                 <?php endif; ?>
@@ -34,44 +34,7 @@
                             </div>
                         </div>
                         
-                        <div class="row">
-                            <div class="col-md-6">
-                                <div class="form-group">
-                                    <label for="first_name">First Name:</label>
-                                    <input type="text" id="first_name" name="first_name" required>
-                                </div>
-                            </div>
-                            <div class="col-md-6">
-                                <div class="form-group">
-                                    <label for="last_name">Last Name:</label>
-                                    <input type="text" id="last_name" name="last_name" required>
-                                </div>
-                            </div>
-                        </div>
-                        
-                        <div class="row">
-                            <div class="col-md-6">
-                                <div class="form-group">
-                                    <label for="nic">NIC Number:</label>
-                                    <input type="text" id="nic" name="nic_number" required>
-                                </div>
-                            </div>
-                            <div class="col-md-6">
-                                <div class="form-group">
-                                    <label for="date_of_birth">Date of Birth:</label>
-                                    <input type="date" id="date_of_birth" name="date_of_birth" required>
-                                </div>
-                            </div>
-                        </div>
-                        
-                        <div class="row">
-                            <div class="col-md-6">
-                                <div class="form-group">
-                                    <label for="contact_number">Contact Number:</label>
-                                    <input type="text" id="contact_number" name="contact_number" required>
-                                </div>
-                            </div>
-                        </div>
+                    
                     </div>
                     
                     <!-- Address Information -->

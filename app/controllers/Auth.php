@@ -19,58 +19,181 @@ class Auth extends Controller
     {
         // Redirect if already logged in
         $this->preventLoginAccess();
-
+    
         $data = [
+            'first_name' => '',
+            'last_name' => '',
             'email' => '',
+            'nic' => '',
+            'date_of_birth' => '',
+            'contact_number' => '',
             'password' => '',
-            'error' => ''
+            'error' => '',
+            'otp_sent' => false
         ];
-
+    
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             // Sanitize POST data
             $_POST = filter_input_array(INPUT_POST, FILTER_SANITIZE_STRING);
-
-            $data['email'] = trim($_POST['email']);
-            $data['password'] = trim($_POST['password']);
-
-            // Validate data
-            if (empty($data['email']) || empty($data['password'])) {
-                $data['error'] = 'Please fill in all fields';
-            } elseif (!filter_var($data['email'], FILTER_VALIDATE_EMAIL)) {
-                $data['error'] = 'Please enter a valid email';
-            } elseif (strlen($data['password']) < 8) { // at least 8 characters
-                $data['error'] = 'Password must be at least 8 characters long';
-            } elseif (!preg_match('/[A-Z]/', $data['password'])) { // at least one uppercase letter
-                $data['error'] = 'Password must contain at least one uppercase letter';
-            } elseif (!preg_match('/[a-z]/', $data['password'])) { // at least one lowercase letter
-                $data['error'] = 'Password must contain at least one lowercase letter';
-            } elseif (!preg_match('/[0-9]/', $data['password'])) { // at least one number
-                $data['error'] = 'Password must contain at least one number';
-            } elseif (!preg_match('/[\W_]/', $data['password'])) { //at least one special character
-                $data['error'] = 'Password must contain at least one special character';
-            } elseif ($this->userModel->findUserByEmail($data['email'])) {
-                $data['error'] = 'Email is already registered';
-            } else {
-                try {
-                    // hashing
-                    $data['password'] = password_hash($data['password'], PASSWORD_DEFAULT);
-
-                    $data['role_id'] = RoleHelper::getRoleByTitle('Website User'); 
-                    $data['account_status'] = 'Active'; // Default status
+    
+            // Check if this is an OTP verification submission
+            if (isset($_POST['otp'])) {
+                // Verify OTP
+                $sessionOTP = isset($_SESSION['registration_otp']) ? $_SESSION['registration_otp'] : null;
+                $sessionOTPExpiry = isset($_SESSION['registration_otp_expiry']) ? $_SESSION['registration_otp_expiry'] : 0;
+                $enteredOTP = trim($_POST['otp']);
+                
+                // Get stored registration data
+                foreach ($_SESSION['registration_data'] as $key => $value) {
+                    $data[$key] = $value;
+                }
+                
+                // Check if OTP has expired
+                if (time() > $sessionOTPExpiry) {
+                    $data['error'] = 'OTP has expired. Please request a new one.';
+                    // Reset OTP session
+                    unset($_SESSION['registration_otp']);
+                    unset($_SESSION['registration_otp_expiry']);
+                    $data['otp_sent'] = false;
+                } 
+                // Check if OTP matches
+                elseif ($sessionOTP !== $enteredOTP) {
+                    $data['error'] = 'Invalid OTP. Please try again.';
+                    $data['otp_sent'] = true;
+                } 
+                // OTP is valid, proceed with registration
+                else {
+                    // Prepare user data
+                    $userData = [
+                        'email' => $data['email'],
+                        'password' => $data['password'], // Already hashed
+                        'role_id' => RoleHelper::getRoleByTitle('Website User'),
+                        'account_status' => 'Active'
+                    ];
 
                     // Register user
-                    if ($this->userModel->registerUser($data)) {
-                        redirect('auth/login');
+                    $userId = $this->userModel->registerUser($userData);
+
+                    if ($userId) {
+                        // Prepare profile data
+                        $profileData = [
+                            'user_id' => $userId,
+                            'first_name' => $data['first_name'],
+                            'last_name' => $data['last_name'],
+                            'nic' => $data['nic'],
+                            'date_of_birth' => $data['date_of_birth'],
+                            'contact_number' => $data['contact_number']
+                        ];
+
+                        // Create profile
+                        if ($this->userModel->createProfile($profileData)) {
+                            // Clear session data
+                            unset($_SESSION['registration_otp']);
+                            unset($_SESSION['registration_otp_expiry']);
+                            unset($_SESSION['registration_data']);
+
+                            // Set success message and redirect
+                            flash('register_success', 'You are registered successfully and can now log in');
+                            redirect('auth/login');
+                        } else {
+                            $data['error'] = 'Profile creation failed. Please try again.';
+                        }
                     } else {
                         $data['error'] = 'Registration failed. Please try again.';
                     }
-                } catch (PDOException $e) {
-                    $data['error'] = 'Registration failed. Please check your information.';
+                }
+
+            } 
+            // Initial form submission - validate data and send OTP
+            else {
+                // Extract data from POST
+                $data['first_name'] = trim($_POST['first_name']);
+                $data['last_name'] = trim($_POST['last_name']);
+                $data['email'] = trim($_POST['email']);
+                $data['nic'] = trim($_POST['nic']);
+                $data['date_of_birth'] = trim($_POST['date_of_birth']);
+                $data['contact_number'] = trim($_POST['contact_number']);
+                $data['password'] = trim($_POST['password']);
+    
+                // Validate data
+                if (empty($data['first_name']) || empty($data['last_name']) || empty($data['email']) || 
+                    empty($data['nic']) || empty($data['date_of_birth']) || 
+                    empty($data['contact_number']) || empty($data['password'])) {
+                    $data['error'] = 'Please fill in all fields';
+                } elseif (!filter_var($data['email'], FILTER_VALIDATE_EMAIL)) {
+                    $data['error'] = 'Please enter a valid email';
+                } elseif (!$this->isOlderThan18($data['date_of_birth'])) {
+                    $data['error'] = 'You must be at least 18 years old to register';
+                } elseif (strlen($data['password']) < 8) { // at least 8 characters
+                    $data['error'] = 'Password must be at least 8 characters long';
+                } elseif (!preg_match('/[A-Z]/', $data['password'])) { // at least one uppercase letter
+                    $data['error'] = 'Password must contain at least one uppercase letter';
+                } elseif (!preg_match('/[a-z]/', $data['password'])) { // at least one lowercase letter
+                    $data['error'] = 'Password must contain at least one lowercase letter';
+                } elseif (!preg_match('/[0-9]/', $data['password'])) { // at least one number
+                    $data['error'] = 'Password must contain at least one number';
+                } elseif (!preg_match('/[\W_]/', $data['password'])) { //at least one special character
+                    $data['error'] = 'Password must contain at least one special character';
+                } elseif ($this->userModel->findUserByEmail($data['email'])) {
+                    $data['error'] = 'Email is already registered';
+                } elseif ($this->userModel->findProfileByNic($data['nic'])) {
+                    $data['error'] = 'NIC number is already registered';
+                } elseif ($this->userModel->findProfileByContactNumber($data['contact_number'])) {
+                    $data['error'] = 'Contact number is already registered';
+                } else {
+                    // Hash password before storing in session
+                    $data['password'] = password_hash($data['password'], PASSWORD_DEFAULT);
+                    
+                    // Generate OTP
+                    $otp = rand(100000, 999999); // 6-digit OTP
+                    $otpExpiry = time() + (10 * 60); // 10 minutes expiry
+                    
+                    // Store OTP and form data in session
+                    $_SESSION['registration_otp'] = (string)$otp; // Store as string to match user input
+                    $_SESSION['registration_otp_expiry'] = $otpExpiry;
+                    $_SESSION['registration_data'] = $data;
+                    
+                    // Send OTP via email
+                    if ($this->sendOTPEmail($data['email'], $otp)) {
+                        $data['otp_sent'] = true;
+                    } else {
+                        $data['error'] = 'Failed to send OTP. Please try again.';
+                    }
                 }
             }
         }
-
+    
         $this->view('auth/v_register', $data);
+    }
+    
+    private function sendOTPEmail($email, $otp)
+    {
+        $mail = new PHPMailer(true);
+        try {
+            //Server settings
+            $mail->isSMTP();                                            // Send using SMTP
+            $mail->Host       = 'smtp.gmail.com';                     // Set the SMTP server
+            $mail->SMTPAuth   = true;                                   // Enable SMTP authentication
+            $mail->Username   = 'simaakniyaz@gmail.com';               // SMTP username
+            $mail->Password   = 'yslhjwsnmozojika';                    // SMTP password
+            $mail->SMTPSecure = PHPMailer::ENCRYPTION_STARTTLS;       // Enable TLS encryption
+            $mail->Port       = 587;                                   // TCP port to connect to
+    
+            //Recipients
+            $mail->setFrom('simaakniyaz@gmail.com', 'Evergreen Tea Factory');
+            $mail->addAddress($email);                                  // Add a recipient
+    
+            // Content
+            $mail->isHTML(true);                                       // Set email format to HTML
+            $mail->Subject = 'Your Registration OTP';
+            $mail->Body    = "Your OTP for registration is: <b>{$otp}</b><br>This code will expire in 10 minutes.";
+            $mail->AltBody = "Your OTP for registration is: {$otp}. This code will expire in 10 minutes.";
+    
+            $mail->send();
+            return true;
+        } catch (Exception $e) {
+            return false;
+        }
     }
 
     private function isOlderThan18($dateOfBirth)
@@ -204,30 +327,24 @@ class Auth extends Controller
 
     public function supplier_register()
     {
-        // 1. Check if user is logged in
+
         if (!isLoggedIn()) {
             redirect('auth/login');
             return;
         }
 
-        // 2. Check if user has already applied
+
         $supplierApplicationModel = $this->model('M_SupplierApplication');
         if ($supplierApplicationModel->hasApplied($_SESSION['user_id'])) {
             redirect('pages/supplier_application_status');
             return;
         }
 
-        // 3. Process form submission if POST request
+
         if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             try {
                 // Collect profile data
                 $profileData = [
-                    'user_id' => $_SESSION['user_id'],
-                    'first_name' => trim($_POST['first_name']),
-                    'last_name' => trim($_POST['last_name']),
-                    'nic' => trim($_POST['nic_number']),
-                    'date_of_birth' => trim($_POST['date_of_birth']),
-                    'contact_number' => trim($_POST['contact_number']),
                     'address' => trim($_POST['address'])
                 ];
 
@@ -291,7 +408,6 @@ class Auth extends Controller
             }
         }
 
-        // 4. Display the form for GET requests
         $data = [
             'title' => 'Supplier Registration'
         ];
@@ -357,7 +473,7 @@ class Auth extends Controller
             } else {
                 // Generate a password reset token
                 $resetToken = bin2hex(random_bytes(16)); // Generate a random token
-                $this->userModel->storeResetToken($data['email'], $resetToken); // Store the token in the database
+                $this->userModel->storeResetToken($data['email'], $resetToken, 5*60); // Store the token in the database
 
                 // Create reset link
                 $resetLink = URLROOT . "/auth/resetPassword?token=" . $resetToken;
@@ -392,6 +508,87 @@ class Auth extends Controller
         }
 
         $this->view('auth/v_forgot_password', $data);
+    }
+
+
+    public function profile()
+    {
+        $userId = $_SESSION['user_id'];
+        $supplierModel = $this->model('M_Supplier');
+
+        if(RoleHelper::hasRole(5)) {
+            $profileData = $supplierModel->getSupplierProfile($userId);
+            
+        } else {
+            $profileData =$this->userModel->getProfile($userId);
+        }
+        
+        
+        
+        if (!$profileData) {
+            flash('profile_message', 'Unable to load profile information', 'alert alert-error');
+            redirect('/');
+        }
+        
+        $data = $profileData;
+        
+        $this->view('auth/v_profile', $data);
+    }
+
+
+    public function updateProfile()
+    {
+        if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+            $userId = $_SESSION['user_id'];
+            $supplierModel = $this->model('M_Supplier');
+
+            $data = [
+                'image_path' => ''
+            ];
+            
+
+            if(RoleHelper::hasRole(5)) {
+                $profileData = $supplierModel->getSupplierProfile($userId);
+                $data['supplier_id'] = $profileData['supplier']->supplier_id;
+                $data['profile_id'] = $profileData['profile']->profile_id;
+                $data['supplier_contact'] == trim($_POST['supplier_contact']);
+
+                
+            } else {
+                $profileData =$this->userModel->getProfile($userId);
+                $data['profile_id'] = $profileData['profile']->profile_id;
+            }
+            
+            
+            if (!empty($_FILES['profile_image']['name'])) {
+                $uploadDir = 'uploads/profile_photos/';
+                
+                if (!file_exists($uploadDir)) {
+                    mkdir($uploadDir, 0777, true);
+                }
+                
+                $fileName = uniqid() . '_' . $_FILES['profile_image']['name'];
+                $uploadPath = $uploadDir . $fileName;
+                
+                if (move_uploaded_file($_FILES['profile_image']['tmp_name'], $uploadPath)) {
+                    $data['image_path'] = $uploadPath;
+                } else {
+                    flash('profile_message', 'Error uploading image', 'alert alert-error');
+                    redirect('Supplier/profile');
+                }
+            }
+            if (RoleHelper::hasRole(5)) {
+                $supplierModel->updateSupplierProfile($data);
+                flash('profile_message', 'Profile updated successfully');
+                redirect('');
+            } else {
+                $this->userModel->updateProfilePhoto($data);
+                flash('profile_message', 'Error updating profile', 'alert alert-error');
+                redirect('');
+            }
+        } else {
+            redirect('');
+        }
     }
 
     // public function resetPassword()

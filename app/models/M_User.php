@@ -109,6 +109,23 @@ class M_User {
         return null; 
     }
 
+    public function getProfile($userId) {
+        
+        $this->db->query("SELECT * FROM profiles WHERE user_id = :user_id");
+        $this->db->bind(':user_id', $userId);
+        $profileData = $this->db->single();
+        
+        $this->db->query("SELECT email FROM users WHERE user_id = :user_id");
+        $this->db->bind(':user_id', $userId);
+        $user = $this->db->single();
+        
+        
+        return [
+            'profile' => $profileData,
+            'user' => $user
+        ];
+    }
+
     public function getManagerId($userId) {
 
         $this->db->query("SELECT profile_id FROM profiles WHERE user_id = :user_id");
@@ -139,6 +156,103 @@ class M_User {
         
         return null; // Return null if no profile is found
     }
+
+    // For password reset functionality
+    public function storeResetToken($email, $token, $expiry)
+    {
+        // First, get the user ID
+        $this->db->query('SELECT user_id FROM users WHERE email = :email');
+        $this->db->bind(':email', $email);
+        $user = $this->db->single();
+        
+        if (!$user) {
+            return false;
+        }
+        
+        // Check if a token already exists for this user
+        $this->db->query('SELECT * FROM password_reset_tokens WHERE user_id = :user_id');
+        $this->db->bind(':user_id', $user->user_id);
+        
+        if ($this->db->rowCount() > 0) {
+            // Update existing token
+            $this->db->query('UPDATE password_reset_tokens SET 
+                            token = :token, 
+                            expiry = :expiry,
+                            created_at = NOW()
+                            WHERE user_id = :user_id');
+        } else {
+            // Insert new token
+            $this->db->query('INSERT INTO password_reset_tokens (user_id, token, expiry) 
+                            VALUES (:user_id, :token, :expiry)');
+        }
+        
+        $this->db->bind(':user_id', $user->user_id);
+        $this->db->bind(':token', $token);
+        $this->db->bind(':expiry', $expiry);
+        
+        return $this->db->execute();
+    }
+
+    public function verifyResetToken($token)
+    {
+        $this->db->query('SELECT * FROM password_reset_tokens 
+                          WHERE token = :token AND expiry > NOW() AND is_used = 0');
+        $this->db->bind(':token', $token);
+        
+        $token = $this->db->single();
+        
+        return ($this->db->rowCount() > 0) ? $token : false;
+    }
+
+    public function updatePasswordByToken($token, $newPassword)
+    {
+        // Get user ID from token
+        $this->db->query('SELECT user_id FROM password_reset_tokens WHERE token = :token');
+        $this->db->bind(':token', $token);
+        $result = $this->db->single();
+        
+        if (!$result) {
+            return false;
+        }
+        
+        // Update the password
+        $this->db->query('UPDATE users SET password = :password WHERE user_id = :user_id');
+        $this->db->bind(':password', $newPassword);
+        $this->db->bind(':user_id', $result->user_id);
+        
+        return $this->db->execute();
+    }
+    
+    public function invalidateToken($token)
+    {
+        $this->db->query('UPDATE password_reset_tokens SET is_used = 1 WHERE token = :token');
+        $this->db->bind(':token', $token);
+        
+        return $this->db->execute();
+    }
+
+
+    public function updateProfilePhoto($data) {
+        $this->db->beginTransaction();
+        
+        try {
+            
+            if (isset($data['image_path']) && !empty($data['image_path'])) {
+                $this->db->query("UPDATE profiles SET image_path = :image_path WHERE profile_id = :profile_id");
+                $this->db->bind(':image_path', $data['image_path']);
+                $this->db->bind(':profile_id', $data['profile_id']);
+                $this->db->execute();
+            }
+            
+            $this->db->commit();
+            return true;
+        } catch (Exception $e) {
+            $this->db->rollBack();
+            return false;
+        }
+    }
+    
+
 
 
     // NOT SURE IF WE SHOULD IMPLEMENT THIS, BECAUSE THE EMAIL IS WORKING BUT WHEN WE SEND THE LINK IT GOES TOO LOCALHOST, ALSO IT WOULD TAKE A LOT OF TIME IN THE PRESENTATION TO SHOW ALL OF THIS, SO IM COMMENTING THIS FEATURE.
@@ -293,26 +407,21 @@ class M_User {
         }
     }
 
-    public function createProfile($data) {
-        $this->db->query('INSERT INTO profiles (user_id, first_name, last_name, nic, date_of_birth, contact_number, emergency_contact, address_line1, address_line2, city) 
-                          VALUES (:user_id, :first_name, :last_name, :nic, :date_of_birth, :contact_number, :emergency_contact, :address_line1, :address_line2, :city)');
+    public function createProfile($data)
+    {
+        $this->db->query('INSERT INTO profiles (user_id, first_name, last_name, nic, date_of_birth, contact_number) 
+                          VALUES (:user_id, :first_name, :last_name, :nic, :date_of_birth, :contact_number)');
         
+        // Bind values
         $this->db->bind(':user_id', $data['user_id']);
         $this->db->bind(':first_name', $data['first_name']);
         $this->db->bind(':last_name', $data['last_name']);
         $this->db->bind(':nic', $data['nic']);
         $this->db->bind(':date_of_birth', $data['date_of_birth']);
         $this->db->bind(':contact_number', $data['contact_number']);
-        $this->db->bind(':emergency_contact', $data['emergency_contact']);
-        $this->db->bind(':address_line1', $data['address_line1']);
-        $this->db->bind(':address_line2', $data['address_line2']);
-        $this->db->bind(':city', $data['city']);
         
-        if($this->db->execute()) {
-            return $this->db->lastInsertId();
-        } else {
-            return false;
-        }
+        // Execute
+        return $this->db->execute();
     }
     
     public function findProfileByNIC($nic) {
@@ -340,6 +449,20 @@ class M_User {
         $this->db->bind(':user_id', $user_id);
         
         return $this->db->single();
+    }
+
+    public function findProfileByContactNumber($contactNumber)
+    {
+        $this->db->query('SELECT * FROM profiles WHERE contact_number = :contact_number');
+        $this->db->bind(':contact_number', $contactNumber);
+        
+        $row = $this->db->single();
+        
+        if ($this->db->rowCount() > 0) {
+            return $row;
+        } else {
+            return false;
+        }
     }
 
     public function updateProfile($data) {
