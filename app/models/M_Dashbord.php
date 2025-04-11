@@ -1,6 +1,6 @@
 <?php
 
-class M_stockvalidate
+class M_Dashbord
 {
     private $db;
 
@@ -90,5 +90,21 @@ class M_stockvalidate
 
 
         
+    }
+
+    public function getleafoflast7days(){
+        $this->db->query("SELECT DATE(finalized_at) as date,
+        leaf_type_id,
+        SUM(actual_weight_kg) as total_quantity
+        FROM bag_usage_history
+        WHERE finalized_at >= DATE_SUB(CURRENT_DATE,INTERVAL 7 DAY)
+        AND is_finalized = 1
+        GROUP BY 
+        DATE(finalized_at), leaf_type_id
+        ORDER BY date DESC, leaf_type_id
+        ");
+
+        return $this->db->resultSet();
+
     }
 }

@@ -15,6 +15,7 @@ class Inventory extends controller
     private $machineModel;
 
     private $inventoryConfigModel;
+    private $leafchartdata;
 
 
 
@@ -25,9 +26,10 @@ class Inventory extends controller
 
         $this->productModel = new M_Products();
         $this->fertilizerModel = new M_Fertilizer();
-        $this->stockvalidate = new M_stockvalidate();
+        $this->stockvalidate = new M_Dashbord();
         $this->machineModel = new M_Machine();
         $this->inventoryConfigModel = new M_Inventory_Config();
+        $this->leafchartdata = new M_Dashbord();
 
     }
 
@@ -35,10 +37,11 @@ class Inventory extends controller
     {
         if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             $report = ['report' => $_POST['report']];
-
-
-
+            
+            
+            
         }
+        $leafchartdata1 = $this->leafchartdata->getleafoflast7days();
         $totalstock = $this->stockvalidate->gettodaytotalstock();
         $products = $this->productModel->getAllProducts();
         $fertilizer = $this->fertilizerModel->getfertilizer();
@@ -52,13 +55,15 @@ class Inventory extends controller
             'stockvalidate' => $stockvalidate,
             'machines' => $machines,
             'totalstock' => $totalstock,
-            'validatedetails' => $validatedetails
+            'validatedetails' => $validatedetails,
+            'leafdata'=> $leafchartdata1
 
         ];
 
 
-        $this->view('inventory/v_dashboard', $data);
-        //var_dump($data);
+
+        $this->view('inventory/v_dashboard',$data);
+        var_dump($data['leafdata']);
     }
 
     public function product()
