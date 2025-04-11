@@ -165,8 +165,9 @@ class M_Supplier {
     {
         $this->db->query("SELECT COUNT(*) as count FROM complaints WHERE status != 'Deleted'");
         $result = $this->db->single();
-        return $result->count;
+        return $result->count ?? 0;
     }
+    
 
     public function getComplaintsByStatus($status)
     {

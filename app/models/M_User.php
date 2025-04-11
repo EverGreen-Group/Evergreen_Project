@@ -255,54 +255,6 @@ class M_User {
 
 
 
-    // NOT SURE IF WE SHOULD IMPLEMENT THIS, BECAUSE THE EMAIL IS WORKING BUT WHEN WE SEND THE LINK IT GOES TOO LOCALHOST, ALSO IT WOULD TAKE A LOT OF TIME IN THE PRESENTATION TO SHOW ALL OF THIS, SO IM COMMENTING THIS FEATURE.
-    // public function storeVerificationCode($email, $code)
-    // {
-    //     $this->db->query("UPDATE users SET verification_code = :code WHERE email = :email");
-    //     $this->db->bind(':code', $code);
-    //     $this->db->bind(':email', $email);
-    //     return $this->db->execute();
-    // }
-
-    // public function verifyEmail($code)
-    // {
-    //     $this->db->query("SELECT * FROM users WHERE verification_code = :code");
-    //     $this->db->bind(':code', $code);
-    //     $this->db->execute();
-    //     if ($this->db->rowCount() > 0) {
-    //         // Update user to set verified status
-    //         $this->db->query("UPDATE users SET verified = 1 WHERE verification_code = :code");
-    //         $this->db->bind(':code', $code);
-    //         $this->db->execute();
-    //         return true;
-    //     }
-    //     return false;
-    // }
-
-    // public function storeResetToken($email, $token)
-    // {
-    //     $this->db->query("UPDATE users SET reset_token = :token WHERE email = :email");
-    //     $this->db->bind(':token', $token);
-    //     $this->db->bind(':email', $email);
-    //     return $this->db->execute();
-    // }
-
-    // public function verifyResetToken($token)
-    // {
-    //     $this->db->query("SELECT * FROM users WHERE reset_token = :token");
-    //     $this->db->bind(':token', $token);
-    //     $this->db->execute();
-    //     return $this->db->rowCount() > 0; // Returns true if token exists
-    // }
-
-    // public function updatePassword($token, $newPassword)
-    // {
-    //     $this->db->query("UPDATE users SET password = :password, reset_token = NULL WHERE reset_token = :token");
-    //     $this->db->bind(':password', $newPassword);
-    //     $this->db->bind(':token', $token);
-    //     return $this->db->execute();
-    // }
-
     public function getAllUsers() {
         $this->db->query("SELECT 
             user_id,
@@ -316,11 +268,68 @@ class M_User {
             created_at
             FROM users");
         
-        // Execute the query and return the result set
         $results = $this->db->resultSet();
         
         return $results;
     }
+
+
+    public function getAllManagers() {
+        $this->db->query("
+            SELECT *
+            FROM managers m
+            JOIN profiles p ON m.profile_id = p.profile_id
+            JOIN users u ON p.user_id = u.user_id
+        ");
+        
+        return $this->db->resultSet();
+    }
+
+    public function getUserIdBySupplierId($supplierId) {
+        $this->db->query("SELECT p.user_id FROM suppliers s INNER JOIN profiles p ON s.profile_id = p.profile_id WHERE supplier_id = :supplier_id");
+        $this->db->bind(':supplier_id', $supplierId);
+        return $this->db->single()->user_id ?? null;
+    }
+
+    public function getUserIdByDriverId($driverId) {
+        $this->db->query("SELECT p.user_id FROM drivers d INNER JOIN profiles p ON d.profile_id = p.profile_id WHERE driver_id = :driver_id");
+        $this->db->bind(':supplier_id', $driverId);
+        return $this->db->single()->user_id ?? null;
+    }
+
+    public function getUserIdByManagerId($managerId) {
+        $this->db->query("SELECT p.user_id FROM managers m INNER JOIN profiles p ON m.profile_id = p.profile_id WHERE manager_id = :manager_id");
+        $this->db->bind(':supplier_id', $managerId);
+        return $this->db->single()->user_id ?? null;
+    }
+
+    public function getSupplierIdsByScheduleId($scheduleId) {
+        $this->db->query("
+            SELECT rs.supplier_id
+            FROM collection_schedules cs
+            INNER JOIN routes r ON cs.route_id = r.route_id
+            INNER JOIN route_suppliers rs ON rs.route_id = r.route_id
+            WHERE cs.schedule_id = :schedule_id
+        ");
+        $this->db->bind(':schedule_id', $scheduleId);
+        return array_column($this->db->resultSet(), 'supplier_id');
+    }
+
+
+    public function getSuppliersByRouteId($routeId) {
+        $this->db->query("
+            SELECT rs.supplier_id
+            FROM route_suppliers rs
+            INNER JOIN routes r ON rs.route_id = r.route_id
+            WHERE r.is_deleted = 0 AND rs.is_deleted = 0 AND rs.route_id = :route_id
+        ");
+        $this->db->bind(':route_id', $routeId);
+        return array_column($this->db->resultSet(), 'supplier_id');
+    }
+    
+
+
+    
 
     public function updateUser($data) {
         $this->db->query("UPDATE users SET 

@@ -125,7 +125,7 @@
                                         <a href="<?php echo URLROOT; ?>/manager/updateSchedule/<?php echo $schedule->schedule_id; ?>" class="action-btn edit">
                                             <i class='bx bx-cog'></i>
                                         </a>
-                                        <form action="<?php echo URLROOT; ?>/collectionschedules/delete" method="POST" style="display: inline;" 
+                                        <form action="<?php echo URLROOT; ?>/manager/deleteSchedule" method="POST" style="display: inline;" 
                                             onsubmit="return confirm('Are you sure you want to delete this schedule?');">
                                             <input type="hidden" name="schedule_id" value="<?php echo $schedule->schedule_id; ?>">
                                             <button type="submit" class="action-btn delete">
@@ -197,7 +197,7 @@
                                             </a>
                                             
                                             <!-- Delete button with icon only -->
-                                            <form action="<?php echo URLROOT; ?>/collectionschedules/delete" method="POST" style="margin: 0;" 
+                                            <form action="<?php echo URLROOT; ?>/manager/deleteSchedule" method="POST" style="margin: 0;" 
                                                 onsubmit="return confirm('Are you sure you want to delete this schedule?');">
                                                 <input type="hidden" name="schedule_id" value="<?php echo $schedule->schedule_id; ?>">
                                                 <button type="submit" class="btn btn-tertiary" 

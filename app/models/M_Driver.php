@@ -261,8 +261,9 @@ class M_Driver{
         AND is_active = 1 
         AND cs.is_deleted = 0 
         AND r.is_deleted = 0
-        AND day >= DAYNAME(CURDATE())
+
                           "); 
+                          //        AND day >= DAYNAME(CURDATE()) must test this again
         $this->db->bind(':driver_id', $driver_id);
         return $this->db->resultSet();
     }

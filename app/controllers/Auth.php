@@ -1,6 +1,7 @@
 <?php
 
 require_once APPROOT . '/helpers/auth_middleware.php';
+require_once APPROOT . '/controllers/Notifications.php';
 
 use PHPMailer\PHPMailer\PHPMailer;
 use PHPMailer\PHPMailer\Exception;
@@ -9,10 +10,12 @@ class Auth extends Controller
 {
     private $userModel;
     private $applicationModel;
+    private $notificationModel;
 
     public function __construct()
     {
         $this->userModel = $this->model('M_User');
+        $this->notificationModel = $this->model('M_Notification');
     }
 
     public function register()
@@ -166,35 +169,10 @@ class Auth extends Controller
         $this->view('auth/v_register', $data);
     }
     
-    private function sendOTPEmail($email, $otp)
-    {
-        $mail = new PHPMailer(true);
-        try {
-            //Server settings
-            $mail->isSMTP();                                            // Send using SMTP
-            $mail->Host       = 'smtp.gmail.com';                     // Set the SMTP server
-            $mail->SMTPAuth   = true;                                   // Enable SMTP authentication
-            $mail->Username   = 'simaakniyaz@gmail.com';               // SMTP username
-            $mail->Password   = 'yslhjwsnmozojika';                    // SMTP password
-            $mail->SMTPSecure = PHPMailer::ENCRYPTION_STARTTLS;       // Enable TLS encryption
-            $mail->Port       = 587;                                   // TCP port to connect to
-    
-            //Recipients
-            $mail->setFrom('simaakniyaz@gmail.com', 'Evergreen Tea Factory');
-            $mail->addAddress($email);                                  // Add a recipient
-    
-            // Content
-            $mail->isHTML(true);                                       // Set email format to HTML
-            $mail->Subject = 'Your Registration OTP';
-            $mail->Body    = "Your OTP for registration is: <b>{$otp}</b><br>This code will expire in 10 minutes.";
-            $mail->AltBody = "Your OTP for registration is: {$otp}. This code will expire in 10 minutes.";
-    
-            $mail->send();
-            return true;
-        } catch (Exception $e) {
-            return false;
-        }
-    }
+private function sendOTPEmail($email, $otp) {
+    $emailService = new EmailService();
+    return $emailService->sendOTP($email, $otp);
+}
 
     private function isOlderThan18($dateOfBirth)
     {
@@ -390,11 +368,17 @@ class Auth extends Controller
                     $processedDocuments
                 );
 
+
                 if (!$result) {
                     throw new Exception('Failed to save application');
                 }
 
-                // Redirect to status page on success
+                $managers = $this->userModel->getAllManagers();
+                foreach ($managers as $manager) {
+                    $this->notificationModel->create($manager->user_id, 'New supplier application submitted.', 'manager/viewApplications/' . $result);
+                }
+
+
                 redirect('pages/supplier_application_status?submitted=true');
                 
             } catch (Exception $e) {

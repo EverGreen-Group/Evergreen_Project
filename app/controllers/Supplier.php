@@ -21,17 +21,11 @@ class Supplier extends Controller {
     private $scheduleModel;
     private $bagModel;
     private $appointmentModel;
+    private $userModel;
 
     public function __construct() {
-        // Check if the user is logged in
         requireAuth();
 
-        // You may want to check if the user has the right role (uncomment if needed)
-        // if (!RoleHelper::hasAnyRole([RoleHelper::ADMIN, RoleHelper::SUPPLIER])) {
-        //     flash('message', 'Unauthorized access', 'alert alert-danger');
-        //     redirect('');
-        //     exit();
-        // }
 
         // Initialize the model
         $this->fertilizerOrderModel = new M_Fertilizer_Order();
@@ -41,6 +35,8 @@ class Supplier extends Controller {
         $this->scheduleModel= new M_CollectionSchedule();
         $this->bagModel = new M_Bag();
         $this->appointmentModel = $this->model('M_Appointment');
+        $this->bagModel = new M_Bag();
+        $this->userModel = $this->model('M_User');
         $supplierDetails = $this->supplierModel->getSupplierDetailsByUserId($_SESSION['user_id']);
         $_SESSION['supplier_id'] = $supplierDetails->supplier_id;
     }
@@ -388,8 +384,20 @@ class Supplier extends Controller {
                 }
             }
     
-    
             if ($this->supplierModel->addComplaint($data)) {
+                // Notify all managers
+                $managers = $this->userModel->getAllManagers();
+                $notificationModel = $this->model('M_Notification');
+    
+                foreach ($managers as $manager) {
+                    $notificationModel->createNotification(
+                        $manager->user_id,
+                        'New Complaint',
+                        'A new complaint has been submitted by a supplier!',
+                        ['link' => 'manager/viewComplaint/']
+                    );
+                }
+    
                 flash('complaint_success', 'Complaint submitted successfully');
                 redirect('supplier/complaints');
             } else {
@@ -399,6 +407,7 @@ class Supplier extends Controller {
             redirect('supplier/complaints');
         }
     }
+    
     
 
     public function settings()

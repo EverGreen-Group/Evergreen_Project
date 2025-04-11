@@ -392,7 +392,7 @@ class M_SupplierApplication {
             }
         
             $this->db->commit();
-            return true;
+            return $applicationId;
             
         } catch (Exception $e) {
             $this->db->rollBack();
