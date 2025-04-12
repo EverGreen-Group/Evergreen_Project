@@ -100,9 +100,9 @@ class Routes extends Controller {
         $result = $this->routeModel->deleteRoute($routeId);
         
         if ($result) {
-            flash('route_message', 'Route deleted successfully');
+            setFlashMessage('Route deleted successfully!');
         } else {
-            flash('route_message', 'Error deleting route', 'alert alert-danger');
+            setFlashMessage('Route deletion failed, please refresh the page!', 'error');
         }
         
         redirect('routes');

@@ -438,10 +438,10 @@ class VehicleDriver extends controller {
         $result = $this->collectionModel->finalizeSupplierCollection($collectionId, $supplierId);
         
         if ($result) {
-            flash('collection_message', 'Collection finalized successfully');
+            setFlashMessage('Collection finalized sucessfully!');
             redirect("vehicledriver/collection/$collectionId");
         } else {
-            flash('bag_message', 'Failed to finalize collection', 'alert alert-danger');
+            setFlashMessage('Failed to finalize the collection!', 'error');
             redirect("vehicledriver/collectionBags/$collectionId/$supplierId");
         }
     }
@@ -708,7 +708,7 @@ class VehicleDriver extends controller {
         $bag = $this->collectionModel->getBagById($bagId, $collectionId);
         
         if (!$bag) {
-            flash('bag_message', 'Bag not found', 'alert alert-danger');
+            setFlashMessage('Bag not found, please retry!', 'error');
             redirect("vehicledriver/collectionBags/$collectionId/$supplierId");
         }
         
@@ -780,10 +780,10 @@ class VehicleDriver extends controller {
         
         if ($result['success']) {
             // Set success flash message
-            flash('bag_message', $result['message']);
+            setFlashMessage('Bag updated sucessfully!');
         } else {
             // Set error flash message
-            flash('bag_message', $result['message'], 'alert alert-danger');
+            setFlashMessage('Bag couldnt be updated!', 'error');
         }
         
         // Redirect back to bags list
@@ -833,9 +833,9 @@ class VehicleDriver extends controller {
         $result = $this->collectionModel->completeCollection($collectionId);
         
         if ($result) {
-            flash('collection_message', 'Collection completed successfully');
+            setFlashMessage('Collection completed sucessfully!');
         } else {
-            flash('collection_message', 'Failed to complete collection', 'alert alert-danger');
+            setFlashMessage('Collection completion failed!');
         }
         
         redirect('vehicledriver/');
@@ -855,16 +855,16 @@ class VehicleDriver extends controller {
         
         if (!empty($bags)) {
             // Cannot cancel if bags exist
-            flash('collection_error', 'Cannot cancel collection as bags have already been recorded', 'alert alert-danger');
+            setFlashMessage('Cannot cancel collection for this supplier, there are bags already assigned. First remove them!', 'error');
             redirect("vehicledriver/collectionBags/$collectionId/$supplierId");
             return;
         }
         
         // Update the status to 'No Show'
         if ($this->collectionModel->updateSupplierCollectionStatus($collectionId, $supplierId, 'No Show')) {
-            flash('collection_success', 'Supplier collection marked as No Show', 'alert alert-success');
+            setFlashMessage('Marked the supplier as unavailable!');
         } else {
-            flash('collection_error', 'Failed to update collection status', 'alert alert-danger');
+            setFlashMessage('Couldnt mark this supplier as unavailable!', 'error');
         }
 
         redirect("vehicledriver/collection/$collectionId");

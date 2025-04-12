@@ -273,7 +273,7 @@ class Manager extends Controller
 
     public function manageSupplier($id = null) {
         if (!$id) {
-            flash('supplier_message', 'Supplier ID is required', 'alert alert-danger');
+            setFlashMessage('Supplier ID is required!', 'error');
             redirect('manager/supplier');
         }
     
@@ -332,10 +332,10 @@ class Manager extends Controller
                 }
                 
                 if ($this->supplierModel->updateSupplier($data)) {
-                    flash('supplier_message', 'Supplier updated successfully');
+                    setFlashMessage('Supplier updated sucessfully!');
                     redirect('manager/manageSupplier/' . $id);
                 } else {
-                    flash('supplier_message', 'Failed to update supplier', 'alert alert-danger');
+                    setFlashMessage('Failed to update supplier', 'error');
                 }
             } else {
                 $data['errors'] = $errors;
@@ -346,7 +346,7 @@ class Manager extends Controller
         
 
         if (!$supplier) {
-            flash('supplier_message', 'Supplier not found', 'alert alert-danger');
+            setFlashMessage('Supplier not found, please try again later!', 'error');
             redirect('manager/supplier');
         }
         
@@ -452,7 +452,7 @@ class Manager extends Controller
 
         // Check if vehicle exists
         if (!$vehicle) {
-            flash('vehicle_not_found', 'Vehicle not found.');
+            setFlashMessage('Vehicle not found, please try again later', 'error');
             redirect('manager/vehicle'); // Redirect to the vehicle list or another page
         }
 
@@ -529,10 +529,10 @@ class Manager extends Controller
                     // If no errors, create vehicle
                     if (empty($data['error'])) {
                         if ($this->vehicleModel->createVehicle($data)) {
-                            flash('vehicle_success', 'Vehicle created successfully');
+                            setFlashMessage('Vehicle created succesfully!');
                             redirect('manager/vehicle'); // Redirect to the vehicle list or another page
                         } else {
-                            $data['error'] = 'Something went wrong. Please try again.';
+                            setFlashMessage('Vehicle creation failed, please try again later!');
                         }
                     }
                 }
@@ -551,13 +551,13 @@ class Manager extends Controller
         // Fetch the current vehicle details
         $vehicle = $this->vehicleModel->getVehicleById($vehicle_id);
         if (!$vehicle) {
-            flash('vehicle_not_found', 'Vehicle not found.');
+            setFlashMessage('Vehicle not found', 'error');
             redirect('manager/vehicle');
         }
 
         if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             // Validate and sanitize input
-            $license_plate = htmlspecialchars(trim($_POST['license_plate'])); // Keep the license plate as is
+            $license_plate = htmlspecialchars(trim($_POST['license_plate']));
             $vehicle_type = htmlspecialchars(trim($_POST['vehicle_type']));
             $make = htmlspecialchars(trim($_POST['make']));
             $model = htmlspecialchars(trim($_POST['model']));
@@ -568,14 +568,13 @@ class Manager extends Controller
             // Check the current status of the vehicle
             if ($vehicle->status === 'In Use') {
                 // Handle the case where the vehicle is in use
-                flash('update_error', 'Cannot update vehicle. The vehicle is currently in use.');
+                setFlashMessage('Cannot update the vehicle because its currently in use.', 'error');
                 redirect('manager/vehicle');
             }
 
-            // Initialize the data array for updating
             $data = [
                 'vehicle_id' => $vehicle_id,
-                'license_plate' => $license_plate, // Keep the existing license plate
+                'license_plate' => $license_plate, 
                 'vehicle_type' => $vehicle_type,
                 'make' => $make,
                 'model' => $model,
@@ -584,30 +583,24 @@ class Manager extends Controller
                 'capacity' => $capacity,
             ];
 
-            // Handle file upload if a new image is provided
             if (isset($_FILES['vehicle_image']) && $_FILES['vehicle_image']['error'] == 0) {
                 $uploadResult = uploadVehicleImage($_FILES['vehicle_image'], $license_plate);
                 if ($uploadResult['success']) {
-                    // Update the image path in the data array
-                    $data['image_path'] = $uploadResult['path']; // Store relative path
-                } else {
-                    // Handle file upload error
-                    flash('upload_error', $uploadResult['message']);
+                    $data['image_path'] = $uploadResult['path']; 
+                    setFlashMessage('There is an issue when updating, Error: ' . $uploadResult['message']);
                     redirect('manager/vehicle');
                 }
             }
 
-            // Update vehicle details in the database
             if ($this->vehicleModel->updateVehicle($data)) {
-                flash('update_success', 'Vehicle updated successfully.');
+                setFlashMessage('Vehicle updated successfully!');
                 redirect('manager/vehicle');
             } else {
-                flash('update_error', 'Failed to update vehicle. Please try again.');
+                setFlashMessage('Vehicle update failed!', 'error');
                 redirect('manager/vehicle');
             }
         }
 
-        // Load the view for updating the vehicle
         $this->view('vehicle_manager/v_update_vehicle', ['vehicle' => $vehicle]);
     }
 
@@ -624,27 +617,11 @@ class Manager extends Controller
 
         // NEED TO DOUBLE CHECK THIS!!! A SIMPLE INSTRUCTION BUT ITS NOT DELETING. IDK ...
 
-        // if ($this->vehicleModel->isVehicleInSchedule($id)) {
-        //     if ($this->vehicleModel->markAsDeleted($id)) {
-        //         error_log("Vehicle " . $id . " marked as deleted");
-        //         flash('delete_success', 'Vehicle marked as deleted');
-        //     } else {
-        //         flash('delete_error', 'Failed to mark vehicle as deleted');
-        //     }
-        // } else {
-        //     if ($this->vehicleModel->deleteVehicle($id)) {
-        //         error_log("Vehicle " . $id . " deleted successfully");
-        //         flash('delete_success', 'Vehicle deleted successfully');
-        //     } else {
-        //         flash('delete_error', 'Failed to delete vehicle from database');
-        //     }
-        // }
-
         if ($this->vehicleModel->markAsDeleted($id)) {
             error_log("Vehicle " . $id . " marked as deleted");
-            flash('delete_success', 'Vehicle marked as deleted');
+            setFlashMessage('Vehicle deleted sucessfully!');
         } else {
-            flash('delete_error', 'Failed to mark vehicle as deleted');
+            setFlashMessage('Vehicle deletion failed!', 'error');
         }
 
         redirect('manager/vehicle');
@@ -796,7 +773,7 @@ class Manager extends Controller
 
         $driver = $this->driverModel->getDriverById($driver_id);
         if (!$driver) {
-            flash('driver_not_found', 'Driver not found.');
+            setFlashMessage('Driver could not be found!');
             redirect('manager/driver'); 
         }
 
@@ -924,14 +901,14 @@ class Manager extends Controller
         // Get the driver data
         $driver = $this->driverModel->getDriverById($id);
         if (!$driver) {
-            flash('driver_error', 'Driver not found', 'alert alert-danger');
+            setFlashMessage('Driver could not be found', 'error');
             redirect('manager/driver');
         }
         
         // Get the profile data
         $profile = $this->userModel->getProfileById($driver->profile_id);
         if (!$profile) {
-            flash('driver_error', 'Profile not found', 'alert alert-danger');
+            setFlashMessage('Profile could not be found');
             redirect('manager/driver');
         }
         
@@ -1023,7 +1000,7 @@ class Manager extends Controller
                     }
                     
                     
-                    flash('driver_success', 'Driver updated successfully');
+                    setFlashMessage('Updated driver sucessfully!');
                     redirect('manager/driver');
                     
                 } catch (Exception $e) {
@@ -1226,14 +1203,13 @@ class Manager extends Controller
                     
 
                     
-                    // Success - redirect with success message
-                    flash('driver_success', 'Driver created successfully');
+                    setFlashMessage('Created driver sucessfully!');
                     redirect('manager/driver');
                     
                 } catch (Exception $e) {
-                    // Rollback transaction on error
-                    $this->db->rollBack();
+
                     $data['error'] = 'Error creating driver: ' . $e->getMessage();
+                    setFlashMessage('Error when creating the driver. Errorr:' . $e, 'error');
                 }
             }
         }
@@ -1251,7 +1227,7 @@ class Manager extends Controller
         // Get the driver data
         $driver = $this->driverModel->getDriverById($id);
         if (!$driver) {
-            flash('driver_error', 'Driver not found', 'alert alert-danger');
+            setFlashMessage('Driver not found!, please refresh the page!', 'error');
             redirect('manager/driver');
         }
         
@@ -1266,16 +1242,16 @@ class Manager extends Controller
             }
             
             $schedulesStr = implode("<br>", $scheduleNames);
-            flash('driver_error', "Cannot delete this driver as they are currently assigned to the following schedules:<br>{$schedulesStr}<br>Please reassign these schedules before deleting the driver.", 'alert alert-danger');
+            setFlashMessage("Cannot delete this driver becasue they are currently assigned to the schedule {$schedulesStr}", 'error');
             redirect('manager/driver');
         }
         
         // Not in any schedules, so we can mark as deleted
         if ($this->driverModel->markDriverAsDeleted($id)) {
-            flash('driver_success', 'Driver has been successfully marked as deleted');
+            setFlashMessage('Driver successfully marked as deleted!');
             redirect('manager/driver');
         } else {
-            flash('driver_error', 'Something went wrong while trying to delete the driver', 'alert alert-danger');
+            setFlashMessage('Driver deletion failed!', 'error');
             redirect('manager/driver');
         }
     }
@@ -1638,7 +1614,7 @@ class Manager extends Controller
             if (empty($data['day']) || 
                 empty($data['driver_id']) || empty($data['route_id']) || 
                 empty($data['start_time']) || empty($data['end_time'])) {
-                $data['error'] = 'Please fill in all fields';
+                setFlashMessage('Please enter all the fields!', 'error');
             } else {
                 // Validate time duration
                 $startTime = strtotime("2000-01-01 " . $data['start_time']);
@@ -1707,15 +1683,10 @@ class Manager extends Controller
                                     }
                                 }
     
-                                flash('schedule_success', 'Schedule created successfully');
+                                setFlashMessage('Schedule created sucessfully!');
                                 redirect('manager/schedule');
                             } else {
-                                $data['error'] = 'Something went wrong. Please try again. Debug info: ' . 
-                                    'day: ' . $data['day'] . ', ' .
-                                    'driver_id: ' . $data['driver_id'] . ', ' .
-                                    'route_id: ' . $data['route_id'] . ', ' .
-                                    'start_time: ' . $data['start_time'] . ', ' .
-                                    'end_time: ' . $data['end_time'];
+                                setFlashMessage('Couldnt create the schedule, please retry it later', 'error');
                             }
                         }
                     }
@@ -1734,8 +1705,8 @@ class Manager extends Controller
     
         // Check if schedule ID is provided
         if (!$scheduleId) {
-            flash('schedule_error', 'Invalid schedule ID');
-            redirect('manager/collectionschedule');
+            setFlashMessage('Schedule doesnt exist, please retry again!', 'error');
+            redirect('manager/schedule');
         }
     
         // Get the existing schedule
@@ -1743,8 +1714,8 @@ class Manager extends Controller
         
         // Check if schedule exists
         if (!$schedule) {
-            flash('schedule_error', 'Schedule not found');
-            redirect('manager/collectionschedule');
+            setFlashMessage('Schedule doesnt exist, please try again later!', 'error');
+            redirect('manager/schedule');
         }
     
         // Get data for the form
@@ -1844,6 +1815,7 @@ class Manager extends Controller
                         // Update schedule
                         if ($this->scheduleModel->updateSchedule($data)) {
                             // Send notifications to the driver
+                            setFlashMessage('Schedule updated successfully!');
                             $driverUserId = $this->userModel->getUserIdByDriverId($data['driver_id']);
                             $this->notificationModel->createNotification(
                                 $driverUserId,
@@ -2174,7 +2146,7 @@ class Manager extends Controller
         $complaint = $this->supplierModel->getComplaintById($id);
     
         if (!$complaint) {
-            flash('complaint_message', 'Complaint not found', 'alert alert-danger');
+            setFlashMessage('Complaint not found!', 'error');
             redirect('manager/complaints');
         }
     
@@ -2198,9 +2170,9 @@ class Manager extends Controller
         ];
     
         if ($this->supplierModel->updateStatus($data)) {
-            flash('complaint_message', 'Complaint resolved successfully', 'alert alert-success');
+            setFlashMessage("Complaint marked as resolved!");
         } else {
-            flash('complaint_message', 'Error resolving complaint', 'alert alert-danger');
+            setFlashMessage('Complaint couldnt be marked as resolved, please try again later!', 'error');
         }
     
         redirect('manager/viewComplaint/' . $data['complaint_id']);
@@ -2214,9 +2186,9 @@ class Manager extends Controller
         ];
     
         if ($this->supplierModel->updateStatus($data)) {
-            flash('complaint_message', 'Complaint reopened successfully', 'alert alert-success');
+            setFlashMessage('Complaint reopen sucessfully!');
         } else {
-            flash('complaint_message', 'Error reopening complaint', 'alert alert-danger');
+            setFlashMessage('Couldnt reopen the complaint, try again later!', 'error');
         }
     
         redirect('manager/viewComplaint/' . $id);
@@ -2225,10 +2197,10 @@ class Manager extends Controller
     public function deleteComplaint($id)
     {
         if ($this->supplierModel->deleteComplaint($id)) {
-            flash('complaint_message', 'Complaint deleted successfully', 'alert alert-success');
+            setFlashMessage('Complaint deleted sucessfully!');
             redirect('manager/complaints');
         } else {
-            flash('complaint_message', 'Error deleting complaint', 'alert alert-danger');
+            setFlashMessage('Couldnt delete the complaint please try again later!', 'error');
             redirect('manager/viewComplaint/' . $id);
         }
     }
@@ -2249,7 +2221,7 @@ class Manager extends Controller
     
             if ($action === 'accept') {
                 if ($this->appointmentModel->acceptRequest($requestId)) {
-                    flash('request_message', 'Request accepted successfully.');
+                    setFlashMessage('Request accepted successful for request ID: ' . $requestId );
     
                     $notificationModel->createNotification(
                         $this->userModel->getUserIdBySupplierId($supplierId),
@@ -2272,12 +2244,12 @@ class Manager extends Controller
                     }
     
                 } else {
-                    flash('request_message', 'Failed to accept the request.');
+                    setFlashMessage('Failed to accept the request. Please refresh the page', 'error');
                 }
     
             } elseif ($action === 'reject') {
                 $this->appointmentModel->rejectRequest($requestId);
-                flash('request_message', 'Request rejected successfully.');
+                setFlashMessage('Request rejected successfuly!');
     
                 $notificationModel->createNotification(
                     $supplierId,

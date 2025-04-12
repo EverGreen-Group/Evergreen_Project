@@ -125,7 +125,7 @@ class Supplier extends Controller {
         if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     
             if (!isset($_POST['slot_id']) || empty($_POST['slot_id'])) {
-                flash('request_message', 'Invalid time slot.', 'alert alert-error');
+                setFlashMessage('Time slot isnt available anymore, please refresh the page!', 'error');
                 redirect('Supplier/viewAppointments');
                 return;
             }
@@ -136,14 +136,14 @@ class Supplier extends Controller {
             // Check if the slot is available
             $slot = $this->appointmentModel->getSlotById($slotId);
             if (!$slot || $slot->status !== 'Available') {
-                flash('request_message', 'This time slot is no longer available.', 'alert alert-error');
+                setFlashMessage('Time slot isnt available anymore.', 'error');
                 redirect('Supplier/viewAppointments');
                 return;
             }
     
             // Check if this supplier has already requested this slot
             if ($this->appointmentModel->hasAlreadyRequested($slotId, $supplierId)) {
-                flash('request_message', 'You have already requested this time slot.', 'alert alert-warning');
+                setFlashMessage('You have already requested this time slot!', 'error');
                 redirect('Supplier/viewAppointments');
                 return;
             }
@@ -158,9 +158,9 @@ class Supplier extends Controller {
     
             // Insert the request
             if ($this->appointmentModel->createRequest($data)) {
-                flash('request_message', 'Time slot requested successfully.');
+                setFlashMessage('Request sent sucessfully!');
             } else {
-                flash('request_message', 'Failed to request time slot.', 'alert alert-error');
+                setFlashMessage('Request failed, please try again later!', 'error');
             }
     
             redirect('Supplier/viewAppointments');
@@ -173,7 +173,7 @@ class Supplier extends Controller {
     public function cancelRequest($id = null) {
         // Validate the request ID
         if (!$id) {
-            flash('request_message', 'Invalid request.', 'alert alert-error');
+            setFlashMessage('Cancellation failed, please try again later!', 'error');
             redirect('Supplier/viewAppointments');
             return;
         }
@@ -181,16 +181,16 @@ class Supplier extends Controller {
         // Check if the request belongs to this supplier and is still pending
         $request = $this->appointmentModel->getRequestById($id);
         if (!$request || $request->supplier_id != $_SESSION['supplier_id'] || $request->status != 'Pending') {
-            flash('request_message', 'You cannot cancel this request.', 'alert alert-error');
+            setFlashMessage('You cannot cancel this request', 'error');
             redirect('Supplier/viewAppointments');
             return;
         }
         
         // Cancel the request
         if ($this->appointmentModel->cancelRequest($id, $_SESSION['supplier_id'])) {
-            flash('request_message', 'Appointment request cancelled successfully.');
+            setFlashMessage('Appointment request cancelled sucessfully!');
         } else {
-            flash('request_message', 'Failed to cancel request.', 'alert alert-error');
+            setFlashMessage('Failed to cancel the request!', 'error');
         }
         
         redirect('Supplier/viewAppointments');
@@ -307,15 +307,15 @@ class Supplier extends Controller {
                 if (move_uploaded_file($_FILES['profile_image']['tmp_name'], $uploadPath)) {
                     $data['image_path'] = $uploadPath;
                 } else {
-                    flash('profile_message', 'Error uploading image', 'alert alert-error');
+                    setFlashMessage('Image upload failed!', 'error');
                     redirect('Supplier/profile');
                 }
             }
             if ($this->supplierModel->updateSupplierProfile($data)) {
-                flash('profile_message', 'Profile updated successfully');
+                setFlashMessage('Profile updated sucessfully!');
                 redirect('Supplier/profile');
             } else {
-                flash('profile_message', 'Error updating profile', 'alert alert-error');
+                setFlashMessage('Profile update failed!', 'error');
                 redirect('Supplier/profile');
             }
         } else {
@@ -398,9 +398,10 @@ class Supplier extends Controller {
                     );
                 }
     
-                flash('complaint_success', 'Complaint submitted successfully');
+                setFlashMessage('Complaint submitted successfully!');
                 redirect('supplier/complaints');
             } else {
+                setFlashMessage('Complaint didnt get sent! Please try again later', 'error');
                 redirect('supplier/complaints');
             }
         } else {
@@ -420,7 +421,7 @@ class Supplier extends Controller {
     public function fertilizerhistory() {
         // Ensure supplier is logged in
         if (!isset($_SESSION['supplier_id'])) {
-            flash('message', 'Please log in to view your order history', 'alert alert-danger');
+
             redirect('login');
             return;
         }
@@ -458,13 +459,13 @@ class Supplier extends Controller {
             if ($this->validateRequest($data)) {
                 // Call model method to insert the data
                 if ($this->fertilizerOrderModel->createOrder($data)) {
-                    flash('message', 'Order successfully submitted!', 'alert alert-success');
+                    setFlashMessage('Order sucessfully submitted!');
                     redirect('supplier/requestFertilizer');
                 } else {
-                    flash('message', 'Something went wrong. Please try again.', 'alert alert-danger');
+                    setFlashMessage('Fertilizer request failed!', 'error');
                 }
             } else {
-                flash('message', 'Please fill in all required fields.', 'alert alert-danger');
+                setFlashMessage('Please fill all the required fields', 'error');
             }
         }
    
@@ -583,7 +584,7 @@ class Supplier extends Controller {
         $order = $this->fertilizerOrderModel->getOrderById($order_id);
         
         if (!$order) {
-            flash('message', 'Order not found', 'alert alert-danger');
+            setFlashMessage('Edit fertilizer request failed!', 'error');
             redirect('supplier/requestFertilizer');
             return;
         }
@@ -605,7 +606,7 @@ class Supplier extends Controller {
     
             // Validation checks
             if (empty($type_id) || empty($unit) || $total_amount <= 0 || $total_amount > 50) {
-                flash('message', 'Please check your inputs. Amount should be between 1 and 50.', 'alert alert-danger');
+                setFlashMessage('Total amount has to be less than 50kg', 'error');
                 redirect('supplier/editFertilizerRequest/' . $order_id);
                 return;
             }
@@ -631,10 +632,10 @@ class Supplier extends Controller {
     
             // Update the order
             if ($this->fertilizerOrderModel->updateOrder($order_id, $updateData)) {
-                flash('message', 'Fertilizer request updated successfully', 'alert alert-success');
+                setFlashMessage('Order request updated sucessfully!');
                 redirect('supplier/requestFertilizer');
             } else {
-                flash('message', 'Failed to update request. Please try again.', 'alert alert-danger');
+                setFlashMessage('Failed to request the order!', 'error');
                 redirect('supplier/editFertilizerRequest/' . $order_id);
             }
         } else {
@@ -798,45 +799,18 @@ class Supplier extends Controller {
     
             // Toggle the status
             $newStatus = $currentStatus === '1' ? '0' : '1';
-            
-            // If supplier is becoming inactive, unsubscribe from all routes
-            if ($newStatus === '0') {
-                $subscribedSchedules = $this->scheduleModel->getSubscribedSchedules($supplierId);
-                
-                // Process each subscription
-                $unsubscribeResults = [];
-                foreach ($subscribedSchedules as $schedule) {
-                    $routeId = $schedule->route_id;
-                    
-                    try {
-                        // Remove supplier from route
-                        if ($this->routeModel->removeSupplierFromRoute($routeId, $supplierId)) {
-                            $this->routeModel->updateRemainingCapacity($routeId, 'remove');
-                            $unsubscribeResults[] = true;
-                        } else {
-                            $unsubscribeResults[] = false;
-                        }
-                    } catch (Exception $e) {
-                        $unsubscribeResults[] = false;
-                    }
-                }
-                
-                // If any unsubscriptions failed, you may want to handle that
-                $allUnsubscribesSuccessful = !in_array(false, $unsubscribeResults);
-                // You could decide whether to proceed based on this result
-            }
+
     
             // Update the supplier's availability in the model
             if ($this->supplierModel->updateSupplierStatus($supplierId, $newStatus)) {
-                flash('message', 'Supplier availability updated successfully.', 'alert alert-success');
+                setFlashMessage('You will not be included in the next schedule!');
             } else {
-                flash('message', 'Failed to update availability. Please try again.', 'alert alert-danger');
+                setFlashMessage('You will be included in the next schedule!');
             }
     
-            // Redirect back to the dashboard
             redirect('supplier/');
         } else {
-            redirect('supplier/'); // Redirect if not a POST request
+            redirect('supplier/');
         }
     }
 

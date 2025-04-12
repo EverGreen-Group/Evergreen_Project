@@ -96,7 +96,7 @@ class Auth extends Controller
                             unset($_SESSION['registration_data']);
 
                             // Set success message and redirect
-                            flash('register_success', 'You are registered successfully and can now log in');
+                            setFlashMessage('Register Successful, you can now log in!');
                             redirect('auth/login');
                         } else {
                             $data['error'] = 'Profile creation failed. Please try again.';
@@ -510,7 +510,7 @@ private function sendOTPEmail($email, $otp) {
         
         
         if (!$profileData) {
-            flash('profile_message', 'Unable to load profile information', 'alert alert-error');
+            setFlashMessage('Cannot load the profile, try again later!');
             redirect('/');
         }
         
@@ -556,18 +556,19 @@ private function sendOTPEmail($email, $otp) {
                 
                 if (move_uploaded_file($_FILES['profile_image']['tmp_name'], $uploadPath)) {
                     $data['image_path'] = $uploadPath;
+                    setFlashMessage('Image uploaded succesful!');
                 } else {
-                    flash('profile_message', 'Error uploading image', 'alert alert-error');
+                    setFlashMessage('Image upload failed, try again later!');
                     redirect('Supplier/profile');
                 }
             }
             if (RoleHelper::hasRole(5)) {
                 $supplierModel->updateSupplierProfile($data);
-                flash('profile_message', 'Profile updated successfully');
+                setFlashMessage('Supplier Profile Updated Successfully!');
                 redirect('');
             } else {
                 $this->userModel->updateProfilePhoto($data);
-                flash('profile_message', 'Error updating profile', 'alert alert-error');
+                setFlashMessage('Image upload failed, try again later!', 'error');
                 redirect('');
             }
         } else {
@@ -647,21 +648,21 @@ private function sendOTPEmail($email, $otp) {
 
 
             if (empty($currentPassword) || empty($newPassword) || empty($confirmPassword)) {
-                flash('profile_message', 'Please fill in all password fields.', 'alert alert-danger');
+                setFlashMessage('Please fill all the password field', 'error');
 
             } elseif ($newPassword !== $confirmPassword) {
-                flash('profile_message', 'New passwords do not match.', 'alert alert-danger');
+                setFlashMessage('Both the passwords do not match, please try again!', 'error');
 
             } elseif (strlen($newPassword) < 8) {
-                flash('profile_message', 'Password must be at least 8 characters long.', 'alert alert-danger');
+                setFlashMessage('Password must be at least 8 letters long', 'error');
             } elseif (!preg_match('/[A-Z]/', $newPassword)) { // At least one uppercase letter
-                flash('profile_message', 'Password must contain at least one uppercase letter.', 'alert alert-danger');
+                setFlashMessage('Password must have at least 1 upper case letter', 'error');
             } elseif (!preg_match('/[a-z]/', $newPassword)) { // At least one lowercase letter
-                 flash('profile_message', 'Password must contain at least one lowercase letter.', 'alert alert-danger');
+                setFlashMessage('Password must have at least 1 simple letter', 'error');
             } elseif (!preg_match('/[0-9]/', $newPassword)) { // At least one number
-                flash('profile_message', 'Password must contain at least one number.', 'alert alert-danger');
-             } elseif (!preg_match('/[\W_]/', $newPassword)) { // At least one special character (matches registration)
-                flash('profile_message', 'Password must contain at least one special character.', 'alert alert-danger');
+                setFlashMessage('Password must have at least 1 number', 'error');
+             } elseif (!preg_match('/[\W_]/', $newPassword)) { 
+                setFlashMessage('Password must have at least 1 special character', 'error');
             } else {
 
                 $userId = $_SESSION['user_id'];
@@ -669,16 +670,16 @@ private function sendOTPEmail($email, $otp) {
 
                 if (!$user || !password_verify($currentPassword, $user->password)) {
 
-                    flash('profile_message', 'Current password is incorrect.', 'alert alert-danger');
+                    setFlashMessage('Entered password is incorrect!', 'error');
                 } else {
 
                     $hashedPassword = password_hash($newPassword, PASSWORD_DEFAULT);
                     if ($this->userModel->updatePasswordByUserId($userId, $hashedPassword)) {
 
-                        flash('profile_message', 'Password updated successfully.', 'alert alert-success');
+                        setFlashMessage('Password updated successfully!');
                     } else {
 
-                         flash('profile_message', 'Failed to update password. Please try again.', 'alert alert-danger');
+                        setFlashMessage('Password update failed, please try again later!', 'error');
 
                     }
                 }
@@ -690,7 +691,7 @@ private function sendOTPEmail($email, $otp) {
 
         } else {
 
-            flash('profile_message', 'Invalid request method for password reset.', 'alert alert-warning');
+            setFlashMessage('Invalid access', 'error');
             redirect('/'); 
             return; 
         }

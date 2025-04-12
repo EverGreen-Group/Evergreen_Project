@@ -251,3 +251,19 @@ function handleNotificationClick(event, notificationId, link) {
 
 
 </script>
+
+<!-- fLash part -->
+<?php if(isset($_SESSION['flash_message'])): ?>
+    <div id="php-flash-message" 
+         data-message="<?php echo htmlspecialchars($_SESSION['flash_message']); ?>"
+         data-type="<?php echo htmlspecialchars($_SESSION['flash_type'] ?? 'success'); ?>"
+         style="display: none;"></div>
+    <?php 
+    // Clear after rendering
+    unset($_SESSION['flash_message']);
+    unset($_SESSION['flash_type']);
+    ?>
+<?php endif; ?>
+
+<!-- Notification container -->
+<div id="notification-container"></div>

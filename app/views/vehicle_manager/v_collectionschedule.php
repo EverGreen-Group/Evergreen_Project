@@ -61,11 +61,6 @@
 
 
 
-
-
-    <?php flash('schedule_error'); ?>
-    <?php flash('schedule_success'); ?>
-    
     
 
 
