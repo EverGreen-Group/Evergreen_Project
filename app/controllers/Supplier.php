@@ -253,14 +253,6 @@ class Supplier extends Controller {
         $this->view('supplier/v_cancel_pickup', $data);
     }
 
-    public function requestFertilizer() {
-        $fertilizerModel = new M_Fertilizer_Order();
-        $data['fertilizer_types'] = $fertilizerModel->getAllFertilizerTypes();
-        $data['orders'] = $fertilizerModel->getAllOrders(); // Switch to getOrderBySupplier() after logging in
-
-        $this->view('supplier/v_fertilizer_request', $data);
-    }
-
     public function complaints() {
         $data = [];
         $this->view('supplier/v_complaint', $data);
@@ -377,6 +369,19 @@ class Supplier extends Controller {
         // Load the view and pass the data
         $this->view('supplier/v_fertilizer_request', $data);
     }
+
+    /*private function logUnitUsage($unit){
+        error_log ($unit);
+    }*/
+
+    public function requestFertilizer() {
+        $fertilizerModel = new M_Fertilizer_Order();
+        $data['fertilizer_types'] = $fertilizerModel->getAllFertilizerTypes();
+        $data['orders'] = $fertilizerModel->getAllOrders(); // Switch to getOrderBySupplier() after logging in
+        $data['unit'] = flash('used_unit');
+
+        $this->view('supplier/v_fertilizer_request', $data);
+    }
    
     public function createFertilizerOrder() {
         header('Content-Type: application/json');
@@ -386,45 +391,49 @@ class Supplier extends Controller {
             if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
                 throw new Exception('Invalid request method');
             }
-
+    
+            // Check for required fields
             $required_fields = ['type_id', 'unit', 'total_amount'];
             foreach ($required_fields as $field) {
                 if (!isset($_POST[$field]) || empty($_POST[$field])) {
                     throw new Exception("Missing required field: $field");
                 }
             }
-
-            // TEMP SUPPLIER ID
-            $supplier_id = 2;
-
-            // Fetch fertilizer types for dropdown
-            $data['fertilizer_types'] = $this->fertilizerOrderModel->getAllFertilizerTypes();
-
+    
+            // Get supplier ID from session
+            $supplier_id = $_SESSION['supplier_id'] ?? null;
+            if (!$supplier_id) {
+                throw new Exception("Supplier ID not found. Please log in again.");
+            }
+    
             // Validate and get fertilizer data
             $type_id = trim($_POST['type_id']);
             $fertilizer = $this->fertilizerOrderModel->getFertilizerByTypeId($type_id);
-
+    
             if (!$fertilizer) {
                 throw new Exception('Invalid fertilizer type');
             }
-
+    
             $unit = $_POST['unit'];
-            $total_amount = floatval($_POST['total_amount']);
+            flash('used_unit', $unit);
 
+            //$this->logUnitUsage($unit);
+            $total_amount = floatval($_POST['total_amount']);
+    
             // Validate amount
             if ($total_amount <= 0 || $total_amount > 50) {
                 throw new Exception('Amount must be between 1 and 50');
             }
-
+    
             // Calculate prices
             $price_column = 'price_' . $unit;
             if (!isset($fertilizer[$price_column])) {
                 throw new Exception('Invalid unit type');
             }
-
+    
             $price_per_unit = $fertilizer[$price_column];
             $total_price = $total_amount * $price_per_unit;
-
+    
             // Create order data
             $order_data = [
                 'supplier_id' => $supplier_id,
@@ -433,23 +442,32 @@ class Supplier extends Controller {
                 'total_amount' => $total_amount,
                 'unit' => $unit,
                 'price_per_unit' => $price_per_unit,
-                'total_price' => $total_price
+                'total_price' => $total_price,
+                'status' => 'Pending',
+                'payment_status' => 'Pending'
             ];
-
+    
             // Create the order
             if ($this->fertilizerOrderModel->createOrder($order_data)) {
                 $response['success'] = true;
                 $response['message'] = 'Order placed successfully!';
+                
+                // Set flash message for when redirected
+                flash('fertilizer_message', 'Order placed successfully!', 'alert alert-success');
             } else {
                 throw new Exception($this->fertilizerOrderModel->getError() ?? 'Failed to create order');
             }
-
+    
         } catch (Exception $e) {
             $response['message'] = $e->getMessage();
+            // Set flash message for when redirected
+            flash('fertilizer_message', $e->getMessage(), 'alert alert-danger');
         }
-
+    
         echo json_encode($response);
-        header("Refresh:1; url=" . $_SERVER['HTTP_REFERER']);
+        
+        // Better redirect - use JavaScript redirection
+        echo "<script>window.location.href = '" . URLROOT . "/Supplier/requestFertilizer';</script>";
         exit;
     }
 
@@ -612,7 +630,7 @@ class Supplier extends Controller {
         }
     
         // Fetch unallocated suppliers for the given day
-        $suppliers = $this->routeModel->getUnallocatedSuppliersByDay($day);
+        $suppliers = $this->routeModel->getUnallocatedSuppliers($day);
     
         // Return the response
         echo json_encode(['success' => true, 'data' => $suppliers]);

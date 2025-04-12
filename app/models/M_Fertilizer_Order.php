@@ -7,7 +7,10 @@ class M_Fertilizer_Order {
     }
 
     public function getAllOrders() {
-        $this->db->query("SELECT * FROM fertilizer_orders ORDER BY order_date DESC, order_time DESC LIMIT 10");
+        $this->db->query("SELECT fo.*, ft.description as fertilizer_name 
+                          FROM fertilizer_orders fo
+                          JOIN fertilizer_types ft ON fo.fertilizer_id = ft.type_id 
+                          ORDER BY order_date DESC, order_time DESC LIMIT 10");
         return $this->db->resultset();
     }
 
@@ -31,6 +34,8 @@ class M_Fertilizer_Order {
     public function getError() {
         return $this->error;
     }
+
+
     public function createOrder($data) {
         try {
             // Start transaction
@@ -50,27 +55,23 @@ class M_Fertilizer_Order {
             // Get current date and time
             $currentDate = date('Y-m-d');
             $currentTime = date('H:i:s');
-    
+            
             $this->db->query(
                 "INSERT INTO fertilizer_orders 
-                (supplier_id, type_id, fertilizer_name, total_amount, unit, 
-                price_per_unit, total_price, order_date, order_time, 
-                status, payment_status) 
+                (supplier_id, order_date, order_time, total_amount, fertilizer_id, quantity)
                 VALUES 
-                (:supplier_id, :type_id, :fertilizer_name, :total_amount, :unit, 
-                :price_per_unit, :total_price, :order_date, :order_time, 
-                'pending', 'pending')"
+                (:supplier_id, :order_date, :order_time, :total_price, :type_id, :total_amount)"
             );
             
             $this->db->bind(':supplier_id', $data['supplier_id']);
-            $this->db->bind(':type_id', $data['type_id']);
-            $this->db->bind(':fertilizer_name', $data['fertilizer_name']);
-            $this->db->bind(':total_amount', $data['total_amount']);
-            $this->db->bind(':unit', $data['unit']);
-            $this->db->bind(':price_per_unit', $data['price_per_unit']);
-            $this->db->bind(':total_price', $data['total_price']);
             $this->db->bind(':order_date', $currentDate);
             $this->db->bind(':order_time', $currentTime);
+            $this->db->bind(':total_price', $data['total_price']);
+            $this->db->bind(':type_id', $data['type_id']);
+            $this->db->bind(':total_amount', $data['total_amount']);
+            //$this->db->bind(':fertilizer_name', $data['fertilizer_name']);
+            //$this->db->bind(':unit', $data['unit']);
+            //$this->db->bind(':price_per_unit', $data['price_per_unit']);
     
             $result = $this->db->execute();
             
