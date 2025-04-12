@@ -28,45 +28,48 @@
     <div class="request-form-card">
       <!-- Note: The form action has been updated to match the old version’s endpoint -->
       <form id="fertilizer-request-form" action="<?php echo URLROOT; ?>/Supplier/createFertilizerOrder" method="post">
+        <!-- Add hidden supplier_id field -->
+        <input type="hidden" name="supplier_id" value="<?php echo $_SESSION['supplier_id']; ?>">
+        
         <div class="form-group">
-          <label for="fertilizer">Fertilizer Type:</label>
-          <select id="fertilizer" name="fertilizer" required onchange="updatePricePerUnit()">
-            <option value="">-- Select Fertilizer --</option>
-            <?php foreach($data['fertilizer_types'] as $type): ?>
-              <option value="<?php echo $type->type_id; ?>"
-                data-price-kg="<?php echo $type->unit_price_kg; ?>"
-                data-price-pack="<?php echo $type->unit_price_packs; ?>"
-                data-price-box="<?php echo $type->unit_price_box; ?>">
-                <?php echo $type->name; ?>
-              </option>
-            <?php endforeach; ?>
-          </select>
+            <label for="type_id">Fertilizer Type:</label>
+            <select id="type_id" name="type_id" required onchange="updatePricePerUnit()">
+                <option value="">-- Select Fertilizer --</option>
+                <?php foreach($data['fertilizer_types'] as $type): ?>
+                    <option value="<?php echo $type->type_id; ?>"
+                        data-price-kg="<?php echo $type->unit_price_kg; ?>"
+                        data-price-pack="<?php echo $type->unit_price_packs; ?>"
+                        data-price-box="<?php echo $type->unit_price_box; ?>">
+                        <?php echo $type->name; ?>
+                    </option>
+                <?php endforeach; ?>
+            </select>
         </div>
         <div class="form-group">
-          <label for="unit">Unit:</label>
-          <select id="unit" name="unit" required onchange="updatePricePerUnit()">
-            <option value="">-- Select Unit --</option>
-            <option value="kg">Kilograms (kg)</option>
-            <option value="packs">Packs</option>
-            <option value="box">Box</option>
-          </select>
+            <label for="unit">Unit:</label>
+            <select id="unit" name="unit" required onchange="updatePricePerUnit()">
+                <option value="">-- Select Unit --</option>
+                <option value="kg">Kilograms (kg)</option>
+                <option value="packs">Packs</option>
+                <option value="box">Box</option>
+            </select>
         </div>
         <div class="form-group">
-          <label for="amount">Amount:</label>
-          <input type="number" id="amount" name="amount" min="1" required oninput="updateTotalPrice()">
+            <label for="total_amount">Amount:</label>
+            <input type="number" id="total_amount" name="total_amount" min="1" required oninput="updateTotalPrice()">
         </div>
         <div class="form-group read-only-group">
-          <label for="price_per_unit">Price Per Unit:</label>
-          <input type="text" id="price_per_unit" name="price_per_unit" readonly>
+            <label for="price_per_unit">Price Per Unit:</label>
+            <input type="text" id="price_per_unit" name="price_per_unit" readonly>
         </div>
         <div class="form-group read-only-group">
-          <label for="total_price">Total Price:</label>
-          <input type="text" id="total_price" name="total_price" readonly>
+            <label for="total_price">Total Price:</label>
+            <input type="text" id="total_price" name="total_price" readonly>
         </div>
         <div class="form-group">
-          <button type="submit" class="submit-btn">Submit Request</button>
+            <button type="submit" class="submit-btn">Submit Request</button>
         </div>
-      </form>
+    </form>
     </div>
   </div>
 
@@ -100,11 +103,11 @@
                 </div>
                 <div class="info-item">
                   <i class='bx bx-calculator'></i>
-                  <span>Amount: <?php echo $order->total_amount . ' ' . $order->unit; ?></span>
+                  <span>Amount: <?php echo number_format($order->quantity) . ' ' . isset($unit) ? $unit : ''; ?></span>
                 </div>
                 <div class="info-item">
                   <i class='bx bx-dollar'></i>
-                  <span>Price: <?php echo 'රු.' . number_format($order->total_price, 2); ?></span>
+                  <span>Price: <?php echo 'රු.' . number_format($order->total_amount, 2); ?></span>
                 </div>
                 <div class="info-item">
                   <i class='bx bx-check-circle'></i>
@@ -135,8 +138,9 @@
 <script src="<?php echo URLROOT; ?>/public/css/script.js"></script>
 <script>
 // Update Price Per Unit based on the selected fertilizer and unit
+// Update Price Per Unit based on the selected fertilizer and unit
 function updatePricePerUnit() {
-  const fertilizerSelect = document.getElementById('fertilizer');
+  const fertilizerSelect = document.getElementById('type_id');
   const unitSelect = document.getElementById('unit');
   const pricePerUnitInput = document.getElementById('price_per_unit');
 
@@ -171,7 +175,7 @@ function updatePricePerUnit() {
 
 // Update total price based on amount and price per unit
 function updateTotalPrice() {
-  const amount = parseFloat(document.getElementById('amount').value);
+  const amount = parseFloat(document.getElementById('total_amount').value);
   const pricePerUnit = parseFloat(document.getElementById('price_per_unit').value);
   const totalPriceInput = document.getElementById('total_price');
   
