@@ -7,7 +7,6 @@
     <title><?php echo SITENAME; ?></title>
     <link rel="stylesheet" href="<?php echo URLROOT; ?>/css/pages/create_product.css" />
     <link rel="stylesheet" href="<?php echo URLROOT; ?>/css/components/topnavbar_style.css" />
-    <link href="https://unpkg.com/boxicons@2.0.9/css/boxicons.min.css" rel="stylesheet" />
 
 </head>
 
@@ -20,7 +19,9 @@
         <?php require APPROOT . '/views/inc/components/sidebar_inventory.php' ?>
         <div class="screen">
             <div class="form-container">
-                <form class="create-product-form" action="<?php echo URLROOT; ?>/inventory/updateproduct/<?php echo $data['id']; ?>" method="POST" enctype="multipart/form-data">
+                <form class="create-product-form"
+                    action="<?php echo URLROOT; ?>/inventory/updateproduct/<?php echo $data['id']; ?>" method="POST"
+                    enctype="multipart/form-data">
                     <div class="form-header">
                         <h2>Update Product</h2>
                     </div>
@@ -50,7 +51,8 @@
                             </div>
                             <div class="form-group">
                                 <label for="code">Grade</label>
-                                <input type="text" id="grade" name="grade" placeholder="Enter Code" value="<?php echo $data['product']->grade ?? ''; ?>">
+                                <input type="text" id="grade" name="grade" placeholder="Enter Code"
+                                    value="<?php echo $data['product']->grade ?? ''; ?>">
                             </div>
                         </div>
                     </div>
@@ -62,8 +64,8 @@
                                 onchange="previewImage(this)">
                             <div class="image-preview" id="imagePreview">
                                 <?php if (!empty($data['product']->image_path)): ?>
-                                    <img src="<?php echo URLROOT . '/uploads/products/' . $data['product']->image_path; ?>" 
-                                         alt="Product Image" id="preview">
+                                    <img src="<?php echo URLROOT . '/uploads/products/' . $data['product']->image_path; ?>"
+                                        alt="Product Image" id="preview">
                                 <?php else: ?>
                                     <div class="upload-placeholder" id="placeholder">
                                         <span>+</span>
@@ -98,8 +100,9 @@
                             <div class="form-group">
                                 <label for="unit">Unit</label>
                                 <select id="unit" name="unit">
-                                   +
-                                    <option value="kg" <?php echo ($data['product']->unit == 'kg') ? 'selected' : ''; ?>>Kg</option>
+                                    +
+                                    <option value="kg" <?php echo ($data['product']->unit == 'kg') ? 'selected' : ''; ?>>
+                                        Kg</option>
                                     <option value="box" <?php echo ($data['product']->unit == 'box') ? 'selected' : ''; ?>>Box(100kg)</option>
                                 </select>
                             </div>

@@ -22,6 +22,12 @@
         <span class="text">Fertilizer</span>
       </a>
     </li>
+    <li class="<?php echo (basename($_SERVER['REQUEST_URI']) == 'collectionBags') ? 'active' : ''; ?>">
+      <a href="../inventory/collectionBags">
+        <i class="bx bx-trip"></i>
+        <span class="text">Bag</span>
+      </a>
+    </li>
     <li class="<?php echo (basename($_SERVER['REQUEST_URI']) == 'machine') ? 'active' : ''; ?>">
       <a href="<?php echo URLROOT; ?>/inventory/machine">
         <i class="bx bxs-time-five"></i>

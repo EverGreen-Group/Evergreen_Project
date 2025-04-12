@@ -48,13 +48,6 @@
 			<i class='bx bxs-dollar-circle'></i>
 			<span class="text">
 				<h3>2543</h3>
-				<p>Sales Orders</p>
-			</span>
-		</li>
-		<li>
-			<i class='bx bxs-dollar-circle'></i>
-			<span class="text">
-				<h3>2543</h3>
 				<p>Fertilizer Orders</p>
 			</span>
 		</li>
@@ -65,7 +58,14 @@
 		<div class="order">
 			<div class="head">
 				<h3>Raw Tea Leaves Supply</h3>
-				<i class='bx bx-shopping-bag'></i>
+				<a href="<?php echo URLROOT; ?>/inventory/rawLeafHistory" class="btn btn-primary">
+					<i class='bx bx-show'></i>
+					View Raw Leaf History
+				</a>
+				<a href="<?php echo URLROOT; ?>/inventory/payments" class="btn btn-primary">
+					<i class='bx bx-cog'></i>
+					Manage Rates
+				</a>
 			</div>
 			<div class="chart-container-wrapper" style="position:relative; width:100%; height:300px; padding:20px;">
 				<canvas id="reportTypesChart"></canvas>
@@ -73,23 +73,8 @@
 		</div>
 
 
+		<!-- machine chart -->
 
-		<div id="reportModal" class="report-modal" style="display: none;">
-			<div class="modal-content" id="reportModalContent">
-				<span class="close" onclick="closeModal('reportModal')">&times;</span>
-				<h2>Report</h2>
-				<form action="<?php echo URLROOT; ?>/Inventory/" method="POST">
-					<div class="modal-body">
-						<textarea type="text" name="report" placeholder="Enter your report">
-
-				</textarea>
-					</div>
-					<div class="modal-footer">
-						<button type="submit" class="btn btn-primary">Submit</button>
-					</div>
-				</form>
-			</div>
-		</div>
 
 		<div class="todo">
 			<div class="head">
@@ -121,25 +106,21 @@
 			<canvas id="machineAllocationChart"></canvas>
 		</div>
 	</div>
+
 	<!-- Stock Validation -->
 	<div class="table-data">
 		<div class="order">
 			<div class="head">
 				<h3>Validate Stock</h3>
-
-				<i class='bx bx-filter'></i>
-				<select name="" id="statusFilter" onchange="filterStocks()">
-					<option value="All">All</option>
-					<option value="Approved">Approved</option>
-					<option value="Rejected">Rejected</option>
-					<option value="Not_Validate">Not Checked</option>
-				</select>
+				<!-- <a href="<?php echo URLROOT; ?>/manager/createVehicle" class="btn btn-primary">
+					<i class='bx bx-show'></i>
+					View Stock Validation History
+				</a> -->
 			</div>
 
 			<table>
 				<thead>
 					<tr>
-						<th>Driver Name</th>
 						<th>Collection No</th>
 						<th>Quantity</th>
 						<th>Time</th>
@@ -147,67 +128,39 @@
 						<th>Actions</th>
 					</tr>
 				</thead>
-				<tbody id="stockTable">
-					<!-- Data will be populated via JavaScript -->
+				<tbody>
+					<?php if (!empty($stockvalidate)): ?>
+						<?php foreach ($stockvalidate as $req): ?>
+							<tr>
+								<td><?php echo htmlspecialchars($req->collection_id); ?></td>
+								<td><?php echo htmlspecialchars($req->total_quantity); ?></td>
+								<td><?php echo htmlspecialchars($req->end_time); ?></td>
+								<td>
+									<span class="status-badge awaiting"><?php echo htmlspecialchars($req->status); ?></span>
+								</td>
+								<td>
+									<div style="display: flex; gap: 5px;">
+										<a href="<?php echo URLROOT; ?>/inventory/viewAwaitingInventory/<?php echo $req->collection_id; ?>"
+											class="btn btn-tertiary"
+											style="display: flex; align-items: center; justify-content: center; width: 40px; height: 40px; border: none; background: none;"
+											title="View Awaiting Inventory Details">
+											<i class='bx bx-add-to-queue' style="font-size: 24px; color:var(--main);"></i>
+										</a>
+									</div>
+								</td>
+							</tr>
+						<?php endforeach; ?>
+					<?php else: ?>
+						<tr>
+							<td colspan="5" style="text-align:center;">No incoming requests</td>
+						</tr>
+					<?php endif; ?>
 				</tbody>
 			</table>
 		</div>
-		<div id="collectionBagDetailsModal" class="modal">
-			<div class="modal-content">
-				<span class="close" onclick="closeModal('collectionBagDetailsModal')">&times;</span>
-				<h2>Colllection Details</h2>
-				<div id="collectionBagDetailsContent">
-					<!-- Bag details will be populated here -->
-				</div>
-			</div>
-		</div>
 	</div>
 
-	<div class="top-selling-section">
-		<div class="section-header">
-			<h2>Top Selling Products</h2>
-			<a href="<?php echo URLROOT; ?>/inventory/product" class="view-all">View all &gt;</a>
-		</div>
 
-		<div class="product-grid">
-			<div class="product-card">
-				<img src="<?php echo URLROOT; ?>/public/img//green tea1.webp" alt="Green Tea" class="product-image"
-					style="height:300px; width: 300px;">
-				<h3>Green Tea</h3>
-				<p class="sold">120 items sold</p>
-			</div>
-
-			<div class="product-card">
-				<img src="<?php echo URLROOT; ?>/public/img/black tea.jpg" alt="Black Tea" class="product-image"
-					style="height:300px; width: 300px;">
-				<h3>Black Tea</h3>
-				<p class="sold">100 items sold</p>
-			</div>
-
-			<div class="product-card">
-				<img src="<?php echo URLROOT; ?>/public/img/white tea.webp" alt="White Tea" class="product-image"
-					style="height:300px; width: 300px;">
-				<h3>White Tea</h3>
-				<p class="sold">90 items sold</p>
-			</div>
-
-			<div class="product-card">
-				<img src="<?php echo URLROOT; ?>/public/img/oolong tea.webp" alt="oolong Tea" class="product-image"
-					style="height:300px; width: 300px;">
-				<h3>Oolong Tea</h3>
-				<p class="sold">80 items sold</p>
-			</div>
-		</div>
-
-		<!-- Pagination -->
-		<div class="pagination">
-			<button class="prev">&lt;</button>
-			<button class="page-number active">1</button>
-			<button class="page-number">2</button>
-			<button class="page-number">3</button>
-			<button class="next">&gt;</button>
-		</div>
-	</div>
 
 
 </main>
@@ -286,24 +239,13 @@
 	//report Type chart
 	document.addEventListener("DOMContentLoaded", function () {
 		const reportCtx = document.getElementById("reportTypesChart");
-
-		console.log("reportCtx");
 		if (reportCtx) {
+			const normalLeafData = <?php echo json_encode($data['normalLeafData']); ?>;
+			const superLeafData = <?php echo json_encode($data['superLeafData']); ?>;
+			const labels = <?php echo json_encode(array_map(function ($date) {
+				return date('D', strtotime($date));
+			}, $data['chartDates'])); ?>;
 
-			// Hardcoded chaotic data for Normal Leaf and Super Leaf for the past week
-			const labels = [
-				"Monday",
-				"Tuesday",
-				"Wednesday",
-				"Thursday",
-				"Friday",
-				"Saturday",
-				"Sunday",
-			];
-			const normalLeafData = [12, 18, 25, 30, 22, 35, 40]; // Chaotic values for Normal Leaf
-			const superLeafData = [8, 15, 20, 25, 18, 30, 28]; // Chaotic values for Super Leaf
-
-			// Create the line chart with the chaotic data
 			new Chart(reportCtx, {
 				type: "line",
 				data: {
@@ -335,42 +277,20 @@
 					plugins: {
 						legend: {
 							position: "top",
-							labels: {
-								padding: 20,
-								font: {
-									size: 12,
-								},
-							},
+							labels: { padding: 20, font: { size: 12 } },
 						},
-						title: {
-							display: false,
-							text: "Weekly Collection of Raw Tea Leaves",
-						},
+						title: { display: false }
 					},
 					scales: {
 						y: {
 							beginAtZero: true,
-							grid: {
-								color: "rgba(0, 0, 0, 0.1)",
-							},
-							ticks: {
-								callback: function (value) {
-									return value + " kg";
-								},
-							},
-							title: {
-								display: true,
-								text: "Stock (kg)",
-							},
+							grid: { color: "rgba(0, 0, 0, 0.1)" },
+							ticks: { callback: value => value + " kg" },
+							title: { display: true, text: "Stock (kg)" },
 						},
 						x: {
-							grid: {
-								display: false,
-							},
-							title: {
-								display: true,
-								text: "Days of the Week",
-							},
+							grid: { display: false },
+							title: { display: true, text: "Days of the Week" },
 						},
 					},
 				},
@@ -482,5 +402,26 @@
 			});
 	}
 </script>
+
+<style>
+	.status-badge {
+		padding: 5px 10px;
+		border-radius: 20px;
+		font-size: 12px;
+		font-weight: bold;
+		text-transform: uppercase;
+	}
+
+	.awaiting {
+		background-color: rgba(18, 184, 98, 0.67);
+		color: rgb(255, 255, 255);
+	}
+
+	#bagUsageChart {
+		width: 100%;
+		height: 300px;
+		/* Adjust as needed */
+	}
+</style>
 
 <?php require APPROOT . '/views/inc/components/footer.php' ?>
