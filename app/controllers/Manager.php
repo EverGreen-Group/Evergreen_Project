@@ -81,6 +81,7 @@ class Manager extends Controller
         //$this->supplierApplicationModel = $this->model('M_SupplierApplication');
         $this->supplierModel = $this->model('M_Supplier');
         $this->chatModel = $this->model('M_Chat'); //added by theekshana
+        $this->appointmentModel = $this->model('M_Appointment');
     }
 
     //----------------------------------------
@@ -148,9 +149,33 @@ class Manager extends Controller
         // Get approved applications pending role assignment
         $approvedPendingRole = $this->model('M_SupplierApplication')->getApprovedPendingRoleApplications();
 
+        // Count application statuses
+        $totalApplications = count($applications);
+        $pendingApplications = 0;
+        $approvedApplications = 0;
+        $rejectedApplications = 0;
+
+        foreach ($applications as $app) {
+            switch (strtolower($app->status)) {
+                case 'pending':
+                    $pendingApplications++;
+                    break;
+                case 'approved':
+                    $approvedApplications++;
+                    break;
+                case 'rejected':
+                    $rejectedApplications++;
+                    break;
+            }
+        }
+
         $data = [
             'applications' => $applications,
-            'approved_pending_role' => $approvedPendingRole
+            'approved_pending_role' => $approvedPendingRole,
+            'totalapplications' => $totalApplications,
+            'pendingApplications' => $pendingApplications,
+            'approvedApplications' => $approvedApplications,
+            'rejectedApplications' => $rejectedApplications
         ];
 
         // Load view
@@ -1908,11 +1933,13 @@ class Manager extends Controller
         $incomingRequests = $this->appointmentModel->getIncomingRequests($managerId);
         $acceptedAppointments = $this->appointmentModel->getAcceptedAppointments($managerId);
     
-        $this->view('supplier_manager/v_appointments', [
+        $data = [
             'timeSlots' => $timeSlots,
             'incomingRequests' => $incomingRequests,
             'acceptedAppointments' => $acceptedAppointments
-        ]);
+        ];
+
+        $this->view('supplier_manager/v_appointments', $data);
     }
 
     public function createSlot() {
@@ -2112,26 +2139,36 @@ class Manager extends Controller
      * ------------------------------------------------------------
      */
 
-    public function complaints()
-    {
-        // Get complaints data
-        $complaints = $this->supplierModel->getComplaints();
-    
-        // Get complaint statistics
-        $totalComplaints = $this->supplierModel->getTotalComplaints();
-        $resolvedComplaints = $this->supplierModel->getComplaintsByStatus('Resolved');
-        $pendingComplaints = $this->supplierModel->getComplaintsByStatus('Pending');
-    
-        // Set up data array for the view
-        $data = [
-            'complaints' => $complaints,
-            'totalComplaints' => $totalComplaints,
-            'resolvedComplaints' => count($resolvedComplaints),
-            'pendingComplaints' => count($pendingComplaints)
-        ];
-    
-        $this->view('supplier_manager/v_complaints', $data);
-    }
+     public function complaints()
+     {
+         // Get complaint statistics
+         $totalComplaints = $this->supplierModel->getTotalComplaints();
+         $resolvedComplaints = $this->supplierModel->getComplaintsByStatus('Resolved');
+         $pendingComplaints = $this->supplierModel->getComplaintsByStatus('Pending');
+         
+         // Check if filters are applied
+         $complaint_id = isset($_GET['complaint_id']) ? $_GET['complaint_id'] : null;
+         $status = isset($_GET['status']) ? $_GET['status'] : null;
+         $date_from = isset($_GET['date_from']) ? $_GET['date_from'] : null;
+         $date_to = isset($_GET['date_to']) ? $_GET['date_to'] : null;
+     
+         // Get complaints data (filtered or unfiltered)
+         if ($complaint_id || $status || $date_from || $date_to) {
+             $complaints = $this->supplierModel->getFilteredComplaints($complaint_id, $status, $date_from, $date_to);
+         } else {
+             $complaints = $this->supplierModel->getComplaints();
+         }
+         
+         // Set up data array for the view
+         $data = [
+             'complaints' => $complaints,
+             'totalComplaints' => $totalComplaints,
+             'resolvedComplaints' => count($resolvedComplaints),
+             'pendingComplaints' => count($pendingComplaints)
+         ];
+         
+         $this->view('supplier_manager/v_complaints', $data);
+     }
 
     //added by theekshana from supplier manager
 
