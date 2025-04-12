@@ -198,16 +198,45 @@ class M_SupplierApplication {
     }
 
     // Add this method to your existing class
-    public function getAllApplications() {
-        $this->db->query('
+    public function getAllApplications($filters = []) {
+        $sql = '
         SELECT supplier_applications.*, users.email, managers.manager_id, 
                CONCAT(profiles.first_name, \' \', profiles.last_name) AS manager_name,
                profiles.image_path AS manager_image
         FROM supplier_applications
         LEFT JOIN users ON supplier_applications.user_id = users.user_id
         LEFT JOIN managers ON managers.manager_id = supplier_applications.reviewed_by
-        LEFT JOIN profiles ON profiles.profile_id = managers.profile_id
-        ');
+        LEFT JOIN profiles ON profiles.profile_id = managers.profile_id 
+        WHERE 1=1
+        ';
+
+        $params = [];
+
+        if(!empty($filters['application_id'])) {
+            $sql .= ' AND supplier_applications.application_id = :application_id';
+            $params[':application_id'] = $filters['application_id'];
+        }
+        if (!empty($filters['status'])) {
+            $sql .= ' AND supplier_applications.status = :status';
+            $params[':status'] = $filters['status'];
+        }
+        if (!empty($filters['date-from'])) {
+            $sql .= ' AND supplier_applications.created_at >= :date-from';
+            $params[':date-from'] = $filters['date-from'] . '00:00:00';
+        }
+        if(!empty($filters['date-to'])) {
+            $sql .= ' AND supplier_applications.created_at <= :date-to';
+            $params[':date-to'] = $filters['date-to'] . '23:59:59';
+        }
+
+        $sql .= ' ORDER BY supplier_applications.created_at DESC';
+
+        $this->db->query($sql);
+
+        foreach ($params as $param => $value) {
+            $this->db->bind($param, $value);
+        }
+
         
         return $this->db->resultSet();
     }
