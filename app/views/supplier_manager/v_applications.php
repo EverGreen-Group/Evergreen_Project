@@ -78,7 +78,7 @@
             <i class='bx bx-search'></i>
         </div>
         <div class="filter-options">
-            <form action="<?php echo URLROOT; ?>/suppliermanager/applications" method="GET">
+            <form action="<?php echo URLROOT; ?>/manager/applications" method="GET">
                 <div class="filter-group">
                     <label for="application-id">Application ID:</label>
                     <input type="text" id="application-id" name="application_id" 
@@ -90,7 +90,7 @@
                         <option value="">All Statuses</option>
                         <option value="pending" <?php echo (isset($_GET['status']) && $_GET['status'] == 'pending') ? 'selected' : ''; ?>>Pending</option>
                         <option value="approved" <?php echo (isset ($_GET['status']) && $_GET['status'] == 'approved') ? 'selected' : ''; ?>>Approved</option>
-                        <option value="rejected" <?php echo (isset($_GET['date-from'])) && $_GET['status'] == 'rejected' ? 'selected' : ''; ?>>Rejected</option>
+                        <option value="rejected" <?php echo (isset($_GET['status'])) && $_GET['status'] == 'rejected' ? 'selected' : ''; ?>>Rejected</option>
                         <option value="auto-rejected" <?php echo (isset($_GET['status']) && $_GET['status'] == 'auto-rejected') ? 'selected' : ''; ?>>Auto-Rejected</option>
                     </select>
                 </div>
@@ -100,7 +100,7 @@
                 </div>
                 <div class="filter-group">
                     <label for="date-to">Date To:</label>
-                    <input type="date" id="date-to" name="date_to" value="<?php echo isset ($_GET['date-to']) ? htmlspecialchars($_GET['date-to']) : ''; ?>">
+                    <input type="date" id="date-to" name="date-to" value="<?php echo isset ($_GET['date-to']) ? htmlspecialchars($_GET['date-to']) : ''; ?>">
                 </div>
                 <button type="submit" class="btn btn-primary">Search</button>
             </form>

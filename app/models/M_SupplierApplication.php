@@ -197,6 +197,13 @@ class M_SupplierApplication {
         return $hasApplied;
     }
 
+    public function countByStatus($status) {
+        $this->db->query("SELECT COUNT(*) as count FROM supplier_applications WHERE status = :status");
+        $this->db->bind(':status', $status);
+        return $this->db->single()->count;
+    }
+    
+
     // Add this method to your existing class
     public function getAllApplications($filters = []) {
         $sql = '
@@ -209,34 +216,36 @@ class M_SupplierApplication {
         LEFT JOIN profiles ON profiles.profile_id = managers.profile_id 
         WHERE 1=1
         ';
-
+    
         $params = [];
-
+    
         if(!empty($filters['application_id'])) {
             $sql .= ' AND supplier_applications.application_id = :application_id';
             $params[':application_id'] = $filters['application_id'];
         }
+        
         if (!empty($filters['status'])) {
             $sql .= ' AND supplier_applications.status = :status';
             $params[':status'] = $filters['status'];
         }
+        
         if (!empty($filters['date-from'])) {
-            $sql .= ' AND supplier_applications.created_at >= :date-from';
-            $params[':date-from'] = $filters['date-from'] . '00:00:00';
+            $sql .= ' AND DATE(supplier_applications.created_at) >= :date_from';
+            $params[':date_from'] = $filters['date-from'];
         }
+        
         if(!empty($filters['date-to'])) {
-            $sql .= ' AND supplier_applications.created_at <= :date-to';
-            $params[':date-to'] = $filters['date-to'] . '23:59:59';
+            $sql .= ' AND DATE(supplier_applications.created_at) <= :date_to';
+            $params[':date_to'] = $filters['date-to'];
         }
-
+    
         $sql .= ' ORDER BY supplier_applications.created_at DESC';
-
+    
         $this->db->query($sql);
-
+    
         foreach ($params as $param => $value) {
             $this->db->bind($param, $value);
         }
-
         
         return $this->db->resultSet();
     }

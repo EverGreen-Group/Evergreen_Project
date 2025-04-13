@@ -2171,19 +2171,35 @@ class Manager extends Controller
      }
 
     //added by theekshana from supplier manager
-
     public function applications() {
-        // Get all applications
-        $applications = $this->model('M_SupplierApplication')->getAllApplications();
-        
         // Get approved applications pending role assignment
         $approvedPendingRole = $this->model('M_SupplierApplication')->getApprovedPendingRoleApplications();
-
+    
+        // Get filter parameters from GET request
+        $filters = [
+            'application_id' => isset($_GET['application_id']) ? $_GET['application_id'] : '',
+            'status' => isset($_GET['status']) ? $_GET['status'] : '',
+            'date-from' => isset($_GET['date-from']) ? $_GET['date-from'] : '',
+            'date-to' => isset($_GET['date-to']) ? $_GET['date-to'] : ''
+        ];
+        
+        // Apply filters to get applications
+        $applications = $this->model('M_SupplierApplication')->getAllApplications($filters);
+        
+        $totalApplications = count($applications);
+        $pendingApplications = $this->model('M_SupplierApplication')->countByStatus('Pending');
+        $approvedApplications = $this->model('M_SupplierApplication')->countByStatus('Approved');
+        $rejectedApplications = $this->model('M_SupplierApplication')->countByStatus('Rejected');
+    
         $data = [
             'applications' => $applications,
-            'approved_pending_role' => $approvedPendingRole
+            'approved_pending_role' => $approvedPendingRole,
+            'totalApplications' => $totalApplications,            
+            'pendingApplications' => $pendingApplications,
+            'approvedApplications' => $approvedApplications,
+            'rejectedApplications' => $rejectedApplications
         ];
-
+    
         // Load view
         $this->view('supplier_manager/v_applications', $data);
     }
