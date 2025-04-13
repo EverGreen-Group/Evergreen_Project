@@ -101,9 +101,9 @@
                     <th>Month</th>
                     <th>No. of Suppliers</th>
                     <th>Total Kg Supplied</th>
-                    <th>Total Payment</th>
                     <th>Normal Leaf Rate</th>
                     <th>Super Leaf Rate</th>  
+                    <th>Total Payment</th>
                     <th>Actions</th>
                 </tr>
             </thead>
@@ -114,9 +114,10 @@
                         <td><?php echo htmlspecialchars($payment->month_name); ?></td>
                         <td><?php echo htmlspecialchars($payment->total_suppliers); ?></td>
                         <td><?php echo htmlspecialchars($payment->total_kg); ?> kg</td>
+
+                        <td>Rs. <?php echo htmlspecialchars(number_format($payment->normal_leaf_rate, 2)); ?></td> 
+                        <td>Rs. <?php echo htmlspecialchars(number_format($payment->super_leaf_rate, 2)); ?></td>
                         <td>Rs. <?php echo htmlspecialchars(number_format($payment->total_payment, 2)); ?></td>
-                        <td>Rs. <?php echo htmlspecialchars(number_format($payment->normal_leaf_rate, 2)); ?></td> <!-- Display normal leaf rate -->
-                        <td>Rs. <?php echo htmlspecialchars(number_format($payment->super_leaf_rate, 2)); ?></td>  <!-- Display super leaf rate -->
                         <td>
                             <a 
                                 href="<?php echo URLROOT; ?>/inventory/viewPaymentReport/<?php echo $payment->id; ?>" 
