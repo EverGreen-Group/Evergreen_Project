@@ -281,7 +281,28 @@ class M_Appointment {
         return $this->db->execute();
     }
 
-
+    public function getAllAppointments($manager_id) {
+        // More comprehensive query to get all relevant information
+        $this->db->query("SELECT 
+                            a.appointment_id, 
+                            ar.supplier_id, 
+                            ar.status, 
+                            asl.date,
+                            asl.start_time,
+                            asl.end_time,
+                            CONCAT(p.first_name, ' ', p.last_name) AS supplier_name,
+                            p.image_path
+                          FROM appointments a
+                          JOIN appointment_requests ar ON a.request_id = ar.request_id
+                          JOIN appointment_slots asl ON ar.slot_id = asl.slot_id
+                          LEFT JOIN suppliers s ON ar.supplier_id = s.supplier_id
+                          LEFT JOIN profiles p ON s.profile_id = p.profile_id
+                          WHERE asl.manager_id = :manager_id
+                          ORDER BY asl.date DESC, ar.submitted_at DESC");
+        
+        $this->db->bind(':manager_id', $manager_id);
+        return $this->db->resultSet();
+    }
 
 
 }

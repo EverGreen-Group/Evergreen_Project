@@ -129,13 +129,9 @@
     <div class="order">
       <div class="head">
         <h3>Accepted Appointments</h3>
-        <a href="<?php echo URLROOT; ?>/manager/createSlot" class="btn btn-primary">
+        <a href="<?php echo URLROOT; ?>/manager/allAppointments" class="btn btn-primary">
           <i class='bx bx-search-alt-2'></i>
           View All Appointments
-        </a>
-        <a href="<?php echo URLROOT; ?>/manager/createSlot" class="btn btn-primary">
-          <i class='bx bx-show'></i>
-          View Your Appointment History
         </a>
       </div>
       <table>

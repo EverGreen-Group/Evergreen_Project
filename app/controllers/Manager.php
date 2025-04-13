@@ -1942,6 +1942,37 @@ class Manager extends Controller
         $this->view('supplier_manager/v_appointments', $data);
     }
 
+    public function allAppointments() {
+        // Ensure user is logged in
+        $this->requireLogin();
+        
+        // Validate manager ID exists in session
+        if(!isset($_SESSION['manager_id']) || empty($_SESSION['manager_id'])) {
+            flash('appointment_error', 'Authentication error. Please login again.', 'alert alert-danger');
+            redirect('users/login');
+            return;
+        }
+        
+        $manager_id = $_SESSION['manager_id'];
+        
+        try {
+            // Get all appointments
+            $appointments = $this->model('M_Appointment')->getAllAppointments($manager_id);
+            
+            // Prepare data for the view with the correct variable name
+            $data = [
+                'appointments' => $appointments,
+                'title' => 'All Appointments'
+            ];
+        
+            // Load view with correct path
+            $this->view('supplier_manager/v_all_appointments', $data);
+        } catch (Exception $e) {
+            flash('appointment_error', 'Error loading appointments: ' . $e->getMessage(), 'alert alert-danger');
+            redirect('manager/');
+        }
+    }
+
     public function createSlot() {
         $this->requireLogin();
         
@@ -2266,8 +2297,6 @@ class Manager extends Controller
         // Load view
         $this->view('supplier_manager/v_applications', $data);
     }
-
-
 
     public function supplierStatement() {
         $data = [];
