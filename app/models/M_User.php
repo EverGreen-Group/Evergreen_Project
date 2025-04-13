@@ -326,6 +326,14 @@ class M_User {
         $this->db->bind(':route_id', $routeId);
         return array_column($this->db->resultSet(), 'supplier_id');
     }
+
+    public function getUserName($userId) {
+        $this->db->query("SELECT CONCAT(p.first_name, ' ', p.last_name) AS full_name FROM users u INNER JOIN profiles p ON u.user_id = p.user_id WHERE u.user_id = :user_id");
+        $this->db->bind(':user_id', $userId);
+        return $this->db->single()->full_name ?? null;
+    }
+
+
     
 
 

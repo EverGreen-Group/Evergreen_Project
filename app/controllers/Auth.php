@@ -242,11 +242,12 @@ private function sendOTPEmail($email, $otp) {
                             
                         }
 
-                        // If all checks pass, complete login
+
                         if ($canLogin) {
                             $_SESSION['user_id'] = $user->user_id;
                             $_SESSION['email'] = $user->email;
                             $_SESSION['role_id'] = $user->role_id;
+                            $_SESSION['full_name'] = $this->userModel->getUserName($_SESSION['user_id']);
 
                             // Fetch profile
                             $profile = $this->userModel->getProfileByUserId($user->user_id);

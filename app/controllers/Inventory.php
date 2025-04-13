@@ -672,23 +672,27 @@ public function createPaymentReport() {
     if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $year = $_POST['year'];
         $month = $_POST['month'];
+        $normalLeafRate = $_POST['normal_leaf_rate'];
+        $superLeafRate = $_POST['super_leaf_rate'];
 
         // Add validation
-        if (empty($year) || empty($month)) {
-            setFlashMessage('Please enter the year and month to generate the report', 'error');
+        if (empty($year) || empty($month) || empty($normalLeafRate) || empty($superLeafRate)) {
+            setFlashMessage('Please enter the year, month, normal leaf rate, and super leaf rate to generate the report', 'error');
+            redirect('inventory/payments2');
+            return;
+        }
+
+        // Validate for negative values
+        if ($normalLeafRate < 0 || $superLeafRate < 0) {
+            setFlashMessage('Normal leaf rate and super leaf rate must be non-negative values.', 'error');
             redirect('inventory/payments2');
             return;
         }
 
         $paymentModel = $this->model('M_Payment');
-
-        if($paymentModel->checkIfAlreadyExists($year, $month)) {
-            // we need to delete that report and recreate it again
-
-        }
         
         try {
-            $result = $paymentModel->generateMonthlyPayment($year, $month);
+            $result = $paymentModel->generateMonthlyPayment($year, $month, $normalLeafRate, $superLeafRate);
             
             if ($result) {
                 setFlashMessage('Payment report created successfully!');
@@ -703,6 +707,44 @@ public function createPaymentReport() {
     } else {
         redirect('inventory/payments2');
     }
+}
+
+
+
+public function deletePaymentReport($payment_id) {
+    // Load payment model
+    $paymentModel = $this->model('M_Payment');
+    
+    try {
+
+        
+        $result = $paymentModel->deletePayment($payment_id);
+        
+        
+        if ($result) {
+            setFlashMessage('Payment report deleted successfully!');
+        } else {
+            setFlashMessage('Payment report deletion failed!', 'error');
+        }
+    } catch (Exception $e) {
+
+        setFlashMessage('Error when deleting the report: ' . $e->getMessage(), 'error');
+    }
+    
+    redirect('inventory/payments2');
+}
+
+
+public function viewPaymentReport($payment_id) {
+    $paymentModel = $this->model('M_Payment');
+
+    $paymentDetails = $paymentModel->getPaymentDetailsByPaymentId($payment_id); 
+
+    $data = [
+        'payment_details' => $paymentDetails 
+    ];
+
+    $this->view('inventory/v_view_payment_report', $data);
 }
 
 

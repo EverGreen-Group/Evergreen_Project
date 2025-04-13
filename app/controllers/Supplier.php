@@ -803,9 +803,13 @@ class Supplier extends Controller {
     
             // Update the supplier's availability in the model
             if ($this->supplierModel->updateSupplierStatus($supplierId, $newStatus)) {
-                setFlashMessage('You will not be included in the next schedule!');
-            } else {
+                if($newStatus){
                 setFlashMessage('You will be included in the next schedule!');
+                } else {
+                    setFlashMessage('You will not be included in the next schedule!', 'error');
+                }
+            } else {
+                setFlashMessage('Couldnt update you availability! Please contact our managers immediately!');
             }
     
             redirect('supplier/');

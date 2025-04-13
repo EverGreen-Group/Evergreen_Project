@@ -29,12 +29,11 @@ class M_Payment {
 //////////////////////////////////////////////////////////////////////////////// FOR ISHAN
 
     // Main method to generate the monthly payment report and supplier details
-    public function generateMonthlyPayment($year, $month) {
+    public function generateMonthlyPayment($year, $month, $normalLeafRate, $superLeafRate) { // Updated method signature
         // Fetch configuration values for deductions, transport cost, and leaf type rates
         $moistureDeductions = $this->getDeductionRates('moisture');
         $ageDeductions = $this->getDeductionRates('leaf_age');
         $transportCost = $this->getTransportCost();  // cost per unique collection
-        $leafTypeRates = $this->getLeafTypeRates();  // Get payment rates for different leaf types
 
         // Fetch bag usage history rows that are finalized for the given month and year
         $this->db->query("
@@ -75,7 +74,12 @@ class M_Payment {
             $totalDeductionPercent = $moistureDeduct + $ageDeduct;
 
             // Get the rate for this leaf type
-            $ratePerKg = isset($leafTypeRates[$bag->leaf_type_id]) ? $leafTypeRates[$bag->leaf_type_id] : 0;
+            $ratePerKg = 0; // Default to 0
+            if ($bag->leaf_type_id == 1) {
+                $ratePerKg = $normalLeafRate; // Use normal leaf rate
+            } elseif ($bag->leaf_type_id == 2) {
+                $ratePerKg = $superLeafRate; // Use super leaf rate
+            }
 
             // Calculate adjusted weight and payment
             $originalWeight = $bag->actual_weight_kg;
@@ -105,16 +109,18 @@ class M_Payment {
             $totalPayment += $data['total_payment'];
         }
 
-        // Insert into factory_payments (the report summary)
+
         $this->db->query("
-            INSERT INTO factory_payments (year, month, total_suppliers, total_kg, total_payment)
-            VALUES (:year, :month, :total_suppliers, :total_kg, :total_payment)
+            INSERT INTO factory_payments (year, month, total_suppliers, total_kg, total_payment, normal_leaf_rate, super_leaf_rate)
+            VALUES (:year, :month, :total_suppliers, :total_kg, :total_payment, :normal_leaf_rate, :super_leaf_rate)
         ");
         $this->db->bind(':year', $year);
         $this->db->bind(':month', $month);
         $this->db->bind(':total_suppliers', $total_suppliers);
         $this->db->bind(':total_kg', $totalKg);
         $this->db->bind(':total_payment', $totalPayment);
+        $this->db->bind(':normal_leaf_rate', $normalLeafRate);
+        $this->db->bind(':super_leaf_rate', $superLeafRate);
         $this->db->execute();
 
         // Get the generated payment_id
@@ -183,6 +189,42 @@ class M_Payment {
         $this->db->query("SELECT cost_per_collection FROM transport_cost_configuration LIMIT 1");
         $result = $this->db->single();
         return ($result) ? $result->cost_per_collection : 0;
+    }
+
+
+// Get payment by ID
+public function getPaymentById($payment_id) {
+    $this->db->query("
+        SELECT * FROM factory_payments
+        WHERE id = :payment_id
+    ");
+    $this->db->bind(':payment_id', $payment_id);
+    return $this->db->single();
+}
+
+    // Get payment details with supplier names
+    public function getPaymentDetailsByPaymentId($payment_id) {
+        $this->db->query("
+            SELECT fpd.*, p.first_name, p.last_name, CONCAT(p.first_name, ' ' , p.last_name) as supplier_name
+            FROM factory_payment_details fpd
+            JOIN suppliers s ON fpd.supplier_id = s.supplier_id
+            JOIN profiles p on s.profile_id = p.profile_id
+            WHERE fpd.payment_id = :payment_id
+            ORDER BY fpd.total_kg DESC
+        ");
+        $this->db->bind(':payment_id', $payment_id);
+        return $this->db->resultSet();
+    }
+
+
+    // Delete payment by ID
+    public function deletePayment($payment_id) {
+        $this->db->query("
+            DELETE FROM factory_payments
+            WHERE id = :payment_id
+        ");
+        $this->db->bind(':payment_id', $payment_id);
+        return $this->db->execute();
     }
 
 

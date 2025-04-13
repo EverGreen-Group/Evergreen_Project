@@ -1,9 +1,7 @@
 <script src="<?php echo URLROOT; ?>/public/js/notification.js"></script>
 <link href="<?php echo URLROOT; ?>/public/css/notification.css" rel="stylesheet" />
 
-<!-- NAVBAR -->
 <section id="content">
-    <!-- NAVBAR -->
     <nav>
         <i class='bx bx-menu'></i>
         <a href="#" class="nav-link" style="visibility: hidden;">Categories</a>
@@ -14,20 +12,28 @@
             </div>
         </form>
         <input type="checkbox" id="switch-mode" hidden>
-        <label for="switch-mode" class="switch-mode"></label>
+        <!-- <label for="switch-mode" class="switch-mode"></label> -->
         <a href="#" class="notification" id="notificationIcon">
             <i class='bx bxs-bell'></i>
             <span class="num" style="cursor: pointer;">8</span>
         </a>
-        <a href="#" class="profile">
-            <?php
-                $profileImageSrc = URLROOT . '/uploads/supplier_photos/default-supplier.png'; 
-                if (isset($_SESSION['profile_image_path']) && !empty($_SESSION['profile_image_path'])) {
-                    $profileImageSrc = URLROOT . '/' . $_SESSION['profile_image_path'];
-                }
-            ?>
-            <img src="<?php echo $profileImageSrc; ?>" alt="Profile Photo">
-        </a>
+        <div class="profile-container">
+            <a href="#" class="profile">
+                <?php
+                    $profileImageSrc = URLROOT . '/uploads/supplier_photos/default-supplier.png'; 
+                    if (isset($_SESSION['profile_image_path']) && !empty($_SESSION['profile_image_path'])) {
+                        $profileImageSrc = URLROOT . '/' . $_SESSION['profile_image_path'];
+                    }
+                ?>
+                <img src="<?php echo $profileImageSrc; ?>" alt="Profile Photo">
+            </a>
+            <!-- Display the user's full name -->
+            <div class="user-name">
+                <?php if (isset($_SESSION['full_name'])): ?>
+                    <span><?php echo htmlspecialchars($_SESSION['full_name']); ?></span>
+                <?php endif; ?>
+            </div>
+        </div>
     </nav>
 
     <div id="notificationDropdown" class="notification-dropdown" style="display: none;">

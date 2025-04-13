@@ -61,6 +61,12 @@
   src: url("../fonts/poppins/Poppins-SemiBold.ttf") format("truetype");
 }
 
+.user-name {
+  margin-left: 15px; /* Adjust spacing as needed */
+  font-weight: bold; /* Make the name bold */
+  color: #333; /* Change color as needed */
+}
+
 * {
   margin: 0;
   padding: 0;
@@ -250,7 +256,7 @@ body {
   transition: 0.3s ease;
 }
 
-#sidebar.hide~#content {
+#sidebar.hide ~ #content {
   width: calc(100% - 60px);
   left: 60px;
 }
@@ -389,7 +395,7 @@ body {
   transition: all 0.3s ease;
 }
 
-#content nav #switch-mode:checked+.switch-mode::before {
+#content nav #switch-mode:checked + .switch-mode::before {
   left: calc(100% - (25px - 4px) - 2px);
 }
 
@@ -512,7 +518,7 @@ body {
   color: var(--dark);
 }
 
-#content main .table-data>div {
+#content main .table-data > div {
   border-radius: 20px;
   background: var(--light);
   padding: 24px;
@@ -674,7 +680,7 @@ body {
   font-weight: 700;
 }
 
-#content main .table-data  table tr td .status.completed {
+#content main .table-data table tr td .status.completed {
   background: var(--main);
 }
 #content main .table-data table tr td .status.awaiting-inventory {
@@ -782,8 +788,8 @@ body {
     background: var(--red);
   }
 
-  #content nav form.show~.notification,
-  #content nav form.show~.profile {
+  #content nav form.show ~ .notification,
+  #content nav form.show ~ .profile {
     display: none;
   }
 
@@ -1402,4 +1408,70 @@ body.dark .auth-form-group input {
   border-radius: 5px;
   text-decoration: none;
   transition: background-color 0.3s ease;
+}
+
+/* PROFILES NAVBAR PART */
+
+/* Enhanced profile styling with larger name - No role */
+.profile-container {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  padding: 5px 10px;
+  border-radius: 10px;
+  transition: background-color 0.2s;
+  cursor: pointer;
+  margin-right: 10px;
+}
+
+.profile-container:hover {
+  background-color: rgba(0, 0, 0, 0.05);
+}
+
+.profile {
+  position: relative;
+}
+
+.profile img {
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 1px solid #000000;
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.profile:hover img {
+  transform: scale(1.05);
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.18);
+}
+
+.user-name {
+  display: flex;
+  align-items: center;
+}
+
+.user-name span {
+  font-family: "Poppins", sans-serif;
+  font-weight: 400;
+  font-size: 15px; /* Bigger font size */
+  color: #333;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 160px;
+  letter-spacing: 0.1px;
+}
+
+/* Media query for smaller screens */
+@media screen and (max-width: 768px) {
+  .user-name span {
+    max-width: 120px;
+    font-size: 16px;
+  }
+
+  .profile img {
+    width: 38px;
+    height: 38px;
+  }
 }

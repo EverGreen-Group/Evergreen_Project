@@ -18,9 +18,6 @@
 
 <!-- MAIN -->
 <main>
-
-<?php print_r($data); ?>
-  <!-- Supplier Management Section -->
   <div class="head-title">
       <div class="left">
           <h1>Payment Management</h1>
@@ -71,6 +68,16 @@
                     </select>
                 </div>
 
+                <div class="filter-group">
+                    <label for="normal-leaf-rate">Normal Leaf Rate:</label>
+                    <input type="number" id="normal-leaf-rate" name="normal_leaf_rate" required>
+                </div>
+
+                <div class="filter-group">
+                    <label for="super-leaf-rate">Super Leaf Rate:</label>
+                    <input type="number" id="super-leaf-rate" name="super_leaf_rate" required>
+                </div>
+
                 <button type="submit" class="btn btn-primary">Generate Report</button>
             </form>
         </div>
@@ -95,24 +102,36 @@
                     <th>No. of Suppliers</th>
                     <th>Total Kg Supplied</th>
                     <th>Total Payment</th>
+                    <th>Normal Leaf Rate</th> <!-- New column -->
+                    <th>Super Leaf Rate</th>  <!-- New column -->
                     <th>Actions</th>
                 </tr>
             </thead>
             <tbody>
                 <?php foreach ($payment_summary as $payment): ?>
-                    <tr class="payment-row" data-payment-id="<?php echo htmlspecialchars($payment->payment_id); ?>">
+                    <tr class="payment-row" data-payment-id="<?php echo htmlspecialchars($payment->id); ?>">
                         <td><?php echo htmlspecialchars($payment->year); ?></td>
                         <td><?php echo htmlspecialchars($payment->month_name); ?></td>
                         <td><?php echo htmlspecialchars($payment->total_suppliers); ?></td>
                         <td><?php echo htmlspecialchars($payment->total_kg); ?> kg</td>
                         <td>Rs. <?php echo htmlspecialchars(number_format($payment->total_payment, 2)); ?></td>
+                        <td>Rs. <?php echo htmlspecialchars(number_format($payment->normal_leaf_rate, 2)); ?></td> <!-- Display normal leaf rate -->
+                        <td>Rs. <?php echo htmlspecialchars(number_format($payment->super_leaf_rate, 2)); ?></td>  <!-- Display super leaf rate -->
                         <td>
                             <a 
-                                href="<?php echo URLROOT; ?>/manager/viewPaymentReport/<?php echo $payment->payment_id; ?>" 
+                                href="<?php echo URLROOT; ?>/inventory/viewPaymentReport/<?php echo $payment->id; ?>" 
                                 class="btn btn-primary"
                             >
                                 <i class='bx bx-show'></i>
                                 View
+                            </a>
+                            <a 
+                                href="<?php echo URLROOT; ?>/inventory/deletePaymentReport/<?php echo $payment->id; ?>" 
+                                class="btn btn-danger delete-payment"
+                                onclick="return confirm('Are you sure you want to delete this payment report? This will also delete all associated payment details.');"
+                            >
+                                <i class='bx bx-trash'></i>
+                                Delete
                             </a>
                         </td>
                     </tr>
