@@ -394,9 +394,6 @@ class Supplier extends Controller {
     }
    
     public function createFertilizerOrder() {
-        header('Content-Type: application/json');
-        $response = ['success' => false, 'message' => ''];
-    
         try {
             if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
                 throw new Exception('Invalid request method');
@@ -426,8 +423,7 @@ class Supplier extends Controller {
     
             $unit = $_POST['unit'];
             flash('used_unit', $unit);
-
-            //$this->logUnitUsage($unit);
+    
             $total_amount = floatval($_POST['total_amount']);
     
             // Validate amount
@@ -458,26 +454,30 @@ class Supplier extends Controller {
             ];
     
             // Create the order
-            if ($this->fertilizerOrderModel->createOrder($order_data)) {
-                $response['success'] = true;
-                $response['message'] = 'Order placed successfully!';
-                
+            /*if ($this->fertilizerOrderModel->createOrder($order_data)) {
                 // Set flash message for when redirected
                 flash('fertilizer_message', 'Order placed successfully!', 'alert alert-success');
             } else {
                 throw new Exception($this->fertilizerOrderModel->getError() ?? 'Failed to create order');
+            }*/
+
+            if ($this->fertilizerOrderModel->createOrder($order_data)) {
+                $_SESSION['fertilizer_message'] = 'Request submitted!';
+                $_SESSION['fertilizer_message_class'] = 'alert-success';
+            } else {
+                $_SESSION['fertilizer_message'] = 'Request failed!';
+                $_SESSION['fertilizer_message_class'] = 'alert-danger';
             }
+            
+            redirect('Supplier/requestFertilizer');
     
         } catch (Exception $e) {
-            $response['message'] = $e->getMessage();
             // Set flash message for when redirected
             flash('fertilizer_message', $e->getMessage(), 'alert alert-danger');
         }
-    
-        echo json_encode($response);
-        
-        // Better redirect - use JavaScript redirection
-        echo "<script>window.location.href = '" . URLROOT . "/Supplier/requestFertilizer';</script>";
+
+        // Redirect back to the fertilizer request page
+        redirect('Supplier/requestFertilizer');
         exit;
     }
 
