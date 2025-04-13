@@ -24,56 +24,58 @@
                 <h3>Complaint</h3>
             </div>
             
-            <form action="<?php echo URLROOT; ?>/supplier/submitComplaint" method="post" enctype="multipart/form-data">
-                <div class="form-group">
-                    <label for="complaint-type">Complaint Type</label>
-                    <select id="complaint-type" name="complaint_type" required>
-                        <option value="">Select type</option>
-                        <option value="quality">Quality Issues</option>
-                        <option value="delivery">Delivery Problems</option>
-                        <option value="payment">Payment Issues</option>
-                        <option value="service">Customer Service</option>
-                        <option value="other">Other</option>
-                    </select>
-                </div>
-
-                <div class="form-group">
-                    <label for="subject">Subject</label>
-                    <input type="text" id="subject" name="subject" placeholder="Brief description of the issue" required>
-                </div>
-
-                <div class="form-group">
-                    <label for="description">Description</label>
-                    <textarea id="description" name="description" placeholder="Provide detailed information about your complaint" rows="4" required></textarea>
-                </div>
-
-                <div class="form-group">
-                    <label for="image">Attach Image (Optional)</label>
-                    <div class="file-upload">
-                        <input type="file" id="image" name="image" accept="image/*">
-                        <label for="image" class="file-label">
-                            <i class='bx bx-upload'></i>
-                            <span>Choose File</span>
-                        </label>
-                        <div id="image-preview" class="image-preview"></div>
+            <div class="form-container">
+                <form action="<?php echo URLROOT; ?>/supplier/submitComplaint" method="post" enctype="multipart/form-data">
+                    <div class="form-group">
+                        <label for="complaint-type">Complaint Type</label>
+                        <select id="complaint-type" name="complaint_type" required>
+                            <option value="">Select type</option>
+                            <option value="quality">Quality Issues</option>
+                            <option value="delivery">Delivery Problems</option>
+                            <option value="payment">Payment Issues</option>
+                            <option value="service">Customer Service</option>
+                            <option value="other">Other</option>
+                        </select>
                     </div>
-                </div>
+
+                    <div class="form-group">
+                        <label for="subject">Subject</label>
+                        <input type="text" id="subject" name="subject" placeholder="Brief description of the issue" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="description">Description</label>
+                        <textarea id="description" name="description" placeholder="Provide detailed information about your complaint" rows="4" required></textarea>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="image">Attach Image (Optional)</label>
+                        <div class="file-upload">
+                            <input type="file" id="image" name="image" accept="image/*">
+                            <label for="image" class="file-label">
+                                <i class='bx bx-upload'></i>
+                                <span>Choose File</span>
+                            </label>
+                            <div id="image-preview" class="image-preview"></div>
+                        </div>
+                    </div>
 
 
-                <div class="form-group">
-                    <label for="priority">Priority Level</label>
-                    <select id="priority" name="priority" required>
-                        <option value="low">Low</option>
-                        <option value="medium">Medium</option>
-                        <option value="high">High</option>
-                    </select>
-                </div>
+                    <div class="form-group">
+                        <label for="priority">Priority Level</label>
+                        <select id="priority" name="priority" required>
+                            <option value="low">Low</option>
+                            <option value="medium">Medium</option>
+                            <option value="high">High</option>
+                        </select>
+                    </div>
 
-                <div class="form-actions">
-                    <button type="submit" class="btn btn-secondary">Submit Complaint</button>
-                    <button type="button" class="btn-cancel" onclick="window.location.href='<?php echo URLROOT; ?>/supplier'">Cancel</button>
-                </div>
-            </form>
+                    <div class="form-actions">
+                        <button type="submit" class="btn btn-secondary">Submit Complaint</button>
+                        <button type="button" class="btn btn-secondary" onclick="window.location.href='<?php echo URLROOT; ?>/supplier'">Cancel</button>
+                    </div>
+                </form>
+            </div>
         </div>
     </div>
 </main>
@@ -200,6 +202,15 @@
             height: 60px;
         }
     }
+
+    .form-container {
+        max-width: 1000px; 
+        margin: 0 auto;
+        background: #fff; 
+        padding: 20px;  
+        border-radius: 8px;
+    }
+
 </style>
 
 <script>
