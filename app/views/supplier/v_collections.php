@@ -141,6 +141,8 @@ main {
   box-shadow: var(--shadow-md);
   padding: var(--spacing-lg);
   margin-bottom: var(--spacing-xl);
+  width: 90%;
+  margin: 0 auto;
 }
 
 .section-header {
@@ -371,6 +373,8 @@ table {
   width: 100%;
   border-collapse: collapse;
   margin-top: var(--spacing-md);
+  align-items: center;
+  justify-content: center;
 }
 
 th, td {
@@ -380,17 +384,17 @@ th, td {
 }
 
 table tr{
-  line-height: 50px;
+  line-height: 30px;
 }
 
 th {
   font-weight: 650;
-  font-size: 1rem;
+  font-size: 0.95rem;
 }
 
 td {
   font-weight: 400;
-  font-size: 1rem;
+  font-size: 0.9rem;
 }
 
 </style>

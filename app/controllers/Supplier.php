@@ -4,6 +4,7 @@ require_once APPROOT . '/models/M_Supplier.php';
 require_once APPROOT . '/models/M_Route.php';
 require_once APPROOT . '/models/M_Collection.php';
 require_once APPROOT . '/models/M_CollectionSchedule.php';
+require_once APPROOT . '/models/M_Complaint.php';
 require_once APPROOT . '/models/M_Bag.php';
 require_once APPROOT . '/models/M_Chat.php'; // Add the chat model
 require_once '../app/helpers/auth_middleware.php';
@@ -19,6 +20,7 @@ class Supplier extends Controller {
     private $routeModel;
     private $collectionModel;
     private $scheduleModel;
+    private $complaintModel;
     private $bagModel;
     private $appointmentModel;
     private $chatModel; // Add the chat model property
@@ -33,6 +35,7 @@ class Supplier extends Controller {
         $this->routeModel = new M_Route();
         $this->collectionModel = new M_Collection();
         $this->scheduleModel = new M_CollectionSchedule();
+        $this->complaintModel = new M_Complaint();
         $this->bagModel = new M_Bag();
         $this->appointmentModel = $this->model('M_Appointment');
         $this->chatModel = new M_Chat(); // Initialize the chat model
@@ -254,7 +257,14 @@ class Supplier extends Controller {
     }
 
     public function complaints() {
-        $data = [];
+        $supplier_id = $_SESSION['supplier_id'];
+        if (!$supplier_id) {
+            throw new Exception("Supplier ID not found. Please login again.");
+        }
+
+        $complaints = $this->complaintModel->getComplaints($supplier_id);
+
+        $data = ['complaints' => $complaints];
         $this->view('supplier/v_complaint', $data);
     }
 
