@@ -28,7 +28,8 @@ class Supplier extends Controller {
         requireAuth();
 
         // Initialize the models
-        $this->fertilizerOrderModel = new M_Fertilizer_Order();
+        //$this->fertilizerOrderModel = new M_Fertilizer_Order();
+        
         $this->supplierModel = new M_Supplier();
         $this->routeModel = new M_Route();
         $this->collectionModel = new M_Collection();
@@ -36,6 +37,7 @@ class Supplier extends Controller {
         $this->bagModel = new M_Bag();
         $this->appointmentModel = $this->model('M_Appointment');
         $this->chatModel = new M_Chat(); // Initialize the chat model
+        $this->fertilizerOrderModel = $this->model('M_FertilizerOrder');
 
         // Set the supplier ID in the session
         $supplierDetails = $this->supplierModel->getSupplierDetailsByUserId($_SESSION['user_id']);
@@ -254,12 +256,320 @@ class Supplier extends Controller {
     }
 
     public function requestFertilizer() {
-        $fertilizerModel = new M_Fertilizer_Order();
-        $data['fertilizer_types'] = $fertilizerModel->getAllFertilizerTypes();
-        $data['orders'] = $fertilizerModel->getAllOrders(); // Switch to getOrderBySupplier() after logging in
+        $supplier_id = $_SESSION['user_id'] ?? null;
+        if (!$supplier_id) {
+            flash('message', 'Please log in to access this page', 'alert alert-danger');
+            redirect('login');
+            return;
+        }
+
+        $data = [
+            'fertilizer_types' => $this->fertilizerOrderModel->getAvailableFertilizerTypes(),
+            'orders' => $this->fertilizerOrderModel->getOrdersBySupplier($supplier_id)
+        ];
 
         $this->view('supplier/v_fertilizer_request', $data);
     }
+
+    public function fertilizerOrders() {
+        $supplier_id = $_SESSION['user_id'] ?? null;
+        if (!$supplier_id) {
+            flash('message', 'Please log in to access this page', 'alert alert-danger');
+            redirect('login');
+            return;
+        }
+
+        if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+            $data = [
+                'fertilizer_order_id' => $_POST['order_id'] ?? null,
+                'supplier_id' => $supplier_id,
+                'fertilizer_name' => $_POST['fertilizer_name'] ?? '',
+                'quantity' => $_POST['quantity'] ?? 0,
+                'total_amount' => $_POST['total_amount'] ?? 0,
+                'order_date' => date('Y-m-d'),
+                'order_time' => date('H:i:s'),
+            ];
+
+            if ($this->validateRequest($data)) {
+                if ($this->fertilizerOrderModel->createOrder($data)) {
+                    flash('message', 'Order successfully submitted!', 'alert alert-success');
+                    redirect('supplier/requestFertilizer');
+                } else {
+                    flash('message', 'Something went wrong. Please try again.', 'alert alert-danger');
+                }
+            } else {
+                flash('message', 'Please fill in all required fields.', 'alert alert-danger');
+            }
+        }
+
+        $data = [
+            'fertilizer_types' => $this->fertilizerOrderModel->getAvailableFertilizerTypes(),
+            'orders' => $this->fertilizerOrderModel->getOrdersBySupplier($supplier_id)
+        ];
+
+        $this->view('supplier/v_fertilizer_request', $data);
+    }
+
+    public function createFertilizerOrder() {
+        header('Content-Type: application/json');
+        $response = ['success' => false, 'message' => ''];
+
+        try {
+            if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+                throw new Exception('Invalid request method');
+            }
+
+            $required_fields = ['fertilizer', 'quantity'];
+            foreach ($required_fields as $field) {
+                if (!isset($_POST[$field]) || empty($_POST[$field])) {
+                    throw new Exception("Missing required field: $field");
+                }
+            }
+
+            $supplier_id = $_SESSION['user_id'] ?? null;
+            if (!$supplier_id) {
+                throw new Exception('Please log in to place an order');
+            }
+
+            $type_id = trim($_POST['fertilizer']);
+            $fertilizer = $this->fertilizerOrderModel->getFertilizerByTypeId($type_id);
+
+            if (!$fertilizer) {
+                throw new Exception('Invalid fertilizer type');
+            }
+
+            $quantity = floatval($_POST['quantity']);
+
+            if ($quantity <= 0 || $quantity > 50) {
+                throw new Exception('Quantity must be between 1 and 50');
+            }
+            if ($quantity > $fertilizer->quantity) {
+                throw new Exception("Requested quantity exceeds available stock. Only {$fertilizer->quantity} {$fertilizer->unit} available.");
+            }
+
+            $total_amount = $quantity * $fertilizer->price;
+
+            $order_data = [
+                'supplier_id' => $supplier_id,
+                'type_id' => $type_id,
+                'quantity' => $quantity,
+                'total_amount' => $total_amount
+            ];
+
+            if ($this->fertilizerOrderModel->createOrder($order_data)) {
+                $response['success'] = true;
+                $response['message'] = 'Order placed successfully! Awaiting approval.';
+            } else {
+                throw new Exception('Failed to create order');
+            }
+
+        } catch (Exception $e) {
+            $response['message'] = $e->getMessage();
+        }
+
+        echo json_encode($response);
+        header("Refresh:1; url=" . $_SERVER['HTTP_REFERER']);
+        exit;
+    }
+
+    public function editFertilizerRequest($order_id) {
+        $supplier_id = $_SESSION['user_id'] ?? null;
+        if (!$supplier_id) {
+            flash('message', 'Please log in to access this page', 'alert alert-danger');
+            redirect('login');
+            return;
+        }
+
+        $order = $this->fertilizerOrderModel->getOrderById($order_id);
+
+        if (!$order || $order->supplier_id != $supplier_id) {
+            flash('message', 'Order not found or unauthorized access', 'alert alert-danger');
+            redirect('supplier/requestFertilizer');
+            return;
+        }
+
+        if ($order->status !== 'Pending') {
+            flash('message', 'This order cannot be edited as it is not in Pending status', 'alert alert-danger');
+            redirect('supplier/requestFertilizer');
+            return;
+        }
+
+        if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+            $type_id = isset($_POST['type_id']) ? trim($_POST['type_id']) : '';
+            $quantity = isset($_POST['quantity']) ? floatval($_POST['quantity']) : 0;
+
+            if (empty($type_id) || $quantity <= 0 || $quantity > 50) {
+                flash('message', 'Please check your inputs. Quantity should be between 1 and 50.', 'alert alert-danger');
+                redirect('supplier/editFertilizerRequest/' . $order_id);
+                return;
+            }
+
+            $fertilizer = $this->fertilizerOrderModel->getFertilizerByTypeId($type_id);
+
+            if (!$fertilizer) {
+                flash('message', 'Invalid fertilizer type selected.', 'alert alert-danger');
+                redirect('supplier/editFertilizerRequest/' . $order_id);
+                return;
+            }
+
+            if ($quantity > $fertilizer->quantity) {
+                flash('message', "Requested quantity exceeds available stock. Only {$fertilizer->quantity} {$fertilizer->unit} available.", 'alert alert-danger');
+                redirect('supplier/editFertilizerRequest/' . $order_id);
+                return;
+            }
+
+            $total_amount = $quantity * $fertilizer->price;
+
+            $updateData = [
+                'type_id' => $type_id,
+                'quantity' => $quantity,
+                'total_amount' => $total_amount
+            ];
+
+            if ($this->fertilizerOrderModel->updateOrder($order_id, $updateData)) {
+                flash('message', 'Fertilizer request updated successfully', 'alert alert-success');
+                redirect('supplier/requestFertilizer');
+            } else {
+                flash('message', 'Failed to update request. Please try again.', 'alert alert-danger');
+                redirect('supplier/editFertilizerRequest/' . $order_id);
+            }
+        } else {
+            $data = [
+                'order' => $order,
+                'fertilizer_types' => $this->fertilizerOrderModel->getAvailableFertilizerTypes()
+            ];
+            $this->view('supplier/v_request_edit', $data);
+        }
+    }
+
+    public function checkFertilizerOrderStatus($orderId) {
+        if (!$this->isSupplierOrder($orderId)) {
+            echo json_encode(['canDelete' => false, 'message' => 'Unauthorized access']);
+            header("Refresh:2; url=" . $_SERVER['HTTP_REFERER']);
+            return;
+        }
+
+        $order = $this->fertilizerOrderModel->getOrderById($orderId);
+
+        if (!$order) {
+            echo json_encode(['canDelete' => false, 'message' => 'Order not found']);
+            header("Refresh:2; url=" . $_SERVER['HTTP_REFERER']);
+            return;
+        }
+
+        $canDelete = ($order->status === 'Pending' && $order->payment_status === 'pending');
+
+        echo json_encode([
+            'canDelete' => $canDelete,
+            'message' => $canDelete ? 'Order can be deleted' : 'Order cannot be deleted'
+        ]);
+    }
+
+    public function deleteFertilizerRequest($orderId) {
+        header('Content-Type: application/json');
+
+        if (!$this->isSupplierOrder($orderId)) {
+            echo json_encode(['success' => false, 'message' => 'Unauthorized access']);
+            header("Refresh:2; url=" . $_SERVER['HTTP_REFERER']);
+            return;
+        }
+
+        $order = $this->fertilizerOrderModel->getOrderById($orderId);
+
+        if (!$order) {
+            echo json_encode(['success' => false, 'message' => 'Order not found']);
+            header("Refresh:2; url=" . $_SERVER['HTTP_REFERER']);
+            return;
+        }
+
+        if ($order->status !== 'Pending' || $order->payment_status !== 'pending') {
+            echo json_encode(['success' => false, 'message' => 'This order cannot be deleted']);
+            header("Refresh:2; url=" . $_SERVER['HTTP_REFERER']);
+            return;
+        }
+
+        $res = $this->fertilizerOrderModel->deleteFertilizerOrder($orderId);
+
+        if ($res) {
+            echo json_encode(['success' => true, 'message' => 'Order deleted successfully']);
+        } else {
+            echo json_encode(['success' => false, 'message' => 'Failed to delete order']);
+        }
+        header("Refresh:2; url=" . $_SERVER['HTTP_REFERER']);
+    }
+
+    public function finalizeFertilizerOrder($order_id) {
+        $supplier_id = $_SESSION['user_id'] ?? null;
+        if (!$supplier_id) {
+            flash('message', 'Please log in to access this page', 'alert alert-danger');
+            redirect('login');
+            return;
+        }
+
+        if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+            $delivery_date = $_POST['delivery_date'] ?? '';
+            if (empty($delivery_date)) {
+                flash('message', 'Please provide a delivery date.', 'alert alert-danger');
+                redirect("supplier/finalizeFertilizerOrder/$order_id");
+            }
+
+            $order = $this->fertilizerOrderModel->getOrderById($order_id);
+            if ($order && $order->supplier_id == $supplier_id && $order->status == 'Accepted') {
+                if ($this->fertilizerOrderModel->updateOrderWithDeliveryDate($order_id, $delivery_date)) {
+                    flash('message', 'Order finalized successfully!', 'alert alert-success');
+                    redirect('supplier/requestFertilizer');
+                } else {
+                    flash('message', 'Failed to finalize order.', 'alert alert-danger');
+                }
+            } else {
+                flash('message', 'Order not found or not yet accepted.', 'alert alert-danger');
+            }
+        }
+
+        $data['order_id'] = $order_id;
+        $this->view('supplier/v_finalize_order', $data);
+    }
+
+    public function fertilizerhistory() {
+        // Ensure supplier is logged in
+        if (!isset($_SESSION['user_id'])) {
+            flash('message', 'Please log in to view your order history', 'alert alert-danger');
+            redirect('login');
+            return;
+        }
+
+        // Fetch orders for the current supplier
+        $orders = $this->fertilizerOrderModel->getOrdersBySupplier($_SESSION['user_id']);
+
+        $data = [
+            'orders' => $orders,
+            'fertilizer_types' => $this->fertilizerOrderModel->getAvailableFertilizerTypes()
+        ];
+
+        $this->view('supplier/v_fertilizer_history', $data);
+    }
+
+    private function isSupplierOrder($orderId) {
+        $order = $this->fertilizerOrderModel->getOrderById($orderId);
+        return $order && $order->supplier_id == ($_SESSION['user_id'] ?? null);
+    }
+
+    private function validateRequest($data) {
+        $required_fields = ['quantity', 'total_amount'];
+        foreach ($required_fields as $field) {
+            if (!isset($data[$field]) || empty($data[$field])) {
+                return false;
+            }
+        }
+
+        if ($data['quantity'] <= 0 || $data['quantity'] > 50) {
+            return false;
+        }
+
+        return true;
+    }
+
+    
 
     public function complaints() {
         $data = [];
@@ -320,138 +630,8 @@ class Supplier extends Controller {
         $this->view('supplier/v_settings', $data);
     }
 
-    public function fertilizerhistory() {
-        // Ensure supplier is logged in
-        if (!isset($_SESSION['supplier_id'])) {
-            flash('message', 'Please log in to view your order history', 'alert alert-danger');
-            redirect('login');
-            return;
-        }
+
     
-        // Fetch orders for the current supplier
-        $orders = $this->fertilizerOrderModel->getOrdersBySupplier($_SESSION['supplier_id']);
-    
-        $data = [
-            'orders' => $orders,
-            'fertilizer_types' => $this->fertilizerOrderModel->getAllFertilizerTypes()
-        ];
-    
-        $this->view('supplier/v_fertilizer_history', $data);
-    }
-
-    public function fertilizerOrders() {
-        if ($_SERVER['REQUEST_METHOD'] == 'POST') {
-            // Collect form data
-            $data = [
-                'fertilizer_order_id' => $_POST['order_id'],
-                'supplier_id' => $_POST['supplier_id'],
-                'fertilizer_name' => $_POST['fertilizer_name'],
-                'totalamount' => $_POST['total_amount'],
-                'unit' => $_POST['unit'],
-                'price_per_unit' => $_POST['price_per_unit'],
-                'total_price' => $_POST['total_price'],
-                'order_date' => $_POST['order_date'],
-                'order_time' => $_POST['order_time'],
-            ];
-   
-            // Validate form data
-            if ($this->validateRequest($data)) {
-                // Call model method to insert the data
-                if ($this->fertilizerOrderModel->createOrder($data)) {
-                    flash('message', 'Order successfully submitted!', 'alert alert-success');
-                    redirect('supplier/requestFertilizer');
-                } else {
-                    flash('message', 'Something went wrong. Please try again.', 'alert alert-danger');
-                }
-            } else {
-                flash('message', 'Please fill in all required fields.', 'alert alert-danger');
-            }
-        }
-   
-        // Fetch all orders
-        $orders = $this->fertilizerOrderModel->getAllOrders();
-   
-        // Pass data to the view
-        $data['orders'] = $orders;
-   
-        // Load the view and pass the data
-        $this->view('supplier/v_fertilizer_request', $data);
-    }
-   
-    public function createFertilizerOrder() {
-        header('Content-Type: application/json');
-        $response = ['success' => false, 'message' => ''];
-    
-        try {
-            if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-                throw new Exception('Invalid request method');
-            }
-
-            $required_fields = ['type_id', 'unit', 'total_amount'];
-            foreach ($required_fields as $field) {
-                if (!isset($_POST[$field]) || empty($_POST[$field])) {
-                    throw new Exception("Missing required field: $field");
-                }
-            }
-
-            // TEMP SUPPLIER ID
-            $supplier_id = 2;
-
-            // Fetch fertilizer types for dropdown
-            $data['fertilizer_types'] = $this->fertilizerOrderModel->getAllFertilizerTypes();
-
-            // Validate and get fertilizer data
-            $type_id = trim($_POST['type_id']);
-            $fertilizer = $this->fertilizerOrderModel->getFertilizerByTypeId($type_id);
-
-            if (!$fertilizer) {
-                throw new Exception('Invalid fertilizer type');
-            }
-
-            $unit = $_POST['unit'];
-            $total_amount = floatval($_POST['total_amount']);
-
-            // Validate amount
-            if ($total_amount <= 0 || $total_amount > 50) {
-                throw new Exception('Amount must be between 1 and 50');
-            }
-
-            // Calculate prices
-            $price_column = 'price_' . $unit;
-            if (!isset($fertilizer[$price_column])) {
-                throw new Exception('Invalid unit type');
-            }
-
-            $price_per_unit = $fertilizer[$price_column];
-            $total_price = $total_amount * $price_per_unit;
-
-            // Create order data
-            $order_data = [
-                'supplier_id' => $supplier_id,
-                'type_id' => $fertilizer['type_id'],
-                'fertilizer_name' => $fertilizer['name'],
-                'total_amount' => $total_amount,
-                'unit' => $unit,
-                'price_per_unit' => $price_per_unit,
-                'total_price' => $total_price
-            ];
-
-            // Create the order
-            if ($this->fertilizerOrderModel->createOrder($order_data)) {
-                $response['success'] = true;
-                $response['message'] = 'Order placed successfully!';
-            } else {
-                throw new Exception($this->fertilizerOrderModel->getError() ?? 'Failed to create order');
-            }
-
-        } catch (Exception $e) {
-            $response['message'] = $e->getMessage();
-        }
-
-        echo json_encode($response);
-        header("Refresh:1; url=" . $_SERVER['HTTP_REFERER']);
-        exit;
-    }
 
     public function viewMonthlyIncome() {
         $data = [
@@ -461,131 +641,11 @@ class Supplier extends Controller {
     }
 
     // Form validation function 
-    private function validateRequest($data) {
-        return !empty($data['supplier_id']) && !empty($data['totalamount']);
-    }
+    // private function validateRequest($data) {
+    //     return !empty($data['supplier_id']) && !empty($data['totalamount']);
+    // }
 
-    public function editFertilizerRequest($order_id) {
-        // Basic check if order exists and belongs to the current supplier
-        $order = $this->fertilizerOrderModel->getOrderById($order_id);
-        
-        if (!$order) {
-            flash('message', 'Order not found', 'alert alert-danger');
-            redirect('supplier/requestFertilizer');
-            return;
-        }
     
-        if ($_SERVER['REQUEST_METHOD'] == 'POST') {
-            // Validate inputs
-            $type_id = isset($_POST['type_id']) ? trim($_POST['type_id']) : '';
-            $unit = isset($_POST['unit']) ? trim($_POST['unit']) : '';
-            $total_amount = isset($_POST['total_amount']) ? floatval($_POST['total_amount']) : 0;
-    
-            // Validation checks
-            if (empty($type_id) || empty($unit) || $total_amount <= 0 || $total_amount > 50) {
-                flash('message', 'Please check your inputs. Amount should be between 1 and 50.', 'alert alert-danger');
-                redirect('supplier/editFertilizerRequest/' . $order_id);
-                return;
-            }
-    
-            // Get fertilizer details and calculate prices
-            $fertilizer = $this->fertilizerOrderModel->getFertilizerByTypeId($type_id);
-            
-            // Calculate price based on unit
-            $price_column = 'price_' . $unit;
-            $price_per_unit = $fertilizer[$price_column];
-            $total_price = $total_amount * $price_per_unit;
-    
-            // Prepare update data
-            $updateData = [
-                'type_id' => $type_id,
-                'fertilizer_name' => $fertilizer['name'],
-                'total_amount' => $total_amount,
-                'unit' => $unit,
-                'price_per_unit' => $price_per_unit,
-                'total_price' => $total_price,
-                'last_modified' => date('Y-m-d H:i:s')
-            ];
-    
-            // Update the order
-            if ($this->fertilizerOrderModel->updateOrder($order_id, $updateData)) {
-                flash('message', 'Fertilizer request updated successfully', 'alert alert-success');
-                redirect('supplier/requestFertilizer');
-            } else {
-                flash('message', 'Failed to update request. Please try again.', 'alert alert-danger');
-                redirect('supplier/editFertilizerRequest/' . $order_id);
-            }
-        } else {
-            // GET request - show edit form
-            $data = [
-                'order' => $order,
-                'fertilizer_types' => $this->fertilizerOrderModel->getAllFertilizerTypes()
-            ];
-            $this->view('supplier/v_request_edit', $data);
-        }
-    }
-    
-    public function checkFertilizerOrderStatus($orderId) {
-        // Verify that the order belongs to the current logged-in supplier
-        if (!$this->isSupplierOrder($orderId)) {
-            echo json_encode(['canDelete' => false, 'message' => 'Unauthorized access']);
-            header("Refresh:2; url=" . $_SERVER['HTTP_REFERER']);
-            return;
-        }
-    
-        $order = $this->fertilizerOrderModel->getFertilizerOrderById($orderId);
-        
-        if (!$order) {
-            echo json_encode(['canDelete' => false, 'message' => 'Order not found']);
-            header("Refresh:2; url=" . $_SERVER['HTTP_REFERER']);
-            return;
-        }
-    
-        // Check if order status allows deletion
-        $canDelete = (!isset($order->status) || !in_array($order->status, ['accepted', 'rejected'])) && 
-                    (!isset($order->payment_status) || $order->payment_status === 'pending');
-    
-        echo json_encode([
-            'canDelete' => $canDelete,
-            'message' => $canDelete ? 'Order can be deleted' : 'Order cannot be deleted'
-        ]);
-    }
-
-    public function deleteFertilizerRequest($orderId) {
-        // Set header to return JSON
-        header('Content-Type: application/json');
-    
-        $order = $this->fertilizerOrderModel->getFertilizerOrderById($orderId);
-        
-        if (!$order) {
-            echo json_encode(['success' => false, 'message' => 'Order not found']);
-            header("Refresh:2; url=" . $_SERVER['HTTP_REFERER']);
-            return;
-        }
-    
-        // Check if order can be deleted
-        if ($order->status !== 'Pending' || $order->payment_status !== 'Pending') {
-            echo json_encode($order->status);
-            echo json_encode($order->payment_status);
-            echo json_encode(['success' => false, 'message' => 'This order cannot be deleted']);
-            header("Refresh:2; url=" . $_SERVER['HTTP_REFERER']);
-            return;
-        }
-
-        $res = $this->fertilizerOrderModel->deleteFertilizerOrder($orderId);
-    
-        if ($res) {
-            echo json_encode(['success' => true, 'message' => 'Order deleted successfully']);
-        } else {
-            echo json_encode(['success' => false, 'message' => 'Failed to delete order']);
-        }
-        header("Refresh:2; url=" . $_SERVER['HTTP_REFERER']);
-    }
-
-    private function isSupplierOrder($orderId) {
-        $order = $this->fertilizerOrderModel->getFertilizerOrderById($orderId);
-        return $order && $order->supplier_id == $_SESSION['user_id'];
-    }
     
     public function scheduleDetails() {
         $data = [
