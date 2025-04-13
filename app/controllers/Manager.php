@@ -172,7 +172,7 @@ class Manager extends Controller
         $data = [
             'applications' => $applications,
             'approved_pending_role' => $approvedPendingRole,
-            'totalapplications' => $totalApplications,
+            'totalApplications' => $totalApplications,
             'pendingApplications' => $pendingApplications,
             'approvedApplications' => $approvedApplications,
             'rejectedApplications' => $rejectedApplications
