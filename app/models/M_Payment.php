@@ -29,13 +29,14 @@ class M_Payment {
 //////////////////////////////////////////////////////////////////////////////// FOR ISHAN
 
     // Main method to generate the monthly payment report and supplier details
-    public function generateMonthlyPayment($year, $month, $normalLeafRate, $superLeafRate) { // Updated method signature
-        // Fetch configuration values for deductions, transport cost, and leaf type rates
+    public function generateMonthlyPayment($year, $month, $normalLeafRate, $superLeafRate) {
+        // Fetch configuration values for deductions, transport cost, etc.
         $moistureDeductions = $this->getDeductionRates('moisture');
         $ageDeductions = $this->getDeductionRates('leaf_age');
         $transportCost = $this->getTransportCost();  // cost per unique collection
-
-        // Fetch bag usage history rows that are finalized for the given month and year
+    
+        // Fetch bag usage history rows that are finalized for the given month and year.
+        // We now also select 'finalized_at' so we can group daily.
         $this->db->query("
             SELECT 
                 supplier_id,
@@ -43,7 +44,8 @@ class M_Payment {
                 leaf_type_id,
                 actual_weight_kg,
                 leaf_age,
-                moisture_level
+                moisture_level,
+                finalized_at
             FROM bag_usage_history
             WHERE is_finalized = 1
               AND YEAR(finalized_at) = :year
@@ -52,55 +54,90 @@ class M_Payment {
         $this->db->bind(':year', $year);
         $this->db->bind(':month', $month);
         $bags = $this->db->resultSet();
-
-        // Group data per supplier
-        $suppliers = [];
+    
+        // Initialize arrays to hold aggregated data.
+        $suppliers = [];       // For monthly aggregation.
+        $dailyBreakdown = [];  // For supplier daily aggregation, keyed by supplier and date.
+    
         foreach ($bags as $bag) {
             $sid = $bag->supplier_id;
-
+            // Extract the date portion for daily grouping.
+            $date = date('Y-m-d', strtotime($bag->finalized_at));
+    
+            // Calculate deductions
+            $moistureDeduct = isset($moistureDeductions[$bag->moisture_level]) ? $moistureDeductions[$bag->moisture_level] : 0;
+            $ageDeduct      = isset($ageDeductions[$bag->leaf_age])      ? $ageDeductions[$bag->leaf_age]      : 0;
+            $totalDeductionPercent = $moistureDeduct + $ageDeduct;
+    
+            // Determine rate per kg for this leaf type
+            $ratePerKg = 0;
+            if ($bag->leaf_type_id == 1) {
+                $ratePerKg = $normalLeafRate;
+            } elseif ($bag->leaf_type_id == 2) {
+                $ratePerKg = $superLeafRate;
+            }
+    
+            // Compute weights and payment
+            $originalWeight = $bag->actual_weight_kg;
+            $adjustedWeight = $originalWeight * (1 - $totalDeductionPercent / 100);
+            // Deduction amount: difference in weight * rate (assuming linear rate)
+            $deductionWeight = $originalWeight - $adjustedWeight;
+            $payment = $adjustedWeight * $ratePerKg;
+            $deductionAmount = $originalWeight * $ratePerKg - $payment;
+    
+            // -------------------------
+            // Monthly Aggregation (for factory reports)
+            // -------------------------
             if (!isset($suppliers[$sid])) {
                 $suppliers[$sid] = [
                     'collections'   => [],  // unique collection_ids
                     'normal_kg'     => 0,
                     'super_kg'      => 0,
-                    'total_payment' => 0
+                    'total_payment' => 0,
+                    'deduct_kg'     => 0,
+                    'deduct_amount' => 0
                 ];
             }
-
-            // Get deduction rates for moisture and age;
-            // if no config is found, default to 0%
-            $moistureDeduct = isset($moistureDeductions[$bag->moisture_level]) ? $moistureDeductions[$bag->moisture_level] : 0;
-            $ageDeduct      = isset($ageDeductions[$bag->leaf_age])      ? $ageDeductions[$bag->leaf_age]      : 0;
-            $totalDeductionPercent = $moistureDeduct + $ageDeduct;
-
-            // Get the rate for this leaf type
-            $ratePerKg = 0; // Default to 0
-            if ($bag->leaf_type_id == 1) {
-                $ratePerKg = $normalLeafRate; // Use normal leaf rate
-            } elseif ($bag->leaf_type_id == 2) {
-                $ratePerKg = $superLeafRate; // Use super leaf rate
-            }
-
-            // Calculate adjusted weight and payment
-            $originalWeight = $bag->actual_weight_kg;
-            $adjustedWeight = $originalWeight * (1 - $totalDeductionPercent / 100);
-            
-            // Calculate payment based on rate per kg and adjusted weight
-            $payment = $adjustedWeight * $ratePerKg;
-
-            // Sum up according to leaf type
+    
+            // Sum adjusted weight by leaf type and aggregate payment & deductions
             if ($bag->leaf_type_id == 1) {
                 $suppliers[$sid]['normal_kg'] += $adjustedWeight;
             } elseif ($bag->leaf_type_id == 2) {
                 $suppliers[$sid]['super_kg'] += $adjustedWeight;
             }
             $suppliers[$sid]['total_payment'] += $payment;
-
-            // Record unique collection IDs to later compute transport cost per supplier
+            $suppliers[$sid]['deduct_kg'] += $deductionWeight;
+            $suppliers[$sid]['deduct_amount'] += $deductionAmount;
             $suppliers[$sid]['collections'][$bag->collection_id] = true;
+    
+            // -------------------------
+            // Daily Aggregation (for supplier daily earnings)
+            // -------------------------
+            if (!isset($dailyBreakdown[$sid])) {
+                $dailyBreakdown[$sid] = [];
+            }
+            if (!isset($dailyBreakdown[$sid][$date])) {
+                $dailyBreakdown[$sid][$date] = [
+                    'normal_kg' => 0,
+                    'super_kg' => 0,
+                    'payment' => 0,
+                    'deduct_kg' => 0,
+                    'deduct_amount' => 0,
+                    'collections' => []
+                ];
+            }
+            if ($bag->leaf_type_id == 1) {
+                $dailyBreakdown[$sid][$date]['normal_kg'] += $adjustedWeight;
+            } elseif ($bag->leaf_type_id == 2) {
+                $dailyBreakdown[$sid][$date]['super_kg'] += $adjustedWeight;
+            }
+            $dailyBreakdown[$sid][$date]['payment'] += $payment;
+            $dailyBreakdown[$sid][$date]['deduct_kg'] += $deductionWeight;
+            $dailyBreakdown[$sid][$date]['deduct_amount'] += $deductionAmount;
+            $dailyBreakdown[$sid][$date]['collections'][$bag->collection_id] = true;
         }
-
-        // Compute overall totals for the summary report
+    
+        // Compute overall monthly totals for summary report
         $total_suppliers = count($suppliers);
         $totalKg = 0;
         $totalPayment = 0;
@@ -108,11 +145,17 @@ class M_Payment {
             $totalKg += ($data['normal_kg'] + $data['super_kg']);
             $totalPayment += $data['total_payment'];
         }
-
-
+    
+        // Insert summary row into factory_payments
         $this->db->query("
-            INSERT INTO factory_payments (year, month, total_suppliers, total_kg, total_payment, normal_leaf_rate, super_leaf_rate)
-            VALUES (:year, :month, :total_suppliers, :total_kg, :total_payment, :normal_leaf_rate, :super_leaf_rate)
+            INSERT INTO factory_payments (
+                year, month, total_suppliers, total_kg, total_payment, 
+                normal_leaf_rate, super_leaf_rate
+            )
+            VALUES (
+                :year, :month, :total_suppliers, :total_kg, :total_payment, 
+                :normal_leaf_rate, :super_leaf_rate
+            )
         ");
         $this->db->bind(':year', $year);
         $this->db->bind(':month', $month);
@@ -122,23 +165,25 @@ class M_Payment {
         $this->db->bind(':normal_leaf_rate', $normalLeafRate);
         $this->db->bind(':super_leaf_rate', $superLeafRate);
         $this->db->execute();
-
-        // Get the generated payment_id
+    
+        // Retrieve the generated payment_id
         $payment_id = $this->db->lastInsertId();
-
-        // Insert a detail row for each supplier
+    
+        // Insert detailed monthly rows for each supplier into factory_payment_details
         foreach ($suppliers as $sid => $data) {
             $collectionCount = count($data['collections']);
             $transportCharge = $transportCost * $collectionCount;
-            $finalPayment = $data['total_payment'] + $transportCharge; // add transport cost to base payment
-
+            $finalPayment = $data['total_payment'] + $transportCharge; // Adding transport charge to base payment
+    
             $this->db->query("
                 INSERT INTO factory_payment_details (
                     payment_id, supplier_id, total_collections, 
-                    normal_kg, super_kg, total_kg, payment_amount, transport_charge
+                    normal_kg, super_kg, total_kg, payment_amount, transport_charge,
+                    total_deduction_kg, total_deduction_amount
                 ) VALUES (
                     :payment_id, :supplier_id, :collections, 
-                    :normal_kg, :super_kg, :total_kg, :payment_amount, :transport_charge
+                    :normal_kg, :super_kg, :total_kg, :payment_amount, :transport_charge,
+                    :deduct_kg, :deduct_amount
                 )
             ");
             $this->db->bind(':payment_id', $payment_id);
@@ -149,11 +194,51 @@ class M_Payment {
             $this->db->bind(':total_kg', $data['normal_kg'] + $data['super_kg']);
             $this->db->bind(':payment_amount', $finalPayment);
             $this->db->bind(':transport_charge', $transportCharge);
+            $this->db->bind(':deduct_kg', $data['deduct_kg']);
+            $this->db->bind(':deduct_amount', $data['deduct_amount']);
             $this->db->execute();
         }
-
+    
+        // Insert daily breakdown rows for each supplier into supplier_daily_earnings
+        foreach ($dailyBreakdown as $sid => $dates) {
+            foreach ($dates as $date => $data) {
+                $normal = $data['normal_kg'];
+                $super = $data['super_kg'];
+                $basePayment = $data['payment'];
+                $dailyCollections = count($data['collections']);
+                $transport = $transportCost * $dailyCollections;
+                $totalPaymentDaily = $basePayment + $transport;
+                $deductKg = $data['deduct_kg'];
+                $deductAmount = $data['deduct_amount'];
+    
+                $this->db->query("
+                    INSERT INTO supplier_daily_earnings (
+                        supplier_id, collection_date, normal_kg, super_kg, 
+                        total_kg, base_payment, transport_charge, total_payment,
+                        total_deduction_kg, total_deduction_amount
+                    ) VALUES (
+                        :supplier_id, :collection_date, :normal_kg, :super_kg, 
+                        :total_kg, :base_payment, :transport_charge, :total_payment,
+                        :deduct_kg, :deduct_amount
+                    )
+                ");
+                $this->db->bind(':supplier_id', $sid);
+                $this->db->bind(':collection_date', $date);
+                $this->db->bind(':normal_kg', $normal);
+                $this->db->bind(':super_kg', $super);
+                $this->db->bind(':total_kg', $normal + $super);
+                $this->db->bind(':base_payment', $basePayment);
+                $this->db->bind(':transport_charge', $transport);
+                $this->db->bind(':total_payment', $totalPaymentDaily);
+                $this->db->bind(':deduct_kg', $deductKg);
+                $this->db->bind(':deduct_amount', $deductAmount);
+                $this->db->execute();
+            }
+        }
+    
         return $payment_id;
     }
+    
 
     // Helper to fetch deduction rates for a given category (moisture or leaf_age)
     private function getDeductionRates($category) {

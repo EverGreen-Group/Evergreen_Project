@@ -50,8 +50,12 @@
                     <th>Normal Kg</th>
                     <th>Super Kg</th>
                     <th>Total Kg</th>
-                    <th>Payment Amount</th>
+                    <th>Quality Reduct Kg</th>
+                    <th>Quality Reduct Rs.</th>
+                    <th>True Kg</th>
                     <th>Transport Charge</th>
+                    <th>Payment Amount</th>
+
                 </tr>
             </thead>
             <tbody>
@@ -63,8 +67,13 @@
                         <td><?php echo htmlspecialchars($detail->normal_kg); ?> kg</td>
                         <td><?php echo htmlspecialchars($detail->super_kg); ?> kg</td>
                         <td><?php echo htmlspecialchars($detail->total_kg); ?> kg</td>
-                        <td>Rs. <?php echo htmlspecialchars(number_format($detail->payment_amount, 2)); ?></td>
+                        <td><?php echo htmlspecialchars($detail->total_deduction_kg); ?> kg</td>
+                        <td>Rs. <?php echo htmlspecialchars($detail->total_deduction_amount); ?></td>
+                        <td><?php echo htmlspecialchars($detail->total_kg - $detail->total_deduction_kg); ?> kg</td>
+
                         <td>Rs. <?php echo htmlspecialchars(number_format($detail->transport_charge, 2)); ?></td>
+                        <td>Rs. <?php echo htmlspecialchars(number_format($detail->payment_amount, 2)); ?></td>
+
                     </tr>
                 <?php endforeach; ?>
             </tbody>

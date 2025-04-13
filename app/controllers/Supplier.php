@@ -224,11 +224,45 @@ class Supplier extends Controller {
     //     $this->view('supplier/v_new_order', $data);
     // }
 
-    public function payments()
-    {
-
-
-        $this->view('supplier/v_supplier_payment', []);
+    public function payments() {
+        $supplierId = $_SESSION['supplier_id'];
+        
+        // Get filter values
+        $month = isset($_GET['month']) ? $_GET['month'] : 'all';
+        $year = isset($_GET['year']) ? $_GET['year'] : date('Y');
+        
+        // Get earnings data based on filters
+        $earnings = $this->supplierModel->getSupplierEarnings($supplierId, $month, $year);
+        
+        // Calculate totals
+        $totals = (object)[
+            'total_normal_kg' => 0,
+            'total_super_kg' => 0,
+            'total_deduction_kg' => 0,
+            'total_kg' => 0,
+            'total_base_payment' => 0,
+            'total_transport_charge' => 0,
+            'total_deduction_amount' => 0,
+            'total_payment' => 0
+        ];
+        
+        foreach ($earnings as $earning) {
+            $totals->total_normal_kg += $earning->normal_kg;
+            $totals->total_super_kg += $earning->super_kg;
+            $totals->total_deduction_kg += $earning->total_deduction_kg;
+            $totals->total_kg += $earning->total_kg;
+            $totals->total_base_payment += $earning->base_payment;
+            $totals->total_transport_charge += $earning->transport_charge;
+            $totals->total_deduction_amount += $earning->total_deduction_amount;
+            $totals->total_payment += $earning->total_payment;
+        }
+        
+        $data = [
+            'earnings' => $earnings,
+            'totals' => $totals
+        ];
+        
+        $this->view('supplier/v_supplier_payment', $data);
     }
 
     public function schedule()

@@ -102,8 +102,8 @@
                     <th>No. of Suppliers</th>
                     <th>Total Kg Supplied</th>
                     <th>Total Payment</th>
-                    <th>Normal Leaf Rate</th> <!-- New column -->
-                    <th>Super Leaf Rate</th>  <!-- New column -->
+                    <th>Normal Leaf Rate</th>
+                    <th>Super Leaf Rate</th>  
                     <th>Actions</th>
                 </tr>
             </thead>
