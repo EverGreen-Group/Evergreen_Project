@@ -671,9 +671,21 @@ class M_Collection {
     }
 
 
+    public function getCollectionDetails($supplier_id) {
+        $this->db->query("
+            SELECT csr.* , c.status AS collection_status
+            FROM collection_supplier_records csr
+            JOIN collections c ON csr.collection_id = c.collection_id
+            WHERE csr.supplier_id = :supplier_id
+            ORDER BY csr.collection_time DESC
+        ");
+        
+        $this->db->bind(':supplier_id', $supplier_id);
+        return $this->db->resultSet();
+    }
 
 
-    public function getCollectionDetails($id) {
+    /*public function getCollectionDetails($id) {
         $this->db->query("
             SELECT 
                 c.collection_id,
@@ -711,7 +723,7 @@ class M_Collection {
         
         $this->db->bind(':id', $id);
         return $this->db->single();
-    }
+    }*/
     
 
     public function approveCollection($collectionId) {

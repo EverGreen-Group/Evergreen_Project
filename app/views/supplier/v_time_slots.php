@@ -363,6 +363,10 @@
     grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
     gap: var(--spacing-md);
     margin-bottom: var(--spacing-md);
+    align-self: center;
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-lg);
   }
 
   .info-item {

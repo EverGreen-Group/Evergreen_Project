@@ -44,6 +44,15 @@ class M_Bag {
         return $this->db->single();
     }
 
+    public function getBagsByCollectionId($collectionId) {
+        $this->db->query("SELECT * FROM bag_usage_history WHERE collectionId = :collectionId");
+        
+        // Bind the parameters
+        $this->db->bind(':collectionId', $collectionId);
+        
+        return $this->db->single();
+    }
+
 
     public function deleteBagById($bagId) {
         // Start a transaction

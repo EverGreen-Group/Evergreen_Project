@@ -13,6 +13,7 @@ require_once '../app/models/M_CollectionSupplierRecord.php';
 require_once '../app/models/M_SupplierApplication.php';
 require_once '../app/models/M_Supplier.php';
 require_once '../app/models/M_Chat.php';
+require_once '../app/models/M_Partner.php';
 
 
 class SupplierManager extends Controller {
@@ -30,6 +31,7 @@ class SupplierManager extends Controller {
     private $supplierApplicationModel;
     private $supplierModel;
     private $chatModel; // Add this line
+    private $partnerModel;
     
 
     public function __construct() {
@@ -92,15 +94,35 @@ class SupplierManager extends Controller {
     }
 
     public function applications() {
+
+        //Get the filters
+        $filters = [
+            'application_id' => $_GET['application_id'] ?? '',
+            'status' => $_GET['status'] ?? '',
+            'date-from' => $_GET['date-from'] ?? '',
+            'date-to' => $_GET['date-to'] ?? ''
+        ];
+
         // Get all applications
         $applications = $this->model('M_SupplierApplication')->getAllApplications();
         
         // Get approved applications pending role assignment
         $approvedPendingRole = $this->model('M_SupplierApplication')->getApprovedPendingRoleApplications();
 
+        // Add stats for dashboard
+        $totalApplications = count($this->model('M_SupplierApplication')->getAllApplications());
+        $pendingApplications = count($this->model('M_SupplierApplication')->getAllApplications(['status' => 'pending']));
+        $approvedApplications = count($this->model('M_SupplierApplication')->getAllApplications(['status' => 'approved']));
+        $rejectedApplications = count($this->model('M_SupplierApplication')->getAllApplications(['status' => 'rejected']));
+
         $data = [
             'applications' => $applications,
-            'approved_pending_role' => $approvedPendingRole
+            'approved_pending_role' => $approvedPendingRole,
+            'filters' => $filters,
+            'totalApplications' => $totalApplications,
+            'pendingApplications' => $pendingApplications,
+            'approvedApplications' => $approvedApplications,
+            'rejectedApplications' => $rejectedApplications
         ];
 
         // Load view
