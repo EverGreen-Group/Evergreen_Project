@@ -32,7 +32,7 @@
     <div class="section-header">
       <h3>Bag Details</h3>
     </div>
-    <?php flash('bag_message'); ?>
+
     <?php if (!empty($data['bags'])): ?>
       <div class="bags-container">
         <div class="table-wrapper">

@@ -46,9 +46,6 @@
     </li>
   </ul>
 
-
-  <?php flash('vehicle_message'); ?>
-  <!-- New section for vehicle cards -->
   <!-- <div class="vehicle-cards-section">
       <h2>All Vehicles</h2>
       <div class="vehicle-cards-container" id="vehicleCardsContainer">

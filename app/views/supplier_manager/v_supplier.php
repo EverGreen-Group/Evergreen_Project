@@ -20,9 +20,7 @@
 <main>
 
 
-<?php 
-flash('supplier_success', 'Supplier updated successfully', 'alert alert-success');
-flash('error'); ?>
+
   <!-- Supplier Management Section -->
   <div class="head-title">
       <div class="left">

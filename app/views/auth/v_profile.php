@@ -32,7 +32,6 @@
     </div>
   </div>
 
-  <?php flash('profile_message'); ?>
 
   <!-- Profile Photo Section -->
   <div class="profile-section">

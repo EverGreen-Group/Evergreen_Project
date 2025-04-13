@@ -300,9 +300,9 @@ class M_SupplierApplication {
     public function approveApplication($applicationId) {
         $supplierModel = new M_SupplierApplication();
         if ($supplierModel->updateApplicationStatus($applicationId, 'approved')) {
-            flash('application_message', 'Application has been approved successfully');
+            setFlashMessage('Approved the application sucessfully!');
         } else {
-            flash('application_message', 'Something went wrong while approving the application', 'alert alert-danger');
+            setFlashMessage('Couldnt approve the application, please try again later!', 'error');
         }
         redirect('suppliermanager/applications');
     }
@@ -310,9 +310,9 @@ class M_SupplierApplication {
     public function rejectApplication($applicationId) {
         $supplierModel = new M_SupplierApplication();
         if ($supplierModel->updateApplicationStatus($applicationId, 'rejected')) {
-            flash('application_message', 'Application has been rejected successfully');
+            setFlashMessage('Application rejected sucessfully!');
         } else {
-            flash('application_message', 'Something went wrong while rejecting the application', 'alert alert-danger');
+            setFlashMessage('Couldnt reject this application, please try again later!', 'error');
         }
         redirect('suppliermanager/applications');
     }
@@ -392,7 +392,7 @@ class M_SupplierApplication {
             }
         
             $this->db->commit();
-            return true;
+            return $applicationId;
             
         } catch (Exception $e) {
             $this->db->rollBack();

@@ -25,7 +25,6 @@
     <div class="section-header">
       <h3>Available Time Slots</h3>
     </div>
-    <?php flash('request_message'); ?>
     <?php if (!empty($data['time_slots'])): ?>
       <div class="slots-container">
         <?php foreach($data['time_slots'] as $slot): ?>

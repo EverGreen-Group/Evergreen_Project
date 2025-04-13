@@ -23,7 +23,6 @@
     <div class="section-header">
 
     </div>
-    <?php flash('collection_message'); ?>
     <?php if (!empty($data['collections'])): ?>
       <div class="collections-container">
         <div class="table-wrapper">

@@ -50,9 +50,9 @@ class Admin extends Controller
         requireAuth();
 
         // Check if user has Vehicle Manager OR Admin role
-        if (!RoleHelper::hasAnyRole([RoleHelper::ADMIN, RoleHelper::VEHICLE_MANAGER])) {
+        if (!RoleHelper::hasAnyRole([RoleHelper::ADMIN, RoleHelper::MANAGER])) {
             // Redirect unauthorized access
-            flash('message', 'Unauthorized access', 'alert alert-danger');
+            setFlashMessage('Unauthorized acess');
             redirect('');
             exit();
         }
@@ -139,11 +139,11 @@ class Admin extends Controller
             // Update the user in the database
             if ($this->userModel->updateUser($data)) {
                 // Redirect to the user management page or show a success message
-                flash('user_message', 'User updated successfully');
+                setFlashMessage('User updated successfully');
                 redirect('admin/users'); // Adjust the redirect as necessary
             } else {
-                // Handle the error
-                flash('user_message', 'Something went wrong, please try again', 'alert alert-danger');
+
+                setFlashMessage('User updating failed!', 'error');
                 redirect('admin/manageUser/' . $data['user_id']); // Redirect back to the edit page
             }
         } else {

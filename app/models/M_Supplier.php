@@ -165,8 +165,9 @@ class M_Supplier {
     {
         $this->db->query("SELECT COUNT(*) as count FROM complaints WHERE status != 'Deleted'");
         $result = $this->db->single();
-        return $result->count;
+        return $result->count ?? 0;
     }
+    
 
     public function getComplaintsByStatus($status)
     {
@@ -366,6 +367,33 @@ class M_Supplier {
             $this->db->rollBack();
             return false;
         }
+    }
+
+
+    public function getSupplierEarnings($supplierId, $month = 'all', $year = null) {
+        $sql = "SELECT * FROM supplier_daily_earnings WHERE supplier_id = :supplier_id";
+
+        if ($month !== 'all' && is_numeric($month)) {
+            $sql .= " AND MONTH(collection_date) = :month";
+        }
+        if ($year !== null) {
+            $sql .= " AND YEAR(collection_date) = :year";
+        }
+        
+
+        $sql .= " ORDER BY collection_date DESC";
+        
+        $this->db->query($sql);
+        $this->db->bind(':supplier_id', $supplierId);
+        
+        if ($month !== 'all' && is_numeric($month)) {
+            $this->db->bind(':month', $month);
+        }
+        if ($year !== null) {
+            $this->db->bind(':year', $year);
+        }
+        
+        return $this->db->resultSet();
     }
 
     
