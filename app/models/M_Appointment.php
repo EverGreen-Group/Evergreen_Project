@@ -6,8 +6,81 @@ class M_Appointment {
     public function __construct() {
         $this->db = new Database();
     }
+    
+    // Add function to clean up expired available slots
+    private function cleanupExpiredAvailableSlots() {
+        // First, get the IDs of slots that will be deleted
+        $this->db->query("SELECT slot_id FROM appointment_slots 
+                         WHERE status = 'Available' 
+                         AND CONCAT(date, ' 00:00:00') <= NOW()");
+        $expiredSlots = $this->db->resultSet();
+        
+        // Delete any pending requests for these slots
+        if (!empty($expiredSlots)) {
+            foreach ($expiredSlots as $slot) {
+                $this->db->query("DELETE FROM appointment_requests 
+                                 WHERE slot_id = :slot_id");
+                $this->db->bind(':slot_id', $slot->slot_id);
+                $this->db->execute();
+            }
+        }
+        
+        // Now delete the slots themselves
+        $this->db->query("DELETE FROM appointment_slots 
+                         WHERE status = 'Available' 
+                         AND CONCAT(date, ' 00:00:00') <= NOW()");
+        $this->db->execute();
+    }
+    
+    // Add function to clean up expired booked slots
+    private function cleanupExpiredBookedSlots() {
+        // First, get the IDs of slots that will be deleted
+        $this->db->query("SELECT slot_id FROM appointment_slots 
+                         WHERE status = 'Booked' 
+                         AND CONCAT(date, ' 12:00:00') <= NOW()");
+        $expiredSlots = $this->db->resultSet();
+        
+        // Delete any requests for these slots (though they should be completed already)
+        if (!empty($expiredSlots)) {
+            foreach ($expiredSlots as $slot) {
+                $this->db->query("DELETE FROM appointment_requests 
+                                 WHERE slot_id = :slot_id");
+                $this->db->bind(':slot_id', $slot->slot_id);
+                $this->db->execute();
+            }
+        }
+        
+        // Now delete the slots themselves
+        $this->db->query("DELETE FROM appointment_slots 
+                         WHERE status = 'Booked' 
+                         AND CONCAT(date, ' 12:00:00') <= NOW()");
+        $this->db->execute();
+    }
+    
+    // Check if a time slot already exists
+    public function isSlotDuplicate($data) {
+        $this->db->query("SELECT * FROM appointment_slots 
+                         WHERE manager_id = :manager_id 
+                         AND date = :date 
+                         AND start_time = :start_time 
+                         AND end_time = :end_time");
+        
+        $this->db->bind(':manager_id', $data['manager_id']);
+        $this->db->bind(':date', $data['date']);
+        $this->db->bind(':start_time', $data['start_time']);
+        $this->db->bind(':end_time', $data['end_time']);
+        
+        $result = $this->db->single();
+        return !empty($result);
+    }
 
     public function getManagerTimeSlots($managerId) {
+        // Auto-delete expired available slots (at midnight of the slot date)
+        $this->cleanupExpiredAvailableSlots();
+        
+        // Auto-delete expired booked slots (at noon of the slot date)
+        $this->cleanupExpiredBookedSlots();
+        
         $this->db->query("SELECT * FROM appointment_slots WHERE manager_id = :manager_id");
         $this->db->bind(':manager_id', $managerId);
         return $this->db->resultSet();
@@ -41,16 +114,27 @@ class M_Appointment {
     }
     
 
-        public function createSlot($data) {
+    public function createSlot($data) {
+        // Check if the date is not earlier than today
+        if(strtotime($data['date']) < strtotime(date('Y-m-d'))) {
+            return false;
+        }
+        
+        // Check if the time slot overlaps with another
+        if($this->isSlotOverlapping($data)) {
+            return false;
+        }
+        
         $this->db->query('INSERT INTO appointment_slots 
-            (manager_id, date, start_time, end_time) 
-            VALUES (:manager_id, :date, :start_time, :end_time)');
-
+            (manager_id, date, start_time, end_time, status) 
+            VALUES (:manager_id, :date, :start_time, :end_time, :status)');
+    
         $this->db->bind(':manager_id', $data['manager_id']);
         $this->db->bind(':date', $data['date']);
         $this->db->bind(':start_time', $data['start_time']);
         $this->db->bind(':end_time', $data['end_time']);
-
+        $this->db->bind(':status', 'Available');
+    
         return $this->db->execute();
     }
 
@@ -92,7 +176,6 @@ class M_Appointment {
         return $this->db->resultSet();
     }
 
-
     public function getMyRequests($supplierId) {
         $this->db->query("
             SELECT r.*, sl.date, sl.start_time, sl.end_time, sl.manager_id
@@ -123,6 +206,26 @@ class M_Appointment {
         $this->db->bind(':request_id', $requestId);
         $this->db->bind(':supplier_id', $supplierId);
         return $this->db->execute();
+    }
+
+    public function isSlotOverlapping($data) {
+        $this->db->query("SELECT * FROM appointment_slots 
+                         WHERE manager_id = :manager_id 
+                         AND date = :date 
+                         AND (
+                             (:start_time BETWEEN start_time AND end_time) OR
+                             (:end_time BETWEEN start_time AND end_time) OR
+                             (start_time BETWEEN :start_time AND :end_time) OR
+                             (end_time BETWEEN :start_time AND :end_time)
+                         )");
+        
+        $this->db->bind(':manager_id', $data['manager_id']);
+        $this->db->bind(':date', $data['date']);
+        $this->db->bind(':start_time', $data['start_time']);
+        $this->db->bind(':end_time', $data['end_time']);
+        
+        $result = $this->db->resultSet();
+        return !empty($result);
     }
 
     public function getSlotById($slotId) {
@@ -157,6 +260,29 @@ class M_Appointment {
         return $this->db->single(); 
     }
     
+    // Add function to cancel a time slot
+    public function cancelSlot($slotId, $managerId) {
+        // First, delete any pending requests for this slot
+        $this->db->query("DELETE FROM appointment_requests 
+                         WHERE slot_id = :slot_id 
+                         AND status = 'Pending'");
+        $this->db->bind(':slot_id', $slotId);
+        $this->db->execute();
+        
+        // Then delete the slot itself
+        $this->db->query("DELETE FROM appointment_slots 
+                         WHERE slot_id = :slot_id 
+                         AND manager_id = :manager_id 
+                         AND status = 'Available'");
+        
+        $this->db->bind(':slot_id', $slotId);
+        $this->db->bind(':manager_id', $managerId);
+        
+        return $this->db->execute();
+    }
+
+
+
 
 }
 ?>

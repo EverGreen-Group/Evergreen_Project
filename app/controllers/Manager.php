@@ -1943,30 +1943,93 @@ class Manager extends Controller
     }
 
     public function createSlot() {
+        $this->requireLogin();
+        
+        // If form is submitted
         if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+            // Sanitize POST data - Use FILTER_SANITIZE_FULL_SPECIAL_CHARS instead of deprecated FILTER_SANITIZE_STRING
+            $_POST = filter_input_array(INPUT_POST, FILTER_SANITIZE_FULL_SPECIAL_CHARS);
+            
+            // Process form
             $data = [
                 'manager_id' => $_SESSION['manager_id'],
                 'date' => trim($_POST['date']),
                 'start_time' => trim($_POST['start_time']),
-                'end_time' => trim($_POST['end_time'])
+                'end_time' => trim($_POST['end_time']),
+                'date_err' => '',
+                'time_err' => ''
             ];
-    
-            if ($this->appointmentModel->createSlot($data)) {
-                flash('slot_message', 'Time slot created successfully.');
-                redirect('manager/appointments');
-            } else {
-                redirect('manager/createSlot');
+            
+            // Validate date is not in the past
+            if (strtotime($data['date']) < strtotime(date('Y-m-d'))) {
+                $data['date_err'] = 'Time slots must be scheduled for future dates';
+                flash('slot_message', 'Time slots must be scheduled for future dates', 'alert alert-danger');
             }
+            
+            // Check if end time is after start time
+            if (strtotime($data['start_time']) >= strtotime($data['end_time'])) {
+                $data['time_err'] = 'End time must be after start time';
+                flash('slot_message', 'End time must be after start time', 'alert alert-danger');
+            }
+            
+            // Check if slot already exists or overlaps with another slot
+            $overlap = $this->appointmentModel->isSlotOverlapping($data);
+            if ($overlap) {
+                $data['time_err'] = 'This time slot overlaps with an existing slot';
+                flash('slot_message', 'This time slot overlaps with an existing slot', 'alert alert-danger');
+            }
+            
+            // Make sure no errors
+            if (empty($data['date_err']) && empty($data['time_err'])) {
+                // Create slot
+                if ($this->appointmentModel->createSlot($data)) {
+                    flash('slot_message', 'Time slot created successfully');
+                    redirect('manager/appointments');
+                } else {
+                    flash('slot_message', 'Something went wrong', 'alert alert-danger');
+                }
+            }
+            
+            // If there were errors, show the form again with the error messages
+            $this->view('supplier_manager/v_create_slot', $data);
         } else {
-            // Load the form view for creating a slot
+            // Init data
             $data = [
                 'date' => '',
                 'start_time' => '',
-                'end_time' => ''
+                'end_time' => '',
+                'date_err' => '',
+                'time_err' => ''
             ];
-    
+            
+            // Load view
             $this->view('supplier_manager/v_create_slot', $data);
         }
+    }
+
+    public function cancelSlot() {
+        $this->requireLogin();
+        
+        // Check if form was submitted
+        if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+            $slotId = isset($_POST['slot_id']) ? $_POST['slot_id'] : null;
+            
+            if ($slotId) {
+                $managerId = $_SESSION['manager_id'];
+                
+                // Call the model method to cancel the slot
+                if ($this->appointmentModel->cancelSlot($slotId, $managerId)) {
+                    flash('slot_message', 'Time slot canceled successfully');
+                } else {
+                    flash('slot_message', 'Unable to cancel time slot. It may already be booked.', 'alert alert-danger');
+                }
+            } else {
+                flash('slot_message', 'Invalid request', 'alert alert-danger');
+            }
+        }
+        
+        // Redirect back to the appointments page
+        redirect('manager/appointments');
     }
 
 
