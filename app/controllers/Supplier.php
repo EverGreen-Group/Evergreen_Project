@@ -612,14 +612,18 @@ class Supplier extends Controller {
         $this->view('supplier/v_schedule_details', $data);
     }
 
-    public function collection($collectionId) {
-        $collectionDetails = $this->collectionModel->getCollectionDetails($collectionId);
+    public function collections() {
+        $supplier_id = $_SESSION['supplier_id'] ?? null;
+        if (!$supplier_id) {
+            throw new Exception("Supplier ID not found. Please login again!");
+        }
+
+        $collectionDetails = $this->collectionModel->getCollectionDetails($supplier_id);
 
         $data = [
-            'collectionId' => $collectionId,
             'collectionDetails' => $collectionDetails
         ];
-        $this->view('supplier/v_collection', $data);
+        $this->view('supplier/v_collections', $data);
     }
 
     public function getUnallocatedSuppliersByDay($day) {
