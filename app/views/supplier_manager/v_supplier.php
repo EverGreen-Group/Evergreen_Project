@@ -126,38 +126,44 @@
                         </tr>
                     </thead>
                     <tbody>
-                        <?php foreach ($suppliers as $supplier): ?>
-                            <tr class="supplier-row" data-supplier-id="<?php echo htmlspecialchars($supplier->supplier_id); ?>">
-                                <td><?php echo htmlspecialchars($supplier->supplier_id); ?></td>
-                                <td><?php echo htmlspecialchars($supplier->first_name . ' ' . $supplier->last_name); ?></td>
-                                <td><?php echo htmlspecialchars($supplier->email); ?></td>
-                                <td><?php echo htmlspecialchars($supplier->contact_number); ?></td>
-                                <td><?php echo htmlspecialchars($supplier->number_of_collections); ?></td>
-                                <td><?php echo htmlspecialchars($supplier->average_collection); ?></td>
-                                <td>
-                                    <div style="display: flex; gap: 5px;">
+                        <?php if (isset($suppliers) && !empty($suppliers)): ?>
+                            <?php foreach ($suppliers as $supplier): ?>
+                                <tr class="supplier-row" data-supplier-id="<?php echo htmlspecialchars($supplier->supplier_id); ?>">
+                                    <td><?php echo htmlspecialchars($supplier->supplier_id); ?></td>
+                                    <td><?php echo htmlspecialchars($supplier->first_name . ' ' . $supplier->last_name); ?></td>
+                                    <td><?php echo htmlspecialchars($supplier->email); ?></td>
+                                    <td><?php echo htmlspecialchars($supplier->contact_number); ?></td>
+                                    <td><?php echo htmlspecialchars($supplier->number_of_collections); ?></td>
+                                    <td><?php echo htmlspecialchars($supplier->average_collection); ?></td>
+                                    <td>
+                                        <div style="display: flex; gap: 5px;">
 
-                                        <!-- Manage button with icon only -->
-                                        <a 
-                                            href="<?php echo URLROOT; ?>/manager/manageSupplier/<?php echo $supplier->supplier_id; ?>" 
-                                            class="btn btn-tertiary" 
-                                            style="display: flex; align-items: center; justify-content: center; width: 40px; height: 40px; border: none; background: none;"
-                                        >
-                                            <i class='bx bx-cog' style="font-size: 24px; color:green;"></i>
-                                        </a>
-                                        
-                                        <!-- Delete button with icon only -->
-                                        <a 
-                                            href="<?php echo URLROOT; ?>/manager/deleteSupplier/<?php echo $supplier->supplier_id; ?>" 
-                                            class="btn btn-tertiary" 
-                                            style="display: flex; align-items: center; justify-content: center; width: 40px; height: 40px; border: none; background: none;" 
-                                        >
-                                            <i class='bx bx-user-x' style="font-size: 24px; color:red;"></i>
-                                        </a>
-                                    </div>
-                                </td>
+                                            <!-- Manage button with icon only -->
+                                            <a 
+                                                href="<?php echo URLROOT; ?>/manager/manageSupplier/<?php echo $supplier->supplier_id; ?>" 
+                                                class="btn btn-tertiary" 
+                                                style="display: flex; align-items: center; justify-content: center; width: 40px; height: 40px; border: none; background: none;"
+                                            >
+                                                <i class='bx bx-cog' style="font-size: 24px; color:green;"></i>
+                                            </a>
+                                            
+                                            <!-- Delete button with icon only -->
+                                            <a 
+                                                href="<?php echo URLROOT; ?>/manager/deleteSupplier/<?php echo $supplier->supplier_id; ?>" 
+                                                class="btn btn-tertiary" 
+                                                style="display: flex; align-items: center; justify-content: center; width: 40px; height: 40px; border: none; background: none;" 
+                                            >
+                                                <i class='bx bx-user-x' style="font-size: 24px; color:red;"></i>
+                                            </a>
+                                        </div>
+                                    </td>
+                                </tr>
+                            <?php endforeach; ?>
+                        <?php else: ?>
+                            <tr>
+                                <td colspan="7" style="align-items : center; justify-content : center">No suppliers found.</td>
                             </tr>
-                        <?php endforeach; ?>
+                        <?php endif; ?>
                     </tbody>
                 </table>
             </div>
