@@ -35,10 +35,6 @@
 					<i class='bx bx-show'></i>
 					View Raw Leaf History
 				</a>
-				<a href="<?php echo URLROOT; ?>/inventory/manageLeafRate" class="btn btn-primary">
-					<i class='bx bx-cog'></i>
-					Manage Rates
-				</a>
 			</div>
 			<div class="chart-container-wrapper" style="position:relative; width:100%; height:300px; padding:20px;">
 				<canvas id="reportTypesChart"></canvas>

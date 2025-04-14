@@ -26,8 +26,8 @@ class Admin extends Controller
 
         requireAuth();
         if (!RoleHelper::hasAnyRole([RoleHelper::ADMIN])) {
-            setFlashMessage('Unauthorized acess');
-            redirect('');
+            setFlashMessage('Unauthorized access');
+            redirect('/');
             exit();
         }
 
@@ -111,12 +111,16 @@ class Admin extends Controller
 
 
     public function userLogs() {
-        $userLogs = $this->logModel->getAllUserLogs();
-
+        $userId = isset($_GET['user_id']) ? $_GET['user_id'] : null;
+        $email = isset($_GET['email']) ? $_GET['email'] : null;
+    
+        // Fetch filtered user logs based on search criteria
+        $userLogs = $this->logModel->getFilteredUserLogs($userId, $email);
+    
         $data = [
             'userLogs' => $userLogs
         ];
-
+    
         $this->view('admin/v_user_log', $data);
     }
 

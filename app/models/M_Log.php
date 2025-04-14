@@ -29,6 +29,32 @@ class M_Log {
         $this->db->query($sql);
         return $this->db->resultSet();
     }
+
+    public function getFilteredUserLogs($userId = null, $email = null) {
+        $sql = "SELECT * FROM user_logs WHERE 1=1"; // Start with a base query
+    
+        // Add conditions based on provided filters
+        if ($userId) {
+            $sql .= " AND user_id = :user_id";
+        }
+        if ($email) {
+            $sql .= " AND email LIKE :email";
+        }
+    
+        $sql .= " ORDER BY timestamp DESC";
+    
+        $this->db->query($sql);
+    
+        // Bind parameters if they exist
+        if ($userId) {
+            $this->db->bind(':user_id', $userId);
+        }
+        if ($email) {
+            $this->db->bind(':email', "%$email%");
+        }
+    
+        return $this->db->resultSet();
+    }
     
 
 

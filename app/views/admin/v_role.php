@@ -141,11 +141,11 @@
                             <td>
                                 <div style="display: flex; gap: 5px;">
                                     <a 
-                                        href="<?php echo URLROOT; ?>/auth/profile/<?php echo $user->user_id; ?>" 
+                                        href="<?php echo URLROOT; ?>/admin/manageUser/<?php echo $user->user_id; ?>" 
                                         class="btn btn-tertiary" 
                                         style="display: flex; align-items: center; justify-content: center; width: 40px; height: 40px; border: none; background: none;"
                                     >
-                                        <i class='bx bx-show' style="font-size: 24px; color:blue;"></i> 
+                                        <i class='bx bx-cog' style="font-size: 24px; color:blue;"></i> 
                                     </a>
 
                                     <form action="<?php echo URLROOT; ?>/user/deleteUser/" method="POST" style="margin: 0;"> 

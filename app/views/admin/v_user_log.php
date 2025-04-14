@@ -4,6 +4,7 @@
 <?php require APPROOT . '/views/inc/components/sidebar_admin.php'; ?>
 <!-- Top nav bar -->
 <?php require APPROOT . '/views/inc/components/topnavbar.php'; ?>
+<link rel="stylesheet" href="<?php echo URLROOT; ?>/css/vehicle_manager/vehicle/vehicle.css">
 
 <link rel="stylesheet" href="<?php echo URLROOT; ?>/css/admin/user_logs.css">
 
@@ -16,6 +17,28 @@
                 <li><a href="#">Dashboard</a></li>
                 <li><a href="#">User Logs</a></li>
             </ul>
+        </div>
+    </div>
+
+    <div class="table-data">
+        <div class="order">
+            <div class="head">
+                <h3>Search Filters</h3>
+                <i class='bx bx-search'></i>
+            </div>
+            <div class="filter-options">
+                <form action="<?php echo URLROOT; ?>/admin/userLogs" method="GET">
+                <div class="filter-group">
+                        <label for="user_id">User ID:</label>
+                        <input type="text" id="user_id" name="user_id" placeholder="Enter User ID" value="<?php echo isset($_GET['user_id']) ? htmlspecialchars($_GET['user_id']) : ''; ?>">
+                    </div>
+                    <div class="filter-group">
+                        <label for="email">Email:</label>
+                        <input type="text" id="email" name="email" placeholder="Enter email" value="<?php echo isset($_GET['email']) ? htmlspecialchars($_GET['email']) : ''; ?>">
+                    </div>
+                    <button type="submit" class="btn btn-primary">Search</button>
+                </form>
+            </div>
         </div>
     </div>
 

@@ -53,11 +53,18 @@ class M_User {
 
     public function getUserById($user_id) {
         $this->db->query("SELECT
-            user_id, 
-            email,
-            password
+            u.user_id, 
+            u.email,
+            p.first_name,
+            p.last_name,
+            p.date_of_birth,
+            p.nic,
+            r.role_id,
+            r.role_name
             FROM users u
-            WHERE user_id = :user_id");
+            INNER JOIN profiles p ON p.user_id = u.user_id
+            INNER JOIN roles r ON u.role_id = r.role_id
+            WHERE u.user_id = :user_id");
         
         $this->db->bind(':user_id', $user_id);
         
