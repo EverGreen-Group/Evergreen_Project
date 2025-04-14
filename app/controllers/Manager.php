@@ -2055,44 +2055,120 @@ class Manager extends Controller
         $this->view('supplier_manager/v_appointments', $data);
     }
 
+    public function allAppointments() {
+        // Ensure user is logged in
+        $this->requireLogin();
+        
+        // if(!isset($_SESSION['manager_id']) || empty($_SESSION['manager_id'])) {
+        //     redirect('users/login');
+        //     return;
+        // }
+        
+        $manager_id = $_SESSION['manager_id'];
+        
+        try {
+            $appointments = $this->model('M_Appointment')->getAllAppointments($manager_id);
+            
+            $data = [
+                'appointments' => $appointments,
+                'title' => 'All Appointments'
+            ];
+        
+            $this->view('supplier_manager/v_all_appointments', $data);
+        } catch (Exception $e) {
+            redirect('manager/');
+        }
+    }
+
     public function createSlot() {
+        $this->requireLogin();
+        
+        // If form is submitted
         if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+            // Sanitize POST data
+            $_POST = filter_input_array(INPUT_POST, FILTER_SANITIZE_FULL_SPECIAL_CHARS);
+            
+            // Process form
             $data = [
                 'manager_id' => $_SESSION['manager_id'],
                 'date' => trim($_POST['date']),
                 'start_time' => trim($_POST['start_time']),
-                'end_time' => trim($_POST['end_time'])
+                'end_time' => trim($_POST['end_time']),
+                'date_err' => '',
+                'time_err' => ''
             ];
-    
-            if ($this->appointmentModel->createSlot($data)) {
+            
+            if (strtotime($data['date']) < strtotime(date('Y-m-d'))) {
+                $data['date_err'] = 'Time slots must be scheduled for future dates';
+            }
+            
+            $start_timestamp = strtotime($data['start_time']);
+            $end_timestamp = strtotime($data['end_time']);
 
-                $this->logModel->create(
-                    $_SESSION['user_id'],
-                    $_SESSION['email'],
-                    $_SERVER['REMOTE_ADDR'],
-                    "Created a new time slot",
-                    $_SERVER['REQUEST_URI'],     
-                    http_response_code()     
-                );
-                setFlashMessage("New time slot created sucessfully!");
-                
-                redirect('manager/appointments');
+            if ($start_timestamp >= $end_timestamp) {
+                $data['time_err'] = 'End time must be after start time';
             } else {
 
+                $duration_minutes = ($end_timestamp - $start_timestamp) / 60;
 
-                setFlashMessage("Time slot creation failed!", 'error');
-                redirect('manager/createSlot');
+                if ($duration_minutes < 30) {
+                    $data['time_err'] = 'Time slots must be at least 30 minutes long';
+                } else if ($duration_minutes > 120) {
+                    $data['time_err'] = 'Time slots cannot exceed 2 hours';
+                }
             }
+            
+            // Check if slot already exists or overlaps with another slot
+            $overlap = $this->appointmentModel->isSlotOverlapping($data);
+            if ($overlap) {
+                $data['time_err'] = 'This time slot overlaps with an existing slot';
+            }
+            
+            // Make sure no errors
+            if (empty($data['date_err']) && empty($data['time_err'])) {
+                // Create slot
+                if ($this->appointmentModel->createSlot($data)) {
+                    redirect('manager/appointments');
+                } else {
+                }
+            }
+            
+            // If there were errors, show the form again with the error messages
+            $this->view('supplier_manager/v_create_slot', $data);
         } else {
-
             $data = [
                 'date' => '',
                 'start_time' => '',
-                'end_time' => ''
+                'end_time' => '',
+                'date_err' => '',
+                'time_err' => ''
             ];
-    
+            
+            // Load view
             $this->view('supplier_manager/v_create_slot', $data);
         }
+    }
+
+    public function cancelSlot() {
+        $this->requireLogin();
+        
+        // Check if form was submitted
+        if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+            $slotId = isset($_POST['slot_id']) ? $_POST['slot_id'] : null;
+            
+            if ($slotId) {
+                $managerId = $_SESSION['manager_id'];
+                
+                // Call the model method to cancel the slot
+                if ($this->appointmentModel->cancelSlot($slotId, $managerId)) {
+                } else {
+                }
+            } else {
+            }
+        }
+        
+        // Redirect back to the appointments page
+        redirect('manager/appointments');
     }
 
 
@@ -2349,8 +2425,6 @@ class Manager extends Controller
 
         $this->view('supplier_manager/v_applications', $data);
     }
-
-
 
     public function supplierStatement() {
         $data = [];

@@ -20,6 +20,25 @@
     </div>
   </div>
 
+  <!-- Flash Message Section -->
+  <?php if(isset($_SESSION['fertilizer_message'])): ?>
+    <div class="alert-container">
+      <div class="alert <?php echo isset($_SESSION['fertilizer_message_class']) ? $_SESSION['fertilizer_message_class'] : 'alert-success'; ?>">
+        <div class="alert-icon">
+          <i class='bx <?php echo (strpos($_SESSION['fertilizer_message_class'] ?? '', 'danger') !== false) ? 'bx-x-circle' : 'bx-check-circle'; ?>'></i>
+        </div>
+        <div class="alert-content">
+          <?php echo $_SESSION['fertilizer_message']; ?>
+        </div>
+        <button class="alert-close" onclick="this.parentElement.style.display='none';">
+          <i class='bx bx-x'></i>
+        </button>
+      </div>
+    </div>
+    <?php unset($_SESSION['fertilizer_message']); ?>
+    <?php unset($_SESSION['fertilizer_message_class']); ?>
+  <?php endif; ?>
+
   <!-- New Fertilizer Request Form Section -->
   <div class="request-form-section">
     <div class="section-header">
@@ -103,7 +122,7 @@
                 </div>
                 <div class="info-item">
                   <i class='bx bx-calculator'></i>
-                  <span>Amount: <?php echo number_format($order->quantity) . ' ' . isset($unit) ? $unit : ''; ?></span>
+                  <span>Amount: <?php echo number_format($order->quantity) . ' ' . ($order->unit ?? ''); ?></span>
                 </div>
                 <div class="info-item">
                   <i class='bx bx-dollar'></i>
@@ -133,58 +152,78 @@
       </div>
     <?php endif; ?>
   </div>
+
+  <!-- Auto-hide success message and refresh page -->
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    // Look for alert elements with success class
+    const successAlerts = document.querySelectorAll('.alert.alert-success');
+    
+    // Check if we found any success alerts
+    if (successAlerts.length > 0) {
+      console.log('Success alert found, setting timeout');
+      
+      // Set timeout to refresh after 3 seconds
+      setTimeout(function() {
+        console.log('Timeout triggered, refreshing page');
+        window.location.reload();
+      }, 3000);
+    }
+  });
+</script>
+
 </main>
 
 <script src="<?php echo URLROOT; ?>/public/css/script.js"></script>
 <script>
-// Update Price Per Unit based on the selected fertilizer and unit
-// Update Price Per Unit based on the selected fertilizer and unit
-function updatePricePerUnit() {
-  const fertilizerSelect = document.getElementById('type_id');
-  const unitSelect = document.getElementById('unit');
-  const pricePerUnitInput = document.getElementById('price_per_unit');
+  // Update Price Per Unit based on the selected fertilizer and unit
+  function updatePricePerUnit() {
+    const fertilizerSelect = document.getElementById('type_id');
+    const unitSelect = document.getElementById('unit');
+    const pricePerUnitInput = document.getElementById('price_per_unit');
 
-  const selectedOption = fertilizerSelect.options[fertilizerSelect.selectedIndex];
-  if (!selectedOption || selectedOption.value === "") {
-    pricePerUnitInput.value = '';
+    const selectedOption = fertilizerSelect.options[fertilizerSelect.selectedIndex];
+    if (!selectedOption || selectedOption.value === "") {
+      pricePerUnitInput.value = '';
+      updateTotalPrice();
+      return;
+    }
+
+    const unit = unitSelect.value;
+    let price = 0;
+    
+    if (unit === "kg") {
+      price = parseFloat(selectedOption.getAttribute('data-price-kg'));
+    } else if (unit === "packs") {
+      price = parseFloat(selectedOption.getAttribute('data-price-pack'));
+    } else if (unit === "box") {
+      price = parseFloat(selectedOption.getAttribute('data-price-box'));
+    } else {
+      price = 0;
+    }
+    
+    if (!isNaN(price)) {
+      pricePerUnitInput.value = price.toFixed(2);
+    } else {
+      pricePerUnitInput.value = '';
+    }
+    
     updateTotalPrice();
-    return;
   }
 
-  const unit = unitSelect.value;
-  let price = 0;
-  
-  if (unit === "kg") {
-    price = parseFloat(selectedOption.getAttribute('data-price-kg'));
-  } else if (unit === "packs") {
-    price = parseFloat(selectedOption.getAttribute('data-price-pack'));
-  } else if (unit === "box") {
-    price = parseFloat(selectedOption.getAttribute('data-price-box'));
-  } else {
-    price = 0;
+  // Update total price based on amount and price per unit
+  function updateTotalPrice() {
+    const amount = parseFloat(document.getElementById('total_amount').value);
+    const pricePerUnit = parseFloat(document.getElementById('price_per_unit').value);
+    const totalPriceInput = document.getElementById('total_price');
+    
+    if (!isNaN(amount) && !isNaN(pricePerUnit)) {
+      totalPriceInput.value = (amount * pricePerUnit).toFixed(2);
+    } else {
+      totalPriceInput.value = '';
+    }
   }
-  
-  if (!isNaN(price)) {
-    pricePerUnitInput.value = price.toFixed(2);
-  } else {
-    pricePerUnitInput.value = '';
-  }
-  
-  updateTotalPrice();
-}
 
-// Update total price based on amount and price per unit
-function updateTotalPrice() {
-  const amount = parseFloat(document.getElementById('total_amount').value);
-  const pricePerUnit = parseFloat(document.getElementById('price_per_unit').value);
-  const totalPriceInput = document.getElementById('total_price');
-  
-  if (!isNaN(amount) && !isNaN(pricePerUnit)) {
-    totalPriceInput.value = (amount * pricePerUnit).toFixed(2);
-  } else {
-    totalPriceInput.value = '';
-  }
-}
 </script>
 
 <?php require APPROOT . '/views/inc/components/footer.php'; ?>
@@ -406,6 +445,77 @@ function updateTotalPrice() {
     }
     .schedule-info {
       flex-direction: column;
+    }
+  }
+
+  /* Alert Styles */
+  .alert-container {
+    margin-bottom: var(--spacing-lg);
+  }
+
+  .alert {
+    display: flex;
+    align-items: center;
+    padding: var(--spacing-md);
+    border-radius: var(--border-radius-md);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    animation: slideDown 0.3s ease-out;
+  }
+
+  .alert-success {
+    background-color: rgba(46, 204, 113, 0.15);
+    border-left: 4px solid #2ecc71;
+    color: #27ae60;
+  }
+
+  .alert-danger {
+    background-color: rgba(231, 76, 60, 0.15);
+    border-left: 4px solid #e74c3c;
+    color: #c0392b;
+  }
+
+  .alert-warning {
+    background-color: rgba(243, 156, 18, 0.15);
+    border-left: 4px solid #f39c12;
+    color: #d35400;
+  }
+
+  .alert-icon {
+    font-size: 1.5rem;
+    margin-right: var(--spacing-md);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .alert-content {
+    flex: 1;
+    font-size: 1rem;
+    line-height: 1.4;
+  }
+
+  .alert-close {
+    background: transparent;
+    border: none;
+    color: inherit;
+    cursor: pointer;
+    font-size: 1.25rem;
+    opacity: 0.7;
+    transition: opacity 0.2s;
+  }
+
+  .alert-close:hover {
+    opacity: 1;
+  }
+
+  @keyframes slideDown {
+    from {
+      transform: translateY(-20px);
+      opacity: 0;
+    }
+    to {
+      transform: translateY(0);
+      opacity: 1;
     }
   }
 </style>

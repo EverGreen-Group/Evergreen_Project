@@ -28,7 +28,7 @@
   <div class="table-data">
     <div class="order">
       <div class="head">
-        <h3>Your Time Slots</h3>
+        <h3>My Time Slots</h3>
         <a href="<?php echo URLROOT; ?>/manager/createSlot" class="btn btn-primary">
           <i class='bx bx-plus'></i>
           Create Time Slot
@@ -41,6 +41,7 @@
             <th>Date</th>
             <th>Time Range</th>
             <th>Status</th>
+            <th>Cancellation</th>
           </tr>
         </thead>
         <tbody>
@@ -51,6 +52,18 @@
                 <td><?php echo htmlspecialchars($slot->date); ?></td>
                 <td><?php echo htmlspecialchars($slot->start_time . ' - ' . $slot->end_time); ?></td>
                 <td><span class="status-badge <?php echo strtolower($slot->status); ?>"><?php echo ucfirst($slot->status); ?></span></td>
+                <td>
+                  <?php if ($slot->status == 'Available'): ?>
+                  <form method="POST" action="<?php echo URLROOT; ?>/manager/cancelSlot">
+                    <input type="hidden" name="slot_id" value="<?php echo $slot->slot_id; ?>">
+                    <button type="submit" class="btn" style="background-color: rgb(240, 46, 46); color: white; font-size: 0.8rem; border-radius: 20px; height: 25px; width: 70px;" title="Cancel Slot">
+                      Cancel
+                    </button>
+                  </form>
+                  <?php else: ?>
+                    <span class="disabled-action btn" style="background-color:rgb(224, 224, 224); font-size: 0.7rem; color: white; border-radius: 20px; width: 70px;">Cancel</span>
+                  <?php endif; ?>
+                </td>
               </tr>
             <?php endforeach; ?>
           <?php else: ?>
@@ -66,7 +79,7 @@
     <div class="order">
       <div class="head">
         <h3>Incoming Requests</h3>
-        <a href="<?php echo URLROOT; ?>/manager/createSlot" class="btn btn-primary">
+        <a href="<?php echo URLROOT; ?>/manager/appointments" class="btn btn-primary">
           <i class='bx bx-show'></i>
           View Rejected Requests
         </a>
@@ -116,13 +129,9 @@
     <div class="order">
       <div class="head">
         <h3>Accepted Appointments</h3>
-        <a href="<?php echo URLROOT; ?>/manager/createSlot" class="btn btn-primary">
+        <a href="<?php echo URLROOT; ?>/manager/allAppointments" class="btn btn-primary">
           <i class='bx bx-search-alt-2'></i>
           View All Appointments
-        </a>
-        <a href="<?php echo URLROOT; ?>/manager/createSlot" class="btn btn-primary">
-          <i class='bx bx-show'></i>
-          View Your Appointment History
         </a>
       </div>
       <table>
@@ -249,6 +258,7 @@
         margin-right: 8px; /* Space between image and name */
         object-fit: cover; /* Ensure the image covers the area */
     }
+
 </style>
 
 <?php require APPROOT . '/views/inc/components/footer.php'; ?>
