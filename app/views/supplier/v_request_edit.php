@@ -20,6 +20,12 @@
           <i class='bx bx-chevron-right'></i>
         </li>
         <li>
+        <span>Fertilizer Requests</span>
+        </li>        
+        <li>
+          <i class='bx bx-chevron-right'></i>
+        </li>
+        <li>
           <span>Edit Fertilizer Request</span>
         </li>
       </ul>
@@ -32,32 +38,24 @@
       <h2>Current Order Details</h2>
     </div>
     <div class="card-body">
-      <div class="order-details-grid">
-        <div class="detail-item">
-          <span class="label">Order ID:</span>
-          <span class="value"><?php echo $data['order']->order_id; ?></span>
+        <div class="order-details-grid">
+            <div class="detail-item">
+              <span class="label">Order ID:</span>
+              <span class="value"><?php echo $data['order']->order_id; ?></span>
+            </div>
+            <div class="detail-item">
+              <span class="label">Fertilizer Name:</span>
+              <span class="value"><?php echo $data['order']->fertilizer_name; ?></span>
+            </div>
+            <div class="detail-item">
+              <span class="label">Quantity:</span>
+              <span class="value"><?php echo $data['order']->quantity; ?></span>
+            </div>
+            <div class="detail-item">
+              <span class="label">Total Price:</span>
+              <span class="value"><?php echo $data['order']->total_amount; ?></span>
+            </div>
         </div>
-        <div class="detail-item">
-          <span class="label">Fertilizer Type:</span>
-          <span class="value"><?php echo $data['order']->fertilizer_name; ?></span>
-        </div>
-        <div class="detail-item">
-          <span class="label">Total Amount:</span>
-          <span class="value"><?php echo $data['order']->total_amount; ?></span>
-        </div>
-        <div class="detail-item">
-          <span class="label">Unit:</span>
-          <span class="value"><?php echo $data['order']->unit; ?></span>
-        </div>
-        <div class="detail-item">
-          <span class="label">Price Per Unit:</span>
-          <span class="value"><?php echo $data['order']->price_per_unit; ?></span>
-        </div>
-        <div class="detail-item">
-          <span class="label">Total Price:</span>
-          <span class="value"><?php echo $data['order']->total_price; ?></span>
-        </div>
-      </div>
     </div>
   </div>
 
@@ -67,44 +65,40 @@
       <h2>Update Request</h2>
     </div>
     <div class="card-body">
-      <form id="fertilizerForm" method="POST" action="<?php echo URLROOT . '/supplier/editFertilizerRequest/' . $data['order']->order_id; ?>">
-        <div class="form-group">
-          <label for="type_id">Fertilizer Type:</label>
-          <select id="type_id" name="type_id" required>
-            <option value="">Select Fertilizer</option>
-            <?php foreach($data['fertilizer_types'] as $type): ?>
-              <option value="<?php echo $type->type_id; ?>" 
-                      <?php echo ($data['order']->type_id == $type->type_id) ? 'selected' : ''; ?>
-                      data-unit-price-kg="<?php echo $type->unit_price_kg; ?>"
-                      data-pack-price="<?php echo $type->unit_price_packs; ?>"
-                      data-box-price="<?php echo $type->unit_price_box; ?>">
-                <?php echo $type->name; ?>
-              </option>
-            <?php endforeach; ?>
+      <form id="fertilizer-request-form" method="POST" action="<?php echo URLROOT . '/supplier/editFertilizerRequest/' . $data['order']->order_id; ?>">
+        
+      <div class="form-group">
+          <label for="fertilizer_id">Fertilizer Name:</label>
+          <select id="fertilizer_id" name="fertilizer_id" required onchange="updateTotalPrice()">
+            <option value="">-- Select Fertilizer ID --</option>
+                <?php foreach($data['fertilizer_types'] as $fertilizer): ?>
+                  <option value="<?php echo $fertilizer->fertilizer_id; ?>" 
+                      <?php echo ($data['order']->fertilizer_id == $fertilizer->fertilizer_id) ? 'selected' : ''; ?>
+                          data-price = "<?php echo $fertilizer->price; ?>">
+                      <?php echo $fertilizer->fertilizer_name; ?> (<?php echo $fertilizer->company_name; ?>)
+                  </option>
+                <?php endforeach; ?>
           </select>
         </div>
 
         <div class="form-group">
-          <label for="unit">Unit:</label>
-          <select id="unit" name="unit" required>
-            <option value="">Select Unit</option>
-            <option value="kg" <?php echo ($data['order']->unit == 'kg') ? 'selected' : ''; ?>>Kilograms (kg)</option>
-            <option value="packs" <?php echo ($data['order']->unit == 'packs') ? 'selected' : ''; ?>>Packs</option>
-            <option value="box" <?php echo ($data['order']->unit == 'box') ? 'selected' : ''; ?>>Box</option>
-          </select>
+          <label for="total_amount">Quantity:</label>
+          <input type="number" id="quantity" name="quantity" max="100" min="1" value="<?php echo $data['order']->quantity; ?>" required onchange="updateTotalPrice()">
         </div>
 
-        <div class="form-group">
-          <label for="total_amount">Total Amount:</label>
-          <input type="number" id="total_amount" name="total_amount" max="50" min="1" value="<?php echo $data['order']->total_amount; ?>" required>
+        <div class="form-group read-only-group">
+            <label for="price_per_unit">Price Per Unit:</label>
+            <input type="text" id="price_per_unit" name="price_per_unit" readonly>
         </div>
-
-        <input type="hidden" id="price_per_unit" name="price_per_unit">
-        <input type="hidden" id="total_price" name="total_price">
+        <div class="form-group read-only-group">
+            <label for="total_price">Total Price:</label>
+            <input type="text" id="total_price" name="total_price" readonly>
+        </div>
 
         <div class="form-group">
           <button type="submit" class="submit-btn">Update Request</button>
         </div>
+
       </form>
     </div>
   </div>
@@ -112,8 +106,78 @@
 
 <div id="notification" class="notification" style="display: none;"></div>
 <script src="<?php echo URLROOT; ?>/css/script.js"></script>
+
 <script>
-  // (Optional) JavaScript functions for price calculation can be added here
+  function updateTotalPrice() {
+      const fertilizerSelect = document.getElementById('fertilizer_id');
+      const quantityInput = document.getElementById('quantity');
+      const pricePerUnitInput = document.getElementById('price_per_unit');
+      const totalPriceInput = document.getElementById('total_price');
+
+      // Get selected option
+      const selectedOption = fertilizerSelect.options[fertilizerSelect.selectedIndex];
+
+      // Check if a valid option is selected
+      if (!selectedOption || selectedOption.value === "") {
+        pricePerUnitInput.value = '';
+        totalPriceInput.value = '';
+        return;
+      }
+
+      // Get price
+      const price = parseFloat(selectedOption.getAttribute('data-price'));
+      const quantity = parseFloat(quantityInput.value);
+
+      if (!isNaN(price)) {
+        pricePerUnitInput.value = price.toFixed(2);
+
+        if (!isNaN(quantity)) {
+          totalPriceInput.value = (price * quantity).toFixed(2);
+        } else {
+          totalPriceInput.value = '';
+        }
+      } else {
+        pricePerUnitInput.value = '';
+        totalPriceInput.value = '';
+      }
+    }
+
+    function confirmDelete(orderId) {
+      if (confirm("Are you sure you want to delete order #" + orderId + "?")) {
+        window.location.href = '<?php echo URLROOT; ?>/Supplier/deleteFertilizerRequest/' + orderId;
+      }
+    }
+
+    document.getElementById('fertilizer-request-form').addEventListener('submit', function(e) {
+      const fertilizerSelect = document.getElementById('fertilizer_id');
+      const quantityInput = document.getElementById('quantity');
+      const totalPriceInput = document.getElementById('total_price');
+      
+      if (fertilizerSelect.value === "") {
+          e.preventDefault();
+          alert("Please select a fertilizer type");
+          return false;
+      }
+      
+      const quantity = parseFloat(quantityInput.value);
+      if (isNaN(quantity) || quantity <= 0 || quantity > 100) {
+          e.preventDefault();
+          alert("Please enter a valid quantity between 1 and 100");
+          return false;
+      }
+      
+      // Ensure price calculation was performed
+      if (totalPriceInput.value === "") {
+          e.preventDefault();
+          updateTotalPrice(); // Recalculate price
+          if (totalPriceInput.value === "") {
+              alert("Unable to calculate total price. Please check your inputs.");
+              return false;
+          }
+      }
+      
+      return true;
+  });
 </script>
 
 <style>
@@ -257,4 +321,52 @@
       grid-template-columns: 1fr;
     }
   }
+
+  .read-only-group input {
+    background-color: var(--background-light);
+    cursor: not-allowed;
+  }
+
+  /* Consistent Input Styling */
+.edit-form-card input[type="text"],
+.edit-form-card input[type="number"],
+.edit-form-card select {
+  padding: var(--spacing-sm);
+  border: 1px solid var(--border-color);
+  border-radius: var(--border-radius-sm);
+  font-size: 1rem;
+  height: 40px; /* Fixed height for all inputs */
+  width: 100%;
+  box-sizing: border-box;
+}
+
+/* Make readonly inputs appear slightly different but maintain the same dimensions */
+.edit-form-card input[readonly] {
+  background-color: var(--background-light);
+  cursor: not-allowed;
+  color: var(--text-secondary);
+}
+
+/* Style for the submit button container */
+.edit-form-card .button-group {
+  grid-column: span 2;
+}
+
+/* Maintain consistent form layout */
+.edit-form-card form {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--spacing-lg);
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .edit-form-card form {
+    grid-template-columns: 1fr;
+  }
+  
+  .edit-form-card .button-group {
+    grid-column: 1;
+  }
+}
 </style>
