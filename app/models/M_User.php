@@ -591,6 +591,43 @@ class M_User {
 
         return $stats;
     }
+
+
+    public function getFactoryConfigurations() {
+        $data = [];
+
+        $this->db->query("SELECT * FROM factory_location ORDER BY id DESC LIMIT 1");
+        $data['factory_location'] = $this->db->single();
+        
+
+        $this->db->query("SELECT * FROM deduction_configurations WHERE category = 'moisture' ORDER BY value");
+        $data['moisture_deductions'] = $this->db->resultSet();
+        
+        $this->db->query("SELECT * FROM deduction_configurations WHERE category = 'leaf_age' ORDER BY value");
+        $data['leaf_age_deductions'] = $this->db->resultSet();
+        
+        return $data;
+    }
+
+    public function updateFactoryLocation($id, $latitude, $longitude) {
+        $this->db->query("UPDATE factory_location SET latitude = :latitude, longitude = :longitude WHERE id = :id");
+        $this->db->bind(':id', $id);
+        $this->db->bind(':latitude', $latitude);
+        $this->db->bind(':longitude', $longitude);
+        
+        return $this->db->execute();
+    }
+    
+    public function updateDeduction($id, $deductionPercent) {
+        $this->db->query("UPDATE deduction_configurations SET deduction_percent = :percent WHERE id = :id");
+        $this->db->bind(':id', $id);
+        $this->db->bind(':percent', $deductionPercent);
+        
+        return $this->db->execute();
+    }
+
+
+
     
 }
 ?>

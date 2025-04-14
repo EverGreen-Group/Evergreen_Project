@@ -26,8 +26,8 @@ class Admin extends Controller
 
         requireAuth();
         if (!RoleHelper::hasAnyRole([RoleHelper::ADMIN])) {
-            setFlashMessage('Unauthorized access');
-            redirect('/');
+            setFlashMessage('Unauthorized access', 'error');
+            redirect('');
             exit();
         }
 
@@ -175,14 +175,14 @@ class Admin extends Controller
             $normalLeafRate = $_POST['normal_leaf_rate'];
             $superLeafRate = $_POST['super_leaf_rate'];
     
-            // Add validation
+            // validation but i have put it in the view also
             if (empty($year) || empty($month) || empty($normalLeafRate) || empty($superLeafRate)) {
                 setFlashMessage('Please enter the year, month, normal leaf rate, and super leaf rate to generate the report', 'error');
                 redirect('admin/payments');
                 return;
             }
     
-            // Validate for negative values
+            //validate for negative values
             if ($normalLeafRate < 0 || $superLeafRate < 0) {
                 setFlashMessage('Normal leaf rate and super leaf rate must be non-negative values.', 'error');
                 redirect('admin/payments');
@@ -259,6 +259,88 @@ class Admin extends Controller
         ];
     
         $this->view('inventory/v_view_payment_report', $data);
+    }
+
+
+    public function config() {
+
+        $data = $this->userModel->getFactoryConfigurations();
+        
+        if (isset($_SESSION['success'])) {
+            $data['success'] = $_SESSION['success'];
+            unset($_SESSION['success']);
+        }
+        
+        if (isset($_SESSION['error'])) {
+            $data['error'] = $_SESSION['error'];
+            unset($_SESSION['error']);
+        }
+        
+        $this->view('admin/v_config', $data);
+    }
+
+    public function updateFactoryLocation() {
+        if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+            $id = $_POST['id'];
+            $latitude = $_POST['latitude'];
+            $longitude = $_POST['longitude'];
+            
+            $result = $this->userModel->updateFactoryLocation($id, $latitude, $longitude);
+            
+            if ($result) {
+                setFlashMessage('Factory location updated successfully');
+            } else {
+                setFlashMessage('Failed to update factory location', 'error');
+            }
+        }
+        
+        redirect('admin/config');
+    }
+    
+    public function updateMoistureDeductions() {
+        if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+            $ids = $_POST['id'];
+            $deductions = $_POST['deduction'];
+            
+            $result = true;
+            for ($i = 0; $i < count($ids); $i++) {
+                $updateResult = $this->userModel->updateDeduction($ids[$i], $deductions[$i]);
+                if (!$updateResult) {
+                    $result = false;
+                }
+            }
+            
+            if ($result) {
+                setFlashMessage('Moisture deductions updated successfully');
+            } else {
+                setFlashMessage('Failed to update some moisture deductions', 'error');
+            }
+        }
+        
+        redirect('admin/config');
+    }
+    
+    public function updateLeafAgeDeductions() {
+        if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+            $ids = $_POST['id'];
+            $deductions = $_POST['deduction'];
+            
+            $result = true;
+            for ($i = 0; $i < count($ids); $i++) {
+                $updateResult = $this->userModel->updateDeduction($ids[$i], $deductions[$i]);
+                if (!$updateResult) {
+                    $result = false;
+                }
+            }
+            
+            if ($result) {
+                setFlashMessage('Leaf age deductions updated successfully');
+            } else {
+                setFlashMessage('Failed to update some leaf age deductions', 'error');
+            }
+        }
+        
+        redirect('admin/config');
     }
 
 }

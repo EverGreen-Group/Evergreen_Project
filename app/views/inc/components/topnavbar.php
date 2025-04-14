@@ -47,7 +47,7 @@
                 <li><a href="<?php echo URLROOT; ?>/auth/profile">Profile</a></li>
                 <li><a href="<?php echo URLROOT; ?>/admin/">Admin Dashboard</a></li>
                 <li><a href="<?php echo URLROOT; ?>/manager/">Manager Dashboard</a></li>
-                <li><a href="<?php echo URLROOT; ?>/inventory/">Inventory Manager Dashboard</a></li>
+                <li><a href="<?php echo URLROOT; ?>/inventory/">Inventory Dashboard</a></li>
             <?php endif; ?>
 
             <?php if (RoleHelper::hasRole(RoleHelper::MANAGER)): ?>

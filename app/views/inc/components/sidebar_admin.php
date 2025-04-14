@@ -23,6 +23,12 @@
 					<span class="text">Payment Reports</span>
 				</a>
 			</li>
+			<li class="<?php echo (basename($_SERVER['REQUEST_URI']) == 'admin') ? 'active' : ''; ?>">
+				<a href="<?php echo URLROOT; ?>/admin/config">
+					<i class='bx bxs-cog'></i>
+					<span class="text">Factory Configs</span>
+				</a>
+			</li>	
 			<li class="<?php echo (basename($_SERVER['REQUEST_URI']) == 'manager') ? 'active' : ''; ?>">
 				<a href="<?php echo URLROOT; ?>/manager/">
 					<i class='bx bxs-network-chart'></i>
