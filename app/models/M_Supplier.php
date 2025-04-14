@@ -420,7 +420,7 @@ class M_Supplier {
 
 
     public function getSupplierEarnings($supplierId, $month = 'all', $year = null) {
-        $sql = "SELECT * FROM supplier_daily_earnings WHERE supplier_id = :supplier_id";
+        $sql = "SELECT * FROM supplier_daily_earnings WHERE active = 1 AND supplier_id = :supplier_id";
 
         if ($month !== 'all' && is_numeric($month)) {
             $sql .= " AND MONTH(collection_date) = :month";

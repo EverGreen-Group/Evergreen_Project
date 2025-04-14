@@ -77,14 +77,30 @@ class Admin extends Controller
     //----------------------------------------
     // DASHBOARD METHODS
     //----------------------------------------
-    public function index()
-    {
-        // Get dashboard stats from the model
-
-        // Pass the stats and data for the dropdowns to the view
-        $this->view('admin/v_dashboard', [
-
-        ]);
+    public function index() {
+        $email = isset($_GET['email']) ? $_GET['email'] : null;
+        $first_name = isset($_GET['first_name']) ? $_GET['first_name'] : null;
+        $last_name = isset($_GET['last_name']) ? $_GET['last_name'] : null;
+        $nic = isset($_GET['nic']) ? $_GET['nic'] : null; 
+        $role_id = isset($_GET['role']) ? $_GET['role'] : null;
+    
+        if ($email || $first_name || $last_name || $nic || $role_id) {
+            $data['allUsers'] = $this->userModel->getFilteredUsers($email, $first_name, $last_name, $nic, $role_id);
+        } else {
+            $data['allUsers'] = $this->userModel->getAllUsers();
+        }
+    
+        // Get user statistics
+        $data['totalUsers'] = $this->userModel->getTotalUsersCount();
+        $data['normalUsers'] = $this->userModel->getNormalUsersCount();
+        
+        // Get data for charts
+        $data['monthlyRegistration'] = $this->userModel->getMonthlyRegistrations();
+        $data['roleDistribution'] = $this->userModel->getUserRoleDistribution();
+        
+        $data['allRoles'] = $this->userModel->getAllUniqueRoles();
+    
+        $this->view('admin/v_role', $data);
     }
 
     public function users() {
@@ -150,6 +166,113 @@ class Admin extends Controller
             // If not a POST request, redirect to the user management page
             redirect('admin/users');
         }
+    }
+
+    public function payments() {
+
+        $paymentModel = $this->model('M_Payment');
+        $paymentSummary = $paymentModel->getPaymentSummary();
+    
+    
+    
+        $data = [
+            'payment_summary' => $paymentSummary
+        ];
+    
+        $this->view('admin/v_payments_2', $data);
+    }
+    
+    public function createPaymentReport() {
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            $year = $_POST['year'];
+            $month = $_POST['month'];
+            $normalLeafRate = $_POST['normal_leaf_rate'];
+            $superLeafRate = $_POST['super_leaf_rate'];
+    
+            // Add validation
+            if (empty($year) || empty($month) || empty($normalLeafRate) || empty($superLeafRate)) {
+                setFlashMessage('Please enter the year, month, normal leaf rate, and super leaf rate to generate the report', 'error');
+                redirect('admin/payments');
+                return;
+            }
+    
+            // Validate for negative values
+            if ($normalLeafRate < 0 || $superLeafRate < 0) {
+                setFlashMessage('Normal leaf rate and super leaf rate must be non-negative values.', 'error');
+                redirect('admin/payments');
+                return;
+            }
+    
+            $paymentModel = $this->model('M_Payment');
+            
+            try {
+                $result = $paymentModel->generateMonthlyPayment($year, $month, $normalLeafRate, $superLeafRate);
+                
+                if ($result) {
+                    setFlashMessage('Payment report created successfully!');
+                } else {
+                    setFlashMessage('Payment report generation failed!', 'error');
+                }
+            } catch (Exception $e) {
+                setFlashMessage('Error when generating the report, Error: ' . $e);
+            }
+            
+            redirect('admin/payments');
+        } else {
+            redirect('admin/payments');
+        }
+    }
+
+    public function publishPaymentReport($paymentId) {
+        $paymentModel = $this->model('M_Payment');
+        $result = $paymentModel->publishPaymentReport($paymentId);
+        if ($result == 1 ){
+            setFlashMessage("Payment report published to the suppliers!");
+        } elseif ($result == 0) {
+            setFlashMessage("This report was already published!", 'error');
+        } else {
+            setFlashMessage("Couldnt publish this payment report!", 'error');
+        }
+
+        redirect('admin/payments');
+    }
+    
+    
+    
+    public function deletePaymentReport($payment_id) {
+        // Load payment model
+        $paymentModel = $this->model('M_Payment');
+        
+        try {
+    
+            
+            $result = $paymentModel->deletePayment($payment_id);
+            
+            
+            if ($result) {
+                setFlashMessage('Payment report deleted successfully!');
+            } else {
+                setFlashMessage('Payment report deletion failed!', 'error');
+            }
+        } catch (Exception $e) {
+    
+            setFlashMessage('Error when deleting the report: ' . $e->getMessage(), 'error');
+        }
+        
+        redirect('admin/payments');
+    }
+    
+    
+    public function viewPaymentReport($payment_id) {
+        $paymentModel = $this->model('M_Payment');
+    
+        $paymentDetails = $paymentModel->getPaymentDetailsByPaymentId($payment_id); 
+    
+        $data = [
+            'payment_details' => $paymentDetails 
+        ];
+    
+        $this->view('inventory/v_view_payment_report', $data);
     }
 
 }

@@ -4,44 +4,39 @@
     <span class="text">EVERGREEN</span>
   </a>
   <ul class="side-menu top">
-    <li class="<?php echo (basename($_SERVER['REQUEST_URI']) == 'index') ? 'active' : ''; ?>">
-      <a href="<?php echo URLROOT; ?>/admin/index">
-        <i class="bx bxs-dashboard"></i>
-        <span class="text">Home</span>
-      </a>
-    </li>
-    <li class="<?php echo (basename($_SERVER['REQUEST_URI']) == 'supplier') ? 'active' : ''; ?>">
-      <a href="<?php echo URLROOT; ?>/suppliermanager/">
-        <i class="bx bxs-user"></i>
-        <span class="text">Supplier Management</span>
-      </a>
-    </li>
-    <li class="<?php echo (basename($_SERVER['REQUEST_URI']) == 'collection') ? 'active' : ''; ?>">
-      <a href="<?php echo URLROOT; ?>/manager/">
-        <i class="bx bxs-truck"></i>
-        <span class="text">Collection Management</span>
-      </a>
-    </li>
-    <li class="<?php echo (basename($_SERVER['REQUEST_URI']) == 'inventory') ? 'active' : ''; ?>">
-      <a href="<?php echo URLROOT; ?>/inventory/">
-        <i class="bx bxs-box"></i>
-        <span class="text">Inventory Management</span>
-      </a>
-    </li>
+
+			<li class="<?php echo (basename($_SERVER['REQUEST_URI']) == 'index') ? 'active' : ''; ?>">
+				<a href="<?php echo URLROOT; ?>/admin/index">
+					<i class='bx bxs-envelope'></i>
+					<span class="text">Dashboard</span>
+				</a>
+			</li>
+      		<li class="<?php echo (basename($_SERVER['REQUEST_URI']) == 'userLogs') ? 'active' : ''; ?>">
+				<a href="<?php echo URLROOT; ?>/manager/userLogs">
+        				<i class='bx bxs-calendar-check' ></i>
+					<span class="text">User logs</span>
+				</a>
+			</li>
+      		<li class="<?php echo (basename($_SERVER['REQUEST_URI']) == 'payments') ? 'active' : ''; ?>">
+				<a href="<?php echo URLROOT; ?>/admin/payments">
+					<i class='bx bxs-wallet' ></i>
+					<span class="text">Payment Reports</span>
+				</a>
+			</li>
+			<li class="<?php echo (basename($_SERVER['REQUEST_URI']) == 'manager') ? 'active' : ''; ?>">
+				<a href="<?php echo URLROOT; ?>/manager/">
+					<i class='bx bxs-network-chart'></i>
+					<span class="text">Supplier Relations</span>
+				</a>
+			</li>		
+			<li>
+				<a href="<?php echo URLROOT; ?>/inventory/">
+					<i class='bx bxs-alarm-exclamation' ></i>
+					<span class="text">Inventory Management</span>
+				</a>
+			</li>
   </ul>
   <ul class="side-menu">
-    <li class="<?php echo (basename($_SERVER['REQUEST_URI']) == 'settings') ? 'active' : ''; ?>">
-      <a href="<?php echo URLROOT; ?>/manager/settings">
-        <i class="bx bxs-cog"></i>
-        <span class="text">Settings</span>
-      </a>
-    </li>
-    <li>
-      <a href="<?php echo URLROOT; ?>/manager/personal-details" class="logout">
-        <i class="bx bxs-user-detail"></i>
-        <span class="text">Personal Details</span>
-      </a>
-    </li>
     <li>
       <a href="<?php echo URLROOT; ?>/auth/logout" class="logout">
         <i class="bx bxs-log-out-circle"></i>

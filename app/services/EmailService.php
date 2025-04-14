@@ -4,10 +4,6 @@ use PHPMailer\PHPMailer\PHPMailer;
 use PHPMailer\PHPMailer\SMTP;
 use PHPMailer\PHPMailer\Exception;
 
-// Make sure these files are included
-require_once APPROOT . '/libraries/PHPMailer/src/PHPMailer.php';
-require_once APPROOT . '/libraries/PHPMailer/src/SMTP.php';
-require_once APPROOT . '/libraries/PHPMailer/src/Exception.php';
 class EmailService {
     private $mailer;
     

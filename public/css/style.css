@@ -1410,6 +1410,18 @@ body.dark .auth-form-group input {
   transition: background-color 0.3s ease;
 }
 
+.btn-blue {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background-color: lightskyblue;
+  color: var(--light);
+  padding: 10px 20px;
+  border-radius: 5px;
+  text-decoration: none;
+  transition: background-color 0.3s ease;
+}
+
 /* PROFILES NAVBAR PART */
 
 /* Enhanced profile styling with larger name - No role */

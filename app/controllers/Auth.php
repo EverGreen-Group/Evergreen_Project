@@ -2,6 +2,8 @@
 
 require_once APPROOT . '/helpers/auth_middleware.php';
 require_once APPROOT . '/controllers/Notifications.php';
+require_once APPROOT . '/services/EmailService.php';
+
 
 use PHPMailer\PHPMailer\PHPMailer;
 use PHPMailer\PHPMailer\Exception;

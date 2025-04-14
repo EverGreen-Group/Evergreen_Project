@@ -257,16 +257,19 @@ class M_User {
 
     public function getAllUsers() {
         $this->db->query("SELECT 
-            user_id,
-            email,
-            first_name,
-            last_name,
-            nic,
-            date_of_birth,
-            role_id,
-            approval_status,
-            created_at
-            FROM users");
+            u.user_id,
+            u.email,
+            p.first_name,
+            p.last_name,
+            p.nic,
+            p.date_of_birth,
+            u.role_id,
+            r.role_name,
+            u.created_at
+            FROM users u 
+            INNER JOIN profiles p on p.user_id = u.user_id
+            INNER JOIN roles r on u.role_id = r.role_id
+            ");
         
         $results = $this->db->resultSet();
         
@@ -362,50 +365,64 @@ class M_User {
         return $this->db->execute();
     }
 
-    public function getFilteredUsers($email = null, $first_name = null, $last_name = null, $role_id = null) {
-        $sql = "SELECT 
-                    user_id,
-                    email,
-                    first_name,
-                    last_name,
-                    nic,
-                    date_of_birth,
-                    role_id,
-                    approval_status,
-                    created_at
-                FROM users WHERE 1=1"; // Start with a base query
+    // app/models/M_User.php
+    public function getFilteredUsers($email, $first_name, $last_name, $nic, $role_id) {
+        $query = "SELECT 
+            u.user_id,
+            u.email,
+            p.first_name,
+            p.last_name,
+            p.nic,
+            p.date_of_birth,
+            u.role_id,
+            r.role_name
+            FROM users u 
+            INNER JOIN profiles p ON p.user_id = u.user_id
+            INNER JOIN roles r ON u.role_id = r.role_id
+            WHERE 1=1"; // Start with a base query
 
-        // Build the query based on provided filters
-        if (!empty($email)) {
-            $sql .= " AND email LIKE :email";
+        // Add filters based on provided parameters
+        if ($email) {
+            $query .= " AND u.email LIKE :email";
         }
-        if (!empty($first_name)) {
-            $sql .= " AND first_name LIKE :first_name";
+        if ($first_name) {
+            $query .= " AND p.first_name LIKE :first_name";
         }
-        if (!empty($last_name)) {
-            $sql .= " AND last_name LIKE :last_name";
+        if ($last_name) {
+            $query .= " AND p.last_name LIKE :last_name";
         }
-        if (!empty($role_id)) {
-            $sql .= " AND role_id = :role_id";
+        if ($nic) {
+            $query .= " AND p.nic LIKE :nic";
+        }
+        if ($role_id) {
+            $query .= " AND u.role_id = :role_id";
         }
 
-        // Prepare the statement
-        $this->db->query($sql);
+        $this->db->query($query);
 
-        // Bind parameters if they were set
-        if (!empty($email)) {
-            $this->db->bind(':email', '%' . $email . '%'); 
+        // Bind parameters
+        if ($email) {
+            $this->db->bind(':email', '%' . $email . '%');
         }
-        if (!empty($first_name)) {
-            $this->db->bind(':first_name', '%' . $first_name . '%'); 
+        if ($first_name) {
+            $this->db->bind(':first_name', '%' . $first_name . '%');
         }
-        if (!empty($last_name)) {
-            $this->db->bind(':last_name', '%' . $last_name . '%'); 
+        if ($last_name) {
+            $this->db->bind(':last_name', '%' . $last_name . '%');
         }
-        if (!empty($role_id)) {
+        if ($nic) {
+            $this->db->bind(':nic', '%' . $nic . '%');
+        }
+        if ($role_id) {
             $this->db->bind(':role_id', $role_id);
         }
 
+        return $this->db->resultSet();
+    }
+
+
+    public function getAllUniqueRoles() {
+        $this->db->query("SELECT DISTINCT role_id, role_name FROM roles");
         return $this->db->resultSet();
     }
 
@@ -515,6 +532,41 @@ class M_User {
         $this->db->bind(':password', $hashedPassword);
         $this->db->bind(':id', $userId);
         $this->db->execute();
+    }
+
+
+    public function getTotalUsersCount() {
+        $this->db->query("SELECT COUNT(*) as total FROM users");
+        $result = $this->db->single();
+        return $result->total;
+    }
+    
+    public function getNormalUsersCount() {
+        $this->db->query("SELECT COUNT(*) as total FROM users WHERE role_id = 7");
+        $result = $this->db->single();
+        return $result->total;
+    }
+    
+    public function getMonthlyRegistrations() {
+        $this->db->query("SELECT 
+            DATE_FORMAT(created_at, '%m/%Y') as month_year, 
+            COUNT(*) as count
+            FROM users
+            GROUP BY month_year
+            ORDER BY MIN(created_at) ASC");
+        
+        return $this->db->resultSet();
+    }
+    
+    public function getUserRoleDistribution() {
+        $this->db->query("SELECT 
+            r.role_name,
+            COUNT(u.user_id) as count
+            FROM users u
+            INNER JOIN roles r ON u.role_id = r.role_id
+            GROUP BY r.role_name");
+        
+        return $this->db->resultSet();
     }
     
 }

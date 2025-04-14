@@ -6,25 +6,7 @@ $vendorDir = dirname(__DIR__);
 $baseDir = dirname($vendorDir);
 
 return array(
-    'Simaak\\EvergreenProject\\' => array($baseDir . '/src'),
-    'PHPMailer\\PHPMailer\\' => array($vendorDir . '/phpmailer/phpmailer/src'),
-    'Symfony\\Polyfill\\Mbstring\\' => array($vendorDir . '/symfony/polyfill-mbstring'),
-    'Symfony\\Component\\Routing\\' => array($vendorDir . '/symfony/routing'),
-    'Symfony\\Component\\HttpFoundation\\' => array($vendorDir . '/symfony/http-foundation'),
     'Simaak\\EvergreenProject\\' => array($baseDir . '/app'),
-    'React\\Stream\\' => array($vendorDir . '/react/stream/src'),
-    'React\\Socket\\' => array($vendorDir . '/react/socket/src'),
-    'React\\Promise\\' => array($vendorDir . '/react/promise/src'),
-    'React\\EventLoop\\' => array($vendorDir . '/react/event-loop/src'),
-    'React\\Dns\\' => array($vendorDir . '/react/dns/src'),
-    'React\\Cache\\' => array($vendorDir . '/react/cache/src'),
-    'Ratchet\\RFC6455\\' => array($vendorDir . '/ratchet/rfc6455/src'),
-    'Ratchet\\' => array($vendorDir . '/cboden/ratchet/src/Ratchet'),
-    'Psr\\Http\\Message\\' => array($vendorDir . '/psr/http-message/src'),
-    'GuzzleHttp\\Psr7\\' => array($vendorDir . '/guzzlehttp/psr7/src'),
-    'Evenement\\' => array($vendorDir . '/evenement/evenement/src'),
-    'Endroid\\QrCode\\' => array($vendorDir . '/endroid/qr-code/src'),
-    'DASPRiD\\Enum\\' => array($vendorDir . '/dasprid/enum/src'),
-    'BaconQrCode\\' => array($vendorDir . '/bacon/bacon-qr-code/src'),
+    'PHPMailer\\PHPMailer\\' => array($vendorDir . '/phpmailer/phpmailer/src'),
     'App\\' => array($baseDir . '/app'),
 );
