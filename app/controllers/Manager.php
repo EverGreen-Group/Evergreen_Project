@@ -1978,7 +1978,7 @@ class Manager extends Controller
         
         // If form is submitted
         if ($_SERVER['REQUEST_METHOD'] == 'POST') {
-            // Sanitize POST data - Use FILTER_SANITIZE_FULL_SPECIAL_CHARS instead of deprecated FILTER_SANITIZE_STRING
+            // Sanitize POST data
             $_POST = filter_input_array(INPUT_POST, FILTER_SANITIZE_FULL_SPECIAL_CHARS);
             
             // Process form
@@ -1997,10 +1997,24 @@ class Manager extends Controller
                 flash('slot_message', 'Time slots must be scheduled for future dates', 'alert alert-danger');
             }
             
+            $start_timestamp = strtotime($data['start_time']);
+            $end_timestamp = strtotime($data['end_time']);
+
             // Check if end time is after start time
-            if (strtotime($data['start_time']) >= strtotime($data['end_time'])) {
+            if ($start_timestamp >= $end_timestamp) {
                 $data['time_err'] = 'End time must be after start time';
                 flash('slot_message', 'End time must be after start time', 'alert alert-danger');
+            } else {
+                // Only check duration if time order is valid
+                $duration_minutes = ($end_timestamp - $start_timestamp) / 60;
+
+                if ($duration_minutes < 30) {
+                    $data['time_err'] = 'Time slots must be at least 30 minutes long';
+                    flash('slot_message', 'Time slots must be at least 30 minutes long', 'alert alert-danger');
+                } else if ($duration_minutes > 120) {
+                    $data['time_err'] = 'Time slots cannot exceed 2 hours';
+                    flash('slot_message', 'Time slots cannot exceed 2 hours', 'alert alert-danger');
+                }
             }
             
             // Check if slot already exists or overlaps with another slot

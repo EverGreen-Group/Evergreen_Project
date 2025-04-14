@@ -56,12 +56,12 @@
                   <?php if ($slot->status == 'Available'): ?>
                   <form method="POST" action="<?php echo URLROOT; ?>/manager/cancelSlot">
                     <input type="hidden" name="slot_id" value="<?php echo $slot->slot_id; ?>">
-                    <button type="submit" class="btn" style="background-color: crimson; color: white; font-size: 0.8rem; border-radius: 20px; height: 25px; width: 70px;" title="Cancel Slot">
+                    <button type="submit" class="btn" style="background-color: rgb(240, 46, 46); color: white; font-size: 0.8rem; border-radius: 20px; height: 25px; width: 70px;" title="Cancel Slot">
                       Cancel
                     </button>
                   </form>
                   <?php else: ?>
-                    <span class="disabled-action btn" style="background-color:rgb(192, 192, 192); font-size: 0.7rem; color: white; border-radius: 20px; width: 70px;">Cancel</span>
+                    <span class="disabled-action btn" style="background-color:rgb(224, 224, 224); font-size: 0.7rem; color: white; border-radius: 20px; width: 70px;">Cancel</span>
                   <?php endif; ?>
                 </td>
               </tr>
