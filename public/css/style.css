@@ -345,13 +345,14 @@ body {
 }
 
 #content nav .notification {
-  font-size: 20px;
+  font-size: 27px;
   position: relative;
+  top: 2px;
 }
 
 #content nav .notification .num {
   position: absolute;
-  top: -6px;
+  top: -8px;
   right: -6px;
   width: 20px;
   height: 20px;
@@ -1437,7 +1438,7 @@ body.dark .auth-form-group input {
 }
 
 .profile-container:hover {
-  background-color: rgba(0, 0, 0, 0.05);
+  background-color: rgba(201, 201, 201, 0.05);
 }
 
 .profile {
@@ -1473,6 +1474,7 @@ body.dark .auth-form-group input {
   text-overflow: ellipsis;
   max-width: 160px;
   letter-spacing: 0.1px;
+  margin-right: 13px;
 }
 
 /* Media query for smaller screens */

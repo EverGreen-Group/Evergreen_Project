@@ -13,11 +13,13 @@ class Auth extends Controller
     private $userModel;
     private $applicationModel;
     private $notificationModel;
+    private $logModel;
 
     public function __construct()
     {
         $this->userModel = $this->model('M_User');
         $this->notificationModel = $this->model('M_Notification');
+        $this->logModel = $this->model('M_Log');
     }
 
     public function register()
@@ -97,6 +99,15 @@ class Auth extends Controller
                             unset($_SESSION['registration_otp_expiry']);
                             unset($_SESSION['registration_data']);
 
+                            $this->logModel->create(
+                                $userId,
+                                $data['email'],
+                                $_SERVER['REMOTE_ADDR'],
+                                "User registered as Website User with email {$data['email']}",
+                                $_SERVER['REQUEST_URI'],     
+                                http_response_code()     
+                            );
+
                             // Set success message and redirect
                             setFlashMessage('Register Successful, you can now log in!');
                             redirect('auth/login');
@@ -171,10 +182,10 @@ class Auth extends Controller
         $this->view('auth/v_register', $data);
     }
     
-private function sendOTPEmail($email, $otp) {
-    $emailService = new EmailService();
-    return $emailService->sendOTP($email, $otp);
-}
+    private function sendOTPEmail($email, $otp) {
+        $emailService = new EmailService();
+        return $emailService->sendOTP($email, $otp);
+    }
 
     private function isOlderThan18($dateOfBirth)
     {
@@ -256,7 +267,17 @@ private function sendOTPEmail($email, $otp) {
 
                             $_SESSION['profile_image_path'] = ($profile && !empty($profile->image_path)) ? $profile->image_path : null;
 
-                            // After successful login, redirect based on role
+
+                            $this->logModel->create(
+                                $user->user_id,
+                                $user->email,
+                                $_SERVER['REMOTE_ADDR'],
+                                "User logged in successfully.",
+                                $_SERVER['REQUEST_URI'],     
+                                http_response_code()     
+                            );
+
+
                             switch (RoleHelper::getRole()) {
                                 case RoleHelper::DRIVER:
                                     header('Location: ' . URLROOT . '/vehicledriver/');
@@ -268,7 +289,7 @@ private function sendOTPEmail($email, $otp) {
                                     header('Location: ' . URLROOT . '/supplier/');
                                     break;
                                 case RoleHelper::ADMIN:
-                                    header('Location: ' . URLROOT . '/manager/');
+                                    header('Location: ' . URLROOT . '/admin/');
                                     break;
                                 case RoleHelper::INVENTORY_MANAGER:
                                     header('Location: ' . URLROOT . '/inventory/');
@@ -279,6 +300,15 @@ private function sendOTPEmail($email, $otp) {
                             exit();
                         } else {
                             $data['error'] = $loginErrorMessage;
+                            // Log failed login attempt
+                            $this->logModel->create(
+                                $user->user_id,
+                                $user->email,
+                                $_SERVER['REMOTE_ADDR'],
+                                "Failed login attempt: {$loginErrorMessage}",
+                                $_SERVER['REQUEST_URI'],     
+                                http_response_code()     
+                            );
                         }
                     } else {
                         $data['error'] = 'Invalid credentials';
@@ -294,6 +324,20 @@ private function sendOTPEmail($email, $otp) {
 
     public function logout()
     {
+        $userId = $_SESSION['user_id'];
+        $userEmail = $_SESSION['email']; 
+
+        if ($userId) {
+            $this->logModel->create(
+                $userId,
+                $userEmail,
+                $_SERVER['REMOTE_ADDR'],
+                "User logged out successfully.",
+                $_SERVER['REQUEST_URI'],     
+                http_response_code()     
+            );
+        }
+
         unset($_SESSION['user_id']);
         unset($_SESSION['first_name']);
         unset($_SESSION['last_name']);
@@ -308,19 +352,16 @@ private function sendOTPEmail($email, $otp) {
 
     public function supplier_register()
     {
-
         if (!isLoggedIn()) {
             redirect('auth/login');
             return;
         }
-
 
         $supplierApplicationModel = $this->model('M_SupplierApplication');
         if ($supplierApplicationModel->hasApplied($_SESSION['user_id'])) {
             redirect('pages/supplier_application_status');
             return;
         }
-
 
         if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             try {
@@ -370,7 +411,14 @@ private function sendOTPEmail($email, $otp) {
                     $_FILES['profile_photo'],
                     $processedDocuments
                 );
-
+                $this->logModel->create(
+                    $_SESSION['user_id'],
+                    $_SESSION['email'],
+                    $_SERVER['REMOTE_ADDR'],
+                    "Supplier application submitted.",
+                    $_SERVER['REQUEST_URI'],     
+                    http_response_code()     
+                );
 
                 if (!$result) {
                     throw new Exception('Failed to save application');
@@ -381,11 +429,19 @@ private function sendOTPEmail($email, $otp) {
                     $this->notificationModel->create($manager->user_id, 'New supplier application submitted.', 'manager/viewApplications/' . $result);
                 }
 
-
                 redirect('pages/supplier_application_status?submitted=true');
                 
             } catch (Exception $e) {
-                // Set error message and continue to display the form
+                // loggin error
+                $this->logModel->create(
+                    $_SESSION['user_id'],
+                    $_SESSION['email'],
+                    $_SERVER['REMOTE_ADDR'],
+                    "Error during supplier registration: " . $e->getMessage(),
+                    $_SERVER['REQUEST_URI'],     
+                    http_response_code()     
+                );
+
                 $data = [
                     'title' => 'Supplier Registration',
                     'error' => $e->getMessage()
@@ -428,14 +484,11 @@ private function sendOTPEmail($email, $otp) {
         if (isset($_GET['code'])) {
             $code = $_GET['code'];
             if ($this->userModel->verifyEmail($code)) {
-                // Email verified successfully
-                $this->view('auth/v_verify'); // Load the verification success view
+                $this->view('auth/v_verify'); 
             } else {
-                // Invalid verification code
                 echo "Invalid verification code.";
             }
         } else {
-            // No code provided
             echo "No verification code provided.";
         }
     }
@@ -460,7 +513,7 @@ private function sendOTPEmail($email, $otp) {
             } else {
                 // Generate a password reset token
                 $resetToken = bin2hex(random_bytes(16)); // Generate a random token
-                $this->userModel->storeResetToken($data['email'], $resetToken, 5*60); // Store the token in the database
+                $this->userModel->storeResetToken($data['email'], $resetToken, 5*60);
 
                 // Create reset link
                 $resetLink = URLROOT . "/auth/resetPassword?token=" . $resetToken;
@@ -534,11 +587,11 @@ private function sendOTPEmail($email, $otp) {
             ];
             
 
-            if(RoleHelper::hasRole(5)) {
+            if(RoleHelper::hasRole(5)) { // for the supplier only
                 $profileData = $supplierModel->getSupplierProfile($userId);
                 $data['supplier_id'] = $profileData['supplier']->supplier_id;
                 $data['profile_id'] = $profileData['profile']->profile_id;
-                $data['supplier_contact'] == trim($_POST['supplier_contact']);
+                $data['supplier_contact'] = trim($_POST['supplier_contact']);
 
                 
             } else {
@@ -559,7 +612,7 @@ private function sendOTPEmail($email, $otp) {
                 
                 if (move_uploaded_file($_FILES['profile_image']['tmp_name'], $uploadPath)) {
                     $data['image_path'] = $uploadPath;
-                    setFlashMessage('Image uploaded succesful!');
+                    setFlashMessage('Image uploaded successfully!');
                 } else {
                     setFlashMessage('Image upload failed, try again later!');
                     redirect('Supplier/profile');
@@ -567,10 +620,27 @@ private function sendOTPEmail($email, $otp) {
             }
             if (RoleHelper::hasRole(5)) {
                 $supplierModel->updateSupplierProfile($data);
+
+                $this->logModel->create(
+                    $userId,
+                    $_SESSION['email'],
+                    $_SERVER['REMOTE_ADDR'],
+                    "Supplier profile updated successfully.",
+                    $_SERVER['REQUEST_URI'],     
+                    http_response_code()     
+                );
                 setFlashMessage('Supplier Profile Updated Successfully!');
                 redirect('');
             } else {
                 $this->userModel->updateProfilePhoto($data);
+                $this->logModel->create(
+                    $userId,
+                    $_SESSION['email'],
+                    $_SERVER['REMOTE_ADDR'],
+                    "User profile photo updated successfully.",
+                    $_SERVER['REQUEST_URI'],     
+                    http_response_code()     
+                );
                 setFlashMessage('Image upload failed, try again later!', 'error');
                 redirect('');
             }

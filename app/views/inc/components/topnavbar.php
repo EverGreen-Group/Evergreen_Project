@@ -12,7 +12,6 @@
             </div>
         </form>
         <input type="checkbox" id="switch-mode" hidden>
-        <!-- <label for="switch-mode" class="switch-mode"></label> -->
         <a href="#" class="notification" id="notificationIcon">
             <i class='bx bxs-bell'></i>
             <span class="num" style="cursor: pointer;">8</span>
@@ -27,7 +26,6 @@
                 ?>
                 <img src="<?php echo $profileImageSrc; ?>" alt="Profile Photo">
             </a>
-            <!-- Display the user's full name -->
             <div class="user-name">
                 <?php if (isset($_SESSION['full_name'])): ?>
                     <span><?php echo htmlspecialchars($_SESSION['full_name']); ?></span>

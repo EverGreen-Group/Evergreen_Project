@@ -1,77 +1,48 @@
 <?php
-use Endroid\QrCode\QrCode;
-use Endroid\QrCode\Builder\Builder;
-use Endroid\QrCode\Writer\PngWriter;
-
-// Require all model files
-require_once '../app/models/M_VehicleManager.php';
-require_once '../app/models/M_Route.php';
-require_once '../app/models/M_Vehicle.php';
-require_once '../app/models/M_Shift.php';
-require_once '../app/models/M_CollectionSchedule.php';
-require_once '../app/models/M_Staff.php';
-require_once '../app/models/M_Driver.php';
-require_once '../app/models/M_Collection.php';
-require_once '../app/models/M_CollectionSupplierRecord.php';
-require_once '../app/models/M_User.php';
-require_once '../app/models/M_Employee.php';
-require_once '../app/models/M_CollectionBag.php';
-
-// Require helper files
 require_once '../app/helpers/auth_middleware.php';
-require_once '../app/helpers/UserHelper.php';
 
 class Admin extends Controller
 {
     //----------------------------------------
     // PROPERTIES
     //----------------------------------------
-    private $vehicleManagerModel;
     private $routeModel;
     private $vehicleModel;
-    private $shiftModel;
     private $scheduleModel;
     private $driverModel;
-    private $staffModel;
     private $userHelper;
     private $collectionModel;
     private $collectionSupplierRecordModel;
     private $userModel;
-    private $employeeModel;
     private $bagModel;
     private $roleModel;
+    private $logModel;
 
     //----------------------------------------
     // CONSTRUCTOR
     //----------------------------------------
     public function __construct()
     {
-        // Check if user is logged in
-        requireAuth();
 
-        // Check if user has Vehicle Manager OR Admin role
-        if (!RoleHelper::hasAnyRole([RoleHelper::ADMIN, RoleHelper::MANAGER])) {
-            // Redirect unauthorized access
+        requireAuth();
+        if (!RoleHelper::hasAnyRole([RoleHelper::ADMIN])) {
             setFlashMessage('Unauthorized acess');
             redirect('');
             exit();
         }
 
         // Initialize models
-        $this->vehicleManagerModel = new M_VehicleManager();
-        $this->routeModel = new M_Route();
-        $this->vehicleModel = new M_Vehicle();
-        $this->shiftModel = new M_Shift();
-        $this->scheduleModel = new M_CollectionSchedule();
-        $this->driverModel = new M_Driver();
-        $this->staffModel = $this->model('M_Staff');
-        $this->userHelper = new UserHelper();
+
+        $this->routeModel = $this->model('M_Route');
+        $this->vehicleModel = $this->model('M_Vehicle');
+        $this->scheduleModel = $this->model('M_CollectionSchedule');
+        $this->driverModel = $this->model('M_Driver');
         $this->collectionModel = $this->model('M_Collection');
         $this->collectionSupplierRecordModel = $this->model('M_CollectionSupplierRecord');
         $this->userModel = $this->model('M_User');
-        $this->employeeModel = $this->model('M_Employee');
         $this->bagModel = $this->model('M_CollectionBag');
         $this->roleModel = $this->model('M_Role');
+        $this->logModel = $this->model('M_Log');
     }
 
     //----------------------------------------
@@ -136,6 +107,17 @@ class Admin extends Controller
         ];
         $this->view('admin/v_manage_user', $data);
 
+    }
+
+
+    public function userLogs() {
+        $userLogs = $this->logModel->getAllUserLogs();
+
+        $data = [
+            'userLogs' => $userLogs
+        ];
+
+        $this->view('admin/v_user_log', $data);
     }
 
     public function updateUser() {

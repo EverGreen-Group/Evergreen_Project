@@ -12,7 +12,7 @@
 				</a>
 			</li>
       		<li class="<?php echo (basename($_SERVER['REQUEST_URI']) == 'userLogs') ? 'active' : ''; ?>">
-				<a href="<?php echo URLROOT; ?>/manager/userLogs">
+				<a href="<?php echo URLROOT; ?>/admin/userLogs">
         				<i class='bx bxs-calendar-check' ></i>
 					<span class="text">User logs</span>
 				</a>

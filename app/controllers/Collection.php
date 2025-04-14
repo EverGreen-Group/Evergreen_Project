@@ -71,7 +71,6 @@ class Collection extends Controller{
                 return;
             }
 
-            // Prepare the data for updating
             $bagId = $data['bag_id'];
             $actualWeight = $data['actual_weight_kg'];
             $leafTypeId = $data['leaf_type_id'];

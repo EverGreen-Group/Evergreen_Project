@@ -6,10 +6,12 @@ require_once '../app/helpers/RoleHelper.php';
 class Profile extends Controller {
     private $userModel;
     private $driverModel;
+    private $logModel;
 
     public function __construct() {
         $this->userModel = $this->model('M_User');
         $this->driverModel = $this->model('M_Driver');
+        $this->logModel = $this->model('M_Log');
     }
 
     public function index() {
@@ -77,6 +79,15 @@ class Profile extends Controller {
 
                 // Update user profile
                 if ($this->userModel->updateUser($data)) {
+
+                    $this->logModel->create(
+                        $_SESSION['user_id'],
+                        $_SESSION['email'],
+                        $_SERVER['REMOTE_ADDR'],
+                        "Updated the profile",
+                        $_SERVER['REQUEST_URI'],     
+                        http_response_code()     
+                    );
                     setFlashMessage('Profile updated successfully!');
                 } else {
                     throw new Exception('Error updating profile');
@@ -110,6 +121,15 @@ class Profile extends Controller {
 
                 // Update password
                 if ($this->userModel->updatePassword($data)) {
+
+                    $this->logModel->create(
+                        $_SESSION['user_id'],
+                        $_SESSION['email'],
+                        $_SERVER['REMOTE_ADDR'],
+                        "Updated the account password",
+                        $_SERVER['REQUEST_URI'],     
+                        http_response_code()     
+                    );
                     setFlashMessage('Password updated successfully!');
                 } else {
                     throw new Exception('Error updating password');
@@ -143,7 +163,6 @@ class Profile extends Controller {
                 
                 // Move uploaded file
                 if (move_uploaded_file($file['tmp_name'], $file_path)) {
-                    // Save to database
                     if ($this->userModel->updateProfileImage($_SESSION['user_id'], $file_path)) {
                         echo json_encode(['success' => true, 'file_path' => $file_path]);
                     } else {

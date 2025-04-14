@@ -568,6 +568,22 @@ class M_User {
         
         return $this->db->resultSet();
     }
+
+    public function getDashboardStats() {
+        $stats = [];
+
+        $this->db->query("SELECT 
+            COUNT(*) as total_collections,
+            SUM(CASE WHEN status = 'In Progress' THEN 1 ELSE 0 END) as in_progress,
+            SUM(CASE WHEN status = 'Completed' AND DATE(collection_completed_at) = CURDATE() THEN 1 ELSE 0 END) as completed_today,
+            SUM(CASE WHEN DATE(start_time) = CURDATE() THEN 1 ELSE 0 END) as total_today,
+            SUM(CASE WHEN status = 'In Progress' OR status = 'Awaiting Inventory Addition' THEN 1 ELSE 0 END) as total_ongoing
+            FROM collections");
+        $stats['collections'] = $this->db->single();
+        
+
+        return $stats;
+    }
     
 }
 ?>
