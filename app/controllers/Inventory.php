@@ -4,7 +4,7 @@ require_once APPROOT . '/models/M_Fertilizer.php';
 require_once APPROOT . '/models/M_Dashbord.php';
 require_once APPROOT . '/models/M_Machine.php';
 require_once APPROOT . '/models/M_Inventory_Config.php';
-
+require_once APPROOT . '/models/M_Fertilizer_Order.php';
 require_once '../app/models/M_Products.php';
 class Inventory extends controller
 {
@@ -16,6 +16,7 @@ class Inventory extends controller
 
     private $inventoryConfigModel;
     private $leafchartdata;
+    private $fertilizerOrderModel;
 
 
 
@@ -30,6 +31,7 @@ class Inventory extends controller
         $this->machineModel = new M_Machine();
         $this->inventoryConfigModel = new M_Inventory_Config();
         $this->leafchartdata = new M_Dashbord();
+        $this->fertilizerOrderModel = new M_Fertilizer_Order();
 
     }
 
@@ -232,9 +234,15 @@ class Inventory extends controller
 
     public function fertilizer()
     {
-        $data = [];
-
-        $this->view('inventory/v_fertilizer_available', $data);
+        $fertilizer = $this->fertilizerOrderModel->getfertilizerorderforInventory();
+    
+        $data=[
+            'fertilizers' => $fertilizer
+        ];
+        // echo "<pre>";
+        // print_r($data);
+        // echo "</pre>";
+        $this->view('inventory/v_fertilizer_available',$data);
     }
     public function createfertilizer()
     {
