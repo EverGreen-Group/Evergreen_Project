@@ -18,7 +18,6 @@
 
 <!-- MAIN -->
 <main>
-    <!-- <?php print_r($stats['collections']);?> -->
   <!-- Vehicle Management Section -->
   <div class="head-title">
       <div class="left">
@@ -103,14 +102,11 @@
 
 
 
+<!-- app/views/vehicle_manager/v_collection_0.php -->
 <div class="table-data">
     <div class="order">
         <div class="head">
             <h3>Collections</h3>
-            <a href="<?php echo URLROOT; ?>/manager/createCollection" class="btn btn-primary">
-                <i class='bx bxs-report'></i>
-                Generate Report
-            </a>
         </div>
         <table>
             <thead>
@@ -141,11 +137,9 @@
                             </td>
                             <td><?php echo date('Y-m-d H:i', strtotime($collection->created_at)); ?></td>
                             <td><?php echo isset($collection->end_time) ? date('Y-m-d H:i', strtotime($collection->end_time)) : 'N/A'; ?></td>
-
                             <td><?php echo htmlspecialchars($collection->total_quantity); ?></td>
                             <td>
                                 <div style="display: flex; gap: 5px;">
-                                    <!-- View button with icon -->
                                     <a 
                                         href="<?php echo URLROOT; ?>/collection/details/<?php echo $collection->collection_id; ?>" 
                                         class="btn btn-tertiary" 
@@ -164,6 +158,22 @@
                 <?php endif; ?>
             </tbody>
         </table>
+
+        <!-- Pagination -->
+        <div class="table-pagination">
+            <div class="pagination">
+                <?php if ($totalCollections > 0): ?>
+                    <?php $totalPages = ceil($totalCollections / 5); // Assuming 5 is the limit ?>
+                    <?php for ($i = 1; $i <= $totalPages; $i++): ?>
+                        <a 
+                        href="<?php echo URLROOT; ?>/manager/collection?page=<?php echo $i; ?>&collection_id=<?php echo urlencode($filters['collection_id']); ?>&schedule_id=<?php echo urlencode($filters['schedule_id']); ?>&status=<?php echo urlencode($filters['status']); ?>&start_date=<?php echo urlencode($filters['start_date']); ?>&end_date=<?php echo urlencode($filters['end_date']); ?>" 
+                        <?php if ($currentPage == $i) { echo 'class="active"'; } ?>>
+                            <?php echo $i; ?>
+                        </a>
+                    <?php endfor; ?>
+                <?php endif; ?>
+            </div>
+        </div>
     </div>
 </div>
 

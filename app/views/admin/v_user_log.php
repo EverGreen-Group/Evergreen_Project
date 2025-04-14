@@ -42,6 +42,7 @@
         </div>
     </div>
 
+
     <div class="table-data">
         <div class="order">
             <div class="head">
@@ -50,7 +51,6 @@
             <table>
                 <thead>
                     <tr>
-                        <!-- <th>ID</th> -->
                         <th>User ID</th>
                         <th>Email</th>
                         <th>IP Address</th>
@@ -64,7 +64,6 @@
                 <?php if (isset($data['userLogs']) && !empty($data['userLogs'])): ?>
                     <?php foreach ($data['userLogs'] as $log): ?>
                         <tr>
-                            <!-- <td><?php echo htmlspecialchars($log->id); ?></td> -->
                             <td><?php echo htmlspecialchars($log->user_id); ?></td>
                             <td><?php echo htmlspecialchars($log->email); ?></td>
                             <td><?php echo htmlspecialchars($log->ip_address); ?></td>
@@ -81,8 +80,25 @@
                 <?php endif; ?>
                 </tbody>
             </table>
+            
+            <div class="table-pagination">
+                <div class="pagination">
+                    <?php if ($data['totalPages'] > 1): ?>
+                        <?php for ($i = 1; $i <= $data['totalPages']; $i++): ?>
+                            <a 
+                            href="<?php echo URLROOT; ?>/admin/userLogs?page=<?php echo $i; ?>&user_id=<?php echo urlencode($data['user_id']); ?>&email=<?php echo urlencode($data['email']); ?>" 
+                            <?php if ($data['currentPage'] == $i) { echo 'class="active"'; } ?>>
+                                <?php echo $i; ?>
+                            </a>
+                        <?php endfor; ?>
+                    <?php endif; ?>
+                </div>
+            </div>
         </div>
     </div>
 </main>
+
+
+
 
 <?php require APPROOT . '/views/inc/components/footer.php'; ?>

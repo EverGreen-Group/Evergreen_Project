@@ -147,7 +147,7 @@ class M_Supplier {
         return $this->db->resultSet();
     }
 
-    public function getFilteredComplaints($complaint_id, $status, $date_from, $date_to) {
+    public function getFilteredComplaints($complaint_id, $status, $date_from, $date_to, $limit = 5, $offset = 0) {
         $sql = "
             SELECT c.*, CONCAT(p.first_name, ' ', p.last_name) as supplier_name, p.image_path 
             FROM complaints c
@@ -155,47 +155,49 @@ class M_Supplier {
             JOIN profiles p ON s.profile_id = p.profile_id
             WHERE c.status != 'Deleted'
         ";
-    
+
         $params = [];
-    
+
         if ($complaint_id) {
             $sql .= " AND c.complaint_id = :complaint_id";
             $params[':complaint_id'] = $complaint_id;
         }
-    
+
         if ($status) {
             $sql .= " AND c.status = :status";
             $params[':status'] = $status;
         }
-    
+
         if ($date_from) {
             $sql .= " AND DATE(c.created_at) >= :date_from";
             $params[':date_from'] = $date_from;
         }
-    
+
         if ($date_to) {
             $sql .= " AND DATE(c.created_at) <= :date_to";
             $params[':date_to'] = $date_to;
         }
-    
+
         $sql .= " ORDER BY 
-                  CASE c.priority 
-                      WHEN 'high' THEN 1 
-                      WHEN 'medium' THEN 2 
-                      WHEN 'low' THEN 3 
-                  END,
-                  c.created_at DESC";
-    
+                CASE c.priority 
+                    WHEN 'high' THEN 1 
+                    WHEN 'medium' THEN 2 
+                    WHEN 'low' THEN 3 
+                END,
+                c.created_at DESC
+                LIMIT :limit OFFSET :offset";
+
         $this->db->query($sql);
-    
-        // Bind parameters
+
         foreach ($params as $param => $value) {
             $this->db->bind($param, $value);
         }
-    
+
+        $this->db->bind(':limit', $limit);
+        $this->db->bind(':offset', $offset);
+
         return $this->db->resultSet();
     }
-    
     public function getComplaintById($id)
     {
         $this->db->query("SELECT c.*, CONCAT(p.first_name, ' ', p.last_name) as supplier_name, p.image_path, u.email, p.contact_number as phone 
@@ -250,7 +252,7 @@ class M_Supplier {
 
     public function deleteComplaint($id)
     {
-        // Using soft delete by updating to delete
+
         $this->db->query("UPDATE complaints SET status = 'Deleted' WHERE complaint_id = :id");
         
         $this->db->bind(':id', $id);
@@ -259,23 +261,9 @@ class M_Supplier {
     }
 
 
-    public function getAllSuppliersDetails() {
-        $this->db->query("
-            SELECT s.*,p.*,u.email
-            FROM suppliers s
-            JOIN profiles p ON s.profile_id = p.profile_id
-            JOIN users u ON p.user_id = u.user_id
-            WHERE s.is_deleted = 0
-            ORDER BY s.supplier_id DESC
-        ");
-
-        return $this->db->resultSet();
-    }
-
-
-    public function getFilteredSuppliers($supplier_id, $name, $nic, $contact_number, $application_id, $supplier_status) {
+    public function getFilteredSuppliers($supplier_id, $name, $nic, $contact_number, $application_id, $supplier_status, $limit = 5, $offset = 0) {
         $sql = "
-            SELECT s.*,p.*,u.email
+            SELECT s.*, p.*, u.email
             FROM suppliers s
             JOIN profiles p ON s.profile_id = p.profile_id
             JOIN users u ON p.user_id = u.user_id
@@ -319,14 +307,17 @@ class M_Supplier {
             }
         }
 
-        $sql .= " ORDER BY s.supplier_id DESC";
+        $sql .= " ORDER BY s.supplier_id DESC LIMIT :limit OFFSET :offset";
 
         $this->db->query($sql);
 
-        // Bind parameters
+
         foreach ($params as $param => $value) {
             $this->db->bind($param, $value);
         }
+
+        $this->db->bind(':limit', $limit);
+        $this->db->bind(':offset', $offset);
 
         return $this->db->resultSet();
     }

@@ -56,43 +56,38 @@ class Manager extends Controller
 
 
 
-     public function index() {
-        // Get all applications
-        $applications = $this->model('M_SupplierApplication')->getAllApplications();
-        
-        // Get approved applications pending role assignment
+    public function index() {
+
         $approvedPendingRole = $this->model('M_SupplierApplication')->getApprovedPendingRoleApplications();
 
-        // Count application statuses
-        $totalApplications = count($applications);
-        $pendingApplications = 0;
-        $approvedApplications = 0;
-        $rejectedApplications = 0;
+        $filters = [
+            'application_id' => isset($_GET['application_id']) ? $_GET['application_id'] : '',
+            'status' => isset($_GET['status']) ? $_GET['status'] : '',
+            'date-from' => isset($_GET['date-from']) ? $_GET['date-from'] : '',
+            'date-to' => isset($_GET['date-to']) ? $_GET['date-to'] : ''
+        ];
+        
+        $page = isset($_GET['page']) && is_numeric($_GET['page']) ? (int)$_GET['page'] : 1;
+        $limit = 2; 
+        $offset = ($page - 1) * $limit;
 
-        foreach ($applications as $app) {
-            switch (strtolower($app->status)) {
-                case 'pending':
-                    $pendingApplications++;
-                    break;
-                case 'approved':
-                    $approvedApplications++;
-                    break;
-                case 'rejected':
-                    $rejectedApplications++;
-                    break;
-            }
-        }
+        $applications = $this->model('M_SupplierApplication')->getAllApplications($filters, $limit, $offset);
+        
+        $totalApplications = $this->model('M_SupplierApplication')->getTotalApplications($filters);
+        $totalPages = ceil($totalApplications / $limit);
 
         $data = [
             'applications' => $applications,
             'approved_pending_role' => $approvedPendingRole,
-            'totalApplications' => $totalApplications,
-            'pendingApplications' => $pendingApplications,
-            'approvedApplications' => $approvedApplications,
-            'rejectedApplications' => $rejectedApplications
+            'totalApplications' => $totalApplications,            
+            'pendingApplications' => $this->model('M_SupplierApplication')->countByStatus('Pending'),
+            'approvedApplications' => $this->model('M_SupplierApplication')->countByStatus('Approved'),
+            'rejectedApplications' => $this->model('M_SupplierApplication')->countByStatus('Rejected'),
+            'currentPage' => $page,
+            'totalPages' => $totalPages,
+            'filters' => $filters
         ];
 
-        // Load view
         $this->view('supplier_manager/v_applications', $data);
     }
 
@@ -287,27 +282,33 @@ class Manager extends Controller
      * ------------------------------------------------------------
      */
 
-     public function supplier() {
-
+    public function supplier() {
         $data = [];
-    
+        
+        // Get filter parameters (optional)
         $supplier_id = isset($_GET['supplier_id']) ? $_GET['supplier_id'] : null;
         $name = isset($_GET['name']) ? $_GET['name'] : null;
         $nic = isset($_GET['nic']) ? $_GET['nic'] : null;
         $contact_number = isset($_GET['contact_number']) ? $_GET['contact_number'] : null;
         $application_id = isset($_GET['application_id']) ? $_GET['application_id'] : null;
         $supplier_status = isset($_GET['supplier_status']) ? $_GET['supplier_status'] : null;
-    
+
+        $page = isset($_GET['page']) && is_numeric($_GET['page']) ? (int)$_GET['page'] : 1;
+        $limit = 3; 
+        $offset = ($page - 1) * $limit;
+
+        // Apply filters to get suppliers with pagination
         if ($supplier_id || $name || $nic || $contact_number || $application_id || $supplier_status) {
-            $data['suppliers'] = $this->supplierModel->getFilteredSuppliers($supplier_id, $name, $nic, $contact_number, $application_id, $supplier_status);
+            $data['suppliers'] = $this->supplierModel->getFilteredSuppliers($supplier_id, $name, $nic, $contact_number, $application_id, $supplier_status, $limit, $offset);
         } else {
-            $data['suppliers'] = $this->supplierModel->getAllSuppliersDetails();
+            $data['suppliers'] = $this->supplierModel->getFilteredSuppliers(null, null, null, null, null, null, $limit, $offset);
         }
-    
 
         $data['total_suppliers'] = $this->supplierModel->getTotalSuppliers();
         $data['active_suppliers'] = $this->supplierModel->getActiveSuppliers();
-        
+        $data['currentPage'] = $page;
+        $data['totalPages'] = ceil($data['total_suppliers'] / $limit);
+
         $this->view('supplier_manager/v_supplier', $data);
     }
 
@@ -1594,63 +1595,61 @@ class Manager extends Controller
      * ------------------------------------------------------------
      */
 
-    public function collection(){
+    public function collection() {
         // Get dashboard stats from the model
         $stats = $this->userModel->getDashboardStats();
         $stats['collections'] = (array)$stats['collections'];
 
-        // Retrieve filter parameters from the GET request
+        // Get filter parameters (optional)
         $collection_id = isset($_GET['collection_id']) ? $_GET['collection_id'] : null;
         $schedule_id = isset($_GET['schedule_id']) ? $_GET['schedule_id'] : null;
         $status = isset($_GET['status']) ? $_GET['status'] : null;
         $start_date = isset($_GET['start_date']) ? $_GET['start_date'] : null;
         $end_date = isset($_GET['end_date']) ? $_GET['end_date'] : null;
-        $min_quantity = isset($_GET['min_quantity']) ? $_GET['min_quantity'] : null;
-        $max_quantity = isset($_GET['max_quantity']) ? $_GET['max_quantity'] : null;
-        $bags_added = isset($_GET['bags_added']) ? $_GET['bags_added'] : null;
 
-        // Fetch collections based on filters
-        if ($collection_id || $schedule_id || $status || $start_date || $end_date || $min_quantity || $max_quantity || $bags_added !== null) {
+        // Determine the current page, defaulting to page 1
+        $page = isset($_GET['page']) && is_numeric($_GET['page']) ? (int)$_GET['page'] : 1;
+        $limit = 5; // Number of collections per page
+        $offset = ($page - 1) * $limit;
+
+        // Fetch collections based on filters with pagination
+        if ($collection_id || $schedule_id || $status || $start_date || $end_date) {
             $allCollections = $this->collectionModel->getFilteredCollections(
                 $collection_id, 
                 $schedule_id, 
                 $status, 
                 $start_date, 
-                $end_date, 
-                $min_quantity, 
-                $max_quantity, 
-                $bags_added
+                $end_date,
+                $limit,
+                $offset
             );
         } else {
-            // Otherwise, fetch all collections
-            $allCollections = $this->collectionModel->getAllCollections();
+            $allCollections = $this->collectionModel->getFilteredCollections(
+                null, 
+                null, 
+                null, 
+                null, 
+                null,
+                $limit,
+                $offset 
+            );
         }
 
-        // Fetch all necessary data for the dropdowns
-        $schedules = $this->scheduleModel->getAllSchedules();
-        $collectionSchedules = $this->scheduleModel->getSchedulesForNextWeek(); 
-        $todayRoutes = $this->routeModel->getTodayAssignedRoutes();
-
+        // Get total count for pagination
         $data = [
             'stats' => $stats,
-            'schedules' => $schedules,
             'all_collections' => $allCollections,
-            'collectionSchedules' => $collectionSchedules,
-            'todayRoutes' => $todayRoutes,
-            // Pass the filter values back to the view to maintain state
+            'currentPage' => $page,
+            'totalCollections' => $this->collectionModel->getTotalCollections(), // You need to implement this method
             'filters' => [
                 'collection_id' => $collection_id,
                 'schedule_id' => $schedule_id,
                 'status' => $status,
                 'start_date' => $start_date,
                 'end_date' => $end_date,
-                'min_quantity' => $min_quantity,
-                'max_quantity' => $max_quantity,
-                'bags_added' => $bags_added
             ]
         ];
 
-        // Pass the stats and data for the dropdowns to the view
         $this->view('vehicle_manager/v_collection_0', $data);
     }
 
@@ -2341,36 +2340,45 @@ class Manager extends Controller
      * ------------------------------------------------------------
      */
 
-     public function complaints()
-     {
-         // Get complaint statistics
-         $totalComplaints = $this->supplierModel->getTotalComplaints();
-         $resolvedComplaints = $this->supplierModel->getComplaintsByStatus('Resolved');
-         $pendingComplaints = $this->supplierModel->getComplaintsByStatus('Pending');
-         
-         // Check if filters are applied
-         $complaint_id = isset($_GET['complaint_id']) ? $_GET['complaint_id'] : null;
-         $status = isset($_GET['status']) ? $_GET['status'] : null;
-         $date_from = isset($_GET['date_from']) ? $_GET['date_from'] : null;
-         $date_to = isset($_GET['date_to']) ? $_GET['date_to'] : null;
-     
-         // Get complaints data (filtered or unfiltered)
-         if ($complaint_id || $status || $date_from || $date_to) {
-             $complaints = $this->supplierModel->getFilteredComplaints($complaint_id, $status, $date_from, $date_to);
-         } else {
-             $complaints = $this->supplierModel->getComplaints();
-         }
-         
-         // Set up data array for the view
-         $data = [
-             'complaints' => $complaints,
-             'totalComplaints' => $totalComplaints,
-             'resolvedComplaints' => count($resolvedComplaints),
-             'pendingComplaints' => count($pendingComplaints)
-         ];
-         
-         $this->view('supplier_manager/v_complaints', $data);
-     }
+    public function complaints()
+    {
+        $totalComplaints = $this->supplierModel->getTotalComplaints();
+        $resolvedComplaints = $this->supplierModel->getComplaintsByStatus('Resolved');
+        $pendingComplaints = $this->supplierModel->getComplaintsByStatus('Pending');
+        
+        $complaint_id = isset($_GET['complaint_id']) ? $_GET['complaint_id'] : null;
+        $status = isset($_GET['status']) ? $_GET['status'] : null;
+        $date_from = isset($_GET['date_from']) ? $_GET['date_from'] : null;
+        $date_to = isset($_GET['date_to']) ? $_GET['date_to'] : null;
+
+
+        $page = isset($_GET['page']) && is_numeric($_GET['page']) ? (int)$_GET['page'] : 1;
+        $limit = 5; 
+        $offset = ($page - 1) * $limit;
+
+        $complaints = $this->supplierModel->getFilteredComplaints(
+            $complaint_id, 
+            $status, 
+            $date_from, 
+            $date_to,
+            $limit,
+            $offset  
+        );
+
+        $totalComplaints = $this->supplierModel->getTotalComplaints($complaint_id, $status, $date_from, $date_to);
+        $totalPages = ceil($totalComplaints / $limit);
+
+        $data = [
+            'complaints' => $complaints,
+            'totalComplaints' => $totalComplaints,
+            'resolvedComplaints' => count($resolvedComplaints),
+            'pendingComplaints' => count($pendingComplaints),
+            'currentPage' => $page,
+            'totalPages' => $totalPages,
+        ];
+        
+        $this->view('supplier_manager/v_complaints', $data);
+    }
 
 
     public function viewComplaint($id = null)
@@ -2393,11 +2401,9 @@ class Manager extends Controller
         $this->view('supplier_manager/v_view_complaint', $data);
     }
 
-    //added by theekshana from supplier manager
     public function applications() {
-        // Get approved applications pending role assignment
+
         $approvedPendingRole = $this->model('M_SupplierApplication')->getApprovedPendingRoleApplications();
-    
 
         $filters = [
             'application_id' => isset($_GET['application_id']) ? $_GET['application_id'] : '',
@@ -2406,21 +2412,25 @@ class Manager extends Controller
             'date-to' => isset($_GET['date-to']) ? $_GET['date-to'] : ''
         ];
         
-        // Apply filters to get applications
-        $applications = $this->model('M_SupplierApplication')->getAllApplications($filters);
+        $page = isset($_GET['page']) && is_numeric($_GET['page']) ? (int)$_GET['page'] : 1;
+        $limit = 10; 
+        $offset = ($page - 1) * $limit;
+
+        $applications = $this->model('M_SupplierApplication')->getAllApplications($filters, $limit, $offset);
         
-        $totalApplications = count($applications);
-        $pendingApplications = $this->model('M_SupplierApplication')->countByStatus('Pending');
-        $approvedApplications = $this->model('M_SupplierApplication')->countByStatus('Approved');
-        $rejectedApplications = $this->model('M_SupplierApplication')->countByStatus('Rejected');
-    
+        $totalApplications = $this->model('M_SupplierApplication')->getTotalApplications($filters);
+        $totalPages = ceil($totalApplications / $limit);
+
         $data = [
             'applications' => $applications,
             'approved_pending_role' => $approvedPendingRole,
             'totalApplications' => $totalApplications,            
-            'pendingApplications' => $pendingApplications,
-            'approvedApplications' => $approvedApplications,
-            'rejectedApplications' => $rejectedApplications
+            'pendingApplications' => $this->model('M_SupplierApplication')->countByStatus('Pending'),
+            'approvedApplications' => $this->model('M_SupplierApplication')->countByStatus('Approved'),
+            'rejectedApplications' => $this->model('M_SupplierApplication')->countByStatus('Rejected'),
+            'currentPage' => $page,
+            'totalPages' => $totalPages,
+            'filters' => $filters
         ];
 
         $this->view('supplier_manager/v_applications', $data);

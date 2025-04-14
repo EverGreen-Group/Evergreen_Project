@@ -1489,3 +1489,59 @@ body.dark .auth-form-group input {
     height: 38px;
   }
 }
+
+/* FOR THE TABLE PAGINATION */
+
+.table-pagination {
+  display: flex;
+  justify-content: right;
+  align-items: center;
+  margin-top: 24px;
+  margin-right: 20px;
+  padding-top: 16px;
+  border-top: 1px solid var(--grey);
+}
+
+.pagination {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.pagination a {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 36px;
+  min-width: 36px;
+  padding: 0 10px;
+  border-radius: 6px;
+  text-decoration: none;
+  font-size: 14px;
+  color: var(--dark);
+  background-color: #f9f9f9;
+  border: 1px solid #e6e6e6;
+  transition: all 0.3s ease;
+}
+
+.pagination a:hover {
+  background-color: #eaeaea;
+}
+
+.pagination a.active {
+  background-color: var(--main);
+  color: white;
+  border-color: var(--main);
+}
+
+.yes {
+  background-color: #e8fff3;
+  color: var(--mainn);
+}
+
+.no {
+  background-color: #ffe2e5;
+  color: var(--red);
+}
