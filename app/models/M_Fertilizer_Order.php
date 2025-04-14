@@ -7,24 +7,28 @@ class M_Fertilizer_Order {
     }
 
     public function getAllOrders() {
-        $this->db->query("SELECT fo.*, ft.description as fertilizer_name 
+        $this->db->query("SELECT fo.*, f.description as fertilizer_name 
                           FROM fertilizer_orders fo
-                          JOIN fertilizer_types ft ON fo.fertilizer_id = ft.type_id 
+                          JOIN Fertilizer f ON fo.fertilizer_id = f.type_id 
                           ORDER BY order_date DESC, order_time DESC LIMIT 10");
         return $this->db->resultset();
     }
 
     public function getOrderById($order_id) {
-        $this->db->query("SELECT fo.*, ft.name as fertilizer_name 
+        $this->db->query("SELECT fo.*, f.fertilizer_name 
                           FROM fertilizer_orders fo 
-                          LEFT JOIN fertilizer_types ft ON fo.type_id = ft.type_id 
+                          JOIN Fertilizer f ON fo.fertilizer_id = f.id 
                           WHERE fo.order_id = :order_id");
         $this->db->bind(':order_id', $order_id);
         return $this->db->single();
     }
 
     public function getOrdersBySupplier($supplier_id) {
-        $this->db->query("SELECT * FROM fertilizer_orders WHERE supplier_id = :supplier_id");
+        $this->db->query("SELECT fo.*, f.fertilizer_name 
+                          FROM fertilizer_orders fo
+                          JOIN Fertilizer f ON fo.fertilizer_id = f.id 
+                          WHERE fo.supplier_id = :supplier_id
+                          ORDER BY order_date DESC, order_time DESC LIMIT 10");
         $this->db->bind(':supplier_id', $supplier_id);
         return $this->db->resultset();
     }
@@ -42,14 +46,13 @@ class M_Fertilizer_Order {
             $this->db->beginTransaction();
     
             // Validate data
-            if (empty($data['supplier_id']) || empty($data['type_id']) || 
-                empty($data['total_amount']) || empty($data['unit'])) {
+            if (empty($data['supplier_id']) || empty($data['fertilizer_id']) || empty($data['quantity'])) {
                 throw new Exception('Missing required fields');
             }
     
             // Validate amount
-            if ($data['total_amount'] <= 0 || $data['total_amount'] > 50) {
-                throw new Exception('Invalid amount. Must be between 1 and 50');
+            if ($data['quantity'] <= 0 || $data['quantity'] > 100) {
+                throw new Exception('Invalid amount. Must be between 1 and 100');
             }
     
             // Get current date and time
@@ -58,20 +61,20 @@ class M_Fertilizer_Order {
             
             $this->db->query(
                 "INSERT INTO fertilizer_orders 
-                (supplier_id, order_date, order_time, total_amount, fertilizer_id, quantity)
+                (supplier_id, order_date, order_time, total_amount, fertilizer_id, quantity, status, payment_status)
                 VALUES 
-                (:supplier_id, :order_date, :order_time, :total_price, :type_id, :total_amount)"
+                (:supplier_id, :order_date, :order_time, :total_amount, :fertilizer_id, :quantity, :status, :payment_status)"
             );
             
             $this->db->bind(':supplier_id', $data['supplier_id']);
             $this->db->bind(':order_date', $currentDate);
             $this->db->bind(':order_time', $currentTime);
-            $this->db->bind(':total_price', $data['total_price']);
-            $this->db->bind(':type_id', $data['type_id']);
             $this->db->bind(':total_amount', $data['total_amount']);
-            //$this->db->bind(':fertilizer_name', $data['fertilizer_name']);
-            //$this->db->bind(':unit', $data['unit']);
-            //$this->db->bind(':price_per_unit', $data['price_per_unit']);
+            $this->db->bind(':fertilizer_id', $data['fertilizer_id']);
+            $this->db->bind(':total_amount', $data['total_amount']);
+            $this->db->bind(':status', $data['status']);
+            $this->db->bind(':quantity', $data['quantity']);
+            $this->db->bind(':payment_status', $data['payment_status']);
     
             $result = $this->db->execute();
             
@@ -95,26 +98,18 @@ class M_Fertilizer_Order {
         
             $this->db->query(
                 "UPDATE fertilizer_orders 
-                SET type_id = :type_id,
-                    fertilizer_name = :fertilizer_name,
+                 SET fertilizer_id = :fertilizer_id,
+                    quantity = :quantity,
                     total_amount = :total_amount,
-                    unit = :unit,
-                    price_per_unit = :price_per_unit,
-                    total_price = :total_price,
                     order_time = :last_modified
-                WHERE order_id = :order_id "
-                //AND status != 'accepted' 
-                //AND status != 'completed'
-                //AND payment_status != 'paid'
-            );
+                 WHERE order_id = :order_id AND status = 'Pending'
+            ");
     
             $this->db->bind(':order_id', $order_id);
-            $this->db->bind(':type_id', $data['type_id']);
-            $this->db->bind(':fertilizer_name', $data['fertilizer_name']);
+            $this->db->bind(':fertilizer_id', $data['fertilizer_id']);
             $this->db->bind(':total_amount', $data['total_amount']);
-            $this->db->bind(':unit', $data['unit']);
-            $this->db->bind(':price_per_unit', $data['price_per_unit']);
-            $this->db->bind(':total_price', $data['total_price']);
+            $this->db->bind(':quantity', $data['quantity']);
+            $this->db->bind(':total_amount', $data['total_amount']);
             $this->db->bind(':last_modified', $data['last_modified']);
     
             return $this->db->execute();
@@ -122,9 +117,9 @@ class M_Fertilizer_Order {
     }
 
     public function getFertilizerOrderById($orderId) {
-        $this->db->query('SELECT fo.*, ft.name as fertilizer_name 
+        $this->db->query('SELECT fo.*, f.fertilizer_name 
                           FROM fertilizer_orders fo 
-                          LEFT JOIN fertilizer_types ft ON fo.type_id = ft.type_id 
+                          LEFT JOIN Fertilizer f ON fo.type_id = f.type_id 
                           WHERE fo.order_id = :order_id');
         $this->db->bind(':order_id', $orderId);
         return $this->db->single();
@@ -153,7 +148,7 @@ class M_Fertilizer_Order {
             unit_price_kg as price_kg, 
             unit_price_packs as price_packs, 
             unit_price_box as price_box 
-            FROM fertilizer_types 
+            FROM Fertilizer 
             WHERE type_id = :id");
         $stmt->bindValue(':id', $type_id, PDO::PARAM_INT);
         $stmt->execute();
@@ -161,19 +156,29 @@ class M_Fertilizer_Order {
         return $stmt->fetch(PDO::FETCH_ASSOC);
     }
 
+    public function getFertilizerByName($fertilizer_name) {
+        $stmt = $this->db->prepare("SELECT *
+            FROM Fertilizer
+            WHERE fertilizer_name = :fertilizer_name");
+        $stmt->bindValue(':fertilizer_name', $fertilizer_name, PDO::PARAM_INT);
+        $stmt->execute();
+    
+        return $stmt->fetch(PDO::FETCH_ASSOC);
+    }
+
     public function getAllFertilizerTypes() {
-        $this->db->query("SELECT type_id, name,description,recommended_usage, unit_price_kg, unit_price_packs, unit_price_box FROM fertilizer_types");
+        $this->db->query("SELECT id as fertilizer_id, fertilizer_name, company_name, details, code, price, quantity FROM Fertilizer WHERE quantity > 0");
         return $this->db->resultset();
     }
 
     public function getFertilizerPrice($type_id) {
-        $this->db->query('SELECT price_per_unit FROM fertilizer_types WHERE type_id = :type_id');
+        $this->db->query('SELECT price_per_unit FROM Fertilizer WHERE type_id = :type_id');
         $this->db->bind(':type_id', $type_id);
         return $this->db->single();
     }
 
     public function getFertilizerName($type_id) {
-        $this->db->query('SELECT fertilizer_name FROM fertilizer_types WHERE type_id = :type_id');
+        $this->db->query('SELECT fertilizer_name FROM Fertilizer WHERE type_id = :type_id');
         $this->db->bind(':type_id', $type_id);
         return $this->db->single();
     }
