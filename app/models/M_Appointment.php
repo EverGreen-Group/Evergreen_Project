@@ -74,15 +74,35 @@ class M_Appointment {
         return !empty($result);
     }
 
-    public function getManagerTimeSlots($managerId) {
+    public function getManagerTimeSlots($managerId, $status) {
         // Auto-delete expired available slots (at midnight of the slot date)
         $this->cleanupExpiredAvailableSlots();
         
         // Auto-delete expired booked slots (at noon of the slot date)
         $this->cleanupExpiredBookedSlots();
         
-        $this->db->query("SELECT * FROM appointment_slots WHERE manager_id = :manager_id");
+        $this->db->query("SELECT * FROM appointment_slots 
+                          WHERE manager_id = :manager_id 
+                          AND date >= CURDATE()
+                          AND status = :status");
         $this->db->bind(':manager_id', $managerId);
+        $this->db->bind(':status', $status);
+        return $this->db->resultSet();
+    }
+
+    public function getBookedTimeSlots($managerId, $status) {
+        // Auto-delete expired available slots (at midnight of the slot date)
+        $this->cleanupExpiredAvailableSlots();
+        
+        // Auto-delete expired booked slots (at noon of the slot date)
+        $this->cleanupExpiredBookedSlots();
+        
+        $this->db->query("SELECT asl.* , ar.supplier_id 
+                          FROM appointment_slots asl
+                          JOIN appointment_requests ar ON asl.slot_id = ar.slot_id
+                          WHERE asl.manager_id = :manager_id AND asl.status = :status AND asl.date >= CURDATE()");
+        $this->db->bind(':manager_id', $managerId);
+        $this->db->bind(':status', $status);
         return $this->db->resultSet();
     }
     
@@ -172,7 +192,7 @@ class M_Appointment {
     }
 
     public function getAvailableTimeSlots() {
-        $this->db->query("SELECT * FROM appointment_slots WHERE status = 'Available'"); // Adjust the query as needed
+        $this->db->query("SELECT * FROM appointment_slots WHERE status = 'Available' AND date > CURDATE()");
         return $this->db->resultSet();
     }
 
