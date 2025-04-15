@@ -86,31 +86,14 @@ class M_CollectionSchedule {
         }
     }
 
-    public function getUpcomingSchedules($driverId) {
+    public function getUpcomingSchedules($driverId) { // TESTED
         $this->db->query("
             SELECT 
                 cs.schedule_id,
                 cs.day,
                 r.route_name,
                 v.*,
-                cs.start_time,
-                cs.end_time,
-                CASE 
-                    WHEN cs.day = DATE_FORMAT(CURDATE(), '%W') THEN 'today'
-                    WHEN FIELD(cs.day, 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday') 
-                        > FIELD(DATE_FORMAT(CURDATE(), '%W'), 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday')
-                    THEN 'upcoming'
-                    ELSE 'upcoming_next_week'
-                END AS schedule_status,
-                CASE 
-                    WHEN cs.day = DATE_FORMAT(CURDATE(), '%W') THEN 1 
-                    ELSE 0 
-                END as is_today,
-                (SELECT COUNT(*) 
-                 FROM collections c 
-                 WHERE c.schedule_id = cs.schedule_id 
-                 AND DATE(c.created_at) = CURDATE()
-                ) as collection_exists
+                cs.start_time
             FROM collection_schedules cs
             JOIN routes r ON cs.route_id = r.route_id
             JOIN vehicles v ON r.vehicle_id = v.vehicle_id
@@ -118,10 +101,7 @@ class M_CollectionSchedule {
                 AND cs.is_active = 1
                 AND cs.is_deleted = 0
                 AND r.is_deleted = 0
-            ORDER BY 
-                FIELD(schedule_status, 'today', 'upcoming', 'upcoming_next_week'),
-                FIELD(cs.day, 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'),
-                cs.start_time
+            ORDER BY cs.start_time
         ");
         
         $this->db->bind(':driver_id', $driverId);

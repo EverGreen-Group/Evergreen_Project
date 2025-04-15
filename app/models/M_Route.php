@@ -256,7 +256,7 @@ class M_Route {
     }
 
 
-    public function getSupplierCountByScheduleId($scheduleId) {
+    public function getSupplierCountByScheduleId($scheduleId) { // TESTED
         $this->db->query("
             SELECT 
                 COUNT(*)

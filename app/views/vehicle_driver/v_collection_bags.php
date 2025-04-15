@@ -30,7 +30,7 @@
     <!-- Supplier Info -->
     <div class="panel">
         <div class="panel-header">
-            <h3>Supplier Information</h3>
+            <h3>Supplier</h3>
             <div class="panel-badge">Collection ID: <?php echo $data['collection']->collection_id; ?></div>
         </div>
         <div class="panel-body">

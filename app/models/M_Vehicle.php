@@ -237,7 +237,7 @@ class M_Vehicle {
         return $this->db->execute();
     }
 
-    public function getVehicleLocation($vehicleId) {
+    public function getVehicleLocation($vehicleId) { // TESTED
         $this->db->query('
             SELECT latitude, longitude 
             FROM vehicles 
