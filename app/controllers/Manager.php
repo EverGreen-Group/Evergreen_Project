@@ -1929,12 +1929,20 @@ class Manager extends Controller
         
         $managerId = $_SESSION['manager_id'];
     
-        $timeSlots = $this->appointmentModel->getManagerTimeSlots($managerId);
+        if (!isset($managerId) || empty($managerId)) {
+            flash('appointment_error', 'Authentication error. Please login again.', 'alert alert-danger');
+            redirect('users/login');
+            return;
+        }
+
+        $pendingSlots = $this->appointmentModel->getManagerTimeSlots($managerId, 'Available');
+        $bookedSlots = $this->appointmentModel->getBookedTimeSlots($managerId, 'Booked');
         $incomingRequests = $this->appointmentModel->getIncomingRequests($managerId);
         $acceptedAppointments = $this->appointmentModel->getAcceptedAppointments($managerId);
     
         $data = [
-            'timeSlots' => $timeSlots,
+            'pendingSlots' => $pendingSlots,
+            'bookedSlots' => $bookedSlots,
             'incomingRequests' => $incomingRequests,
             'acceptedAppointments' => $acceptedAppointments
         ];
