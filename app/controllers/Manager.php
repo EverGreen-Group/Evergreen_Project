@@ -2032,21 +2032,25 @@ class Manager extends Controller
      * ------------------------------------------------------------
      */
 
-    public function appointments() {
-        $this->requireLogin(); 
-
-        if(!isset($_SESSION['manager_id'])) {
-            redirect('manager/allAppointments');
-        }
+    public function appointments() {                    // bug free function
+        $this->requireLogin(); // Assuming session check
         
         $managerId = $_SESSION['manager_id'];
     
-        $timeSlots = $this->appointmentModel->getManagerTimeSlots($managerId);
+        if (!isset($managerId) || empty($managerId)) {
+            setFlashMessage('appointment_error', 'Authentication error. Please login again.', 'alert alert-danger');
+            redirect('users/login');
+            return;
+        }
+
+        $availableSlots = $this->appointmentModel->getManagerTimeSlots($managerId, 'Available');
+        $bookedSlots = $this->appointmentModel->getBookedTimeSlots($managerId, 'Booked');
         $incomingRequests = $this->appointmentModel->getIncomingRequests($managerId);
         $acceptedAppointments = $this->appointmentModel->getAcceptedAppointments($managerId);
     
         $data = [
-            'timeSlots' => $timeSlots,
+            'availableSlots' => $availableSlots,
+            'bookedSlots' => $bookedSlots,
             'incomingRequests' => $incomingRequests,
             'acceptedAppointments' => $acceptedAppointments
         ];
@@ -2055,39 +2059,42 @@ class Manager extends Controller
     }
 
     public function allAppointments() {
-        // Ensure user is logged in
+        //user logged in
         $this->requireLogin();
         
-        // if(!isset($_SESSION['manager_id']) || empty($_SESSION['manager_id'])) {
-        //     redirect('users/login');
-        //     return;
-        // }
+        // Validate manager ID exists in session
+        if(!isset($_SESSION['manager_id']) || empty($_SESSION['manager_id'])) {
+            setFlashMessage('appointment_error', 'Authentication error. Please login again.', 'alert alert-danger');
+            redirect('users/login');
+            return;
+        }
         
         $manager_id = $_SESSION['manager_id'];
         
         try {
+            // Get all appointments
             $appointments = $this->model('M_Appointment')->getAllAppointments($manager_id);
             
+            // Prepare data for the view with the correct variable name
             $data = [
                 'appointments' => $appointments,
                 'title' => 'All Appointments'
             ];
         
+            // Load view with correct path
             $this->view('supplier_manager/v_all_appointments', $data);
         } catch (Exception $e) {
+            setFlashMessage('appointment_error', 'Error loading appointments: ' . $e->getMessage(), 'alert alert-danger');
             redirect('manager/');
         }
     }
 
-    public function createSlot() {
+    public function createSlot() {                  // bug free function
         $this->requireLogin();
-        
-        // If form is submitted
+    
         if ($_SERVER['REQUEST_METHOD'] == 'POST') {
-            // Sanitize POST data
             $_POST = filter_input_array(INPUT_POST, FILTER_SANITIZE_FULL_SPECIAL_CHARS);
-            
-            // Process form
+    
             $data = [
                 'manager_id' => $_SESSION['manager_id'],
                 'date' => trim($_POST['date']),
@@ -2096,44 +2103,57 @@ class Manager extends Controller
                 'date_err' => '',
                 'time_err' => ''
             ];
-            
+    
+            $errorMessages = '';
+    
+            // Validate date
             if (strtotime($data['date']) < strtotime(date('Y-m-d'))) {
                 $data['date_err'] = 'Time slots must be scheduled for future dates';
+                $errorMessages .= $data['date_err'] . '<br>';
             }
-            
+    
             $start_timestamp = strtotime($data['start_time']);
             $end_timestamp = strtotime($data['end_time']);
-
+    
+            // Time order validation
             if ($start_timestamp >= $end_timestamp) {
                 $data['time_err'] = 'End time must be after start time';
+                $errorMessages .= $data['time_err'] . '<br>';
             } else {
-
                 $duration_minutes = ($end_timestamp - $start_timestamp) / 60;
-
+    
                 if ($duration_minutes < 30) {
                     $data['time_err'] = 'Time slots must be at least 30 minutes long';
+                    $errorMessages .= $data['time_err'] . '<br>';
                 } else if ($duration_minutes > 120) {
                     $data['time_err'] = 'Time slots cannot exceed 2 hours';
+                    $errorMessages .= $data['time_err'] . '<br>';
                 }
             }
-            
-            // Check if slot already exists or overlaps with another slot
-            $overlap = $this->appointmentModel->isSlotOverlapping($data);
-            if ($overlap) {
-                $data['time_err'] = 'This time slot overlaps with an existing slot';
+
+            if ($start_timestamp < strtotime('08:00') || $end_timestamp > strtotime('18:00')) {
+                $data['time_err'] = 'Time slots must be created between 8:00AM and 06:00PM';
+                $errorMessages .= $data['time_err'] . '<br>';
             }
-            
-            // Make sure no errors
+    
+            // Overlap check
+            if ($this->appointmentModel->isSlotOverlapping($data)) {
+                $data['time_err'] = 'This time slot overlaps with an existing slot';
+                $errorMessages .= $data['time_err'] . '<br>';
+            }
+    
             if (empty($data['date_err']) && empty($data['time_err'])) {
-                // Create slot
                 if ($this->appointmentModel->createSlot($data)) {
+                    setFlashMessage('Time slot created successfully');
                     redirect('manager/appointments');
                 } else {
+                    setFlashMessage('Something went wrong', 'alert alert-danger');
                 }
+            } else {
+                // Show all errors at the bottom
+                setFlashMessage($errorMessages, 'alert alert-danger');
+                $this->view('supplier_manager/v_create_slot', $data);
             }
-            
-            // If there were errors, show the form again with the error messages
-            $this->view('supplier_manager/v_create_slot', $data);
         } else {
             $data = [
                 'date' => '',
@@ -2142,32 +2162,120 @@ class Manager extends Controller
                 'date_err' => '',
                 'time_err' => ''
             ];
-            
-            // Load view
             $this->view('supplier_manager/v_create_slot', $data);
         }
     }
+    
 
-    public function cancelSlot() {
+    public function cancelSlot() {                    // bug free function
         $this->requireLogin();
         
         // Check if form was submitted
         if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+            $managerId = $_SESSION['manager_id'];
             $slotId = isset($_POST['slot_id']) ? $_POST['slot_id'] : null;
+            $incomingSlot = $this->appointmentModel->getIncomingRequests($managerId);
             
             if ($slotId) {
-                $managerId = $_SESSION['manager_id'];
-                
-                // Call the model method to cancel the slot
-                if ($this->appointmentModel->cancelSlot($slotId, $managerId)) {
-                } else {
+                $isPendingRequest = false;
+                foreach ($incomingSlot as $slot) {
+                    if ($slot->slot_id == $slotId) {
+                        $isPendingRequest = true;
+                        break;
+                    }
+                }
+
+                if ($isPendingRequest) {
+                    setFlashMessage('Pending request for this time slot is already present', 'alert alert-danger');
+                    redirect('manager/appointments');
+                } else {           
+                    if ($this->appointmentModel->cancelSlot($slotId, $managerId)) {
+                        setFlashMessage('Time slot canceled successfully');
+                    } else {
+                        setFlashMessage('Unable to cancel time slot. It may already be booked or requested.', 'alert alert-danger');
+                    }
+                    redirect('manager/appointments');
                 }
             } else {
+                setFlashMessage('Invalid request', 'alert alert-danger');
             }
         }
         
-        // Redirect back to the appointments page
         redirect('manager/appointments');
+    }
+
+    public function respondRequest() {                    // bug free function
+        if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+            $requestId = trim($_POST['request_id']);
+            $action = trim($_POST['action']);
+    
+            $notificationModel = $this->model('M_Notification');
+    
+
+            $request = $this->appointmentModel->getRequestById($requestId);
+            $slotId = $request->slot_id;
+            $supplierId = $request->supplier_id;
+    
+            if ($action === 'accept') {
+                if ($this->appointmentModel->acceptRequest($requestId)) {
+
+                    $this->logModel->create(
+                        $_SESSION['user_id'],
+                        $_SESSION['email'],
+                        $_SERVER['REMOTE_ADDR'],
+                        "Accepted the request for the timeslot",
+                        $_SERVER['REQUEST_URI'],     
+                        http_response_code()     
+                    );
+                    setFlashMessage('Request accepted successful for request ID: ' . $requestId );
+    
+                    $notificationModel->createNotification(
+                        $this->userModel->getUserIdBySupplierId($supplierId),
+                        'Appointment Accepted',
+                        'Your appointment request has been accepted.',
+                        ['link' => 'supplier/viewAppointment/']
+                    );
+    
+                    $otherRequests = $this->appointmentModel->getRequestsBySlotExcept($slotId, $requestId);
+                    foreach ($otherRequests as $req) {
+
+                        $this->appointmentModel->rejectRequest($req->request_id);
+    
+                        $notificationModel->createNotification(
+                            $this->userModel->getUserIdBySupplierId($req->supplier_id),
+                            'Appointment Rejected',
+                            'Your request for the same time slot was rejected.',
+                            ['link' => 'supplier/viewAppointment/']
+                        );
+                    }
+    
+                } else {
+                    setFlashMessage('Failed to accept the request. Please refresh the page', 'error');
+                }
+    
+            } elseif ($action === 'reject') {
+                $this->appointmentModel->rejectRequest($requestId);
+
+                $this->logModel->create(
+                    $_SESSION['user_id'],
+                    $_SESSION['email'],
+                    $_SERVER['REMOTE_ADDR'],
+                    "Rejected the request for the time slot",
+                    $_SERVER['REQUEST_URI'],     
+                    http_response_code()     
+                );
+                setFlashMessage('Request rejected successfuly!');
+    
+                $notificationModel->createNotification(
+                    $supplierId,
+                    'Appointment Rejected',
+                    'Your appointment request has been rejected.',
+                    ['link' => 'supplier/viewAppointment/' . $requestId]
+                );
+            }
+    
+            redirect('manager/appointments');
+        }
     }
 
 
@@ -2529,80 +2637,6 @@ class Manager extends Controller
         
         echo json_encode(['success' => false, 'message' => 'Invalid request method']);
         exit();
-    }
-
-    public function respondRequest() {
-        if ($_SERVER['REQUEST_METHOD'] == 'POST') {
-            $requestId = trim($_POST['request_id']);
-            $action = trim($_POST['action']);
-    
-            $notificationModel = $this->model('M_Notification');
-    
-
-            $request = $this->appointmentModel->getRequestById($requestId);
-            $slotId = $request->slot_id;
-            $supplierId = $request->supplier_id;
-    
-            if ($action === 'accept') {
-                if ($this->appointmentModel->acceptRequest($requestId)) {
-
-                    $this->logModel->create(
-                        $_SESSION['user_id'],
-                        $_SESSION['email'],
-                        $_SERVER['REMOTE_ADDR'],
-                        "Accepted the request for the timeslot",
-                        $_SERVER['REQUEST_URI'],     
-                        http_response_code()     
-                    );
-                    setFlashMessage('Request accepted successful for request ID: ' . $requestId );
-    
-                    $notificationModel->createNotification(
-                        $this->userModel->getUserIdBySupplierId($supplierId),
-                        'Appointment Accepted',
-                        'Your appointment request has been accepted.',
-                        ['link' => 'supplier/viewAppointment/']
-                    );
-    
-                    $otherRequests = $this->appointmentModel->getRequestsBySlotExcept($slotId, $requestId);
-                    foreach ($otherRequests as $req) {
-
-                        $this->appointmentModel->rejectRequest($req->request_id);
-    
-                        $notificationModel->createNotification(
-                            $this->userModel->getUserIdBySupplierId($req->supplier_id),
-                            'Appointment Rejected',
-                            'Your request for the same time slot was rejected.',
-                            ['link' => 'supplier/viewAppointment/']
-                        );
-                    }
-    
-                } else {
-                    setFlashMessage('Failed to accept the request. Please refresh the page', 'error');
-                }
-    
-            } elseif ($action === 'reject') {
-                $this->appointmentModel->rejectRequest($requestId);
-
-                $this->logModel->create(
-                    $_SESSION['user_id'],
-                    $_SESSION['email'],
-                    $_SERVER['REMOTE_ADDR'],
-                    "Rejected the request for the time slot",
-                    $_SERVER['REQUEST_URI'],     
-                    http_response_code()     
-                );
-                setFlashMessage('Request rejected successfuly!');
-    
-                $notificationModel->createNotification(
-                    $supplierId,
-                    'Appointment Rejected',
-                    'Your appointment request has been rejected.',
-                    ['link' => 'supplier/viewAppointment/' . $requestId]
-                );
-            }
-    
-            redirect('manager/appointments');
-        }
     }
     
 

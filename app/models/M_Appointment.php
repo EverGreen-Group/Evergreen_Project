@@ -74,7 +74,7 @@ class M_Appointment {
         return !empty($result);
     }
 
-    public function getManagerTimeSlots($managerId, $status) {
+    public function getManagerTimeSlots($managerId, $status) {                    // bug free function
         // Auto-delete expired available slots (at midnight of the day prior to slot date)
         $this->cleanupExpiredAvailableSlots();
         
@@ -91,7 +91,7 @@ class M_Appointment {
         return $this->db->resultSet();
     }
 
-    public function getBookedTimeSlots($managerId, $status) {
+    public function getBookedTimeSlots($managerId, $status) {                    // bug free function
         // Auto-delete expired available slots (at midnight of the day prior to slot date)
         $this->cleanupExpiredAvailableSlots();
         
@@ -110,7 +110,7 @@ class M_Appointment {
         return $this->db->resultSet();
     }
     
-    public function getIncomingRequests($managerId) {
+    public function getIncomingRequests($managerId) {                    // bug free function
         $this->db->query("
             SELECT r.slot_id, r.request_id, CONCAT(p.first_name, ' ', p.last_name) AS supplier_name, sl.date, sl.start_time, sl.end_time, r.submitted_at, p.*
             FROM appointment_requests r
@@ -123,7 +123,7 @@ class M_Appointment {
         return $this->db->resultSet();
     }
     
-    public function getAcceptedAppointments($managerId) {
+    public function getAcceptedAppointments($managerId) {                    // bug free function
         $this->db->query("
             SELECT a.appointment_id, CONCAT(p.first_name, ' ', p.last_name) AS supplier_name, sl.date, sl.start_time, sl.end_time, p.*
             FROM appointments a
@@ -138,13 +138,12 @@ class M_Appointment {
     }
     
 
-    public function createSlot($data) {
+    public function createSlot($data) {                    // bug free function
         // Check if the date is not earlier than today
         if(strtotime($data['date']) < strtotime(date('Y-m-d'))) {
             return false;
         }
         
-        // Check if the time slot overlaps with another
         if($this->isSlotOverlapping($data)) {
             return false;
         }
@@ -162,13 +161,12 @@ class M_Appointment {
         return $this->db->execute();
     }
 
-    public function acceptRequest($requestId) {
-        // First, get the slot_id for the accepted request
+    public function acceptRequest($requestId) {                    // bug free function
+        
         $this->db->query("SELECT slot_id FROM appointment_requests WHERE request_id = :request_id");
         $this->db->bind(':request_id', $requestId);
         $slot = $this->db->single();
 
-        // Insert into appointments table
         $this->db->query("INSERT INTO appointments (request_id, accepted_at) VALUES (:request_id, NOW())");
         $this->db->bind(':request_id', $requestId);
         $this->db->execute();
@@ -189,7 +187,7 @@ class M_Appointment {
         return $this->db->execute();
     }
 
-    public function rejectRequest($requestId) {
+    public function rejectRequest($requestId) {                    // bug free function
         $this->db->query("UPDATE appointment_requests SET status = 'Rejected' WHERE request_id = :request_id");
         $this->db->bind(':request_id', $requestId);
         return $this->db->execute();
@@ -233,7 +231,7 @@ class M_Appointment {
         return $this->db->execute();
     }
 
-    public function isSlotOverlapping($data) {
+    public function isSlotOverlapping($data) {                    // bug free function
         $this->db->query("SELECT * FROM appointment_slots 
                          WHERE manager_id = :manager_id 
                          AND date = :date 
@@ -259,7 +257,7 @@ class M_Appointment {
         return $this->db->single();
     }
     
-    public function getRequestById($requestId) {
+    public function getRequestById($requestId) {                    // bug free function
         $this->db->query("SELECT * FROM appointment_requests WHERE request_id = :request_id");
         $this->db->bind(':request_id', $requestId);
         return $this->db->single();
@@ -293,7 +291,7 @@ class M_Appointment {
         return $this->db->resultSet();
     }    
 
-    public function cancelSlot($slotId, $managerId) {
+    public function cancelSlot($slotId, $managerId) {                    // bug free function
 
         $this->db->query("DELETE FROM appointment_requests 
                          WHERE slot_id = :slot_id 
@@ -313,7 +311,7 @@ class M_Appointment {
         return $this->db->execute();
     }
 
-    public function getAllAppointments($manager_id) {
+    public function getAllAppointments($manager_id) {                    // bug free function
         $this->db->query("SELECT 
                             a.appointment_id, 
                             ar.supplier_id, 

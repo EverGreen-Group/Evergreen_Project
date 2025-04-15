@@ -154,9 +154,11 @@ class Supplier extends Controller {
             
             // Create the request
             if ($this->appointmentModel->createRequest($data)) {
-                setFlashMessage('Request sent sucessfully!');
+                setFlashMessage('Request sent successfully!');
+                redirect('Supplier/viewAppointments');
             } else {
                 setFlashMessage('Request failed, please try again later!', 'error');
+                redirect('Supplier/viewAppointments');
             }
             
             redirect('Supplier/viewAppointments');
