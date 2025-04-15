@@ -41,26 +41,6 @@
                     <h3>Time Slot Information</h3>
                 </div>
 
-                <!--Error alerts-->
-                <?php if(!empty($data['date_err']) || !empty($data['time_err']) || !empty($data['error'])): ?>
-                    <div class="error-alert">
-                        <div class="error-icon"><i class='bx bx-error-circle'></i></div>
-                        <div class="error-content">
-                            <?php if(!empty($data['error'])): ?>
-                                <p><?php echo $data['error']; ?></p>
-                            <?php endif; ?>
-                            
-                            <?php if(!empty($data['date_err'])): ?>
-                                <p><?php echo $data['date_err']; ?></p>
-                            <?php endif; ?>
-                            
-                            <?php if(!empty($data['time_err'])): ?>
-                                <p><?php echo $data['time_err']; ?></p>
-                            <?php endif; ?>
-                        </div>
-                    </div>
-                <?php endif; ?>
-
                 <div class="section-content">
                     <div class="info-row">
                         <label class="label" for="date">Date:</label>
