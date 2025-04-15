@@ -335,12 +335,12 @@ class M_SupplierApplication {
         return $this->db->execute();
     }
 
-    public function approveApplication($applicationId) {
+    /*public function approveApplication($applicationId) {
         $supplierModel = new M_SupplierApplication();
         if ($supplierModel->updateApplicationStatus($applicationId, 'approved')) {
-            setFlashMessage('Approved the application sucessfully!');
+            setFlashMessage('Approved the application successfully!');
         } else {
-            setFlashMessage('Couldnt approve the application, please try again later!', 'error');
+            setFlashMessage('Couldn\'t approve the application, please try again later!', 'error');
         }
         redirect('suppliermanager/applications');
     }
@@ -353,7 +353,7 @@ class M_SupplierApplication {
             setFlashMessage('Couldnt reject this application, please try again later!', 'error');
         }
         redirect('suppliermanager/applications');
-    }
+    }*/
 
     public function createProfileAndApplication($profileData, $applicationData, $profilePhoto, $documents) {
         $this->db->beginTransaction();
