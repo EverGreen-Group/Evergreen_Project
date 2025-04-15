@@ -136,6 +136,10 @@
                     <i class='bx bx-time-five'></i>
                     <span>Time: <?php echo $order->order_time; ?></span>
                   </div>
+                  <div class="info-item">
+                    <i class='bx bx-package'></i>
+                    <span>Quantity: <?php echo $order->quantity; ?></span>
+                  </div>
                 </div>
                 <!-- second row -->
                 <div class="info-row">
@@ -150,6 +154,8 @@
                   <div class="info-item">
                     <i class='bx bx-credit-card'></i>
                     <span>Payment: <p class="btn"> <?php echo isset($order->payment_status) ? $order->payment_status : 'Pending'; ?></p></span>
+                  </div>
+                  <div class="info-item">
                   </div>
                 </div>
               </div>
