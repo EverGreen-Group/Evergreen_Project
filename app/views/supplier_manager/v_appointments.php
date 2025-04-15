@@ -24,7 +24,7 @@
     </div>
   </div>
 
-  <!-- Section 1: Your Time Slots -->
+  <!-- Section 1: My Time Slots -->
   <div class="table-data">
     <div class="order">
       <div class="head">
@@ -45,8 +45,8 @@
           </tr>
         </thead>
         <tbody>
-          <?php if (!empty($timeSlots)): ?>
-            <?php foreach ($timeSlots as $slot): ?>
+          <?php if (!empty($pendingSlots)): ?>
+            <?php foreach ($pendingSlots as $slot): ?>
               <tr>
                 <td><?php echo htmlspecialchars($slot->slot_id); ?></td>
                 <td><?php echo htmlspecialchars($slot->date); ?></td>
@@ -74,7 +74,45 @@
     </div>
   </div>
 
-  <!-- Section 2: Incoming Appointment Requests -->
+  <!-- Section 2: Booked Slots -->
+  <div class="table-data">
+    <div class="order">
+      <div class="head">
+        <h3>Booked Slots</h3>
+      </div>
+      <table>
+        <thead>
+          <tr>
+            <th>Slot ID</th>
+            <th>Date</th>
+            <th>Time Range</th>
+            <th>Status</th>
+            <th>Supplier ID</th>
+          </tr>
+        </thead>
+        <tbody>
+          <?php if (!empty($bookedSlots)): ?>
+            <?php foreach ($bookedSlots as $slots): ?>
+              <tr>
+                <td><?php echo $slots->slot_id; ?></td>
+                <td><?php echo $slots->date; ?></td>
+                <td><?php echo $slots->start_time . ' - ' . $slots->end_time; ?></td>
+                <td><span class="status-badge <?php echo strtolower($slots->status); ?>"><?php echo ucfirst($slots->status); ?></span></td>
+                <td><?php echo $slots->supplier_id; ?></td>
+              </tr>
+            <?php endforeach;?>
+          <?php else: ?>
+            <tr>
+              <td colspan="5" style="text-align: center;">No booked appointments available.</td>
+            </tr>
+          <?php endif; ?>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+
+  <!-- Section 3: Incoming Appointment Requests -->
   <div class="table-data">
     <div class="order">
       <div class="head">
