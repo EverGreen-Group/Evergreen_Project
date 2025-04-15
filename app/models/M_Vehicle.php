@@ -24,6 +24,7 @@ class M_Vehicle {
         return $result->available;
     }
 
+
     public function getVehicleDetails() {
         $this->db->query("SELECT 
             v.*
@@ -244,12 +245,8 @@ class M_Vehicle {
         ');
         
         $this->db->bind(':vehicle_id', $vehicleId);
-        $result = $this->db->single();
-        
-        return $result ? [
-            'lat' => (float)$result->latitude,
-            'lng' => (float)$result->longitude
-        ] : null;
+        return $this->db->single();
+
     }
 
     public function getFilteredVehicles($license_plate = null, $vehicle_type = null, $capacity = null, $make = null, $model = null, $manufacturing_year = null) {

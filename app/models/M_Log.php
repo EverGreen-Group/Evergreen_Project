@@ -30,10 +30,9 @@ class M_Log {
         return $this->db->resultSet();
     }
 
-    public function getFilteredUserLogs($userId = null, $email = null) {
-        $sql = "SELECT * FROM user_logs WHERE 1=1"; // Start with a base query
+    public function getFilteredUserLogs($userId = null, $email = null, $limit = 8, $offset = 0) {
+        $sql = "SELECT * FROM user_logs WHERE 1=1"; 
     
-        // Add conditions based on provided filters
         if ($userId) {
             $sql .= " AND user_id = :user_id";
         }
@@ -41,7 +40,7 @@ class M_Log {
             $sql .= " AND email LIKE :email";
         }
     
-        $sql .= " ORDER BY timestamp DESC";
+        $sql .= " ORDER BY timestamp DESC LIMIT :limit OFFSET :offset";
     
         $this->db->query($sql);
     
@@ -52,11 +51,35 @@ class M_Log {
         if ($email) {
             $this->db->bind(':email', "%$email%");
         }
+        // Bind as integers to avoid issues
+        $this->db->bind(':limit', $limit, PDO::PARAM_INT);
+        $this->db->bind(':offset', $offset, PDO::PARAM_INT);
     
         return $this->db->resultSet();
     }
+
+    public function getTotalUserLogs($userId = null, $email = null) {
+        $sql = "SELECT COUNT(*) as total FROM user_logs WHERE 1=1";
+        if ($userId) {
+            $sql .= " AND user_id = :user_id";
+        }
+        if ($email) {
+            $sql .= " AND email LIKE :email";
+        }
+    
+        $this->db->query($sql);
+    
+        if ($userId) {
+            $this->db->bind(':user_id', $userId);
+        }
+        if ($email) {
+            $this->db->bind(':email', "%$email%");
+        }
+    
+        $row = $this->db->single();
+        return $row->total;
+    }
     
 
-
-
 } 
+

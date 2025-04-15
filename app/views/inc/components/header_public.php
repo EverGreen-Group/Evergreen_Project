@@ -163,7 +163,7 @@
                 </a>
                 <a href="<?php echo URLROOT; ?>/pages/store"
                     class="<?php echo ($_GET['url'] ?? '') === 'pages/store' ? 'active' : ''; ?>">
-                    STORE
+                    PRODUCT
                 </a>
                 <a href="<?php echo URLROOT; ?>/pages/about"
                     class="<?php echo ($_GET['url'] ?? '') === 'pages/store' ? 'active' : ''; ?>">

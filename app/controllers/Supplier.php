@@ -60,9 +60,9 @@ class Supplier extends Controller {
 
             foreach ($allSchedules as $schedule) {
                 // Skip schedules that already have collections for today
-                if ($schedule->is_today && $schedule->collection_exists > 0) {
-                    continue;
-                }
+                // if ($schedule->is_today && $schedule->collection_exists > 0) {
+                //     continue;
+                // }
                 
                 if ($schedule->is_today) {
                     $todaySchedules[] = $schedule;

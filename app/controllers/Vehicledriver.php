@@ -201,7 +201,7 @@ class VehicleDriver extends controller {
 
     public function collection($collectionId) {
         $collection = $this->collectionModel->getCollectionDetails($collectionId);
-        $driverLocation = $this->getCurrentDriverLocation();
+        $driverLocation = $this->getCurrentDriverLocation($collection->vehicle_id);
         $vehicleLocation = $this->vehicleModel->getVehicleLocation($collection->vehicle_id);
         $collectionSuppliers = $this->collectionScheduleModel->getCollectionSupplierRecords($collectionId);
         
@@ -278,13 +278,21 @@ class VehicleDriver extends controller {
 
 
     // Add this new method to get current driver location
-    private function getCurrentDriverLocation() {
-        // If you have a stored location in session or database, retrieve it
-        // Otherwise, get it from browser geolocation
-        return [
-            'lat' => $_SESSION['driver_lat'] ?? null,
-            'lng' => $_SESSION['driver_lng'] ?? null
-        ];
+    public function getCurrentDriverLocation($vehicleId) {
+        // Get the vehicle's location
+        $vehicleLocation = $this->vehicleModel->getVehicleLocation($vehicleId);
+        
+        return $vehicleLocation; // Return only the vehicle location
+    }
+
+    public function getVehicleLocation($vehicleId) {
+        $vehicleLocation = $this->vehicleModel->getVehicleLocation($vehicleId);
+        if ($vehicleLocation) {
+            echo json_encode($vehicleLocation);
+        } else {
+            // Return an error response
+            echo json_encode(['error' => 'Vehicle location not found']);
+        }
     }
 
     public function markSupplierArrival($collectionId, $supplierId, $arrivalTime, $latitude = null, $longitude = null) {

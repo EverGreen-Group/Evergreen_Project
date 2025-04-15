@@ -1312,9 +1312,9 @@ class M_Collection {
         return $this->db->resultSet();
     }
 
+    // app/models/M_Collection.php
     public function getFilteredCollections($collection_id = null, $schedule_id = null, $status = null, 
-                                          $start_date = null, $end_date = null, $min_quantity = null, 
-                                          $max_quantity = null, $bags_added = null) {
+                                            $start_date = null, $end_date = null, $limit = 5, $offset = 0) {
         $sql = "SELECT 
                 c.*,
                 cs.schedule_id,
@@ -1327,8 +1327,7 @@ class M_Collection {
             JOIN vehicles v ON r.vehicle_id = v.vehicle_id
             JOIN drivers d ON cs.driver_id = d.driver_id
             JOIN profiles p ON d.profile_id = p.profile_id
-            WHERE cs.is_active = 1
-            AND cs.is_deleted = 0";
+            ";
         
         $params = [];
         
@@ -1358,31 +1357,29 @@ class M_Collection {
             $params[':end_date'] = $end_date;
         }
         
-        if ($min_quantity) {
-            $sql .= " AND c.total_quantity >= :min_quantity";
-            $params[':min_quantity'] = $min_quantity;
-        }
-        
-        if ($max_quantity) {
-            $sql .= " AND c.total_quantity <= :max_quantity";
-            $params[':max_quantity'] = $max_quantity;
-        }
-        
-        if ($bags_added !== null) {
-            $sql .= " AND c.bags_added = :bags_added";
-            $params[':bags_added'] = $bags_added;
-        }
-        
-        $sql .= " ORDER BY c.start_time ASC";
-        
+        // Add pagination
+        $sql .= " ORDER BY c.start_time DESC LIMIT :limit OFFSET :offset";
+
         $this->db->query($sql);
         
         // Bind parameters
         foreach ($params as $param => $value) {
             $this->db->bind($param, $value);
         }
+
+        // Bind limit and offset
+        $this->db->bind(':limit', $limit, PDO::PARAM_INT);
+        $this->db->bind(':offset', $offset, PDO::PARAM_INT);
         
         return $this->db->resultSet();
+    }
+
+    // Implement a method to get the total collections count
+    public function getTotalCollections() {
+        $sql = "SELECT COUNT(*) as total FROM collections";
+        $this->db->query($sql);
+        $row = $this->db->single();
+        return $row->total;
     }
 
 

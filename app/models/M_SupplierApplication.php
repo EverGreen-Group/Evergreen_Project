@@ -204,8 +204,7 @@ class M_SupplierApplication {
     }
     
 
-    // Add this method to your existing class
-    public function getAllApplications($filters = []) {
+    public function getAllApplications($filters = [], $limit = 5, $offset = 0) {
         $sql = '
         SELECT supplier_applications.*, users.email, managers.manager_id, 
                CONCAT(profiles.first_name, \' \', profiles.last_name) AS manager_name,
@@ -216,7 +215,7 @@ class M_SupplierApplication {
         LEFT JOIN profiles ON profiles.profile_id = managers.profile_id 
         WHERE 1=1
         ';
-    
+        
         $params = [];
     
         if(!empty($filters['application_id'])) {
@@ -239,13 +238,16 @@ class M_SupplierApplication {
             $params[':date_to'] = $filters['date-to'];
         }
     
-        $sql .= ' ORDER BY supplier_applications.created_at DESC';
+        $sql .= ' ORDER BY supplier_applications.created_at DESC LIMIT :limit OFFSET :offset';
     
         $this->db->query($sql);
     
         foreach ($params as $param => $value) {
             $this->db->bind($param, $value);
         }
+
+        $this->db->bind(':limit', $limit);
+        $this->db->bind(':offset', $offset);
         
         return $this->db->resultSet();
     }
@@ -261,6 +263,40 @@ class M_SupplierApplication {
             ORDER BY sa.created_at DESC');
         
         return $this->db->resultSet();
+    }
+
+    public function getTotalApplications($filters = []) {
+        $sql = "SELECT COUNT(*) as total FROM supplier_applications WHERE 1=1";
+        $params = [];
+    
+        if(!empty($filters['application_id'])) {
+            $sql .= ' AND application_id = :application_id';
+            $params[':application_id'] = $filters['application_id'];
+        }
+        
+        if (!empty($filters['status'])) {
+            $sql .= ' AND status = :status';
+            $params[':status'] = $filters['status'];
+        }
+        
+        if (!empty($filters['date-from'])) {
+            $sql .= ' AND DATE(created_at) >= :date_from';
+            $params[':date_from'] = $filters['date-from'];
+        }
+        
+        if(!empty($filters['date-to'])) {
+            $sql .= ' AND DATE(created_at) <= :date_to';
+            $params[':date_to'] = $filters['date-to'];
+        }
+    
+        $this->db->query($sql);
+    
+        foreach ($params as $param => $value) {
+            $this->db->bind($param, $value);
+        }
+    
+        $row = $this->db->single();
+        return $row->total;
     }
 
 

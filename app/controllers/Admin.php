@@ -111,18 +111,31 @@ class Admin extends Controller
 
 
     public function userLogs() {
+        // Get filter parameters (optional)
         $userId = isset($_GET['user_id']) ? $_GET['user_id'] : null;
         $email = isset($_GET['email']) ? $_GET['email'] : null;
     
-        // Fetch filtered user logs based on search criteria
-        $userLogs = $this->logModel->getFilteredUserLogs($userId, $email);
+
+        $page = isset($_GET['page']) && is_numeric($_GET['page']) ? (int)$_GET['page'] : 1;
+        $limit = 5; // Number of logs per page
+        $offset = ($page - 1) * $limit;
+
+        $userLogs = $this->logModel->getFilteredUserLogs($userId, $email, $limit, $offset);
+
+        $totalLogs = $this->logModel->getTotalUserLogs($userId, $email);
+        $totalPages = ceil($totalLogs / $limit);
     
         $data = [
-            'userLogs' => $userLogs
+            'userLogs'    => $userLogs,
+            'currentPage' => $page,
+            'totalPages'  => $totalPages,
+            'user_id'     => $userId,
+            'email'       => $email
         ];
     
         $this->view('admin/v_user_log', $data);
     }
+    
 
     public function updateUser() {
         // Check if the request method is POST

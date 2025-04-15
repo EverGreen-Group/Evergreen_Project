@@ -89,49 +89,65 @@
         </div>
     </div>
 
-  <!-- All Complaints Section -->
-  <div class="table-data">
-    <div class="order">
-      <div class="head">
-        <h3>All Complaints</h3>
-      </div>
-      <table>
-        <thead>
-          <tr>
-            <th>Complaint ID</th>
-            <th>Supplier</th>
-            <th>Subject</th>
-            <th>Date Filed</th>
-            <th>Priority</th>
-            <th>Status</th>
-            <th>Actions</th>
-          </tr>
-        </thead>
-        <tbody>
-            <?php if (!empty($data['complaints'])): ?>
-                <?php foreach ($data['complaints'] as $complaint): ?>
-                <tr>
-                    <td><?php echo htmlspecialchars($complaint->complaint_id); ?>
-                    <td><a href="<?php echo URLROOT; ?>/manager/viewSupplier/<?php echo htmlspecialchars($complaint->supplier_id); ?>" class="manager-link">
-                            <img src="<?php echo URLROOT . '/' . htmlspecialchars($complaint->image_path); ?>" alt="Supplier Photo" class="manager-photo">
-                            <?php echo htmlspecialchars($complaint->supplier_name); ?>
-                        </a></td>
-                    <td><?php echo htmlspecialchars($complaint->subject); ?></td>
-                    <td><?php echo htmlspecialchars($complaint->created_at); ?></td>
-                    <td><span class="priority-badge <?php echo strtolower($complaint->priority); ?>"><?php echo ucfirst($complaint->priority); ?></span></td>
-                    <td><span class="status-badge <?php echo strtolower($complaint->status); ?>"><?php echo ucfirst($complaint->status); ?></span></td>
-                    <td><a href="<?php echo URLROOT; ?>/manager/viewComplaint/<?php echo $complaint->complaint_id; ?>" class="btn btn-primary" title="View Details">
-                            <i class='bx bx-detail'></i>
-                        </a></td>
-                </tr>
-                <?php endforeach; ?>
-            <?php else: ?>
-                <tr><td colspan="7" style="text-align:center;">No complaints found</td></tr>
-            <?php endif; ?>
-        </tbody>
-      </table>
+    <div class="table-data">
+        <div class="order">
+            <div class="head">
+                <h3>All Complaints</h3>
+            </div>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Complaint ID</th>
+                        <th>Supplier</th>
+                        <th>Subject</th>
+                        <th>Date Filed</th>
+                        <th>Priority</th>
+                        <th>Status</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <?php if (!empty($data['complaints'])): ?>
+                        <?php foreach ($data['complaints'] as $complaint): ?>
+                        <tr>
+                            <td><?php echo htmlspecialchars($complaint->complaint_id); ?></td>
+                            <td>
+                                <a href="<?php echo URLROOT; ?>/manager/viewSupplier/<?php echo htmlspecialchars($complaint->supplier_id); ?>" class="manager-link">
+                                    <img src="<?php echo URLROOT . '/' . htmlspecialchars($complaint->image_path); ?>" alt="Supplier Photo" class="manager-photo">
+                                    <?php echo htmlspecialchars($complaint->supplier_name); ?>
+                                </a>
+                            </td>
+                            <td><?php echo htmlspecialchars($complaint->subject); ?></td>
+                            <td><?php echo htmlspecialchars($complaint->created_at); ?></td>
+                            <td><span class="priority-badge <?php echo strtolower($complaint->priority); ?>"><?php echo ucfirst($complaint->priority); ?></span></td>
+                            <td><span class="status-badge <?php echo strtolower($complaint->status); ?>"><?php echo ucfirst($complaint->status); ?></span></td>
+                            <td><a href="<?php echo URLROOT; ?>/manager/viewComplaint/<?php echo $complaint->complaint_id; ?>" class="btn btn-primary" title="View Details">
+                                    <i class='bx bx-detail'></i>
+                                </a></td>
+                        </tr>
+                        <?php endforeach; ?>
+                    <?php else: ?>
+                        <tr><td colspan="7" style="text-align:center;">No complaints found</td></tr>
+                    <?php endif; ?>
+                </tbody>
+            </table>
+
+            <!-- Pagination -->
+            <div class="table-pagination">
+                <div class="pagination">
+                    <?php if ($data['totalPages'] > 1): ?>
+                        <?php for ($i = 1; $i <= $data['totalPages']; $i++): ?>
+                            <a 
+                            href="<?php echo URLROOT; ?>/manager/complaints?page=<?php echo $i; ?>&complaint_id=<?php echo urlencode($complaint_id); ?>&status=<?php echo urlencode($status); ?>&date_from=<?php echo urlencode($date_from); ?>&date_to=<?php echo urlencode($date_to); ?>" 
+                            <?php if ($data['currentPage'] == $i) { echo 'class="active"'; } ?>>
+                                <?php echo $i; ?>
+                            </a>
+                        <?php endfor; ?>
+                    <?php endif; ?>
+                </div>
+            </div>
+        </div>
     </div>
-  </div>
 </main>
 
 <style>
