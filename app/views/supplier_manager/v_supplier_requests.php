@@ -666,9 +666,10 @@
     .show-dropdown {
         display: block;
     }
+</style>
 
-    /* Add this JavaScript to position the dropdown */
-    <script>
+    
+<script>
     document.querySelectorAll('.three-dots-btn').forEach(button => {
         button.addEventListener('click', (e) => {
             e.preventDefault();
