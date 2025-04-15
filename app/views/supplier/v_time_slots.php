@@ -25,7 +25,6 @@
     <div class="section-header">
       <h3>Available Time Slots</h3>
     </div>
-    <?php flash('request_message'); ?>
     <?php if (!empty($data['time_slots'])): ?>
       <div class="slots-container">
         <?php foreach($data['time_slots'] as $slot): ?>
@@ -364,6 +363,10 @@
     grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
     gap: var(--spacing-md);
     margin-bottom: var(--spacing-md);
+    align-self: center;
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-lg);
   }
 
   .info-item {

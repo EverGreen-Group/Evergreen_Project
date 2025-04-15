@@ -62,10 +62,10 @@
                 <i class='bx bx-search'></i>
             </div>
             <div class="filter-options">
-                <form action="<?php echo URLROOT; ?>/manager/complaints" method="GET">
+            <form action="<?php echo URLROOT; ?>/manager/complaints" method="GET">
                     <div class="filter-group">
-                        <label for="application-id">Complaint ID:</label>
-                        <input type="text" id="application-id" name="application_id" placeholder="Enter application ID">
+                        <label for="complaint-id">Complaint ID:</label>
+                        <input type="text" id="complaint-id" name="complaint_id" placeholder="Enter complaint ID">
                     </div>
                     <div class="filter-group">
                         <label for="status">Status:</label>
@@ -108,28 +108,26 @@
           </tr>
         </thead>
         <tbody>
-        <?php if (!empty($data['complaints'])): ?>
-            <?php foreach ($data['complaints'] as $complaint): ?>
-            <tr>
-                <td><?php echo htmlspecialchars($complaint->complaint_id); ?></td>
-                <td>
-                    <a href="<?php echo URLROOT; ?>/manager/viewSupplier/<?php echo htmlspecialchars($complaint->supplier_id); ?>" class="manager-link">
-                        <img src="<?php echo URLROOT . '/' . htmlspecialchars($complaint->image_path); ?>" alt="Supplier Photo" class="manager-photo">
-                        <?php echo htmlspecialchars($complaint->supplier_name); ?>
-                    </a>
-                </td>
-                <td><?php echo htmlspecialchars($complaint->subject); ?></td>
-                <td><?php echo htmlspecialchars($complaint->created_at); ?></td>
-                <td><span class="priority-badge <?php echo strtolower($complaint->priority); ?>"><?php echo ucfirst($complaint->priority); ?></span></td>
-                <td><span class="status-badge <?php echo strtolower($complaint->status); ?>"><?php echo ucfirst($complaint->status); ?></span></td>
-                <td>
-                <a href="<?php echo URLROOT; ?>/manager/viewComplaint/<?php echo $complaint->complaint_id; ?>" class="btn btn-primary" title="View Details"><i class='bx bx-detail'></i></a>
-                </td>
-            </tr>
-            <?php endforeach; ?>
-        <?php else: ?>
-            <tr><td colspan="7" style="text-align:center;">No complaints found</td></tr>
-        <?php endif; ?>
+            <?php if (!empty($data['complaints'])): ?>
+                <?php foreach ($data['complaints'] as $complaint): ?>
+                <tr>
+                    <td><?php echo htmlspecialchars($complaint->complaint_id); ?>
+                    <td><a href="<?php echo URLROOT; ?>/manager/viewSupplier/<?php echo htmlspecialchars($complaint->supplier_id); ?>" class="manager-link">
+                            <img src="<?php echo URLROOT . '/' . htmlspecialchars($complaint->image_path); ?>" alt="Supplier Photo" class="manager-photo">
+                            <?php echo htmlspecialchars($complaint->supplier_name); ?>
+                        </a></td>
+                    <td><?php echo htmlspecialchars($complaint->subject); ?></td>
+                    <td><?php echo htmlspecialchars($complaint->created_at); ?></td>
+                    <td><span class="priority-badge <?php echo strtolower($complaint->priority); ?>"><?php echo ucfirst($complaint->priority); ?></span></td>
+                    <td><span class="status-badge <?php echo strtolower($complaint->status); ?>"><?php echo ucfirst($complaint->status); ?></span></td>
+                    <td><a href="<?php echo URLROOT; ?>/manager/viewComplaint/<?php echo $complaint->complaint_id; ?>" class="btn btn-primary" title="View Details">
+                            <i class='bx bx-detail'></i>
+                        </a></td>
+                </tr>
+                <?php endforeach; ?>
+            <?php else: ?>
+                <tr><td colspan="7" style="text-align:center;">No complaints found</td></tr>
+            <?php endif; ?>
         </tbody>
       </table>
     </div>

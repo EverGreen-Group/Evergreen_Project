@@ -146,6 +146,55 @@ class M_Supplier {
         
         return $this->db->resultSet();
     }
+
+    public function getFilteredComplaints($complaint_id, $status, $date_from, $date_to) {
+        $sql = "
+            SELECT c.*, CONCAT(p.first_name, ' ', p.last_name) as supplier_name, p.image_path 
+            FROM complaints c
+            JOIN suppliers s ON c.supplier_id = s.supplier_id
+            JOIN profiles p ON s.profile_id = p.profile_id
+            WHERE c.status != 'Deleted'
+        ";
+    
+        $params = [];
+    
+        if ($complaint_id) {
+            $sql .= " AND c.complaint_id = :complaint_id";
+            $params[':complaint_id'] = $complaint_id;
+        }
+    
+        if ($status) {
+            $sql .= " AND c.status = :status";
+            $params[':status'] = $status;
+        }
+    
+        if ($date_from) {
+            $sql .= " AND DATE(c.created_at) >= :date_from";
+            $params[':date_from'] = $date_from;
+        }
+    
+        if ($date_to) {
+            $sql .= " AND DATE(c.created_at) <= :date_to";
+            $params[':date_to'] = $date_to;
+        }
+    
+        $sql .= " ORDER BY 
+                  CASE c.priority 
+                      WHEN 'high' THEN 1 
+                      WHEN 'medium' THEN 2 
+                      WHEN 'low' THEN 3 
+                  END,
+                  c.created_at DESC";
+    
+        $this->db->query($sql);
+    
+        // Bind parameters
+        foreach ($params as $param => $value) {
+            $this->db->bind($param, $value);
+        }
+    
+        return $this->db->resultSet();
+    }
     
     public function getComplaintById($id)
     {
@@ -165,8 +214,9 @@ class M_Supplier {
     {
         $this->db->query("SELECT COUNT(*) as count FROM complaints WHERE status != 'Deleted'");
         $result = $this->db->single();
-        return $result->count;
+        return $result->count ?? 0;
     }
+    
 
     public function getComplaintsByStatus($status)
     {
@@ -366,6 +416,33 @@ class M_Supplier {
             $this->db->rollBack();
             return false;
         }
+    }
+
+
+    public function getSupplierEarnings($supplierId, $month = 'all', $year = null) {
+        $sql = "SELECT * FROM supplier_daily_earnings WHERE supplier_id = :supplier_id";
+
+        if ($month !== 'all' && is_numeric($month)) {
+            $sql .= " AND MONTH(collection_date) = :month";
+        }
+        if ($year !== null) {
+            $sql .= " AND YEAR(collection_date) = :year";
+        }
+        
+
+        $sql .= " ORDER BY collection_date DESC";
+        
+        $this->db->query($sql);
+        $this->db->bind(':supplier_id', $supplierId);
+        
+        if ($month !== 'all' && is_numeric($month)) {
+            $this->db->bind(':month', $month);
+        }
+        if ($year !== null) {
+            $this->db->bind(':year', $year);
+        }
+        
+        return $this->db->resultSet();
     }
 
     

@@ -179,10 +179,8 @@
     // Cancel collection
     function cancelCollection() {
         if (confirm('Are you sure you want to cancel this collection?')) {
-            // Add your cancellation logic here
             alert('Collection canceled!');
-            // Redirect back to a relevant page
-            window.location.href = `${URLROOT}/vehicledriver/dashboard`;
+            window.location.href = `${URLROOT}/vehicledriver/`;
         }
     }
 </script>

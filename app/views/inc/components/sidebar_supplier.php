@@ -37,6 +37,19 @@
 					<span class="text">Payments</span>
 				</a>
 			</li>
+
+			<li>
+				<a href="<?php echo URLROOT; ?>/supplier/chat">
+					<i class='bx bxs-message-dots'></i>
+					<span class="text">Send Message</span>
+				</a>
+			</li>
+			<li>
+				<a href="<?php echo URLROOT; ?>/supplier/announcements">
+					<i class='bx bxs-megaphone'></i>
+					<span class="text">View Announcements</span>
+				</a>
+			</li>
 			
 			<li>
 				<a href="<?php echo URLROOT; ?>/supplier/complaints">

@@ -190,7 +190,7 @@ class Inventory extends controller
             ) {
 
                 if ($this->productModel->createProduct($data)) {
-                    flash('product_message', 'Product Added');
+                    setFlashMessage('Added product sucessfully!');
                     redirect('inventory/product');
                 } else {
                     echo "<pre>";
@@ -322,7 +322,7 @@ class Inventory extends controller
             ) {
 
                 if ($this->fertilizerModel->createFertilizer($data)) {
-                    flash('fertilizer_message', 'Fertilizer Added');
+                    setFlashMessage('Fertilizer added sucessfully!');
 
                     redirect('inventory/fertilizerdashboard');
 
@@ -440,7 +440,7 @@ class Inventory extends controller
 
                 if ($machineModel->insertMachineData($data)) {
                     // Redirect to success page or show success message
-                    flash('machine_message', 'Machine data added successfully!');
+                    setFlashMessage('Machine added sucessfully!');
                     redirect('Inventory/machine');
                 } else {
                     // Handle database error
@@ -563,7 +563,7 @@ class Inventory extends controller
 
                 // Validated
                 if ($this->productModel->updateProduct($data)) {
-                    flash('product_message', 'Product Updated Successfully');
+                    setFlashMessage('Product updated sucessfully');
                     redirect('inventory/product');
                 } else {
                     die('Something went wrong');
@@ -595,9 +595,9 @@ class Inventory extends controller
     {
         if ($_SERVER['REQUEST_METHOD'] == 'GET') {
             if ($this->productModel->deleteProduct($id)) {
-                flash('product_message', 'Product Removed');
+                setFlashMessage('Product removed successful');
             } else {
-                flash('product_message', 'Something went wrong', 'alert alert-danger');
+                setFlashMessage('Product removal failed', 'error');
             }
         }
         redirect('inventory/product');
@@ -614,9 +614,9 @@ class Inventory extends controller
     {
         if ($_SERVER['REQUEST_METHOD'] == 'GET') {
             if ($this->fertilizerModel->deleteFertilizer($id)) {
-                flash('fertilizer_message', 'Fertilizer Removed');
+                setFlashMessage('Fertilizer removed successfully!');
             } else {
-                flash('fertilizer_message', 'Something went wrong', 'alert alert-danger');
+                setFlashMessage('Fertilizer removal failed!', 'error');
             }
         }
         redirect('inventory/fertilizerdashboard');
@@ -666,6 +666,102 @@ class Inventory extends controller
 
     $this->view('inventory/v_payments',$data);
 }
+
+
+public function payments2() {
+
+    $paymentModel = $this->model('M_Payment');
+    $paymentSummary = $paymentModel->getPaymentSummary();
+
+
+
+    $data = [
+        'payment_summary' => $paymentSummary
+    ];
+
+    $this->view('inventory/v_payments_2', $data);
+}
+
+public function createPaymentReport() {
+    if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+        $year = $_POST['year'];
+        $month = $_POST['month'];
+        $normalLeafRate = $_POST['normal_leaf_rate'];
+        $superLeafRate = $_POST['super_leaf_rate'];
+
+        // Add validation
+        if (empty($year) || empty($month) || empty($normalLeafRate) || empty($superLeafRate)) {
+            setFlashMessage('Please enter the year, month, normal leaf rate, and super leaf rate to generate the report', 'error');
+            redirect('inventory/payments2');
+            return;
+        }
+
+        // Validate for negative values
+        if ($normalLeafRate < 0 || $superLeafRate < 0) {
+            setFlashMessage('Normal leaf rate and super leaf rate must be non-negative values.', 'error');
+            redirect('inventory/payments2');
+            return;
+        }
+
+        $paymentModel = $this->model('M_Payment');
+        
+        try {
+            $result = $paymentModel->generateMonthlyPayment($year, $month, $normalLeafRate, $superLeafRate);
+            
+            if ($result) {
+                setFlashMessage('Payment report created successfully!');
+            } else {
+                setFlashMessage('Payment report generation failed!', 'error');
+            }
+        } catch (Exception $e) {
+            setFlashMessage('Error when generating the report, Error: ' . $e);
+        }
+        
+        redirect('inventory/payments2');
+    } else {
+        redirect('inventory/payments2');
+    }
+}
+
+
+
+public function deletePaymentReport($payment_id) {
+    // Load payment model
+    $paymentModel = $this->model('M_Payment');
+    
+    try {
+
+        
+        $result = $paymentModel->deletePayment($payment_id);
+        
+        
+        if ($result) {
+            setFlashMessage('Payment report deleted successfully!');
+        } else {
+            setFlashMessage('Payment report deletion failed!', 'error');
+        }
+    } catch (Exception $e) {
+
+        setFlashMessage('Error when deleting the report: ' . $e->getMessage(), 'error');
+    }
+    
+    redirect('inventory/payments2');
+}
+
+
+public function viewPaymentReport($payment_id) {
+    $paymentModel = $this->model('M_Payment');
+
+    $paymentDetails = $paymentModel->getPaymentDetailsByPaymentId($payment_id); 
+
+    $data = [
+        'payment_details' => $paymentDetails 
+    ];
+
+    $this->view('inventory/v_view_payment_report', $data);
+}
+
+
 
     public function getStockValidations()
     {
@@ -721,9 +817,9 @@ class Inventory extends controller
         $result = $this->stockvalidate->processApproval($historyId);
         
         if ($result['success']) {
-            flash('inventory_message', $result['message'], 'alert alert-success');
+            setFlashMessage('Bag approval successful!');
         } else {
-            flash('inventory_message', $result['message'], 'alert alert-danger');
+            setFlashMessage('Failed tho approve this bag', 'error');
         }
         
         redirect("inventory/viewAwaitingInventory/$collectionId");
@@ -754,7 +850,7 @@ class Inventory extends controller
                 if ($this->stockvalidate->updateBag($data)) {
                     // Get collection ID for redirect
                     $collectionId = $this->stockvalidate->getBagCollectionId($historyId);
-                    flash('inventory_message', 'Bag updated successfully', 'alert alert-success');
+                    setFlashMessage('Bag properties updated sucessfully!');
                     redirect("inventory/viewAwaitingInventory/$collectionId");
                 } else {
                     $data['error'] = 'Something went wrong';
@@ -766,7 +862,7 @@ class Inventory extends controller
             
             // If bag not found, redirect
             if (!$bag) {
-                flash('inventory_message', 'Bag not found', 'alert alert-danger');
+                setFlashMessage('Bag not found, please try again later!', 'error');
                 redirect("inventory/");
             }
             
@@ -824,13 +920,13 @@ class Inventory extends controller
     {
 
         if (!$id) {
-            flash('bag_message', 'Invalid bag ID', 'alert alert-danger');
+            setFlashMessage('Invalid bag id, bag may not be used!', 'error');
             redirect('inventory/collectionBags');
         }
         
         // Make sure the ID is numeric
         if (!is_numeric($id)) {
-            flash('bag_message', 'Invalid bag ID format', 'alert alert-danger');
+            setFlashMessage('Bag id is not in numeric format', 'error');
             redirect('inventory/collectionBags');
         }
         
@@ -838,20 +934,20 @@ class Inventory extends controller
         $bag = $this->stockvalidate->getBagById($id);
         
         if (!$bag) {
-            flash('bag_message', 'Bag not found', 'alert alert-danger');
+            setFlashMessage('Bag is not found!', 'error');
             redirect('inventory/collectionBags');
         }
         
         if ($bag->status !== 'active') {
-            flash('bag_message', 'This bag is already inactive', 'alert alert-warning');
+            setFlashMessage('Bag is already inactive!', 'error');
             redirect('inventory/collectionBags');
         }
         
         // Update bag status to inactive and reset weight
         if ($this->stockvalidate->markAsInactive($id)) {
-            flash('bag_message', 'Bag has been emptied successfully', 'alert alert-success');
+            setFlashMessage('Bag has been emptied sucessfully!');
         } else {
-            flash('bag_message', 'Failed to empty bag', 'alert alert-danger');
+            setFlashMessage('Failed to empty the bag!', 'error');
         }
         
         redirect('inventory/collectionBags');
@@ -863,9 +959,9 @@ class Inventory extends controller
         $result = $this->stockvalidate->deleteBag($bagId);
         
         if ($result) {
-            flash('inventory_message', 'Bag deleted successfully', 'alert alert-success');
+            setFlashMessage('Bag deleted successfuly!');
         } else {
-            flash('inventory_message', 'Failed to delete the bag', 'alert alert-danger');
+            setFlashMessage('Bag deletion failed!', 'error');
         }
         
         redirect("inventory/collectionBags");
@@ -887,7 +983,7 @@ class Inventory extends controller
             
             // Validate capacity
             if (empty($data['capacity_kg']) || !is_numeric($data['capacity_kg']) || $data['capacity_kg'] <= 0) {
-                flash('bag_message', 'Please enter a valid capacity greater than 0', 'alert alert-danger');
+                setFlashMessage('Please enter a capacity greater than 0!', 'error');
                 redirect('inventory/createBag');
                 exit;
             }
@@ -950,7 +1046,7 @@ class Inventory extends controller
         
                 // Add leaf rate using model
                 if ($this->stockvalidate->addLeafRate($data)) {
-                    flash('leaf_rate_message', 'Tea leaf rate added successfully');
+                    setFlashMessage('Tea leaf rate added successfully!');
                     redirect('inventory/');
                 } else {
                     $data['error'] = 'Something went wrong';

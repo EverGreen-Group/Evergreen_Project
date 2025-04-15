@@ -20,9 +20,6 @@
 <main>
 
 
-<?php 
-flash('driver_success', 'Driver updated successfully', 'alert alert-success');
-flash('error'); ?>
   <!-- Driver Management Section -->
   <div class="head-title">
       <div class="left">

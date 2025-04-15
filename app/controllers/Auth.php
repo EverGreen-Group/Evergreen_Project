@@ -1,6 +1,7 @@
 <?php
 
 require_once APPROOT . '/helpers/auth_middleware.php';
+require_once APPROOT . '/controllers/Notifications.php';
 
 use PHPMailer\PHPMailer\PHPMailer;
 use PHPMailer\PHPMailer\Exception;
@@ -9,10 +10,12 @@ class Auth extends Controller
 {
     private $userModel;
     private $applicationModel;
+    private $notificationModel;
 
     public function __construct()
     {
         $this->userModel = $this->model('M_User');
+        $this->notificationModel = $this->model('M_Notification');
     }
 
     public function register()
@@ -93,7 +96,7 @@ class Auth extends Controller
                             unset($_SESSION['registration_data']);
 
                             // Set success message and redirect
-                            flash('register_success', 'You are registered successfully and can now log in');
+                            setFlashMessage('Register Successful, you can now log in!');
                             redirect('auth/login');
                         } else {
                             $data['error'] = 'Profile creation failed. Please try again.';
@@ -166,35 +169,10 @@ class Auth extends Controller
         $this->view('auth/v_register', $data);
     }
     
-    private function sendOTPEmail($email, $otp)
-    {
-        $mail = new PHPMailer(true);
-        try {
-            //Server settings
-            $mail->isSMTP();                                            // Send using SMTP
-            $mail->Host       = 'smtp.gmail.com';                     // Set the SMTP server
-            $mail->SMTPAuth   = true;                                   // Enable SMTP authentication
-            $mail->Username   = 'simaakniyaz@gmail.com';               // SMTP username
-            $mail->Password   = 'yslhjwsnmozojika';                    // SMTP password
-            $mail->SMTPSecure = PHPMailer::ENCRYPTION_STARTTLS;       // Enable TLS encryption
-            $mail->Port       = 587;                                   // TCP port to connect to
-    
-            //Recipients
-            $mail->setFrom('simaakniyaz@gmail.com', 'Evergreen Tea Factory');
-            $mail->addAddress($email);                                  // Add a recipient
-    
-            // Content
-            $mail->isHTML(true);                                       // Set email format to HTML
-            $mail->Subject = 'Your Registration OTP';
-            $mail->Body    = "Your OTP for registration is: <b>{$otp}</b><br>This code will expire in 10 minutes.";
-            $mail->AltBody = "Your OTP for registration is: {$otp}. This code will expire in 10 minutes.";
-    
-            $mail->send();
-            return true;
-        } catch (Exception $e) {
-            return false;
-        }
-    }
+private function sendOTPEmail($email, $otp) {
+    $emailService = new EmailService();
+    return $emailService->sendOTP($email, $otp);
+}
 
     private function isOlderThan18($dateOfBirth)
     {
@@ -264,11 +242,12 @@ class Auth extends Controller
                             
                         }
 
-                        // If all checks pass, complete login
+
                         if ($canLogin) {
                             $_SESSION['user_id'] = $user->user_id;
                             $_SESSION['email'] = $user->email;
                             $_SESSION['role_id'] = $user->role_id;
+                            $_SESSION['full_name'] = $this->userModel->getUserName($_SESSION['user_id']);
 
                             // Fetch profile
                             $profile = $this->userModel->getProfileByUserId($user->user_id);
@@ -390,11 +369,17 @@ class Auth extends Controller
                     $processedDocuments
                 );
 
+
                 if (!$result) {
                     throw new Exception('Failed to save application');
                 }
 
-                // Redirect to status page on success
+                $managers = $this->userModel->getAllManagers();
+                foreach ($managers as $manager) {
+                    $this->notificationModel->create($manager->user_id, 'New supplier application submitted.', 'manager/viewApplications/' . $result);
+                }
+
+
                 redirect('pages/supplier_application_status?submitted=true');
                 
             } catch (Exception $e) {
@@ -526,7 +511,7 @@ class Auth extends Controller
         
         
         if (!$profileData) {
-            flash('profile_message', 'Unable to load profile information', 'alert alert-error');
+            setFlashMessage('Cannot load the profile, try again later!');
             redirect('/');
         }
         
@@ -572,18 +557,19 @@ class Auth extends Controller
                 
                 if (move_uploaded_file($_FILES['profile_image']['tmp_name'], $uploadPath)) {
                     $data['image_path'] = $uploadPath;
+                    setFlashMessage('Image uploaded succesful!');
                 } else {
-                    flash('profile_message', 'Error uploading image', 'alert alert-error');
+                    setFlashMessage('Image upload failed, try again later!');
                     redirect('Supplier/profile');
                 }
             }
             if (RoleHelper::hasRole(5)) {
                 $supplierModel->updateSupplierProfile($data);
-                flash('profile_message', 'Profile updated successfully');
+                setFlashMessage('Supplier Profile Updated Successfully!');
                 redirect('');
             } else {
                 $this->userModel->updateProfilePhoto($data);
-                flash('profile_message', 'Error updating profile', 'alert alert-error');
+                setFlashMessage('Image upload failed, try again later!', 'error');
                 redirect('');
             }
         } else {
@@ -663,21 +649,21 @@ class Auth extends Controller
 
 
             if (empty($currentPassword) || empty($newPassword) || empty($confirmPassword)) {
-                flash('profile_message', 'Please fill in all password fields.', 'alert alert-danger');
+                setFlashMessage('Please fill all the password field', 'error');
 
             } elseif ($newPassword !== $confirmPassword) {
-                flash('profile_message', 'New passwords do not match.', 'alert alert-danger');
+                setFlashMessage('Both the passwords do not match, please try again!', 'error');
 
             } elseif (strlen($newPassword) < 8) {
-                flash('profile_message', 'Password must be at least 8 characters long.', 'alert alert-danger');
+                setFlashMessage('Password must be at least 8 letters long', 'error');
             } elseif (!preg_match('/[A-Z]/', $newPassword)) { // At least one uppercase letter
-                flash('profile_message', 'Password must contain at least one uppercase letter.', 'alert alert-danger');
+                setFlashMessage('Password must have at least 1 upper case letter', 'error');
             } elseif (!preg_match('/[a-z]/', $newPassword)) { // At least one lowercase letter
-                 flash('profile_message', 'Password must contain at least one lowercase letter.', 'alert alert-danger');
+                setFlashMessage('Password must have at least 1 simple letter', 'error');
             } elseif (!preg_match('/[0-9]/', $newPassword)) { // At least one number
-                flash('profile_message', 'Password must contain at least one number.', 'alert alert-danger');
-             } elseif (!preg_match('/[\W_]/', $newPassword)) { // At least one special character (matches registration)
-                flash('profile_message', 'Password must contain at least one special character.', 'alert alert-danger');
+                setFlashMessage('Password must have at least 1 number', 'error');
+             } elseif (!preg_match('/[\W_]/', $newPassword)) { 
+                setFlashMessage('Password must have at least 1 special character', 'error');
             } else {
 
                 $userId = $_SESSION['user_id'];
@@ -685,16 +671,16 @@ class Auth extends Controller
 
                 if (!$user || !password_verify($currentPassword, $user->password)) {
 
-                    flash('profile_message', 'Current password is incorrect.', 'alert alert-danger');
+                    setFlashMessage('Entered password is incorrect!', 'error');
                 } else {
 
                     $hashedPassword = password_hash($newPassword, PASSWORD_DEFAULT);
                     if ($this->userModel->updatePasswordByUserId($userId, $hashedPassword)) {
 
-                        flash('profile_message', 'Password updated successfully.', 'alert alert-success');
+                        setFlashMessage('Password updated successfully!');
                     } else {
 
-                         flash('profile_message', 'Failed to update password. Please try again.', 'alert alert-danger');
+                        setFlashMessage('Password update failed, please try again later!', 'error');
 
                     }
                 }
@@ -706,7 +692,7 @@ class Auth extends Controller
 
         } else {
 
-            flash('profile_message', 'Invalid request method for password reset.', 'alert alert-warning');
+            setFlashMessage('Invalid access', 'error');
             redirect('/'); 
             return; 
         }

@@ -1,6 +1,7 @@
-<!-- NAVBAR -->
+<script src="<?php echo URLROOT; ?>/public/js/notification.js"></script>
+<link href="<?php echo URLROOT; ?>/public/css/notification.css" rel="stylesheet" />
+
 <section id="content">
-    <!-- NAVBAR -->
     <nav>
         <i class='bx bx-menu'></i>
         <a href="#" class="nav-link" style="visibility: hidden;">Categories</a>
@@ -11,20 +12,28 @@
             </div>
         </form>
         <input type="checkbox" id="switch-mode" hidden>
-        <label for="switch-mode" class="switch-mode"></label>
+        <!-- <label for="switch-mode" class="switch-mode"></label> -->
         <a href="#" class="notification" id="notificationIcon">
             <i class='bx bxs-bell'></i>
             <span class="num" style="cursor: pointer;">8</span>
         </a>
-        <a href="#" class="profile">
-            <?php
-                $profileImageSrc = URLROOT . '/uploads/supplier_photos/default-supplier.png'; 
-                if (isset($_SESSION['profile_image_path']) && !empty($_SESSION['profile_image_path'])) {
-                    $profileImageSrc = URLROOT . '/' . $_SESSION['profile_image_path'];
-                }
-            ?>
-            <img src="<?php echo $profileImageSrc; ?>" alt="Profile Photo">
-        </a>
+        <div class="profile-container">
+            <a href="#" class="profile">
+                <?php
+                    $profileImageSrc = URLROOT . '/uploads/supplier_photos/default-supplier.png'; 
+                    if (isset($_SESSION['profile_image_path']) && !empty($_SESSION['profile_image_path'])) {
+                        $profileImageSrc = URLROOT . '/' . $_SESSION['profile_image_path'];
+                    }
+                ?>
+                <img src="<?php echo $profileImageSrc; ?>" alt="Profile Photo">
+            </a>
+            <!-- Display the user's full name -->
+            <div class="user-name">
+                <?php if (isset($_SESSION['full_name'])): ?>
+                    <span><?php echo htmlspecialchars($_SESSION['full_name']); ?></span>
+                <?php endif; ?>
+            </div>
+        </div>
     </nav>
 
     <div id="notificationDropdown" class="notification-dropdown" style="display: none;">
@@ -72,254 +81,195 @@
     <!-- NAVBAR -->
 
 <script>
-    document.addEventListener('DOMContentLoaded', function() {
-        const profileLink = document.querySelector('.profile');
-        const dropdown = document.getElementById('profileDropdown');
+document.addEventListener('DOMContentLoaded', function() {
+    // Profile dropdown functionality
+    const profileLink = document.querySelector('.profile');
+    const profileDropdown = document.getElementById('profileDropdown');
 
+    if (profileLink && profileDropdown) {
         profileLink.addEventListener('click', function(event) {
-            event.preventDefault(); // Prevent default link behavior
-            dropdown.style.display = dropdown.style.display === 'none' || dropdown.style.display === '' ? 'block' : 'none';
+            event.preventDefault();
+            profileDropdown.style.display = profileDropdown.style.display === 'none' || profileDropdown.style.display === '' ? 'block' : 'none';
         });
 
-        // Close the dropdown if clicked outside
-        window.addEventListener('click', function(event) {
-            const isClickInsideProfile = profileLink.contains(event.target);
-            if (!isClickInsideProfile) {
-                dropdown.style.display = 'none';
+        // Close dropdown when clicking outside
+        document.addEventListener('click', function(event) {
+            if (!profileLink.contains(event.target) && !profileDropdown.contains(event.target)) {
+                profileDropdown.style.display = 'none';
             }
         });
-    });
+    }
 
-    // Similar modification for notification dropdown
-    document.addEventListener('DOMContentLoaded', function() {
-        const notificationIcon = document.getElementById('notificationIcon');
-        const notificationDropdown = document.getElementById('notificationDropdown');
+    // Notification dropdown functionality
+    const notificationIcon = document.getElementById('notificationIcon');
+    const notificationDropdown = document.getElementById('notificationDropdown');
 
+    if (notificationIcon && notificationDropdown) {
         notificationIcon.addEventListener('click', function(event) {
             event.preventDefault();
             notificationDropdown.style.display = notificationDropdown.style.display === 'block' ? 'none' : 'block';
         });
 
-        // Close the dropdown if clicked outside
-        window.addEventListener('click', function(event) {
-            const isClickInsideNotification = notificationIcon.contains(event.target);
-            if (!isClickInsideNotification) {
+        // Close dropdown when clicking outside
+        document.addEventListener('click', function(event) {
+            if (!notificationIcon.contains(event.target) && !notificationDropdown.contains(event.target)) {
                 notificationDropdown.style.display = 'none';
             }
         });
-    });
+    }
 
-    document.addEventListener('DOMContentLoaded', function() {
-        const userId = <?php echo json_encode($_SESSION['user_id']); ?>;
+    // Load notification count
+    loadNotificationCount();
+    
+    // Load notifications for dropdown
+    loadNotifications();
+});
 
-        // Fetch unread notifications count
-        fetch(`/Evergreen_Project/notifications/getUnreadNotificationCount`)
-            .then(response => response.json())
-            .then(data => {
-                const notificationCount = data.count;
-                document.querySelector('.num').textContent = notificationCount; 
-            })
-            .catch(error => {
-                console.error('Error fetching unread notification count:', error);
-            });
-
-        // forr dropdown
-        fetch(`/Evergreen_Project/notifications/getUnreadUserNotifications/${userId}`)
-            .then(response => response.json())
-            .then(notifications => {
-                const notificationList = document.getElementById('notificationList');
-                notificationList.innerHTML = ''; 
-
-                if (notifications.length > 0) {
-                    notifications.forEach(notification => {
-                        const listItem = document.createElement('li');
-                        const data = JSON.parse(notification.data); // Parse the JSON data
-                        const scheduleId = data.schedule_id; // Extract the schedule ID
-                        const link = data.link; // Extract the link
-
-                        listItem.innerHTML = `
-                            <div class="notification-item" data-id="${notification.id}">
-                                <div class="notification-content">
-                                    <h4 class="notification-title" style="color: green; font-weight: bold;">${notification.type}</h4>
-                                    <p class="notification-description">
-                                        ${notification.message} 
-                                    </p>
-                                </div>
-                                <div class="notification-meta">
-                                    <a href="${link ? link : '#'}" class="notification-action" onclick="handleNotificationClick(event, '${notification.id}', '${link}')">View</a>
-                                    <a href="#" class="notification-action" onclick="markAsRead(event, ${notification.id})">Mark as read</a>
-                                </div>
-                            </div>
-                        `;
-                        notificationList.appendChild(listItem);
-                    });
-                } else {
-                    notificationList.innerHTML = '<li>No notifications available.</li>';
-                }
-            })
-            .catch(error => {
-                console.error('Error fetching notifications:', error);
-                document.getElementById('notificationList').innerHTML = '<li>Error loading notifications.</li>';
-            });
-    });
-
-    function markAsRead(event, notificationId) {
-        event.preventDefault(); // Prevent the default link behavior
-        fetch(`/Evergreen_Project/notifications/markAsRead/${notificationId}`, {
-            method: 'POST'
+function loadNotificationCount() {
+    fetch('/Evergreen_Project/notifications/getUnreadNotificationCount')
+        .then(response => response.json())
+        .then(data => {
+            const countElement = document.querySelector('.num');
+            if (countElement) {
+                countElement.textContent = data.count;
+            }
         })
-        .then(response => {
-            if (response.ok) {
-                console.log('Notification marked as read');
-                // Optionally, remove the notification from the UI or update its status
-                const notificationItem = document.querySelector(`.notification-item[data-id="${notificationId}"]`);
-                if (notificationItem) {
-                    notificationItem.remove(); 
-                }
-                updateUnreadCount();
+        .catch(error => {
+            console.error('Error fetching notification count:', error);
+        });
+}
+
+function loadNotifications() {
+    const userId = <?php echo isset($_SESSION['user_id']) ? json_encode($_SESSION['user_id']) : 'null'; ?>;
+    if (!userId) return;
+    
+    fetch(`/Evergreen_Project/notifications/getUnreadUserNotifications/${userId}`)
+        .then(response => response.json())
+        .then(notifications => {
+            const notificationList = document.getElementById('notificationList');
+            if (!notificationList) return;
+            
+            notificationList.innerHTML = '';
+
+            if (notifications.length > 0) {
+                notifications.forEach(notification => {
+                    const listItem = document.createElement('li');
+                    
+                    // Safely check if data exists and can be parsed
+                    let link = '#';
+                    try {
+                        // Try to use the link property directly first
+                        if (notification.link) {
+                            link = notification.link;
+                        } 
+                        // Fall back to parsing data if needed
+                        else if (notification.data) {
+                            const data = JSON.parse(notification.data);
+                            if (data.link) {
+                                link = data.link;
+                            }
+                        }
+                    } catch (e) {
+                        console.warn('Could not parse notification data', e);
+                    }
+
+                    listItem.innerHTML = `
+                        <div class="notification-item" data-id="${notification.id}">
+                            <div class="notification-content">
+                                ${notification.type ? 
+                                  `<h4 class="notification-title" style="color: green; font-weight: bold;">${notification.type}</h4>` : ''}
+                                <p class="notification-description">
+                                    ${notification.message}
+                                </p>
+                            </div>
+                            <div class="notification-meta">
+                                <a href="${link}" class="notification-action" onclick="handleNotificationClick(event, ${notification.id}, '${link}')">View</a>
+                                <a href="#" class="notification-action" onclick="markAsRead(event, ${notification.id})">Mark as read</a>
+                            </div>
+                        </div>
+                    `;
+                    notificationList.appendChild(listItem);
+                });
+            } else {
+                notificationList.innerHTML = '<li>No notifications available.</li>';
+            }
+        })
+        .catch(error => {
+            console.error('Error fetching notifications:', error);
+            const notificationList = document.getElementById('notificationList');
+            if (notificationList) {
+                notificationList.innerHTML = '<li>Error loading notifications.</li>';
             }
         });
-    }
+}
 
-    function updateUnreadCount() {
-        const userId = <?php echo json_encode($_SESSION['user_id']); ?>; // Get user ID from PHP
-        fetch(`/Evergreen_Project/notifications/getUnreadNotificationCount`)
-            .then(response => response.json())
-            .then(data => {
-                const notificationCount = data.count;
-                document.querySelector('.num').textContent = notificationCount; // Update the notification count
-            })
-            .catch(error => {
-                console.error('Error fetching unread notification count:', error);
-            });
-    }
-
-    function handleNotificationClick(event, notificationId, link) {
-        // Prevent the default action if there's no link
-        if (!link) {
-            event.preventDefault(); // Prevent the default link behavior
-            return; // Exit the function
+function markAsRead(event, notificationId) {
+    event.preventDefault();
+    
+    fetch(`/Evergreen_Project/notifications/markAsRead/${notificationId}`, {
+        method: 'POST'
+    })
+    .then(response => response.json())
+    .then(result => {
+        if (result.success) {
+            console.log('Notification marked as read');
+            
+            // Remove from UI
+            const notificationItem = document.querySelector(`.notification-item[data-id="${notificationId}"]`);
+            if (notificationItem && notificationItem.parentElement) {
+                notificationItem.parentElement.remove();
+            }
+            
+            // Update count
+            loadNotificationCount();
+            
+            // Check if there are no more notifications
+            const notificationList = document.getElementById('notificationList');
+            if (notificationList && notificationList.children.length === 0) {
+                notificationList.innerHTML = '<li>No notifications available.</li>';
+            }
         }
-        // Optionally, you can mark the notification as read here if you want
-        markAsRead(notificationId);
-        // Redirect to the link
-        window.location.href = link;
-    }
+    })
+    .catch(error => {
+        console.error('Error marking notification as read:', error);
+    });
+}
+
+function handleNotificationClick(event, notificationId, link) {
+    event.preventDefault();
+
+    if (!link || link === '#') return;
+
+    const baseUrl = '<?php echo URLROOT; ?>';
+    const finalLink = `${baseUrl}/${link}`;
+
+    fetch(`${baseUrl}/notifications/markAsRead/${notificationId}`, {
+        method: 'POST'
+    })
+    .then(() => {
+        window.location.href = finalLink;
+    })
+    .catch(error => {
+        console.error('Error marking notification as read:', error);
+        window.location.href = finalLink; 
+    });
+}
+
+
 </script>
 
-<style>
+<!-- fLash part -->
+<?php if(isset($_SESSION['flash_message'])): ?>
+    <div id="php-flash-message" 
+         data-message="<?php echo htmlspecialchars($_SESSION['flash_message']); ?>"
+         data-type="<?php echo htmlspecialchars($_SESSION['flash_type'] ?? 'success'); ?>"
+         style="display: none;"></div>
+    <?php 
+    // Clear after rendering
+    unset($_SESSION['flash_message']);
+    unset($_SESSION['flash_type']);
+    ?>
+<?php endif; ?>
 
-    .notification-dropdown {
-        position: absolute;
-        right: 10px;
-        background-color: white;
-        /* border: 1px solid #ccc; */
-        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-        z-index: 1000;
-        width: 450px;
-        padding: 10px 0;
-        border-radius: 12px;
-        font-family: 'Lato', sans-serif;
-    }
-
-    .notification-dropdown ul {
-        list-style-type: none;
-        padding: 0;
-        margin: 0;
-    }
-
-    .notification-dropdown li {
-        padding: 10px 15px;
-        cursor: pointer;
-        font-size: 15px;
-        color: #333;
-        transition: all 0.2s ease;
-    }
-
-    .notification-dropdown li:hover {
-        background-color: rgba(0, 123, 0, 0.05);
-        color: #007b00;
-    }
-
-    .notification-item {
-        display: flex;
-        flex-direction: column;
-    }
-
-    .notification-content {
-        margin-bottom: 5px;
-    }
-
-    .notification-title {
-        margin: 0;
-        font-weight: 1000;
-        font-size: 15px;
-        color: var(--main);
-    }
-
-    .notification-description {
-        margin: 0;
-        font-size: 14px;
-        color: #666;
-    }
-
-    .notification-meta {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        font-size: 13px;
-        color: #888;
-    }
-
-    .notification-time {
-        font-size: 12px;
-    }
-
-    .notification-action {
-        text-decoration: none;
-        color: #007b00;
-        font-weight: 500;
-        font-size: 13px;
-    }
-
-    .profile-dropdown {
-        position: absolute;
-        right: 10px;
-        background-color: white;
-        /* border: 1px solid #ccc; */
-        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-        z-index: 1000;
-        width: 200px;
-        border-radius: 12px;
-        font-family: 'Lato', sans-serif;
-        overflow: hidden;
-    }
-
-    .profile-dropdown ul {
-        list-style: none;
-        padding: 0;
-        margin: 0;
-    }
-
-    .profile-dropdown li {
-        padding: 10px 15px;
-        transition: all 0.2s ease;
-    }
-
-    .profile-dropdown li a {
-        text-decoration: none;
-        color: #333;
-        font-weight: 500;
-        font-size: 15px;
-        display: block;
-        transition: color 0.2s ease;
-    }
-
-    .profile-dropdown li:hover {
-        background-color: rgba(0, 123, 0, 0.05);
-    }
-
-    .profile-dropdown li:hover a {
-        color: #007b00;
-    }
-</style>
+<!-- Notification container -->
+<div id="notification-container"></div>

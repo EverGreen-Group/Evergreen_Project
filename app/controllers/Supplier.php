@@ -4,7 +4,9 @@ require_once APPROOT . '/models/M_Supplier.php';
 require_once APPROOT . '/models/M_Route.php';
 require_once APPROOT . '/models/M_Collection.php';
 require_once APPROOT . '/models/M_CollectionSchedule.php';
+require_once APPROOT . '/models/M_Complaint.php';
 require_once APPROOT . '/models/M_Bag.php';
+require_once APPROOT . '/models/M_Chat.php'; 
 require_once '../app/helpers/auth_middleware.php';
 
 if (session_status() == PHP_SESSION_NONE) {
@@ -17,35 +19,32 @@ class Supplier extends Controller {
     private $supplierModel;
     private $routeModel;
     private $collectionModel;
-
     private $scheduleModel;
+    private $complaintModel;
     private $bagModel;
     private $appointmentModel;
+    private $chatModel;
+    private $userModel;
 
     public function __construct() {
-        // Check if the user is logged in
         requireAuth();
 
-        // You may want to check if the user has the right role (uncomment if needed)
-        // if (!RoleHelper::hasAnyRole([RoleHelper::ADMIN, RoleHelper::SUPPLIER])) {
-        //     flash('message', 'Unauthorized access', 'alert alert-danger');
-        //     redirect('');
-        //     exit();
-        // }
-
-        // Initialize the model
         $this->fertilizerOrderModel = new M_Fertilizer_Order();
         $this->supplierModel = new M_Supplier();
         $this->routeModel = new M_Route();
-        $this->collectionModel= new M_Collection();
-        $this->scheduleModel= new M_CollectionSchedule();
+        $this->collectionModel = new M_Collection();
+        $this->scheduleModel = new M_CollectionSchedule();
+        $this->complaintModel = new M_Complaint();
         $this->bagModel = new M_Bag();
         $this->appointmentModel = $this->model('M_Appointment');
+        $this->chatModel = new M_Chat(); // Initialize the chat model
+
+        $this->bagModel = new M_Bag();
+        $this->userModel = $this->model('M_User');
         $supplierDetails = $this->supplierModel->getSupplierDetailsByUserId($_SESSION['user_id']);
         $_SESSION['supplier_id'] = $supplierDetails->supplier_id;
     }
 
-    
     public function index() {
         $supplierId = $_SESSION['supplier_id'];
         $collectionId = $this->collectionModel->checkCollectionExistsUsingSupplierId($supplierId);
@@ -59,16 +58,11 @@ class Supplier extends Controller {
             $todaySchedules = [];
             $upcomingSchedules = [];
 
-            /*
-            WE CAN SIMPLY OMIT THE SCHEDULES IF THERE EXISTS A COLLECTION FOR IT...
-            */
-            
             foreach ($allSchedules as $schedule) {
                 // Skip schedules that already have collections for today
-                if ($schedule->is_today && $schedule->collection_exists > 0 && ($this->collectionModel->getCollectionSuppliersStatus($collectionId,$supplierId) == 'Completed')) {
+                if ($schedule->is_today && $schedule->collection_exists > 0) {
                     continue;
                 }
-                
                 
                 if ($schedule->is_today) {
                     $todaySchedules[] = $schedule;
@@ -94,7 +88,7 @@ class Supplier extends Controller {
             }
             
         } catch (Exception $e) {
-            // Log the error (assuming you have a logging system)
+            // Log the error
             error_log($e->getMessage());
             
             $data = [
@@ -127,57 +121,55 @@ class Supplier extends Controller {
     
     public function requestTimeSlot() {
         if ($_SERVER['REQUEST_METHOD'] == 'POST') {
-    
+            // Validate the slot ID
             if (!isset($_POST['slot_id']) || empty($_POST['slot_id'])) {
-                flash('request_message', 'Invalid time slot.', 'alert alert-error');
+                setFlashMessage('Time slot isnt available anymore, please refresh the page!', 'error');
                 redirect('Supplier/viewAppointments');
                 return;
             }
-    
+            
             $slotId = trim($_POST['slot_id']);
             $supplierId = $_SESSION['supplier_id'];
-    
-            // Check if the slot is available
-            $slot = $this->appointmentModel->getSlotById($slotId);
+            
+            $slot = $this->appointmentModel->getSlotById($_POST['slot_id']);
             if (!$slot || $slot->status !== 'Available') {
-                flash('request_message', 'This time slot is no longer available.', 'alert alert-error');
+                setFlashMessage('Time slot isnt available anymore.', 'error');
                 redirect('Supplier/viewAppointments');
                 return;
             }
-    
+
             // Check if this supplier has already requested this slot
             if ($this->appointmentModel->hasAlreadyRequested($slotId, $supplierId)) {
-                flash('request_message', 'You have already requested this time slot.', 'alert alert-warning');
+                setFlashMessage('You have already requested this time slot!', 'error');
                 redirect('Supplier/viewAppointments');
                 return;
             }
-    
-            // Prepare request data
+
             $data = [
-                'supplier_id' => $supplierId,
-                'slot_id' => $slotId,
+                'supplier_id' => $_SESSION['supplier_id'],
+                'slot_id' => trim($_POST['slot_id']),
                 'status' => 'Pending',
                 'submitted_at' => date('Y-m-d H:i:s')
             ];
-    
-            // Insert the request
+            
+            // Create the request
             if ($this->appointmentModel->createRequest($data)) {
-                flash('request_message', 'Time slot requested successfully.');
+                setFlashMessage('Request sent sucessfully!');
             } else {
-                flash('request_message', 'Failed to request time slot.', 'alert alert-error');
+                setFlashMessage('Request failed, please try again later!', 'error');
             }
-    
+            
             redirect('Supplier/viewAppointments');
         } else {
+            // Redirect if accessed directly without POST
             redirect('Supplier/viewAppointments');
         }
     }
     
-    
     public function cancelRequest($id = null) {
         // Validate the request ID
         if (!$id) {
-            flash('request_message', 'Invalid request.', 'alert alert-error');
+            setFlashMessage('Cancellation failed, please try again later!', 'error');
             redirect('Supplier/viewAppointments');
             return;
         }
@@ -185,58 +177,80 @@ class Supplier extends Controller {
         // Check if the request belongs to this supplier and is still pending
         $request = $this->appointmentModel->getRequestById($id);
         if (!$request || $request->supplier_id != $_SESSION['supplier_id'] || $request->status != 'Pending') {
-            flash('request_message', 'You cannot cancel this request.', 'alert alert-error');
+            setFlashMessage('You cannot cancel this request', 'error');
             redirect('Supplier/viewAppointments');
             return;
         }
         
         // Cancel the request
         if ($this->appointmentModel->cancelRequest($id, $_SESSION['supplier_id'])) {
-            flash('request_message', 'Appointment request cancelled successfully.');
+            setFlashMessage('Appointment request cancelled sucessfully!');
         } else {
-            flash('request_message', 'Failed to cancel request.', 'alert alert-error');
+            setFlashMessage('Failed to cancel the request!', 'error');
         }
         
         redirect('Supplier/viewAppointments');
     }
 
-    public function notifications()
-    {
+    public function notifications() {
         $data = [];
-
         $this->view('supplier/v_all_notifications', $data);
     }
     
-    public function changepassword()
-    {
+    public function changepassword() {
         $data = [];
-
         $this->view('supplier/v_change_password', $data);
     }
 
-    public function confirmationhistory()
-    {
+    public function confirmationhistory() {
         $data = [];
-
         $this->view('supplier/v_confirmation_history', $data);
     }
 
-    // public function teaorders()
-    // {
-    //     $data = [];
-
-    //     $this->view('supplier/v_new_order', $data);
-    // }
-
-    public function payments()
-    {
 
 
-        $this->view('supplier/v_supplier_payment', []);
+    public function payments() {
+        $supplierId = $_SESSION['supplier_id'];
+        
+        // Get filter values
+        $month = isset($_GET['month']) ? $_GET['month'] : 'all';
+        $year = isset($_GET['year']) ? $_GET['year'] : date('Y');
+        
+        // Get earnings data based on filters
+        $earnings = $this->supplierModel->getSupplierEarnings($supplierId, $month, $year);
+        
+        // Calculate totals
+        $totals = (object)[
+            'total_normal_kg' => 0,
+            'total_super_kg' => 0,
+            'total_deduction_kg' => 0,
+            'total_kg' => 0,
+            'total_base_payment' => 0,
+            'total_transport_charge' => 0,
+            'total_deduction_amount' => 0,
+            'total_payment' => 0
+        ];
+        
+        foreach ($earnings as $earning) {
+            $totals->total_normal_kg += $earning->normal_kg;
+            $totals->total_super_kg += $earning->super_kg;
+            $totals->total_deduction_kg += $earning->total_deduction_kg;
+            $totals->total_kg += $earning->total_kg;
+            $totals->total_base_payment += $earning->base_payment;
+            $totals->total_transport_charge += $earning->transport_charge;
+            $totals->total_deduction_amount += $earning->total_deduction_amount;
+            $totals->total_payment += $earning->total_payment;
+        }
+        
+        $data = [
+            'earnings' => $earnings,
+            'totals' => $totals
+        ];
+        
+        $this->view('supplier/v_supplier_payment', $data);
     }
 
-    public function schedule()
-    {
+    public function schedule() {
         $supplierId = $_SESSION['supplier_id'];
 
         try {
@@ -274,16 +288,12 @@ class Supplier extends Controller {
         $this->view('supplier/v_supplier_schedule', $data);
     }
 
-    public function paymentanalysis()
-    {
+    public function paymentanalysis() {
         $data = [];
-
         $this->view('supplier/v_payment_analysis', $data);
     }
 
 
-
-    
     public function updateProfile()
     {
         if ($_SERVER['REQUEST_METHOD'] == 'POST') {
@@ -311,15 +321,15 @@ class Supplier extends Controller {
                 if (move_uploaded_file($_FILES['profile_image']['tmp_name'], $uploadPath)) {
                     $data['image_path'] = $uploadPath;
                 } else {
-                    flash('profile_message', 'Error uploading image', 'alert alert-error');
+                    setFlashMessage('Image upload failed!', 'error');
                     redirect('Supplier/profile');
                 }
             }
             if ($this->supplierModel->updateSupplierProfile($data)) {
-                flash('profile_message', 'Profile updated successfully');
+                setFlashMessage('Profile updated sucessfully!');
                 redirect('Supplier/profile');
             } else {
-                flash('profile_message', 'Error updating profile', 'alert alert-error');
+                setFlashMessage('Profile update failed!', 'error');
                 redirect('Supplier/profile');
             }
         } else {
@@ -327,32 +337,34 @@ class Supplier extends Controller {
         }
     }
 
-    public function cancelpickup()
-    {
+    public function cancelpickup() {
         $data = [];
-
         $this->view('supplier/v_cancel_pickup', $data);
     }
 
-    public function requestFertilizer()
-    {
-        $fertilizerModel = new M_Fertilizer_Order();
-        $data['fertilizer_types'] = $fertilizerModel->getAllFertilizerTypes();
-        $data['orders'] = $fertilizerModel->getAllOrders();     //switch to getOrderBySupplier() after logging in
+    // public function requestFertilizer() {
+    //     $fertilizerModel = new M_Fertilizer_Order();
+    //     $data['fertilizer_types'] = $fertilizerModel->getAllFertilizerTypes();
+    //     $data['orders'] = $fertilizerModel->getAllOrders(); 
 
-        $this->view('supplier/v_fertilizer_request', $data);
-    }
+    //     $this->view('supplier/v_fertilizer_request', $data);
+    // }
 
-    public function complaints()
-    {
-        $data = [];
+    public function complaints() {
+        $supplier_id = $_SESSION['supplier_id'];
+        if (!$supplier_id) {
+            throw new Exception("Supplier ID not found. Please login again.");
+        }
 
+        $complaints = $this->complaintModel->getComplaints($supplier_id);
+
+        $data = ['complaints' => $complaints];
         $this->view('supplier/v_complaint', $data);
     }
 
-    public function submitComplaint()
-    {
+    public function submitComplaint() {
         if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+            // Sanitize input
             $_POST = filter_input_array(INPUT_POST, FILTER_SANITIZE_STRING);
     
             $supplierId = $_SESSION['supplier_id']; 
@@ -388,30 +400,40 @@ class Supplier extends Controller {
                 }
             }
     
-    
             if ($this->supplierModel->addComplaint($data)) {
-                flash('complaint_success', 'Complaint submitted successfully');
+                // Notify all managers
+                $managers = $this->userModel->getAllManagers();
+                $notificationModel = $this->model('M_Notification');
+    
+                foreach ($managers as $manager) {
+                    $notificationModel->createNotification(
+                        $manager->user_id,
+                        'New Complaint',
+                        'A new complaint has been submitted by a supplier!',
+                        ['link' => 'manager/viewComplaint/']
+                    );
+                }
+    
+                setFlashMessage('Complaint submitted successfully!');
                 redirect('supplier/complaints');
             } else {
+                setFlashMessage('Complaint didnt get sent! Please try again later', 'error');
                 redirect('supplier/complaints');
             }
         } else {
             redirect('supplier/complaints');
         }
     }
-    
 
-    public function settings()
-    {
+    public function settings() {
         $data = [];
-
         $this->view('supplier/v_settings', $data);
     }
 
     public function fertilizerhistory() {
         // Ensure supplier is logged in
         if (!isset($_SESSION['supplier_id'])) {
-            flash('message', 'Please log in to view your order history', 'alert alert-danger');
+
             redirect('login');
             return;
         }
@@ -442,20 +464,17 @@ class Supplier extends Controller {
                 'order_time' => $_POST['order_time'],
             ];
    
-            // Load model
-            $this->model('M_Fertilizer_Order');
-   
             // Validate form data
             if ($this->validateRequest($data)) {
                 // Call model method to insert the data
                 if ($this->fertilizerOrderModel->createOrder($data)) {
-                    flash('message', 'Order successfully submitted!', 'alert alert-success');
+                    setFlashMessage('Order sucessfully submitted!');
                     redirect('supplier/requestFertilizer');
                 } else {
-                    flash('message', 'Something went wrong. Please try again.', 'alert alert-danger');
+                    setFlashMessage('Fertilizer request failed!', 'error');
                 }
             } else {
-                flash('message', 'Please fill in all required fields.', 'alert alert-danger');
+                setFlashMessage('Please fill all the required fields', 'error');
             }
         }
    
@@ -468,65 +487,71 @@ class Supplier extends Controller {
         // Load the view and pass the data
         $this->view('supplier/v_fertilizer_request', $data);
     }
+
+    /*private function logUnitUsage($unit){
+        error_log ($unit);
+    }*/
+
+    public function requestFertilizer() {
+        $fertilizerModel = new M_Fertilizer_Order();
+        $data['fertilizer_types'] = $fertilizerModel->getAllFertilizerTypes();
+        $data['orders'] = $fertilizerModel->getAllOrders(); // Switch to getOrderBySupplier() after logging in
+        $data['unit'] = flash('used_unit');
+
+        $this->view('supplier/v_fertilizer_request', $data);
+    }
    
     public function createFertilizerOrder() {
         header('Content-Type: application/json');
         $response = ['success' => false, 'message' => ''];
     
-        // Check if the supplier is logged in
-        /*if (!isset($_SESSION['supplier_logged_in']) || !$_SESSION['supplier_logged_in']) {
-            echo "Error: You must be logged in to place an order.";
-            return;
-        }*/
-
         try {
             if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
                 throw new Exception('Invalid request method');
             }
-
+    
+            // Check for required fields
             $required_fields = ['type_id', 'unit', 'total_amount'];
             foreach ($required_fields as $field) {
                 if (!isset($_POST[$field]) || empty($_POST[$field])) {
                     throw new Exception("Missing required field: $field");
                 }
             }
-
-            // Get the logged-in supplier's ID
-            //$supplier_id = $_SESSION['supplier_id'];
-
-            //TEMP SUPPLIER ID
-            //AFTER THE LOGIN IS COMPLETED REMOVE $supplier_id = 1; LINE, UNCOMMENT if (!isset($_SESSION['supplier_logged_in'])... THIS IF, 
-            //AND $supplier_id = $_SESSION['supplier_id']; THIS LINE
-            $supplier_id = 2;
-
-            // Fetch fertilizer types for dropdown
-            $data['fertilizer_types'] = $this->fertilizerOrderModel->getAllFertilizerTypes();
-
+    
+            // Get supplier ID from session
+            $supplier_id = $_SESSION['supplier_id'] ?? null;
+            if (!$supplier_id) {
+                throw new Exception("Supplier ID not found. Please log in again.");
+            }
+    
             // Validate and get fertilizer data
             $type_id = trim($_POST['type_id']);
             $fertilizer = $this->fertilizerOrderModel->getFertilizerByTypeId($type_id);
-
+    
             if (!$fertilizer) {
                 throw new Exception('Invalid fertilizer type');
             }
-
+    
             $unit = $_POST['unit'];
-            $total_amount = floatval($_POST['total_amount']);
+            flash('used_unit', $unit);
 
+            //$this->logUnitUsage($unit);
+            $total_amount = floatval($_POST['total_amount']);
+    
             // Validate amount
             if ($total_amount <= 0 || $total_amount > 50) {
                 throw new Exception('Amount must be between 1 and 50');
             }
-
+    
             // Calculate prices
             $price_column = 'price_' . $unit;
             if (!isset($fertilizer[$price_column])) {
                 throw new Exception('Invalid unit type');
             }
-
+    
             $price_per_unit = $fertilizer[$price_column];
             $total_price = $total_amount * $price_per_unit;
-
+    
             // Create order data
             $order_data = [
                 'supplier_id' => $supplier_id,
@@ -535,23 +560,32 @@ class Supplier extends Controller {
                 'total_amount' => $total_amount,
                 'unit' => $unit,
                 'price_per_unit' => $price_per_unit,
-                'total_price' => $total_price
+                'total_price' => $total_price,
+                'status' => 'Pending',
+                'payment_status' => 'Pending'
             ];
-
+    
             // Create the order
             if ($this->fertilizerOrderModel->createOrder($order_data)) {
                 $response['success'] = true;
                 $response['message'] = 'Order placed successfully!';
+                
+                // Set flash message for when redirected
+                flash('fertilizer_message', 'Order placed successfully!', 'alert alert-success');
             } else {
                 throw new Exception($this->fertilizerOrderModel->getError() ?? 'Failed to create order');
             }
-
+    
         } catch (Exception $e) {
             $response['message'] = $e->getMessage();
+            // Set flash message for when redirected
+            flash('fertilizer_message', $e->getMessage(), 'alert alert-danger');
         }
-
+    
         echo json_encode($response);
-        header("Refresh:1; url=" . $_SERVER['HTTP_REFERER']);
+        
+        // Better redirect - use JavaScript redirection
+        echo "<script>window.location.href = '" . URLROOT . "/Supplier/requestFertilizer';</script>";
         exit;
     }
 
@@ -559,34 +593,23 @@ class Supplier extends Controller {
         $data = [
             'title' => 'Schedule Details'
         ];
-
         $this->view('shared/supplier/v_view_monthly_statement', $data);
     }
 
-    // form validation function 
+    // Form validation function 
     private function validateRequest($data) {
-        return !empty($data['supplier_id']) && !empty($data['total_amount']) ;
+        return !empty($data['supplier_id']) && !empty($data['totalamount']);
     }
-
 
     public function editFertilizerRequest($order_id) {
         // Basic check if order exists and belongs to the current supplier
         $order = $this->fertilizerOrderModel->getOrderById($order_id);
         
         if (!$order) {
-            flash('message', 'Order not found', 'alert alert-danger');
+            setFlashMessage('Edit fertilizer request failed!', 'error');
             redirect('supplier/requestFertilizer');
             return;
         }
-        
-        //UNCOMMENT AFTER IMPLEMENTING THE ORDER STATUS AND PAYMENT STATUS
-        // Check if order is in an editable state
-        /*
-        if ($order->status === 'accepted' || $order->status === 'completed' || $order->payment_status === 'paid') {
-            flash('message', 'This order cannot be edited as it has already been processed', 'alert alert-danger');
-            redirect('supplier/requestFertilizer');
-            return;
-        }*/
     
         if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             // Validate inputs
@@ -596,7 +619,7 @@ class Supplier extends Controller {
     
             // Validation checks
             if (empty($type_id) || empty($unit) || $total_amount <= 0 || $total_amount > 50) {
-                flash('message', 'Please check your inputs. Amount should be between 1 and 50.', 'alert alert-danger');
+                setFlashMessage('Total amount has to be less than 50kg', 'error');
                 redirect('supplier/editFertilizerRequest/' . $order_id);
                 return;
             }
@@ -622,10 +645,10 @@ class Supplier extends Controller {
     
             // Update the order
             if ($this->fertilizerOrderModel->updateOrder($order_id, $updateData)) {
-                flash('message', 'Fertilizer request updated successfully', 'alert alert-success');
+                setFlashMessage('Order request updated sucessfully!');
                 redirect('supplier/requestFertilizer');
             } else {
-                flash('message', 'Failed to update request. Please try again.', 'alert alert-danger');
+                setFlashMessage('Failed to request the order!', 'error');
                 redirect('supplier/editFertilizerRequest/' . $order_id);
             }
         } else {
@@ -664,22 +687,9 @@ class Supplier extends Controller {
         ]);
     }
 
-    
     public function deleteFertilizerRequest($orderId) {
         // Set header to return JSON
         header('Content-Type: application/json');
-    
-        /*if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-            echo json_encode(['success' => false, 'message' => 'Invalid request method']);
-            header("Refresh:2; url=" . $_SERVER['HTTP_REFERER']);
-            return;
-        }
-    
-        if (!$this->isSupplierOrder($orderId)) {
-            echo json_encode(['success' => false, 'message' => 'Unauthorized access']);
-            header("Refresh:2; url=" . $_SERVER['HTTP_REFERER']);
-            return;
-        }*/
     
         $order = $this->fertilizerOrderModel->getFertilizerOrderById($orderId);
         
@@ -692,7 +702,7 @@ class Supplier extends Controller {
         // Check if order can be deleted
         if ($order->status !== 'Pending' || $order->payment_status !== 'Pending') {
             echo json_encode($order->status);
-            echo json_encode( $order->payment_status );
+            echo json_encode($order->payment_status);
             echo json_encode(['success' => false, 'message' => 'This order cannot be deleted']);
             header("Refresh:2; url=" . $_SERVER['HTTP_REFERER']);
             return;
@@ -717,20 +727,21 @@ class Supplier extends Controller {
         $data = [
             'title' => 'Schedule Details'
         ];
-
         $this->view('supplier/v_schedule_details', $data);
     }
 
-    public function collection($collectionId) {
+    public function collections() {
+        $supplier_id = $_SESSION['supplier_id'] ?? null;
+        if (!$supplier_id) {
+            throw new Exception("Supplier ID not found. Please login again!");
+        }
 
-        $collectionDetails = $this->collectionModel->getCollectionDetails($collectionId);
+        $collectionDetails = $this->collectionModel->getCollectionDetails($supplier_id);
 
         $data = [
-            'collectionId' => $collectionId,
             'collectionDetails' => $collectionDetails
         ];
-
-        $this->view('supplier/v_collection', $data);
+        $this->view('supplier/v_collections', $data);
     }
 
     public function getUnallocatedSuppliersByDay($day) {
@@ -741,7 +752,7 @@ class Supplier extends Controller {
         }
     
         // Fetch unallocated suppliers for the given day
-        $suppliers = $this->routeModel->getUnallocatedSuppliersByDay($day);
+        $suppliers = $this->routeModel->getUnallocatedSuppliers($day);
     
         // Return the response
         echo json_encode(['success' => true, 'data' => $suppliers]);
@@ -758,28 +769,18 @@ class Supplier extends Controller {
     }
 
     public function bag($bagId) {
-        // $collectionDetails = $this->collectionModel->getCollectionDetails($collectionId);
-
         $data = [
             'bagId' => $bagId,
-            // 'bagDetails' => $collectionDetails
         ];
-
         $this->view('supplier/v_bag', $data);
     }
 
     public function fertilizer($fertilizerId) {
-        // $collectionDetails = $this->collectionModel->getCollectionDetails($collectionId);
-
         $data = [
             'fertilizerId' => $fertilizerId,
-            // 'bagDetails' => $collectionDetails
         ];
-
         $this->view('supplier/v_fertilizer', $data);
     }
-
-
 
     public function toggleAvailability() {
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
@@ -789,76 +790,206 @@ class Supplier extends Controller {
     
             // Toggle the status
             $newStatus = $currentStatus === '1' ? '0' : '1';
-            
-            // If supplier is becoming inactive, unsubscribe from all routes
-            if ($newStatus === '0') {
-                $subscribedSchedules = $this->scheduleModel->getSubscribedSchedules($supplierId);
-                
-                // Process each subscription
-                $unsubscribeResults = [];
-                foreach ($subscribedSchedules as $schedule) {
-                    $routeId = $schedule->route_id;
-                    
-                    try {
-                        // Remove supplier from route
-                        if ($this->routeModel->removeSupplierFromRoute($routeId, $supplierId)) {
-                            $this->routeModel->updateRemainingCapacity($routeId, 'remove');
-                            $unsubscribeResults[] = true;
-                        } else {
-                            $unsubscribeResults[] = false;
-                        }
-                    } catch (Exception $e) {
-                        $unsubscribeResults[] = false;
-                    }
-                }
-                
-                // If any unsubscriptions failed, you may want to handle that
-                $allUnsubscribesSuccessful = !in_array(false, $unsubscribeResults);
-                // You could decide whether to proceed based on this result
-            }
     
             // Update the supplier's availability in the model
             if ($this->supplierModel->updateSupplierStatus($supplierId, $newStatus)) {
-                flash('message', 'Supplier availability updated successfully.', 'alert alert-success');
+                if($newStatus){
+                setFlashMessage('You will be included in the next schedule!');
+                } else {
+                    setFlashMessage('You will not be included in the next schedule!', 'error');
+                }
             } else {
-                flash('message', 'Failed to update availability. Please try again.', 'alert alert-danger');
+                setFlashMessage('Couldnt update you availability! Please contact our managers immediately!');
             }
     
-            // Redirect back to the dashboard
             redirect('supplier/');
         } else {
-            redirect('supplier/'); // Redirect if not a POST request
+            redirect('supplier/');
         }
     }
 
+    // Chat-related methods
 
-    public function collections() {
-        
-        $supplierId = $_SESSION['supplier_id'];
+    public function chat() {
+        // Ensure the user is logged in and has the Supplier role (role_id = 5)
+        if (!isset($_SESSION['user_id']) || $_SESSION['role_id'] != 7) {
+            flash('message', 'Unauthorized access', 'alert alert-danger');
+            redirect('auth/login');
+            return;
+        }
 
-        $collections = $this->collectionModel->getSupplierCollections($supplierId);
-        
+        // Fetch the list of active Vehicle Managers (role_id = 4)
+        $activeManagers = $this->chatModel->getActiveManagers();
+        error_log("Managers in Supplier chat(): " . print_r($activeManagers, true));
+
         $data = [
-            'collections' => $collections
+            'active_managers' => $activeManagers,
+            'page_title' => 'Chat with Managers',
+            'user_id' => $_SESSION['user_id']
         ];
         
-        $this->view('supplier/v_view_collection', $data);
+        $this->view('supplier/v_chat', $data);
     }
 
-    public function collectionBags($collection_id) {
+    public function sendMessage() {
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            http_response_code(405);
+            echo json_encode(['success' => false, 'message' => 'Method Not Allowed']);
+            return;
+        }
+
+        $data = json_decode(file_get_contents('php://input'), true);
+        if (!isset($data['receiver_id']) || !is_numeric($data['receiver_id']) || !isset($data['message'])) {
+            http_response_code(400);
+            echo json_encode(['success' => false, 'message' => 'Invalid input']);
+            return;
+        }
+
+        $senderId = $_SESSION['user_id'];
+        $receiverId = (int)$data['receiver_id'];
+        $message = trim($data['message']);
+
+        // Ensure the receiver is a Vehicle Manager (role_id = 4)
+        $receiver = $this->chatModel->getUserName($receiverId);
+        if (!$receiver || !str_contains($receiver, 'MGR')) {
+            http_response_code(400);
+            echo json_encode(['success' => false, 'message' => 'Invalid receiver']);
+            return;
+        }
+
+        $result = $this->chatModel->saveMessage($senderId, $receiverId, $message);
+        if ($result['success']) {
+            echo json_encode(['success' => true, 'message_id' => $result['message_id']]);
+        } else {
+            http_response_code(500);
+            echo json_encode(['success' => false, 'message' => 'Error saving message']);
+        }
+    }
+
+    public function getMessages() {
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            http_response_code(405);
+            echo json_encode(['success' => false, 'message' => 'Method Not Allowed']);
+            return;
+        }
+
+        $data = json_decode(file_get_contents('php://input'), true);
+        if (!isset($data['receiver_id']) || !is_numeric($data['receiver_id'])) {
+            http_response_code(400);
+            echo json_encode(['success' => false, 'message' => 'Invalid receiver ID']);
+            return;
+        }
 
 
-        $supplier_id = $_SESSION['supplier_id'];
-        
-        // Get bags for this collection that belong to this supplier
-        $bags = $this->collectionModel->getSupplierBagsForCollection($supplier_id, $collection_id);
-        
-        $data = [
-            'collection_id' => $collection_id,
-            'bags' => $bags
-        ];
-        
-        $this->view('supplier/v_collection_bags', $data);
+        $userId = $_SESSION['user_id'];
+        $receiverId = (int)$data['receiver_id'];
+
+        $messages = $this->chatModel->getMessages($userId, $receiverId);
+        if ($messages === false) {
+            http_response_code(500);
+            echo json_encode(['success' => false, 'message' => 'Error fetching messages']);
+            return;
+        }
+
+        echo json_encode([
+            'success' => true,
+            'messages' => $messages
+        ]);
+    }
+
+    
+
+    public function editMessage() {
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            http_response_code(405);
+            echo json_encode(['success' => false, 'message' => 'Method Not Allowed']);
+            return;
+        }
+
+        $data = json_decode(file_get_contents('php://input'), true);
+        if (!isset($data['message_id']) || !is_numeric($data['message_id']) || !isset($data['new_message'])) {
+            http_response_code(400);
+            echo json_encode(['success' => false, 'message' => 'Invalid input']);
+            return;
+        }
+
+        $messageId = (int)$data['message_id'];
+        $newMessage = trim($data['new_message']);
+        $userId = $_SESSION['user_id'];
+
+        $result = $this->chatModel->editMessage($messageId, $newMessage, $userId);
+        if ($result) {
+            echo json_encode(['success' => true]);
+        } else {
+            http_response_code(500);
+            echo json_encode(['success' => false, 'message' => 'Error editing message']);
+        }
+    }
+
+    public function deleteMessage() {
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            http_response_code(405);
+            echo json_encode(['success' => false, 'message' => 'Method Not Allowed']);
+            return;
+        }
+
+        $data = json_decode(file_get_contents('php://input'), true);
+        if (!isset($data['message_id']) || !is_numeric($data['message_id'])) {
+            http_response_code(400);
+            echo json_encode(['success' => false, 'message' => 'Invalid message ID']);
+            return;
+        }
+
+        $messageId = (int)$data['message_id'];
+        $userId = $_SESSION['user_id'];
+
+        $result = $this->chatModel->deleteMessage($messageId, $userId);
+        if ($result) {
+            echo json_encode(['success' => true]);
+        } else {
+            http_response_code(500);
+            echo json_encode(['success' => false, 'message' => 'Error deleting message']);
+        }
+    }
+
+    //announcements by Theekshana
+    public function announcements() {
+        // Ensure the user is logged in and has the Supplier role (role_id = 5)
+        if (!isset($_SESSION['user_id']) || $_SESSION['role_id'] != 7) {
+            flash('message', 'Unauthorized access', 'alert alert-danger');
+            redirect('auth/login');
+            return;
+        }
+    
+        try {
+            // Fetch announcements created by Vehicle Managers (role_id = 4)
+            $announcements = $this->chatModel->getAnnouncementsForSupplier($_SESSION['supplier_id']);
+            
+            $data = [
+                'announcements' => $announcements,
+                'error' => ''
+            ];
+        } catch (Exception $e) {
+            error_log($e->getMessage());
+            $data = [
+                'announcements' => [],
+                'error' => 'An error occurred while fetching announcements. Please try again later.'
+            ];
+        }
+    
+        $this->view('supplier/v_announcements', $data);
+    }
+
+    public function getAnnouncementsForSupplier($supplierId) {
+        // Fetch announcements created by Vehicle Managers (role_id = 4)
+        $this->db->query("
+            SELECT a.announcement_id, a.title, a.content, a.created_at, a.updated_at, 
+                   CONCAT(u.first_name, ' ', u.last_name) AS sender_name
+            FROM announcements a
+            JOIN users u ON a.created_by = u.user_id
+            WHERE u.role_id = 4
+            ORDER BY a.created_at DESC
+        ");
+        return $this->db->resultSet();
     }
 }
-?>
