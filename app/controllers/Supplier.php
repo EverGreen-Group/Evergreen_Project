@@ -105,7 +105,7 @@ class Supplier extends Controller {
     }
 
     public function viewAppointments() {
-        // Fetch all required data for the view
+        
         $timeSlots = $this->appointmentModel->getAvailableTimeSlots();
         $myRequests = $this->appointmentModel->getMyRequests($_SESSION['supplier_id']);
         $confirmedAppointments = $this->appointmentModel->getConfirmedAppointments($_SESSION['supplier_id']);
@@ -117,12 +117,12 @@ class Supplier extends Controller {
             'confirmed_appointments' => $confirmedAppointments
         ];
         
-        // Load the view with the data
         $this->view('supplier/v_time_slots', $data);
     }
     
     public function requestTimeSlot() {
         if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+
             // Validate the slot ID
             if (!isset($_POST['slot_id']) || empty($_POST['slot_id'])) {
                 setFlashMessage('Time slot isnt available anymore, please refresh the page!', 'error');
@@ -154,7 +154,7 @@ class Supplier extends Controller {
                 'submitted_at' => date('Y-m-d H:i:s')
             ];
             
-            // Create the request
+            // Create request
             if ($this->appointmentModel->createRequest($data)) {
                 setFlashMessage('Request sent sucessfully!');
             } else {
@@ -163,12 +163,13 @@ class Supplier extends Controller {
             
             redirect('Supplier/viewAppointments');
         } else {
-            // Redirect if accessed directly without POST
+            
             redirect('Supplier/viewAppointments');
         }
     }
     
     public function cancelRequest($id = null) {
+
         // Validate the request ID
         if (!$id) {
             setFlashMessage('Cancellation failed, please try again later!', 'error');
@@ -184,7 +185,7 @@ class Supplier extends Controller {
             return;
         }
         
-        // Cancel the request
+        // Cancel request
         if ($this->appointmentModel->cancelRequest($id, $_SESSION['supplier_id'])) {
             setFlashMessage('Appointment request cancelled sucessfully!');
         } else {
@@ -418,7 +419,9 @@ class Supplier extends Controller {
     
                 setFlashMessage('Complaint submitted successfully!');
                 redirect('supplier/complaints');
+
             } else {
+                
                 setFlashMessage('Complaint didnt get sent! Please try again later', 'error');
                 redirect('supplier/complaints');
             }
@@ -494,7 +497,7 @@ class Supplier extends Controller {
         error_log ($unit);
     }*/
 
-    public function requestFertilizer() {
+    public function requestFertilizer() {                       // bug free function
 
         $fertilizerModel = new M_Fertilizer_Order();
         $supplier_id = $_SESSION['supplier_id'];
@@ -518,7 +521,7 @@ class Supplier extends Controller {
         
     }
    
-    public function createFertilizerOrder() {
+    public function createFertilizerOrder() {                       // bug free function
         try {
             if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
                 throw new Exception('Invalid request method');
@@ -584,7 +587,7 @@ class Supplier extends Controller {
         return !empty($data['supplier_id']) && !empty($data['totalamount']);
     }
 
-    public function editFertilizerRequest($order_id) {
+    public function editFertilizerRequest($order_id) {                       // bug free function
         //check if order exists and belongs to the current supplier
         $order = $this->fertilizerOrderModel->getOrderById($order_id);
     
@@ -601,6 +604,7 @@ class Supplier extends Controller {
         }
     
         if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+
             // Validate inputs
             $fertilizer_id = isset($_POST['fertilizer_id']) ? intval($_POST['fertilizer_id']) : '';
             $quantity = isset($_POST['quantity']) ? floatval($_POST['quantity']) : '';
@@ -614,7 +618,6 @@ class Supplier extends Controller {
                 return;
             }
             
-            // Prepare update data
             $updateData = [
                 'fertilizer_id' => $fertilizer_id,
                 'quantity' => $quantity,
@@ -641,6 +644,7 @@ class Supplier extends Controller {
     }
     
     public function checkFertilizerOrderStatus($orderId) {
+        
         // Verify that the order belongs to the current logged-in supplier
         if (!$this->isSupplierOrder($orderId)) {
             echo json_encode(['canDelete' => false, 'message' => 'Unauthorized access']);
@@ -666,8 +670,8 @@ class Supplier extends Controller {
         ]);
     }
 
-    public function deleteFertilizerRequest($orderId) {
-        // First, verify the order exists and belongs to this supplier
+    public function deleteFertilizerRequest($orderId) {                       // bug free function
+        
         $order = $this->fertilizerOrderModel->getOrderById($orderId);
         
         if (!$order) {

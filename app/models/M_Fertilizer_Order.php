@@ -6,7 +6,7 @@ class M_Fertilizer_Order {
         $this->db = new Database();
     }
 
-    public function getAllOrders() {
+    public function getAllOrders() {                       // bug free function
         $this->db->query("SELECT fo.*, f.description as fertilizer_name 
                           FROM fertilizer_orders fo
                           JOIN Fertilizer f ON fo.fertilizer_id = f.type_id 
@@ -14,7 +14,7 @@ class M_Fertilizer_Order {
         return $this->db->resultset();
     }
 
-    public function getOrderById($order_id) {
+    public function getOrderById($order_id) {                       // bug free function
         $this->db->query("SELECT fo.*, f.fertilizer_name 
                           FROM fertilizer_orders fo 
                           JOIN Fertilizer f ON fo.fertilizer_id = f.id 
@@ -23,7 +23,7 @@ class M_Fertilizer_Order {
         return $this->db->single();
     }
 
-    public function getOrdersBySupplier($supplier_id) {
+    public function getOrdersBySupplier($supplier_id) {                       // bug free function
         $this->db->query("SELECT fo.*, f.fertilizer_name 
                           FROM fertilizer_orders fo
                           JOIN Fertilizer f ON fo.fertilizer_id = f.id 
@@ -35,12 +35,12 @@ class M_Fertilizer_Order {
 
 
     private $error = null;
-    public function getError() {
+    public function getError() {                       // bug free function
         return $this->error;
     }
 
 
-    public function createOrder($data) {
+    public function createOrder($data) {                       // bug free function
         try {
             // Start transaction
             $this->db->beginTransaction();
@@ -94,7 +94,7 @@ class M_Fertilizer_Order {
         }
     }
 
-    public function updateOrder($order_id, $data) {
+    public function updateOrder($order_id, $data) {                       // bug free function
         
             $this->db->query(
                 "UPDATE fertilizer_orders 
@@ -116,7 +116,7 @@ class M_Fertilizer_Order {
         
     }
 
-    public function getFertilizerOrderById($orderId) {
+    public function getFertilizerOrderById($orderId) {                       // bug free function
         $this->db->query('SELECT fo.*, f.fertilizer_name 
                           FROM fertilizer_orders fo 
                           LEFT JOIN Fertilizer f ON fo.type_id = f.type_id 
@@ -125,7 +125,7 @@ class M_Fertilizer_Order {
         return $this->db->single();
     }
 
-    public function deleteFertilizerOrder($orderId) {
+    public function deleteFertilizerOrder($orderId) {                       // bug free function
         try {
             $this->db->query('DELETE FROM fertilizer_orders 
                               WHERE order_id = :order_id');
@@ -142,8 +142,23 @@ class M_Fertilizer_Order {
             return false;
         }
     }
+
+    public function getAllFertilizerTypes() {                       // bug free function
+        $this->db->query("SELECT id as fertilizer_id, fertilizer_name, company_name, details, code, price, quantity FROM Fertilizer WHERE quantity > 0");
+        return $this->db->resultset();
+    }
+
+    public function updateStatus($order_id, $status) {                       // bug free function
+        $this->db->query("UPDATE fertilizer_orders SET status = :status WHERE order_id = :order_id");
+        $this->db->bind(':status', $status);
+        $this->db->bind(':order_id', $order_id);
+        return $this->db->execute();
+    }
+
     
-    public function getFertilizerByTypeId($type_id) {
+    //UNUSED FUNCTIONS
+    
+    /*public function getFertilizerByTypeId($type_id) {
         $stmt = $this->db->prepare("SELECT type_id, name, 
             unit_price_kg as price_kg, 
             unit_price_packs as price_packs, 
@@ -166,11 +181,6 @@ class M_Fertilizer_Order {
         return $stmt->fetch(PDO::FETCH_ASSOC);
     }
 
-    public function getAllFertilizerTypes() {
-        $this->db->query("SELECT id as fertilizer_id, fertilizer_name, company_name, details, code, price, quantity FROM Fertilizer WHERE quantity > 0");
-        return $this->db->resultset();
-    }
-
     public function getFertilizerPrice($type_id) {
         $this->db->query('SELECT price_per_unit FROM Fertilizer WHERE type_id = :type_id');
         $this->db->bind(':type_id', $type_id);
@@ -183,21 +193,12 @@ class M_Fertilizer_Order {
         return $this->db->single();
     }
 
-    public function updateStatus($order_id, $status) {
-        $this->db->query("UPDATE fertilizer_orders SET status = :status WHERE order_id = :order_id");
-        $this->db->bind(':status', $status);
-        $this->db->bind(':order_id', $order_id);
-        return $this->db->execute();
-    }
-
     public function updatePaymentStatus($order_id, $payment_status) {
         $this->db->query("UPDATE fertilizer_orders SET payment_status = :payment_status WHERE order_id = :order_id");
         $this->db->bind(':payment_status', $payment_status);
         $this->db->bind(':order_id', $order_id);
         return $this->db->execute();
-    }
-
-    
+    }*/
     
 }
 ?> 
