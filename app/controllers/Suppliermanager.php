@@ -138,7 +138,7 @@ class SupplierManager extends Controller {
 
         // If application not found, redirect with error
         if (!$application) {
-            flash('application_error', 'Application not found');
+            setFlashMessage('Application error: Application not found', 'error');
             redirect('supplier_manager/applications');
         }
 
@@ -201,7 +201,7 @@ class SupplierManager extends Controller {
     }
 
 
-    public function confirmSupplierRole() {
+    /*public function confirmSupplierRole() {
         if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             $data = json_decode(file_get_contents('php://input'), true);
             $applicationId = $data['application_id'];
@@ -216,7 +216,7 @@ class SupplierManager extends Controller {
             http_response_code(400);
             echo json_encode(['success' => false, 'message' => 'Invalid request.']);
         }
-    }
+    }*/
 
     public function suppliers() {
         // Get all suppliers from the database
