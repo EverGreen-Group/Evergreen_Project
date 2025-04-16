@@ -11,7 +11,7 @@ class M_Chat {
             $sql = "SELECT u.user_id, p.first_name, p.last_name
                     FROM users u
                     LEFT JOIN profiles p ON u.user_id = p.user_id
-                    WHERE u.role_id = 7 or u.role_id = 5";
+                    WHERE u.role_id = 5";
             $stmt = $this->db->prepare($sql);
             $stmt->execute();
             return $stmt->fetchAll(PDO::FETCH_OBJ);
@@ -26,7 +26,7 @@ class M_Chat {
             $sql = "SELECT u.user_id, p.first_name, p.last_name
                     FROM users u
                     LEFT JOIN profiles p ON u.user_id = p.user_id
-                    WHERE u.role_id = 4 OR u.role_id = 1";
+                    WHERE u.role_id = 12";
             $stmt = $this->db->prepare($sql);
             $stmt->execute();
             return $stmt->fetchAll(PDO::FETCH_OBJ);
