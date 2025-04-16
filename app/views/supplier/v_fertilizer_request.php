@@ -20,24 +20,44 @@
     </div>
   </div>
 
-  <!-- Flash Message Section -->
-  <?php if(isset($_SESSION['fertilizer_message'])): ?>
-    <div class="alert-container">
-      <div class="alert <?php echo isset($_SESSION['fertilizer_message_class']) ? $_SESSION['fertilizer_message_class'] : 'alert-success'; ?>">
-        <div class="alert-icon">
-          <i class='bx <?php echo (strpos($_SESSION['fertilizer_message_class'] ?? '', 'danger') !== false) ? 'bx-x-circle' : 'bx-check-circle'; ?>'></i>
-        </div>
-        <div class="alert-content">
-          <?php echo $_SESSION['fertilizer_message']; ?>
-        </div>
-        <button class="alert-close" onclick="this.parentElement.style.display='none';">
-          <i class='bx bx-x'></i>
-        </button>
+  <!-- Section 1: Your Time Slots -->
+  <div class="table-data">
+    <div class="order">
+      <div class="head">
+        <h3>Available Fertilizer Types</h3>
       </div>
+      <table>
+        <thead>
+          <tr>
+            <th>Fertilizer ID</th>
+            <th>Fertilizer Name</th>
+            <th>Company Name</th>
+            <th>Code</th>
+            <th>Description</th>
+            <th>Price</th>
+            <th>Available Quantity</th>
+          </tr>
+        </thead>
+        <tbody>
+          <?php if (isset($fertilizer_types) && !empty($fertilizer_types)): ?>
+            <?php foreach ($fertilizer_types as $fertilizer): ?>
+              <tr>
+                <td><?php echo $fertilizer->fertilizer_id; ?></td>
+                <td><?php echo $fertilizer->fertilizer_name; ?></td>
+                <td><?php echo $fertilizer->company_name; ?></td>
+                <td><?php echo $fertilizer->code; ?></td>
+                <td><?php echo $fertilizer->details; ?></td>
+                <td><?php echo $fertilizer->price; ?></td>
+                <td><?php echo $fertilizer->quantity; ?></td>
+              </tr>
+            <?php endforeach; ?>
+          <?php else: ?>
+            <tr><td colspan="6" style="text-align:center;">No fertilizer stocks available.</td></tr>
+          <?php endif; ?>
+        </tbody>
+      </table>
     </div>
-    <?php unset($_SESSION['fertilizer_message']); ?>
-    <?php unset($_SESSION['fertilizer_message_class']); ?>
-  <?php endif; ?>
+  </div>
 
   <!-- New Fertilizer Request Form Section -->
   <div class="request-form-section">
@@ -45,50 +65,44 @@
       <h3>New Fertilizer Request</h3>
     </div>
     <div class="request-form-card">
-      <!-- Note: The form action has been updated to match the old version’s endpoint -->
+
       <form id="fertilizer-request-form" action="<?php echo URLROOT; ?>/Supplier/createFertilizerOrder" method="post">
+
         <!-- Add hidden supplier_id field -->
         <input type="hidden" name="supplier_id" value="<?php echo $_SESSION['supplier_id']; ?>">
         
-        <div class="form-group">
-            <label for="type_id">Fertilizer Type:</label>
-            <select id="type_id" name="type_id" required onchange="updatePricePerUnit()">
-                <option value="">-- Select Fertilizer --</option>
-                <?php foreach($data['fertilizer_types'] as $type): ?>
-                    <option value="<?php echo $type->type_id; ?>"
-                        data-price-kg="<?php echo $type->unit_price_kg; ?>"
-                        data-price-pack="<?php echo $type->unit_price_packs; ?>"
-                        data-price-box="<?php echo $type->unit_price_box; ?>">
-                        <?php echo $type->name; ?>
-                    </option>
-                <?php endforeach; ?>
-            </select>
-        </div>
-        <div class="form-group">
-            <label for="unit">Unit:</label>
-            <select id="unit" name="unit" required onchange="updatePricePerUnit()">
-                <option value="">-- Select Unit --</option>
-                <option value="kg">Kilograms (kg)</option>
-                <option value="packs">Packs</option>
-                <option value="box">Box</option>
-            </select>
-        </div>
-        <div class="form-group">
-            <label for="total_amount">Amount:</label>
-            <input type="number" id="total_amount" name="total_amount" min="1" required oninput="updateTotalPrice()">
-        </div>
-        <div class="form-group read-only-group">
-            <label for="price_per_unit">Price Per Unit:</label>
-            <input type="text" id="price_per_unit" name="price_per_unit" readonly>
-        </div>
-        <div class="form-group read-only-group">
-            <label for="total_price">Total Price:</label>
-            <input type="text" id="total_price" name="total_price" readonly>
-        </div>
-        <div class="form-group">
-            <button type="submit" class="submit-btn">Submit Request</button>
-        </div>
-    </form>
+          <div class="form-group">
+              <label for="fertilizer_id">Fertilizer ID:</label>
+              <select id="fertilizer_id" name="fertilizer_id" required onchange="updateTotalPrice()">
+                  <option value="">-- Select Fertilizer --</option>
+                  <?php foreach($data['fertilizer_types'] as $fertilizer): ?>
+                      <option value="<?php echo $fertilizer->fertilizer_id; ?>" data-price="<?php echo $fertilizer->price; ?>">
+                          <?php echo $fertilizer->fertilizer_name; ?> (<?php echo $fertilizer->company_name; ?>)
+                      </option>
+                  <?php endforeach; ?>
+              </select>
+          </div>
+
+          <div class="form-group">
+              <label for="quantity">Quantity:</label>
+              <input type="number" id="quantity" name="quantity" min="1" max="100" required oninput="updateTotalPrice()">
+          </div>
+
+          <div class="form-group read-only-group">
+              <label for="price_per_unit">Price Per Unit:</label>
+              <input type="text" id="price_per_unit" name="price_per_unit" readonly>
+          </div>
+
+          <div class="form-group read-only-group">
+              <label for="total_price">Total Price:</label>
+              <input type="text" id="total_price" name="total_price" readonly>
+          </div>
+
+          <div class="form-group">
+              <button type="submit" class="submit-btn">Submit Request</button>
+          </div>
+
+      </form>
     </div>
   </div>
 
@@ -107,40 +121,62 @@
               </div>
             </div>
             <div class="card-body">
-              <div class="schedule-info">
-                <div class="info-item">
-                  <i class='bx bx-box'></i>
-                  <span>Fertilizer: <?php echo $order->fertilizer_name; ?></span>
+              <div class="schedule-info-grid">
+                <!-- first row -->
+                <div class="info-row">
+                  <div class="info-item">
+                    <i class='bx bx-box'></i>
+                    <span>Fertilizer: <?php echo $order->fertilizer_name; ?></span>
+                  </div>
+                  <div class="info-item">
+                    <i class='bx bx-calendar'></i>
+                    <span>Date: <?php echo date('m/d/Y', strtotime($order->order_date)); ?></span>
+                  </div>
+                  <div class="info-item">
+                    <i class='bx bx-time-five'></i>
+                    <span>Time: <?php echo $order->order_time; ?></span>
+                  </div>
+                  <div class="info-item">
+                    <i class='bx bx-package'></i>
+                    <span>Quantity: <?php echo $order->quantity; ?></span>
+                  </div>
                 </div>
-                <div class="info-item">
-                  <i class='bx bx-calendar'></i>
-                  <span>Date: <?php echo date('m/d/Y', strtotime($order->order_date)); ?></span>
-                </div>
-                <div class="info-item">
-                  <i class='bx bx-time-five'></i>
-                  <span>Time: <?php echo $order->order_time; ?></span>
-                </div>
-                <div class="info-item">
-                  <i class='bx bx-calculator'></i>
-                  <span>Amount: <?php echo number_format($order->quantity) . ' ' . ($order->unit ?? ''); ?></span>
-                </div>
-                <div class="info-item">
-                  <i class='bx bx-dollar'></i>
-                  <span>Price: <?php echo 'රු.' . number_format($order->total_amount, 2); ?></span>
-                </div>
-                <div class="info-item">
-                  <i class='bx bx-check-circle'></i>
-                  <span>Status: <?php echo isset($order->payment_status) ? $order->payment_status : 'Pending'; ?></span>
+                <!-- second row -->
+                <div class="info-row">
+                  <div class="info-item">
+                    <i class='bx bx-dollar'></i>
+                    <span>Price: <?php echo 'රු.' . number_format($order->total_amount, 2); ?></span>
+                  </div>
+                  <div class="info-item">
+                    <i class='bx bx-check-circle'></i>
+                    <span>Status: <p class="btn"> <?php echo isset($order->status) ? $order->status : 'Pending'; ?></p></span>
+                  </div>
+                  <div class="info-item">
+                    <i class='bx bx-credit-card'></i>
+                    <span>Payment: <p class="btn"> <?php echo isset($order->payment_status) ? $order->payment_status : 'Pending'; ?></p></span>
+                  </div>
+                  <div class="info-item">
+                  </div>
                 </div>
               </div>
+
               <!-- Action buttons -->
               <div class="schedule-action">
-                <button class="update-btn" onclick="location.href='<?php echo URLROOT; ?>/Supplier/editFertilizerRequest/<?php echo $order->order_id; ?>'">
-                  <i class='bx bx-edit'></i>
-                </button>
-                <button class="cancel-btn" onclick="location.href='<?php echo URLROOT; ?>/Supplier/deleteFertilizerRequest/<?php echo $order->order_id; ?>'">
-                  <i class='bx bx-trash'></i>
-                </button>
+                <?php if (isset($order->status) && strtolower($order->status) ==='pending'): ?>
+                  <button class="update-btn" onclick="location.href='<?php echo URLROOT; ?>/Supplier/editFertilizerRequest/<?php echo $order->order_id; ?>'">
+                    <i class='bx bx-edit'></i>
+                  </button>
+                  <button class="cancel-btn" onclick="confirmDelete(<?php echo $order->order_id; ?>)">
+                    <i class='bx bx-trash'></i>
+                  </button>
+                <?php else: ?>
+                  <button class="update-btn disabled" disabled title="Cannot edit not pending orders">
+                    <i class='bx bx-edit'></i>
+                  </button>
+                  <button class="cancel-btn disabled" disabled title="Cannot delete not pending orders">
+                    <i class="bx bx-trash"></i>
+                  </button>
+                <?php endif; ?>
               </div>
             </div>
           </div>
@@ -152,78 +188,118 @@
       </div>
     <?php endif; ?>
   </div>
-
-  <!-- Auto-hide success message and refresh page -->
-<script>
-  document.addEventListener('DOMContentLoaded', function() {
-    // Look for alert elements with success class
-    const successAlerts = document.querySelectorAll('.alert.alert-success');
-    
-    // Check if we found any success alerts
-    if (successAlerts.length > 0) {
-      console.log('Success alert found, setting timeout');
-      
-      // Set timeout to refresh after 3 seconds
-      setTimeout(function() {
-        console.log('Timeout triggered, refreshing page');
-        window.location.reload();
-      }, 3000);
-    }
-  });
-</script>
-
 </main>
 
 <script src="<?php echo URLROOT; ?>/public/css/script.js"></script>
 <script>
-  // Update Price Per Unit based on the selected fertilizer and unit
-  function updatePricePerUnit() {
-    const fertilizerSelect = document.getElementById('type_id');
-    const unitSelect = document.getElementById('unit');
-    const pricePerUnitInput = document.getElementById('price_per_unit');
 
-    const selectedOption = fertilizerSelect.options[fertilizerSelect.selectedIndex];
-    if (!selectedOption || selectedOption.value === "") {
-      pricePerUnitInput.value = '';
+    // Update Price Per Unit based on the selected fertilizer and unit
+    /*function updatePricePerUnit() {
+      const fertilizerSelect = document.getElementById('fertilizer_name');
+      const unitSelect = document.getElementById('unit');
+      const pricePerUnitInput = document.getElementById('price_per_unit');
+
+      const selectedOption = fertilizerSelect.options[fertilizerSelect.selectedIndex];
+      if (!selectedOption || selectedOption.value === "") {
+        pricePerUnitInput.value = '';
+        updateTotalPrice();
+        return;
+      }
+
+      const unit = unitSelect.value;
+      let price = 0;
+      
+      if (unit === "kg") {
+        price = parseFloat(selectedOption.getAttribute('data-price-kg'));
+      } else if (unit === "packs") {
+        price = parseFloat(selectedOption.getAttribute('data-price-pack'));
+      } else if (unit === "box") {
+        price = parseFloat(selectedOption.getAttribute('data-price-box'));
+      } else {
+        price = 0;
+      }
+      
+      if (!isNaN(price)) {
+        pricePerUnitInput.value = price.toFixed(2);
+      } else {
+        pricePerUnitInput.value = '';
+      }
+      
       updateTotalPrice();
-      return;
+    }*/
+
+    // Update total price based on amount and price per unit
+    function updateTotalPrice() {
+      const fertilizerSelect = document.getElementById('fertilizer_id');
+      const quantityInput = document.getElementById('quantity');
+      const pricePerUnitInput = document.getElementById('price_per_unit');
+      const totalPriceInput = document.getElementById('total_price');
+
+      // Get selected option
+      const selectedOption = fertilizerSelect.options[fertilizerSelect.selectedIndex];
+
+      // Check if a valid option is selected
+      if (!selectedOption || selectedOption.value === "") {
+        pricePerUnitInput.value = '';
+        totalPriceInput.value = '';
+        return;
+      }
+
+      // Get price
+      const price = parseFloat(selectedOption.getAttribute('data-price'));
+      const quantity = parseFloat(quantityInput.value);
+
+      if (!isNaN(price)) {
+        pricePerUnitInput.value = price.toFixed(2);
+
+        if (!isNaN(quantity)) {
+          totalPriceInput.value = (price * quantity).toFixed(2);
+        } else {
+          totalPriceInput.value = '';
+        }
+      } else {
+        pricePerUnitInput.value = '';
+        totalPriceInput.value = '';
+      }
     }
 
-    const unit = unitSelect.value;
-    let price = 0;
-    
-    if (unit === "kg") {
-      price = parseFloat(selectedOption.getAttribute('data-price-kg'));
-    } else if (unit === "packs") {
-      price = parseFloat(selectedOption.getAttribute('data-price-pack'));
-    } else if (unit === "box") {
-      price = parseFloat(selectedOption.getAttribute('data-price-box'));
-    } else {
-      price = 0;
+    function confirmDelete(orderId) {
+      if (confirm("Are you sure you want to delete order #" + orderId + "?")) {
+        window.location.href = '<?php echo URLROOT; ?>/Supplier/deleteFertilizerRequest/' + orderId;
+      }
     }
-    
-    if (!isNaN(price)) {
-      pricePerUnitInput.value = price.toFixed(2);
-    } else {
-      pricePerUnitInput.value = '';
-    }
-    
-    updateTotalPrice();
-  }
 
-  // Update total price based on amount and price per unit
-  function updateTotalPrice() {
-    const amount = parseFloat(document.getElementById('total_amount').value);
-    const pricePerUnit = parseFloat(document.getElementById('price_per_unit').value);
-    const totalPriceInput = document.getElementById('total_price');
+    document.getElementById('fertilizer-request-form').addEventListener('submit', function(e) {
+      const fertilizerSelect = document.getElementById('fertilizer_id');
+      const quantityInput = document.getElementById('quantity');
+      const totalPriceInput = document.getElementById('total_price');
+      
+      if (fertilizerSelect.value === "") {
+          e.preventDefault();
+          alert("Please select a fertilizer type");
+          return false;
+      }
+      
+      const quantity = parseFloat(quantityInput.value);
+      if (isNaN(quantity) || quantity <= 0 || quantity > 100) {
+          e.preventDefault();
+          alert("Please enter a valid quantity between 1 and 100");
+          return false;
+      }
+      
+      // Ensure price calculation was performed
+      if (totalPriceInput.value === "") {
+          e.preventDefault();
+          updateTotalPrice(); // Recalculate price
+          if (totalPriceInput.value === "") {
+              alert("Unable to calculate total price. Please check your inputs.");
+              return false;
+          }
+      }
+      
+      return true;
+  });
     
-    if (!isNaN(amount) && !isNaN(pricePerUnit)) {
-      totalPriceInput.value = (amount * pricePerUnit).toFixed(2);
-    } else {
-      totalPriceInput.value = '';
-    }
-  }
-
 </script>
 
 <?php require APPROOT . '/views/inc/components/footer.php'; ?>
@@ -240,11 +316,13 @@
     --border-color: #e0e0e0;
     --success-color: #27ae60;
     --warning-color: #f39c12;
+    --danger-color: #e74c3c;
     --spacing-xs: 0.25rem;
     --spacing-sm: 0.5rem;
     --spacing-md: 1rem;
     --spacing-lg: 1.5rem;
     --spacing-xl: 2rem;
+    --spacing-xxl: 3rem; /* Added larger spacing */
     --border-radius-sm: 4px;
     --border-radius-md: 8px;
     --border-radius-lg: 12px;
@@ -252,13 +330,13 @@
 
   /* Layout & Common Styles */
   main {
-    padding: var(--spacing-lg);
+    padding: var(--spacing-sm); /* Reduced left margin */
     max-width: 1200px;
     margin: 0 auto;
   }
 
   .head-title {
-    margin-bottom: var(--spacing-xl);
+    margin-bottom: var(--spacing-lg);
     display: flex;
     flex-wrap: wrap;
     justify-content: space-between;
@@ -288,15 +366,54 @@
     color: var(--primary-color);
   }
 
-  .section-divider {
-    height: 1px;
-    background-color: var(--border-color);
-    margin: var(--spacing-xl) 0;
+  /* Table Styles */
+  .table-data {
+    margin-bottom: var(--spacing-xxl); /* Increased gap between fertilizer types and form */
+  }
+
+  .table-data .order {
+    background-color: white;
+    padding: var(--spacing-md);
+    border-radius: var(--border-radius-lg);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  }
+
+  .table-data .head {
+    display: flex;
+    align-items: center;
+    grid-gap: 16px;
+    margin-bottom: 16px;
+  }
+
+  .table-data table {
+    width: 100%;
+    border-collapse: collapse;
+  }
+
+  .table-data table th {
+    padding: var(--spacing-sm);
+    text-align: left;
+    background-color: var(--background-light);
+    color: var(--text-primary);
+  }
+
+  .table-data table td {
+    padding: var(--spacing-sm);
+    border-bottom: 1px solid var(--border-color);
   }
 
   /* Request Form Section */
   .request-form-section {
     margin-bottom: var(--spacing-xl);
+  }
+
+  .section-header {
+    margin-bottom: var(--spacing-md);
+  }
+
+  .section-header h3 {
+    color: var(--text-primary);
+    font-size: 1.25rem;
   }
 
   .request-form-card {
@@ -312,9 +429,16 @@
     gap: var(--spacing-lg);
   }
 
+  /* Adjust width of form fields */
   .request-form-card .form-group {
     display: flex;
     flex-direction: column;
+    width: 100%;
+  }
+
+  /* Make fertilizer_id and price_per_unit match width with quantity and total_price */
+  #fertilizer_id, #price_per_unit, #quantity, #total_price {
+    width: 100%;
   }
 
   .request-form-card label {
@@ -387,22 +511,54 @@
   }
 
   .schedule-info {
-    display: flex;
-    flex-wrap: wrap;
-    gap: var(--spacing-lg);
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: var(--spacing-md);
     margin-bottom: var(--spacing-md);
+  }
+
+  /* Move price to second row */
+  .schedule-info .info-item:nth-child(4) {
+    grid-row: 2;
+    grid-column: 1;
   }
 
   .info-item {
     display: flex;
     align-items: center;
     gap: var(--spacing-sm);
-    flex: 1;
-    min-width: 200px;
   }
 
   .info-item i {
     color: var(--primary-color);
+  }
+
+  /* Order Status Styles */
+  .status-indicator {
+    padding: var(--spacing-xs) var(--spacing-sm);
+    border-radius: var(--border-radius-sm);
+    font-weight: 500;
+    display: inline-block;
+  }
+
+  .status-pending {
+    background-color: rgba(243, 156, 18, 0.2);
+    color: var(--warning-color);
+  }
+
+  .status-approved {
+    background-color: rgba(46, 204, 113, 0.2);
+    color: var(--secondary-color);
+  }
+
+  .status-delivered {
+    background-color: rgba(39, 174, 96, 0.2);
+    color: var(--success-color);
+  }
+
+  .status-cancelled {
+    background-color: rgba(231, 76, 60, 0.2);
+    color: var(--danger-color);
   }
 
   /* Action Buttons Section */
@@ -438,84 +594,49 @@
     transform: scale(1.05);
   }
 
-  /* Responsive Design */
-  @media (max-width: 768px) {
-    .request-form-card form {
-      grid-template-columns: 1fr;
-    }
-    .schedule-info {
-      flex-direction: column;
-    }
+  .schedule-info-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    width: 100%;
   }
 
-  /* Alert Styles */
-  .alert-container {
-    margin-bottom: var(--spacing-lg);
+  .info-row {
+    display: flex;
+    justify-content: space-between;
+    width: 100%;
   }
 
-  .alert {
+  .info-item {
     display: flex;
     align-items: center;
-    padding: var(--spacing-md);
-    border-radius: var(--border-radius-md);
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-    animation: slideDown 0.3s ease-out;
-  }
-
-  .alert-success {
-    background-color: rgba(46, 204, 113, 0.15);
-    border-left: 4px solid #2ecc71;
-    color: #27ae60;
-  }
-
-  .alert-danger {
-    background-color: rgba(231, 76, 60, 0.15);
-    border-left: 4px solid #e74c3c;
-    color: #c0392b;
-  }
-
-  .alert-warning {
-    background-color: rgba(243, 156, 18, 0.15);
-    border-left: 4px solid #f39c12;
-    color: #d35400;
-  }
-
-  .alert-icon {
-    font-size: 1.5rem;
-    margin-right: var(--spacing-md);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-  }
-
-  .alert-content {
+    gap: 8px;
     flex: 1;
-    font-size: 1rem;
-    line-height: 1.4;
   }
 
-  .alert-close {
-    background: transparent;
-    border: none;
-    color: inherit;
-    cursor: pointer;
-    font-size: 1.25rem;
-    opacity: 0.7;
-    transition: opacity 0.2s;
+  .info-item i {
+    font-size: 18px;
+    color: var(--primary-color); /* Using your theme color */
   }
 
-  .alert-close:hover {
-    opacity: 1;
-  }
-
-  @keyframes slideDown {
-    from {
-      transform: translateY(-20px);
-      opacity: 0;
-    }
-    to {
-      transform: translateY(0);
-      opacity: 1;
+  /* For responsive design on smaller screens */
+  @media (max-width: 768px) {
+    .info-row {
+      flex-direction: column;
+      gap: 10px;
     }
   }
+
+  .disabled {
+    cursor: not-allowed;
+  }
+
+  .btn {
+    background-color:rgba(35, 111, 81, 0.09); /*rgb(253, 207, 26)*/
+    font-size: small;
+    height: fit-content;
+    width: fit-content;
+    color: rgb(80, 80, 80);
+  }
+
 </style>
