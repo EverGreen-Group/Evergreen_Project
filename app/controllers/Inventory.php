@@ -1,4 +1,13 @@
 <?php
+
+require_once APPROOT . '/models/M_Products.php';
+require_once APPROOT . '/models/M_Fertilizer.php';
+require_once APPROOT . '/models/M_Dashbord.php';
+require_once APPROOT . '/models/M_Machine.php';
+require_once APPROOT . '/models/M_Inventory_Config.php';
+require_once APPROOT . '/models/M_Fertilizer_Order.php';
+require_once '../app/models/M_Products.php';
+
 class Inventory extends controller
 {
     private $productModel;
@@ -8,6 +17,8 @@ class Inventory extends controller
     private $machineModel;
 
     private $inventoryConfigModel;
+    private $leafchartdata;
+    private $fertilizerOrderModel;
     private $logModel;
 
 
@@ -17,25 +28,30 @@ class Inventory extends controller
     public function __construct()
     {
 
-        $this->productModel = $this->model('M_Products');
-        $this->fertilizerModel = $this->model('M_Fertilizer');
-        $this->stockvalidate = $this->model('M_stockvalidate');
-        $this->machineModel = $this->model('M_Machine');
-        $this->inventoryConfigModel = $this->model('M_Inventory_Config');
+
+        $this->productModel = new M_Products();
+        $this->fertilizerModel = new M_Fertilizer();
+        $this->stockvalidate = new M_Dashbord();
+        $this->machineModel = new M_Machine();
+        $this->inventoryConfigModel = new M_Inventory_Config();
+        $this->leafchartdata = new M_Dashbord();
+        $this->fertilizerOrderModel = new M_Fertilizer_Order();
+
         $this->logModel = $this->model('M_Log');
+
 
     }
 
     public function index()
     {
-        if ($_SERVER['REQUEST_METHOD'] == 'POST') {
-            $report = ['report' => $_POST['report']];
-        }
-
+        // Get the stock validation data
+        
         $stockvalidate = $this->stockvalidate->getvalidateStocks();
 
         // Get leaf quantities for the last 7 days
-        $leafQuantities = $this->stockvalidate->getLeafQuantitiesLast7Days();
+        $leafQuantities = $this->stockvalidate->getleafoflast7days();
+
+        $machine = $this->machineModel->getmachines();
         
         // Process the leaf quantities data for the chart
         $normalLeafData = [];
@@ -87,10 +103,14 @@ class Inventory extends controller
             'bagUsageCounts' => ['active' => $activeBagsCount, 'inactive' => $inactiveBagsCount],
             'normalLeafData' => array_values($normalLeafData),
             'superLeafData' => array_values($superLeafData),
-            'chartDates' => array_keys($normalLeafData)
+            'chartDates' => array_keys($normalLeafData),
+            'machines' => $machine,
         ];
+       // var_dump($data);
+
 
         $this->view('inventory/v_dashboard', $data);
+
     }
 
     public function product()
@@ -224,9 +244,31 @@ class Inventory extends controller
 
     public function fertilizer()
     {
-        $data = [];
 
-        $this->view('inventory/v_fertilizer_available', $data);
+        if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['status_approve'])) {
+            $us = $_GET['id'];
+            // var_dump($us);
+
+            $this->fertilizerOrderModel->updateFertilizerByStatus($us, 'Approved');
+            // redirect('Inventory/fertilizerdashboard');
+
+        } elseif ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['status_reject'])) {
+            $us = $_GET['id'];
+
+            $this->fertilizerOrderModel->updateFertilizerByStatus($us, 'Rejected');
+            // redirect('Inventory/fertilizerdashboard');
+
+        }
+
+        $fertilizer = $this->fertilizerOrderModel->getfertilizerorderforInventory();
+    
+        $data=[
+            'fertilizers' => $fertilizer
+        ];
+        // echo "<pre>";
+        // print_r($data);
+        // echo "</pre>";
+        $this->view('inventory/v_fertilizer_available',$data);
     }
     public function createfertilizer()
     {
@@ -846,6 +888,7 @@ class Inventory extends controller
         ];
         
         $this->view('inventory/v_collection_bags', $data);
+        var_dump($data);
     }
 
 
@@ -962,7 +1005,7 @@ class Inventory extends controller
     public function rawLeafHistory()
     {
         // Get leaf quantities data
-        $leafQuantities = $this->stockvalidate->getLeafQuantitiesLast7Days();
+        $leafQuantities = $this->stockvalidate->getleafoflast7days();
         
         $data = [
             'leafQuantities' => $leafQuantities

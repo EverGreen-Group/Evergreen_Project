@@ -24,16 +24,17 @@
             </ul>
         </div>
     </div>
-    
+
     <!-- Error Messages -->
-    <?php if(!empty($data['error'])): ?>
+    <?php if (!empty($data['error'])): ?>
         <div class="alert alert-danger">
             <?php echo $data['error']; ?>
         </div>
     <?php endif; ?>
-    
-    <form id="createProductForm" method="POST" action="<?php echo URLROOT; ?>/Inventory/createproduct" enctype="multipart/form-data">
-    
+
+    <form id="createProductForm" method="POST" action="<?php echo URLROOT; ?>/Inventory/createproduct"
+        enctype="multipart/form-data">
+
         <!-- Basic Information -->
         <div class="table-data">
             <div class="order">
@@ -43,7 +44,8 @@
                 <div class="section-content">
                     <div class="info-row">
                         <label class="label" for="product_name">Product Name:</label>
-                        <input type="text" id="product_name" name="product_name" class="form-control" required value="<?php echo isset($data['product_name']) ? $data['product_name'] : ''; ?>">
+                        <input type="text" id="product_name" name="product_name" class="form-control" required
+                            value="<?php echo isset($data['product_name']) ? $data['product_name'] : ''; ?>">
                     </div>
                     <div class="info-row">
                         <label class="label" for="location">Location:</label>
@@ -55,16 +57,18 @@
                     </div>
                     <div class="info-row">
                         <label class="label" for="details">Details:</label>
-                        <input type="text" id="details" name="details" class="form-control" value="<?php echo isset($data['details']) ? $data['details'] : ''; ?>">
+                        <input type="text" id="details" name="details" class="form-control"
+                            value="<?php echo isset($data['details']) ? $data['details'] : ''; ?>">
                     </div>
                     <div class="info-row">
                         <label class="label" for="grade">Grade:</label>
-                        <input type="text" id="grade" name="grade" class="form-control" placeholder="Enter Grade" required value="<?php echo isset($data['grade']) ? $data['grade'] : ''; ?>">
+                        <input type="text" id="grade" name="grade" class="form-control" placeholder="Enter Grade"
+                            required value="<?php echo isset($data['grade']) ? $data['grade'] : ''; ?>">
                     </div>
                 </div>
             </div>
         </div>
-        
+
         <!-- Media Section -->
         <div class="table-data">
             <div class="order">
@@ -74,7 +78,8 @@
                 <div class="section-content">
                     <div class="info-row">
                         <label class="label" for="product_image">Product Image:</label>
-                        <input type="file" id="product_image" name="product_image" class="form-control" accept="image/*" onchange="previewImage(this)">
+                        <input type="file" id="product_image" name="product_image" class="form-control" accept="image/*"
+                            onchange="previewImage(this)">
                     </div>
                     <div class="info-row">
                         <div id="imagePreview" style="width:100%; text-align:center;">
@@ -84,7 +89,7 @@
                 </div>
             </div>
         </div>
-        
+
         <!-- Sale Information -->
         <div class="table-data">
             <div class="order">
@@ -96,13 +101,14 @@
                         <label class="label" for="price">Price:</label>
                         <div class="input-with-prefix" style="display:flex; align-items:center;">
                             <span class="prefix" style="margin-right:5px;">$</span>
-                            <input type="number" id="price" name="price" class="form-control" required value="<?php echo isset($data['price']) ? $data['price'] : ''; ?>">
+                            <input type="number" id="price" name="price" class="form-control" required
+                                value="<?php echo isset($data['price']) ? $data['price'] : ''; ?>">
                         </div>
                     </div>
                 </div>
             </div>
         </div>
-        
+
         <!-- Inventory Information -->
         <div class="table-data">
             <div class="order">
@@ -112,7 +118,8 @@
                 <div class="section-content">
                     <div class="info-row">
                         <label class="label" for="quantity">Quantity:</label>
-                        <input type="number" id="quantity" name="quantity" class="form-control" required value="<?php echo isset($data['quantity']) ? $data['quantity'] : ''; ?>">
+                        <input type="number" id="quantity" name="quantity" class="form-control" required
+                            value="<?php echo isset($data['quantity']) ? $data['quantity'] : ''; ?>">
                     </div>
                     <div class="info-row">
                         <label class="label" for="unit">Unit:</label>
@@ -124,24 +131,24 @@
                 </div>
             </div>
         </div>
-        
+
         <!-- Submit Button -->
         <button type="submit" class="btn btn-primary">Create Product</button>
     </form>
 </main>
 
 <script>
-function previewImage(input) {
-    const preview = document.getElementById('preview');
-    if (input.files && input.files[0]) {
-        const reader = new FileReader();
-        reader.onload = function(e) {
-            preview.src = e.target.result;
-            preview.style.display = 'block';
+    function previewImage(input) {
+        const preview = document.getElementById('preview');
+        if (input.files && input.files[0]) {
+            const reader = new FileReader();
+            reader.onload = function (e) {
+                preview.src = e.target.result;
+                preview.style.display = 'block';
+            }
+            reader.readAsDataURL(input.files[0]);
         }
-        reader.readAsDataURL(input.files[0]);
     }
-}
 </script>
 
 <style>
