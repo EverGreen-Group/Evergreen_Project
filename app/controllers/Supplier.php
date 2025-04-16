@@ -582,8 +582,8 @@ class Supplier extends Controller {
         return !empty($data['supplier_id']) && !empty($data['totalamount']);
     }
 
-    public function editFertilizerRequest($order_id) {                       // bug free function
-        //check if order exists and belongs to the current supplier
+    public function editFertilizerRequest($order_id) {
+
         $order = $this->fertilizerOrderModel->getOrderById($order_id);
     
         if (!$order) {
@@ -591,7 +591,7 @@ class Supplier extends Controller {
             redirect('supplier/requestFertilizer');
             return;
         }
-
+    
         if ($order->status !== 'Pending') {
             setFlashMessage('Only pending orders can be edited!', 'error');
             redirect('supplier/requestFertilizer');
@@ -599,22 +599,34 @@ class Supplier extends Controller {
         }
     
         if ($_SERVER['REQUEST_METHOD'] == 'POST') {
-
             // Validate inputs
             $fertilizer_id = isset($_POST['fertilizer_id']) ? intval($_POST['fertilizer_id']) : '';
             $quantity = isset($_POST['quantity']) ? floatval($_POST['quantity']) : '';
-            $price_per_unit = isset($_POST['price_per_unit']) ? floatval($_POST['price_per_unit']) : '';
             $total_price = isset($_POST['total_price']) ? floatval($_POST['total_price']) : 0;
+
+            if ($fertilizer_id !== $order->fertilizer_id) {
+                setFlashMessage('Fertilizer type cannot be updated!');
+                redirect('supplier/editFertilizerRequest/' . $order_id);
+                return;
+            }
+            
     
-            // Validation checks
-            if (empty($fertilizer_id) || $quantity <= 0 || $quantity > 100) {
+            // recalculate total price if invalid
+            if ($total_price <= 0) {
+                // Calculate price per unit based on original order
+                $price_per_unit = $order->total_amount / $order->quantity;
+                $total_price = $price_per_unit * $quantity;
+                return;
+            }
+    
+            if (empty($fertilizer_id) || $quantity < 1 || $quantity > 100) {
                 setFlashMessage('Total amount has to be greater than 1kg and less than 100kg', 'error');
                 redirect('supplier/editFertilizerRequest/' . $order_id);
                 return;
             }
             
             $updateData = [
-                'fertilizer_id' => $fertilizer_id,
+                //'fertilizer_id' => $fertilizer_id,
                 'quantity' => $quantity,
                 'total_amount' => $total_price,
                 'last_modified' => date('Y-m-d H:i:s')
@@ -622,10 +634,10 @@ class Supplier extends Controller {
     
             // Update the order
             if ($this->fertilizerOrderModel->updateOrder($order_id, $updateData)) {
-                setFlashMessage('Order request updated sucessfully!');
+                setFlashMessage('Order request updated successfully!');
                 redirect('supplier/requestFertilizer');
             } else {
-                setFlashMessage('Failed to request the order!', 'error');
+                setFlashMessage('Failed to update the order!', 'error');
                 redirect('supplier/editFertilizerRequest/' . $order_id);
             }
         } else {
