@@ -69,16 +69,7 @@
         
       <div class="form-group">
           <label for="fertilizer_id">Fertilizer Name:</label>
-          <select id="fertilizer_id" name="fertilizer_id" required onchange="updateTotalPrice()">
-            <option value="">-- Select Fertilizer ID --</option>
-                <?php foreach($data['fertilizer_types'] as $fertilizer): ?>
-                  <option value="<?php echo $fertilizer->fertilizer_id; ?>" 
-                      <?php echo ($data['order']->fertilizer_id == $fertilizer->fertilizer_id) ? 'selected' : ''; ?>
-                          data-price = "<?php echo $fertilizer->price; ?>">
-                      <?php echo $fertilizer->fertilizer_name; ?> (<?php echo $fertilizer->company_name; ?>)
-                  </option>
-                <?php endforeach; ?>
-          </select>
+          <input type="text" id="fertilizer_name" name="fertilizer_name" value="<?php echo $data['order']->fertilizer_name; ?>" readonly>          
         </div>
 
         <div class="form-group">
@@ -315,7 +306,6 @@
     background-color: var(--secondary-color);
   }
 
-  /* Responsive Adjustments */
   @media (max-width: 768px) {
     .edit-form-card form {
       grid-template-columns: 1fr;
@@ -327,46 +317,41 @@
     cursor: not-allowed;
   }
 
-  /* Consistent Input Styling */
-.edit-form-card input[type="text"],
-.edit-form-card input[type="number"],
-.edit-form-card select {
-  padding: var(--spacing-sm);
-  border: 1px solid var(--border-color);
-  border-radius: var(--border-radius-sm);
-  font-size: 1rem;
-  height: 40px; /* Fixed height for all inputs */
-  width: 100%;
-  box-sizing: border-box;
-}
-
-/* Make readonly inputs appear slightly different but maintain the same dimensions */
-.edit-form-card input[readonly] {
-  background-color: var(--background-light);
-  cursor: not-allowed;
-  color: var(--text-secondary);
-}
-
-/* Style for the submit button container */
-.edit-form-card .button-group {
-  grid-column: span 2;
-}
-
-/* Maintain consistent form layout */
-.edit-form-card form {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: var(--spacing-lg);
-}
-
-/* Responsive adjustments */
-@media (max-width: 768px) {
-  .edit-form-card form {
-    grid-template-columns: 1fr;
+  .edit-form-card input[type="text"],
+  .edit-form-card input[type="number"],
+  .edit-form-card select {
+    padding: var(--spacing-sm);
+    border: 1px solid var(--border-color);
+    border-radius: var(--border-radius-sm);
+    font-size: 1rem;
+    height: 40px; 
+    width: 100%;
+    box-sizing: border-box;
   }
-  
+
+  .edit-form-card input[readonly] {
+    background-color: var(--background-light);
+    cursor: not-allowed;
+    color: var(--text-secondary);
+  }
+
   .edit-form-card .button-group {
-    grid-column: 1;
+    grid-column: span 2;
   }
-}
+
+  .edit-form-card form {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: var(--spacing-lg);
+  }
+
+  @media (max-width: 768px) {
+    .edit-form-card form {
+      grid-template-columns: 1fr;
+    }
+    
+    .edit-form-card .button-group {
+      grid-column: 1;
+    }
+  }
 </style>
