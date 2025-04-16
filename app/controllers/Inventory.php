@@ -265,9 +265,9 @@ class Inventory extends controller
         $data=[
             'fertilizers' => $fertilizer
         ];
-        echo "<pre>";
-        print_r($data);
-        echo "</pre>";
+        // echo "<pre>";
+        // print_r($data);
+        // echo "</pre>";
         $this->view('inventory/v_fertilizer_available',$data);
     }
     public function createfertilizer()
