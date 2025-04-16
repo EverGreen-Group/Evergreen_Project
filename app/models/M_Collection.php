@@ -369,9 +369,11 @@ class M_Collection {
         }
     }
 
-    public function createCollection($scheduleId) {
+    public function createCollection($scheduleId) { // TESTED
         $this->db->beginTransaction();
         try {
+
+            //getting all the suppliers from the route suppliers and then adding them to the collection supplier records
 
                 $this->db->query('SELECT cs.start_time 
                                   FROM collection_schedules cs
@@ -447,7 +449,6 @@ class M_Collection {
             $this->db->commit(); 
             return $collectionId; 
         } catch (Exception $e) {
-            error_log('Error in createCollection: ' . $e->getMessage());
             $this->db->rollBack();
             return false; 
         }
@@ -584,7 +585,7 @@ class M_Collection {
     }
 
 
-    public function saveBag($bagData) {
+    public function saveBag($bagData) { // TESTED
         $this->db->beginTransaction();
         
         try {
@@ -671,21 +672,21 @@ class M_Collection {
     }
 
 
-    public function getCollectionDetails($supplier_id) {
-        $this->db->query("
-            SELECT csr.* , c.status AS collection_status
-            FROM collection_supplier_records csr
-            JOIN collections c ON csr.collection_id = c.collection_id
-            WHERE csr.supplier_id = :supplier_id
-            ORDER BY csr.collection_time DESC
-        ");
+    // public function getCollectionDetails($supplier_id) {
+    //     $this->db->query("
+    //         SELECT csr.* , c.status AS collection_status
+    //         FROM collection_supplier_records csr
+    //         JOIN collections c ON csr.collection_id = c.collection_id
+    //         WHERE csr.supplier_id = :supplier_id
+    //         ORDER BY csr.collection_time DESC
+    //     ");
         
-        $this->db->bind(':supplier_id', $supplier_id);
-        return $this->db->resultSet();
-    }
+    //     $this->db->bind(':supplier_id', $supplier_id);
+    //     return $this->db->resultSet();
+    // }
 
 
-    /*public function getCollectionDetails($id) {
+    public function getCollectionDetails($id) {
         $this->db->query("
             SELECT 
                 c.collection_id,
@@ -723,7 +724,7 @@ class M_Collection {
         
         $this->db->bind(':id', $id);
         return $this->db->single();
-    }*/
+    }
     
 
     public function approveCollection($collectionId) {
@@ -904,12 +905,10 @@ class M_Collection {
     }
 
 
-    public function finalizeSupplierCollection($collectionId, $supplierId) {
+    public function finalizeSupplierCollection($collectionId, $supplierId) { // TESTED
         try {
-            // Begin transaction
             $this->db->beginTransaction();
 
-            // Get total weight from assigned bags
             $this->db->query('SELECT COALESCE(SUM(actual_weight_kg), 0) as total_weight 
                 FROM bag_usage_history 
                 WHERE supplier_id = :supplier_id 
@@ -919,7 +918,7 @@ class M_Collection {
             $result = $this->db->single();
             $totalWeight = $result->total_weight;
 
-            // Update collection_supplier_records
+
             $this->db->query('UPDATE collection_supplier_records SET
                 status = :status,
                 quantity = :quantity,
@@ -933,7 +932,6 @@ class M_Collection {
 
             $this->db->execute();
 
-            // Update total_quantity in collections table
             $this->db->query('UPDATE collections SET
                 total_quantity = total_quantity + :totalWeight
             WHERE collection_id = :collection_id');
@@ -943,12 +941,10 @@ class M_Collection {
 
             $this->db->execute();
 
-            // Commit transaction
             $this->db->commit();
             return true;
 
         } catch (Exception $e) {
-            // Rollback on error
             $this->db->rollBack();
             error_log('Error in finalizeSupplierCollection: ' . $e->getMessage());
             return false;
@@ -1072,7 +1068,7 @@ class M_Collection {
     }
 
 
-    public function checkCollectionExists($driverId) {
+    public function checkCollectionExists($driverId) { // TESTED
         // Check if it's pending or in progress
         $this->db->query("
             SELECT c.collection_id 
@@ -1239,7 +1235,7 @@ class M_Collection {
     }
 
 
-    public function deleteBag($bagId, $collectionId) {
+    public function deleteBag($bagId, $collectionId) { // TESTED
         // Start transaction
         $this->db->beginTransaction();
         
@@ -1277,12 +1273,11 @@ class M_Collection {
             return true;
         } catch (Exception $e) {
             $this->db->rollBack();
-            error_log('Error in deleteBag: ' . $e->getMessage());
             return false;
         }
     }
 
-    public function completeCollection($collectionId) {
+    public function completeCollection($collectionId) { // TESTED
         try {
             $this->db->query('UPDATE collections SET status = :status, end_time = NOW() WHERE collection_id = :collection_id');
             $this->db->bind(':status', 'Awaiting Inventory Addition');
@@ -1290,7 +1285,6 @@ class M_Collection {
             
             return $this->db->execute();
         } catch (Exception $e) {
-            error_log('Error in completeCollection: ' . $e->getMessage());
             return false;
         }
     }
@@ -1301,7 +1295,7 @@ class M_Collection {
         return $this->db->single();
     }
     
-    public function getBagsByCollectionAndSupplier($collectionId, $supplierId) {
+    public function getBagsByCollectionAndSupplier($collectionId, $supplierId) { // TESTED
         $this->db->query("
             SELECT * FROM bag_usage_history 
             WHERE collection_id = :collection_id 
@@ -1312,9 +1306,9 @@ class M_Collection {
         return $this->db->resultSet();
     }
 
+    // app/models/M_Collection.php
     public function getFilteredCollections($collection_id = null, $schedule_id = null, $status = null, 
-                                          $start_date = null, $end_date = null, $min_quantity = null, 
-                                          $max_quantity = null, $bags_added = null) {
+                                            $start_date = null, $end_date = null, $limit = 5, $offset = 0) {
         $sql = "SELECT 
                 c.*,
                 cs.schedule_id,
@@ -1327,8 +1321,7 @@ class M_Collection {
             JOIN vehicles v ON r.vehicle_id = v.vehicle_id
             JOIN drivers d ON cs.driver_id = d.driver_id
             JOIN profiles p ON d.profile_id = p.profile_id
-            WHERE cs.is_active = 1
-            AND cs.is_deleted = 0";
+            ";
         
         $params = [];
         
@@ -1358,31 +1351,29 @@ class M_Collection {
             $params[':end_date'] = $end_date;
         }
         
-        if ($min_quantity) {
-            $sql .= " AND c.total_quantity >= :min_quantity";
-            $params[':min_quantity'] = $min_quantity;
-        }
-        
-        if ($max_quantity) {
-            $sql .= " AND c.total_quantity <= :max_quantity";
-            $params[':max_quantity'] = $max_quantity;
-        }
-        
-        if ($bags_added !== null) {
-            $sql .= " AND c.bags_added = :bags_added";
-            $params[':bags_added'] = $bags_added;
-        }
-        
-        $sql .= " ORDER BY c.start_time ASC";
-        
+        // Add pagination
+        $sql .= " ORDER BY c.start_time DESC LIMIT :limit OFFSET :offset";
+
         $this->db->query($sql);
         
         // Bind parameters
         foreach ($params as $param => $value) {
             $this->db->bind($param, $value);
         }
+
+        // Bind limit and offset
+        $this->db->bind(':limit', $limit, PDO::PARAM_INT);
+        $this->db->bind(':offset', $offset, PDO::PARAM_INT);
         
         return $this->db->resultSet();
+    }
+
+    // Implement a method to get the total collections count
+    public function getTotalCollections() {
+        $sql = "SELECT COUNT(*) as total FROM collections";
+        $this->db->query($sql);
+        $row = $this->db->single();
+        return $row->total;
     }
 
 

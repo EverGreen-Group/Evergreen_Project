@@ -40,10 +40,31 @@
                 <div class="head">
                     <h3>Time Slot Information</h3>
                 </div>
+
+                <!--Error alerts-->
+                <?php if(!empty($data['date_err']) || !empty($data['time_err']) || !empty($data['error'])): ?>
+                    <div class="error-alert">
+                        <div class="error-icon"><i class='bx bx-error-circle'></i></div>
+                        <div class="error-content">
+                            <?php if(!empty($data['error'])): ?>
+                                <p><?php echo $data['error']; ?></p>
+                            <?php endif; ?>
+                            
+                            <?php if(!empty($data['date_err'])): ?>
+                                <p><?php echo $data['date_err']; ?></p>
+                            <?php endif; ?>
+                            
+                            <?php if(!empty($data['time_err'])): ?>
+                                <p><?php echo $data['time_err']; ?></p>
+                            <?php endif; ?>
+                        </div>
+                    </div>
+                <?php endif; ?>
+
                 <div class="section-content">
                     <div class="info-row">
                         <label class="label" for="date">Date:</label>
-                        <input type="date" id="date" name="date" class="form-control" value="<?php echo $data['date']; ?>" required>
+                        <input type="date" id="date" name="date" class="form-control" value="<?php echo $data['date']; ?>" min="<?php echo date('Y-m-d', strtotime('+1 day')); ?>" required>
                     </div>
                     <div class="info-row">
                         <label class="label" for="start_time">Start Time:</label>
@@ -205,6 +226,36 @@
 
     .btn-primary:hover {
         background-color: #059669;
+    }
+
+    /* Error alert styling */
+    .error-alert {
+        display: flex;
+        background-color: #fff1f1;
+        border-left: 4px solid #ff4d4d;
+        margin: 15px 20px;
+        padding: 15px;
+        border-radius: 4px;
+        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+    }
+
+    .error-icon {
+        flex: 0 0 40px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 24px;
+        color: #ff4d4d;
+    }
+
+    .error-content {
+        flex: 1;
+    }
+
+    .error-content p {
+        margin: 5px 0;
+        color: #e41c3e;
+        font-size: 14px;
     }
 </style>
 

@@ -12,7 +12,6 @@
             </div>
         </form>
         <input type="checkbox" id="switch-mode" hidden>
-        <!-- <label for="switch-mode" class="switch-mode"></label> -->
         <a href="#" class="notification" id="notificationIcon">
             <i class='bx bxs-bell'></i>
             <span class="num" style="cursor: pointer;">8</span>
@@ -27,7 +26,6 @@
                 ?>
                 <img src="<?php echo $profileImageSrc; ?>" alt="Profile Photo">
             </a>
-            <!-- Display the user's full name -->
             <div class="user-name">
                 <?php if (isset($_SESSION['full_name'])): ?>
                     <span><?php echo htmlspecialchars($_SESSION['full_name']); ?></span>
@@ -44,19 +42,18 @@
 
     <div id="profileDropdown" class="profile-dropdown" style="display: none;">
         <ul>
-            <!-- <li><a href="<?php echo URLROOT; ?>/profile">Profile</a></li> -->
 
             <?php if (RoleHelper::isAdmin()): ?>
+                <li><a href="<?php echo URLROOT; ?>/auth/profile">Profile</a></li>
                 <li><a href="<?php echo URLROOT; ?>/admin/">Admin Dashboard</a></li>
-                <li><a href="<?php echo URLROOT; ?>/suppliermanager/">Supplier Manager Dashboard</a></li>
-                <li><a href="<?php echo URLROOT; ?>/manager/">Vehicle Manager Dashboard</a></li>
-                <li><a href="<?php echo URLROOT; ?>/inventory/">Inventory Manager Dashboard</a></li>
+                <li><a href="<?php echo URLROOT; ?>/manager/">Manager Dashboard</a></li>
+                <li><a href="<?php echo URLROOT; ?>/inventory/">Inventory Dashboard</a></li>
             <?php endif; ?>
 
             <?php if (RoleHelper::hasRole(RoleHelper::MANAGER)): ?>
+                <li><a href="<?php echo URLROOT; ?>/auth/profile">Profile</a></li>
                 <li><a href="<?php echo URLROOT; ?>/manager/index">Dashboard</a></li>
                 <li><a href="<?php echo URLROOT; ?>/manager/collection">Collections</a></li>
-                <li><a href="<?php echo URLROOT; ?>/auth/profile">Profile</a></li>
             <?php endif; ?>
 
             <?php if (RoleHelper::hasRole(RoleHelper::SUPPLIER)): ?>
@@ -68,11 +65,12 @@
             <?php endif; ?>
 
             <?php if (RoleHelper::hasRole(RoleHelper::WEBSITE_USER)): ?>
-                <li><a href="<?php echo URLROOT; ?>/user/dashboard">Orders</a></li>
+                <li><a href="<?php echo URLROOT; ?>/auth/profile">Profile</a></li>  
             <?php endif; ?>
 
             <?php if (RoleHelper::hasRole(RoleHelper::INVENTORY_MANAGER)): ?>
-                <li><a href="<?php echo URLROOT; ?>/inventorymanager/dashboard">Inventory Manager Dashboard</a></li>
+                <li><a href="<?php echo URLROOT; ?>/auth/profile">Profile</a></li>
+                <li><a href="<?php echo URLROOT; ?>/manager/dashboard">Dashboard</a></li>
             <?php endif; ?>
 
             <li><a href="<?php echo URLROOT; ?>/auth/logout">Logout</a></li>

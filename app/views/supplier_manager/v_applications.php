@@ -177,6 +177,21 @@
                 <?php endif; ?>
             </tbody>
         </table>
+        
+
+        <div class="table-pagination">
+            <div class="pagination">
+                <?php if ($totalPages > 1): ?>
+                    <?php for ($i = 1; $i <= $totalPages; $i++): ?>
+                        <a 
+                        href="<?php echo URLROOT; ?>/manager/applications?page=<?php echo $i; ?>" 
+                        <?php if ($currentPage == $i) { echo 'class="active"'; } ?>>
+                            <?php echo $i; ?>
+                        </a>
+                    <?php endfor; ?>
+                <?php endif; ?>
+            </div>
+        </div>
     </div>
 </div>
 

@@ -143,14 +143,44 @@
                     
                     <div class="collection-status">
                         <?php if (!empty($data['collectionId'])): ?>
-                            <a href="<?php echo URLROOT; ?>/supplier/viewDriverLocation/<?php echo $data['collectionId']; ?>" class="view-details-link">
+                            <a href="#" class="view-details-link" onclick="fetchVehicleLocation(<?php echo $schedule->vehicle_id; ?>)">
                                 <i class='bx bx-info-circle'></i>
-                                <span>View Driver Location</span>
+                                <span>View Vehicle Location on Google Maps</span>
                             </a>
                         <?php else: ?>
                             <span class="collection-message">Collection hasn't started yet!</span>
                         <?php endif; ?>
                     </div>
+
+                    <script>
+                        // Try this simple version to debug
+                        function fetchVehicleLocation(vehicleId) {
+                            fetch('<?php echo URLROOT; ?>/vehicledriver/getVehicleLocation/' + vehicleId)
+                                .then(response => {
+                                    console.log('Raw response:', response);
+                                    return response.text(); // Get as text first to see raw response
+                                })
+                                .then(text => {
+                                    console.log('Raw text:', text);
+                                    // Try to parse it manually
+                                    try {
+                                        const data = JSON.parse(text);
+                                        console.log('Parsed data:', data);
+                                        if (data && data.latitude && data.longitude) {
+                                            window.open('https://www.google.com/maps?q=' + data.latitude + ',' + data.longitude, '_blank');
+                                        } else {
+                                            alert('Vehicle location data is incomplete: ' + text);
+                                        }
+                                    } catch (e) {
+                                        console.error('JSON parse error:', e);
+                                        alert('Could not parse server response: ' + text);
+                                    }
+                                })
+                                .catch(error => {
+                                    console.error('Fetch error:', error);
+                                });
+                        }
+                    </script>
                 </div>
             <?php else: ?>
                 <div class="no-schedule">

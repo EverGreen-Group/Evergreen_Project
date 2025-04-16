@@ -7,6 +7,8 @@
 <?php require APPROOT . '/views/inc/components/sidebar_vehicle_manager.php'; ?>
 <?php elseif(RoleHelper::hasRole(11)): ?>
 <?php require APPROOT . '/views/inc/components/sidebar_inventory.php'; ?>
+<?php elseif(RoleHelper::hasRole(1)): ?>
+  <?php require APPROOT . '/views/inc/components/sidebar_admin.php'; ?>
 <?php endif; ?>
 
 <?php require APPROOT . '/views/inc/components/topnavbar.php'; ?>

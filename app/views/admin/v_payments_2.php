@@ -2,7 +2,7 @@
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
 <!-- Side bar -->
-<?php require APPROOT.'/views/inc/components/sidebar_inventory.php'; ?>
+<?php require APPROOT.'/views/inc/components/sidebar_admin.php'; ?>
 <!-- Top nav bar -->
 <?php require APPROOT . '/views/inc/components/topnavbar.php'; ?>
 
@@ -42,7 +42,7 @@
             <h3>Create Factory Payment Report</h3>
         </div>
         <div class="filter-options">
-            <form action="<?php echo URLROOT; ?>/inventory/createPaymentReport" method="POST">
+            <form action="<?php echo URLROOT; ?>/admin/createPaymentReport" method="POST">
                 <div class="filter-group">
                     <label for="select-year">Select Year:</label>
                     <select id="select-year" name="year" required>
@@ -119,21 +119,30 @@
                         <td>Rs. <?php echo htmlspecialchars(number_format($payment->super_leaf_rate, 2)); ?></td>
                         <td>Rs. <?php echo htmlspecialchars(number_format($payment->total_payment, 2)); ?></td>
                         <td>
-                            <a 
-                                href="<?php echo URLROOT; ?>/inventory/viewPaymentReport/<?php echo $payment->id; ?>" 
-                                class="btn btn-primary"
-                            >
-                                <i class='bx bx-show'></i>
-                                View
-                            </a>
-                            <a 
-                                href="<?php echo URLROOT; ?>/inventory/deletePaymentReport/<?php echo $payment->id; ?>" 
-                                class="btn btn-danger delete-payment"
-                                onclick="return confirm('Are you sure you want to delete this payment report? This will also delete all associated payment details.');"
-                            >
-                                <i class='bx bx-trash'></i>
-                                Delete
-                            </a>
+                            <div style="display: flex; gap: 5px;">
+                                <a 
+                                    href="<?php echo URLROOT; ?>/admin/viewPaymentReport/<?php echo $payment->id; ?>" 
+                                    class="btn btn-tertiary" 
+                                    style="display: flex; align-items: center; justify-content: center; width: 40px; height: 40px; border: none; background: none;"
+                                >
+                                    <i class='bx bx-show' style="font-size: 24px; color:blue;"></i> 
+                                </a>
+                                <a 
+                                    href="<?php echo URLROOT; ?>/admin/publishPaymentReport/<?php echo $payment->id; ?>" 
+                                    class="btn btn-tertiary" 
+                                    style="display: flex; align-items: center; justify-content: center; width: 40px; height: 40px; border: none; background: none;"
+                                >
+                                    <i class='bx bxs-file-export' style="font-size: 24px; color:orange;"></i> 
+                                </a>
+
+                                <a 
+                                    href="<?php echo URLROOT; ?>/admin/deletePaymentReport/<?php echo $payment->id; ?>" 
+                                    class="btn btn-tertiary" 
+                                    style="display: flex; align-items: center; justify-content: center; width: 40px; height: 40px; border: none; background: none;"
+                                >
+                                    <i class='bx bx-trash' style="font-size: 24px; color:red;"></i> 
+                                </a>
+                            </div>
                         </td>
                     </tr>
                 <?php endforeach; ?>

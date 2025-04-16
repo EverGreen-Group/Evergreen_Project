@@ -1,5 +1,5 @@
 <?php
-
+require_once '../app/helpers/auth_middleware.php';
 class Route extends Controller{
     private $collectionModel;
     private $routeModel;
@@ -11,6 +11,14 @@ class Route extends Controller{
 
 
     public function __construct(){
+        requireAuth();
+
+        if (!RoleHelper::hasAnyRole([RoleHelper::ADMIN, RoleHelper::MANAGER])) {
+
+            redirect('');
+            exit();
+        }
+
         $this->collectionModel = $this->model('M_Collection');
         $this->routeModel = $this->model('M_Route');
         $this->driverModel = $this->model('M_Driver');
@@ -19,12 +27,30 @@ class Route extends Controller{
         $this->bagModel = $this->model('M_Bag');
     }
 
-    public function index(){
-        $allRoutes = $this->routeModel->getAllUndeletedRoutes();
+    public function index() {
+        requireAuth();
+
+        if (!RoleHelper::hasAnyRole([RoleHelper::ADMIN, RoleHelper::MANAGER])) {
+
+            redirect('');
+            exit();
+        }
+        redirect('/../route/route/');
+    }
+
+
+    public function route() {
+        $page = isset($_GET['page']) && is_numeric($_GET['page']) ? (int)$_GET['page'] : 1;
+        $limit = 5; 
+        $offset = ($page - 1) * $limit;
+
+        $allRoutes = $this->routeModel->getAllUndeletedRoutes($limit, $offset);
         $totalRoutes = $this->routeModel->getTotalRoutes();
         $unassignedRoutes = $this->routeModel->getUnassignedRoutesCount();
         $totalActive = $this->routeModel->getTotalActiveRoutes();
         $totalInactive = $this->routeModel->getTotalInactiveRoutes();
+
+        $totalPages = ceil($totalRoutes / $limit);
 
         $availableVehicles = $this->vehicleModel->getAllAvailableVehicles();
 
@@ -34,7 +60,9 @@ class Route extends Controller{
             'totalActive' => $totalActive,
             'totalInactive' => $totalInactive,
             'unassignedRoutes' => $unassignedRoutes,
-            'availableVehicles' => $availableVehicles
+            'availableVehicles' => $availableVehicles,
+            'currentPage' => $page,
+            'totalPages' => $totalPages
         ];
 
         $this->view('vehicle_manager/routes/v_create_route', $data);

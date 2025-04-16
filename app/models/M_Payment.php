@@ -141,9 +141,14 @@ class M_Payment {
         $total_suppliers = count($suppliers);
         $totalKg = 0;
         $totalPayment = 0;
+        $totalTransportCost = 0;
+        
         foreach ($suppliers as $sid => $data) {
             $totalKg += ($data['normal_kg'] + $data['super_kg']);
-            $totalPayment += $data['total_payment'];
+            $collectionCount = count($data['collections']);
+            $transportCharge = $transportCost * $collectionCount;
+            $totalTransportCost += $transportCharge;
+            $totalPayment += ($data['total_payment'] - $transportCharge); // Subtract transport charge
         }
     
         // Insert summary row into factory_payments
@@ -173,7 +178,7 @@ class M_Payment {
         foreach ($suppliers as $sid => $data) {
             $collectionCount = count($data['collections']);
             $transportCharge = $transportCost * $collectionCount;
-            $finalPayment = $data['total_payment'] + $transportCharge; // Adding transport charge to base payment
+            $finalPayment = $data['total_payment'] - $transportCharge; // Subtracting transport charge from base payment
     
             $this->db->query("
                 INSERT INTO factory_payment_details (
@@ -207,22 +212,24 @@ class M_Payment {
                 $basePayment = $data['payment'];
                 $dailyCollections = count($data['collections']);
                 $transport = $transportCost * $dailyCollections;
-                $totalPaymentDaily = $basePayment + $transport;
+                $totalPaymentDaily = $basePayment - $transport; // Subtracting transport charge
                 $deductKg = $data['deduct_kg'];
                 $deductAmount = $data['deduct_amount'];
     
                 $this->db->query("
                     INSERT INTO supplier_daily_earnings (
-                        supplier_id, collection_date, normal_kg, super_kg, 
+                        supplier_id, payment_id, active, collection_date, normal_kg, super_kg, 
                         total_kg, base_payment, transport_charge, total_payment,
                         total_deduction_kg, total_deduction_amount
                     ) VALUES (
-                        :supplier_id, :collection_date, :normal_kg, :super_kg, 
+                        :supplier_id, :payment_id, :active, :collection_date, :normal_kg, :super_kg, 
                         :total_kg, :base_payment, :transport_charge, :total_payment,
                         :deduct_kg, :deduct_amount
                     )
                 ");
                 $this->db->bind(':supplier_id', $sid);
+                $this->db->bind(':payment_id', $payment_id);
+                $this->db->bind(':active', 0);
                 $this->db->bind(':collection_date', $date);
                 $this->db->bind(':normal_kg', $normal);
                 $this->db->bind(':super_kg', $super);
@@ -277,15 +284,15 @@ class M_Payment {
     }
 
 
-// Get payment by ID
-public function getPaymentById($payment_id) {
-    $this->db->query("
-        SELECT * FROM factory_payments
-        WHERE id = :payment_id
-    ");
-    $this->db->bind(':payment_id', $payment_id);
-    return $this->db->single();
-}
+    // Get payment by ID
+    public function getPaymentById($payment_id) {
+        $this->db->query("
+            SELECT * FROM factory_payments
+            WHERE id = :payment_id
+        ");
+        $this->db->bind(':payment_id', $payment_id);
+        return $this->db->single();
+    }
 
     // Get payment details with supplier names
     public function getPaymentDetailsByPaymentId($payment_id) {
@@ -304,12 +311,45 @@ public function getPaymentById($payment_id) {
 
     // Delete payment by ID
     public function deletePayment($payment_id) {
+
+        $this->db->query("
+            DELETE FROM supplier_daily_earnings
+            WHERE payment_id = :payment_id
+        ");
+        $this->db->bind(':payment_id', $payment_id);
+        $this->db->execute();
+
+
         $this->db->query("
             DELETE FROM factory_payments
             WHERE id = :payment_id
         ");
         $this->db->bind(':payment_id', $payment_id);
         return $this->db->execute();
+    }
+
+    public function publishPaymentReport($paymentId) {
+
+        $this->db->query("
+            SELECT * FROM supplier_daily_earnings WHERE active = 1 AND payment_id = :payment_id
+        ");
+        $this->db->bind(':payment_id', $paymentId);
+        $result1 = $this->db->resultSet();
+        if(count($result1) > 1) {
+            return 0;
+        }
+
+
+        $this->db->query("
+            UPDATE supplier_daily_earnings SET active = 1 WHERE payment_id = :payment_id
+        ");
+        $this->db->bind(':payment_id', $paymentId);
+        $result2 = $this->db->execute();
+        if($result2) {
+            return 1;
+        } else {
+            return 3;
+        }
     }
 
 
