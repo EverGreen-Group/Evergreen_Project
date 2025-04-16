@@ -2342,7 +2342,7 @@ class Manager extends Controller
 
     public function complaints()
     {
-        $totalComplaints = $this->supplierModel->getTotalComplaints();
+        $totalComplaints = $this->supplierModel->getTotalComplaints();      //count of total complaints
         $resolvedComplaints = $this->supplierModel->getComplaintsByStatus('Resolved');
         $pendingComplaints = $this->supplierModel->getComplaintsByStatus('Pending');
         
@@ -2353,7 +2353,7 @@ class Manager extends Controller
 
 
         $page = isset($_GET['page']) && is_numeric($_GET['page']) ? (int)$_GET['page'] : 1;
-        $limit = 5; 
+        $limit = 3; 
         $offset = ($page - 1) * $limit;
 
         $complaints = $this->supplierModel->getFilteredComplaints(
@@ -2365,8 +2365,8 @@ class Manager extends Controller
             $offset  
         );
 
-        $totalComplaints = $this->supplierModel->getTotalComplaints($complaint_id, $status, $date_from, $date_to);
-        $totalPages = ceil($totalComplaints / $limit);
+        $totalFilteredComplaints = $this->supplierModel->getTotalComplaints($complaint_id, $status, $date_from, $date_to);
+        $totalPages = ceil($totalFilteredComplaints / $limit);
 
         $data = [
             'complaints' => $complaints,
@@ -2375,19 +2375,25 @@ class Manager extends Controller
             'pendingComplaints' => count($pendingComplaints),
             'currentPage' => $page,
             'totalPages' => $totalPages,
+            'filters' => [
+                'complaint_id' => $complaint_id,
+                'status' => $status,
+                'date_from' => $date_from,
+                'date_to' => $date_to
+            ]
         ];
         
         $this->view('supplier_manager/v_complaints', $data);
     }
 
 
-    public function viewComplaint($id = null)
+    public function viewComplaint($complaint_id = null)
     {
-        if ($id === null) {
+        if ($complaint_id === null) {
             redirect('manager/complaints');
         }
     
-        $complaint = $this->supplierModel->getComplaintById($id);
+        $complaint = $this->supplierModel->getComplaintById($complaint_id);
     
         if (!$complaint) {
             setFlashMessage('Complaint not found!', 'error');
@@ -2400,6 +2406,40 @@ class Manager extends Controller
     
         $this->view('supplier_manager/v_view_complaint', $data);
     }
+
+    public function resolveComplaint() {
+        if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+            
+            $complaint_id = filter_input(INPUT_POST, 'complaint_id', FILTER_SANITIZE_NUMBER_INT);
+            $resolution_notes = trim(strip_tags($_POST['resolution_notes']));
+
+    
+            if (empty($complaint_id) || empty($resolution_notes)) {
+                setFlashMessage('Please fill in all fields!', 'error');
+                redirect('manager/viewComplaint/' . $complaint_id);
+            }
+    
+            $result = $this->supplierModel->resolveComplaint($complaint_id);
+            
+            if ($result) {
+                setFlashMessage('Complaint ' . $complaint_id . ' marked as resolved!');
+                redirect('manager/complaints');
+            } else {
+                setFlashMessage('Could not mark the complaint as resolved, please try again later!', 'error');
+                redirect('manager/viewComplaint/' . $complaint_id);
+            }
+        } else {
+            setFlashMessage('Invalid request method','error');
+            redirect('manager/complaints');
+        }     
+    }
+
+
+    /** 
+     * Application Management
+     * ------------------------------------------------------------
+     */
+
 
     public function applications() {
 
@@ -2484,28 +2524,23 @@ class Manager extends Controller
         redirect('manager/viewComplaint/' . $data['complaint_id']);
     }
     
-    public function reopenComplaint($id)
+    public function reopenComplaint($complaint_id)
     {
-        $data = [
-            'complaint_id' => $id,
-            'status' => 'Pending'
-        ];
-    
-        if ($this->supplierModel->updateStatus($data)) {
-            $this->logModel->create(
-                $_SESSION['user_id'],
-                $_SESSION['email'],
-                $_SERVER['REMOTE_ADDR'],
-                "Re-opened the complaint: ".$data['complaint_id'],
-                $_SERVER['REQUEST_URI'],     
-                http_response_code()     
-            );
-            setFlashMessage('Complaint reopen sucessfully!');
-        } else {
-            setFlashMessage('Couldnt reopen the complaint, try again later!', 'error');
+        if (!$complaint_id) {
+            setFlashMessage('Invalid complaint id!');
+            redirect('manager/complaints');
         }
-    
-        redirect('manager/viewComplaint/' . $id);
+
+        $statusChange = $this->supplierModel->updateComplaintStatus($complaint_id, 'Pending');
+
+        if ($statusChange) {
+            setFlashMessage('Complaint reopened sucessfully!');
+        } else {
+            setFlashMessage('Couldn\'t reopen the complaint, please try again later!', 'error');
+
+        }
+
+        redirect('manager/complaints');
     }
     
     public function deleteComplaint($id)
