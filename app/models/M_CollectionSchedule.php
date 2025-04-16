@@ -684,7 +684,7 @@ class M_CollectionSchedule {
         return $schedules;
     }
 
-    public function getUpcomingSchedulesBySupplierId($supplierId) {
+    public function getUpcomingSchedulesBySupplierId($supplierId) { // NOT IN USE ANYMORE,
         $this->db->query("
             SELECT 
                 cs.schedule_id,
@@ -732,6 +732,43 @@ class M_CollectionSchedule {
     
         $this->db->bind(':supplier_id', $supplierId);
         return $this->db->resultSet();
+    }
+
+    public function getTodayScheduleBySupplierId($supplierId) { // NEW IMPLEMENTATION, TESTED
+        $this->db->query("
+            SELECT 
+                cs.schedule_id,
+                cs.day,
+                cs.driver_id,
+                CONCAT(p.first_name, ' ', p.last_name) AS driver_name,
+                r.route_name,
+                r.route_id,
+                v.vehicle_type,
+                v.license_plate,
+                v.vehicle_id,
+                cs.start_time,
+                p.image_path AS driver_image,
+                cs.end_time,
+                (SELECT COUNT(*) 
+                 FROM collections c 
+                 WHERE c.schedule_id = cs.schedule_id 
+                 AND DATE(c.created_at) = CURDATE()
+                ) as collection_exists
+            FROM collection_schedules cs
+            JOIN routes r ON cs.route_id = r.route_id
+            JOIN route_suppliers rs ON r.route_id = rs.route_id
+            JOIN vehicles v ON r.vehicle_id = v.vehicle_id
+            JOIN drivers d on d.driver_id = cs.driver_id
+            JOIN profiles p on d.profile_id = p.profile_id
+            WHERE rs.supplier_id = :supplier_id
+                AND cs.is_active = 1
+                AND cs.is_deleted = 0
+                AND r.is_deleted = 0
+                AND cs.day = DATE_FORMAT(CURDATE(), '%W')  
+        ");
+    
+        $this->db->bind(':supplier_id', $supplierId);
+        return $this->db->single(); // Use single() to return one schedule or null
     }
     
     

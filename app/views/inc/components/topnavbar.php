@@ -14,7 +14,7 @@
         <input type="checkbox" id="switch-mode" hidden>
         <a href="#" class="notification" id="notificationIcon">
             <i class='bx bxs-bell'></i>
-            <span class="num" style="cursor: pointer;">8</span>
+            <span class="num" style="cursor: pointer;">0</span>
         </a>
         <div class="profile-container">
             <a href="#" class="profile">
