@@ -7,7 +7,7 @@ class M_Fertilizer_Order {
     }
 
     public function getAllOrders() {                       // bug free function
-        $this->db->query("SELECT fo.*, f.description as fertilizer_name 
+        $this->db->query("SELECT fo.*, f.description as fertilizer_name, f.fertilizer_id
                           FROM fertilizer_orders fo
                           JOIN Fertilizer f ON fo.fertilizer_id = f.type_id 
                           ORDER BY order_date DESC, order_time DESC LIMIT 10");

@@ -20,12 +20,6 @@
           <i class='bx bx-chevron-right'></i>
         </li>
         <li>
-        <span>Fertilizer Requests</span>
-        </li>        
-        <li>
-          <i class='bx bx-chevron-right'></i>
-        </li>
-        <li>
           <span>Edit Fertilizer Request</span>
         </li>
       </ul>
@@ -38,24 +32,24 @@
       <h2>Current Order Details</h2>
     </div>
     <div class="card-body">
-        <div class="order-details-grid">
-            <div class="detail-item">
-              <span class="label">Order ID:</span>
-              <span class="value"><?php echo $data['order']->order_id; ?></span>
-            </div>
-            <div class="detail-item">
-              <span class="label">Fertilizer Name:</span>
-              <span class="value"><?php echo $data['order']->fertilizer_name; ?></span>
-            </div>
-            <div class="detail-item">
-              <span class="label">Quantity:</span>
-              <span class="value"><?php echo $data['order']->quantity; ?></span>
-            </div>
-            <div class="detail-item">
-              <span class="label">Total Price:</span>
-              <span class="value"><?php echo $data['order']->total_amount; ?></span>
-            </div>
+      <div class="order-details-grid">
+        <div class="detail-item">
+          <span class="label">Order ID:</span>
+          <span class="value"><?php echo $data['order']->order_id; ?></span>
         </div>
+        <div class="detail-item">
+          <span class="label">Fertilizer Name:</span>
+          <span class="value"><?php echo $data['order']->fertilizer_name; ?></span>
+        </div>
+        <div class="detail-item">
+          <span class="label">Quantity:</span>
+          <span class="value"><?php echo $data['order']->quantity; ?></span>
+        </div>
+        <div class="detail-item">
+          <span class="label">Total Price:</span>
+          <span class="value"><?php echo $data['order']->total_amount; ?></span>
+        </div>
+      </div>
     </div>
   </div>
 
@@ -65,31 +59,32 @@
       <h2>Update Request</h2>
     </div>
     <div class="card-body">
-      <form id="fertilizer-request-form" method="POST" action="<?php echo URLROOT . '/supplier/editFertilizerRequest/' . $data['order']->order_id; ?>">
-        
-      <div class="form-group">
-          <label for="fertilizer_id">Fertilizer Name:</label>
-          <input type="text" id="fertilizer_name" name="fertilizer_name" value="<?php echo $data['order']->fertilizer_name; ?>" readonly>          
+      <form id="fertilizerForm" method="POST" action="<?php echo URLROOT . '/supplier/editFertilizerRequest/' . $data['order']->order_id; ?>">
+        <div class="form-group">
+          <label for="fertilizer_name">Fertilizer Name:</label>
+          <input type="text" id="fertilizer_name" name="fertilizer_name" value="<?php echo $data['order']->fertilizer_name; ?>" required readonly>
+          <!-- Hidden input for fertilizer_id -->
+          <input type="hidden" id="fertilizer_id" name="fertilizer_id" value="<?php echo $data['order']->fertilizer_id; ?>">
         </div>
 
         <div class="form-group">
-          <label for="total_amount">Quantity:</label>
-          <input type="number" id="quantity" name="quantity" max="100" min="1" value="<?php echo $data['order']->quantity; ?>" required onchange="updateTotalPrice()">
+          <label for="quantity">Quantity:</label>
+          <input type="number" id="quantity" name="quantity" max="100" min="1" value="<?php echo $data['order']->quantity; ?>" required>
         </div>
 
         <div class="form-group read-only-group">
-            <label for="price_per_unit">Price Per Unit:</label>
-            <input type="text" id="price_per_unit" name="price_per_unit" readonly>
+          <label for="price_per_unit">Price Per Unit:</label>
+          <input type="text" id="price_per_unit" name="price_per_unit" readonly>
         </div>
+
         <div class="form-group read-only-group">
-            <label for="total_price">Total Price:</label>
-            <input type="text" id="total_price" name="total_price" readonly>
+          <label for="total_price">Total Price:</label>
+          <input type="text" id="total_price" name="total_price" readonly>
         </div>
 
         <div class="form-group">
           <button type="submit" class="submit-btn">Update Request</button>
         </div>
-
       </form>
     </div>
   </div>
@@ -97,78 +92,58 @@
 
 <div id="notification" class="notification" style="display: none;"></div>
 <script src="<?php echo URLROOT; ?>/css/script.js"></script>
-
 <script>
-  function updateTotalPrice() {
-      const fertilizerSelect = document.getElementById('fertilizer_id');
-      const quantityInput = document.getElementById('quantity');
-      const pricePerUnitInput = document.getElementById('price_per_unit');
-      const totalPriceInput = document.getElementById('total_price');
+function updateTotalPrice() {
+  const quantityInput = document.getElementById('quantity');
+  const pricePerUnitInput = document.getElementById('price_per_unit');
+  const totalPriceInput = document.getElementById('total_price');
 
-      // Get selected option
-      const selectedOption = fertilizerSelect.options[fertilizerSelect.selectedIndex];
+  const quantity = parseFloat(quantityInput.value);
+  // Calculate price per unit from the existing order data
+  const price = <?php echo isset($data['order']->total_amount) && isset($data['order']->quantity) ? 
+                ($data['order']->total_amount / $data['order']->quantity) : 0; ?>;
 
-      // Check if a valid option is selected
-      if (!selectedOption || selectedOption.value === "") {
-        pricePerUnitInput.value = '';
-        totalPriceInput.value = '';
-        return;
-      }
+  pricePerUnitInput.value = price.toFixed(2);
+  
+  if (!isNaN(quantity)) {
+    totalPriceInput.value = (price * quantity).toFixed(2);
+  } else {
+    totalPriceInput.value = '';
+  }
+}
 
-      // Get price
-      const price = parseFloat(selectedOption.getAttribute('data-price'));
-      const quantity = parseFloat(quantityInput.value);
-
-      if (!isNaN(price)) {
-        pricePerUnitInput.value = price.toFixed(2);
-
-        if (!isNaN(quantity)) {
-          totalPriceInput.value = (price * quantity).toFixed(2);
-        } else {
-          totalPriceInput.value = '';
-        }
-      } else {
-        pricePerUnitInput.value = '';
-        totalPriceInput.value = '';
-      }
+document.addEventListener('DOMContentLoaded', function() {
+  // Set initial values when page loads
+  updateTotalPrice();
+  
+  // Add event listener to quantity input for real-time updates
+  document.getElementById('quantity').addEventListener('input', updateTotalPrice);
+  
+  // Form submission handler
+  document.getElementById('fertilizerForm').addEventListener('submit', function(e) {
+    const quantityInput = document.getElementById('quantity');
+    const totalPriceInput = document.getElementById('total_price');
+    
+    const quantity = parseFloat(quantityInput.value);
+    if (isNaN(quantity) || quantity <= 0 || quantity > 100) {
+      e.preventDefault();
+      alert("Please enter a valid quantity between 1 and 100");
+      return false;
     }
-
-    function confirmDelete(orderId) {
-      if (confirm("Are you sure you want to delete order #" + orderId + "?")) {
-        window.location.href = '<?php echo URLROOT; ?>/Supplier/deleteFertilizerRequest/' + orderId;
-      }
-    }
-
-    document.getElementById('fertilizer-request-form').addEventListener('submit', function(e) {
-      const fertilizerSelect = document.getElementById('fertilizer_id');
-      const quantityInput = document.getElementById('quantity');
-      const totalPriceInput = document.getElementById('total_price');
-      
-      if (fertilizerSelect.value === "") {
-          e.preventDefault();
-          alert("Please select a fertilizer type");
-          return false;
-      }
-      
-      const quantity = parseFloat(quantityInput.value);
-      if (isNaN(quantity) || quantity <= 0 || quantity > 100) {
-          e.preventDefault();
-          alert("Please enter a valid quantity between 1 and 100");
-          return false;
-      }
-      
-      // Ensure price calculation was performed
+    
+    // Ensure price calculation was performed
+    if (totalPriceInput.value === "") {
+      e.preventDefault();
+      updateTotalPrice(); // Recalculate price
       if (totalPriceInput.value === "") {
-          e.preventDefault();
-          updateTotalPrice(); // Recalculate price
-          if (totalPriceInput.value === "") {
-              alert("Unable to calculate total price. Please check your inputs.");
-              return false;
-          }
+        alert("Unable to calculate total price. Please check your inputs.");
+        return false;
       }
-      
-      return true;
+    }
+    
+    return true;
   });
+});
 </script>
 
 <style>
@@ -285,11 +260,15 @@
     margin-bottom: var(--spacing-xs);
     color: var(--text-primary);
   }
+  .edit-form-card input[type="text"],
   .edit-form-card input[type="number"],
+  .edit-form-card input[type="hidden"],
   .edit-form-card select {
+    width: 100%;
     padding: var(--spacing-sm);
     border: 1px solid var(--border-color);
     border-radius: var(--border-radius-sm);
+    box-sizing: border-box;
   }
   .edit-form-card .submit-btn {
     grid-column: span 2;
@@ -306,52 +285,10 @@
     background-color: var(--secondary-color);
   }
 
+  /* Responsive Adjustments */
   @media (max-width: 768px) {
     .edit-form-card form {
       grid-template-columns: 1fr;
-    }
-  }
-
-  .read-only-group input {
-    background-color: var(--background-light);
-    cursor: not-allowed;
-  }
-
-  .edit-form-card input[type="text"],
-  .edit-form-card input[type="number"],
-  .edit-form-card select {
-    padding: var(--spacing-sm);
-    border: 1px solid var(--border-color);
-    border-radius: var(--border-radius-sm);
-    font-size: 1rem;
-    height: 40px; 
-    width: 100%;
-    box-sizing: border-box;
-  }
-
-  .edit-form-card input[readonly] {
-    background-color: var(--background-light);
-    cursor: not-allowed;
-    color: var(--text-secondary);
-  }
-
-  .edit-form-card .button-group {
-    grid-column: span 2;
-  }
-
-  .edit-form-card form {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: var(--spacing-lg);
-  }
-
-  @media (max-width: 768px) {
-    .edit-form-card form {
-      grid-template-columns: 1fr;
-    }
-    
-    .edit-form-card .button-group {
-      grid-column: 1;
     }
   }
 </style>

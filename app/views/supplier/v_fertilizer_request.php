@@ -72,7 +72,7 @@
         <input type="hidden" name="supplier_id" value="<?php echo $_SESSION['supplier_id']; ?>">
         
           <div class="form-group">
-              <label for="fertilizer_id">Fertilizer ID:</label>
+              <label for="fertilizer_id">Fertilizer Name:</label>
               <select id="fertilizer_id" name="fertilizer_id" required onchange="updateTotalPrice()">
                   <option value="">-- Select Fertilizer --</option>
                   <?php foreach($data['fertilizer_types'] as $fertilizer): ?>
