@@ -37,7 +37,7 @@ class M_Appointment {
         
         $this->db->query("SELECT slot_id FROM appointment_slots 
                          WHERE status = 'Booked' 
-                         AND CONCAT(date, ' 12:00:00') <= NOW()");
+                         AND CONCAT(date, ' 23:59:59') <= NOW()");
         $expiredSlots = $this->db->resultSet();
         
         // Delete any requests for these slots
@@ -251,6 +251,29 @@ class M_Appointment {
         return !empty($result);
     }
 
+
+    public function requestedSlotTimes($supplier_id) {
+    $this->db->query("SELECT asl.date, asl.start_time, asl.end_time     /* date, start time and end time of the slots supplier requested */
+                          FROM appointment_requests ar
+                          JOIN appointment_slots asl ON ar.slot_id = asl.slot_id
+                          WHERE ar.supplier_id = :supplier_id
+                          AND ar.slot_id = asl.slot_id
+                          AND (ar.status = 'Accepted' OR ar.status = 'Pending')");
+                          $this->db->bind(':supplier_id', $supplier_id);
+
+                          return $this->db->resultSet();}
+
+    public function overlappingRequests($supplier_id, $slot_id) {
+        $this->db->query("SELECT ar.slot_id, ar.submitted_at, asl.date, asl.start_time, asl.end_time
+                          FROM appointment_requests ar 
+                          JOIN appointment_slots asl ON ar.slot_id = asl.slot_id
+                          WHERE ar.supplier_id = :supplier_id
+                          ");
+        $this->db->bind(':supplier_id', $supplier_id);
+
+        $this->db->execute();
+    }
+
     public function getSlotById($slotId) {
         $this->db->query("SELECT * FROM appointment_slots WHERE slot_id = :slot_id");
         $this->db->bind(':slot_id', $slotId);
@@ -263,7 +286,7 @@ class M_Appointment {
         return $this->db->single();
     }
     
-    public function createRequest($data) {
+    public function createRequest($data) {                   // bug free function
         $this->db->query("INSERT INTO appointment_requests 
             (supplier_id, slot_id, status, submitted_at) 
             VALUES (:supplier_id, :slot_id, :status, :submitted_at)");
@@ -276,14 +299,14 @@ class M_Appointment {
         return $this->db->execute();
     }
 
-    public function hasAlreadyRequested($slotId, $supplierId) {
+    public function hasAlreadyRequested($slotId, $supplierId) {                   // bug free function
         $this->db->query("SELECT * FROM appointment_requests WHERE slot_id = :slot_id AND supplier_id = :supplier_id");
         $this->db->bind(':slot_id', $slotId);
         $this->db->bind(':supplier_id', $supplierId);
         return $this->db->single(); 
     }
 
-    public function getRequestsBySlotExcept($slotId, $exceptRequestId) {
+    public function getRequestsBySlotExcept($slotId, $exceptRequestId) {                   // bug free function
         $this->db->query("SELECT * FROM appointment_requests WHERE slot_id = :slot_id AND request_id != :except_id");
         $this->db->bind(':slot_id', $slotId);
         $this->db->bind(':except_id', $exceptRequestId);
