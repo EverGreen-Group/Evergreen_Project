@@ -1,11 +1,13 @@
 <?php
+
 require_once APPROOT . '/models/M_Products.php';
 require_once APPROOT . '/models/M_Fertilizer.php';
 require_once APPROOT . '/models/M_Dashbord.php';
 require_once APPROOT . '/models/M_Machine.php';
 require_once APPROOT . '/models/M_Inventory_Config.php';
-
+require_once APPROOT . '/models/M_Fertilizer_Order.php';
 require_once '../app/models/M_Products.php';
+
 class Inventory extends controller
 {
     private $productModel;
@@ -15,6 +17,9 @@ class Inventory extends controller
     private $machineModel;
 
     private $inventoryConfigModel;
+    private $leafchartdata;
+    private $fertilizerOrderModel;
+    private $logModel;
 
 
 
@@ -23,25 +28,72 @@ class Inventory extends controller
     public function __construct()
     {
 
+
         $this->productModel = new M_Products();
         $this->fertilizerModel = new M_Fertilizer();
-        $this->stockvalidate = new M_stockvalidate();
+        $this->stockvalidate = new M_Dashbord();
         $this->machineModel = new M_Machine();
         $this->inventoryConfigModel = new M_Inventory_Config();
+        $this->leafchartdata = new M_Dashbord();
+        $this->fertilizerOrderModel = new M_Fertilizer_Order();
+
+        $this->logModel = $this->model('M_Log');
+
 
     }
 
     public function index()
     {
-        if ($_SERVER['REQUEST_METHOD'] == 'POST') {
-            $report = ['report' => $_POST['report']];
-        }
-        $totalstock = $this->stockvalidate->gettodaytotalstock();
-        $products = $this->productModel->getAllProducts();
-        $fertilizer = $this->fertilizerModel->getfertilizer();
+        // Get the stock validation data
+        
         $stockvalidate = $this->stockvalidate->getvalidateStocks();
-        $machines = $this->machineModel->gettimesofmachine();
-        $validatedetails = $this->stockvalidate->getvalidatestockdetails();
+
+        // Get leaf quantities for the last 7 days
+        $leafQuantities = $this->stockvalidate->getleafoflast7days();
+
+        $machine = $this->machineModel->getmachines();
+        
+        // Process the leaf quantities data for the chart
+        $normalLeafData = [];
+        $superLeafData = [];
+        $dates = [];
+        
+        foreach ($leafQuantities as $record) {
+            $date = $record->date;
+            if (!in_array($date, $dates)) {
+                $dates[] = $date;
+            }
+            
+            if ($record->leaf_type_id == 1) {
+                $normalLeafData[$date] = $record->total_quantity;
+            } else if ($record->leaf_type_id == 2) {
+                $superLeafData[$date] = $record->total_quantity;
+            }
+        }
+
+        // Fill in missing dates with 0
+        for ($i = 6; $i >= 0; $i--) {
+            $date = date('Y-m-d', strtotime("-$i days"));
+            if (!isset($normalLeafData[$date])) {
+                $normalLeafData[$date] = 0;
+            }
+            if (!isset($superLeafData[$date])) {
+                $superLeafData[$date] = 0;
+            }
+        }
+        
+        // Sort by date
+        ksort($normalLeafData);
+        ksort($superLeafData);
+
+        $awaitingInventory = 5;
+        $kgApprovedToday = 150;
+        $fertilizerOrders = 3;
+        $activeBags = $this->stockvalidate->getBagsByStatus('active');
+        $inactiveBags = $this->stockvalidate->getBagsByStatus('inactive');
+
+        $activeBagsCount = count($activeBags);
+        $inactiveBagsCount = count($inactiveBags);
 
         $data = [
             'stockvalidate' => $stockvalidate,
@@ -51,10 +103,14 @@ class Inventory extends controller
             'bagUsageCounts' => ['active' => $activeBagsCount, 'inactive' => $inactiveBagsCount],
             'normalLeafData' => array_values($normalLeafData),
             'superLeafData' => array_values($superLeafData),
-            'chartDates' => array_keys($normalLeafData)
+            'chartDates' => array_keys($normalLeafData),
+            'machines' => $machine,
         ];
+       // var_dump($data);
+
 
         $this->view('inventory/v_dashboard', $data);
+
     }
 
     public function product()
@@ -98,27 +154,22 @@ class Inventory extends controller
                 "quantity_err" => '',
             ];
 
-            // Handle image upload
             if (isset($_FILES['product_image']) && $_FILES['product_image']['error'] === UPLOAD_ERR_OK) {
                 $uploadDir = 'uploads/products/';
 
-                // Create upload directory if it doesn't exist
                 if (!file_exists($uploadDir)) {
                     mkdir($uploadDir, 0777, true);
                 }
 
-                // Generate unique filename
                 $fileExtension = pathinfo($_FILES['product_image']['name'], PATHINFO_EXTENSION);
                 $uniqueFilename = uniqid() . '.' . $fileExtension;
                 $uploadPath = $uploadDir . $uniqueFilename;
 
-                // Move uploaded file
                 if (move_uploaded_file($_FILES['product_image']['tmp_name'], $uploadPath)) {
                     $data['image_path'] = $uniqueFilename;
                 }
             }
 
-            //validate 
             if (empty($data['product-name'])) {
                 $data['product-name_err'] = 'Please enter product name';
             }
@@ -141,7 +192,15 @@ class Inventory extends controller
             ) {
 
                 if ($this->productModel->createProduct($data)) {
-                    setFlashMessage('Added product sucessfully!');
+                    $this->logModel->create(
+                        $_SESSION['user_id'],
+                        $_SESSION['email'],
+                        $_SERVER['REMOTE_ADDR'],
+                        "Product '{$data['product-name']}' added successfully.",
+                        $_SERVER['REQUEST_URI'],     
+                        http_response_code()     
+                    );
+                    setFlashMessage('Added product successfully!');
                     redirect('inventory/product');
                 } else {
                     echo "<pre>";
@@ -185,9 +244,31 @@ class Inventory extends controller
 
     public function fertilizer()
     {
-        $data = [];
 
-        $this->view('inventory/v_fertilizer_available', $data);
+        if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['status_approve'])) {
+            $us = $_GET['id'];
+            // var_dump($us);
+
+            $this->fertilizerOrderModel->updateFertilizerByStatus($us, 'Approved');
+            // redirect('Inventory/fertilizerdashboard');
+
+        } elseif ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['status_reject'])) {
+            $us = $_GET['id'];
+
+            $this->fertilizerOrderModel->updateFertilizerByStatus($us, 'Rejected');
+            // redirect('Inventory/fertilizerdashboard');
+
+        }
+
+        $fertilizer = $this->fertilizerOrderModel->getfertilizerorderforInventory();
+    
+        $data=[
+            'fertilizers' => $fertilizer
+        ];
+        // echo "<pre>";
+        // print_r($data);
+        // echo "</pre>";
+        $this->view('inventory/v_fertilizer_available',$data);
     }
     public function createfertilizer()
     {
@@ -216,17 +297,14 @@ class Inventory extends controller
             if (isset($_FILES['fertilizer_image']) && $_FILES['fertilizer_image']['error'] === UPLOAD_ERR_OK) {
                 $uploadDir = 'uploads/fertilizers/';
 
-                // Create upload directory if it doesn't exist
                 if (!file_exists($uploadDir)) {
-                    // mkdir($uploadDir, 0777, true);
+                    mkdir($uploadDir, 0777, true);
                 }
 
-                // Generate unique filename
                 $fileExtension = pathinfo($_FILES['fertilizer_image']['name'], PATHINFO_EXTENSION);
                 $uniqueFilename = uniqid() . '.' . $fileExtension;
                 $uploadPath = $uploadDir . $uniqueFilename;
 
-                // Move uploaded file
                 if (move_uploaded_file($_FILES['fertilizer_image']['tmp_name'], $uploadPath)) {
                     $data['image_path'] = $uniqueFilename;
                 }
@@ -234,13 +312,9 @@ class Inventory extends controller
                 print_r("no file found");
             }
 
-
-
-
-            //validation
+            // Validation
             if (empty($data['fertilizer_name'])) {
                 $data['fertilizer_name_err'] = "Please Enter Fertilizer name";
-
             }
             if (empty($data['company_name'])) {
                 $data['company_name_err'] = "Please Enter Company name";
@@ -263,25 +337,27 @@ class Inventory extends controller
 
             if (
                 !empty($data['fertilizer_name']) && !empty($data['company_name']) && !empty($data['details'])
-                && !empty($data['code']) && !empty($data['price']) && !empty($data['quantity']) && !empty($data['unit'] && !empty($data['image_path']))
+                && !empty($data['code']) && !empty($data['price']) && !empty($data['quantity']) && !empty($data['unit']) && !empty($data['image_path'])
             ) {
-
                 if ($this->fertilizerModel->createFertilizer($data)) {
-                    setFlashMessage('Fertilizer added sucessfully!');
-
+                    // Log successful fertilizer addition
+                    $this->logModel->create(
+                        $_SESSION['user_id'],
+                        $_SESSION['email'],
+                        $_SERVER['REMOTE_ADDR'],
+                        "Fertilizer '{$data['fertilizer_name']}' added successfully.",
+                        $_SERVER['REQUEST_URI'],     
+                        http_response_code()     
+                    );
+                    setFlashMessage('Fertilizer added successfully!');
                     redirect('inventory/fertilizerdashboard');
-
                 } else {
                     echo "<pre>";
                     print_r($data);
                     echo "</pre>";
                     die('Something went wrong');
                 }
-
-
             }
-
-
         } else {
             $data = [
                 'fertilizer_name' => '',
@@ -291,18 +367,14 @@ class Inventory extends controller
                 'price' => '',
                 'quantity' => '',
                 'unit' => '',
-
             ];
-
 
             $this->view('inventory/v_create_fertilizer', $data);
         }
-
     }
 
     public function updatefertilizer($id)
     {
-
         if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             $data = [
                 'id' => $id,
@@ -320,24 +392,36 @@ class Inventory extends controller
                 'price_err' => '',
                 'quantity_err' => '',
                 'unit_err' => '',
-
             ];
 
             if (
                 !empty($data['fertilizer_name']) && !empty($data['company_name']) && !empty($data['details'])
                 && !empty($data['code']) && !empty($data['price']) && !empty($data['quantity']) && !empty($data['unit'])
             ) {
-
-
+                if ($this->fertilizerModel->updateFertilizer($data)) {
+                    $this->logModel->create(
+                        $_SESSION['user_id'],
+                        $_SESSION['email'],
+                        $_SERVER['REMOTE_ADDR'],
+                        "Fertilizer with ID {$id} updated successfully.",
+                        $_SERVER['REQUEST_URI'],     
+                        http_response_code()     
+                    );
+                    setFlashMessage('Fertilizer updated successfully!');
+                    redirect('inventory/fertilizerdashboard');
+                } else {
+                    echo "<pre>";
+                    print_r($data);
+                    echo "</pre>";
+                    die('Something went wrong');
+                }
             }
-
         } else {
             $fertilizer = $this->fertilizerModel->getFertilizerById($id);
             $data = [
                 'id' => $id,
                 'fertilizer' => $fertilizer
             ];
-            // print_r($data);
             $this->view('inventory/v_update_fertilizer', $data);
         }
     }
@@ -440,10 +524,8 @@ class Inventory extends controller
     public function updateproduct($id)
     {
         if ($_SERVER['REQUEST_METHOD'] == 'POST') {
-            // Sanitize POST data
             $_POST = filter_input_array(INPUT_POST, FILTER_SANITIZE_STRING);
 
-            // Initialize data array with POST data
             $data = [
                 'id' => $id,
                 'product-name' => trim($_POST['product-name']),
@@ -454,7 +536,6 @@ class Inventory extends controller
                 'quantity' => trim($_POST['quantity']),
                 'unit' => trim($_POST['unit']),
                 'image_path' => '',
-                // Error fields
                 'product-name_err' => '',
                 'location_err' => '',
                 'details_err' => '',
@@ -462,27 +543,22 @@ class Inventory extends controller
                 'quantity_err' => ''
             ];
 
-            // Handle image upload
             if (isset($_FILES['product_image']) && $_FILES['product_image']['error'] === UPLOAD_ERR_OK) {
                 $uploadDir = 'uploads/products/';
 
-                // Create upload directory if it doesn't exist
                 if (!file_exists($uploadDir)) {
                     mkdir($uploadDir, 0777, true);
                 }
 
-                // Generate unique filename
                 $fileExtension = pathinfo($_FILES['product_image']['name'], PATHINFO_EXTENSION);
                 $uniqueFilename = uniqid() . '.' . $fileExtension;
                 $uploadPath = $uploadDir . $uniqueFilename;
 
-                // Move uploaded file
                 if (move_uploaded_file($_FILES['product_image']['tmp_name'], $uploadPath)) {
                     $data['image_path'] = $uniqueFilename;
                 }
             }
 
-            // Validate data
             if (empty($data['product-name'])) {
                 $data['product-name_err'] = 'Please enter product name';
             }
@@ -499,27 +575,30 @@ class Inventory extends controller
                 $data['quantity_err'] = 'Please enter quantity';
             }
 
-            // Make sure no errors
             if (
                 empty($data['product-name_err']) && empty($data['location_err']) &&
                 empty($data['details_err']) && empty($data['price_err']) &&
                 empty($data['quantity_err'])
             ) {
-
-                // Validated
                 if ($this->productModel->updateProduct($data)) {
-                    setFlashMessage('Product updated sucessfully');
+                    $this->logModel->create(
+                        $_SESSION['user_id'],
+                        $_SESSION['email'],
+                        $_SERVER['REMOTE_ADDR'],
+                        "Product with ID {$id} updated successfully.",
+                        $_SERVER['REQUEST_URI'],     
+                        http_response_code()     
+                    );
+                    setFlashMessage('Product updated successfully');
                     redirect('inventory/product');
                 } else {
                     die('Something went wrong');
                 }
             } else {
-                // Load view with errors
                 $this->view('inventory/v_update_product', $data);
             }
 
         } else {
-            // GET request - show form to edit product
             $product = $this->productModel->getProductById($id);
 
             if (!$product) {
@@ -533,15 +612,30 @@ class Inventory extends controller
 
             $this->view('inventory/v_update_product', $data);
         }
-
     }
 
     public function deleteproduct($id)
     {
         if ($_SERVER['REQUEST_METHOD'] == 'GET') {
             if ($this->productModel->deleteProduct($id)) {
-                setFlashMessage('Product removed successful');
+                $this->logModel->create(
+                    $_SESSION['user_id'],
+                    $_SESSION['email'],
+                    $_SERVER['REMOTE_ADDR'],
+                    "Product with ID {$id} removed successfully.",
+                    $_SERVER['REQUEST_URI'],     
+                    http_response_code()     
+                );
+                setFlashMessage('Product removed successfully');
             } else {
+                $this->logModel->create(
+                    $_SESSION['user_id'],
+                    $_SESSION['email'],
+                    $_SERVER['REMOTE_ADDR'],
+                    "Failed to remove product with ID {$id}.",
+                    $_SERVER['REQUEST_URI'],     
+                    http_response_code()     
+                );
                 setFlashMessage('Product removal failed', 'error');
             }
         }
@@ -559,8 +653,24 @@ class Inventory extends controller
     {
         if ($_SERVER['REQUEST_METHOD'] == 'GET') {
             if ($this->fertilizerModel->deleteFertilizer($id)) {
+                $this->logModel->create(
+                    $_SESSION['user_id'],
+                    $_SESSION['email'],
+                    $_SERVER['REMOTE_ADDR'],
+                    "Fertilizer with ID {$id} removed successfully.",
+                    $_SERVER['REQUEST_URI'],     
+                    http_response_code()     
+                );
                 setFlashMessage('Fertilizer removed successfully!');
             } else {
+                $this->logModel->create(
+                    $_SESSION['user_id'],
+                    $_SESSION['email'],
+                    $_SERVER['REMOTE_ADDR'],
+                    "Failed to remove fertilizer with ID {$id}.",
+                    $_SERVER['REQUEST_URI'],     
+                    http_response_code()     
+                );
                 setFlashMessage('Fertilizer removal failed!', 'error');
             }
         }
@@ -613,100 +723,6 @@ class Inventory extends controller
 }
 
 
-public function payments2() {
-
-    $paymentModel = $this->model('M_Payment');
-    $paymentSummary = $paymentModel->getPaymentSummary();
-
-
-
-    $data = [
-        'payment_summary' => $paymentSummary
-    ];
-
-    $this->view('inventory/v_payments_2', $data);
-}
-
-public function createPaymentReport() {
-    if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-        $year = $_POST['year'];
-        $month = $_POST['month'];
-        $normalLeafRate = $_POST['normal_leaf_rate'];
-        $superLeafRate = $_POST['super_leaf_rate'];
-
-        // Add validation
-        if (empty($year) || empty($month) || empty($normalLeafRate) || empty($superLeafRate)) {
-            setFlashMessage('Please enter the year, month, normal leaf rate, and super leaf rate to generate the report', 'error');
-            redirect('inventory/payments2');
-            return;
-        }
-
-        // Validate for negative values
-        if ($normalLeafRate < 0 || $superLeafRate < 0) {
-            setFlashMessage('Normal leaf rate and super leaf rate must be non-negative values.', 'error');
-            redirect('inventory/payments2');
-            return;
-        }
-
-        $paymentModel = $this->model('M_Payment');
-        
-        try {
-            $result = $paymentModel->generateMonthlyPayment($year, $month, $normalLeafRate, $superLeafRate);
-            
-            if ($result) {
-                setFlashMessage('Payment report created successfully!');
-            } else {
-                setFlashMessage('Payment report generation failed!', 'error');
-            }
-        } catch (Exception $e) {
-            setFlashMessage('Error when generating the report, Error: ' . $e);
-        }
-        
-        redirect('inventory/payments2');
-    } else {
-        redirect('inventory/payments2');
-    }
-}
-
-
-
-public function deletePaymentReport($payment_id) {
-    // Load payment model
-    $paymentModel = $this->model('M_Payment');
-    
-    try {
-
-        
-        $result = $paymentModel->deletePayment($payment_id);
-        
-        
-        if ($result) {
-            setFlashMessage('Payment report deleted successfully!');
-        } else {
-            setFlashMessage('Payment report deletion failed!', 'error');
-        }
-    } catch (Exception $e) {
-
-        setFlashMessage('Error when deleting the report: ' . $e->getMessage(), 'error');
-    }
-    
-    redirect('inventory/payments2');
-}
-
-
-public function viewPaymentReport($payment_id) {
-    $paymentModel = $this->model('M_Payment');
-
-    $paymentDetails = $paymentModel->getPaymentDetailsByPaymentId($payment_id); 
-
-    $data = [
-        'payment_details' => $paymentDetails 
-    ];
-
-    $this->view('inventory/v_view_payment_report', $data);
-}
-
-
 
     public function getStockValidations()
     {
@@ -754,17 +770,31 @@ public function viewPaymentReport($payment_id) {
     }  
 
 
-    // APPROVING BAG, MUST IMRPOVE IT FURTHER, LIKE DEDUCTIONS AND ALL
+    // APPROVING BAG, MUST IMRPOVE IT FURTHER, 
     public function approveBag($historyId, $collectionId)
     {
-        
-        // Call the model method to handle all logic and database operations
         $result = $this->stockvalidate->processApproval($historyId);
         
         if ($result['success']) {
+            $this->logModel->create(
+                $_SESSION['user_id'],
+                $_SESSION['email'],
+                $_SERVER['REMOTE_ADDR'],
+                "Bag with history ID {$historyId} approved successfully.",
+                $_SERVER['REQUEST_URI'],     
+                http_response_code()     
+            );
             setFlashMessage('Bag approval successful!');
         } else {
-            setFlashMessage('Failed tho approve this bag', 'error');
+            $this->logModel->create(
+                $_SESSION['user_id'],
+                $_SESSION['email'],
+                $_SERVER['REMOTE_ADDR'],
+                "Failed to approve bag with history ID {$historyId}.",
+                $_SERVER['REQUEST_URI'],     
+                http_response_code()     
+            );
+            setFlashMessage('Failed to approve this bag', 'error');
         }
         
         redirect("inventory/viewAwaitingInventory/$collectionId");
@@ -773,7 +803,6 @@ public function viewPaymentReport($payment_id) {
 
     public function updateBag($historyId)
     {
-        // Check if form is submitted
         if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             $data = [
                 'history_id' => $historyId,
@@ -785,33 +814,35 @@ public function viewPaymentReport($payment_id) {
                 'error' => ''
             ];
     
-            // Validate weight
             if (empty($data['actual_weight_kg']) || !is_numeric($data['actual_weight_kg'])) {
                 $data['error'] = 'Please enter a valid weight';
             }
     
-            // If no errors, update the bag
             if (empty($data['error'])) {
                 if ($this->stockvalidate->updateBag($data)) {
-                    // Get collection ID for redirect
                     $collectionId = $this->stockvalidate->getBagCollectionId($historyId);
-                    setFlashMessage('Bag properties updated sucessfully!');
+                    $this->logModel->create(
+                        $_SESSION['user_id'],
+                        $_SESSION['email'],
+                        $_SERVER['REMOTE_ADDR'],
+                        "Bag with history ID {$historyId} updated successfully.",
+                        $_SERVER['REQUEST_URI'],     
+                        http_response_code()     
+                    );
+                    setFlashMessage('Bag properties updated successfully!');
                     redirect("inventory/viewAwaitingInventory/$collectionId");
                 } else {
                     $data['error'] = 'Something went wrong';
                 }
             }
         } else {
-            // Get existing bag data
             $bag = $this->stockvalidate->getBagByHistoryId($historyId);
             
-            // If bag not found, redirect
             if (!$bag) {
                 setFlashMessage('Bag not found, please try again later!', 'error');
                 redirect("inventory/");
             }
             
-            // Get leaf types for dropdown
             $leafTypes = $this->stockvalidate->getLeafTypes();
             
             $data = [
@@ -857,24 +888,22 @@ public function viewPaymentReport($payment_id) {
         ];
         
         $this->view('inventory/v_collection_bags', $data);
+        var_dump($data);
     }
 
 
     public function markAsInactive($id = null)
     {
-
         if (!$id) {
             setFlashMessage('Invalid bag id, bag may not be used!', 'error');
             redirect('inventory/collectionBags');
         }
         
-        // Make sure the ID is numeric
         if (!is_numeric($id)) {
             setFlashMessage('Bag id is not in numeric format', 'error');
             redirect('inventory/collectionBags');
         }
         
-
         $bag = $this->stockvalidate->getBagById($id);
         
         if (!$bag) {
@@ -887,10 +916,25 @@ public function viewPaymentReport($payment_id) {
             redirect('inventory/collectionBags');
         }
         
-        // Update bag status to inactive and reset weight
         if ($this->stockvalidate->markAsInactive($id)) {
-            setFlashMessage('Bag has been emptied sucessfully!');
+            $this->logModel->create(
+                $_SESSION['user_id'],
+                $_SESSION['email'],
+                $_SERVER['REMOTE_ADDR'],
+                "Bag with ID {$id} has been marked as inactive.",
+                $_SERVER['REQUEST_URI'],     
+                http_response_code()     
+            );
+            setFlashMessage('Bag has been emptied successfully!');
         } else {
+            $this->logModel->create(
+                $_SESSION['user_id'],
+                $_SESSION['email'],
+                $_SERVER['REMOTE_ADDR'],
+                "Failed to mark bag with ID {$id} as inactive.",
+                $_SERVER['REQUEST_URI'],     
+                http_response_code()     
+            );
             setFlashMessage('Failed to empty the bag!', 'error');
         }
         
@@ -899,12 +943,27 @@ public function viewPaymentReport($payment_id) {
 
     public function deleteBag($bagId)
     {
-        // Call the model method to delete the bag
         $result = $this->stockvalidate->deleteBag($bagId);
         
         if ($result) {
-            setFlashMessage('Bag deleted successfuly!');
+            $this->logModel->create(
+                $_SESSION['user_id'],
+                $_SESSION['email'],
+                $_SERVER['REMOTE_ADDR'],
+                "Bag with ID {$bagId} deleted successfully.",
+                $_SERVER['REQUEST_URI'],     
+                http_response_code()     
+            );
+            setFlashMessage('Bag deleted successfully!');
         } else {
+            $this->logModel->create(
+                $_SESSION['user_id'],
+                $_SESSION['email'],
+                $_SERVER['REMOTE_ADDR'],
+                "Failed to delete bag with ID {$bagId}.",
+                $_SERVER['REQUEST_URI'],     
+                http_response_code()     
+            );
             setFlashMessage('Bag deletion failed!', 'error');
         }
         
@@ -914,18 +973,14 @@ public function viewPaymentReport($payment_id) {
 
 
     public function createBag() {
-        // Check if form is submitted
         if ($_SERVER['REQUEST_METHOD'] == 'POST') {
-            // Sanitize POST data
             $_POST = filter_input_array(INPUT_POST, FILTER_SANITIZE_STRING);
             
-            // Init data
             $data = [
                 'capacity_kg' => trim($_POST['capacity_kg']),
                 'status' => 'inactive'
             ];
             
-            // Validate capacity
             if (empty($data['capacity_kg']) || !is_numeric($data['capacity_kg']) || $data['capacity_kg'] <= 0) {
                 setFlashMessage('Please enter a capacity greater than 0!', 'error');
                 redirect('inventory/createBag');
@@ -933,8 +988,15 @@ public function viewPaymentReport($payment_id) {
             }
             
             $this->stockvalidate->addBag($data);
+            $this->logModel->create(
+                $_SESSION['user_id'],
+                $_SESSION['email'],
+                $_SERVER['REMOTE_ADDR'],
+                "New bag with capacity {$data['capacity_kg']} kg created.",
+                $_SERVER['REQUEST_URI'],     
+                http_response_code()     
+            );
             redirect('inventory/collectionBags');
-
         }
             
         $this->view('inventory/v_create_bag');
@@ -943,7 +1005,7 @@ public function viewPaymentReport($payment_id) {
     public function rawLeafHistory()
     {
         // Get leaf quantities data
-        $leafQuantities = $this->stockvalidate->getLeafQuantitiesLast7Days();
+        $leafQuantities = $this->stockvalidate->getleafoflast7days();
         
         $data = [
             'leafQuantities' => $leafQuantities

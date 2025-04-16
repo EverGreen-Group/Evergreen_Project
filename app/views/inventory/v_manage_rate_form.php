@@ -20,14 +20,14 @@
             </ul>
         </div>
     </div>
-    
+
     <!-- Error Messages -->
-    <?php if(!empty($data['error'])): ?>
+    <?php if (!empty($data['error'])): ?>
         <div class="alert alert-danger">
             <?php echo $data['error']; ?>
         </div>
     <?php endif; ?>
-    
+
     <form method="POST" action="<?php echo URLROOT; ?>/inventory/manageLeafRate">
         <div class="table-data">
             <div class="order">

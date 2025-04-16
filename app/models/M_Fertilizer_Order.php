@@ -14,6 +14,11 @@ class M_Fertilizer_Order {
     public function getAllOrders() {
         $this->db->query("SELECT * FROM fertilizer_orders ORDER BY order_date DESC, order_time DESC LIMIT 10");
         return $this->db->resultSet();
+        $this->db->query("SELECT fo.*, ft.description as fertilizer_name 
+                          FROM fertilizer_orders fo
+                          JOIN fertilizer_types ft ON fo.fertilizer_id = ft.type_id 
+                          ORDER BY order_date DESC, order_time DESC LIMIT 10");
+        return $this->db->resultset();
     }
 
     public function getOrderById($order_id) {
@@ -88,9 +93,51 @@ class M_Fertilizer_Order {
 
     public function deleteOrder($order_id) {
         try {
-            $this->db->query('DELETE FROM fertilizer_orders WHERE order_id = :order_id');
-            $this->db->bind(':order_id', $order_id);
-            return $this->db->execute() ?: throw new Exception('Failed to delete order');
+            // Start transaction
+            $this->db->beginTransaction();
+    
+            // Validate data
+            if (empty($data['supplier_id']) || empty($data['type_id']) || 
+                empty($data['total_amount']) || empty($data['unit'])) {
+                throw new Exception('Missing required fields');
+            }
+    
+            // Validate amount
+            if ($data['total_amount'] <= 0 || $data['total_amount'] > 50) {
+                throw new Exception('Invalid amount. Must be between 1 and 50');
+            }
+    
+            // Get current date and time
+            $currentDate = date('Y-m-d');
+            $currentTime = date('H:i:s');
+            
+            $this->db->query(
+                "INSERT INTO fertilizer_orders 
+                (supplier_id, order_date, order_time, total_amount, fertilizer_id, quantity)
+                VALUES 
+                (:supplier_id, :order_date, :order_time, :total_price, :type_id, :total_amount)"
+            );
+            
+            $this->db->bind(':supplier_id', $data['supplier_id']);
+            $this->db->bind(':order_date', $currentDate);
+            $this->db->bind(':order_time', $currentTime);
+            $this->db->bind(':total_price', $data['total_price']);
+            $this->db->bind(':type_id', $data['type_id']);
+            $this->db->bind(':total_amount', $data['total_amount']);
+            //$this->db->bind(':fertilizer_name', $data['fertilizer_name']);
+            //$this->db->bind(':unit', $data['unit']);
+            //$this->db->bind(':price_per_unit', $data['price_per_unit']);
+    
+            $result = $this->db->execute();
+            
+            if (!$result) {
+                throw new Exception('Failed to insert order');
+            }
+    
+            // Commit transaction
+            $this->db->commit();
+            return true;
+    
         } catch (Exception $e) {
             error_log("Error deleting fertilizer order: " . $e->getMessage());
             $this->error = $e->getMessage();
@@ -314,4 +361,29 @@ class M_Fertilizer_Order {
         $this->db->bind(':user_id', $supplier_id);
         return $this->db->single();
     }
+    public function updatePaymentStatus($order_id, $payment_status) {
+        $this->db->query("UPDATE fertilizer_orders SET payment_status = :payment_status WHERE order_id = :order_id");
+        $this->db->bind(':payment_status', $payment_status);
+        $this->db->bind(':order_id', $order_id);
+        return $this->db->execute();
+    }
+
+    
+    public function getfertilizerorderforInventory(){
+        $this->db->query("SELECT fo.order_id, pr.first_name, sup.address, fo.order_date,fo.status FROM fertilizer_orders fo LEFT JOIN suppliers sup ON fo.supplier_id=sup.supplier_id JOIN profiles pr ON sup.profile_id = pr.profile_id
+        ");
+        return $this->db->resultset();
+    }
+
+    public function updateFertilizerByStatus($id, $status) {
+        $this->db->query("UPDATE fertilizer_orders SET status = :status WHERE order_id = :id");
+        $this->db->bind(':status', $status);
+        $this->db->bind(':id', $id);
+        return $this->db->execute();
+    }
 }
+    
+    
+    
+
+?> 

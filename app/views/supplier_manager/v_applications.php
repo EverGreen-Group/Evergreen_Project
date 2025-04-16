@@ -78,28 +78,29 @@
             <i class='bx bx-search'></i>
         </div>
         <div class="filter-options">
-            <form action="<?php echo URLROOT; ?>/suppliermanager/applications" method="GET">
+            <form action="<?php echo URLROOT; ?>/manager/applications" method="GET">
                 <div class="filter-group">
                     <label for="application-id">Application ID:</label>
-                    <input type="text" id="application-id" name="application_id" placeholder="Enter application ID">
+                    <input type="text" id="application-id" name="application_id" 
+                     placeholder="Enter application ID" value="<?php echo isset($_GET['application_id']) ? htmlspecialchars($_GET['application_id']) : ''; ?>">
                 </div>
                 <div class="filter-group">
                     <label for="status">Status:</label>
                     <select id="status" name="status">
                         <option value="">All Statuses</option>
-                        <option value="pending">Pending</option>
-                        <option value="approved">Approved</option>
-                        <option value="rejected">Rejected</option>
-                        <option value="auto-rejected">Auto-Rejected</option>
+                        <option value="pending" <?php echo (isset($_GET['status']) && $_GET['status'] == 'pending') ? 'selected' : ''; ?>>Pending</option>
+                        <option value="approved" <?php echo (isset ($_GET['status']) && $_GET['status'] == 'approved') ? 'selected' : ''; ?>>Approved</option>
+                        <option value="rejected" <?php echo (isset($_GET['status'])) && $_GET['status'] == 'rejected' ? 'selected' : ''; ?>>Rejected</option>
+                        <option value="auto-rejected" <?php echo (isset($_GET['status']) && $_GET['status'] == 'auto-rejected') ? 'selected' : ''; ?>>Auto-Rejected</option>
                     </select>
                 </div>
                 <div class="filter-group">
                     <label for="date-from">Date From:</label>
-                    <input type="date" id="date-from" name="date_from">
+                    <input type="date" id="date-from" name="date-from" value="<?php echo isset($_GET['date-from']) ? htmlspecialchars($_GET['date-from']) : ''; ?>">
                 </div>
                 <div class="filter-group">
                     <label for="date-to">Date To:</label>
-                    <input type="date" id="date-to" name="date_to">
+                    <input type="date" id="date-to" name="date-to" value="<?php echo isset ($_GET['date-to']) ? htmlspecialchars($_GET['date-to']) : ''; ?>">
                 </div>
                 <button type="submit" class="btn btn-primary">Search</button>
             </form>
@@ -176,6 +177,21 @@
                 <?php endif; ?>
             </tbody>
         </table>
+        
+
+        <div class="table-pagination">
+            <div class="pagination">
+                <?php if ($totalPages > 1): ?>
+                    <?php for ($i = 1; $i <= $totalPages; $i++): ?>
+                        <a 
+                        href="<?php echo URLROOT; ?>/manager/applications?page=<?php echo $i; ?>" 
+                        <?php if ($currentPage == $i) { echo 'class="active"'; } ?>>
+                            <?php echo $i; ?>
+                        </a>
+                    <?php endfor; ?>
+                <?php endif; ?>
+            </div>
+        </div>
     </div>
 </div>
 

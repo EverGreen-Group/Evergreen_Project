@@ -1,9 +1,11 @@
 <?php
 class Collectionschedules extends Controller {
     private $collectionScheduleModel;
+    private $logModel;
 
     public function __construct() {
         $this->collectionScheduleModel = $this->model('M_CollectionSchedule');
+        $this->logModel = $this->model('M_Log');
     }
 
 
@@ -17,52 +19,6 @@ class Collectionschedules extends Controller {
             'schedule' => $schedule
         ]);
     }    
-    public function create() {
-        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-            redirect('manager/dashboard');
-        }
-
-        // Get and sanitize POST data
-        $data = [
-            'route_id' => trim($_POST['route_id']),
-            'driver_id' => trim($_POST['driver_id']),
-            'shift_id' => trim($_POST['shift_id']),
-            'day' => trim($_POST['day'])
-        ];
-
-        // Debug: Print data
-        error_log(print_r($data, true));
-
-        // Validation rules
-        $errors = [];
-
-
-        // Validate day selection
-        if (empty($data['day'])) {
-            $errors[] = "Please select a day of the week";
-        }
-
-
-        if (!empty($errors)) {
-            foreach ($errors as $error) {
-                setFlashMessage('Error when creating the schedule! Error: ' . $error, 'error');
-            }
-            redirect('manager/');
-            return;
-        }
-
-
-
-        // Create schedule for this day
-        if (!$this->collectionScheduleModel->create($data)) {
-            setFlashMessage("Error when creating the schedule for {$data['day']}", 'error');
-            redirect('manager/');
-            return;
-        }
-
-        setFlashMessage('Schedule creation successful!');
-        redirect('manager/');
-    }
 
     public function toggleActive() {
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
@@ -83,7 +39,15 @@ class Collectionschedules extends Controller {
             $schedule_id = $_POST['schedule_id'];
             
             if ($this->collectionScheduleModel->delete($schedule_id)) {
-                setFlashMessage('Schedule status deleted sucessfully');
+                $this->logModel->create(
+                    $_SESSION['user_id'],
+                    $_SESSION['email'],
+                    $_SERVER['REMOTE_ADDR'],
+                    "Schedule with ID {$schedule_id} deleted successfully.",
+                    $_SERVER['REQUEST_URI'],     
+                    http_response_code()     
+                );
+                setFlashMessage('Schedule status deleted successfully');
             } else {
                 setFlashMessage('Unable to delete the schedule', 'error');
             }
@@ -100,8 +64,7 @@ class Collectionschedules extends Controller {
                 'driver_id' => $_POST['driver_id'],
                 'shift_id' => $_POST['shift_id'],
             ];
-    
-            // Check for schedule conflicts (excluding current schedule)
+
             if ($this->collectionScheduleModel->checkConflict($data)) {
                 setFlashMessage('Cannot update the schedule, a conflict exists!', 'error');
                 redirect('manager/');
@@ -109,8 +72,24 @@ class Collectionschedules extends Controller {
             }
     
             if ($this->collectionScheduleModel->update($data)) {
-                setFlashMessage('Schedule updated sucessfully');
+                $this->logModel->create(
+                    $_SESSION['user_id'],
+                    $_SESSION['email'],
+                    $_SERVER['REMOTE_ADDR'],
+                    "Schedule with ID {$data['schedule_id']} updated successfully.",
+                    $_SERVER['REQUEST_URI'],     
+                    http_response_code()     
+                );
+                setFlashMessage('Schedule updated successfully');
             } else {
+                $this->logModel->create(
+                    $_SESSION['user_id'],
+                    $_SESSION['email'],
+                    $_SERVER['REMOTE_ADDR'],
+                    "Failed to update schedule with ID {$data['schedule_id']}.",
+                    $_SERVER['REQUEST_URI'],     
+                    http_response_code()     
+                );
                 setFlashMessage('Failed to update the schedule');
             }
     

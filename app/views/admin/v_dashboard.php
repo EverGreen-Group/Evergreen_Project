@@ -1,103 +1,80 @@
 <?php require APPROOT . '/views/inc/components/header.php'; ?>
-<?php require APPROOT . '/views/inc/components/sidebar_admin.php'; ?>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<!-- Side bar -->
+<?php require APPROOT.'/views/inc/components/sidebar_vehicle_manager.php'; ?>
+<!-- Top nav bar -->
 <?php require APPROOT . '/views/inc/components/topnavbar.php'; ?>
 
+<?php print_r($data); ?>
+
 <main>
-  <div class="dashboard-container">
-    <h1>Admin Dashboard</h1>
-    <div class="card-grid">
-
-    <a href="<?= URLROOT ?>/suppliermanager" class="card">
-        <div class="card-icon"><i class='bx bxs-user'></i></div>
-        <div class="card-title">Supplier Management</div>
-      </a>
-
-      <a href="<?= URLROOT ?>/manager" class="card">
-        <div class="card-icon"><i class='bx bxs-truck'></i></div>
-        <div class="card-title">Collection Management</div>
-      </a>
-      
-      <a href="<?= URLROOT ?>/inventory" class="card">
-        <div class="card-icon"><i class='bx bxs-box'></i></div>
-        <div class="card-title">Inventory Management</div>
-      </a>
-      
-
-      
-
-      
-      <a href="<?= URLROOT ?>/delivery" class="card">
-        <div class="card-icon"><i class='bx bxs-cart-download'></i></div>
-        <div class="card-title">Order & Delivery Management</div>
-      </a>
-      
-      <a href="<?= URLROOT ?>/admin/assignRoles" class="card">
-        <div class="card-icon"><i class='bx bx-user-check'></i></div>
-        <div class="card-title">Assign Roles</div>
-      </a>
-      
-      <a href="<?= URLROOT ?>/reports" class="card">
-        <div class="card-icon"><i class='bx bx-line-chart'></i></div>
-        <div class="card-title">Reports</div>
-      </a>
-      
-      <a href="<?= URLROOT ?>/admin/users" class="card">
-        <div class="card-icon"><i class='bx bx-group'></i></div>
-        <div class="card-title">User Management</div>
-      </a>
-      
-      <a href="<?= URLROOT ?>/settings" class="card">
-        <div class="card-icon"><i class='bx bx-cog'></i></div>
-        <div class="card-title">System Settings</div>
-      </a>
-      
+    <div class="head-title">
+        <div class="left">
+            <h1>All Users Management</h1>
+            <ul class="breadcrumb">
+                <li><a href="#">Dashboard</a></li>
+            </ul>
+        </div>
     </div>
-  </div>
-  <script src="<?php echo URLROOT; ?>/public/css/script.js"></script>
+
+    <div class="table-data">
+        <div class="order">
+            <table>
+                <thead>
+                    <tr>
+                        <th>User ID</th>
+                        <th>Email</th>
+                        <th>Name</th>
+                        <th>NIC</th>
+                        <th>Date of Birth</th>
+                        <th>Role</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <?php if (isset($users) && !empty($users)): ?>
+                        <?php foreach ($users as $user): ?>
+                            <tr class="user-row" data-user-id="<?php echo htmlspecialchars($user->user_id); ?>">
+                                <td><?php echo htmlspecialchars($user->user_id); ?></td>
+                                <td><?php echo htmlspecialchars($user->email); ?></td>
+                                <td><?php echo htmlspecialchars($user->first_name . ' ' . $user->last_name); ?></td>
+                                <td><?php echo htmlspecialchars($user->nic); ?></td>
+                                <td><?php echo htmlspecialchars($user->date_of_birth); ?></td>
+                                <td><?php echo htmlspecialchars($user->role_id); ?></td>
+                                <td>
+                                    <div style="display: flex; gap: 5px;">
+                                        <!-- View button -->
+                                        <a 
+                                            href="<?php echo URLROOT; ?>/admin/viewUser/<?php echo $user->user_id; ?>" 
+                                            class="btn btn-tertiary" 
+                                            style="display: flex; align-items: center; justify-content: center; width: 40px; height: 40px; border: none; background: none;"
+                                        >
+                                            <i class='bx bx-show' style="font-size: 24px; color:blue;"></i>
+                                        </a>
+                                        
+                                        <!-- Remove role button -->
+                                        <a 
+                                            href="<?php echo URLROOT; ?>/admin/removeRole/<?php echo $user->user_id; ?>" 
+                                            class="btn btn-tertiary" 
+                                            style="display: flex; align-items: center; justify-content: center; width: 40px; height: 40px; border: none; background: none;" 
+                                            onclick="return confirm('Are you sure you want to remove this user\'s role?');"
+                                        >
+                                            <i class='bx bx-user-x' style="font-size: 24px; color:red;"></i>
+                                        </a>
+                                    </div>
+                                </td>
+                            </tr>
+                        <?php endforeach; ?>
+                    <?php else: ?>
+                        <tr>
+                            <td colspan="7" style="text-align: center;">No users found.</td>
+                        </tr>
+                    <?php endif; ?>
+                </tbody>
+            </table>
+        </div>
+    </div>
 </main>
 
-<?php require APPROOT . '/views/inc/components/footer.php'; ?>
-
-<style>
-  .dashboard-container {
-    padding: 3rem 2rem;
-    max-width: 1400px;
-    margin: auto;
-  }
-  .dashboard-container h1 {
-    text-align: center;
-    margin-bottom: 3rem;
-    font-size: 2.5rem;
-    color: #333;
-  }
-  .card-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-    gap: 2rem;
-  }
-  .card {
-    background: #fff;
-    padding: 2.5rem 1.5rem;
-    text-align: center;
-    border-radius: 10px;
-    text-decoration: none;
-    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
-    transition: transform 0.3s ease, box-shadow 0.3s ease;
-  }
-  .card:hover {
-    transform: translateY(-8px);
-    box-shadow: 0 6px 12px rgba(0,0,0,0.15);
-  }
-  .card-icon {
-    font-size: 4rem;
-    margin-bottom: 1.5rem;
-    color: var(--primary, #007bff);
-  }
-  .card-title {
-    font-size: 1.5rem;
-    font-weight: bold;
-    color: var(--dark, #333);
-  }
-</style>
-
-
+<?php require APPROOT . '/views/inc/components/footer.php'; ?> 

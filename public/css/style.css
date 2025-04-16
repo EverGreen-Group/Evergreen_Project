@@ -345,13 +345,14 @@ body {
 }
 
 #content nav .notification {
-  font-size: 20px;
+  font-size: 27px;
   position: relative;
+  top: 2px;
 }
 
 #content nav .notification .num {
   position: absolute;
-  top: -6px;
+  top: -8px;
   right: -6px;
   width: 20px;
   height: 20px;
@@ -1410,6 +1411,18 @@ body.dark .auth-form-group input {
   transition: background-color 0.3s ease;
 }
 
+.btn-blue {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background-color: lightskyblue;
+  color: var(--light);
+  padding: 10px 20px;
+  border-radius: 5px;
+  text-decoration: none;
+  transition: background-color 0.3s ease;
+}
+
 /* PROFILES NAVBAR PART */
 
 /* Enhanced profile styling with larger name - No role */
@@ -1425,7 +1438,7 @@ body.dark .auth-form-group input {
 }
 
 .profile-container:hover {
-  background-color: rgba(0, 0, 0, 0.05);
+  background-color: rgba(201, 201, 201, 0.05);
 }
 
 .profile {
@@ -1461,6 +1474,7 @@ body.dark .auth-form-group input {
   text-overflow: ellipsis;
   max-width: 160px;
   letter-spacing: 0.1px;
+  margin-right: 13px;
 }
 
 /* Media query for smaller screens */
@@ -1474,4 +1488,60 @@ body.dark .auth-form-group input {
     width: 38px;
     height: 38px;
   }
+}
+
+/* FOR THE TABLE PAGINATION */
+
+.table-pagination {
+  display: flex;
+  justify-content: right;
+  align-items: center;
+  margin-top: 24px;
+  margin-right: 20px;
+  padding-top: 16px;
+  border-top: 1px solid var(--grey);
+}
+
+.pagination {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.pagination a {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 36px;
+  min-width: 36px;
+  padding: 0 10px;
+  border-radius: 6px;
+  text-decoration: none;
+  font-size: 14px;
+  color: var(--dark);
+  background-color: #f9f9f9;
+  border: 1px solid #e6e6e6;
+  transition: all 0.3s ease;
+}
+
+.pagination a:hover {
+  background-color: #eaeaea;
+}
+
+.pagination a.active {
+  background-color: var(--main);
+  color: white;
+  border-color: var(--main);
+}
+
+.yes {
+  background-color: #e8fff3;
+  color: var(--mainn);
+}
+
+.no {
+  background-color: #ffe2e5;
+  color: var(--red);
 }

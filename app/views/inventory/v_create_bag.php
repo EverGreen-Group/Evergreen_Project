@@ -17,61 +17,64 @@
             </ul>
         </div>
     </div>
-    
+
+    <!-- Error Messages -->
+    <?php flash('bag_message'); ?>
 
     <form id="createBagForm" method="POST" action="<?php echo URLROOT; ?>/inventory/createBag">
-    
-    <!-- Bag Information -->
-    <div class="table-data">
-        <div class="order">
-            <div class="head">
-                <h3>Bag Information</h3>
-            </div>
-            <div class="section-content">
-                <div class="info-row">
-                    <label class="label" for="capacity">Capacity (kg):</label>
-                    <input type="number" step="0.01" id="capacity" name="capacity_kg" class="form-control" required min="1" value="50.00">
+
+        <!-- Bag Information -->
+        <div class="table-data">
+            <div class="order">
+                <div class="head">
+                    <h3>Bag Information</h3>
+                </div>
+                <div class="section-content">
+                    <div class="info-row">
+                        <label class="label" for="capacity">Capacity (kg):</label>
+                        <input type="number" step="0.01" id="capacity" name="capacity_kg" class="form-control" required
+                            min="1" value="50.00">
+                    </div>
                 </div>
             </div>
         </div>
-    </div>
 
-    <!-- QR Code Preview -->
-    <div class="table-data">
-        <div class="order">
-            <div class="head">
-                <h3>QR Code Preview</h3>
-            </div>
-            <div class="section-content">
-                <div class="qr-container">
-                    <div id="qrcode"></div>
-                    <p class="qr-explanation">QR code will be generated upon bag creation</p>
+        <!-- QR Code Preview -->
+        <div class="table-data">
+            <div class="order">
+                <div class="head">
+                    <h3>QR Code Preview</h3>
+                </div>
+                <div class="section-content">
+                    <div class="qr-container">
+                        <div id="qrcode"></div>
+                        <p class="qr-explanation">QR code will be generated upon bag creation</p>
+                    </div>
                 </div>
             </div>
         </div>
-    </div>
 
-    <!-- Submit Button -->
-    <button type="submit" class="btn btn-primary">Create Bag</button>
+        <!-- Submit Button -->
+        <button type="submit" class="btn btn-primary">Create Bag</button>
     </form>
-    
+
 </main>
 
 <!-- Include QR code library -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 
 <script>
-document.addEventListener('DOMContentLoaded', function() {
-    // Create dummy QR code for preview
-    const qrcode = new QRCode(document.getElementById("qrcode"), {
-        text: "SAMPLE-BAG-CODE",
-        width: 128,
-        height: 128,
-        colorDark: "#000000",
-        colorLight: "#ffffff",
-        correctLevel: QRCode.CorrectLevel.H
+    document.addEventListener('DOMContentLoaded', function () {
+        // Create dummy QR code for preview
+        const qrcode = new QRCode(document.getElementById("qrcode"), {
+            text: "SAMPLE-BAG-CODE",
+            width: 128,
+            height: 128,
+            colorDark: "#000000",
+            colorLight: "#ffffff",
+            correctLevel: QRCode.CorrectLevel.H
+        });
     });
-});
 </script>
 
 <style>

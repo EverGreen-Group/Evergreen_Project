@@ -9,53 +9,53 @@
 <link rel="stylesheet" href="<?php echo URLROOT; ?>/css/vehicle_manager/vehicle/vehicle.css">
 
 <style>
-  /* Existing styles... */
-  
-  .header-actions {
-    display: flex;
-    align-items: center;
-    gap: 1rem;
-    margin-bottom: 1rem;
-  }
+    /* Existing styles... */
 
-  .search-box {
-    display: flex;
-    align-items: center;
-  }
+    .header-actions {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        margin-bottom: 1rem;
+    }
 
-  .search-box form {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-  }
+    .search-box {
+        display: flex;
+        align-items: center;
+    }
 
-  .search-box input[type="text"] {
-    padding: 0.5rem 1rem;
-    border: 1px solid #ddd;
-    border-radius: 4px;
-    width: 200px;
-  }
+    .search-box form {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
 
-  .filter-btn {
-    background: none;
-    border: none;
-    color: #555;
-    cursor: pointer;
-    padding: 0.5rem;
-  }
+    .search-box input[type="text"] {
+        padding: 0.5rem 1rem;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        width: 200px;
+    }
 
-  .filter-btn:hover {
-    color: #333;
-  }
+    .filter-btn {
+        background: none;
+        border: none;
+        color: #555;
+        cursor: pointer;
+        padding: 0.5rem;
+    }
+
+    .filter-btn:hover {
+        color: #333;
+    }
 
 
 
-  .head-title {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 2rem;
-  }
+    .head-title {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 2rem;
+    }
 </style>
 
 <main>
@@ -65,16 +65,16 @@
 
     <!-- Header Section -->
     <header>
-    <div class="head-title">
-      <div class="left">
-          <h1>Inventory Management</h1>
-          <ul class="breadcrumb">
-              <li><a href="#">Dashboard</a></li>
-              <li><i class='bx bx-chevron-right'></i></li>
-              <li><a class="active" href="#">Inventory</a></li>
-          </ul>
-      </div>
-  </div>
+        <div class="head-title">
+            <div class="left">
+                <h1>Inventory Management</h1>
+                <ul class="breadcrumb">
+                    <li><a href="#">Dashboard</a></li>
+                    <li><i class='bx bx-chevron-right'></i></li>
+                    <li><a class="active" href="#">Inventory</a></li>
+                </ul>
+            </div>
+        </div>
         <div class="header-actions">
             <div class="search-box">
                 <form method="GET">
@@ -107,7 +107,7 @@
             <div class="stat-content">
                 <i class='bx bx-basket'></i>
                 <div class="stat-info">
-                    <h3><?php echo isset($data['totalInactive']) ? $data['totalInactive'] : 0;?></h3>
+                    <h3><?php echo isset($data['totalInactive']) ? $data['totalInactive'] : 0; ?></h3>
                     <p>Total Inactive</p>
                 </div>
             </div>
@@ -122,7 +122,7 @@
                 <h3><img src="<?php echo URLROOT; ?>/img/warehouse-svgrepo-com.svg" alt="Warehouse Icon"
                         style="width: 20px;"> Total Products</h3>
             </div>
-            
+
             <div class="product-grid">
                 <?php foreach ($data['products'] as $product): ?>
                     <div class="product-card"

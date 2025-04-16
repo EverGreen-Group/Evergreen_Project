@@ -1,21 +1,5 @@
 <?php
 
-require_once '../app/models/M_VehicleManager.php';
-require_once '../app/models/M_Route.php';
-require_once '../app/models/M_Vehicle.php';
-require_once '../app/models/M_Shift.php';
-require_once '../app/models/M_CollectionSchedule.php';
-require_once '../app/models/M_Staff.php';
-require_once '../app/models/M_Driver.php';
-require_once '../app/models/M_Partner.php';
-require_once '../app/models/M_Collection.php';
-require_once '../app/models/M_CollectionSupplierRecord.php';
-require_once '../app/models/M_User.php';
-require_once '../app/models/M_Employee.php';
-require_once '../app/models/M_CollectionBag.php';
-require_once '../app/models/M_Chat.php'; //added by theekshana
-
-// Require helper files
 require_once '../app/helpers/auth_middleware.php';
 require_once '../app/helpers/UserHelper.php';
 require_once '../app/helpers/image_helper.php';
@@ -25,133 +9,87 @@ class Manager extends Controller
     //----------------------------------------
     // PROPERTIES
     //----------------------------------------
-    private $vehicleManagerModel;
     private $routeModel;
     private $vehicleModel;
-    private $shiftModel;
     private $scheduleModel;
     private $driverModel;
-    private $partnerModel;
-    private $staffModel;
     private $userHelper;
     private $collectionModel;
     private $collectionSupplierRecordModel;
     private $userModel;
-    private $employeeModel;
     private $bagModel;
     private $supplierModel;
-    private $chatModel; // Add this line
+    private $chatModel; 
     private $appointmentModel;
     private $notificationModel;
+    private $logModel;
 
     //----------------------------------------
     // CONSTRUCTOR
     //----------------------------------------
     public function __construct()
     {
-        // Check if user is logged in
         requireAuth();
 
-        // Check if user has Vehicle Manager OR Admin role
         if (!RoleHelper::hasAnyRole([RoleHelper::ADMIN, RoleHelper::MANAGER])) {
 
             redirect('');
             exit();
         }
 
-        // Initialize models
-        $this->vehicleManagerModel = new M_VehicleManager();
-        $this->routeModel = new M_Route();
-        $this->vehicleModel = new M_Vehicle();
-        $this->shiftModel = new M_Shift();
-        $this->scheduleModel = new M_CollectionSchedule();
-        $this->driverModel = new M_Driver();
-        $this->partnerModel = new M_Partner();
-        $this->staffModel = $this->model('M_Staff');
+        $this->routeModel = $this->model('M_Route');
+        $this->vehicleModel = $this->model('M_Vehicle');
+        $this->scheduleModel = $this->model('M_CollectionSchedule');
+        $this->driverModel = $this->model('M_Driver');
         $this->userHelper = new UserHelper();
         $this->collectionModel = $this->model('M_Collection');
         $this->collectionSupplierRecordModel = $this->model('M_CollectionSupplierRecord');
         $this->userModel = $this->model('M_User');
-        $this->employeeModel = $this->model('M_Employee');
         $this->bagModel = $this->model('M_CollectionBag');
-        //$this->supplierApplicationModel = $this->model('M_SupplierApplication');
         $this->supplierModel = $this->model('M_Supplier');
         $this->chatModel = $this->model('M_Chat'); //added by theekshana
         $this->appointmentModel = $this->model('M_Appointment');
         $this->notificationModel = $this->model('M_Notification');
+        $this->chatModel = $this->model('M_Chat');
+        $this->appointmentModel = $this->model('M_Appointment');
+        $this->logModel = $this->model('M_Log');
+
     }
 
-    //----------------------------------------
-    // DASHBOARD METHODS
-    //----------------------------------------
-    // public function collection()
-    // {
-    //     // Get dashboard stats from the model
-    //     $stats = $this->vehicleManagerModel->getDashboardStats();
-
-    //     // Fetch all necessary data for the dropdowns
-    //     $routes = $this->routeModel->getAllRoutes();
-    //     $drivers = $this->driverModel->getUnassignedDrivers();
-    //     $vehicles = $this->vehicleModel->getAllAvailableVehicles();
-    //     $schedules = $this->scheduleModel->getAllSchedules();
-    //     $collectionSchedules = $this->scheduleModel->getSchedulesForNextWeek(); 
-    //     $ongoingCollections = $this->collectionModel->getOngoingCollections();
-    //     $todayRoutes = $this->routeModel->getTodayAssignedRoutes();
-
-    //     // Pass the stats and data for the dropdowns to the view
-    //     $this->view('vehicle_manager/v_collection', [
-    //         'stats' => $stats,
-    //         'routes' => $routes,
-    //         'drivers' => $drivers,
-    //         'vehicles' => $vehicles,
-    //         'schedules' => $schedules,
-    //         'ongoing_collections' => $ongoingCollections,
-    //         'collectionSchedules' => $collectionSchedules,
-    //         'todayRoutes' => $todayRoutes 
-    //     ]);
-    // }
-
-    // public function schedule()
-    // {
-    //     // Get dashboard stats from the model
-    //     $totalSchedules = $this->scheduleModel->getTotalSchedules();
-    //     $availableSchedules = $this->scheduleModel->getActiveSchedulesCount();
-
-    //     // Fetch all necessary data for the dropdowns
-    //     $routes = $this->routeModel->getAllRoutes();
-    //     $drivers = $this->driverModel->getUnassignedDrivers();
-    //     $vehicles = $this->vehicleModel->getAllAvailableVehicles();
-    //     $shifts = $this->shiftModel->getAllShifts();
-    //     $schedules = $this->scheduleModel->getAllSchedules();
-
-    //     // Pass the stats and data for the dropdowns to the view
-    //     $this->view('vehicle_manager/v_collectionschedule', [
-    //         'totalSchedules' => $totalSchedules, // Total schedules
-    //         'availableSchedules' => $availableSchedules, // Currently ongoing schedules
-    //         'routes' => $routes,
-    //         'drivers' => $drivers,
-    //         'vehicles' => $vehicles,
-    //         'shifts' => $shifts,
-    //         'schedules' => $schedules
-    //     ]);
-    //     $this->appointmentModel = $this->model('M_Appointment');
-    // }
 
 
+    public function index() {
 
-     public function index() {
-        // Get all applications
-        $applications = $this->model('M_SupplierApplication')->getAllApplications();
-        
-        // Get approved applications pending role assignment
         $approvedPendingRole = $this->model('M_SupplierApplication')->getApprovedPendingRoleApplications();
+
+        $filters = [
+            'application_id' => isset($_GET['application_id']) ? $_GET['application_id'] : '',
+            'status' => isset($_GET['status']) ? $_GET['status'] : '',
+            'date-from' => isset($_GET['date-from']) ? $_GET['date-from'] : '',
+            'date-to' => isset($_GET['date-to']) ? $_GET['date-to'] : ''
+        ];
+        
+        $page = isset($_GET['page']) && is_numeric($_GET['page']) ? (int)$_GET['page'] : 1;
+        $limit = 2; 
+        $offset = ($page - 1) * $limit;
+
+        $applications = $this->model('M_SupplierApplication')->getAllApplications($filters, $limit, $offset);
+        
+        $totalApplications = $this->model('M_SupplierApplication')->getTotalApplications($filters);
+        $totalPages = ceil($totalApplications / $limit);
 
         $data = [
             'applications' => $applications,
-            'approved_pending_role' => $approvedPendingRole
+            'approved_pending_role' => $approvedPendingRole,
+            'totalApplications' => $totalApplications,            
+            'pendingApplications' => $this->model('M_SupplierApplication')->countByStatus('Pending'),
+            'approvedApplications' => $this->model('M_SupplierApplication')->countByStatus('Approved'),
+            'rejectedApplications' => $this->model('M_SupplierApplication')->countByStatus('Rejected'),
+            'currentPage' => $page,
+            'totalPages' => $totalPages,
+            'filters' => $filters
         ];
 
-        // Load view
         $this->view('supplier_manager/v_applications', $data);
     }
 
@@ -213,12 +151,19 @@ class Manager extends Controller
             redirect('users/login');
         }
     
-
         $supplierApplicationModel = $this->model('M_SupplierApplication');
     
         $supplierApplicationModel->updateApplicationStatus($applicationId, $_SESSION['manager_id'], 'under_review');
 
-    
+        $this->logModel->create(
+            $_SESSION['user_id'],
+            $_SESSION['email'],
+            $_SERVER['REMOTE_ADDR'],
+            "Application with ID {$applicationId} assigned to under review.",
+            $_SERVER['REQUEST_URI'],     
+            http_response_code()     
+        );
+
         redirect('manager/');
     }
 
@@ -250,14 +195,13 @@ class Manager extends Controller
         $profile = $userModel->getProfileByUserId($application->user_id);
         $supplierExpectedAmount  = ($application->monthly_production) / 4.0;
 
-        // Create supplier data array
         $supplierData = [
             'profile_id' => $profile->profile_id,
             'contact_number' => $profile->contact_number, 
             'application_id' => $applicationId,
             'latitude' => $application->latitude,
             'longitude' => $application->longitude,
-            'address' => $application->address, // Include address from application
+            'address' => $application->address,
             'is_active' => 1,
             'is_deleted' => 0,
             'number_of_collections' => 0,
@@ -271,7 +215,16 @@ class Manager extends Controller
             redirect('manager/');
         }
 
-        $supplierApplicationModel->updateApplicationStatus($applicationId, $_SESSION['manager_id'], 'approved');
+        $supplierApplicationModel->updateApplicationStatus($applicationId, $application->user_id, 'approved');
+
+        $this->logModel->create(
+            $_SESSION['user_id'],
+            $_SESSION['email'],
+            $_SERVER['REMOTE_ADDR'],
+            "Application with ID {$applicationId} approved and supplier account created.",
+            $_SERVER['REQUEST_URI'],     
+            http_response_code()     
+        );
 
         redirect('manager/');
     }
@@ -279,6 +232,16 @@ class Manager extends Controller
     public function rejectApplication($applicationId) {
         $supplierApplicationModel = $this->model('M_SupplierApplication');
         $supplierApplicationModel->updateApplicationStatus($applicationId, $_SESSION['manager_id'], 'rejected');
+
+        $this->logModel->create(
+            $_SESSION['user_id'],
+            $_SESSION['email'],
+            $_SERVER['REMOTE_ADDR'],
+            "Application with ID {$applicationId} rejected.",
+            $_SERVER['REQUEST_URI'],     
+            http_response_code()     
+        );
+
         redirect('manager/');
     }
 
@@ -289,8 +252,24 @@ class Manager extends Controller
 
             $result = $this->supplierModel->confirmSupplierRole($applicationId);
             if ($result) {
+                $this->logModel->create(
+                    $_SESSION['user_id'],
+                    $_SESSION['email'],
+                    $_SERVER['REMOTE_ADDR'],
+                    "Supplier role confirmed for application ID {$applicationId}.",
+                    $_SERVER['REQUEST_URI'],     
+                    http_response_code()     
+                );
                 echo json_encode(['success' => true]);
             } else {
+                $this->logModel->create(
+                    $_SESSION['user_id'],
+                    $_SESSION['email'],
+                    $_SERVER['REMOTE_ADDR'],
+                    "Failed to confirm supplier role for application ID {$applicationId}.",
+                    $_SERVER['REQUEST_URI'],     
+                    http_response_code()     
+                );
                 echo json_encode(['success' => false, 'message' => 'Failed to confirm role. Check application ID and user data.']);
             }
         } else {
@@ -305,27 +284,33 @@ class Manager extends Controller
      * ------------------------------------------------------------
      */
 
-     public function supplier() {
-
+    public function supplier() {
         $data = [];
-    
+        
+        // Get filter parameters (optional)
         $supplier_id = isset($_GET['supplier_id']) ? $_GET['supplier_id'] : null;
         $name = isset($_GET['name']) ? $_GET['name'] : null;
         $nic = isset($_GET['nic']) ? $_GET['nic'] : null;
         $contact_number = isset($_GET['contact_number']) ? $_GET['contact_number'] : null;
         $application_id = isset($_GET['application_id']) ? $_GET['application_id'] : null;
         $supplier_status = isset($_GET['supplier_status']) ? $_GET['supplier_status'] : null;
-    
+
+        $page = isset($_GET['page']) && is_numeric($_GET['page']) ? (int)$_GET['page'] : 1;
+        $limit = 3; 
+        $offset = ($page - 1) * $limit;
+
+        // Apply filters to get suppliers with pagination
         if ($supplier_id || $name || $nic || $contact_number || $application_id || $supplier_status) {
-            $data['suppliers'] = $this->supplierModel->getFilteredSuppliers($supplier_id, $name, $nic, $contact_number, $application_id, $supplier_status);
+            $data['suppliers'] = $this->supplierModel->getFilteredSuppliers($supplier_id, $name, $nic, $contact_number, $application_id, $supplier_status, $limit, $offset);
         } else {
-            $data['suppliers'] = $this->supplierModel->getAllSuppliersDetails();
+            $data['suppliers'] = $this->supplierModel->getFilteredSuppliers(null, null, null, null, null, null, $limit, $offset);
         }
-    
 
         $data['total_suppliers'] = $this->supplierModel->getTotalSuppliers();
         $data['active_suppliers'] = $this->supplierModel->getActiveSuppliers();
-        
+        $data['currentPage'] = $page;
+        $data['totalPages'] = ceil($data['total_suppliers'] / $limit);
+
         $this->view('supplier_manager/v_supplier', $data);
     }
 
@@ -336,7 +321,6 @@ class Manager extends Controller
             redirect('manager/supplier');
         }
     
-
         if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             $_POST = filter_input_array(INPUT_POST, FILTER_SANITIZE_STRING);
             
@@ -369,13 +353,11 @@ class Manager extends Controller
                 $errors['email'] = 'Please enter a valid email';
             }
             
-
             if (empty($errors)) {
                 if (!empty($_FILES['supplier_image']['name'])) {
                     $file = $_FILES['supplier_image'];
                     $upload_dir = 'uploads/suppliers/';
                     
-
                     if (!file_exists($upload_dir)) {
                         mkdir($upload_dir, 0777, true);
                     }
@@ -391,7 +373,15 @@ class Manager extends Controller
                 }
                 
                 if ($this->supplierModel->updateSupplier($data)) {
-                    setFlashMessage('Supplier updated sucessfully!');
+                    $this->logModel->create(
+                        $_SESSION['user_id'],
+                        $_SESSION['email'],
+                        $_SERVER['REMOTE_ADDR'],
+                        "Supplier with ID {$id} updated successfully.",
+                        $_SERVER['REQUEST_URI'],     
+                        http_response_code()     
+                    );
+                    setFlashMessage('Supplier updated successfully!');
                     redirect('manager/manageSupplier/' . $id);
                 } else {
                     setFlashMessage('Failed to update supplier', 'error');
@@ -403,17 +393,14 @@ class Manager extends Controller
 
         $supplier = $this->supplierModel->getSupplierById($id);
         
-
         if (!$supplier) {
             setFlashMessage('Supplier not found, please try again later!', 'error');
             redirect('manager/supplier');
         }
         
-
         $upcomingSchedules = $this->scheduleModel->getUpcomingSchedulesBySupplierId($id);
         $collectionHistory = $this->collectionModel->getSupplierCollections($id);
         
-
         $viewData = [
             'supplier' => $supplier,
             'upcomingSchedules' => $upcomingSchedules,
@@ -425,7 +412,6 @@ class Manager extends Controller
             $viewData = array_merge($viewData, $data);
         }
         
-
         $this->view('supplier_manager/v_supplier_profile', $viewData);
     }
 
@@ -533,10 +519,9 @@ class Manager extends Controller
             redirect('users/login');
         }
 
-        // Get data for the form
         $data = [
             'license_plate' => '',
-            'status' => 'Available', // Default status
+            'status' => 'Available',
             'capacity' => '',
             'vehicle_type' => '',
             'make' => '',
@@ -546,7 +531,6 @@ class Manager extends Controller
         ];
 
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-            // Sanitize and get POST data
             $_POST = filter_input_array(INPUT_POST, FILTER_SANITIZE_STRING);
 
             $data = [
@@ -560,7 +544,6 @@ class Manager extends Controller
                 'error' => ''
             ];
 
-            // Validate data
             if (empty($data['license_plate']) || 
                 empty($data['capacity']) || 
                 empty($data['vehicle_type']) || 
@@ -569,15 +552,13 @@ class Manager extends Controller
                 empty($data['manufacturing_year'])) {
                 $data['error'] = 'Please fill in all fields';
             } else {
-                // Check if the license plate is unique
                 if ($this->vehicleModel->isLicensePlateTaken($data['license_plate'])) {
                     $data['error'] = 'This license plate is already taken.';
                 } else {
-                    // Handle image upload
                     if (isset($_FILES['image']) && $_FILES['image']['error'] == 0) {
                         $uploadResult = uploadVehicleImage($_FILES['image'], $data['license_plate']);
                         if ($uploadResult['success']) {
-                            $data['image_path'] = $uploadResult['path']; // Store the file path
+                            $data['image_path'] = $uploadResult['path'];
                         } else {
                             $data['error'] = $uploadResult['message'];
                         }
@@ -585,11 +566,18 @@ class Manager extends Controller
                         $data['error'] = 'Image file is required.';
                     }
 
-                    // If no errors, create vehicle
                     if (empty($data['error'])) {
                         if ($this->vehicleModel->createVehicle($data)) {
-                            setFlashMessage('Vehicle created succesfully!');
-                            redirect('manager/vehicle'); // Redirect to the vehicle list or another page
+                            $this->logModel->create(
+                                $_SESSION['user_id'],
+                                $_SESSION['email'],
+                                $_SERVER['REMOTE_ADDR'],
+                                "Vehicle with license plate {$data['license_plate']} created successfully.",
+                                $_SERVER['REQUEST_URI'],     
+                                http_response_code()     
+                            );
+                            setFlashMessage('Vehicle created successfully!');
+                            redirect('manager/vehicle');
                         } else {
                             setFlashMessage('Vehicle creation failed, please try again later!');
                         }
@@ -598,7 +586,6 @@ class Manager extends Controller
             }
         }
 
-        // Load the view for creating a vehicle
         $this->view('vehicle_manager/v_create_vehicle', $data);
     }
 
@@ -607,7 +594,6 @@ class Manager extends Controller
             redirect('users/login');
         }
 
-        // Fetch the current vehicle details
         $vehicle = $this->vehicleModel->getVehicleById($vehicle_id);
         if (!$vehicle) {
             setFlashMessage('Vehicle not found', 'error');
@@ -615,7 +601,6 @@ class Manager extends Controller
         }
 
         if ($_SERVER['REQUEST_METHOD'] == 'POST') {
-            // Validate and sanitize input
             $license_plate = htmlspecialchars(trim($_POST['license_plate']));
             $vehicle_type = htmlspecialchars(trim($_POST['vehicle_type']));
             $make = htmlspecialchars(trim($_POST['make']));
@@ -624,10 +609,8 @@ class Manager extends Controller
             $color = htmlspecialchars(trim($_POST['color']));
             $capacity = htmlspecialchars(trim($_POST['capacity']));
 
-            // Check the current status of the vehicle
             if ($vehicle->status === 'In Use') {
-                // Handle the case where the vehicle is in use
-                setFlashMessage('Cannot update the vehicle because its currently in use.', 'error');
+                setFlashMessage('Cannot update the vehicle because it is currently in use.', 'error');
                 redirect('manager/vehicle');
             }
 
@@ -646,12 +629,21 @@ class Manager extends Controller
                 $uploadResult = uploadVehicleImage($_FILES['vehicle_image'], $license_plate);
                 if ($uploadResult['success']) {
                     $data['image_path'] = $uploadResult['path']; 
+                } else {
                     setFlashMessage('There is an issue when updating, Error: ' . $uploadResult['message']);
                     redirect('manager/vehicle');
                 }
             }
 
             if ($this->vehicleModel->updateVehicle($data)) {
+                $this->logModel->create(
+                    $_SESSION['user_id'],
+                    $_SESSION['email'],
+                    $_SERVER['REMOTE_ADDR'],
+                    "Vehicle with ID {$vehicle_id} updated successfully.",
+                    $_SERVER['REQUEST_URI'],     
+                    http_response_code()     
+                );
                 setFlashMessage('Vehicle updated successfully!');
                 redirect('manager/vehicle');
             } else {
@@ -673,12 +665,16 @@ class Manager extends Controller
     }
 
     public function deleteVehicle($id){
-
-        // NEED TO DOUBLE CHECK THIS!!! A SIMPLE INSTRUCTION BUT ITS NOT DELETING. IDK ...
-
         if ($this->vehicleModel->markAsDeleted($id)) {
-            error_log("Vehicle " . $id . " marked as deleted");
-            setFlashMessage('Vehicle deleted sucessfully!');
+            $this->logModel->create(
+                $_SESSION['user_id'],
+                $_SESSION['email'],
+                $_SERVER['REMOTE_ADDR'],
+                "Vehicle with ID {$id} marked as deleted.",
+                $_SERVER['REQUEST_URI'],     
+                http_response_code()     
+            );
+            setFlashMessage('Vehicle deleted successfully!');
         } else {
             setFlashMessage('Vehicle deletion failed!', 'error');
         }
@@ -688,7 +684,6 @@ class Manager extends Controller
 
     public function addVehicle() {
         if ($_SERVER['REQUEST_METHOD'] == 'POST') {
-            // Validate and sanitize input
             $license_plate = htmlspecialchars(trim($_POST['license_plate']));
             $vehicle_type = htmlspecialchars(trim($_POST['vehicle_type']));
             $make = htmlspecialchars(trim($_POST['make']));
@@ -697,15 +692,12 @@ class Manager extends Controller
             $color = htmlspecialchars(trim($_POST['color']));
             $capacity = htmlspecialchars(trim($_POST['capacity']));
 
-            // Handle file upload
             if (isset($_FILES['vehicle_image']) && $_FILES['vehicle_image']['error'] == 0) {
                 $image = $_FILES['vehicle_image'];
                 $target_dir = "/opt/lampp/htdocs/Evergreen_Project/public/uploads/vehicle_photos/";
-                $target_file = $target_dir . $license_plate . ".jpg"; // Save as {license_plate}.jpg
+                $target_file = $target_dir . $license_plate . ".jpg";
 
-                // Move the uploaded file to the target directory
                 if (move_uploaded_file($image['tmp_name'], $target_file)) {
-                    // File upload successful, now save vehicle details to the database
                     $this->vehicleModel->addVehicle([
                         'license_plate' => $license_plate,
                         'vehicle_type' => $vehicle_type,
@@ -714,47 +706,59 @@ class Manager extends Controller
                         'manufacturing_year' => $manufacturing_year,
                         'color' => $color,
                         'capacity' => $capacity,
-                        'image_path' => $target_file // Optional: store the image path in the database
+                        'image_path' => $target_file
                     ]);
 
-                    // Redirect or show success message
+                    $this->logModel->create(
+                        $_SESSION['user_id'],
+                        $_SESSION['email'],
+                        $_SERVER['REMOTE_ADDR'],
+                        "Vehicle with license plate {$license_plate} added successfully.",
+                        $_SERVER['REQUEST_URI'],     
+                        http_response_code()     
+                    );
+
                     header('Location: ' . URLROOT . '/manager/vehicle');
                     exit();
                 } else {
-                    // Handle file upload error
-                    echo "Error uploading file.";
+                    setFlashMessage('Error uploading file.', 'error');
                 }
             } else {
-                // Handle no file uploaded or other errors
-                echo "No file uploaded or there was an error.";
+                setFlashMessage('No file uploaded or there was an error.', 'error');
             }
         }
     }
 
+
     public function removeVehicle() {
         if ($_SERVER['REQUEST_METHOD'] == 'POST') {
-            // Validate and sanitize input
             $license_plate = htmlspecialchars(trim($_POST['license_plate']));
 
-            // Check if the vehicle exists
             $vehicle = $this->vehicleModel->getVehicleByLicensePlate($license_plate);
             if ($vehicle) {
-                // Remove the vehicle from the database
                 if ($this->vehicleModel->deleteVehicle($license_plate)) {
-                    // Optionally, remove the vehicle image file
                     $imagePath = "/opt/lampp/htdocs/Evergreen_Project/public/uploads/vehicle_photos/" . $license_plate . ".jpg";
                     if (file_exists($imagePath)) {
-                        unlink($imagePath); // Delete the image file
+                        unlink($imagePath);
                     }
 
-                    // Redirect or show success message
+                    $this->logModel->create(
+                        $_SESSION['user_id'],
+                        $_SESSION['email'],
+                        $_SERVER['REMOTE_ADDR'],
+                        "Vehicle with license plate {$license_plate} removed successfully.",
+                        $_SERVER['REQUEST_URI'],     
+                        http_response_code()     
+                    );
+
+                    setFlashMessage('Vehicle removed successfully!');
                     header('Location: ' . URLROOT . '/manager/vehicle');
                     exit();
                 } else {
-                    echo "Error removing vehicle.";
+                    setFlashMessage('Error removing vehicle.', 'error');
                 }
             } else {
-                echo "Vehicle not found.";
+                setFlashMessage('Vehicle not found.', 'error');
             }
         }
     }
@@ -916,6 +920,14 @@ class Manager extends Controller
 
                     // Insert the driver data into the drivers table
                     if ($this->driverModel->addDriver($driverData)) {
+                        $this->logModel->create(
+                            $_SESSION['user_id'],
+                            $_SESSION['email'],
+                            $_SERVER['REMOTE_ADDR'],
+                            "Driver added to the system",
+                            $_SERVER['REQUEST_URI'],     
+                            http_response_code()     
+                        );
                         $_SESSION['flash_messages']['driver_message']['message'] .= ' Driver added successfully.';
                     } else {
                         $_SESSION['flash_messages']['driver_message']['message'] .= ' Failed to add driver.';
@@ -1057,6 +1069,15 @@ class Manager extends Controller
                     if (!$this->driverModel->updateDriver($driverData)) {
                         throw new Exception('Failed to update driver');
                     }
+
+                    $this->logModel->create(
+                        $_SESSION['user_id'],
+                        $_SESSION['email'],
+                        $_SERVER['REMOTE_ADDR'],
+                        "Updated driver: ". $data['driver_id'] ." details",
+                        $_SERVER['REQUEST_URI'],     
+                        http_response_code()     
+                    );
                     
                     
                     setFlashMessage('Updated driver sucessfully!');
@@ -1259,6 +1280,15 @@ class Manager extends Controller
                     if (!$driver_id) {
                         throw new Exception('Failed to create driver record');
                     }
+
+                    $this->logModel->create(
+                        $_SESSION['user_id'],
+                        $_SESSION['email'],
+                        $_SERVER['REMOTE_ADDR'],
+                        "Created a new driver account",
+                        $_SERVER['REQUEST_URI'],     
+                        http_response_code()     
+                    );
                     
 
                     
@@ -1307,6 +1337,15 @@ class Manager extends Controller
         
         // Not in any schedules, so we can mark as deleted
         if ($this->driverModel->markDriverAsDeleted($id)) {
+
+            $this->logModel->create(
+                $_SESSION['user_id'],
+                $_SESSION['email'],
+                $_SERVER['REMOTE_ADDR'],
+                "Driver " . $id . " marked as deleted",
+                $_SERVER['REQUEST_URI'],     
+                http_response_code()     
+            );
             setFlashMessage('Driver successfully marked as deleted!');
             redirect('manager/driver');
         } else {
@@ -1380,10 +1419,18 @@ class Manager extends Controller
             $response = [
                 'success' => true,
                 'message' => 'Route created successfully',
-                'routeId' => $result // Assuming createRoute returns the new route ID
+                'routeId' => $result 
             ];
 
-            error_log("Sending response: " . json_encode($response)); // Debug log
+            $this->logModel->create(
+                $_SESSION['user_id'],
+                $_SESSION['email'],
+                $_SERVER['REMOTE_ADDR'],
+                "Created a new route",
+                $_SERVER['REQUEST_URI'],     
+                http_response_code()     
+            );
+
             echo json_encode($response);
 
         } catch (Exception $e) {
@@ -1550,63 +1597,61 @@ class Manager extends Controller
      * ------------------------------------------------------------
      */
 
-    public function collection(){
+    public function collection() {
         // Get dashboard stats from the model
-        $stats = $this->vehicleManagerModel->getDashboardStats();
+        $stats = $this->userModel->getDashboardStats();
         $stats['collections'] = (array)$stats['collections'];
 
-        // Retrieve filter parameters from the GET request
+        // Get filter parameters (optional)
         $collection_id = isset($_GET['collection_id']) ? $_GET['collection_id'] : null;
         $schedule_id = isset($_GET['schedule_id']) ? $_GET['schedule_id'] : null;
         $status = isset($_GET['status']) ? $_GET['status'] : null;
         $start_date = isset($_GET['start_date']) ? $_GET['start_date'] : null;
         $end_date = isset($_GET['end_date']) ? $_GET['end_date'] : null;
-        $min_quantity = isset($_GET['min_quantity']) ? $_GET['min_quantity'] : null;
-        $max_quantity = isset($_GET['max_quantity']) ? $_GET['max_quantity'] : null;
-        $bags_added = isset($_GET['bags_added']) ? $_GET['bags_added'] : null;
 
-        // Fetch collections based on filters
-        if ($collection_id || $schedule_id || $status || $start_date || $end_date || $min_quantity || $max_quantity || $bags_added !== null) {
+        // Determine the current page, defaulting to page 1
+        $page = isset($_GET['page']) && is_numeric($_GET['page']) ? (int)$_GET['page'] : 1;
+        $limit = 5; // Number of collections per page
+        $offset = ($page - 1) * $limit;
+
+        // Fetch collections based on filters with pagination
+        if ($collection_id || $schedule_id || $status || $start_date || $end_date) {
             $allCollections = $this->collectionModel->getFilteredCollections(
                 $collection_id, 
                 $schedule_id, 
                 $status, 
                 $start_date, 
-                $end_date, 
-                $min_quantity, 
-                $max_quantity, 
-                $bags_added
+                $end_date,
+                $limit,
+                $offset
             );
         } else {
-            // Otherwise, fetch all collections
-            $allCollections = $this->collectionModel->getAllCollections();
+            $allCollections = $this->collectionModel->getFilteredCollections(
+                null, 
+                null, 
+                null, 
+                null, 
+                null,
+                $limit,
+                $offset 
+            );
         }
 
-        // Fetch all necessary data for the dropdowns
-        $schedules = $this->scheduleModel->getAllSchedules();
-        $collectionSchedules = $this->scheduleModel->getSchedulesForNextWeek(); 
-        $todayRoutes = $this->routeModel->getTodayAssignedRoutes();
-
+        // Get total count for pagination
         $data = [
             'stats' => $stats,
-            'schedules' => $schedules,
             'all_collections' => $allCollections,
-            'collectionSchedules' => $collectionSchedules,
-            'todayRoutes' => $todayRoutes,
-            // Pass the filter values back to the view to maintain state
+            'currentPage' => $page,
+            'totalCollections' => $this->collectionModel->getTotalCollections(), // You need to implement this method
             'filters' => [
                 'collection_id' => $collection_id,
                 'schedule_id' => $schedule_id,
                 'status' => $status,
                 'start_date' => $start_date,
                 'end_date' => $end_date,
-                'min_quantity' => $min_quantity,
-                'max_quantity' => $max_quantity,
-                'bags_added' => $bags_added
             ]
         ];
 
-        // Pass the stats and data for the dropdowns to the view
         $this->view('vehicle_manager/v_collection_0', $data);
     }
 
@@ -1626,7 +1671,6 @@ class Manager extends Controller
         $routes = $this->routeModel->getAllRoutes();
         $drivers = $this->driverModel->getUnassignedDrivers();
         $vehicles = $this->vehicleModel->getAllAvailableVehicles();
-        $shifts = $this->shiftModel->getAllShifts();
         $schedules = $this->scheduleModel->getAllSchedules();
 
         // Pass the stats and data for the dropdowns to the view
@@ -1636,7 +1680,6 @@ class Manager extends Controller
             'routes' => $routes,
             'drivers' => $drivers,
             'vehicles' => $vehicles,
-            'shifts' => $shifts,
             'schedules' => $schedules
         ]);
     }
@@ -1741,6 +1784,15 @@ class Manager extends Controller
                                         error_log("Notification failed: No user ID for supplier ID: $supplierId");
                                     }
                                 }
+
+                                $this->logModel->create(
+                                    $_SESSION['user_id'],
+                                    $_SESSION['email'],
+                                    $_SERVER['REMOTE_ADDR'],
+                                    "Created a new schedule",
+                                    $_SERVER['REQUEST_URI'],     
+                                    http_response_code()     
+                                );
     
                                 setFlashMessage('Schedule created sucessfully!');
                                 redirect('manager/schedule');
@@ -1874,6 +1926,15 @@ class Manager extends Controller
                         // Update schedule
                         if ($this->scheduleModel->updateSchedule($data)) {
                             // Send notifications to the driver
+
+                            $this->logModel->create(
+                                $_SESSION['user_id'],
+                                $_SESSION['email'],
+                                $_SERVER['REMOTE_ADDR'],
+                                "Updated the schedule " . $scheduleId,
+                                $_SERVER['REQUEST_URI'],     
+                                http_response_code()     
+                            );
                             setFlashMessage('Schedule updated successfully!');
                             $driverUserId = $this->userModel->getUserIdByDriverId($data['driver_id']);
                             $this->notificationModel->createNotification(
@@ -1943,10 +2004,21 @@ class Manager extends Controller
                             'A schedule related to your route has been deleted.',
                             ['link' => 'supplier/viewSchedule']
                         );
+                        
                     } else {
                         error_log("Failed to create notification for supplier ID: $supplierId (no user_id found)");
                     }
                 }
+
+                $this->logModel->create(
+                    $_SESSION['user_id'],
+                    $_SESSION['email'],
+                    $_SERVER['REMOTE_ADDR'],
+                    "Deleted the schedule " . $schedule_id,
+                    $_SERVER['REQUEST_URI'],     
+                    http_response_code()     
+                );
+                setFlashMessage("Deleted the schedule sucessfully!");
             }
     
             // Now delete the schedule
@@ -1963,7 +2035,11 @@ class Manager extends Controller
      */
 
     public function appointments() {
-        $this->requireLogin(); // Assuming session check
+        $this->requireLogin(); 
+
+        if(!isset($_SESSION['manager_id'])) {
+            redirect('manager/allAppointments');
+        }
         
         $managerId = $_SESSION['manager_id'];
     
@@ -1971,38 +2047,129 @@ class Manager extends Controller
         $incomingRequests = $this->appointmentModel->getIncomingRequests($managerId);
         $acceptedAppointments = $this->appointmentModel->getAcceptedAppointments($managerId);
     
-        $this->view('supplier_manager/v_appointments', [
+        $data = [
             'timeSlots' => $timeSlots,
             'incomingRequests' => $incomingRequests,
             'acceptedAppointments' => $acceptedAppointments
-        ]);
+        ];
+
+        $this->view('supplier_manager/v_appointments', $data);
+    }
+
+    public function allAppointments() {
+        // Ensure user is logged in
+        $this->requireLogin();
+        
+        // if(!isset($_SESSION['manager_id']) || empty($_SESSION['manager_id'])) {
+        //     redirect('users/login');
+        //     return;
+        // }
+        
+        $manager_id = $_SESSION['manager_id'];
+        
+        try {
+            $appointments = $this->model('M_Appointment')->getAllAppointments($manager_id);
+            
+            $data = [
+                'appointments' => $appointments,
+                'title' => 'All Appointments'
+            ];
+        
+            $this->view('supplier_manager/v_all_appointments', $data);
+        } catch (Exception $e) {
+            redirect('manager/');
+        }
     }
 
     public function createSlot() {
+        $this->requireLogin();
+        
+        // If form is submitted
         if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+            // Sanitize POST data
+            $_POST = filter_input_array(INPUT_POST, FILTER_SANITIZE_FULL_SPECIAL_CHARS);
+            
+            // Process form
             $data = [
                 'manager_id' => $_SESSION['manager_id'],
                 'date' => trim($_POST['date']),
                 'start_time' => trim($_POST['start_time']),
-                'end_time' => trim($_POST['end_time'])
+                'end_time' => trim($_POST['end_time']),
+                'date_err' => '',
+                'time_err' => ''
             ];
-    
-            if ($this->appointmentModel->createSlot($data)) {
-                
-                redirect('manager/appointments');
-            } else {
-                redirect('manager/createSlot');
+            
+            if (strtotime($data['date']) < strtotime(date('Y-m-d'))) {
+                $data['date_err'] = 'Time slots must be scheduled for future dates';
             }
+            
+            $start_timestamp = strtotime($data['start_time']);
+            $end_timestamp = strtotime($data['end_time']);
+
+            if ($start_timestamp >= $end_timestamp) {
+                $data['time_err'] = 'End time must be after start time';
+            } else {
+
+                $duration_minutes = ($end_timestamp - $start_timestamp) / 60;
+
+                if ($duration_minutes < 30) {
+                    $data['time_err'] = 'Time slots must be at least 30 minutes long';
+                } else if ($duration_minutes > 120) {
+                    $data['time_err'] = 'Time slots cannot exceed 2 hours';
+                }
+            }
+            
+            // Check if slot already exists or overlaps with another slot
+            $overlap = $this->appointmentModel->isSlotOverlapping($data);
+            if ($overlap) {
+                $data['time_err'] = 'This time slot overlaps with an existing slot';
+            }
+            
+            // Make sure no errors
+            if (empty($data['date_err']) && empty($data['time_err'])) {
+                // Create slot
+                if ($this->appointmentModel->createSlot($data)) {
+                    redirect('manager/appointments');
+                } else {
+                }
+            }
+            
+            // If there were errors, show the form again with the error messages
+            $this->view('supplier_manager/v_create_slot', $data);
         } else {
-            // Load the form view for creating a slot
             $data = [
                 'date' => '',
                 'start_time' => '',
-                'end_time' => ''
+                'end_time' => '',
+                'date_err' => '',
+                'time_err' => ''
             ];
-    
+            
+            // Load view
             $this->view('supplier_manager/v_create_slot', $data);
         }
+    }
+
+    public function cancelSlot() {
+        $this->requireLogin();
+        
+        // Check if form was submitted
+        if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+            $slotId = isset($_POST['slot_id']) ? $_POST['slot_id'] : null;
+            
+            if ($slotId) {
+                $managerId = $_SESSION['manager_id'];
+                
+                // Call the model method to cancel the slot
+                if ($this->appointmentModel->cancelSlot($slotId, $managerId)) {
+                } else {
+                }
+            } else {
+            }
+        }
+        
+        // Redirect back to the appointments page
+        redirect('manager/appointments');
     }
 
 
@@ -2177,44 +2344,99 @@ class Manager extends Controller
 
     public function complaints()
     {
-        // Get complaints data
-        $complaints = $this->supplierModel->getComplaints();
-    
-        // Get complaint statistics
         $totalComplaints = $this->supplierModel->getTotalComplaints();
         $resolvedComplaints = $this->supplierModel->getComplaintsByStatus('Resolved');
         $pendingComplaints = $this->supplierModel->getComplaintsByStatus('Pending');
-    
-        // Set up data array for the view
+        
+        $complaint_id = isset($_GET['complaint_id']) ? $_GET['complaint_id'] : null;
+        $status = isset($_GET['status']) ? $_GET['status'] : null;
+        $date_from = isset($_GET['date_from']) ? $_GET['date_from'] : null;
+        $date_to = isset($_GET['date_to']) ? $_GET['date_to'] : null;
+
+
+        $page = isset($_GET['page']) && is_numeric($_GET['page']) ? (int)$_GET['page'] : 1;
+        $limit = 5; 
+        $offset = ($page - 1) * $limit;
+
+        $complaints = $this->supplierModel->getFilteredComplaints(
+            $complaint_id, 
+            $status, 
+            $date_from, 
+            $date_to,
+            $limit,
+            $offset  
+        );
+
+        $totalComplaints = $this->supplierModel->getTotalComplaints($complaint_id, $status, $date_from, $date_to);
+        $totalPages = ceil($totalComplaints / $limit);
+
         $data = [
             'complaints' => $complaints,
             'totalComplaints' => $totalComplaints,
             'resolvedComplaints' => count($resolvedComplaints),
-            'pendingComplaints' => count($pendingComplaints)
+            'pendingComplaints' => count($pendingComplaints),
+            'currentPage' => $page,
+            'totalPages' => $totalPages,
         ];
-    
+        
         $this->view('supplier_manager/v_complaints', $data);
     }
 
-    //added by theekshana from supplier manager
+
+    public function viewComplaint($id = null)
+    {
+        if ($id === null) {
+            redirect('manager/complaints');
+        }
+    
+        $complaint = $this->supplierModel->getComplaintById($id);
+    
+        if (!$complaint) {
+            setFlashMessage('Complaint not found!', 'error');
+            redirect('manager/complaints');
+        }
+    
+        $data = [
+            'complaint' => $complaint
+        ];
+    
+        $this->view('supplier_manager/v_view_complaint', $data);
+    }
 
     public function applications() {
-        // Get all applications
-        $applications = $this->model('M_SupplierApplication')->getAllApplications();
-        
-        // Get approved applications pending role assignment
+
         $approvedPendingRole = $this->model('M_SupplierApplication')->getApprovedPendingRoleApplications();
+
+        $filters = [
+            'application_id' => isset($_GET['application_id']) ? $_GET['application_id'] : '',
+            'status' => isset($_GET['status']) ? $_GET['status'] : '',
+            'date-from' => isset($_GET['date-from']) ? $_GET['date-from'] : '',
+            'date-to' => isset($_GET['date-to']) ? $_GET['date-to'] : ''
+        ];
+        
+        $page = isset($_GET['page']) && is_numeric($_GET['page']) ? (int)$_GET['page'] : 1;
+        $limit = 10; 
+        $offset = ($page - 1) * $limit;
+
+        $applications = $this->model('M_SupplierApplication')->getAllApplications($filters, $limit, $offset);
+        
+        $totalApplications = $this->model('M_SupplierApplication')->getTotalApplications($filters);
+        $totalPages = ceil($totalApplications / $limit);
 
         $data = [
             'applications' => $applications,
-            'approved_pending_role' => $approvedPendingRole
+            'approved_pending_role' => $approvedPendingRole,
+            'totalApplications' => $totalApplications,            
+            'pendingApplications' => $this->model('M_SupplierApplication')->countByStatus('Pending'),
+            'approvedApplications' => $this->model('M_SupplierApplication')->countByStatus('Approved'),
+            'rejectedApplications' => $this->model('M_SupplierApplication')->countByStatus('Rejected'),
+            'currentPage' => $page,
+            'totalPages' => $totalPages,
+            'filters' => $filters
         ];
 
-        // Load view
         $this->view('supplier_manager/v_applications', $data);
     }
-
-
 
     public function supplierStatement() {
         $data = [];
@@ -2555,25 +2777,25 @@ class Manager extends Controller
         echo json_encode(['success' => false, 'message' => 'Invalid request method']);
         exit();
     }
-    public function viewComplaint($id = null)
-    {
-        if ($id === null) {
-            redirect('manager/complaints');
-        }
+    // public function viewComplaint($id = null)
+    // {
+    //     if ($id === null) {
+    //         redirect('manager/complaints');
+    //     }
     
-        $complaint = $this->supplierModel->getComplaintById($id);
+    //     $complaint = $this->supplierModel->getComplaintById($id);
     
-        if (!$complaint) {
-            setFlashMessage('Complaint not found!', 'error');
-            redirect('manager/complaints');
-        }
+    //     if (!$complaint) {
+    //         setFlashMessage('Complaint not found!', 'error');
+    //         redirect('manager/complaints');
+    //     }
     
-        $data = [
-            'complaint' => $complaint
-        ];
+    //     $data = [
+    //         'complaint' => $complaint
+    //     ];
     
-        $this->view('supplier_manager/v_view_complaint', $data);
-    }
+    //     $this->view('supplier_manager/v_view_complaint', $data);
+    // }
     
     public function resolveComplaint()
     {
@@ -2604,6 +2826,14 @@ class Manager extends Controller
         ];
     
         if ($this->supplierModel->updateStatus($data)) {
+            $this->logModel->create(
+                $_SESSION['user_id'],
+                $_SESSION['email'],
+                $_SERVER['REMOTE_ADDR'],
+                "Re-opened the complaint: ".$data['complaint_id'],
+                $_SERVER['REQUEST_URI'],     
+                http_response_code()     
+            );
             setFlashMessage('Complaint reopen sucessfully!');
         } else {
             setFlashMessage('Couldnt reopen the complaint, try again later!', 'error');
@@ -2615,15 +2845,25 @@ class Manager extends Controller
     public function deleteComplaint($id)
     {
         if ($this->supplierModel->deleteComplaint($id)) {
+
+            $this->logModel->create(
+                $_SESSION['user_id'],
+                $_SESSION['email'],
+                $_SERVER['REMOTE_ADDR'],
+                "Deleted the complaint: ".$id,
+                $_SERVER['REQUEST_URI'],     
+                http_response_code()     
+            );
             setFlashMessage('Complaint deleted sucessfully!');
             redirect('manager/complaints');
         } else {
             setFlashMessage('Couldnt delete the complaint please try again later!', 'error');
             redirect('manager/viewComplaint/' . $id);
         }
+        
+        echo json_encode(['success' => false, 'message' => 'Invalid request method']);
+        exit();
     }
-    
-     
 
     public function respondRequest() {
         if ($_SERVER['REQUEST_METHOD'] == 'POST') {
@@ -2639,6 +2879,15 @@ class Manager extends Controller
     
             if ($action === 'accept') {
                 if ($this->appointmentModel->acceptRequest($requestId)) {
+
+                    $this->logModel->create(
+                        $_SESSION['user_id'],
+                        $_SESSION['email'],
+                        $_SERVER['REMOTE_ADDR'],
+                        "Accepted the request for the timeslot",
+                        $_SERVER['REQUEST_URI'],     
+                        http_response_code()     
+                    );
                     setFlashMessage('Request accepted successful for request ID: ' . $requestId );
     
                     $notificationModel->createNotification(
@@ -2667,6 +2916,15 @@ class Manager extends Controller
     
             } elseif ($action === 'reject') {
                 $this->appointmentModel->rejectRequest($requestId);
+
+                $this->logModel->create(
+                    $_SESSION['user_id'],
+                    $_SESSION['email'],
+                    $_SERVER['REMOTE_ADDR'],
+                    "Rejected the request for the time slot",
+                    $_SERVER['REQUEST_URI'],     
+                    http_response_code()     
+                );
                 setFlashMessage('Request rejected successfuly!');
     
                 $notificationModel->createNotification(

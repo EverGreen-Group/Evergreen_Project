@@ -19,7 +19,7 @@
                 </li>
                 <li>
                     <i class='bx bx-chevron-right'></i>
-                    <a href="<?php echo URLROOT; ?>/vehicledriver/collectionBags/<?php echo $data['collection']->collection_id; ?>/<?php echo $data['supplier']['id']; ?>">Bags</a>
+                    <a href="<?php echo URLROOT; ?>/vehicledriver/collectionBags/<?php echo $data['collection']->collection_id; ?>/<?php echo $data['supplier_id']; ?>">Bags</a>
                 </li>
                 <li>
                     <i class='bx bx-chevron-right'></i>
@@ -40,7 +40,7 @@
                 <input type="hidden" name="history_id" value="<?php echo $data['bag']->history_id; ?>">
                 <input type="hidden" name="bag_id" value="<?php echo $data['bag']->bag_id; ?>">
                 <input type="hidden" name="collection_id" value="<?php echo $data['collection']->collection_id; ?>">
-                <input type="hidden" name="supplier_id" value="<?php echo $data['supplier']['id']; ?>">
+                <input type="hidden" name="supplier_id" value="<?php echo $data['supplier_id']; ?>">
                 
                 <div class="form-group">
                     <label>Bag Capacity: <span><?php echo $data['bag']->capacity_kg; ?></span>kg</label>
@@ -87,7 +87,7 @@
                         <i class='bx bx-check'></i>
                         Update Bag
                     </button>
-                    <a href="<?php echo URLROOT; ?>/vehicledriver/collectionBags/<?php echo $data['collection']->collection_id; ?>/<?php echo $data['supplier']['id']; ?>" class="action-btn">
+                    <a href="<?php echo URLROOT; ?>/vehicledriver/collectionBags/<?php echo $data['collection']->collection_id; ?>/<?php echo $data['supplier_id']; ?>" class="action-btn">
                         <i class='bx bx-x'></i>
                         Cancel
                     </a>
@@ -96,3 +96,5 @@
         </div>
     </div>
 </main> 
+
+<script src="<?php echo URLROOT; ?>/public/css/script.js"></script>

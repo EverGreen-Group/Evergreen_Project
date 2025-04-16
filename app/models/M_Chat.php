@@ -187,4 +187,6 @@ class M_Chat {
 
         return $announcements;
     }
+
+    
 }

@@ -4,6 +4,7 @@ require_once APPROOT . '/models/M_Supplier.php';
 require_once APPROOT . '/models/M_Route.php';
 require_once APPROOT . '/models/M_Collection.php';
 require_once APPROOT . '/models/M_CollectionSchedule.php';
+require_once APPROOT . '/models/M_Complaint.php';
 require_once APPROOT . '/models/M_Bag.php';
 require_once APPROOT . '/models/M_Chat.php';
 require_once APPROOT . '/models/M_User.php'; // Add User model
@@ -22,6 +23,7 @@ class Supplier extends Controller {
     private $routeModel;
     private $collectionModel;
     private $scheduleModel;
+    private $complaintModel;
     private $bagModel;
     private $appointmentModel;
     private $chatModel;
@@ -37,6 +39,7 @@ class Supplier extends Controller {
         $this->routeModel = new M_Route();
         $this->collectionModel = new M_Collection();
         $this->scheduleModel = new M_CollectionSchedule();
+        $this->complaintModel = new M_Complaint();
         $this->bagModel = new M_Bag();
         $this->appointmentModel = $this->model('M_Appointment');
         $this->chatModel = new M_Chat();
@@ -202,6 +205,8 @@ class Supplier extends Controller {
         $this->view('supplier/v_confirmation_history', $data);
     }
 
+
+
     public function payments() {
         $supplierId = $_SESSION['supplier_id'];
 
@@ -291,69 +296,48 @@ class Supplier extends Controller {
         $this->view('supplier/v_payment_analysis', $data);
     }
 
-    public function profile() {
-        $data = [];
-        $this->view('supplier/v_profile', $data);
-    }
 
-    public function updateProfile() {
-        if ($_SERVER['REQUEST_METHOD'] != 'POST') {
-            redirect('Supplier/profile');
-            return;
-        }
-
-        $userId = $_SESSION['user_id'];
-        $profileData = $this->supplierModel->getSupplierProfile($userId);
-
-        $data = [
-            'supplier_id' => $profileData['supplier']->supplier_id,
-            'profile_id' => $profileData['profile']->profile_id,
-            'supplier_contact' => trim($_POST['supplier_contact']),
-            'image_path' => ''
-        ];
-
-        if (!empty($_FILES['profile_image']['name'])) {
-            $uploadDir = 'uploads/profile_photos/';
-            $maxFileSize = 5 * 1024 * 1024; // 5MB
-
-            if (!file_exists($uploadDir)) {
-                mkdir($uploadDir, 0777, true);
+    public function updateProfile()
+    {
+        if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+            $userId = $_SESSION['user_id'];
+            
+            $profileData = $this->supplierModel->getSupplierProfile($userId);
+            
+            $data = [
+                'supplier_id' => $profileData['supplier']->supplier_id,
+                'profile_id' => $profileData['profile']->profile_id,
+                'supplier_contact' => trim($_POST['supplier_contact']),
+                'image_path' => ''
+            ];
+            
+            if (!empty($_FILES['profile_image']['name'])) {
+                $uploadDir = 'uploads/profile_photos/';
+                
+                if (!file_exists($uploadDir)) {
+                    mkdir($uploadDir, 0777, true);
+                }
+                
+                $fileName = uniqid() . '_' . $_FILES['profile_image']['name'];
+                $uploadPath = $uploadDir . $fileName;
+                
+                if (move_uploaded_file($_FILES['profile_image']['tmp_name'], $uploadPath)) {
+                    $data['image_path'] = $uploadPath;
+                } else {
+                    setFlashMessage('Image upload failed!', 'error');
+                    redirect('Supplier/profile');
+                }
             }
-
-            $image = $_FILES['profile_image'];
-            $allowedTypes = ['image/jpeg', 'image/png', 'image/gif'];
-
-            if (!in_array($image['type'], $allowedTypes)) {
-                setFlashMessage('Invalid file type! Only JPEG, PNG, and GIF are allowed.', 'error');
+            if ($this->supplierModel->updateSupplierProfile($data)) {
+                setFlashMessage('Profile updated sucessfully!');
                 redirect('Supplier/profile');
-                return;
-            }
-
-            if ($image['size'] > $maxFileSize) {
-                setFlashMessage('File size exceeds the 5MB limit!', 'error');
-                redirect('Supplier/profile');
-                return;
-            }
-
-            $fileName = uniqid() . '_' . $image['name'];
-            $uploadPath = $uploadDir . $fileName;
-
-            if (move_uploaded_file($image['tmp_name'], $uploadPath)) {
-                $data['image_path'] = $uploadPath;
             } else {
-                setFlashMessage('Image upload failed!', 'error');
+                setFlashMessage('Profile update failed!', 'error');
                 redirect('Supplier/profile');
-                return;
             }
-        }
-
-        if ($this->supplierModel->updateSupplierProfile($data)) {
-            setFlashMessage('Profile updated successfully!');
         } else {
-            setFlashMessage('Profile update failed!', 'error');
+            redirect('Supplier/profile');
         }
-
-        redirect('Supplier/profile');
     }
 
     public function cancelpickup() {
@@ -361,94 +345,87 @@ class Supplier extends Controller {
         $this->view('supplier/v_cancel_pickup', $data);
     }
 
+    // public function requestFertilizer() {
+    //     $fertilizerModel = new M_Fertilizer_Order();
+    //     $data['fertilizer_types'] = $fertilizerModel->getAllFertilizerTypes();
+    //     $data['orders'] = $fertilizerModel->getAllOrders(); 
+
+    //     $this->view('supplier/v_fertilizer_request', $data);
+    // }
+
     public function complaints() {
-        $data = [];
+        $supplier_id = $_SESSION['supplier_id'];
+        if (!$supplier_id) {
+            throw new Exception("Supplier ID not found. Please login again.");
+        }
+
+        $complaints = $this->complaintModel->getComplaints($supplier_id);
+
+        $data = ['complaints' => $complaints];
         $this->view('supplier/v_complaint', $data);
     }
 
     public function submitComplaint() {
-        if ($_SERVER['REQUEST_METHOD'] != 'POST') {
-            redirect('supplier/complaints');
-            return;
-        }
-
-        $_POST = filter_input_array(INPUT_POST, FILTER_SANITIZE_STRING);
-        $supplierId = $_SESSION['supplier_id'];
-
-        $priority = trim($_POST['priority']);
-        $validPriorities = ['Low', 'Medium', 'High'];
-        if (!in_array($priority, $validPriorities)) {
-            setFlashMessage('Invalid priority level!', 'error');
-            redirect('supplier/complaints');
-            return;
-        }
-
-        $data = [
-            'supplier_id' => $supplierId,
-            'complaint_type' => trim($_POST['complaint_type']),
-            'subject' => trim($_POST['subject']),
-            'description' => trim($_POST['description']),
-            'priority' => $priority,
-            'image_path' => null,
-        ];
-
-        if (empty($data['complaint_type']) || empty($data['subject']) || empty($data['description'])) {
-            setFlashMessage('Please fill all required fields!', 'error');
-            redirect('supplier/complaints');
-            return;
-        }
-
-        if (isset($_FILES['image']) && $_FILES['image']['error'] === UPLOAD_ERR_OK) {
-            $image = $_FILES['image'];
-            $maxFileSize = 5 * 1024 * 1024; // 5MB
-            $allowedTypes = ['image/jpeg', 'image/png', 'image/gif'];
-
-            if (!in_array($image['type'], $allowedTypes)) {
-                setFlashMessage('Invalid file type! Only JPEG, PNG, and GIF are allowed.', 'error');
+        if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+            // Sanitize input
+            $_POST = filter_input_array(INPUT_POST, FILTER_SANITIZE_STRING);
+    
+            $supplierId = $_SESSION['supplier_id']; 
+    
+            $data = [
+                'supplier_id' => $supplierId,
+                'complaint_type' => trim($_POST['complaint_type']),
+                'subject' => trim($_POST['subject']),
+                'description' => trim($_POST['description']),
+                'priority' => trim($_POST['priority']),
+                'image_path' => null,
+            ];
+    
+            // Image upload handling
+            if (isset($_FILES['image']) && $_FILES['image']['error'] === UPLOAD_ERR_OK) {
+                $image = $_FILES['image'];
+    
+                $allowedTypes = ['image/jpeg', 'image/png', 'image/gif'];
+                if (in_array($image['type'], $allowedTypes)) {
+                    $imageExt = pathinfo($image['name'], PATHINFO_EXTENSION);
+                    $imageName = 'complaint_' . time() . '.' . $imageExt;
+                    $uploadDir = 'uploads/complaints/';
+                    $uploadPath = $uploadDir . $imageName;
+    
+                    // Ensure directory exists
+                    if (!is_dir($uploadDir)) {
+                        mkdir($uploadDir, 0777, true);
+                    }
+    
+                    if (move_uploaded_file($image['tmp_name'], $uploadPath)) {
+                        $data['image_path'] = $uploadPath;
+                    }
+                }
+            }
+    
+            if ($this->supplierModel->addComplaint($data)) {
+                // Notify all managers
+                $managers = $this->userModel->getAllManagers();
+                $notificationModel = $this->model('M_Notification');
+    
+                foreach ($managers as $manager) {
+                    $notificationModel->createNotification(
+                        $manager->user_id,
+                        'New Complaint',
+                        'A new complaint has been submitted by a supplier!',
+                        ['link' => 'manager/viewComplaint/']
+                    );
+                }
+    
+                setFlashMessage('Complaint submitted successfully!');
                 redirect('supplier/complaints');
-                return;
-            }
-
-            if ($image['size'] > $maxFileSize) {
-                setFlashMessage('File size exceeds the 5MB limit!', 'error');
-                redirect('supplier/complaints');
-                return;
-            }
-
-            $imageExt = pathinfo($image['name'], PATHINFO_EXTENSION);
-            $imageName = 'complaint_' . time() . '.' . $imageExt;
-            $uploadDir = 'uploads/complaints/';
-            $uploadPath = $uploadDir . $imageName;
-
-            if (!is_dir($uploadDir)) {
-                mkdir($uploadDir, 0777, true);
-            }
-
-            if (move_uploaded_file($image['tmp_name'], $uploadPath)) {
-                $data['image_path'] = $uploadPath;
             } else {
-                setFlashMessage('Image upload failed!', 'error');
+                setFlashMessage('Complaint didnt get sent! Please try again later', 'error');
                 redirect('supplier/complaints');
-                return;
             }
-        }
-
-        if ($this->supplierModel->addComplaint($data)) {
-            $managers = $this->userModel->getAllManagers();
-            foreach ($managers as $manager) {
-                $this->notificationModel->createNotification(
-                    $manager->user_id,
-                    'New Complaint',
-                    'A new complaint has been submitted by a supplier!',
-                    ['link' => 'manager/viewComplaint/']
-                );
-            }
-            setFlashMessage('Complaint submitted successfully!');
         } else {
-            setFlashMessage('Complaint didn\'t get sent! Please try again later', 'error');
+            redirect('supplier/complaints');
         }
-
-        redirect('supplier/complaints');
     }
 
     public function settings() {
@@ -456,63 +433,162 @@ class Supplier extends Controller {
         $this->view('supplier/v_settings', $data);
     }
 
-    public function createFertilizerOrder() {
-        header('Content-Type: application/json');
-        $response = ['success' => false, 'message' => ''];
+    // public function fertilizerhistory() {
+    //     // Ensure supplier is logged in
+    //     if (!isset($_SESSION['supplier_id'])) {
 
+    //         redirect('login');
+    //         return;
+    //     }
+    
+    //     // Fetch orders for the current supplier
+    //     $orders = $this->fertilizerOrderModel->getOrdersBySupplier($_SESSION['supplier_id']);
+    
+    //     $data = [
+    //         'orders' => $orders,
+    //         'fertilizer_types' => $this->fertilizerOrderModel->getAllFertilizerTypes()
+    //     ];
+    
+    //     $this->view('supplier/v_fertilizer_history', $data);
+    // }
+
+    public function fertilizerOrders() {
+        if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+            // Collect form data
+            $data = [
+                'fertilizer_order_id' => $_POST['order_id'],
+                'supplier_id' => $_POST['supplier_id'],
+                'fertilizer_name' => $_POST['fertilizer_name'],
+                'totalamount' => $_POST['total_amount'],
+                'unit' => $_POST['unit'],
+                'price_per_unit' => $_POST['price_per_unit'],
+                'total_price' => $_POST['total_price'],
+                'order_date' => $_POST['order_date'],
+                'order_time' => $_POST['order_time'],
+            ];
+   
+            // Validate form data
+            if ($this->validateRequest($data)) {
+                // Call model method to insert the data
+                if ($this->fertilizerOrderModel->createOrder($data)) {
+                    setFlashMessage('Order sucessfully submitted!');
+                    redirect('supplier/requestFertilizer');
+                } else {
+                    setFlashMessage('Fertilizer request failed!', 'error');
+                }
+            } else {
+                setFlashMessage('Please fill all the required fields', 'error');
+            }
+        }
+   
+        // Fetch all orders
+        $orders = $this->fertilizerOrderModel->getAllOrders();
+   
+        // Pass data to the view
+        $data['orders'] = $orders;
+   
+        // Load the view and pass the data
+        $this->view('supplier/v_fertilizer_request', $data);
+    }
+
+    /*private function logUnitUsage($unit){
+        error_log ($unit);
+    }*/
+
+    // public function requestFertilizer() {
+    //     $fertilizerModel = new M_Fertilizer_Order();
+    //     $data['fertilizer_types'] = $fertilizerModel->getAllFertilizerTypes();
+    //     $data['orders'] = $fertilizerModel->getAllOrders(); // Switch to getOrderBySupplier() after logging in
+    //     $data['unit'] = flash('used_unit');
+
+    //     $this->view('supplier/v_fertilizer_request', $data);
+    // }
+   
+    public function createFertilizerOrder() {
         try {
             if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
                 throw new Exception('Invalid request method');
             }
-
-            $required_fields = ['fertilizer', 'quantity'];
+    
+            // Check for required fields
+            $required_fields = ['type_id', 'unit', 'total_amount'];
             foreach ($required_fields as $field) {
                 if (!isset($_POST[$field]) || empty($_POST[$field])) {
                     throw new Exception("Missing required field: $field");
                 }
             }
-
-            $supplier_id = $_SESSION['user_id'] ?? null;
+    
+            // Get supplier ID from session
+            $supplier_id = $_SESSION['supplier_id'] ?? null;
             if (!$supplier_id) {
-                throw new Exception('Please log in to place an order');
+                throw new Exception("Supplier ID not found. Please log in again.");
             }
-
-            $type_id = trim($_POST['fertilizer']);
+    
+            // Validate and get fertilizer data
+            $type_id = trim($_POST['type_id']);
             $fertilizer = $this->fertilizerOrderModel->getFertilizerByTypeId($type_id);
-
+    
             if (!$fertilizer) {
                 throw new Exception('Invalid fertilizer type');
             }
-
-            $quantity = floatval($_POST['quantity']);
-            if ($quantity <= 0 || $quantity > 1000) { // Updated limit to 1000
-                throw new Exception('Quantity must be between 1 and 1000');
+    
+            $unit = $_POST['unit'];
+            flash('used_unit', $unit);
+    
+            $total_amount = floatval($_POST['total_amount']);
+    
+            // Validate amount
+            if ($total_amount <= 0 || $total_amount > 50) {
+                throw new Exception('Amount must be between 1 and 50');
             }
-
-            if ($quantity > $fertilizer->quantity) {
-                throw new Exception("Requested quantity exceeds available stock. Only {$fertilizer->quantity} {$fertilizer->unit} available.");
+    
+            // Calculate prices
+            $price_column = 'price_' . $unit;
+            if (!isset($fertilizer[$price_column])) {
+                throw new Exception('Invalid unit type');
             }
-
-            $total_amount = $quantity * $fertilizer->price;
+    
+            $price_per_unit = $fertilizer[$price_column];
+            $total_price = $total_amount * $price_per_unit;
+    
+            // Create order data
             $order_data = [
                 'supplier_id' => $supplier_id,
-                'type_id' => $type_id,
-                'quantity' => $quantity,
-                'total_amount' => $total_amount
+                'type_id' => $fertilizer['type_id'],
+                'fertilizer_name' => $fertilizer['name'],
+                'total_amount' => $total_amount,
+                'unit' => $unit,
+                'price_per_unit' => $price_per_unit,
+                'total_price' => $total_price,
+                'status' => 'Pending',
+                'payment_status' => 'Pending'
             ];
+    
+            // Create the order
+            /*if ($this->fertilizerOrderModel->createOrder($order_data)) {
+                // Set flash message for when redirected
+                flash('fertilizer_message', 'Order placed successfully!', 'alert alert-success');
+            } else {
+                throw new Exception($this->fertilizerOrderModel->getError() ?? 'Failed to create order');
+            }*/
 
             if ($this->fertilizerOrderModel->createOrder($order_data)) {
-                $response['success'] = true;
-                $response['message'] = 'Order placed successfully! Awaiting approval.';
+                $_SESSION['fertilizer_message'] = 'Request submitted!';
+                $_SESSION['fertilizer_message_class'] = 'alert-success';
             } else {
-                throw new Exception('Failed to create order');
+                $_SESSION['fertilizer_message'] = 'Request failed!';
+                $_SESSION['fertilizer_message_class'] = 'alert-danger';
             }
+            
+            redirect('Supplier/requestFertilizer');
+    
         } catch (Exception $e) {
-            $response['message'] = $e->getMessage();
+            // Set flash message for when redirected
+            flash('fertilizer_message', $e->getMessage(), 'alert alert-danger');
         }
 
-        echo json_encode($response);
-        header("Refresh:1; url=" . $_SERVER['HTTP_REFERER']);
+        // Redirect back to the fertilizer request page
+        redirect('Supplier/requestFertilizer');
         exit;
     }
 
@@ -545,19 +621,18 @@ class Supplier extends Controller {
         $this->view('supplier/v_schedule_details', $data);
     }
 
-    public function collection($collectionId) {
-        $collectionDetails = $this->collectionModel->getCollectionDetails($collectionId);
-        if (!$collectionDetails) {
-            flash('message', 'Collection not found', 'alert alert-danger');
-            redirect('supplier/');
-            return;
+    public function collections() {
+        $supplier_id = $_SESSION['supplier_id'] ?? null;
+        if (!$supplier_id) {
+            throw new Exception("Supplier ID not found. Please login again!");
         }
 
+        $collectionDetails = $this->collectionModel->getCollectionDetails($supplier_id);
+
         $data = [
-            'collectionId' => $collectionId,
             'collectionDetails' => $collectionDetails
         ];
-        $this->view('supplier/v_collection', $data);
+        $this->view('supplier/v_collections', $data);
     }
 
     public function getUnallocatedSuppliersByDay($day) {
@@ -565,14 +640,12 @@ class Supplier extends Controller {
             echo json_encode(['success' => false, 'message' => 'Invalid day provided']);
             return;
         }
-
-        try {
-            $suppliers = $this->routeModel->getUnallocatedSuppliersByDay($day);
-            echo json_encode(['success' => true, 'data' => $suppliers]);
-        } catch (Exception $e) {
-            error_log($e->getMessage());
-            echo json_encode(['success' => false, 'message' => 'Error fetching suppliers']);
-        }
+    
+        // Fetch unallocated suppliers for the given day
+        $suppliers = $this->routeModel->getUnallocatedSuppliers($day);
+    
+        // Return the response
+        echo json_encode(['success' => true, 'data' => $suppliers]);
     }
 
     public function getBagDetails($collectionId) {
@@ -603,43 +676,17 @@ class Supplier extends Controller {
     }
 
     public function toggleAvailability() {
-        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-            redirect('supplier/');
-            return;
-        }
-
-        $currentStatus = isset($_POST['current_status']) ? $_POST['current_status'] : '0';
-        $supplierId = $_SESSION['supplier_id'];
-        $newStatus = $currentStatus === '1' ? '0' : '1';
-
-        if ($newStatus === '0') {
-            $subscribedSchedules = $this->scheduleModel->getSubscribedSchedules($supplierId);
-            $unsubscribeResults = [];
-
-            foreach ($subscribedSchedules as $schedule) {
-                $routeId = $schedule->route_id;
-                try {
-                    if ($this->routeModel->removeSupplierFromRoute($routeId, $supplierId)) {
-                        $this->routeModel->updateRemainingCapacity($routeId, 'remove');
-                        $unsubscribeResults[] = true;
-                    } else {
-                        $unsubscribeResults[] = false;
-                    }
-                } catch (Exception $e) {
-                    error_log($e->getMessage());
-                    $unsubscribeResults[] = false;
-                }
-            }
-
-            if (in_array(false, $unsubscribeResults)) {
-                setFlashMessage('Some unsubscriptions failed. Please try again.', 'error');
-                redirect('supplier/');
-                return;
-            }
-        }
-
-        if ($this->supplierModel->updateSupplierStatus($supplierId, $newStatus)) {
-            if ($newStatus) {
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            // Get the current status from the POST data
+            $currentStatus = isset($_POST['current_status']) ? $_POST['current_status'] : '0';
+            $supplierId = $_SESSION['supplier_id'];
+    
+            // Toggle the status
+            $newStatus = $currentStatus === '1' ? '0' : '1';
+    
+            // Update the supplier's availability in the model
+            if ($this->supplierModel->updateSupplierStatus($supplierId, $newStatus)) {
+                if($newStatus){
                 setFlashMessage('You will be included in the next schedule!');
             } else {
                 setFlashMessage('You will not be included in the next schedule!', 'error');
@@ -649,7 +696,7 @@ class Supplier extends Controller {
         }
 
         redirect('supplier/');
-    }
+    }}
 
     // Chat-related methods
 
@@ -820,30 +867,19 @@ class Supplier extends Controller {
         $this->view('supplier/v_announcements', $data);
     }
 
-    public function getAnnouncementsForSupplier($supplierId) {
-        // Fetch announcements created by Vehicle Managers (role_id = 4)
-        $this->db->query("
-            SELECT a.announcement_id, a.title, a.content, a.created_at, a.updated_at, 
-                   CONCAT(u.first_name, ' ', u.last_name) AS sender_name
-            FROM announcements a
-            JOIN users u ON a.created_by = u.user_id
-            WHERE u.role_id = 4
-            ORDER BY a.created_at DESC
-        ");
-        return $this->db->resultSet();
-    }
 
-    public function collections() {
-        $supplierId = $_SESSION['supplier_id'];
 
-        $collections = $this->collectionModel->getSupplierCollections($supplierId);
+    // public function collections() {
+    //     $supplierId = $_SESSION['supplier_id'];
+
+    //     $collections = $this->collectionModel->getSupplierCollections($supplierId);
         
-        $data = [
-            'collections' => $collections
-        ];
+    //     $data = [
+    //         'collections' => $collections
+    //     ];
         
-        $this->view('supplier/v_view_collection', $data);
-    }
+    //     $this->view('supplier/v_view_collection', $data);
+    // }
 
     public function collectionBags($collection_id) {
         $supplier_id = $_SESSION['supplier_id'];
@@ -859,119 +895,6 @@ class Supplier extends Controller {
         $this->view('supplier/v_collection_bags', $data);
     }
 
-    
-
-    // public function requestFertilizer() {
-    //     $supplier_id = $_SESSION['user_id'] ?? null;
-    //     if (!$supplier_id) {
-    //         flash('message', 'Please log in to access this page', 'alert alert-danger');
-    //         redirect('auth/login');
-    //         return;
-    //     }
-
-    //     // Handle fertilizer request creation
-    //     if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['action']) && $_POST['action'] == 'create_order') {
-    //         $data = [
-    //             'supplier_id' => $supplier_id,
-    //             'type_id' => trim($_POST['fertilizer']),
-    //             'quantity' => floatval($_POST['quantity']),
-    //             'total_amount' => floatval($_POST['total_amount'])
-    //         ];
-
-    //         // Validate type_id
-    //         if (empty($data['type_id']) || !is_numeric($data['type_id'])) {
-    //             flash('message', 'Please select a valid fertilizer type', 'alert alert-danger');
-    //         } else {
-    //             $fertilizer = $this->fertilizerOrderModel->getFertilizerByTypeId($data['type_id']);
-    //             if (!$fertilizer) {
-    //                 flash('message', 'Invalid fertilizer type', 'alert alert-danger');
-    //             } elseif ($data['quantity'] <= 0 || $data['quantity'] > 1000) { // Updated limit to 1000
-    //                 flash('message', 'Quantity must be between 1 and 1000', 'alert alert-danger');
-    //             } elseif ($data['quantity'] > $fertilizer->quantity) {
-    //                 flash('message', "Requested quantity exceeds available stock. Only {$fertilizer->quantity} {$fertilizer->unit} available.", 'alert alert-danger');
-    //             } else {
-    //                 if ($this->fertilizerOrderModel->createOrder($data)) {
-    //                     flash('message', 'Order request submitted successfully! Awaiting approval.', 'alert alert-success');
-    //                 } else {
-    //                     flash('message', 'Failed to create order request', 'alert alert-danger');
-    //                 }
-    //             }
-    //         }
-    //         redirect('Supplier/requestFertilizer');
-    //         return;
-    //     }
-
-    //     // Handle checkout
-    //     if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['action']) && $_POST['action'] == 'checkout') {
-    //         $cartItems = $this->fertilizerOrderModel->getCartItems($supplier_id);
-    //         if (empty($cartItems)) {
-    //             flash('message', 'Your cart is empty', 'alert alert-danger');
-    //         } else {
-    //             $subtotal = 0;
-    //             foreach ($cartItems as $item) {
-    //                 $subtotal += $item->price * $item->quantity;
-    //             }
-    //             $shippingFee = 500.00;
-    //             $taxAmount = $subtotal * 0.10;
-    //             $grandTotal = $subtotal + $shippingFee + $taxAmount;
-
-    //             $formattedItems = array_map(function($item) {
-    //                 return [
-    //                     'fertilizer_id' => $item->fertilizer_id,
-    //                     'quantity' => $item->quantity,
-    //                     'price' => $item->price
-    //                 ];
-    //             }, $cartItems);
-
-    //             $shippingAddress = json_encode([
-    //                 'full_name' => trim($_POST['full_name'] ?? ''),
-    //                 'phone' => trim($_POST['phone'] ?? ''),
-    //                 'address' => trim($_POST['address'] ?? ''),
-    //                 'city' => trim($_POST['city'] ?? ''),
-    //                 'postal_code' => trim($_POST['postal_code'] ?? '')
-    //             ]);
-
-    //             $orderData = [
-    //                 'total_amount' => $subtotal,
-    //                 'shipping_fee' => $shippingFee,
-    //                 'tax_amount' => $taxAmount,
-    //                 'grand_total' => $grandTotal,
-    //                 'delivery_date' => $_POST['delivery_date'],
-    //                 'shipping_address' => $shippingAddress,
-    //                 'items' => $formattedItems
-    //             ];
-
-    //             try {
-    //                 $finalOrderId = $this->fertilizerOrderModel->createFinalOrder($supplier_id, $orderData);
-    //                 if ($finalOrderId) {
-    //                     $this->fertilizerOrderModel->clearCart($supplier_id);
-    //                     flash('message', 'Order placed successfully! Order ID: ' . $finalOrderId, 'alert alert-success');
-    //                 }
-    //             } catch (Exception $e) {
-    //                 flash('message', 'Failed to place order: ' . $e->getMessage(), 'alert alert-danger');
-    //             }
-    //         }
-    //         redirect('Supplier/requestFertilizer');
-    //         return;
-    //     }
-
-    //     // Automatically add accepted orders to cart
-    //     $orders = $this->fertilizerOrderModel->getOrdersBySupplier($supplier_id);
-    //     foreach ($orders as $order) {
-    //         if ($order->status === 'Accepted') {
-    //             $this->fertilizerOrderModel->addAcceptedOrderToCart($order->order_id);
-    //         }
-    //     }
-
-    //     $data = [
-    //         'fertilizer_types' => $this->fertilizerOrderModel->getAvailableFertilizerTypes(),
-    //         'orders' => $orders,
-    //         'cart_items' => $this->fertilizerOrderModel->getCartItems($supplier_id),
-    //         'cart_total' => $this->fertilizerOrderModel->getCartTotal($supplier_id)
-    //     ];
-
-    //     $this->view('supplier/v_fertilizer_request', $data);
-    // }
 
     public function getCartItems($supplier_id) {
         $this->db->query("
