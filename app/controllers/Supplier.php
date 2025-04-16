@@ -421,6 +421,7 @@ class Supplier extends Controller {
                 redirect('supplier/complaints');
             }
         } else {
+            setFlashMessage('Invalid request method!', 'error');
             redirect('supplier/complaints');
         }
     }
