@@ -2353,7 +2353,7 @@ class Manager extends Controller
 
 
         $page = isset($_GET['page']) && is_numeric($_GET['page']) ? (int)$_GET['page'] : 1;
-        $limit = 3; 
+        $limit = 8; 
         $offset = ($page - 1) * $limit;
 
         $complaints = $this->supplierModel->getFilteredComplaints(
@@ -2432,6 +2432,60 @@ class Manager extends Controller
             setFlashMessage('Invalid request method','error');
             redirect('manager/complaints');
         }     
+    }
+    
+    public function reopenComplaint($complaint_id)
+    {
+        if (!$complaint_id) {
+            setFlashMessage('Invalid complaint id!');
+            redirect('manager/complaints');
+        }
+
+        $statusChange = $this->supplierModel->updateComplaintStatus($complaint_id, 'Pending');
+
+        if ($statusChange) {
+            setFlashMessage('Complaint reopened sucessfully!');
+        } else {
+            setFlashMessage('Couldn\'t reopen the complaint, please try again later!', 'error');
+
+        }
+
+        redirect('manager/complaints');
+    }
+    
+    public function deleteComplaint($complaint_id)
+    {
+
+        $complaint = $this->supplierModel->getComplaintById($complaint_id);
+        if (!$complaint) {
+            setFlashMessage('Complaint does not exist', 'error');
+            redirect('manager/complaints');
+        }
+
+        if($complaint->status == 'Pending') {
+            setFlashMessage('Pending complaints cannot be deleted' , 'error');
+            redirect('manager/complaints');
+        }
+
+        if ($this->supplierModel->deleteComplaint($complaint_id)) {
+
+            $this->logModel->create(
+                $_SESSION['user_id'],
+                $_SESSION['email'],
+                $_SERVER['REMOTE_ADDR'],
+                "Deleted the complaint: ".$complaint_id,
+                $_SERVER['REQUEST_URI'],     
+                http_response_code()     
+            );
+            setFlashMessage('Complaint deleted sucessfully!');
+            redirect('manager/complaints');
+        } else {
+            setFlashMessage('Couldn\'t delete the complaint please try again later!', 'error');
+            redirect('manager/viewComplaint/' . $complaint_id);
+        }
+        
+        echo json_encode(['success' => false, 'message' => 'Invalid request method']);
+        exit();
     }
 
 
@@ -2522,48 +2576,6 @@ class Manager extends Controller
         }
     
         redirect('manager/viewComplaint/' . $data['complaint_id']);
-    }
-    
-    public function reopenComplaint($complaint_id)
-    {
-        if (!$complaint_id) {
-            setFlashMessage('Invalid complaint id!');
-            redirect('manager/complaints');
-        }
-
-        $statusChange = $this->supplierModel->updateComplaintStatus($complaint_id, 'Pending');
-
-        if ($statusChange) {
-            setFlashMessage('Complaint reopened sucessfully!');
-        } else {
-            setFlashMessage('Couldn\'t reopen the complaint, please try again later!', 'error');
-
-        }
-
-        redirect('manager/complaints');
-    }
-    
-    public function deleteComplaint($id)
-    {
-        if ($this->supplierModel->deleteComplaint($id)) {
-
-            $this->logModel->create(
-                $_SESSION['user_id'],
-                $_SESSION['email'],
-                $_SERVER['REMOTE_ADDR'],
-                "Deleted the complaint: ".$id,
-                $_SERVER['REQUEST_URI'],     
-                http_response_code()     
-            );
-            setFlashMessage('Complaint deleted sucessfully!');
-            redirect('manager/complaints');
-        } else {
-            setFlashMessage('Couldnt delete the complaint please try again later!', 'error');
-            redirect('manager/viewComplaint/' . $id);
-        }
-        
-        echo json_encode(['success' => false, 'message' => 'Invalid request method']);
-        exit();
     }
 
     public function respondRequest() {
