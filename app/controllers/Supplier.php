@@ -103,19 +103,17 @@ class Supplier extends Controller {
     }
 
     public function viewAppointments() {
-        // Fetch all required data for the view
+        
         $timeSlots = $this->appointmentModel->getAvailableTimeSlots();
         $myRequests = $this->appointmentModel->getMyRequests($_SESSION['supplier_id']);
         $confirmedAppointments = $this->appointmentModel->getConfirmedAppointments($_SESSION['supplier_id']);
         
-        // Prepare data to pass to the view
         $data = [
             'time_slots' => $timeSlots,
             'my_requests' => $myRequests,
             'confirmed_appointments' => $confirmedAppointments
         ];
         
-        // Load the view with the data
         $this->view('supplier/v_time_slots', $data);
     }
     
@@ -138,11 +136,24 @@ class Supplier extends Controller {
                 return;
             }
 
-            // Check if this supplier has already requested this slot
+            // Check if this supplier has already requested the same slot
             if ($this->appointmentModel->hasAlreadyRequested($slotId, $supplierId)) {
                 setFlashMessage('You have already requested this time slot!', 'error');
                 redirect('Supplier/viewAppointments');
                 return;
+            }
+
+            $existingRequests = $this->appointmentModel->requestedSlotTimes($_SESSION['supplier_id']);
+            foreach ($existingRequests as $existing) {    
+                if ($slot->date == $existing->date){
+                    if (($slot->start_time < $existing->end_time) &&
+                        ($slot->end_time > $existing->start_time)) {
+                            setFlashMessage('You have another appointment within this time period.' , 'error');
+                            redirect('supplier/viewAppointments');
+                            return;
+                        }
+                    
+                }
             }
 
             $data = [
