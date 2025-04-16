@@ -56,8 +56,18 @@
                                 <td><?php echo $fertilizer->address; ?></td>
                                 <td><?php echo $fertilizer->order_date; ?></td>
                                 <td><span class="status"><?php echo $fertilizer->status; ?></span></td>
-                                <td><button class="btn btn-primary">Approve</button></td>
-                                <td><button class="action-btn reject-btn">Reject</button></td>
+                                <form method="POST"
+                                    action="<?php echo URLROOT; ?>/Inventory/fertilizer?id=<?php echo $fertilizer->order_id; ?>">
+
+                                    <td><button class="btn btn-primary" type="submit" name="status_approve">Approve</button>
+                                    </td>
+                                </form>
+                                <form method="POST"
+                                    action="<?php echo URLROOT; ?>/Inventory/fertilizer?id=<?php echo $fertilizer->order_id; ?>">
+
+                                    <td><button class="action-btn reject-btn" type="submit" name="status_reject">Reject</button>
+                                    </td>
+                                </form>
                             </tr>
                         <?php endforeach; ?>
                     <?php else: ?>

@@ -194,10 +194,18 @@ class M_Fertilizer_Order {
 
     
     public function getfertilizerorderforInventory(){
-        $this->db->query("SELECT pr.first_name, sup.address, fo.order_date,fo.status FROM fertilizer_orders fo LEFT JOIN suppliers sup ON fo.supplier_id=sup.supplier_id JOIN profiles pr ON sup.profile_id = pr.profile_id
+        $this->db->query("SELECT fo.order_id, pr.first_name, sup.address, fo.order_date,fo.status FROM fertilizer_orders fo LEFT JOIN suppliers sup ON fo.supplier_id=sup.supplier_id JOIN profiles pr ON sup.profile_id = pr.profile_id
         ");
         return $this->db->resultset();
     }
+
+    public function updateFertilizerByStatus($id, $status) {
+        $this->db->query("UPDATE fertilizer_orders SET status = :status WHERE order_id = :id");
+        $this->db->bind(':status', $status);
+        $this->db->bind(':id', $id);
+        return $this->db->execute();
+    }
+    
     
 }
 ?> 

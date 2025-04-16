@@ -234,14 +234,30 @@ class Inventory extends controller
 
     public function fertilizer()
     {
+
+        if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['status_approve'])) {
+            $us = $_GET['id'];
+            // var_dump($us);
+
+            $this->fertilizerOrderModel->updateFertilizerByStatus($us, 'Approved');
+            // redirect('Inventory/fertilizerdashboard');
+
+        } elseif ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['status_reject'])) {
+            $us = $_GET['id'];
+
+            $this->fertilizerOrderModel->updateFertilizerByStatus($us, 'Rejected');
+            // redirect('Inventory/fertilizerdashboard');
+
+        }
+
         $fertilizer = $this->fertilizerOrderModel->getfertilizerorderforInventory();
     
         $data=[
             'fertilizers' => $fertilizer
         ];
-        // echo "<pre>";
-        // print_r($data);
-        // echo "</pre>";
+        echo "<pre>";
+        print_r($data);
+        echo "</pre>";
         $this->view('inventory/v_fertilizer_available',$data);
     }
     public function createfertilizer()
