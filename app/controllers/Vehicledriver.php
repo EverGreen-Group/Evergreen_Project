@@ -28,64 +28,33 @@ class VehicleDriver extends controller {
         $this->userModel = $this->model('M_User');
     }
 
-    public function index() { // TESTED, must study this well, bit hard
+
+    public function index() {
+
         if (!isset($_SESSION['driver_id'])) {
             redirect('login');
             return;
         }
-    
+
         $driverId = $_SESSION['driver_id'];
-    
-        // If a collection is already active for this driver, redirect immediately.
+
         $collectionId = $this->collectionModel->checkCollectionExists($driverId);
         if ($collectionId) {
             redirect('vehicledriver/collection/' . $collectionId);
             exit();
         }
-        
-        try {
-            // Get all upcoming schedules for this driver
-            $allSchedules = $this->scheduleModel->getUpcomingSchedules($driverId);
-            
-            // Determine today's day name, e.g., "Monday"
-            $currentDay = date('l');
-    
-            // Initialize arrays for schedules today and in the future.
-            $todaySchedules = [];
-            $upcomingSchedules = [];
-            
-            foreach ($allSchedules as $schedule) {
-                // If the schedule's day field matches today's day, it's a today's schedule.
-                if (strcasecmp($schedule->day, $currentDay) == 0) {
-                    // Add full start datetime so the view can compare properly
-                    $todayDate = date('Y-m-d');
-                    $schedule->start_datetime = strtotime($todayDate . ' ' . $schedule->start_time);
-                    $schedule->end_datetime = $schedule->start_datetime + 3600; // assume 1 hour
-                    $todaySchedules[] = $schedule;
-                }
-                else {
-                    $upcomingSchedules[] = $schedule;
-                }
-            }
-            
-            $data = [
-                'todaySchedules'   => $todaySchedules,
-                'upcomingSchedules'=> $upcomingSchedules,
-                'currentWeek'      => date('W'),
-                'currentDay'       => $currentDay,
-                'lastUpdated'      => date('Y-m-d H:i:s')
-            ];
-            
-            if (empty($todaySchedules) && empty($upcomingSchedules)) {
-            }
-            
-        } catch (Exception $e) {
-            error_log($e->getMessage());
-            
-            $data = [
-                'todaySchedules'   => [],
-                'upcomingSchedules'=> []
-            ];
+
+        $schedule = $this->scheduleModel->getTodaysScheduleByDriverId($driverId);
+
+        $allSchedules = $this->scheduleModel->getAllAssignedSchedulesByDriverId($driverId);
+        $data = [
+            'schedule' => $schedule,
+            'allSchedules' => $allSchedules
+        ];
+
+        $count = $this->scheduleModel->checkEndedScheduleCollection($schedule->schedule_id);
+        if($count) {
+            $data['collection_completed'] = 1;
         }
         
         $this->view('vehicle_driver/v_dashboard', $data);

@@ -69,7 +69,8 @@ class Supplier extends Controller {
         }
         $supplierStatus = $this->supplierModel->getSupplierStatus($supplierId);
         $data['is_active'] = $supplierStatus;
-
+        $data['teaLeavesKg'] = $teaLeavesKg;
+        $data['teaLeavesKgLastCollection'] = $teaLeavesKgLastCollection;
         
         $this->view('supplier/v_supply_dashboard', $data);
     }

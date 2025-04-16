@@ -50,7 +50,7 @@
             </div>
             <div class="stat-value">
             <?php echo isset($data['teaLeavesKgLastCollection']) ? $data['teaLeavesKgLastCollection'] : '0'; ?>
-                <small>last collection</small>
+                <small>kg last collection</small>
             </div>
         </div>
         <div class="stat-divider"></div>

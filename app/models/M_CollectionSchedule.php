@@ -770,6 +770,89 @@ class M_CollectionSchedule {
         $this->db->bind(':supplier_id', $supplierId);
         return $this->db->single(); // Use single() to return one schedule or null
     }
+
+    public function getTodaysScheduleByDriverId($driverId) { // NEW IMPLEMENTATION, TESTED
+        $this->db->query("
+            SELECT 
+                cs.schedule_id,
+                cs.day,
+                cs.driver_id,
+                r.route_name,
+                r.route_id,
+                v.vehicle_type,
+                v.license_plate,
+                v.vehicle_id,
+                cs.start_time,
+                cs.end_time,
+                (SELECT COUNT(*) 
+                 FROM collections c 
+                 WHERE c.schedule_id = cs.schedule_id 
+                 AND DATE(c.created_at) = CURDATE()
+                ) as collection_exists
+            FROM collection_schedules cs
+            JOIN routes r ON cs.route_id = r.route_id
+            JOIN vehicles v ON r.vehicle_id = v.vehicle_id
+            JOIN drivers d on d.driver_id = cs.driver_id
+            WHERE d.driver_id = :driver_id
+                AND cs.is_active = 1
+                AND cs.is_deleted = 0
+                AND r.is_deleted = 0
+                AND cs.day = DATE_FORMAT(CURDATE(), '%W')  
+        ");
+    
+        $this->db->bind(':driver_id', $driverId);
+        return $this->db->single(); // Use single() to return one schedule or null
+    }
+
+
+    public function getAllAssignedSchedulesByDriverId($driverId) { // NEW IMPLEMENTATION
+        $this->db->query("
+            SELECT 
+                cs.schedule_id,
+                cs.day,
+                cs.driver_id,
+                r.route_name,
+                r.route_id,
+                v.vehicle_type,
+                v.license_plate,
+                v.vehicle_id,
+                cs.start_time,
+                cs.end_time,
+                (SELECT COUNT(*) 
+                 FROM collections c 
+                 WHERE c.schedule_id = cs.schedule_id 
+                 AND DATE(c.created_at) = CURDATE()
+                ) as collection_exists
+            FROM collection_schedules cs
+            JOIN routes r ON cs.route_id = r.route_id
+            JOIN vehicles v ON r.vehicle_id = v.vehicle_id
+            JOIN drivers d on d.driver_id = cs.driver_id
+            WHERE d.driver_id = :driver_id
+                AND cs.is_active = 1
+                AND cs.is_deleted = 0
+                AND r.is_deleted = 0
+        ");
+    
+        $this->db->bind(':driver_id', $driverId); 
+        return $this->db->resultSet(); 
+    }
+
+    public function checkEndedScheduleCollection($scheduleId) { // CHECKED
+        $this->db->query("
+            SELECT COUNT(*) as collection_count 
+            FROM collections 
+            WHERE schedule_id = :schedule_id 
+              AND status IN ('Completed', 'Awaiting Inventory Addition')
+              AND DATE(end_time) = CURDATE() 
+        ");
+        
+        $this->db->bind(':schedule_id', $scheduleId);
+        $result = $this->db->single();
+        
+        return $result->collection_count > 0;
+    }
+
+    
     
     
     public function getSubscribedSchedules($supplierId) {
