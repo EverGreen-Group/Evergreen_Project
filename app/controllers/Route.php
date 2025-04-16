@@ -125,6 +125,7 @@ class Route extends Controller{
             }
 
             if ($this->routeModel->createRoute($routeName,$vehicleId)) {
+                setFlashMessage('Route created successfully!');
                 header('Location: ' . URLROOT . '/route/'); 
                 exit();
             } else {
@@ -139,10 +140,10 @@ class Route extends Controller{
 
 
             if ($this->routeModel->deleteRoute($route_id)) {
-                flash('route_message', 'Route deleted successfully');
+                setFlashMessage('Route deleted successfully!');
                 redirect('route/');
             } else {
-                flash('route_message', 'Failed to delete route', 'error');
+                setFlashMessage('Route deletion failed!');
                 redirect('route/');
             }
         }
@@ -184,6 +185,7 @@ class Route extends Controller{
             if ($this->routeModel->addSupplierToRoute($routeId, $supplierId, $tempStopOrder)) {
                 $this->routeModel->updateRemainingCapacity($routeId, 'add');
                 $this->routeModel->optimizeRouteStopOrders($routeId);
+                setFlashMessage('Supplier added successfully!');
                 
                 header('Location: ' . URLROOT . '/route/manageRoute/' . $routeId);
                 exit();
@@ -199,6 +201,7 @@ class Route extends Controller{
             if ($this->routeModel->removeSupplierFromRoute($routeId, $supplierId)) {
                 $this->routeModel->updateRemainingCapacity($routeId, 'remove');
                 $this->routeModel->optimizeRouteStopOrders($routeId);
+                setFlashMessage('Removed supplier successfully!');
                 
                 header('Location: ' . URLROOT . '/route/manageRoute/' . $routeId);
                 exit();
@@ -208,6 +211,8 @@ class Route extends Controller{
         header('Location: ' . URLROOT . '/route/manageRoute/' . $_POST['route_id']);
         exit();
     }
+
+    
 
 
 

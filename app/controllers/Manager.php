@@ -1,12 +1,7 @@
 <?php
-use Endroid\QrCode\QrCode;
-use Endroid\QrCode\Builder\Builder;
-use Endroid\QrCode\Writer\PngWriter;
 
-// Require all model files
 require_once '../app/models/M_VehicleManager.php';
 require_once '../app/models/M_Route.php';
-require_once '../app/models/M_Team.php';
 require_once '../app/models/M_Vehicle.php';
 require_once '../app/models/M_Shift.php';
 require_once '../app/models/M_CollectionSchedule.php';
@@ -32,7 +27,6 @@ class Manager extends Controller
     //----------------------------------------
     private $vehicleManagerModel;
     private $routeModel;
-    private $teamModel;
     private $vehicleModel;
     private $shiftModel;
     private $scheduleModel;
@@ -48,6 +42,7 @@ class Manager extends Controller
     private $supplierModel;
     private $chatModel; // Add this line
     private $appointmentModel;
+    private $notificationModel;
 
     //----------------------------------------
     // CONSTRUCTOR
@@ -58,9 +53,8 @@ class Manager extends Controller
         requireAuth();
 
         // Check if user has Vehicle Manager OR Admin role
-        if (!RoleHelper::hasAnyRole([RoleHelper::ADMIN, RoleHelper::VEHICLE_MANAGER, RoleHelper::SUPPLIER_MANAGER])) {
-            // Redirect unauthorized access
-            flash('message', 'Unauthorized access', 'alert alert-danger');
+        if (!RoleHelper::hasAnyRole([RoleHelper::ADMIN, RoleHelper::MANAGER])) {
+
             redirect('');
             exit();
         }
@@ -68,7 +62,6 @@ class Manager extends Controller
         // Initialize models
         $this->vehicleManagerModel = new M_VehicleManager();
         $this->routeModel = new M_Route();
-        $this->teamModel = new M_Team();
         $this->vehicleModel = new M_Vehicle();
         $this->shiftModel = new M_Shift();
         $this->scheduleModel = new M_CollectionSchedule();
@@ -84,6 +77,8 @@ class Manager extends Controller
         //$this->supplierApplicationModel = $this->model('M_SupplierApplication');
         $this->supplierModel = $this->model('M_Supplier');
         $this->chatModel = $this->model('M_Chat'); //added by theekshana
+        $this->appointmentModel = $this->model('M_Appointment');
+        $this->notificationModel = $this->model('M_Notification');
     }
 
     //----------------------------------------
@@ -178,7 +173,6 @@ class Manager extends Controller
         }
     
         $profile = $supplierApplicationModel->getProfileInfo($application->user_id);
-        $bankInfo = $supplierApplicationModel->getBankInfo($applicationId);
         $documents = $supplierApplicationModel->getApplicationDocuments($applicationId);
         
         // Get cultivation data (appears to be part of the application in your view)
@@ -204,7 +198,6 @@ class Manager extends Controller
         $data = [
             'application' => (array)$application,
             'profile' => $profile,
-            'bank_info' => $bankInfo,
             'documents' => $documents,
             'cultivation' => $cultivation,
             'location' => $location,
@@ -235,7 +228,7 @@ class Manager extends Controller
         1. we need to update the application status (that is already done)
         2. we need to create a supplier account for this user
         3. we need to copy the details from the application to suppliers entry
-        4. we need to change the users role to 5 for supplier accees
+        4. we need to change the users role to 5 for supplier access
         -simaak
         */
 
@@ -244,7 +237,7 @@ class Manager extends Controller
         $application = $supplierApplicationModel->getApplicationById($applicationId);
 
         if (!$application) {
-            // small validation, but if we are here then ofc the application exists
+            // small validation, but if we are here then of course the application exists
             redirect('manager/');
         }
 
@@ -255,8 +248,7 @@ class Manager extends Controller
         }
 
         $profile = $userModel->getProfileByUserId($application->user_id);
-        $supplierExpectedAmount  = ($application->monthly_production)/4.0;
-
+        $supplierExpectedAmount  = ($application->monthly_production) / 4.0;
 
         // Create supplier data array
         $supplierData = [
@@ -265,10 +257,12 @@ class Manager extends Controller
             'application_id' => $applicationId,
             'latitude' => $application->latitude,
             'longitude' => $application->longitude,
+            'address' => $application->address, // Include address from application
             'is_active' => 1,
             'is_deleted' => 0,
             'number_of_collections' => 0,
-            'average_collection' => $supplierExpectedAmount
+            'average_collection' => $supplierExpectedAmount,
+            'user_id' => $application->user_id
         ];
 
         $supplierCreated = $this->supplierModel->createSupplier($supplierData);
@@ -311,16 +305,130 @@ class Manager extends Controller
      * ------------------------------------------------------------
      */
 
-     public function suppliers() {
-        // Get all suppliers from the database
-        $suppliers = $this->supplierModel->getAllSuppliers();
+     public function supplier() {
 
-        $data = [
-            'suppliers' => $suppliers
-        ];
+        $data = [];
+    
+        $supplier_id = isset($_GET['supplier_id']) ? $_GET['supplier_id'] : null;
+        $name = isset($_GET['name']) ? $_GET['name'] : null;
+        $nic = isset($_GET['nic']) ? $_GET['nic'] : null;
+        $contact_number = isset($_GET['contact_number']) ? $_GET['contact_number'] : null;
+        $application_id = isset($_GET['application_id']) ? $_GET['application_id'] : null;
+        $supplier_status = isset($_GET['supplier_status']) ? $_GET['supplier_status'] : null;
+    
+        if ($supplier_id || $name || $nic || $contact_number || $application_id || $supplier_status) {
+            $data['suppliers'] = $this->supplierModel->getFilteredSuppliers($supplier_id, $name, $nic, $contact_number, $application_id, $supplier_status);
+        } else {
+            $data['suppliers'] = $this->supplierModel->getAllSuppliersDetails();
+        }
+    
 
-        $this->view('supplier_manager/v_suppliers', $data);
+        $data['total_suppliers'] = $this->supplierModel->getTotalSuppliers();
+        $data['active_suppliers'] = $this->supplierModel->getActiveSuppliers();
+        
+        $this->view('supplier_manager/v_supplier', $data);
     }
+
+
+    public function manageSupplier($id = null) {
+        if (!$id) {
+            setFlashMessage('Supplier ID is required!', 'error');
+            redirect('manager/supplier');
+        }
+    
+
+        if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+            $_POST = filter_input_array(INPUT_POST, FILTER_SANITIZE_STRING);
+            
+            $data = [
+                'supplier_id' => $id,
+                'first_name' => trim($_POST['first_name']),
+                'last_name' => trim($_POST['last_name']),
+                'email' => trim($_POST['email']),
+                'contact_number' => trim($_POST['contact_number']),
+                'address_line1' => trim($_POST['address_line1']),
+                'address_line2' => trim($_POST['address_line2']),
+                'city' => trim($_POST['city']),
+                'nic' => trim($_POST['nic']),
+                'is_active' => isset($_POST['is_active']) ? 1 : 0,
+            ];
+    
+            $errors = [];
+            
+            if (empty($data['first_name'])) {
+                $errors['first_name'] = 'First name is required';
+            }
+            
+            if (empty($data['last_name'])) {
+                $errors['last_name'] = 'Last name is required';
+            }
+            
+            if (empty($data['email'])) {
+                $errors['email'] = 'Email is required';
+            } elseif (!filter_var($data['email'], FILTER_VALIDATE_EMAIL)) {
+                $errors['email'] = 'Please enter a valid email';
+            }
+            
+
+            if (empty($errors)) {
+                if (!empty($_FILES['supplier_image']['name'])) {
+                    $file = $_FILES['supplier_image'];
+                    $upload_dir = 'uploads/suppliers/';
+                    
+
+                    if (!file_exists($upload_dir)) {
+                        mkdir($upload_dir, 0777, true);
+                    }
+                    
+                    $file_name = uniqid() . '_' . $file['name'];
+                    $destination = $upload_dir . $file_name;
+                    
+                    if (move_uploaded_file($file['tmp_name'], $destination)) {
+                        $data['image_path'] = $destination;
+                    } else {
+                        $errors['supplier_image'] = 'Failed to upload image';
+                    }
+                }
+                
+                if ($this->supplierModel->updateSupplier($data)) {
+                    setFlashMessage('Supplier updated sucessfully!');
+                    redirect('manager/manageSupplier/' . $id);
+                } else {
+                    setFlashMessage('Failed to update supplier', 'error');
+                }
+            } else {
+                $data['errors'] = $errors;
+            }
+        }
+
+        $supplier = $this->supplierModel->getSupplierById($id);
+        
+
+        if (!$supplier) {
+            setFlashMessage('Supplier not found, please try again later!', 'error');
+            redirect('manager/supplier');
+        }
+        
+
+        $upcomingSchedules = $this->scheduleModel->getUpcomingSchedulesBySupplierId($id);
+        $collectionHistory = $this->collectionModel->getSupplierCollections($id);
+        
+
+        $viewData = [
+            'supplier' => $supplier,
+            'upcomingSchedules' => $upcomingSchedules,
+            'collectionHistory' => $collectionHistory,
+            'errors' => $errors ?? []
+        ];
+        
+        if (isset($data) && isset($data['errors'])) {
+            $viewData = array_merge($viewData, $data);
+        }
+        
+
+        $this->view('supplier_manager/v_supplier_profile', $viewData);
+    }
+
 
 
     public function getSupplierRecords($collectionId){
@@ -403,7 +511,7 @@ class Manager extends Controller
 
         // Check if vehicle exists
         if (!$vehicle) {
-            flash('vehicle_not_found', 'Vehicle not found.');
+            setFlashMessage('Vehicle not found, please try again later', 'error');
             redirect('manager/vehicle'); // Redirect to the vehicle list or another page
         }
 
@@ -480,10 +588,10 @@ class Manager extends Controller
                     // If no errors, create vehicle
                     if (empty($data['error'])) {
                         if ($this->vehicleModel->createVehicle($data)) {
-                            flash('vehicle_success', 'Vehicle created successfully');
+                            setFlashMessage('Vehicle created succesfully!');
                             redirect('manager/vehicle'); // Redirect to the vehicle list or another page
                         } else {
-                            $data['error'] = 'Something went wrong. Please try again.';
+                            setFlashMessage('Vehicle creation failed, please try again later!');
                         }
                     }
                 }
@@ -502,13 +610,13 @@ class Manager extends Controller
         // Fetch the current vehicle details
         $vehicle = $this->vehicleModel->getVehicleById($vehicle_id);
         if (!$vehicle) {
-            flash('vehicle_not_found', 'Vehicle not found.');
+            setFlashMessage('Vehicle not found', 'error');
             redirect('manager/vehicle');
         }
 
         if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             // Validate and sanitize input
-            $license_plate = htmlspecialchars(trim($_POST['license_plate'])); // Keep the license plate as is
+            $license_plate = htmlspecialchars(trim($_POST['license_plate']));
             $vehicle_type = htmlspecialchars(trim($_POST['vehicle_type']));
             $make = htmlspecialchars(trim($_POST['make']));
             $model = htmlspecialchars(trim($_POST['model']));
@@ -519,14 +627,13 @@ class Manager extends Controller
             // Check the current status of the vehicle
             if ($vehicle->status === 'In Use') {
                 // Handle the case where the vehicle is in use
-                flash('update_error', 'Cannot update vehicle. The vehicle is currently in use.');
+                setFlashMessage('Cannot update the vehicle because its currently in use.', 'error');
                 redirect('manager/vehicle');
             }
 
-            // Initialize the data array for updating
             $data = [
                 'vehicle_id' => $vehicle_id,
-                'license_plate' => $license_plate, // Keep the existing license plate
+                'license_plate' => $license_plate, 
                 'vehicle_type' => $vehicle_type,
                 'make' => $make,
                 'model' => $model,
@@ -535,30 +642,24 @@ class Manager extends Controller
                 'capacity' => $capacity,
             ];
 
-            // Handle file upload if a new image is provided
             if (isset($_FILES['vehicle_image']) && $_FILES['vehicle_image']['error'] == 0) {
                 $uploadResult = uploadVehicleImage($_FILES['vehicle_image'], $license_plate);
                 if ($uploadResult['success']) {
-                    // Update the image path in the data array
-                    $data['image_path'] = $uploadResult['path']; // Store relative path
-                } else {
-                    // Handle file upload error
-                    flash('upload_error', $uploadResult['message']);
+                    $data['image_path'] = $uploadResult['path']; 
+                    setFlashMessage('There is an issue when updating, Error: ' . $uploadResult['message']);
                     redirect('manager/vehicle');
                 }
             }
 
-            // Update vehicle details in the database
             if ($this->vehicleModel->updateVehicle($data)) {
-                flash('update_success', 'Vehicle updated successfully.');
+                setFlashMessage('Vehicle updated successfully!');
                 redirect('manager/vehicle');
             } else {
-                flash('update_error', 'Failed to update vehicle. Please try again.');
+                setFlashMessage('Vehicle update failed!', 'error');
                 redirect('manager/vehicle');
             }
         }
 
-        // Load the view for updating the vehicle
         $this->view('vehicle_manager/v_update_vehicle', ['vehicle' => $vehicle]);
     }
 
@@ -575,27 +676,11 @@ class Manager extends Controller
 
         // NEED TO DOUBLE CHECK THIS!!! A SIMPLE INSTRUCTION BUT ITS NOT DELETING. IDK ...
 
-        // if ($this->vehicleModel->isVehicleInSchedule($id)) {
-        //     if ($this->vehicleModel->markAsDeleted($id)) {
-        //         error_log("Vehicle " . $id . " marked as deleted");
-        //         flash('delete_success', 'Vehicle marked as deleted');
-        //     } else {
-        //         flash('delete_error', 'Failed to mark vehicle as deleted');
-        //     }
-        // } else {
-        //     if ($this->vehicleModel->deleteVehicle($id)) {
-        //         error_log("Vehicle " . $id . " deleted successfully");
-        //         flash('delete_success', 'Vehicle deleted successfully');
-        //     } else {
-        //         flash('delete_error', 'Failed to delete vehicle from database');
-        //     }
-        // }
-
         if ($this->vehicleModel->markAsDeleted($id)) {
             error_log("Vehicle " . $id . " marked as deleted");
-            flash('delete_success', 'Vehicle marked as deleted');
+            setFlashMessage('Vehicle deleted sucessfully!');
         } else {
-            flash('delete_error', 'Failed to mark vehicle as deleted');
+            setFlashMessage('Vehicle deletion failed!', 'error');
         }
 
         redirect('manager/vehicle');
@@ -747,7 +832,7 @@ class Manager extends Controller
 
         $driver = $this->driverModel->getDriverById($driver_id);
         if (!$driver) {
-            flash('driver_not_found', 'Driver not found.');
+            setFlashMessage('Driver could not be found!');
             redirect('manager/driver'); 
         }
 
@@ -875,14 +960,14 @@ class Manager extends Controller
         // Get the driver data
         $driver = $this->driverModel->getDriverById($id);
         if (!$driver) {
-            flash('driver_error', 'Driver not found', 'alert alert-danger');
+            setFlashMessage('Driver could not be found', 'error');
             redirect('manager/driver');
         }
         
         // Get the profile data
         $profile = $this->userModel->getProfileById($driver->profile_id);
         if (!$profile) {
-            flash('driver_error', 'Profile not found', 'alert alert-danger');
+            setFlashMessage('Profile could not be found');
             redirect('manager/driver');
         }
         
@@ -908,10 +993,6 @@ class Manager extends Controller
                 'last_name' => trim($_POST['last_name']),
                 'date_of_birth' => trim($_POST['date_of_birth']),
                 'contact_number' => trim($_POST['contact_number']),
-                'emergency_contact' => trim($_POST['emergency_contact']),
-                'address_line1' => trim($_POST['address_line1']),
-                'address_line2' => isset($_POST['address_line2']) ? trim($_POST['address_line2']) : '',
-                'city' => trim($_POST['city']),
                 'license_expiry_date' => trim($_POST['license_expiry_date']),
                 'status' => trim($_POST['status']),
                 'error' => ''
@@ -926,12 +1007,6 @@ class Manager extends Controller
                 $data['error'] = 'Please enter date of birth';
             } elseif (empty($data['contact_number'])) {
                 $data['error'] = 'Please enter contact number';
-            } elseif (empty($data['emergency_contact'])) {
-                $data['error'] = 'Please enter emergency contact';
-            } elseif (empty($data['address_line1'])) {
-                $data['error'] = 'Please enter address line 1';
-            } elseif (empty($data['city'])) {
-                $data['error'] = 'Please enter city';
             } elseif (empty($data['license_expiry_date'])) {
                 $data['error'] = 'Please enter license expiry date';
             } elseif (strtotime($data['license_expiry_date']) <= time()) {
@@ -960,11 +1035,7 @@ class Manager extends Controller
                         'first_name' => $data['first_name'],
                         'last_name' => $data['last_name'],
                         'date_of_birth' => $data['date_of_birth'],
-                        'contact_number' => $data['contact_number'],
-                        'emergency_contact' => $data['emergency_contact'],
-                        'address_line1' => $data['address_line1'],
-                        'address_line2' => $data['address_line2'],
-                        'city' => $data['city']
+                        'contact_number' => $data['contact_number']
                     ];
                     
                     if (!$this->userModel->updateProfile($profileData)) {
@@ -988,7 +1059,7 @@ class Manager extends Controller
                     }
                     
                     
-                    flash('driver_success', 'Driver updated successfully');
+                    setFlashMessage('Updated driver sucessfully!');
                     redirect('manager/driver');
                     
                 } catch (Exception $e) {
@@ -1191,14 +1262,13 @@ class Manager extends Controller
                     
 
                     
-                    // Success - redirect with success message
-                    flash('driver_success', 'Driver created successfully');
+                    setFlashMessage('Created driver sucessfully!');
                     redirect('manager/driver');
                     
                 } catch (Exception $e) {
-                    // Rollback transaction on error
-                    $this->db->rollBack();
+
                     $data['error'] = 'Error creating driver: ' . $e->getMessage();
+                    setFlashMessage('Error when creating the driver. Errorr:' . $e, 'error');
                 }
             }
         }
@@ -1216,7 +1286,7 @@ class Manager extends Controller
         // Get the driver data
         $driver = $this->driverModel->getDriverById($id);
         if (!$driver) {
-            flash('driver_error', 'Driver not found', 'alert alert-danger');
+            setFlashMessage('Driver not found!, please refresh the page!', 'error');
             redirect('manager/driver');
         }
         
@@ -1231,16 +1301,16 @@ class Manager extends Controller
             }
             
             $schedulesStr = implode("<br>", $scheduleNames);
-            flash('driver_error', "Cannot delete this driver as they are currently assigned to the following schedules:<br>{$schedulesStr}<br>Please reassign these schedules before deleting the driver.", 'alert alert-danger');
+            setFlashMessage("Cannot delete this driver becasue they are currently assigned to the schedule {$schedulesStr}", 'error');
             redirect('manager/driver');
         }
         
         // Not in any schedules, so we can mark as deleted
         if ($this->driverModel->markDriverAsDeleted($id)) {
-            flash('driver_success', 'Driver has been successfully marked as deleted');
+            setFlashMessage('Driver successfully marked as deleted!');
             redirect('manager/driver');
         } else {
-            flash('driver_error', 'Something went wrong while trying to delete the driver', 'alert alert-danger');
+            setFlashMessage('Driver deletion failed!', 'error');
             redirect('manager/driver');
         }
     }
@@ -1575,20 +1645,19 @@ class Manager extends Controller
         if (!isLoggedIn()) {
             redirect('users/login');
         }
-
+    
         $drivers = $this->driverModel->getAllDrivers();
         $routes = $this->routeModel->getAllUnAssignedRoutes();
-
+    
         $data = [
             'drivers' => $drivers,
             'routes' => $routes,
             'error' => ''
         ];
-
+    
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-            // Sanitize and get POST data
             $_POST = filter_input_array(INPUT_POST, FILTER_SANITIZE_STRING);
-
+    
             $data = [
                 'day' => trim($_POST['day']),
                 'driver_id' => trim($_POST['driver_id']),
@@ -1599,12 +1668,12 @@ class Manager extends Controller
                 'routes' => $routes,
                 'error' => ''
             ];
-
+    
             // Validate data
             if (empty($data['day']) || 
                 empty($data['driver_id']) || empty($data['route_id']) || 
                 empty($data['start_time']) || empty($data['end_time'])) {
-                $data['error'] = 'Please fill in all fields';
+                setFlashMessage('Please enter all the fields!', 'error');
             } else {
                 // Validate time duration
                 $startTime = strtotime("2000-01-01 " . $data['start_time']);
@@ -1632,7 +1701,7 @@ class Manager extends Controller
                             $data['start_time'],
                             $data['end_time']
                         );
-
+    
                         // Check if the route is already scheduled for this day and time
                         $routeScheduleConflict = $this->scheduleModel->checkRouteScheduleConflict(
                             $data['route_id'],
@@ -1640,7 +1709,7 @@ class Manager extends Controller
                             $data['start_time'],
                             $data['end_time']
                         );
-
+    
                         if ($driverScheduleConflict) {
                             $data['error'] = 'This driver is already scheduled during this time period.';
                         } elseif ($routeScheduleConflict) {
@@ -1648,61 +1717,81 @@ class Manager extends Controller
                         } else {
                             // Create schedule
                             if ($this->scheduleModel->create($data)) {
-                                flash('schedule_success', 'Schedule created successfully');
+                                $driverUserId = $this->userModel->getUserIdByDriverId($data['driver_id']);
+                                if ($driverUserId) {
+                                    $this->notificationModel->createNotification(
+                                        $driverUserId,
+                                        'New Schedule Assigned',
+                                        'You have been assigned a new collection schedule.',
+                                        ['link' => 'vehicledriver/']
+                                    );
+                                }
+    
+                                $suppliers = $this->userModel->getSuppliersByRouteId($data['route_id']);
+                                foreach ($suppliers as $supplierId) {
+                                    $supplierUserId = $this->userModel->getUserIdBySupplierId($supplierId);
+                                    if ($supplierUserId) {
+                                        $this->notificationModel->createNotification(
+                                            $supplierUserId,
+                                            'New Schedule Created',
+                                            'A new collection schedule has been created for your route.',
+                                            ['link' => 'supplier/schedule']
+                                        );
+                                    } else {
+                                        error_log("Notification failed: No user ID for supplier ID: $supplierId");
+                                    }
+                                }
+    
+                                setFlashMessage('Schedule created sucessfully!');
                                 redirect('manager/schedule');
                             } else {
-                                $data['error'] = 'Something went wrong. Please try again. Debug info: ' . 
-                                'day: ' . $data['day'] . ', ' .
-                                'driver_id: ' . $data['driver_id'] . ', ' .
-                                'route_id: ' . $data['route_id'] . ', ' .
-                                'start_time: ' . $data['start_time'] . ', ' .
-                                'end_time: ' . $data['end_time'];
+                                setFlashMessage('Couldnt create the schedule, please retry it later', 'error');
                             }
                         }
                     }
                 }
             }
         }
-
-        // Load the view for creating a schedule
+    
         $this->view('vehicle_manager/v_create_schedule', $data);
     }
+    
 
     public function updateSchedule($scheduleId = null) {
         if (!isLoggedIn()) {
             redirect('users/login');
         }
-
+    
         // Check if schedule ID is provided
         if (!$scheduleId) {
-            flash('schedule_error', 'Invalid schedule ID');
-            redirect('manager/collectionschedule');
+            setFlashMessage('Schedule doesnt exist, please retry again!', 'error');
+            redirect('manager/schedule');
         }
-
+    
         // Get the existing schedule
         $schedule = $this->scheduleModel->getScheduleById($scheduleId);
         
         // Check if schedule exists
         if (!$schedule) {
-            flash('schedule_error', 'Schedule not found');
-            redirect('manager/collectionschedule');
+            setFlashMessage('Schedule doesnt exist, please try again later!', 'error');
+            redirect('manager/schedule');
         }
-
+    
         // Get data for the form
         $drivers = $this->driverModel->getAllDrivers();
         $routes = $this->routeModel->getAllUndeletedRoutes();
-
+    
         $data = [
             'schedule' => $schedule,
             'drivers' => $drivers,
             'routes' => $routes,
             'error' => ''
         ];
-
+    
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             // Sanitize and get POST data
             $_POST = filter_input_array(INPUT_POST, FILTER_SANITIZE_STRING);
-
+    
             $data = [
                 'schedule_id' => $scheduleId,
                 'day' => trim($_POST['day']),
@@ -1715,7 +1804,7 @@ class Manager extends Controller
                 'routes' => $routes,
                 'error' => ''
             ];
-
+    
             // Validate data
             if (empty($data['day']) || 
                 empty($data['driver_id']) || empty($data['route_id']) || 
@@ -1776,7 +1865,7 @@ class Manager extends Controller
                             $scheduleId
                         );
                     }
-
+    
                     if ($driverConflict) {
                         $data['error'] = 'This driver is already scheduled during this time period.';
                     } elseif ($routeConflict) {
@@ -1784,7 +1873,34 @@ class Manager extends Controller
                     } else {
                         // Update schedule
                         if ($this->scheduleModel->updateSchedule($data)) {
-                            flash('schedule_success', 'Schedule updated successfully');
+                            // Send notifications to the driver
+                            setFlashMessage('Schedule updated successfully!');
+                            $driverUserId = $this->userModel->getUserIdByDriverId($data['driver_id']);
+                            $this->notificationModel->createNotification(
+                                $driverUserId,
+                                'Schedule Updated',
+                                'Your schedule has been updated.',
+                                ['link' => 'vehicledriver/']
+                            );
+    
+
+                            $suppliers = $this->userModel->getSuppliersByRouteId($data['route_id']);
+                            foreach ($suppliers as $supplierId) {
+                                $supplierUserId = $this->userModel->getUserIdBySupplierId($supplierId);
+                                $created = $this->notificationModel->createNotification(
+                                    $supplierUserId,
+                                    'Schedule Updated',
+                                    'The schedule for your route has been updated.',
+                                    ['link' => 'supplier/schedule/']
+                                );
+
+                                if (!$created) {
+                                    error_log("Failed to create notification for supplier user ID: " . $supplierUserId);
+                                } else {
+                                    error_log("Notification created for supplier user ID: " . $supplierUserId);
+                                }
+                            }
+    
                             redirect('manager/schedule');
                         } else {
                             $data['error'] = 'Something went wrong. Please try again.';
@@ -1793,10 +1909,53 @@ class Manager extends Controller
                 }
             }
         }
-
+    
         // Load the view for updating a schedule
         $this->view('vehicle_manager/v_update_schedule', $data);
     }
+
+    public function deleteSchedule() {
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            $schedule_id = $_POST['schedule_id'];
+    
+            $collectionScheduleModel = $this->model('M_CollectionSchedule');
+    
+            $schedule = $collectionScheduleModel->getScheduleById($schedule_id);
+            if ($schedule) {
+                $driverUserId = $this->userModel->getUserIdByDriverId($schedule->driver_id);
+                if ($driverUserId) {
+                    $this->notificationModel->createNotification(
+                        $driverUserId,
+                        'Schedule Deleted',
+                        'Your assigned schedule has been deleted by the manager.',
+                        ['link' => 'vehicledriver/']
+                    );
+                }
+    
+                // Notify the suppliers 
+                $suppliers = $this->userModel->getSuppliersByRouteId($schedule->route_id);
+                foreach ($suppliers as $supplierId) {
+                    $supplierUserId = $this->userModel->getUserIdBySupplierId($supplierId);
+                    if ($supplierUserId) {
+                        $this->notificationModel->createNotification(
+                            $supplierUserId,
+                            'Schedule Deleted',
+                            'A schedule related to your route has been deleted.',
+                            ['link' => 'supplier/viewSchedule']
+                        );
+                    } else {
+                        error_log("Failed to create notification for supplier ID: $supplierId (no user_id found)");
+                    }
+                }
+            }
+    
+            // Now delete the schedule
+            $collectionScheduleModel->delete($schedule_id);
+    
+            redirect('manager/');
+        }
+    }
+    
 
     /** 
      * Appointment Management
@@ -1829,7 +1988,7 @@ class Manager extends Controller
             ];
     
             if ($this->appointmentModel->createSlot($data)) {
-                flash('slot_message', 'Time slot created successfully.');
+                
                 redirect('manager/appointments');
             } else {
                 redirect('manager/createSlot');
@@ -2017,10 +2176,24 @@ class Manager extends Controller
      */
 
     public function complaints()
-     {
-         $data = [];
- 
-         $this->view('supplier_manager/v_complaints', $data);
+    {
+        // Get complaints data
+        $complaints = $this->supplierModel->getComplaints();
+    
+        // Get complaint statistics
+        $totalComplaints = $this->supplierModel->getTotalComplaints();
+        $resolvedComplaints = $this->supplierModel->getComplaintsByStatus('Resolved');
+        $pendingComplaints = $this->supplierModel->getComplaintsByStatus('Pending');
+    
+        // Set up data array for the view
+        $data = [
+            'complaints' => $complaints,
+            'totalComplaints' => $totalComplaints,
+            'resolvedComplaints' => count($resolvedComplaints),
+            'pendingComplaints' => count($pendingComplaints)
+        ];
+    
+        $this->view('supplier_manager/v_complaints', $data);
     }
 
     //added by theekshana from supplier manager
@@ -2382,28 +2555,132 @@ class Manager extends Controller
         echo json_encode(['success' => false, 'message' => 'Invalid request method']);
         exit();
     }
+    public function viewComplaint($id = null)
+    {
+        if ($id === null) {
+            redirect('manager/complaints');
+        }
+    
+        $complaint = $this->supplierModel->getComplaintById($id);
+    
+        if (!$complaint) {
+            setFlashMessage('Complaint not found!', 'error');
+            redirect('manager/complaints');
+        }
+    
+        $data = [
+            'complaint' => $complaint
+        ];
+    
+        $this->view('supplier_manager/v_view_complaint', $data);
+    }
+    
+    public function resolveComplaint()
+    {
+        if ($_SERVER['REQUEST_METHOD'] != 'POST') {
+            redirect('manager/complaints');
+        }
+    
+        $data = [
+            'complaint_id' => trim($_POST['complaint_id']),
+            'resolution_notes' => trim($_POST['resolution_notes']),
+            'status' => 'Resolved'
+        ];
+    
+        if ($this->supplierModel->updateStatus($data)) {
+            setFlashMessage("Complaint marked as resolved!");
+        } else {
+            setFlashMessage('Complaint couldnt be marked as resolved, please try again later!', 'error');
+        }
+    
+        redirect('manager/viewComplaint/' . $data['complaint_id']);
+    }
+    
+    public function reopenComplaint($id)
+    {
+        $data = [
+            'complaint_id' => $id,
+            'status' => 'Pending'
+        ];
+    
+        if ($this->supplierModel->updateStatus($data)) {
+            setFlashMessage('Complaint reopen sucessfully!');
+        } else {
+            setFlashMessage('Couldnt reopen the complaint, try again later!', 'error');
+        }
+    
+        redirect('manager/viewComplaint/' . $id);
+    }
+    
+    public function deleteComplaint($id)
+    {
+        if ($this->supplierModel->deleteComplaint($id)) {
+            setFlashMessage('Complaint deleted sucessfully!');
+            redirect('manager/complaints');
+        } else {
+            setFlashMessage('Couldnt delete the complaint please try again later!', 'error');
+            redirect('manager/viewComplaint/' . $id);
+        }
+    }
+    
+     
 
     public function respondRequest() {
         if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             $requestId = trim($_POST['request_id']);
             $action = trim($_POST['action']);
+    
+            $notificationModel = $this->model('M_Notification');
+    
 
+            $request = $this->appointmentModel->getRequestById($requestId);
+            $slotId = $request->slot_id;
+            $supplierId = $request->supplier_id;
+    
             if ($action === 'accept') {
-                // Accept the request and log it
                 if ($this->appointmentModel->acceptRequest($requestId)) {
-                    flash('request_message', 'Request accepted successfully.');
-                } else {
-                    flash('request_message', 'Failed to accept the request.');
-                }
-            } elseif ($action === 'reject') {
-                // Reject the request
-                $this->appointmentModel->rejectRequest($requestId);
-                flash('request_message', 'Request rejected successfully.');
-            }
+                    setFlashMessage('Request accepted successful for request ID: ' . $requestId );
+    
+                    $notificationModel->createNotification(
+                        $this->userModel->getUserIdBySupplierId($supplierId),
+                        'Appointment Accepted',
+                        'Your appointment request has been accepted.',
+                        ['link' => 'supplier/viewAppointment/']
+                    );
+    
+                    $otherRequests = $this->appointmentModel->getRequestsBySlotExcept($slotId, $requestId);
+                    foreach ($otherRequests as $req) {
 
-            redirect('manager/appointments'); // Redirect back to appointments
+                        $this->appointmentModel->rejectRequest($req->request_id);
+    
+                        $notificationModel->createNotification(
+                            $this->userModel->getUserIdBySupplierId($req->supplier_id),
+                            'Appointment Rejected',
+                            'Your request for the same time slot was rejected.',
+                            ['link' => 'supplier/viewAppointment/']
+                        );
+                    }
+    
+                } else {
+                    setFlashMessage('Failed to accept the request. Please refresh the page', 'error');
+                }
+    
+            } elseif ($action === 'reject') {
+                $this->appointmentModel->rejectRequest($requestId);
+                setFlashMessage('Request rejected successfuly!');
+    
+                $notificationModel->createNotification(
+                    $supplierId,
+                    'Appointment Rejected',
+                    'Your appointment request has been rejected.',
+                    ['link' => 'supplier/viewAppointment/' . $requestId]
+                );
+            }
+    
+            redirect('manager/appointments');
         }
     }
+    
 
 
     /** 

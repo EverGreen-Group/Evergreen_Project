@@ -96,10 +96,6 @@
 
 
 
-    <?php flash('schedule_error'); ?>
-    <?php flash('schedule_success'); ?>
-    
-
     <div class="table-data">
         <div class="order" style="max-width:500px;">
             <div id="calendar"></div>  
@@ -198,9 +194,6 @@
     <div class="table-data">
 
     </div>
-
-    <?php flash('schedule_create_error'); ?>
-    <?php flash('schedule_create_success'); ?>
 
 
 <!-- Create Schedule Modal -->

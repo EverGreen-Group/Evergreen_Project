@@ -92,13 +92,15 @@
         </div>
     </header>
 
-    <ul class="box-info">
-        <li>
-            <i class='bx bx-package'></i>
-            <span class="text">
-                <p>Total Products</p>
-                <h3><?php echo count($data['products']); ?></h3>
-            </span>
+    <ul class="dashboard-stats">
+        <li class="stat-card">
+            <div class="stat-content">
+                <i class='bx bxs-basket'></i>
+                <div class="stat-info">
+                    <h3><?php echo isset($data['totalProducts']) ? $data['totalProducts'] : 0; ?></h3>
+                    <p>Total Products</p>
+                </div>
+            </div>
         </li>
 
         <li class="stat-card">

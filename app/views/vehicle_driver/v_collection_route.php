@@ -7,11 +7,33 @@
     const UPLOADROOT = '<?php echo UPLOADROOT; ?>';
     const collections = <?php echo json_encode($data['collections']); ?>;
     const collectionId = <?php echo $data['collection']->collection_id; ?>;
+    const vehicleId = <?php echo $data['collection']->vehicle_id; ?>;
+
+    async function updateVehicleLocation() {
+        if (navigator.geolocation) {
+            navigator.geolocation.getCurrentPosition(async (position) => {
+                const latitude = position.coords.latitude;
+                const longitude = position.coords.longitude;
+
+                const response = await fetch(`${URLROOT}/vehicledriver/updateVehicle/${vehicleId}/${latitude}/${longitude}`, {
+                    method: 'POST',
+                });
+
+                if (!response.ok) {
+                    console.error('Failed to update vehicle location');
+                }
+            }, (error) => {
+                console.error('Error getting location:', error);
+            });
+        } else {
+            console.error('Geolocation is not supported by this browser.');
+        }
+    }
+
+    setInterval(updateVehicleLocation, 0.5 * 60 * 1000); // I set every 5 minyts as the interval
 </script>
-<script src="<?php echo URLROOT; ?>/public/js/vehicle_driver/collection_route_suppliers.js"></script>
 
 <main>
-    <!-- Page Header -->
     <div class="head-title">
         <div class="left">
             <h1>Collection Route</h1>
@@ -54,20 +76,20 @@
                             </button>
                         </form>
                     </div>
-                <?php else: ?>
+                <?php else:?>
                     <div class="supplier-profile">
                         <div class="supplier-avatar">
                             <img src="<?php echo htmlspecialchars(URLROOT . '/' . $data['currentSupplier']['image']); ?>" alt="Supplier">
                         </div>
                         <div class="supplier-details">
                             <h4><?php echo $data['currentSupplier']['supplierName']; ?></h4>
-                            <p class="expected-amount">
-                                <i class='bx bx-leaf'></i>
-                                <?php echo $data['currentSupplier']['estimatedCollection']; ?>kg expected
-                            </p>
                             <p class="supplier-contact">
                                 <i class='bx bx-phone'></i>
                                 <?php echo $data['currentSupplier']['contact']; ?>
+                            </p>
+                            <p class="supplier-contact">
+                                <i class='bx bx-map-pin'></i>
+                                <?php echo $data['currentSupplier']['address']; ?>
                             </p>
                         </div>
                     </div>
@@ -76,16 +98,24 @@
                             <i class='bx bx-package'></i>
                             Manage Bags
                         </a>
-                        <a href="<?php echo URLROOT; ?>/vehicledriver/skipSupplier/<?php echo $data['collection']->collection_id; ?>/<?php echo $data['currentSupplier']['id']; ?>" class="action-btn">
-                            <i class='bx bx-skip-next'></i>
-                            Skip Supplier
+                        <a href="<?php echo URLROOT; ?>/vehicledriver/cancelSupplierCollection/<?php echo $data['collection']->collection_id; ?>/<?php echo $data['currentSupplier']['id']; ?>" class="btn btn-tertiary">
+                            <i class='bx bx-cross'></i>
+                            Cancel Supplier
                         </a>
+                        <button class="action-btn" onclick="window.location.href='tel:<?php echo $data['currentSupplier']['contact']; ?>'">
+                            <i class='bx bx-phone'></i>
+                            Call Supplier
+                        </button>
+                        <button class="action-btn" onclick="window.open('https://www.google.com/maps/dir/?api=1&destination=<?php echo $data['currentSupplier']['location']['lat']; ?>,<?php echo $data['currentSupplier']['location']['lng']; ?>', '_blank')">
+                            <i class='bx bx-map'></i>
+                            Get Directions
+                        </button>
                     </div>
                 <?php endif; ?>
             </div>
         </div>
 
-        <!-- Remaining Suppliers Section -->
+        <!-- REMAINING SUPPLIERS -->
         <div class="panel">
             <div class="panel-header">
                 <h3>Remaining Suppliers</h3>
@@ -94,10 +124,12 @@
                     // Use collections array if remainingSuppliers is not set
                     $remainingCount = 0;
                     if (isset($data['collections'])) {
-                        // Count suppliers that aren't the current one
+                        // Count suppliers that aren't the current one and are not 'Collected' or 'No Show'
                         foreach ($data['collections'] as $supplier) {
                             if (!isset($data['currentSupplier']) || $supplier['id'] != $data['currentSupplier']['id']) {
-                                $remainingCount++;
+                                if ($supplier['status'] != 'Collected' && $supplier['status'] != 'No Show') {
+                                    $remainingCount++;
+                                }
                             }
                         }
                     }
@@ -115,12 +147,14 @@
                     <div class="suppliers-list">
                         <?php foreach ($data['collections'] as $supplier): ?>
                             <?php if (!isset($data['currentSupplier']) || $supplier['id'] != $data['currentSupplier']['id']): ?>
-                                <div class="supplier-item">
-                                    <div class="supplier-info">
-                                        <span class="supplier-name"><?php echo $supplier['supplierName']; ?></span>
-                                        <span class="supplier-estimate"><?php echo $supplier['estimatedCollection']; ?>kg</span>
+                                <?php if ($supplier['status'] != 'Collected' && $supplier['status'] != 'No Show'): ?>
+                                    <div class="supplier-item">
+                                        <div class="supplier-info">
+                                            <span class="supplier-name"><?php echo $supplier['supplierName']; ?></span>
+                                            <span class="supplier-estimate"><?php echo $supplier['estimatedCollection']; ?>kg</span>
+                                        </div>
                                     </div>
-                                </div>
+                                <?php endif; ?>
                             <?php endif; ?>
                         <?php endforeach; ?>
                     </div>
@@ -145,10 +179,8 @@
     // Cancel collection
     function cancelCollection() {
         if (confirm('Are you sure you want to cancel this collection?')) {
-            // Add your cancellation logic here
             alert('Collection canceled!');
-            // Redirect back to a relevant page
-            window.location.href = `${URLROOT}/vehicledriver/dashboard`;
+            window.location.href = `${URLROOT}/vehicledriver/`;
         }
     }
 </script>

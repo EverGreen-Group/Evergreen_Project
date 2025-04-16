@@ -9,12 +9,10 @@ require_once '../app/helpers/UserHelper.php';
 class Distribution extends Controller {
     private $vehicleManagerModel;
     private $routeModel; 
-    private $teamModel; 
     private $vehicleModel; 
     private $shiftModel;     
     private $scheduleModel;    
     private $driverModel; 
-    private $partnerModel;
     private $staffModel;
     private $userHelper;
     private $collectionModel;
@@ -40,12 +38,10 @@ class Distribution extends Controller {
         // Initialize models
         $this->vehicleManagerModel = $this->model('M_VehicleManager');
         $this->routeModel = $this->model('M_Route');
-        $this->teamModel = $this->model('M_Team');
         $this->vehicleModel = $this->model('M_Vehicle');
         $this->shiftModel = $this->model('M_Shift');
         $this->scheduleModel = $this->model('M_CollectionSchedule');
         $this->driverModel = $this->model('M_Driver');
-        $this->partnerModel = $this->model('M_Partner');
         $this->staffModel = $this->model('M_Staff');
         $this->userHelper = new UserHelper();
         $this->collectionModel = $this->model('M_Collection');

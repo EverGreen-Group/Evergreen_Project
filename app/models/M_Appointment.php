@@ -92,6 +92,16 @@ class M_Appointment {
         return $this->db->resultSet();
     }
 
+    
+    public function getRequestsBySlotExcept($slotId, $excludeRequestId) {
+        $this->db->query("SELECT * FROM appointment_requests 
+                          WHERE slot_id = :slot_id AND request_id != :exclude_id AND status = 'Pending'");
+        $this->db->bind(':slot_id', $slotId);
+        $this->db->bind(':exclude_id', $excludeRequestId);
+        return $this->db->resultSet();
+    }
+    
+
 
     public function getMyRequests($supplierId) {
         $this->db->query("
@@ -149,6 +159,14 @@ class M_Appointment {
         
         return $this->db->execute();
     }
+
+    public function hasAlreadyRequested($slotId, $supplierId) {
+        $this->db->query("SELECT * FROM appointment_requests WHERE slot_id = :slot_id AND supplier_id = :supplier_id");
+        $this->db->bind(':slot_id', $slotId);
+        $this->db->bind(':supplier_id', $supplierId);
+        return $this->db->single(); 
+    }
+    
 
 }
 ?>

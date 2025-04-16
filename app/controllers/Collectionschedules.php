@@ -42,10 +42,10 @@ class Collectionschedules extends Controller {
             $errors[] = "Please select a day of the week";
         }
 
-        // If there are any errors, display them and redirect
+
         if (!empty($errors)) {
             foreach ($errors as $error) {
-                flash('schedule_create_error', $error, 'alert alert-danger');
+                setFlashMessage('Error when creating the schedule! Error: ' . $error, 'error');
             }
             redirect('manager/');
             return;
@@ -55,12 +55,12 @@ class Collectionschedules extends Controller {
 
         // Create schedule for this day
         if (!$this->collectionScheduleModel->create($data)) {
-            flash('schedule_create_error', "Failed to create schedule for {$data['day']}", 'alert alert-danger');
+            setFlashMessage("Error when creating the schedule for {$data['day']}", 'error');
             redirect('manager/');
             return;
         }
 
-        flash('schedule_create_success', 'Collection schedule created successfully!', 'alert alert-success');
+        setFlashMessage('Schedule creation successful!');
         redirect('manager/');
     }
 
@@ -69,9 +69,9 @@ class Collectionschedules extends Controller {
             $schedule_id = $_POST['schedule_id'];
             
             if ($this->collectionScheduleModel->toggleActive($schedule_id)) {
-                flash('schedule_success', 'Schedule status updated successfully');
+                setFlashMessage('Schedule status updated sucessfully');
             } else {
-                flash('schedule_error', 'Failed to update schedule status');
+                setFlashMessage('Unable to update the schedle status!', 'error');
             }
             
             redirect('manager/');
@@ -83,9 +83,9 @@ class Collectionschedules extends Controller {
             $schedule_id = $_POST['schedule_id'];
             
             if ($this->collectionScheduleModel->delete($schedule_id)) {
-                flash('schedule_success', 'Schedule deleted successfully');
+                setFlashMessage('Schedule status deleted sucessfully');
             } else {
-                flash('schedule_error', 'Failed to delete schedule');
+                setFlashMessage('Unable to delete the schedule', 'error');
             }
             
             redirect('manager/');
@@ -103,15 +103,15 @@ class Collectionschedules extends Controller {
     
             // Check for schedule conflicts (excluding current schedule)
             if ($this->collectionScheduleModel->checkConflict($data)) {
-                flash('schedule_error', "Schedule conflict detected for the selected route", 'alert alert-danger');
+                setFlashMessage('Cannot update the schedule, a conflict exists!', 'error');
                 redirect('manager/');
                 return;
             }
     
             if ($this->collectionScheduleModel->update($data)) {
-                flash('schedule_success', 'Collection schedule updated successfully');
+                setFlashMessage('Schedule updated sucessfully');
             } else {
-                flash('schedule_error', 'Failed to update collection schedule');
+                setFlashMessage('Failed to update the schedule');
             }
     
             redirect('manager/');

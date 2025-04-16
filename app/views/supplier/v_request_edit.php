@@ -35,27 +35,27 @@
       <div class="order-details-grid">
         <div class="detail-item">
           <span class="label">Order ID:</span>
-          <span class="value"><?php echo $data['order']->order_id; ?></span>
+          <span class="value"><?php echo htmlspecialchars($data['order']->order_id ?? ''); ?></span>
         </div>
         <div class="detail-item">
           <span class="label">Fertilizer Type:</span>
-          <span class="value"><?php echo $data['order']->fertilizer_name; ?></span>
+          <span class="value"><?php echo htmlspecialchars($data['order']->fertilizer_name ?? ''); ?></span>
         </div>
         <div class="detail-item">
           <span class="label">Total Amount:</span>
-          <span class="value"><?php echo $data['order']->total_amount; ?></span>
+          <span class="value"><?php echo htmlspecialchars($data['order']->total_amount ?? ''); ?></span>
         </div>
         <div class="detail-item">
           <span class="label">Unit:</span>
-          <span class="value"><?php echo $data['order']->unit; ?></span>
+          <span class="value"><?php echo htmlspecialchars($data['order']->unit ?? ''); ?></span>
         </div>
         <div class="detail-item">
           <span class="label">Price Per Unit:</span>
-          <span class="value"><?php echo $data['order']->price_per_unit; ?></span>
+          <span class="value"><?php echo htmlspecialchars($data['order']->price_per_unit ?? ''); ?></span>
         </div>
         <div class="detail-item">
           <span class="label">Total Price:</span>
-          <span class="value"><?php echo $data['order']->total_price; ?></span>
+          <span class="value"><?php echo htmlspecialchars($data['order']->total_price ?? ''); ?></span>
         </div>
       </div>
     </div>
@@ -70,7 +70,7 @@
       <form id="fertilizerForm" method="POST" action="<?php echo URLROOT . '/supplier/editFertilizerRequest/' . $data['order']->order_id; ?>">
         <div class="form-group">
           <label for="type_id">Fertilizer Type:</label>
-          <select id="type_id" name="type_id" required>
+          <select id="type_id" name="type_id" required onchange="updatePrice()">
             <option value="">Select Fertilizer</option>
             <?php foreach($data['fertilizer_types'] as $type): ?>
               <option value="<?php echo $type->type_id; ?>" 
@@ -86,7 +86,7 @@
 
         <div class="form-group">
           <label for="unit">Unit:</label>
-          <select id="unit" name="unit" required>
+          <select id="unit" name="unit" required onchange="updatePrice()">
             <option value="">Select Unit</option>
             <option value="kg" <?php echo ($data['order']->unit == 'kg') ? 'selected' : ''; ?>>Kilograms (kg)</option>
             <option value="packs" <?php echo ($data['order']->unit == 'packs') ? 'selected' : ''; ?>>Packs</option>
@@ -95,15 +95,21 @@
         </div>
 
         <div class="form-group">
-          <label for="total_amount">Total Amount:</label>
-          <input type="number" id="total_amount" name="total_amount" max="50" min="1" value="<?php echo $data['order']->total_amount; ?>" required>
+          <label for="quantity">Quantity:</label>
+          <input type="number" id="quantity" name="quantity" max="50" min="1" value="<?php echo htmlspecialchars($data['order']->quantity ?? ''); ?>" required oninput="updatePrice()">
         </div>
 
-        <input type="hidden" id="price_per_unit" name="price_per_unit">
-        <input type="hidden" id="total_price" name="total_price">
-
         <div class="form-group">
+          <label for="total_amount">Total Amount:</label>
+          <input type="number" id="total_amount" name="total_amount" value="<?php echo htmlspecialchars($data['order']->total_amount ?? ''); ?>" readonly>
+        </div>
+
+        <input type="hidden" id="price_per_unit" name="price_per_unit" value="<?php echo htmlspecialchars($data['order']->price_per_unit ?? ''); ?>">
+        <input type="hidden" id="total_price" name="total_price" value="<?php echo htmlspecialchars($data['order']->total_price ?? ''); ?>">
+
+        <div class="form-group button-group">
           <button type="submit" class="submit-btn">Update Request</button>
+          <button type="button" class="back-btn" onclick="window.location.href='<?php echo URLROOT; ?>/Supplier/requestFertilizer'">Back to Requests</button>
         </div>
       </form>
     </div>
@@ -113,7 +119,45 @@
 <div id="notification" class="notification" style="display: none;"></div>
 <script src="<?php echo URLROOT; ?>/css/script.js"></script>
 <script>
-  // (Optional) JavaScript functions for price calculation can be added here
+  function updatePrice() {
+    const typeSelect = document.getElementById('type_id');
+    const unitSelect = document.getElementById('unit');
+    const quantityInput = document.getElementById('quantity');
+    const totalAmountInput = document.getElementById('total_amount');
+    const pricePerUnitInput = document.getElementById('price_per_unit');
+    const totalPriceInput = document.getElementById('total_price');
+
+    if (!typeSelect.value || !unitSelect.value || !quantityInput.value) {
+        totalAmountInput.value = '';
+        pricePerUnitInput.value = '';
+        totalPriceInput.value = '';
+        return;
+    }
+
+    const selectedOption = typeSelect.options[typeSelect.selectedIndex];
+    const unit = unitSelect.value;
+    let pricePerUnit;
+
+    if (unit === 'kg') {
+        pricePerUnit = parseFloat(selectedOption.getAttribute('data-unit-price-kg'));
+    } else if (unit === 'packs') {
+        pricePerUnit = parseFloat(selectedOption.getAttribute('data-pack-price'));
+    } else if (unit === 'box') {
+        pricePerUnit = parseFloat(selectedOption.getAttribute('data-box-price'));
+    }
+
+    const quantity = parseFloat(quantityInput.value);
+    if (!isNaN(pricePerUnit) && !isNaN(quantity)) {
+        const total = pricePerUnit * quantity;
+        pricePerUnitInput.value = pricePerUnit.toFixed(2);
+        totalAmountInput.value = total.toFixed(2);
+        totalPriceInput.value = total.toFixed(2);
+    } else {
+        totalAmountInput.value = '';
+        pricePerUnitInput.value = '';
+        totalPriceInput.value = '';
+    }
+  }
 </script>
 
 <style>
@@ -226,6 +270,11 @@
     display: flex;
     flex-direction: column;
   }
+  .edit-form-card .button-group {
+    display: flex;
+    gap: var(--spacing-md);
+    justify-content: center;
+  }
   .edit-form-card label {
     margin-bottom: var(--spacing-xs);
     color: var(--text-primary);
@@ -236,25 +285,41 @@
     border: 1px solid var(--border-color);
     border-radius: var(--border-radius-sm);
   }
-  .edit-form-card .submit-btn {
-    grid-column: span 2;
+  .edit-form-card .submit-btn,
+  .edit-form-card .back-btn {
     padding: var(--spacing-md);
-    background-color: var(--primary-color);
-    color: white;
     border: none;
     border-radius: var(--border-radius-sm);
     cursor: pointer;
     font-size: 1rem;
     transition: background-color 0.3s ease;
   }
+  .edit-form-card .submit-btn {
+    background-color: var(--primary-color);
+    color: white;
+  }
   .edit-form-card .submit-btn:hover {
     background-color: var(--secondary-color);
+  }
+  .edit-form-card .back-btn {
+    background-color: #6c757d; /* Gray color for the back button */
+    color: white;
+  }
+  .edit-form-card .back-btn:hover {
+    background-color: #5a6268; /* Darker gray on hover */
   }
 
   /* Responsive Adjustments */
   @media (max-width: 768px) {
     .edit-form-card form {
       grid-template-columns: 1fr;
+    }
+    .edit-form-card .button-group {
+      flex-direction: column;
+    }
+    .edit-form-card .submit-btn,
+    .edit-form-card .back-btn {
+      width: 100%;
     }
   }
 </style>

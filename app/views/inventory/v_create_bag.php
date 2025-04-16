@@ -18,9 +18,7 @@
         </div>
     </div>
     
-    <!-- Error Messages -->
-    <?php flash('bag_message'); ?>
-    
+
     <form id="createBagForm" method="POST" action="<?php echo URLROOT; ?>/inventory/createBag">
     
     <!-- Bag Information -->

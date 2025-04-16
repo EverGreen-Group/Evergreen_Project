@@ -92,8 +92,7 @@ class M_CollectionSchedule {
                 cs.schedule_id,
                 cs.day,
                 r.route_name,
-                v.vehicle_type,
-                v.license_plate,
+                v.*,
                 cs.start_time,
                 cs.end_time,
                 CASE 
@@ -278,7 +277,8 @@ class M_CollectionSchedule {
                 CONCAT(p.first_name, ' ', p.last_name) AS supplier_name,
                 p.image_path,
                 csr.arrival_time,
-                rs.stop_order
+                rs.stop_order,
+                s.address
             FROM collection_supplier_records csr
             JOIN collections c ON csr.collection_id = c.collection_id
             JOIN collection_schedules cs ON c.schedule_id = cs.schedule_id
@@ -712,8 +712,10 @@ class M_CollectionSchedule {
                 cs.driver_id,
                 CONCAT(p.first_name, ' ', p.last_name) AS driver_name,
                 r.route_name,
+                r.route_id,
                 v.vehicle_type,
                 v.license_plate,
+                v.vehicle_id,
                 cs.start_time,
                 cs.end_time,
                 CASE 

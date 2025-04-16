@@ -60,7 +60,7 @@
 		</ul>
         <ul class="side-menu">
 		<li>
-				<a href="<?php echo URLROOT; ?>/supplier/profile">
+				<a href="<?php echo URLROOT; ?>/auth/profile">
 					<i class='bx bxs-group'></i>
 					<span class="text">Profile</span>
 				</a>

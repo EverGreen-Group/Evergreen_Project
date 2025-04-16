@@ -5,7 +5,6 @@ include_once APPROOT . '/services/GoogleMapsService.php';
 class VehicleDriver extends controller {
     private $collectionScheduleModel;
     private $driverModel;
-    private $teamModel;
     private $vehicleModel;
     private $routeModel;
     private $collectionModel;
@@ -22,7 +21,6 @@ class VehicleDriver extends controller {
         $this->collectionScheduleModel = $this->model('M_CollectionSchedule');
         $this->collectionModel = $this->model('M_Collection');
         $this->driverModel = $this->model('M_Driver');
-        $this->teamModel = $this->model('M_Team');
         $this->vehicleModel = $this->model('M_Vehicle');
         $this->routeModel = $this->model('M_Route');
         $this->googleMapsService = new GoogleMapsService();
@@ -547,16 +545,16 @@ class VehicleDriver extends controller {
             error_log(print_r($_POST, true));
             
             if (!$scheduleId || empty($bags)) {
-                flash('schedule_message', 'Missing schedule ID or no bags were selected', 'alert alert-danger');
+                setFlashMessage('No bags were selected', 'error');
                 redirect('vehicledriver/scheduleDetails/' . $scheduleId);
                 return;
             }
 
             // Attempt to create collection with bags
             if ($this->collectionModel->createCollectionWithBags($scheduleId, $bags)) {
-                flash('schedule_message', 'Bags assigned successfully', 'alert alert-success');
+                setFlashMessage('Bags assigned sucessfully!');
             } else {
-                flash('schedule_message', 'Failed to assign bags', 'alert alert-danger');
+                setFlashMessage('Bags couldnt not be assigned!', 'error');
             }
             
             redirect('vehicledriver/scheduleDetails/' . $scheduleId);
@@ -672,10 +670,10 @@ class VehicleDriver extends controller {
             $collectionId = $this->collectionModel->createCollection($scheduleId);
 
             if ($collectionId) {
-                flash('schedule_message', 'Collection created successfully. Awaiting vehicle manager approval.', 'alert alert-success');
+                setFlashMessage('Collection created sucessfully!');
                 redirect('vehicledriver/scheduleDetails/' . $scheduleId);
             } else {
-                flash('schedule_message', 'Failed to create collection', 'alert alert-danger');
+                setFlashMessage('Failed to create the collection!', 'error');
                 redirect('vehicledriver/scheduleDetails/' . $scheduleId);
             }
         } else {

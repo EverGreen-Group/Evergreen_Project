@@ -18,7 +18,7 @@
 				</a>
 			</li>
 			<li class="<?php echo (basename($_SERVER['REQUEST_URI']) == 'suppliers') ? 'active' : ''; ?>">
-				<a href="<?php echo URLROOT; ?>/manager/suppliers">
+				<a href="<?php echo URLROOT; ?>/manager/supplier">
 					<i class='bx bxs-network-chart'></i>
 					<span class="text">Suppliers</span>
 				</a>
@@ -75,18 +75,6 @@
 			</li>
   </ul>
   <ul class="side-menu">
-    <li class="<?php echo (basename($_SERVER['REQUEST_URI']) == 'settings') ? 'active' : ''; ?>">
-      <a href="<?php echo URLROOT; ?>/manager/settings">
-        <i class="bx bxs-cog"></i>
-        <span class="text">Settings</span>
-      </a>
-    </li>
-    <li>
-      <a href="<?php echo URLROOT; ?>/manager/personal-details" class="logout">
-        <i class="bx bxs-user-detail"></i>
-        <span class="text">Personal Details</span>
-      </a>
-    </li>
     <li>
       <a href="<?php echo URLROOT; ?>/auth/logout" class="logout">
         <i class="bx bxs-log-out-circle"></i>
