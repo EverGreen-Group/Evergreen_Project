@@ -1,5 +1,8 @@
 <script src="<?php echo URLROOT; ?>/public/js/notification.js"></script>
+<script src="<?php echo URLROOT; ?>/public/js/confirm-dialog.js"></script>
 <link href="<?php echo URLROOT; ?>/public/css/notification.css" rel="stylesheet" />
+<link href="<?php echo URLROOT; ?>/public/css/confirm-dialog.css" rel="stylesheet" />
+
 
 <section id="content">
     <nav>

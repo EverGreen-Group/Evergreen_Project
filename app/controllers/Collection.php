@@ -44,12 +44,12 @@ class Collection extends Controller{
 
         // need to send the bags logs also
         $logModel = $this->model('M_Log');
-        $bagLogs = $logModel->getBagLogsByCollection($collectionId);
+        $bagLogs = $logModel->getBagLogsByCollection($collectionId);    // tested
 
         $leafModel =$this->model('M_Dashbord');
         $leafTypes =$leafModel->getLeafTypes();
 
-        $vehicleLocation = $this->vehicleModel->getVehicleLocation($scheduleDetails->vehicle_id);
+        $vehicleLocation = $this->vehicleModel->getVehicleLocation($scheduleDetails->vehicle_id);   // working
 
 
 

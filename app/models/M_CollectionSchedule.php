@@ -35,6 +35,66 @@ class M_CollectionSchedule {
         return $this->db->resultSet();
     }
 
+
+    public function getFilteredSchedules($route_id = null, $vehicle_id = null, $driver_id = null, $day = null) { // tested ok
+        $sql = "SELECT 
+                    cs.schedule_id,
+                    cs.route_id,
+                    r.route_name,
+                    d.driver_id,
+                    CONCAT(p.first_name, ' ', p.last_name) AS driver_name,
+                    p.image_path AS driver_image,
+                    cs.start_time,
+                    cs.end_time,
+                    cs.day,
+                    v.vehicle_id,
+                    v.license_plate,
+                    v.image_path AS vehicle_image,
+                    cs.created_at,
+                    cs.is_active,
+                    (SELECT COUNT(*) FROM route_suppliers WHERE route_id = r.route_id) AS supplier_count
+                FROM collection_schedules cs
+                LEFT JOIN routes r ON cs.route_id = r.route_id
+                LEFT JOIN drivers d ON cs.driver_id = d.driver_id
+                LEFT JOIN profiles p ON d.profile_id = p.profile_id
+                LEFT JOIN vehicles v ON r.vehicle_id = v.vehicle_id
+                WHERE cs.is_deleted = 0";
+        
+        $params = [];
+    
+        if ($route_id) {
+            $sql .= " AND cs.route_id = :route_id";
+            $params[':route_id'] = $route_id;
+        }
+    
+        if ($vehicle_id) {
+            $sql .= " AND v.vehicle_id = :vehicle_id";
+            $params[':vehicle_id'] = $vehicle_id;
+        }
+    
+        if ($driver_id) {
+            $sql .= " AND cs.driver_id = :driver_id";
+            $params[':driver_id'] = $driver_id;
+        }
+
+        if ($day) {
+            $sql .= " AND cs.day = :day";
+            $params[':day'] = $day;
+        }
+        
+    
+        $sql .= " ORDER BY cs.start_time ASC";
+    
+        $this->db->query($sql);
+    
+        foreach ($params as $param => $value) {
+            $this->db->bind($param, $value);
+        }
+    
+        return $this->db->resultSet();
+    }
+    
+
     public function getSchedulesByDate($startDate, $endDate) {
         try {
             $this->db->query('SELECT cs.*, 
@@ -943,11 +1003,6 @@ class M_CollectionSchedule {
         $newStartTime = strtotime("2000-01-01 " . $startTime);
         $newEndTime = strtotime("2000-01-01 " . $endTime);
         
-        // If end time is earlier than start time, assume it's the next day
-        if ($newEndTime < $newStartTime) {
-            $newEndTime = strtotime("2000-01-02 " . $endTime);
-        }
-        
         // Get all schedules for this driver on this day
         $this->db->query("SELECT * FROM collection_schedules 
                          WHERE driver_id = :driver_id 
@@ -959,107 +1014,15 @@ class M_CollectionSchedule {
         
         $schedules = $this->db->resultSet();
         
-        // Check each schedule for time conflicts
-        foreach ($schedules as $schedule) {
-            $existingStartTime = strtotime("2000-01-01 " . $schedule->start_time);
-            $existingEndTime = strtotime("2000-01-01 " . $schedule->end_time);
-            
-            // If existing end time is earlier than existing start time, assume it's the next day
-            if ($existingEndTime < $existingStartTime) {
-                $existingEndTime = strtotime("2000-01-02 " . $schedule->end_time);
-            }
-            
-            // Check for overlap
-            // New start time falls within existing schedule
-            // or new end time falls within existing schedule
-            // or new schedule completely contains existing schedule
-            if (($newStartTime >= $existingStartTime && $newStartTime < $existingEndTime) ||
-                ($newEndTime > $existingStartTime && $newEndTime <= $existingEndTime) ||
-                ($newStartTime <= $existingStartTime && $newEndTime >= $existingEndTime)) {
-                return true; 
-            }
-        }
-        
-        return false; // No conflict
+        // Check for conflicts using the new method
+        return $this->hasScheduleConflict($newStartTime, $newEndTime, $schedules);
     }
-
-
-    public function checkRouteScheduleConflict($routeId, $day, $startTime = null, $endTime = null, $checkTimeConflict = false) {
-        // First check if the route is already scheduled on this day
-        $this->db->query("SELECT COUNT(*) as count FROM collection_schedules 
-                         WHERE route_id = :route_id 
-                         AND day = :day 
-                         AND is_deleted = 0");
-        
-        $this->db->bind(':route_id', $routeId);
-        $this->db->bind(':day', $day);
-        
-        $result = $this->db->single();
-        
-        // If the route is already scheduled on this day, return conflict
-        if ($result->count > 0) {
-            return true;
-        }
-        
-        // If we're not checking time conflicts or times aren't provided, we're done
-        if (!$checkTimeConflict || !$startTime || !$endTime) {
-            return false;
-        }
-        
-        // Otherwise, proceed with time conflict check (which is now redundant since we're checking day-level)
-        // This is kept for future flexibility if requirements change
-        $newStartTime = strtotime("2000-01-01 " . $startTime);
-        $newEndTime = strtotime("2000-01-01 " . $endTime);
-        
-        // If end time is earlier than start time, assume it's the next day
-        if ($newEndTime < $newStartTime) {
-            $newEndTime = strtotime("2000-01-02 " . $endTime);
-        }
-        
-        // Get all schedules for this route on this day
-        $this->db->query("SELECT * FROM collection_schedules 
-                         WHERE route_id = :route_id 
-                         AND day = :day 
-                         AND is_deleted = 0");
-        
-        $this->db->bind(':route_id', $routeId);
-        $this->db->bind(':day', $day);
-        
-        $schedules = $this->db->resultSet();
-        
-        // Check each schedule for time conflicts
-        foreach ($schedules as $schedule) {
-            $existingStartTime = strtotime("2000-01-01 " . $schedule->start_time);
-            $existingEndTime = strtotime("2000-01-01 " . $schedule->end_time);
-            
-            // If existing end time is earlier than existing start time, assume it's the next day
-            if ($existingEndTime < $existingStartTime) {
-                $existingEndTime = strtotime("2000-01-02 " . $schedule->end_time);
-            }
-            
-            // Check for overlap
-            if (($newStartTime >= $existingStartTime && $newStartTime < $existingEndTime) ||
-                ($newEndTime > $existingStartTime && $newEndTime <= $existingEndTime) ||
-                ($newStartTime <= $existingStartTime && $newEndTime >= $existingEndTime)) {
-                return true; // Conflict found
-            }
-        }
-        
-        return false; // No conflict
-    }
-
 
     public function checkDriverScheduleConflictExcludingCurrent($driverId, $day, $startTime, $endTime, $currentScheduleId) {
         // Convert times for comparison
         $newStartTime = strtotime("2000-01-01 " . $startTime);
         $newEndTime = strtotime("2000-01-01 " . $endTime);
         
-        // If end time is earlier than start time, assume it's the next day
-        if ($newEndTime < $newStartTime) {
-            $newEndTime = strtotime("2000-01-02 " . $endTime);
-        }
-        
-        // Get all schedules for this driver on this day, excluding the current one
         $this->db->query("SELECT * FROM collection_schedules 
                          WHERE driver_id = :driver_id 
                          AND day = :day 
@@ -1072,36 +1035,44 @@ class M_CollectionSchedule {
         
         $schedules = $this->db->resultSet();
         
-        // Check each schedule for time conflicts
+        return $this->hasScheduleConflict($newStartTime, $newEndTime, $schedules);
+    }
+
+
+    private function hasScheduleConflict($newStartTime, $newEndTime, $schedules) {
         foreach ($schedules as $schedule) {
             $existingStartTime = strtotime("2000-01-01 " . $schedule->start_time);
             $existingEndTime = strtotime("2000-01-01 " . $schedule->end_time);
             
-            // If existing end time is earlier than existing start time, assume it's the next day
-            if ($existingEndTime < $existingStartTime) {
-                $existingEndTime = strtotime("2000-01-02 " . $schedule->end_time);
-            }
-            
-            // Check for overlap
             if (($newStartTime >= $existingStartTime && $newStartTime < $existingEndTime) ||
                 ($newEndTime > $existingStartTime && $newEndTime <= $existingEndTime) ||
                 ($newStartTime <= $existingStartTime && $newEndTime >= $existingEndTime)) {
-                return true; // Conflict found
+                return true; 
             }
         }
-        
         return false; // No conflict
     }
+
+    public function checkRouteScheduleConflict($routeId, $day) {
+        // checking if a route is scheduled for the day
+        $this->db->query("SELECT COUNT(*) as count FROM collection_schedules 
+                         WHERE route_id = :route_id 
+                         AND day = :day 
+                         AND is_deleted = 0");
+        
+        $this->db->bind(':route_id', $routeId);
+        $this->db->bind(':day', $day);
+        
+        $result = $this->db->single();
+        
+        // if the route is already scheduled on this day then we have to return conflict
+        return $result->count > 0;
+    }
+
     public function checkRouteScheduleConflictExcludingCurrent($routeId, $day, $startTime, $endTime, $currentScheduleId) {
-        // Convert times for comparison
         $newStartTime = strtotime("2000-01-01 " . $startTime);
         $newEndTime = strtotime("2000-01-01 " . $endTime);
-        
-        // If end time is earlier than start time, assume it's the next day
-        if ($newEndTime < $newStartTime) {
-            $newEndTime = strtotime("2000-01-02 " . $endTime);
-        }
-        
+                // Convert times for comparison
         // Get all schedules for this route on this day, excluding the current one
         $this->db->query("SELECT * FROM collection_schedules 
                          WHERE route_id = :route_id 
@@ -1115,35 +1086,18 @@ class M_CollectionSchedule {
         
         $schedules = $this->db->resultSet();
         
-        // Check each schedule for time conflicts
-        foreach ($schedules as $schedule) {
-            $existingStartTime = strtotime("2000-01-01 " . $schedule->start_time);
-            $existingEndTime = strtotime("2000-01-01 " . $schedule->end_time);
-            
-            // If existing end time is earlier than existing start time, assume it's the next day
-            if ($existingEndTime < $existingStartTime) {
-                $existingEndTime = strtotime("2000-01-02 " . $schedule->end_time);
-            }
-            
-            // Check for overlap
-            if (($newStartTime >= $existingStartTime && $newStartTime < $existingEndTime) ||
-                ($newEndTime > $existingStartTime && $newEndTime <= $existingEndTime) ||
-                ($newStartTime <= $existingStartTime && $newEndTime >= $existingEndTime)) {
-                return true; // Conflict found
-            }
-        }
-        
-        return false; // No conflict
+        return $this->hasScheduleConflict($newStartTime, $newEndTime, $schedules);
     }
 
 
-    public function updateSchedule($data) {
+    public function updateSchedule($data) { // tested
         $this->db->query("UPDATE collection_schedules 
                          SET route_id = :route_id, 
                              driver_id = :driver_id, 
                              day = :day, 
                              start_time = :start_time, 
-                             end_time = :end_time
+                             end_time = :end_time,
+                             is_active = :is_active
                          WHERE schedule_id = :schedule_id");
         
         $this->db->bind(':schedule_id', $data['schedule_id']);
@@ -1152,11 +1106,12 @@ class M_CollectionSchedule {
         $this->db->bind(':day', $data['day']);
         $this->db->bind(':start_time', $data['start_time']);
         $this->db->bind(':end_time', $data['end_time']);
+        $this->db->bind(':is_active', $data['status']);
         
         return $this->db->execute();
     }
 
-    public function getTotalSchedules() {
+    public function getTotalSchedules() {   // TESTED
         $this->db->query("SELECT COUNT(*) as total FROM collection_schedules WHERE is_deleted = 0");
         return $this->db->single()->total; 
     }
@@ -1197,5 +1152,7 @@ class M_CollectionSchedule {
         
         return $this->db->resultSet();
     }
+
+
 
 } 

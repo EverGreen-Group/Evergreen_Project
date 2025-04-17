@@ -7,7 +7,7 @@ class M_Vehicle {
         $this->db = new Database();
     }
 
-    public function getAllAvailableVehicles() {
+    public function getAllAvailableVehicles() { // tested
         $this->db->query("SELECT v.* FROM vehicles v where status = 'Available' AND is_deleted = 0");
         return $this->db->resultSet();
     }

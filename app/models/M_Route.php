@@ -141,7 +141,7 @@ class M_Route {
         return $this->db->resultset();
     }
 
-    public function getAllUnAssignedRoutes() {
+    public function getAllUnAssignedRoutes() {  // tested
         $this->db->query("
             SELECT r.* 
             FROM routes r
@@ -153,7 +153,7 @@ class M_Route {
 
     //  gtting all the undeleted routes
 
-    public function getAllUndeletedRoutes($limit = 5, $offset = 0) {
+    public function getAllUndeletedRoutes($limit = 5, $offset = 0) {    // tested
         $this->db->query("
             SELECT r.*, 
                 v.*, 

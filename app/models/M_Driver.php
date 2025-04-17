@@ -62,15 +62,15 @@ class M_Driver{
     }
 
 
-    public function getAllDrivers() {
-        $this->db->query('
-            SELECT d.*, p.first_name, p.last_name, p.nic, p.date_of_birth, p.contact_number, u.email
+    public function getAllDrivers() {   // tested
+        $this->db->query("
+            SELECT d.*, p.first_name, p.last_name, p.nic, p.date_of_birth, p.contact_number, u.email, CONCAT(p.first_name, ' ', p.last_name) AS full_name
             FROM drivers d
             JOIN profiles p ON d.profile_id = p.profile_id
             JOIN users u ON p.user_id = u.user_id
             WHERE d.is_deleted = 0
             ORDER BY d.driver_id DESC
-        ');
+        ");
         
         return $this->db->resultSet();
     }

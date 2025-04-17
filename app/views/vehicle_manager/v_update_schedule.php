@@ -62,6 +62,13 @@
                     <label class="label" for="end_time">End Time:</label>
                     <input type="time" id="end_time" name="end_time" class="form-control" value="<?php echo $data['schedule']->end_time; ?>" required>
                 </div>
+                <div class="info-row">
+                    <label class="label" for="status">Status:</label>
+                    <select id="status" name="status" class="form-control" required>
+                        <option value="1" <?php echo ($data['schedule']->is_active == 1) ? 'selected' : ''; ?>>Active</option>
+                        <option value="0" <?php echo ($data['schedule']->is_active == 0) ? 'selected' : ''; ?>>Inactive</option>
+                    </select>
+                </div>
             </div>
         </div>
     </div>
@@ -121,142 +128,11 @@
         </div>
     </div>
 
-    <!-- Schedule Summary -->
-    <div class="table-data">
-        <div class="order">
-            <div class="head">
-                <h3>Schedule Summary</h3>
-            </div>
-            <div class="section-content">
-                <div class="info-row">
-                    <span class="label">Day:</span>
-                    <span class="value" id="summaryDay"><?php echo $data['schedule']->day; ?></span>
-                </div>
-                <div class="info-row">
-                    <span class="label">Time:</span>
-                    <span class="value" id="summaryTime"><?php echo date('h:i A', strtotime($data['schedule']->start_time)) . ' - ' . date('h:i A', strtotime($data['schedule']->end_time)); ?></span>
-                </div>
-                <div class="info-row">
-                    <span class="label">Route:</span>
-                    <span class="value" id="summaryRoute">
-                        <?php 
-                        foreach ($data['routes'] as $route) {
-                            if ($route->route_id == $data['schedule']->route_id) {
-                                echo 'R' . str_pad($route->route_id, 3, '0', STR_PAD_LEFT) . ' - ' . htmlspecialchars($route->route_name);
-                                break;
-                            }
-                        }
-                        ?>
-                    </span>
-                </div>
-                <div class="info-row">
-                    <span class="label">Driver:</span>
-                    <span class="value" id="summaryDriver">
-                        <?php 
-                        foreach ($data['drivers'] as $driver) {
-                            if ($driver->driver_id == $data['schedule']->driver_id) {
-                                echo 'D' . str_pad($driver->driver_id, 3, '0', STR_PAD_LEFT) . ' - ' . 
-                                     htmlspecialchars($driver->first_name . ' ' . $driver->last_name);
-                                break;
-                            }
-                        }
-                        ?>
-                    </span>
-                </div>
-            </div>
-        </div>
-    </div>
 
     <!-- Submit Button -->
     <button type="submit" class="btn btn-primary">Update Schedule</button>
     </form>
     
-<script>
-    // Update summary when form fields change
-    document.getElementById('day').addEventListener('change', updateSummary);
-    document.getElementById('start_time').addEventListener('change', updateSummary);
-    document.getElementById('end_time').addEventListener('change', updateSummary);
-    document.getElementById('routeSelect').addEventListener('change', updateSummary);
-    document.getElementById('driverSelect').addEventListener('change', updateSummary);
-
-    // Initial summary update
-    function updateSummary() {
-        // Update day
-        const daySelect = document.getElementById('day');
-        const summaryDay = document.getElementById('summaryDay');
-        if (daySelect.value) {
-            summaryDay.textContent = daySelect.options[daySelect.selectedIndex].text;
-        } else {
-            summaryDay.textContent = 'Not specified';
-        }
-
-        // Update time
-        const startTime = document.getElementById('start_time').value;
-        const endTime = document.getElementById('end_time').value;
-        const summaryTime = document.getElementById('summaryTime');
-        
-        if (startTime && endTime) {
-            // Format times to AM/PM
-            const formattedStartTime = formatTime(startTime);
-            const formattedEndTime = formatTime(endTime);
-            summaryTime.textContent = `${formattedStartTime} - ${formattedEndTime}`;
-        } else {
-            summaryTime.textContent = 'Not specified';
-        }
-
-        // Update route
-        const routeSelect = document.getElementById('routeSelect');
-        const summaryRoute = document.getElementById('summaryRoute');
-        
-        if (routeSelect.value) {
-            const selectedOption = routeSelect.options[routeSelect.selectedIndex];
-            const routeId = routeSelect.value;
-            const routeName = selectedOption.getAttribute('data-route-name');
-            summaryRoute.textContent = `R${routeId.padStart(3, '0')} - ${routeName}`;
-        } else {
-            summaryRoute.textContent = 'Not specified';
-        }
-
-        // Update driver
-        const driverSelect = document.getElementById('driverSelect');
-        const summaryDriver = document.getElementById('summaryDriver');
-        
-        if (driverSelect.value) {
-            const selectedOption = driverSelect.options[driverSelect.selectedIndex];
-            const driverId = driverSelect.value;
-            const firstName = selectedOption.getAttribute('data-first-name');
-            const lastName = selectedOption.getAttribute('data-last-name');
-            summaryDriver.textContent = `D${driverId.padStart(3, '0')} - ${firstName} ${lastName}`;
-        } else {
-            summaryDriver.textContent = 'Not specified';
-        }
-    }
-
-    // Helper function to format time to AM/PM
-    function formatTime(timeString) {
-        const [hours, minutes] = timeString.split(':');
-        let hour = parseInt(hours);
-        const ampm = hour >= 12 ? 'PM' : 'AM';
-        hour = hour % 12;
-        hour = hour ? hour : 12; // Convert 0 to 12
-        return `${hour}:${minutes} ${ampm}`;
-    }
-
-    // Pad a number with leading zeros
-    String.prototype.padStart = String.prototype.padStart || function padStart(targetLength, padString) {
-        targetLength = targetLength >> 0;
-        padString = String(padString || ' ');
-        if (this.length > targetLength) {
-            return String(this);
-        } else {
-            targetLength = targetLength - this.length;
-            if (targetLength > padString.length) {
-                padString += padString.repeat(targetLength / padString.length);
-            }
-            return padString.slice(0, targetLength) + String(this);
-        }
-    };
-</script>
 
 <style>
     /* Table Data Container */

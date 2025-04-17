@@ -7,7 +7,7 @@ class M_User {
         $this->db = new Database();
     }
 
-    public function register($data) {
+    public function register($data) {   // tested
         $sql = "INSERT INTO users (email, first_name, last_name, nic, date_of_birth, password, role_id, approval_status) 
                 VALUES (:email, :first_name, :last_name, :nic, :date_of_birth, :password, :role_id, :approval_status)";
         
@@ -24,7 +24,7 @@ class M_User {
         return $this->db->execute();
     }
 
-    public function findUserByEmail($email) {
+    public function findUserByEmail($email) {   // tested
         $this->db->query('SELECT * FROM users WHERE email = :email');
         $this->db->bind(':email', $email);
         
@@ -37,7 +37,7 @@ class M_User {
         }
     }
 
-    public function login($email, $password) {
+    public function login($email, $password) {  //tested
         $user = $this->findUserByEmail($email);
         if ($user && password_verify($password, $user->password)) {
             return $user;
@@ -45,13 +45,13 @@ class M_User {
         return false;
     }
 
-    public function findUserByNIC($nic) {
+    public function findUserByNIC($nic) {   // tested
         $this->db->query("SELECT * FROM users WHERE nic = :nic");
         $this->db->bind(':nic', $nic);
         return $this->db->single();
     }
 
-    public function getUserById($user_id) {
+    public function getUserById($user_id) { // tested
         $this->db->query("SELECT
             u.user_id, 
             u.email,
@@ -78,7 +78,7 @@ class M_User {
         
     }
 
-    public function getAllUnassignedUsers() {
+    public function getAllUnassignedUsers() {   // get the comming user, tested
         $this->db->query("
         SELECT u.user_id,u.email,u.first_name,u.last_name,u.nic,u.date_of_birth,u.role_id FROM users u WHERE u.user_id NOT IN (SELECT user_id FROM drivers) AND role_id = :role_id
         ");
@@ -86,7 +86,7 @@ class M_User {
         return $this->db->resultSet();
     }
 
-    public function updateUserRole($user_id, $role_id) {
+    public function updateUserRole($user_id, $role_id) {    // tested
         $this->db->query("UPDATE users SET role_id = :role_id WHERE user_id = :user_id");
         $this->db->bind(':role_id', $role_id);
         $this->db->bind(':user_id', $user_id);
@@ -94,13 +94,7 @@ class M_User {
         return $this->db->execute();
     }
 
-    public function getAllUserDrivers() {
-        $this->db->query("SELECT u.user_id,u.email,u.first_name,u.last_name,u.nic,u.date_of_birth,u._role_id FROM users u WHERE u.user_id IN (SELECT user_id FROM drivers) AND role_id = :role_id");
-        $this->db->bind(':role_id', 6);
-        return $this->db->resultSet();
-    }
-
-    public function getDriverId($userId) {
+    public function getDriverId($userId) {  // tested
 
         $this->db->query("SELECT profile_id FROM profiles WHERE user_id = :user_id");
         $this->db->bind(':user_id', $userId);
@@ -116,7 +110,7 @@ class M_User {
         return null; 
     }
 
-    public function getProfile($userId) {
+    public function getProfile($userId) {   // tested
         
         $this->db->query("SELECT * FROM profiles WHERE user_id = :user_id");
         $this->db->bind(':user_id', $userId);
@@ -133,7 +127,7 @@ class M_User {
         ];
     }
 
-    public function getManagerId($userId) {
+    public function getManagerId($userId) { // from user id, tested
 
         $this->db->query("SELECT profile_id FROM profiles WHERE user_id = :user_id");
         $this->db->bind(':user_id', $userId);
@@ -148,7 +142,7 @@ class M_User {
         return null; 
     }
 
-    public function getSupplierId($userId) {
+    public function getSupplierId($userId) {    // from user_id, tested
         // First, get the profile_id associated with the user_id
         $this->db->query("SELECT profile_id FROM profiles WHERE user_id = :user_id");
         $this->db->bind(':user_id', $userId);
@@ -161,11 +155,11 @@ class M_User {
             return $this->db->single();
         }
         
-        return null; // Return null if no profile is found
+        return null;
     }
 
     // For password reset functionality
-    public function storeResetToken($email, $token, $expiry)
+    public function storeResetToken($email, $token, $expiry)// tested
     {
         // First, get the user ID
         $this->db->query('SELECT user_id FROM users WHERE email = :email');
@@ -200,7 +194,7 @@ class M_User {
         return $this->db->execute();
     }
 
-    public function verifyResetToken($token)
+    public function verifyResetToken($token)    // tested
     {
         $this->db->query('SELECT * FROM password_reset_tokens 
                           WHERE token = :token AND expiry > NOW() AND is_used = 0');
@@ -239,7 +233,7 @@ class M_User {
     }
 
 
-    public function updateProfilePhoto($data) {
+    public function updateProfilePhoto($data) { // tested
         $this->db->beginTransaction();
         
         try {
@@ -262,7 +256,7 @@ class M_User {
 
 
 
-    public function getAllUsers() {
+    public function getAllUsers() { // tested
         $this->db->query("SELECT 
             u.user_id,
             u.email,
@@ -284,7 +278,7 @@ class M_User {
     }
 
 
-    public function getAllManagers() {
+    public function getAllManagers() {  // tested
         $this->db->query("
             SELECT *
             FROM managers m
@@ -295,25 +289,25 @@ class M_User {
         return $this->db->resultSet();
     }
 
-    public function getUserIdBySupplierId($supplierId) {
+    public function getUserIdBySupplierId($supplierId) {    // tested
         $this->db->query("SELECT p.user_id FROM suppliers s INNER JOIN profiles p ON s.profile_id = p.profile_id WHERE supplier_id = :supplier_id");
         $this->db->bind(':supplier_id', $supplierId);
         return $this->db->single()->user_id ?? null;
     }
 
-    public function getUserIdByDriverId($driverId) {
+    public function getUserIdByDriverId($driverId) {    // tested
         $this->db->query("SELECT p.user_id FROM drivers d INNER JOIN profiles p ON d.profile_id = p.profile_id WHERE driver_id = :driver_id");
         $this->db->bind(':supplier_id', $driverId);
         return $this->db->single()->user_id ?? null;
     }
 
-    public function getUserIdByManagerId($managerId) {
+    public function getUserIdByManagerId($managerId) {  // tested
         $this->db->query("SELECT p.user_id FROM managers m INNER JOIN profiles p ON m.profile_id = p.profile_id WHERE manager_id = :manager_id");
         $this->db->bind(':supplier_id', $managerId);
         return $this->db->single()->user_id ?? null;
     }
 
-    public function getSupplierIdsByScheduleId($scheduleId) {
+    public function getSupplierIdsByScheduleId($scheduleId) {   //tested
         $this->db->query("
             SELECT rs.supplier_id
             FROM collection_schedules cs
@@ -326,7 +320,7 @@ class M_User {
     }
 
 
-    public function getSuppliersByRouteId($routeId) {
+    public function getSuppliersByRouteId($routeId) {   // tested
         $this->db->query("
             SELECT rs.supplier_id
             FROM route_suppliers rs
@@ -337,7 +331,7 @@ class M_User {
         return array_column($this->db->resultSet(), 'supplier_id');
     }
 
-    public function getUserName($userId) {
+    public function getUserName($userId) {  //tested
         $this->db->query("SELECT CONCAT(p.first_name, ' ', p.last_name) AS full_name FROM users u INNER JOIN profiles p ON u.user_id = p.user_id WHERE u.user_id = :user_id");
         $this->db->bind(':user_id', $userId);
         return $this->db->single()->full_name ?? null;
@@ -349,7 +343,7 @@ class M_User {
 
     
 
-    public function updateUser($data) {
+    public function updateUser($data) { // tested
         $this->db->query("UPDATE users SET 
             email = :email,
             first_name = :first_name,
@@ -373,7 +367,7 @@ class M_User {
     }
 
     // app/models/M_User.php
-    public function getFilteredUsers($email, $first_name, $last_name, $nic, $role_id) {
+    public function getFilteredUsers($email, $first_name, $last_name, $nic, $role_id) { //tested
         $query = "SELECT 
             u.user_id,
             u.email,
@@ -428,12 +422,12 @@ class M_User {
     }
 
 
-    public function getAllUniqueRoles() {
+    public function getAllUniqueRoles() {   // tested, for admin part
         $this->db->query("SELECT DISTINCT role_id, role_name FROM roles");
         return $this->db->resultSet();
     }
 
-    public function registerUser($data) {
+    public function registerUser($data) {   // tested
         $this->db->query('INSERT INTO users (email, password, role_id, account_status) VALUES (:email, :password, :role_id, :account_status)');
         
         $this->db->bind(':email', $data['email']);
@@ -448,7 +442,7 @@ class M_User {
         }
     }
 
-    public function createProfile($data)
+    public function createProfile($data)    // tested
     {
         $this->db->query('INSERT INTO profiles (user_id, first_name, last_name, nic, date_of_birth, contact_number) 
                           VALUES (:user_id, :first_name, :last_name, :nic, :date_of_birth, :contact_number)');
@@ -465,7 +459,7 @@ class M_User {
         return $this->db->execute();
     }
     
-    public function findProfileByNIC($nic) {
+    public function findProfileByNIC($nic) {    // tested
         $this->db->query('SELECT * FROM profiles WHERE nic = :nic');
         $this->db->bind(':nic', $nic);
         
@@ -478,7 +472,7 @@ class M_User {
         }
     }
 
-    public function getProfileById($id) {
+    public function getProfileById($id) {   
         $this->db->query('SELECT * FROM profiles WHERE profile_id = :id');
         $this->db->bind(':id', $id);
         
