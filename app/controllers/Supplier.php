@@ -1179,270 +1179,270 @@ class Supplier extends Controller {
 
     
 
-    public function requestFertilizer() {
-        $supplier_id = $_SESSION['user_id'] ?? null;
-        if (!$supplier_id) {
-            flash('message', 'Please log in to access this page', 'alert alert-danger');
-            redirect('auth/login');
-            return;
-        }
-    
-        // Handle fertilizer request creation
-        if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['action']) && $_POST['action'] == 'create_order') {
-            $fertilizer_id = $_POST['fertilizer'];
-            $unit_type = $_POST['unit_type'];
-            $quantity = $_POST['quantity'];
-            $total_amount = $_POST['total_amount'];
-    
-            $data = [
-                'supplier_id' => $supplier_id,
-                'type_id' => $fertilizer_id,
-                'unit_type' => $unit_type,
-                'quantity' => $quantity,
-                'total_amount' => $total_amount,
-                'status' => 'Pending',
-                'payment_status' => 'pending'
-            ];
-    
-            if ($this->fertilizerOrderModel->createOrder($data)) {
-                flash('message', 'Fertilizer request submitted successfully!', 'alert alert-success');
-            } else {
-                flash('message', 'Failed to submit fertilizer request.', 'alert alert-danger');
-            }
-            redirect('Supplier/requestFertilizer');
-            return;
-        }
-    
-        // Handle checkout
-        if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['action']) && $_POST['action'] == 'checkout') {
-            $shipping_address = [
-                'full_name' => $_POST['full_name'],
-                'phone' => $_POST['phone'],
-                'address' => $_POST['address'],
-                'city' => $_POST['city'],
-                'postal_code' => $_POST['postal_code']
-            ];
-    
-            $data = [
-                'supplier_id' => $supplier_id,
-                'cart_items' => $this->fertilizerOrderModel->getCartItems($supplier_id),
-                'cart_total' => array_sum(array_map(function($item) {
-                    return $item->price * $item->quantity;
-                }, $this->fertilizerOrderModel->getCartItems($supplier_id))),
-                'shipping_fee' => 500.00,
-                'tax_amount' => array_sum(array_map(function($item) {
-                    return $item->price * $item->quantity;
-                }, $this->fertilizerOrderModel->getCartItems($supplier_id))) * 0.10,
-                'delivery_date' => $_POST['delivery_date'],
-                'shipping_address' => json_encode($shipping_address)
-            ];
-    
-            if ($this->fertilizerOrderModel->checkout($supplier_id)) {
-                flash('message', 'Order placed successfully!', 'alert alert-success');
-            } else {
-                flash('message', 'Failed to place order.', 'alert alert-danger');
-            }
-            redirect('Supplier/requestFertilizer');
-            return;
-        }
-    
-        // Automatically add accepted orders to cart
-        $orders = $this->fertilizerOrderModel->getOrdersBySupplier($supplier_id);
-        foreach ($orders as $order) {
-            if ($order->status === 'Accepted') {
-                $this->fertilizerOrderModel->addAcceptedOrderToCart($order->order_id);
-            }
-        }
-    
-        // Fetch data for the view
-        $data = [
-            'fertilizer_types' => $this->fertilizerOrderModel->getFertilizerTypes(), // This line caused the error
-            'orders' => $orders,
-            'cart_items' => $this->fertilizerOrderModel->getCartItems($supplier_id),
-            'cart_total' => array_sum(array_map(function($item) {
-                return $item->price * $item->quantity;
-            }, $this->fertilizerOrderModel->getCartItems($supplier_id)))
-        ];
-    
-        $this->view('supplier/v_fertilizer_request', $data);
-    }
-
-    public function editFertilizerRequest($order_id) {
-        $supplier_id = $_SESSION['user_id'] ?? null;
-        if (!$supplier_id) {
-            flash('message', 'Please log in to access this page', 'alert alert-danger');
-            redirect('auth/login');
-            return;
-        }
-    
-        // Fetch the order details
-        $order = $this->fertilizerOrderModel->getOrderById($order_id);
-        error_log("Order data: " . print_r($order, true)); // Debug log
-    
-        // Check if the order exists, belongs to the supplier, and is editable
-        if (!$order || $order->supplier_id != $supplier_id || $order->status != 'Pending') {
-            flash('message', 'You cannot edit this order.', 'alert alert-danger');
-            redirect('Supplier/requestFertilizer');
-            return;
-        }
-    
-        if ($_SERVER['REQUEST_METHOD'] == 'POST') {
-            // Sanitize POST data
-            $_POST = filter_input_array(INPUT_POST, FILTER_SANITIZE_STRING);
-    
-            $data = [
-                'order_id' => $order_id,
-                'type_id' => $_POST['type_id'],
-                'unit_type' => $_POST['unit'],
-                'quantity' => $_POST['quantity'],
-                'total_amount' => $_POST['total_amount'],
-            ];
-    
-            // Update the order
-            if ($this->fertilizerOrderModel->updateOrder($data)) {
-                flash('message', 'Fertilizer request updated successfully!', 'alert alert-success');
-                redirect('Supplier/requestFertilizer');
-            } else {
-                flash('message', 'Failed to update fertilizer request.', 'alert alert-danger');
-                $data['order'] = $order;
-                $data['fertilizer_types'] = $this->fertilizerOrderModel->getFertilizerTypes();
-                $this->view('supplier/v_request_edit', $data);
-            }
-        } else {
-            $data = [
-                'order' => $order,
-                'fertilizer_types' => $this->fertilizerOrderModel->getFertilizerTypes()
-            ];
-            $this->view('supplier/v_request_edit', $data);
-        }
-    }
-
-
-    public function deleteFertilizerRequest($order_id) {
-        $supplier_id = $_SESSION['user_id'] ?? null;
-        if (!$supplier_id) {
-            echo json_encode(['success' => false, 'message' => 'Please log in to delete an order']);
-            return;
-        }
-
-        $order = $this->fertilizerOrderModel->getOrderById($order_id);
-        if (!$order || $order->supplier_id != $supplier_id) {
-            echo json_encode(['success' => false, 'message' => 'Order not found or unauthorized access']);
-            return;
-        }
-
-        if ($order->status !== 'Pending' || $order->payment_status !== 'pending') {
-            echo json_encode(['success' => false, 'message' => 'Order cannot be deleted']);
-            return;
-        }
-
-        if ($this->fertilizerOrderModel->deleteOrder($order_id)) {
-            echo json_encode(['success' => true, 'message' => 'Order deleted successfully']);
-        } else {
-            echo json_encode(['success' => false, 'message' => 'Failed to delete order']);
-        }
-    }
-
-    public function checkFertilizerOrderStatus($orderId) {
-        $supplier_id = $_SESSION['user_id'] ?? null;
-        if (!$supplier_id || !$this->isSupplierOrder($orderId)) {
-            echo json_encode(['canDelete' => false, 'message' => 'Unauthorized access']);
-            return;
-        }
-
-        $order = $this->fertilizerOrderModel->getOrderById($orderId);
-
-        if (!$order) {
-            echo json_encode(['canDelete' => false, 'message' => 'Order not found']);
-            return;
-        }
-
-        $canDelete = ($order->status === 'Pending' && $order->payment_status === 'pending');
-
-        echo json_encode([
-            'canDelete' => $canDelete,
-            'message' => $canDelete ? 'Order can be deleted' : 'Order cannot be deleted'
-        ]);
-    }
-
-    // public function removeFromCart($fertilizerId) {
+    // public function requestFertilizer() {
     //     $supplier_id = $_SESSION['user_id'] ?? null;
     //     if (!$supplier_id) {
-    //         echo json_encode(['success' => false, 'message' => 'Please log in to remove items from cart']);
+    //         flash('message', 'Please log in to access this page', 'alert alert-danger');
+    //         redirect('auth/login');
     //         return;
     //     }
+    
+    //     // Handle fertilizer request creation
+    //     if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['action']) && $_POST['action'] == 'create_order') {
+    //         $fertilizer_id = $_POST['fertilizer'];
+    //         $unit_type = $_POST['unit_type'];
+    //         $quantity = $_POST['quantity'];
+    //         $total_amount = $_POST['total_amount'];
+    
+    //         $data = [
+    //             'supplier_id' => $supplier_id,
+    //             'type_id' => $fertilizer_id,
+    //             'unit_type' => $unit_type,
+    //             'quantity' => $quantity,
+    //             'total_amount' => $total_amount,
+    //             'status' => 'Pending',
+    //             'payment_status' => 'pending'
+    //         ];
+    
+    //         if ($this->fertilizerOrderModel->createOrder($data)) {
+    //             flash('message', 'Fertilizer request submitted successfully!', 'alert alert-success');
+    //         } else {
+    //             flash('message', 'Failed to submit fertilizer request.', 'alert alert-danger');
+    //         }
+    //         redirect('Supplier/requestFertilizer');
+    //         return;
+    //     }
+    
+    //     // Handle checkout
+    //     if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['action']) && $_POST['action'] == 'checkout') {
+    //         $shipping_address = [
+    //             'full_name' => $_POST['full_name'],
+    //             'phone' => $_POST['phone'],
+    //             'address' => $_POST['address'],
+    //             'city' => $_POST['city'],
+    //             'postal_code' => $_POST['postal_code']
+    //         ];
+    
+    //         $data = [
+    //             'supplier_id' => $supplier_id,
+    //             'cart_items' => $this->fertilizerOrderModel->getCartItems($supplier_id),
+    //             'cart_total' => array_sum(array_map(function($item) {
+    //                 return $item->price * $item->quantity;
+    //             }, $this->fertilizerOrderModel->getCartItems($supplier_id))),
+    //             'shipping_fee' => 500.00,
+    //             'tax_amount' => array_sum(array_map(function($item) {
+    //                 return $item->price * $item->quantity;
+    //             }, $this->fertilizerOrderModel->getCartItems($supplier_id))) * 0.10,
+    //             'delivery_date' => $_POST['delivery_date'],
+    //             'shipping_address' => json_encode($shipping_address)
+    //         ];
+    
+    //         if ($this->fertilizerOrderModel->checkout($supplier_id)) {
+    //             flash('message', 'Order placed successfully!', 'alert alert-success');
+    //         } else {
+    //             flash('message', 'Failed to place order.', 'alert alert-danger');
+    //         }
+    //         redirect('Supplier/requestFertilizer');
+    //         return;
+    //     }
+    
+    //     // Automatically add accepted orders to cart
+    //     $orders = $this->fertilizerOrderModel->getOrdersBySupplier($supplier_id);
+    //     foreach ($orders as $order) {
+    //         if ($order->status === 'Accepted') {
+    //             $this->fertilizerOrderModel->addAcceptedOrderToCart($order->order_id);
+    //         }
+    //     }
+    
+    //     // Fetch data for the view
+    //     $data = [
+    //         'fertilizer_types' => $this->fertilizerOrderModel->getFertilizerTypes(), // This line caused the error
+    //         'orders' => $orders,
+    //         'cart_items' => $this->fertilizerOrderModel->getCartItems($supplier_id),
+    //         'cart_total' => array_sum(array_map(function($item) {
+    //             return $item->price * $item->quantity;
+    //         }, $this->fertilizerOrderModel->getCartItems($supplier_id)))
+    //     ];
+    
+    //     $this->view('supplier/v_fertilizer_request', $data);
+    // }
 
-    //     if ($this->fertilizerOrderModel->removeFromCart($supplier_id, $fertilizerId)) {
-    //         echo json_encode(['success' => true, 'message' => 'Item removed from cart successfully']);
+    // public function editFertilizerRequest($order_id) {
+    //     $supplier_id = $_SESSION['user_id'] ?? null;
+    //     if (!$supplier_id) {
+    //         flash('message', 'Please log in to access this page', 'alert alert-danger');
+    //         redirect('auth/login');
+    //         return;
+    //     }
+    
+    //     // Fetch the order details
+    //     $order = $this->fertilizerOrderModel->getOrderById($order_id);
+    //     error_log("Order data: " . print_r($order, true)); // Debug log
+    
+    //     // Check if the order exists, belongs to the supplier, and is editable
+    //     if (!$order || $order->supplier_id != $supplier_id || $order->status != 'Pending') {
+    //         flash('message', 'You cannot edit this order.', 'alert alert-danger');
+    //         redirect('Supplier/requestFertilizer');
+    //         return;
+    //     }
+    
+    //     if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+    //         // Sanitize POST data
+    //         $_POST = filter_input_array(INPUT_POST, FILTER_SANITIZE_STRING);
+    
+    //         $data = [
+    //             'order_id' => $order_id,
+    //             'type_id' => $_POST['type_id'],
+    //             'unit_type' => $_POST['unit'],
+    //             'quantity' => $_POST['quantity'],
+    //             'total_amount' => $_POST['total_amount'],
+    //         ];
+    
+    //         // Update the order
+    //         if ($this->fertilizerOrderModel->updateOrder($data)) {
+    //             flash('message', 'Fertilizer request updated successfully!', 'alert alert-success');
+    //             redirect('Supplier/requestFertilizer');
+    //         } else {
+    //             flash('message', 'Failed to update fertilizer request.', 'alert alert-danger');
+    //             $data['order'] = $order;
+    //             $data['fertilizer_types'] = $this->fertilizerOrderModel->getFertilizerTypes();
+    //             $this->view('supplier/v_request_edit', $data);
+    //         }
     //     } else {
-    //         echo json_encode(['success' => false, 'message' => 'Failed to remove item from cart']);
+    //         $data = [
+    //             'order' => $order,
+    //             'fertilizer_types' => $this->fertilizerOrderModel->getFertilizerTypes()
+    //         ];
+    //         $this->view('supplier/v_request_edit', $data);
     //     }
     // }
 
-    public function finalizeFertilizerOrder($order_id) {
-        $supplier_id = $_SESSION['user_id'] ?? null;
-        if (!$supplier_id) {
-            flash('message', 'Please log in to access this page', 'alert alert-danger');
-            redirect('auth/login');
-            return;
-        }
 
-        $order = $this->fertilizerOrderModel->getOrderById($order_id);
-        if (!$order || $order->supplier_id != $supplier_id) {
-            flash('message', 'Order not found or unauthorized access', 'alert alert-danger');
-            redirect('supplier/requestFertilizer');
-            return;
-        }
+    // public function deleteFertilizerRequest($order_id) {
+    //     $supplier_id = $_SESSION['user_id'] ?? null;
+    //     if (!$supplier_id) {
+    //         echo json_encode(['success' => false, 'message' => 'Please log in to delete an order']);
+    //         return;
+    //     }
 
-        if ($order->status !== 'Accepted') {
-            flash('message', 'Order must be accepted before finalizing', 'alert alert-danger');
-            redirect('supplier/requestFertilizer');
-            return;
-        }
+    //     $order = $this->fertilizerOrderModel->getOrderById($order_id);
+    //     if (!$order || $order->supplier_id != $supplier_id) {
+    //         echo json_encode(['success' => false, 'message' => 'Order not found or unauthorized access']);
+    //         return;
+    //     }
 
-        if ($_SERVER['REQUEST_METHOD'] == 'POST') {
-            $delivery_date = $_POST['delivery_date'] ?? '';
-            if (empty($delivery_date)) {
-                flash('message', 'Please provide a delivery date.', 'alert alert-danger');
-                redirect("supplier/finalizeFertilizerOrder/$order_id");
-                return;
-            }
+    //     if ($order->status !== 'Pending' || $order->payment_status !== 'pending') {
+    //         echo json_encode(['success' => false, 'message' => 'Order cannot be deleted']);
+    //         return;
+    //     }
 
-            if ($this->fertilizerOrderModel->updateOrderWithDeliveryDate($order_id, $delivery_date)) {
-                flash('message', 'Order finalized successfully!', 'alert alert-success');
-                redirect('supplier/requestFertilizer');
-            } else {
-                flash('message', 'Failed to finalize order.', 'alert alert-danger');
-                redirect("supplier/finalizeFertilizerOrder/$order_id");
-            }
-        }
+    //     if ($this->fertilizerOrderModel->deleteOrder($order_id)) {
+    //         echo json_encode(['success' => true, 'message' => 'Order deleted successfully']);
+    //     } else {
+    //         echo json_encode(['success' => false, 'message' => 'Failed to delete order']);
+    //     }
+    // }
 
-        $data['order_id'] = $order_id;
-        $this->view('supplier/v_finalize_order', $data);
-    }
+    // public function checkFertilizerOrderStatus($orderId) {
+    //     $supplier_id = $_SESSION['user_id'] ?? null;
+    //     if (!$supplier_id || !$this->isSupplierOrder($orderId)) {
+    //         echo json_encode(['canDelete' => false, 'message' => 'Unauthorized access']);
+    //         return;
+    //     }
 
-    public function fertilizerhistory() {
-        $supplier_id = $_SESSION['user_id'] ?? null;
-        if (!$supplier_id) {
-            flash('message', 'Please log in to view your order history', 'alert alert-danger');
-            redirect('auth/login');
-            return;
-        }
+    //     $order = $this->fertilizerOrderModel->getOrderById($orderId);
 
-        $orders = $this->fertilizerOrderModel->getOrdersBySupplier($supplier_id);
+    //     if (!$order) {
+    //         echo json_encode(['canDelete' => false, 'message' => 'Order not found']);
+    //         return;
+    //     }
 
-        $data = [
-            'orders' => $orders,
-            'fertilizer_types' => $this->fertilizerOrderModel->getAvailableFertilizerTypes()
-        ];
+    //     $canDelete = ($order->status === 'Pending' && $order->payment_status === 'pending');
 
-        $this->view('supplier/v_fertilizer_history', $data);
-    }
+    //     echo json_encode([
+    //         'canDelete' => $canDelete,
+    //         'message' => $canDelete ? 'Order can be deleted' : 'Order cannot be deleted'
+    //     ]);
+    // }
 
-    private function isSupplierOrder($orderId) {
-        $order = $this->fertilizerOrderModel->getOrderById($orderId);
-        return $order && $order->supplier_id == ($_SESSION['user_id'] ?? null);
-    }
+    // // public function removeFromCart($fertilizerId) {
+    // //     $supplier_id = $_SESSION['user_id'] ?? null;
+    // //     if (!$supplier_id) {
+    // //         echo json_encode(['success' => false, 'message' => 'Please log in to remove items from cart']);
+    // //         return;
+    // //     }
+
+    // //     if ($this->fertilizerOrderModel->removeFromCart($supplier_id, $fertilizerId)) {
+    // //         echo json_encode(['success' => true, 'message' => 'Item removed from cart successfully']);
+    // //     } else {
+    // //         echo json_encode(['success' => false, 'message' => 'Failed to remove item from cart']);
+    // //     }
+    // // }
+
+    // public function finalizeFertilizerOrder($order_id) {
+    //     $supplier_id = $_SESSION['user_id'] ?? null;
+    //     if (!$supplier_id) {
+    //         flash('message', 'Please log in to access this page', 'alert alert-danger');
+    //         redirect('auth/login');
+    //         return;
+    //     }
+
+    //     $order = $this->fertilizerOrderModel->getOrderById($order_id);
+    //     if (!$order || $order->supplier_id != $supplier_id) {
+    //         flash('message', 'Order not found or unauthorized access', 'alert alert-danger');
+    //         redirect('supplier/requestFertilizer');
+    //         return;
+    //     }
+
+    //     if ($order->status !== 'Accepted') {
+    //         flash('message', 'Order must be accepted before finalizing', 'alert alert-danger');
+    //         redirect('supplier/requestFertilizer');
+    //         return;
+    //     }
+
+    //     if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+    //         $delivery_date = $_POST['delivery_date'] ?? '';
+    //         if (empty($delivery_date)) {
+    //             flash('message', 'Please provide a delivery date.', 'alert alert-danger');
+    //             redirect("supplier/finalizeFertilizerOrder/$order_id");
+    //             return;
+    //         }
+
+    //         if ($this->fertilizerOrderModel->updateOrderWithDeliveryDate($order_id, $delivery_date)) {
+    //             flash('message', 'Order finalized successfully!', 'alert alert-success');
+    //             redirect('supplier/requestFertilizer');
+    //         } else {
+    //             flash('message', 'Failed to finalize order.', 'alert alert-danger');
+    //             redirect("supplier/finalizeFertilizerOrder/$order_id");
+    //         }
+    //     }
+
+    //     $data['order_id'] = $order_id;
+    //     $this->view('supplier/v_finalize_order', $data);
+    // }
+
+    // public function fertilizerhistory() {
+    //     $supplier_id = $_SESSION['user_id'] ?? null;
+    //     if (!$supplier_id) {
+    //         flash('message', 'Please log in to view your order history', 'alert alert-danger');
+    //         redirect('auth/login');
+    //         return;
+    //     }
+
+    //     $orders = $this->fertilizerOrderModel->getOrdersBySupplier($supplier_id);
+
+    //     $data = [
+    //         'orders' => $orders,
+    //         'fertilizer_types' => $this->fertilizerOrderModel->getAvailableFertilizerTypes()
+    //     ];
+
+    //     $this->view('supplier/v_fertilizer_history', $data);
+    // }
+
+    // private function isSupplierOrder($orderId) {
+    //     $order = $this->fertilizerOrderModel->getOrderById($orderId);
+    //     return $order && $order->supplier_id == ($_SESSION['user_id'] ?? null);
+    // }
 
 
     
