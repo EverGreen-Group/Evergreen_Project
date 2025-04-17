@@ -6,9 +6,9 @@ require_once '../app/models/M_Category.php';
 require_once '../app/models/M_Review.php';
 require_once '../app/helpers/auth_middleware.php';
 require_once '../app/helpers/utility_helper.php';
-require_once '../app/helpers/payment/PaymentGatewayInterface.php';
-require_once '../app/helpers/payment/StripeGateway.php';
-require_once '../app/helpers/payment/PaypalGateway.php';
+// require_once '../app/helpers/payment/PaymentGatewayInterface.php';
+// require_once '../app/helpers/payment/StripeGateway.php';
+// require_once '../app/helpers/payment/PaypalGateway.php';
 
 class Shop extends Controller {
     private $productModel;
@@ -26,10 +26,10 @@ class Shop extends Controller {
         $this->reviewModel = new M_Review();
         
         // Initialize payment gateways
-        $this->paymentGateways = [
-            'stripe' => new StripeGateway(),
-            'paypal' => new PaypalGateway()
-        ];
+        // $this->paymentGateways = [
+        //     'stripe' => new StripeGateway(),
+        //     'paypal' => new PaypalGateway()
+        // ];
     }
 
     // Display shop homepage

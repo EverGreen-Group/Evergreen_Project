@@ -2480,6 +2480,46 @@ class Manager extends Controller
         $this->view('vehicle_manager/v_chat', $data);
     }
 
+    // public function sendMessage() {
+    //     header('Content-Type: application/json');
+    //     if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+    //         $data = json_decode(file_get_contents("php://input"), true);
+            
+    //         if (empty($data['receiver_id']) || empty($data['message'])) {
+    //             echo json_encode(['success' => false, 'message' => 'Missing required fields']);
+    //             exit();
+    //         }
+            
+    //         if (!isset($_SESSION['user_id']) || empty($_SESSION['user_id'])) {
+    //             echo json_encode(['success' => false, 'message' => 'User not logged in']);
+    //             exit();
+    //         }
+            
+    //         $result = $this->chatModel->saveMessage(
+    //             $_SESSION['user_id'],
+    //             $data['receiver_id'],
+    //             $data['message'],
+    //             'text'
+    //         );
+            
+    //         if ($result['success']) {
+    //             echo json_encode([
+    //                 'success' => true,
+    //                 'message' => 'Message sent successfully',
+    //                 'data' => $result
+    //             ]);
+    //         } else {
+    //             echo json_encode([
+    //                 'success' => false,
+    //                 'message' => $result['error'] ?? 'Failed to send message'
+    //             ]);
+    //         }
+    //         exit();
+    //     }
+    //     echo json_encode(['success' => false, 'message' => 'Invalid request method']);
+    //     exit();
+    // }
+
     public function sendMessage() {
         header('Content-Type: application/json');
         if ($_SERVER['REQUEST_METHOD'] == 'POST') {
@@ -2501,15 +2541,14 @@ class Manager extends Controller
                 $data['message'],
                 'text'
             );
-
-            // var_dump($result);
-            // die;
             
             if ($result['success']) {
                 echo json_encode([
                     'success' => true,
-                    'message' => 'Message sent successfully',
-                    'data' => $result
+                    'data' => [  // Wrap message_id and created_at in a "data" object
+                        'message_id' => $result['message_id'],
+                        'created_at' => $result['created_at']
+                    ]
                 ]);
             } else {
                 echo json_encode([
@@ -2523,8 +2562,10 @@ class Manager extends Controller
         exit();
     }
 
+
     // public function getMessages() {
     //     if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+    //         error_log("getMessages: Method Not Allowed");
     //         http_response_code(405);
     //         echo json_encode(['success' => false, 'message' => 'Method Not Allowed']);
     //         return;
@@ -2532,6 +2573,7 @@ class Manager extends Controller
     
     //     $data = json_decode(file_get_contents('php://input'), true);
     //     if (!isset($data['receiver_id']) || !is_numeric($data['receiver_id'])) {
+    //         error_log("getMessages: Invalid receiver ID");
     //         http_response_code(400);
     //         echo json_encode(['success' => false, 'message' => 'Invalid receiver ID']);
     //         return;
@@ -2539,20 +2581,23 @@ class Manager extends Controller
     
     //     $userId = $_SESSION['user_id'];
     //     $receiverId = (int)$data['receiver_id'];
+    //     error_log("getMessages: Fetching messages for user $userId and receiver $receiverId");
     
     //     $messages = $this->chatModel->getMessages($userId, $receiverId);
     //     if ($messages === false) {
+    //         error_log("getMessages: Error fetching messages for user $userId and receiver $receiverId");
     //         http_response_code(500);
     //         echo json_encode(['success' => false, 'message' => 'Error fetching messages']);
     //         return;
     //     }
     
+    //     error_log("getMessages: Successfully fetched " . count($messages) . " messages");
     //     echo json_encode([
     //         'success' => true,
     //         'messages' => $messages
     //     ]);
     // }
-    //test
+
     public function getMessages() {
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
             error_log("getMessages: Method Not Allowed");
@@ -2571,21 +2616,22 @@ class Manager extends Controller
     
         $userId = $_SESSION['user_id'];
         $receiverId = (int)$data['receiver_id'];
-        error_log("getMessages: Fetching messages for user $userId and receiver $receiverId");
+        $lastMessageId = isset($data['last_message_id']) && is_numeric($data['last_message_id']) ? (int)$data['last_message_id'] : 0;
+        error_log("getMessages: Fetching messages for user $userId and receiver $receiverId with last_message_id $lastMessageId");
     
-        $messages = $this->chatModel->getMessages($userId, $receiverId);
-        if ($messages === false) {
-            error_log("getMessages: Error fetching messages for user $userId and receiver $receiverId");
+        try {
+            $messages = $this->chatModel->getMessages($userId, $receiverId, $lastMessageId);
+            echo json_encode([
+                'success' => true,
+                'data' => [
+                    'messages' => $messages
+                ]
+            ]);
+        } catch (Exception $e) {
+            error_log("getMessages: Error fetching messages for user $userId and receiver $receiverId: " . $e->getMessage());
             http_response_code(500);
             echo json_encode(['success' => false, 'message' => 'Error fetching messages']);
-            return;
         }
-    
-        error_log("getMessages: Successfully fetched " . count($messages) . " messages");
-        echo json_encode([
-            'success' => true,
-            'messages' => $messages
-        ]);
     }
     
     public function editMessage() {
@@ -2618,29 +2664,41 @@ class Manager extends Controller
 
     public function deleteMessage() {
         header('Content-Type: application/json');
-        if ($_SERVER['REQUEST_METHOD'] == 'POST') {
-            $data = json_decode(file_get_contents("php://input"), true);
-            
-            if (empty($data['message_id'])) {
-                echo json_encode(['success' => false, 'message' => 'Missing message_id']);
-                exit();
-            }
-            
-            if (!isset($_SESSION['user_id']) || empty($_SESSION['user_id'])) {
-                echo json_encode(['success' => false, 'message' => 'User not logged in']);
-                exit();
-            }
-            
-            $result = $this->chatModel->deleteMessage(
-                $data['message_id'],
-                $_SESSION['user_id']
-            );
-            
-            echo json_encode(['success' => $result]);
-            exit();
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            http_response_code(405);
+            echo json_encode(['success' => false, 'message' => 'Method Not Allowed']);
+            return;
         }
-        echo json_encode(['success' => false, 'message' => 'Invalid request method']);
-        exit();
+    
+        $data = json_decode(file_get_contents('php://input'), true);
+        if (!isset($data['message_id']) || !is_numeric($data['message_id'])) {
+            http_response_code(400);
+            echo json_encode(['success' => false, 'message' => 'Invalid message ID']);
+            return;
+        }
+    
+        if (!isset($_SESSION['user_id'])) {
+            http_response_code(401);
+            echo json_encode(['success' => false, 'message' => 'User not logged in']);
+            return;
+        }
+    
+        $messageId = (int)$data['message_id'];
+        $userId = $_SESSION['user_id'];
+    
+        try {
+            $result = $this->chatModel->deleteMessage($messageId, $userId);
+            if ($result) {
+                echo json_encode(['success' => true]);
+            } else {
+                http_response_code(500);
+                echo json_encode(['success' => false, 'message' => 'Error deleting message']);
+            }
+        } catch (Exception $e) {
+            error_log("Error deleting message: " . $e->getMessage());
+            http_response_code(500);
+            echo json_encode(['success' => false, 'message' => 'Error deleting message']);
+        }
     }
 
     // Theekshana Announcements

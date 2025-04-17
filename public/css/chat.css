@@ -5,87 +5,8 @@ main {
     display: flex;
     justify-content: center;
     align-items: center;
+    position: relative;
 }
-
-/*here*/
-
-.chat-container {
-    display: flex;
-    height: 100vh;
-}
-
-.suppliers-sidebar {
-    width: 300px;
-    padding: 10px;
-    overflow-y: auto;
-}
-
-.suppliers-sidebar .list-group-item {
-    display: flex;
-    align-items: center;
-    padding: 10px;
-}
-
-.suppliers-sidebar .img-thumbnail {
-    margin-right: 10px;
-}
-
-.chat-area {
-    flex: 1;
-    padding: 20px;
-    overflow-y: auto;
-}
-
-#messages_area {
-    height: 75vh;
-    overflow-y: auto;
-    background-color: #e6e6e6;
-    padding: 10px;
-}
-
-.input-group {
-    margin-top: 10px;
-}
-
-/*edit message styles*/
-.button-row {
-    display: flex;
-    justify-content: space-between;
-    margin-top: 10px;
-}
-
-.edit-message-modal {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: rgba(0, 0, 0, 0.5);
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    z-index: 10000;
-}
-
-.edit-message-modal .modal-content {
-    background: white;
-    padding: 20px;
-    border-radius: 5px;
-    width: 500px;
-    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-}
-
-.edit-message-modal textarea {
-    width: 100%;
-    margin-bottom: 10px;
-    resize: vertical;
-}
-
-.edit-message-modal button {
-    margin-right: 10px;
-}
-
-/*end of edit message styles*/
 
 /* Chat Container Layout */
 .chat-container {
@@ -102,7 +23,8 @@ main {
     min-height: 0;
 }
 
-/* Left Sidebar */
+/* Left Sidebar (Unified for both managers and suppliers) */
+.managers-sidebar,
 .suppliers-sidebar {
     border-right: 1px solid #e5e7eb;
     background: #fff;
@@ -111,6 +33,9 @@ main {
     height: 100%;
     border-top-left-radius: 12px;
     border-bottom-left-radius: 12px;
+    width: 280px;
+    padding: 10px;
+    overflow-y: auto;
 }
 
 /* Search Box */
@@ -137,12 +62,14 @@ main {
     color: #9ca3af;
 }
 
-/* Supplier List */
+/* User List (Unified for both managers and suppliers) */
+.managers-list,
 .suppliers-list {
     overflow-y: auto;
 }
 
-.supplier-item {
+/* User Item (Unified for both manager-item and supplier-item) */
+.user-item {
     padding: 15px;
     display: flex;
     align-items: center;
@@ -152,20 +79,28 @@ main {
     border-bottom: 1px solid #f3f4f6;
 }
 
-.supplier-item:hover {
+.user-item:hover {
     background: #f9fafb;
 }
 
-.supplier-item.active {
+.user-item.active {
     background: #f0fdf4;
 }
 
+/* User Info (Unified for both manager-info and supplier-info) */
+.manager-info,
+.supplier-info {
+    flex-grow: 1;
+}
+
+.manager-info h4,
 .supplier-info h4 {
     margin: 0;
     font-size: 0.95rem;
     color: #111827;
 }
 
+.manager-info p,
 .supplier-info p {
     margin: 3px 0 0;
     font-size: 0.8rem;
@@ -179,6 +114,8 @@ main {
     height: 100%;
     position: relative;
     min-height: 0;
+    padding: 20px;
+    overflow-y: auto;
 }
 
 .chat-interface {
@@ -251,73 +188,111 @@ main {
     flex-grow: 1;
 }
 
+/* Remove the old message-actions styles */
 .message-actions {
-    display: none;
-    position: absolute;
-    right: 0;
-    top: -25px;
-    background: white;
-    border-radius: 5px;
-    padding: 4px;
-    box-shadow: 0 2px 5px rgba(0,0,0,0.2);
-    gap: 5px;
-    z-index: 10;
+    display: none; /* Remove the hover-based message-actions */
 }
 
-.message:hover .message-actions {
-    display: flex;
-}
-
-.message-actions button {
+/* Style the icon buttons directly within the message */
+.btn-icon {
     border: none;
-    background: none;
     cursor: pointer;
-    padding: 4px;
+    padding: 5px 8px;
     border-radius: 4px;
-    display: flex;
+    display: inline-flex;
     align-items: center;
+    justify-content: center;
+    margin: 2px;
+    transition: all 0.2s ease;
+    font-size: 1rem;
+}
+
+.view-details-btn {
+    background: #edfde1;
+    color: #22a45d;
+}
+
+.view-details-btn:hover {
+    background: #edf5c2;
 }
 
 .edit-msg-btn {
-    color: #4CAF50;
+    color: #10b981;
+    background: #edfde1;
+}
+
+.edit-msg-btn:hover {
+    background: #edf5c2;
 }
 
 .delete-msg-btn {
-    color: #f44336;
+    background: #edfde1;
+    color: #d32f2f;
 }
 
-.message-actions button:hover {
-    background-color: rgba(0, 0, 0, 0.05);
+.delete-msg-btn:hover {
+    background: #ffcdd2;
 }
 
-/* Make sure icons are visible */
-.bx {
+.btn-icon i {
     font-size: 1.2rem;
-    pointer-events: none;
 }
 
-/* Edit message modal */
-.edit-message-modal {
-    display: none;
+.edit-message-modal,
+.view-details-modal,
+.confirm-modal {
     position: fixed;
     top: 0;
     left: 0;
-    width: 100%;
-    height: 100%;
-    background-color: rgba(0,0,0,0.5);
-    z-index: 1000;
+    width: 100vw;
+    height: 100vh;
+    background: rgba(0, 0, 0, 0.3);
+    justify-items: center;
+    align-items: center;
+    padding: 80px;
+    box-sizing: border-box;
+    z-index: 9999;
 }
 
-.edit-message-modal .modal-content {
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    background-color: white;
+.edit-message-modal .modal-content,
+.view-details-modal .modal-content,
+.confirm-modal .modal-content {
+    background: white;
+    padding:20px;
+    border-radius: 5px;
+    width: 100%;
+    max-width: 400px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    box-sizing: border-box;
+}
+
+
+
+.edit-message-modal textarea {
+    width: 100%;
+    margin-bottom: 10px;
+    resize: vertical;
+}
+
+.edit-message-modal .button-row,
+.view-details-modal .button-row,
+.confirm-modal .button-row {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+    margin-top: 15px;
+}
+
+.view-details-modal #message-details-content p {
+    margin: 10px 0;
+    font-size: 14px;
+}
+
+.spinner {
+    text-align: center;
     padding: 20px;
-    border-radius: 8px;
-    width: 90%;
-    max-width: 500px;
+    font-style: italic;
+    color: #666;
 }
 
 /* Chat Input */
@@ -356,43 +331,6 @@ main {
     font-size: 1.2rem;
 }
 
-/* Right Sidebar - Chat Requests */
-.requests-sidebar {
-    border-left: 1px solid #e5e7eb;
-    background: #fff;
-    padding: 20px;
-}
-
-.requests-sidebar h3 {
-    margin: 0 0 15px;
-    font-size: 1rem;
-    color: #111827;
-}
-
-.request-card {
-    padding: 15px;
-    border: 1px solid #e5e7eb;
-    border-radius: 8px;
-    margin-bottom: 10px;
-    background: #f9fafb;
-}
-
-.accept-btn {
-    margin-top: 10px;
-    padding: 8px 15px;
-    background: #10b981;
-    color: white;
-    border: none;
-    border-radius: 6px;
-    cursor: pointer;
-    width: 100%;
-    transition: background 0.2s;
-}
-
-.accept-btn:hover {
-    background: #059669;
-}
-
 /* Status Indicators */
 .status-dot {
     width: 8px;
@@ -425,85 +363,74 @@ main {
     margin-bottom: 10px;
 }
 
-/* Responsive adjustments */
-@media screen and (max-width: 1200px) {
-    .chat-container {
-        height: 90vh;
-        width: 98%;
-    }
-}
-
-@media screen and (min-width: 1600px) {
-    .chat-container {
-        max-width: 1600px;
-        height: 80vh;
-    }
-}
-
-.status-pending {
-    font-size: 0.8rem;
-    color: #9ca3af;
-    padding: 4px 8px;
-    background: #f3f4f6;
-    border-radius: 4px;
-}
-
-.supplier-item.active {
-    background: #f0fdf4;
-}
-
-.supplier-item .status-dot.online {
-    background: #10b981;
+/* Custom Scrollbar Styling */
+.messages::-webkit-scrollbar,
+.managers-list::-webkit-scrollbar,
+.suppliers-list::-webkit-scrollbar {
     width: 8px;
-    height: 8px;
-    border-radius: 50%;
 }
 
-.request-pending {
-    background: #f3f4f6;
-    color: #6b7280;
-    padding: 6px 12px;
+.messages::-webkit-scrollbar-track,
+.managers-list::-webkit-scrollbar-track,
+.suppliers-list::-webkit-scrollbar-track {
+    background: #f1f1f1;
     border-radius: 4px;
-    font-size: 0.9rem;
 }
 
-.request-chat-btn {
-    background: #10b981;
-    color: white;
-    border: none;
-    padding: 6px 12px;
+.messages::-webkit-scrollbar-thumb,
+.managers-list::-webkit-scrollbar-thumb,
+.suppliers-list::-webkit-scrollbar-thumb {
+    background: #c1c1c1;
     border-radius: 4px;
+}
+
+.messages::-webkit-scrollbar-thumb:hover,
+.managers-list::-webkit-scrollbar-thumb:hover,
+.suppliers-list::-webkit-scrollbar-thumb:hover {
+    background: #a8a8a8;
+}
+
+/* For Firefox */
+.messages,
+.managers-list,
+.suppliers-list {
+    scrollbar-width: thin;
+    scrollbar-color: #c1c1c1 #f1f1f1;
+}
+
+/* Toggle Button Styling */
+.toggle-btn {
+    display: none;
     cursor: pointer;
-    font-size: 0.9rem;
+    background: #10b981;
+    border: none;
+    color: white;
+    font-size: 1.5rem;
+    padding: 10px;
+    border-radius: 50%;
+    position: fixed;
+    top: 90px;
+    left: 20px;
+    z-index: 1001;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
 }
 
-.request-chat-btn:hover {
+.toggle-btn:hover {
     background: #059669;
 }
 
 /* Responsive Design */
 @media screen and (max-width: 1200px) {
     .chat-container {
-        grid-template-columns: 220px 1fr 250px;
+        height: 90vh;
+        width: 98%;
+        grid-template-columns: 220px 1fr;
     }
 }
 
 @media screen and (max-width: 992px) {
     .chat-container {
         grid-template-columns: 200px 1fr;
-    }
-    
-    .toggle-requests {
-        display: block;
-        position: fixed;
-        right: 20px;
-        bottom: 20px;
-        padding: 12px;
-        border-radius: 50%;
-        background: #10b981;
-        color: white;
-        box-shadow: 0 2px 5px rgba(0,0,0,0.2);
-        z-index: 1001;
     }
 }
 
@@ -518,6 +445,7 @@ main {
         grid-template-columns: 1fr;
     }
 
+    .managers-sidebar,
     .suppliers-sidebar {
         position: fixed;
         left: 0;
@@ -529,16 +457,21 @@ main {
         transition: transform 0.3s ease;
     }
 
+    .managers-sidebar.active,
     .suppliers-sidebar.active {
         transform: translateX(0);
+    }
+
+    .toggle-btn {
+        display: block;
     }
 
     .message {
         max-width: 85%;
     }
 
-    .message-actions {
-        top: -20px;
+    .btn-icon {
+        padding: 4px 6px;
     }
 }
 
@@ -546,7 +479,22 @@ main {
     .chat-container {
         padding: 10px;
     }
-    
+
+    .toggle-btn {
+        top: 80px;
+        left: 15px;
+    }
+
+    .btn-icon {
+        padding: 3px 5px;
+    }
+}
+
+@media screen and (min-width: 1600px) {
+    .chat-container {
+        max-width: 1600px;
+        height: 80vh;
+    }
 }
 
 /* Animation for sidebars */
@@ -558,166 +506,4 @@ main {
 @keyframes slideOut {
     from { transform: translateX(0); }
     to { transform: translateX(-100%); }
-}
-
-/* Toggle buttons for mobile */
-.toggle-btn {
-    display: none;
-    cursor: pointer;
-    background: none;
-    border: none;
-    color: #1f2937;
-    font-size: 1.5rem;
-}
-
-@media screen and (max-width: 768px) {
-    .toggle-btn {
-        display: block;
-    }
-}
-
-/* Add these styles for message actions */
-.message {
-    position: relative;
-}
-
-.message-actions {
-    position: absolute;
-    top: -20px;
-    right: 5px;
-    display: none;
-    gap: 8px;
-    background: rgba(255, 255, 255, 0.9);
-    padding: 4px 8px;
-    border-radius: 4px;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-}
-
-.message:hover .message-actions {
-    display: flex;
-}
-
-.message-actions button {
-    background: none;
-    border: none;
-    cursor: pointer;
-    padding: 2px;
-    transition: all 0.2s ease;
-}
-
-.edit-msg-btn {
-    color: #4CAF50;
-}
-
-.edit-msg-btn:hover {
-    color: #45a049;
-}
-
-.delete-msg-btn {
-    color: #f44336;
-}
-
-.delete-msg-btn:hover {
-    color: #da190b;
-}
-
-/* Modal styles for edit message */
-.edit-message-modal {
-    display: none;
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: rgba(0, 0, 0, 0.5);
-    z-index: 1000;
-}
-
-.modal-content {
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    background: white;
-    padding: 20px;
-    border-radius: 8px;
-    width: 90%;
-    max-width: 500px;
-}
-
-.modal-content h3 {
-    margin-bottom: 15px;
-    color: #333;
-}
-
-.modal-content textarea {
-    width: 100%;
-    min-height: 100px;
-    padding: 10px;
-    margin-bottom: 15px;
-    border: 1px solid #ddd;
-    border-radius: 4px;
-    resize: vertical;
-}
-
-.modal-buttons {
-    display: flex;
-    gap: 10px;
-    justify-content: flex-end;
-}
-
-.modal-buttons button {
-    padding: 8px 16px;
-    border: none;
-    border-radius: 4px;
-    cursor: pointer;
-    transition: all 0.2s ease;
-}
-
-#save-edit-btn {
-    background: #4CAF50;
-    color: white;
-}
-
-#save-edit-btn:hover {
-    background: #45a049;
-}
-
-.modal-buttons button:last-child {
-    background: #f44336;
-    color: white;
-}
-
-.modal-buttons button:last-child:hover {
-    background: #da190b;
-}
-
-/* Custom Scrollbar Styling */
-.messages::-webkit-scrollbar,
-.suppliers-list::-webkit-scrollbar {
-    width: 8px;
-}
-
-.messages::-webkit-scrollbar-track,
-.suppliers-list::-webkit-scrollbar-track {
-    background: #f1f1f1;
-    border-radius: 4px;
-}
-
-.messages::-webkit-scrollbar-thumb,
-.suppliers-list::-webkit-scrollbar-thumb {
-    background: #c1c1c1;
-    border-radius: 4px;
-}
-
-.messages::-webkit-scrollbar-thumb:hover,
-.suppliers-list::-webkit-scrollbar-thumb:hover {
-    background: #a8a8a8;
-}
-
-/* For Firefox */
-.messages,
-.suppliers-list {
-    scrollbar-width: thin;
-    scrollbar-color: #c1c1c1 #f1f1f1;
 }
