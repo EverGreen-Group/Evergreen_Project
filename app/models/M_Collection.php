@@ -109,7 +109,7 @@ class M_Collection {
         return $this->db->resultSet();
     }
 
-    public function getCollectionSuppliersStatus($collectionId, $supplierId) {
+    public function getCollectionSuppliersStatus($collectionId, $supplierId) {  // tested
         $this->db->query("
             SELECT DISTINCT
                 csr.status
@@ -164,7 +164,7 @@ class M_Collection {
     
     
 
-    public function getCollectionSuppliersCount($collectionId) {
+    public function getCollectionSuppliersCount($collectionId) {    // tested
         $this->db->query("
             SELECT 
                 COUNT(*) as total_suppliers,

@@ -1545,3 +1545,32 @@ body.dark .auth-form-group input {
   background-color: #ffe2e5;
   color: var(--red);
 }
+
+.status-badge {
+  padding: 5px 10px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: bold;
+  text-transform: uppercase;
+  display: inline-block;
+}
+
+.added {
+  background-color: var(--mainn);
+  color: white;
+}
+
+.updated {
+  background-color: #e1f0ff;
+  color: #3699ff;
+}
+
+.removed {
+  background-color: var(--red);
+  color: white;
+}
+
+.unknown {
+  background-color: #eee5ff;
+  color: #7337ee;
+}

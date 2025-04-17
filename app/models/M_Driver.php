@@ -130,7 +130,7 @@ class M_Driver{
 
 
 
-    public function getDriverDetails($driverId) {
+    public function getDriverDetails($driverId) {   // tested
         $this->db->query('
             SELECT d.*,p.*
             FROM drivers d

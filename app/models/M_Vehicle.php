@@ -152,7 +152,7 @@ class M_Vehicle {
         return $this->db->single();
     }  
     
-    public function getVehicleIdByScheduleId($id) {
+    public function getVehicleIdByScheduleId($id) {     // tested
         $this->db->query('
         SELECT v.* FROM collection_schedules cs 
         JOIN routes r ON cs.route_id = r.route_id

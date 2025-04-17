@@ -22,25 +22,34 @@ class Collection extends Controller{
     }
 
     public function details($collectionId) {
-        $collectionDetails = $this->collectionModel->getCollectionById($collectionId);
+        $collectionDetails = $this->collectionModel->getCollectionById($collectionId);  // tested but also repeated version of the lesser one
         if (!$collectionDetails) {
             header("Location: /error_page.php?message=Collection not found");
             exit;
         }
         
-        $routeDetails = $this->routeModel->getRouteDetailsByCollection($collectionId);
+        $routeDetails = $this->routeModel->getRouteDetailsByCollection($collectionId);  // tested but date is null
         $scheduleId = $collectionDetails->schedule_id;
-        $scheduleDetails = $this->collectionSchedulesModel->getScheduleDetails($scheduleId);
-        $vehicleDetails = $this->vehicleModel->getVehicleIdByScheduleId($scheduleId);
+        $scheduleDetails = $this->collectionSchedulesModel->getScheduleDetails($scheduleId);    // tested, only 1 result
+        $vehicleDetails = $this->vehicleModel->getVehicleIdByScheduleId($scheduleId);       // tested
         $driverId = $scheduleDetails->driver_id;
-        $driverDetails = $this->driverModel->getDriverDetails($driverId);
-        $collectionSuppliersDetails = $this->collectionModel->getCollectionSuppliers($collectionId);
+        $driverDetails = $this->driverModel->getDriverDetails($driverId);   // tested
+        $collectionSuppliersDetails = $this->collectionModel->getCollectionSuppliers($collectionId);    // only the distinct csr records nothing detailed tho
 
-        $csrCount = $this->collectionModel->getCollectionSuppliersCount($collectionId);
+        $csrCount = $this->collectionModel->getCollectionSuppliersCount($collectionId); // tested, we get the total_suppliers, collected_count and remaining_count
         $totalSuppliers = $csrCount->total_suppliers;
         $remainingSuppliers = $csrCount->remaining_count;
 
         $vehicleRemainingCapacity = $vehicleDetails->capacity - $collectionDetails->total_quantity;
+
+        // need to send the bags logs also
+        $logModel = $this->model('M_Log');
+        $bagLogs = $logModel->getBagLogsByCollection($collectionId);
+
+        $leafModel =$this->model('M_Dashbord');
+        $leafTypes =$leafModel->getLeafTypes();
+
+        $vehicleLocation = $this->vehicleModel->getVehicleLocation($scheduleDetails->vehicle_id);
 
 
 
@@ -53,7 +62,10 @@ class Collection extends Controller{
             'totalSuppliers' => $totalSuppliers,
             'collectionDetails' => $collectionDetails,
             'remainingSuppliers' => $remainingSuppliers,
-            'vehicleRemainingCapacity' => $vehicleRemainingCapacity
+            'vehicleRemainingCapacity' => $vehicleRemainingCapacity,
+            'bagLogs' => $bagLogs,
+            'leafTypes' => $leafTypes,
+            'vehicleLocation' => $vehicleLocation
         ];
 
         $this->view('vehicle_manager/v_collection_2', $data);

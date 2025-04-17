@@ -1600,19 +1600,16 @@ class Manager extends Controller
         $stats = $this->userModel->getDashboardStats();
         $stats['collections'] = (array)$stats['collections'];
 
-        // Get filter parameters (optional)
         $collection_id = isset($_GET['collection_id']) ? $_GET['collection_id'] : null;
         $schedule_id = isset($_GET['schedule_id']) ? $_GET['schedule_id'] : null;
         $status = isset($_GET['status']) ? $_GET['status'] : null;
         $start_date = isset($_GET['start_date']) ? $_GET['start_date'] : null;
         $end_date = isset($_GET['end_date']) ? $_GET['end_date'] : null;
 
-        // Determine the current page, defaulting to page 1
         $page = isset($_GET['page']) && is_numeric($_GET['page']) ? (int)$_GET['page'] : 1;
-        $limit = 5; // Number of collections per page
+        $limit = 5; 
         $offset = ($page - 1) * $limit;
 
-        // Fetch collections based on filters with pagination
         if ($collection_id || $schedule_id || $status || $start_date || $end_date) {
             $allCollections = $this->collectionModel->getFilteredCollections(
                 $collection_id, 
@@ -1635,12 +1632,11 @@ class Manager extends Controller
             );
         }
 
-        // Get total count for pagination
         $data = [
             'stats' => $stats,
             'all_collections' => $allCollections,
             'currentPage' => $page,
-            'totalCollections' => $this->collectionModel->getTotalCollections(), // You need to implement this method
+            'totalCollections' => $this->collectionModel->getTotalCollections(),
             'filters' => [
                 'collection_id' => $collection_id,
                 'schedule_id' => $schedule_id,

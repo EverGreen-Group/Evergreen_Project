@@ -296,7 +296,7 @@ class M_Route {
     /**
      * Get route details based on a collection ID.
      */
-    public function getRouteDetailsByCollection($collectionId){
+    public function getRouteDetailsByCollection($collectionId){         // tested but  date is null
         $sql = "
         SELECT r.* FROM collection_schedules cs
         JOIN collections c ON c.schedule_id = cs.schedule_id

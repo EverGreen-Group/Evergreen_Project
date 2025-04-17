@@ -112,9 +112,11 @@ class M_CollectionSchedule {
     
     
 
-    public function getScheduleDetails($scheduleId) {
+    public function getScheduleDetails($scheduleId) {   // tested
         $this->db->query("
-            SELECT * FROM collection_schedules WHERE schedule_id = :schedule_id LIMIT 1;
+            SELECT * FROM collection_schedules cs
+            INNER JOIN routes r ON cs.route_id = r.route_id
+            WHERE schedule_id = :schedule_id LIMIT 1;
         ");
     
         $this->db->bind(':schedule_id', $scheduleId);
