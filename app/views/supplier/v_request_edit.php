@@ -38,24 +38,16 @@
           <span class="value"><?php echo htmlspecialchars($data['order']->order_id ?? ''); ?></span>
         </div>
         <div class="detail-item">
-          <span class="label">Fertilizer Type:</span>
-          <span class="value"><?php echo htmlspecialchars($data['order']->fertilizer_name ?? ''); ?></span>
+          <span class="label">Fertilizer Name:</span>
+          <span class="value"><?php echo $data['order']->fertilizer_name; ?></span>
         </div>
         <div class="detail-item">
-          <span class="label">Total Amount:</span>
-          <span class="value"><?php echo htmlspecialchars($data['order']->total_amount ?? ''); ?></span>
-        </div>
-        <div class="detail-item">
-          <span class="label">Unit:</span>
-          <span class="value"><?php echo htmlspecialchars($data['order']->unit ?? ''); ?></span>
-        </div>
-        <div class="detail-item">
-          <span class="label">Price Per Unit:</span>
-          <span class="value"><?php echo htmlspecialchars($data['order']->price_per_unit ?? ''); ?></span>
+          <span class="label">Quantity:</span>
+          <span class="value"><?php echo $data['order']->quantity; ?></span>
         </div>
         <div class="detail-item">
           <span class="label">Total Price:</span>
-          <span class="value"><?php echo htmlspecialchars($data['order']->total_price ?? ''); ?></span>
+          <span class="value"><?php echo $data['order']->total_amount; ?></span>
         </div>
       </div>
     </div>
@@ -69,29 +61,15 @@
     <div class="card-body">
       <form id="fertilizerForm" method="POST" action="<?php echo URLROOT . '/supplier/editFertilizerRequest/' . $data['order']->order_id; ?>">
         <div class="form-group">
-          <label for="type_id">Fertilizer Type:</label>
-          <select id="type_id" name="type_id" required onchange="updatePrice()">
-            <option value="">Select Fertilizer</option>
-            <?php foreach($data['fertilizer_types'] as $type): ?>
-              <option value="<?php echo $type->type_id; ?>" 
-                      <?php echo ($data['order']->type_id == $type->type_id) ? 'selected' : ''; ?>
-                      data-unit-price-kg="<?php echo $type->unit_price_kg; ?>"
-                      data-pack-price="<?php echo $type->unit_price_packs; ?>"
-                      data-box-price="<?php echo $type->unit_price_box; ?>">
-                <?php echo $type->name; ?>
-              </option>
-            <?php endforeach; ?>
-          </select>
+          <label for="fertilizer_name">Fertilizer Name:</label>
+          <input type="text" id="fertilizer_name" name="fertilizer_name" value="<?php echo $data['order']->fertilizer_name; ?>" required readonly>
+          <!-- Hidden input for fertilizer_id -->
+          <input type="hidden" id="fertilizer_id" name="fertilizer_id" value="<?php echo $data['order']->fertilizer_id; ?>">
         </div>
 
         <div class="form-group">
-          <label for="unit">Unit:</label>
-          <select id="unit" name="unit" required onchange="updatePrice()">
-            <option value="">Select Unit</option>
-            <option value="kg" <?php echo ($data['order']->unit == 'kg') ? 'selected' : ''; ?>>Kilograms (kg)</option>
-            <option value="packs" <?php echo ($data['order']->unit == 'packs') ? 'selected' : ''; ?>>Packs</option>
-            <option value="box" <?php echo ($data['order']->unit == 'box') ? 'selected' : ''; ?>>Box</option>
-          </select>
+          <label for="quantity">Quantity:</label>
+          <input type="number" id="quantity" name="quantity" max="100" min="1" value="<?php echo $data['order']->quantity; ?>" required>
         </div>
 
         <div class="form-group">
@@ -99,13 +77,15 @@
           <input type="number" id="quantity" name="quantity" max="50" min="1" value="<?php echo htmlspecialchars($data['order']->quantity ?? ''); ?>" required oninput="updatePrice()">
         </div>
 
-        <div class="form-group">
-          <label for="total_amount">Total Amount:</label>
-          <input type="number" id="total_amount" name="total_amount" value="<?php echo htmlspecialchars($data['order']->total_amount ?? ''); ?>" readonly>
+        <div class="form-group read-only-group">
+          <label for="price_per_unit">Price Per Unit:</label>
+          <input type="text" id="price_per_unit" name="price_per_unit" readonly>
         </div>
 
-        <input type="hidden" id="price_per_unit" name="price_per_unit" value="<?php echo htmlspecialchars($data['order']->price_per_unit ?? ''); ?>">
-        <input type="hidden" id="total_price" name="total_price" value="<?php echo htmlspecialchars($data['order']->total_price ?? ''); ?>">
+        <div class="form-group read-only-group">
+          <label for="total_price">Total Price:</label>
+          <input type="text" id="total_price" name="total_price" readonly>
+        </div>
 
         <div class="form-group button-group">
           <button type="submit" class="submit-btn">Update Request</button>
@@ -119,45 +99,57 @@
 <div id="notification" class="notification" style="display: none;"></div>
 <script src="<?php echo URLROOT; ?>/css/script.js"></script>
 <script>
-  function updatePrice() {
-    const typeSelect = document.getElementById('type_id');
-    const unitSelect = document.getElementById('unit');
-    const quantityInput = document.getElementById('quantity');
-    const totalAmountInput = document.getElementById('total_amount');
-    const pricePerUnitInput = document.getElementById('price_per_unit');
-    const totalPriceInput = document.getElementById('total_price');
+function updateTotalPrice() {
+  const quantityInput = document.getElementById('quantity');
+  const pricePerUnitInput = document.getElementById('price_per_unit');
+  const totalPriceInput = document.getElementById('total_price');
 
-    if (!typeSelect.value || !unitSelect.value || !quantityInput.value) {
-        totalAmountInput.value = '';
-        pricePerUnitInput.value = '';
-        totalPriceInput.value = '';
-        return;
-    }
+  const quantity = parseFloat(quantityInput.value);
+  // Calculate price per unit from the existing order data
+  const price = <?php echo isset($data['order']->total_amount) && isset($data['order']->quantity) ? 
+                ($data['order']->total_amount / $data['order']->quantity) : 0; ?>;
 
-    const selectedOption = typeSelect.options[typeSelect.selectedIndex];
-    const unit = unitSelect.value;
-    let pricePerUnit;
-
-    if (unit === 'kg') {
-        pricePerUnit = parseFloat(selectedOption.getAttribute('data-unit-price-kg'));
-    } else if (unit === 'packs') {
-        pricePerUnit = parseFloat(selectedOption.getAttribute('data-pack-price'));
-    } else if (unit === 'box') {
-        pricePerUnit = parseFloat(selectedOption.getAttribute('data-box-price'));
-    }
-
-    const quantity = parseFloat(quantityInput.value);
-    if (!isNaN(pricePerUnit) && !isNaN(quantity)) {
-        const total = pricePerUnit * quantity;
-        pricePerUnitInput.value = pricePerUnit.toFixed(2);
-        totalAmountInput.value = total.toFixed(2);
-        totalPriceInput.value = total.toFixed(2);
-    } else {
-        totalAmountInput.value = '';
-        pricePerUnitInput.value = '';
-        totalPriceInput.value = '';
-    }
+  pricePerUnitInput.value = price.toFixed(2);
+  
+  if (!isNaN(quantity)) {
+    totalPriceInput.value = (price * quantity).toFixed(2);
+  } else {
+    totalPriceInput.value = '';
   }
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+  // Set initial values when page loads
+  updateTotalPrice();
+  
+  // Add event listener to quantity input for real-time updates
+  document.getElementById('quantity').addEventListener('input', updateTotalPrice);
+  
+  // Form submission handler
+  document.getElementById('fertilizerForm').addEventListener('submit', function(e) {
+    const quantityInput = document.getElementById('quantity');
+    const totalPriceInput = document.getElementById('total_price');
+    
+    const quantity = parseFloat(quantityInput.value);
+    if (isNaN(quantity) || quantity <= 0 || quantity > 100) {
+      e.preventDefault();
+      alert("Please enter a valid quantity between 1 and 100");
+      return false;
+    }
+    
+    // Ensure price calculation was performed
+    if (totalPriceInput.value === "") {
+      e.preventDefault();
+      updateTotalPrice(); // Recalculate price
+      if (totalPriceInput.value === "") {
+        alert("Unable to calculate total price. Please check your inputs.");
+        return false;
+      }
+    }
+    
+    return true;
+  });
+});
 </script>
 
 <style>
@@ -279,11 +271,15 @@
     margin-bottom: var(--spacing-xs);
     color: var(--text-primary);
   }
+  .edit-form-card input[type="text"],
   .edit-form-card input[type="number"],
+  .edit-form-card input[type="hidden"],
   .edit-form-card select {
+    width: 100%;
     padding: var(--spacing-sm);
     border: 1px solid var(--border-color);
     border-radius: var(--border-radius-sm);
+    box-sizing: border-box;
   }
   .edit-form-card .submit-btn,
   .edit-form-card .back-btn {
