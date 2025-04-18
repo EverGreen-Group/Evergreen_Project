@@ -486,7 +486,7 @@
 
 
 </style>
-
+<script src="<?php echo URLROOT; ?>/css/script.js"></script>
 
 </main>
 

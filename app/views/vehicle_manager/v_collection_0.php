@@ -214,6 +214,7 @@
         color: #F64E60;
     }
 </style>
+<script src="<?php echo URLROOT; ?>/public/css/script.js"></script>
 
 <?php require APPROOT . '/views/inc/components/footer.php'; ?>
 
