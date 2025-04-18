@@ -14,6 +14,7 @@ class Export extends controller
 
     public function release()
     {
+
         // Get JSON input
         $input = json_decode(file_get_contents("php://input"), true);
 
@@ -43,22 +44,79 @@ class Export extends controller
             if ($this->exportModel->add_export_data($data)) {
                 http_response_code(201); // Created
                 echo json_encode(['message' => 'Export record added successfully']);
-                
+
             } else {
                 http_response_code(500);
                 echo json_encode(['error' => 'Database insertion failed']);
             }
 
-            
+
 
         } else {
             // Handle GET request
-            $export = $this->exportModel->get_export_data();
-            $data = ['exports' => $export];
+            $exportall = $this->exportModel->get_export_data();
+            $lastmonth_exports = $this->exportModel->get_lastmonth_exportdata();
+            $tea_exports = $this->exportModel->get_tea_export_data_last12months();
+
+            $revenue = 0;
+            $total_quantity = 0;
+            foreach ($lastmonth_exports as $export) {
+                $total_quantity += $export->export_quantity;
+                $revenue += $export->export_price * $export->export_quantity;
+            }
+
+            // Step 1: Create array of last 12 months (YYYY-MM)
+            $months = [];
+            for ($i = 11; $i >= 0; $i--) {
+                $date = new DateTime(); // fresh object every time
+                $date->modify("-$i month");
+                $months[] = $date->format("Y-m");
+            }
+            $labels = $months;
+
+            // Step 2: Initialize empty dataset arrays
+            $black_tea_data = array_fill(0, 12, 0);
+            $green_tea_data = array_fill(0, 12, 0);
+            $herbal_tea_data = array_fill(0, 12, 0);
+
+            // Step 3: Populate data based on exports
+            foreach ($tea_exports as $entry) {
+                $monthIndex = array_search($entry->month, $labels);
+                if ($monthIndex !== false) {
+                    $quantity = (int) $entry->total_quantity;
+                    switch ($entry->stock_name) {
+                        case "Black Tea":
+                            $black_tea_data[$monthIndex] += $quantity;
+                            break;
+                        case "Green Tea":
+                            $green_tea_data[$monthIndex] += $quantity;
+                            break;
+                        case "Herbal Tea":
+                            $herbal_tea_data[$monthIndex] += $quantity;
+                            break;
+                    }
+                }
+            }
+
+
+            
+
+            $data = [
+                'exports' => $exportall,
+                'lastmonth_export' => $lastmonth_exports,
+                'revenue' => $revenue,
+                'total_quantity' => $total_quantity,
+                'green_tea' => $green_tea_data,
+                'black_tea' => $black_tea_data,
+                'herbal_tea' => $herbal_tea_data,
+            ];
+
+            //  var_dump($data);
             $this->view('inventory/v_export', $data);
         }
-        
+
     }
+
 
 
 }

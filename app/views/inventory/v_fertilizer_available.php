@@ -142,17 +142,14 @@
     }
 
     .btn-primary {
-        background-color: #3C91E6;
-        color: white;
+        /* background-color: #3C91E6;
+        color: white; */
         border: none;
         padding: 8px 15px;
         border-radius: 4px;
         cursor: pointer;
     }
 
-    .btn-primary:hover {
-        background-color: #2D7AD8;
-    }
 
     .btn-danger {
         background-color: #F64E60;
