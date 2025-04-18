@@ -9,6 +9,8 @@
     const UPLOADROOT = '<?php echo UPLOADROOT; ?>';
 </script>
 <link rel="stylesheet" href="<?php echo URLROOT; ?>/css/vehicle_manager/vehicle/vehicle.css">
+<link rel="stylesheet" href="<?php echo URLROOT; ?>/css/vehicle_manager/collection/collection.css">
+<link rel="stylesheet" href="<?php echo URLROOT; ?>/css/vehicle_manager/collection/calendar.css">
 
 <!-- MAIN -->
 <main>
@@ -19,6 +21,13 @@
                 <li><a href="#"><?php echo htmlspecialchars($data['route_name']); ?></a></li>
             </ul>
         </div>
+    </div>
+
+    <div class="action-buttons">
+        <a href="<?php echo URLROOT; ?>/route/editRoute/<?php echo $data['route_id']?>" class="btn btn-primary">
+            <i class='bx bx-wrench'></i>
+            Edit route
+        </a>
     </div>
 
   <ul class="dashboard-stats">
@@ -36,7 +45,7 @@
             <div class="stat-content">
                 <i class='bx bxs-shopping-bag'></i>
                 <div class="stat-info">
-                    <h3><?php echo isset($data['remainingCapacity']) ? (int)$data['remainingCapacity'] : 0; ?></h3>
+                    <h3><?php echo isset($data['remainingCapacity']) ? (int)$data['remainingCapacity'] . ' kg' : 0; ?></h3>
                     <p>Remaining Capacity</p>
                 </div>
             </div>
@@ -48,10 +57,6 @@
     <div class="order">
       <div class="head">
           <h3>Unassigned Suppliers</h3>
-        <a href="<?php echo URLROOT; ?>/manager/unallocatedSuppliers" class="btn btn-primary">
-            <i class='bx bx-search'></i>
-            View All Unallocated Suppliers
-        </a>
       </div>
       <div class="filter-options">
           <form id="addSupplierForm" action="<?php echo URLROOT; ?>/route/addSupplier" method="POST">
@@ -81,7 +86,7 @@
       <div class="head">
         <h3>Route Suppliers</h3>
         <a href="<?php echo URLROOT; ?>/route/viewMap/<?php echo $data['route_id'] ?>" class="btn btn-primary">
-            <i class='bx bx-search'></i>
+            <i class='bx bxs-paper-plane'></i>
             View In Map
         </a>
       </div>
@@ -99,12 +104,12 @@
                 <tr>
                     <td><?php echo htmlspecialchars($supplier->stop_order); ?></td>
                     <td><?php echo htmlspecialchars($supplier->full_name); ?></td>
-                    <td><?php echo htmlspecialchars($supplier->average_collection); ?></td>
+                    <td><?php echo htmlspecialchars(floor($supplier->average_collection)) . ' kg'; ?></td>
                     <td>
                         <form action="<?php echo URLROOT; ?>/route/removeSupplier" method="POST">
                             <input type="hidden" name="supplier_id" value="<?php echo htmlspecialchars($supplier->supplier_id); ?>">
                             <input type="hidden" name="route_id" value="<?php echo htmlspecialchars($data['route_id']); ?>">
-                            <button type="submit" class="btn btn-danger">Remove</button>
+                            <button type="submit" class="btn btn-danger" data-confirm="Are you sure you want to remove this supplier?">Remove</button>
                         </form>
                     </td>
                 </tr>

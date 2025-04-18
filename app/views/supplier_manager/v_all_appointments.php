@@ -31,8 +31,6 @@
         </a>
     </div>
   </div>
-
-  <?php flash('appointment_message'); ?>
   
   <div class="table-data">
     <div class="order">

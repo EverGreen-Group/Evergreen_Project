@@ -39,13 +39,13 @@ class Route extends Controller{
     }
 
 
-    public function route() {
+    public function route() {   // tested
         $page = isset($_GET['page']) && is_numeric($_GET['page']) ? (int)$_GET['page'] : 1;
         $limit = 5; 
         $offset = ($page - 1) * $limit;
 
-        $allRoutes = $this->routeModel->getAllUndeletedRoutes($limit, $offset);
-        $totalRoutes = $this->routeModel->getTotalRoutes();
+        $allRoutes = $this->routeModel->getAllUndeletedRoutes($limit, $offset); // tested
+        $totalRoutes = $this->routeModel->getTotalRoutes(); // tested
         $unassignedRoutes = $this->routeModel->getUnassignedRoutesCount();
         $totalActive = $this->routeModel->getTotalActiveRoutes();
         $totalInactive = $this->routeModel->getTotalInactiveRoutes();
@@ -65,7 +65,7 @@ class Route extends Controller{
             'totalPages' => $totalPages
         ];
 
-        $this->view('vehicle_manager/routes/v_create_route', $data);
+        $this->view('vehicle_manager/routes/v_route', $data);
     }
 
     //  =====================================================
@@ -74,11 +74,10 @@ class Route extends Controller{
 
     public function manageRoute($routeId) {
         // Fetch the route details from the model
-        $routeDetails = $this->routeModel->getRouteById($routeId);
+        $routeDetails = $this->routeModel->getRouteById($routeId);  // tested
         $vehicleId = $routeDetails->vehicle_id;
         $vehicleDetails = $this->vehicleModel->getVehicleByVehicleId($vehicleId);
         
-        // Fetch unassigned suppliers
         $unassignedSuppliers = $this->routeModel->getUnallocatedSuppliers();
 
         // Fetch route suppliers
@@ -142,26 +141,111 @@ class Route extends Controller{
     // ===================================================== 
 
 
-    public function createRoute() {
+    public function createRoute() {     // tested!!!!!!
+        $availableVehicles = $this->vehicleModel->getAllAvailableVehicles();
+
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $routeName = trim($_POST['route_name']);
             $vehicleId = trim($_POST['vehicle_id']);
 
-
             if (empty($routeName) || empty($vehicleId)) {
+                setFlashMessage('Please fill in all fields.', 'error');
                 return;
             }
 
-            if ($this->routeModel->createRoute($routeName,$vehicleId)) {
-                setFlashMessage('Route created successfully!');
-                header('Location: ' . URLROOT . '/route/'); 
-                exit();
-            } else {
+            if (!$this->routeModel->createRoute($routeName, $vehicleId)) {
+                setFlashMessage('Route name already exists!', 'error');
+                header('Location: ' . URLROOT . '/route/createRoute');
+                return;
             }
+
+            setFlashMessage('Route created successfully!');
+            header('Location: ' . URLROOT . '/route/'); 
+            exit();
         }
+
+        $data = [
+            'availableVehicles' => $availableVehicles
+        ];
+
+        $this->view('vehicle_manager/routes/v_create_route', $data);
     }
 
-    public function deleteRoute()
+    public function editRoute($id = null) { // tested
+        if (!$id) {
+            setFlashMessage('Invalid route ID', 'error');
+            redirect('route');
+        }
+        
+        $route = $this->routeModel->getRouteById($id);
+        
+        if (!$route) {
+            setFlashMessage('Route not found', 'error');
+            redirect('route');
+        }
+        
+        $availableVehicles = $this->vehicleModel->getAllAvailableVehicles();
+        $currentVehicle = $this->vehicleModel->getVehicleById($route->vehicle_id);
+        
+        // making sure current vehicle is in the list
+        $currentVehicleInList = false;
+        foreach ($availableVehicles as $vehicle) {
+            if ($vehicle->vehicle_id == $route->vehicle_id) {
+                $currentVehicleInList = true;
+                break;
+            }
+        }
+        
+        if (!$currentVehicleInList && $currentVehicle) {
+            array_unshift($availableVehicles, $currentVehicle);
+        }
+        
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            $routeName = trim($_POST['route_name']);
+            $vehicleId = trim($_POST['vehicle_id']);
+            
+            if (empty($routeName) || empty($vehicleId)) {
+                setFlashMessage('Please fill in all fields.', 'error');
+                $data = [
+                    'route' => $route,
+                    'availableVehicles' => $availableVehicles
+                ];
+                $this->view('vehicle_manager/routes/v_edit_route', $data);
+                return;
+            }
+            
+            if ($routeName !== $route->route_name && $this->routeModel->isDuplicateRouteName($routeName)) {
+                setFlashMessage('Route name already exists!', 'error');
+                $data = [
+                    'route' => $route,
+                    'availableVehicles' => $availableVehicles
+                ];
+                $this->view('vehicle_manager/routes/v_edit_route', $data);
+                return;
+            }
+            
+            if ($this->routeModel->editRoute($id, $routeName, $vehicleId)) {
+                setFlashMessage('Route updated successfully!');
+                redirect('route');
+            } else {
+                setFlashMessage('Selected vehicle does not have enough capacity for current suppliers.', 'error');
+                $data = [
+                    'route' => $route,
+                    'availableVehicles' => $availableVehicles
+                ];
+                $this->view('vehicle_manager/routes/v_edit_route', $data);
+            }
+        }
+        
+        $data = [
+            'route' => $route,
+            'availableVehicles' => $availableVehicles
+        ];
+        
+        $this->view('vehicle_manager/routes/v_edit_route', $data);
+    }
+
+    public function deleteRoute()// tested
     {
         if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             $route_id = $_POST['route_id'];
@@ -171,7 +255,7 @@ class Route extends Controller{
                 setFlashMessage('Route deleted successfully!');
                 redirect('route/');
             } else {
-                setFlashMessage('Route deletion failed!');
+                // setFlashMessage('Route deletion failed!');
                 redirect('route/');
             }
         }
@@ -203,7 +287,7 @@ class Route extends Controller{
     }
 
 
-    public function addSupplier() {
+    public function addSupplier() { // tested
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $supplierId = $_POST['supplier_id'];
             $routeId = $_POST['route_id'];

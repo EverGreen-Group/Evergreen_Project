@@ -146,7 +146,7 @@ class M_Vehicle {
         return $row->count > 0;
     }
 
-    public function getVehicleById($id) {
+    public function getVehicleById($id) {   // tested
         $this->db->query('SELECT * FROM vehicles WHERE vehicle_id = :vehicle_id');
         $this->db->bind(':vehicle_id', $id);
         return $this->db->single();
