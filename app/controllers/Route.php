@@ -291,7 +291,20 @@ class Route extends Controller{
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $supplierId = $_POST['supplier_id'];
             $routeId = $_POST['route_id'];
-    
+
+            if (!$supplierId) {
+                setFlashMessage('Supplier not found', 'error');
+                redirect('route/manageRoute/' . $routeId);
+            }
+            $supplierModel = $this->model('M_Supplier');
+            $supplierDetails =$supplierModel->getSupplierById($supplierId);
+            $routeDetails = $this->routeModel->getRouteById($routeId);
+            $remainingCapacity = $routeDetails->remaining_capacity;
+
+            if ($remainingCapacity < $supplierDetails->average_collection) {
+                setFlashMessage('Cannot add supplier. Exceeding the capacity', 'error');
+                redirect('route/manageRoute/' . $routeId);
+            }
             // Fjust a temp value, can use null also, used my index number here.
             $tempStopOrder = 22001913;
             if ($this->routeModel->addSupplierToRoute($routeId, $supplierId, $tempStopOrder)) {

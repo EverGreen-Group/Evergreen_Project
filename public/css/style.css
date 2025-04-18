@@ -1570,6 +1570,11 @@ body.dark .auth-form-group input {
   color: white;
 }
 
+.oranged {
+  background-color: #ff822f;
+  color: white;
+}
+
 .unknown {
   background-color: #eee5ff;
   color: #7337ee;

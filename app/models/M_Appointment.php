@@ -86,9 +86,9 @@ class M_Appointment {
         return $this->db->resultSet();
     }
     
-    public function getIncomingRequests($managerId) {
+    public function getIncomingRequests($managerId) {   // tested
         $this->db->query("
-            SELECT r.request_id, CONCAT(p.first_name, ' ', p.last_name) AS supplier_name, sl.date, sl.start_time, sl.end_time, r.submitted_at, p.*
+            SELECT r.request_id, CONCAT(p.first_name, ' ', p.last_name) AS supplier_name, sl.date, sl.start_time, sl.end_time, r.submitted_at, p.*, s.supplier_id
             FROM appointment_requests r
             JOIN appointment_slots sl ON r.slot_id = sl.slot_id
             JOIN suppliers s ON r.supplier_id = s.supplier_id
@@ -99,9 +99,9 @@ class M_Appointment {
         return $this->db->resultSet();
     }
     
-    public function getAcceptedAppointments($managerId) {
+    public function getAcceptedAppointments($managerId) {   // tested
         $this->db->query("
-            SELECT a.appointment_id, CONCAT(p.first_name, ' ', p.last_name) AS supplier_name, sl.date, sl.start_time, sl.end_time, p.*
+            SELECT a.appointment_id, CONCAT(p.first_name, ' ', p.last_name) AS supplier_name, sl.date, sl.start_time, sl.end_time, p.*, s.supplier_id
             FROM appointments a
             JOIN appointment_requests r ON a.request_id = r.request_id
             JOIN appointment_slots sl ON r.slot_id = sl.slot_id

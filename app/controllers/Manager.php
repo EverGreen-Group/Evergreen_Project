@@ -452,34 +452,18 @@ class Manager extends Controller
      * ------------------------------------------------------------
      */
 
-    public function vehicle() {
-        // Retrieve filter parameters from the GET request
+    public function vehicle() { // tested
         $license_plate = isset($_GET['license_plate']) ? $_GET['license_plate'] : null;
         $vehicle_type = isset($_GET['vehicle_type']) ? $_GET['vehicle_type'] : null;
-        $capacity = isset($_GET['capacity']) ? $_GET['capacity'] : null;
-        $make = isset($_GET['make']) ? $_GET['make'] : null;
-        $model = isset($_GET['model']) ? $_GET['model'] : null;
-        $manufacturing_year = isset($_GET['manufacturing_year']) ? $_GET['manufacturing_year'] : null;
-    
-        // Fetch vehicles based on filters
-        if ($license_plate || $vehicle_type || $capacity || $make || $model || $manufacturing_year) {
-            $allVehicles = $this->vehicleModel->getFilteredVehicles($license_plate, $vehicle_type, $capacity, $make, $model, $manufacturing_year);
-        } else {
-            // Otherwise, fetch all vehicles
-            $allVehicles = $this->vehicleModel->getAllAvailableVehicles();
-        }
-    
-        // Get total vehicles and available vehicles for display
+        $status = isset($_GET['status']) ? $_GET['status'] : null;
+
+        $allVehicles = $this->vehicleModel->getFilteredVehicles($license_plate, $vehicle_type, $status);
+        $totalMaintainance = $this->vehicleModel->inMaintainanceCount();
         $totalVehicles = count($allVehicles);
-        $availableVehicles = count(array_filter($allVehicles, function($vehicle) {
-            return $vehicle->status === 'Available';
-        }));
-    
-        // Prepare data to pass to the view
         $data = [
             'allVehicles' => $allVehicles,
             'totalVehicles' => $totalVehicles,
-            'availableVehicles' => $availableVehicles
+            'totalMaintainance' => $totalMaintainance
         ];
     
         $this->view('vehicle_manager/v_vehicle', $data);
@@ -512,7 +496,7 @@ class Manager extends Controller
         ]);
     }
 
-    public function createVehicle() {
+    public function createVehicle() {   // tested fully
         if (!isLoggedIn()) {
             redirect('users/login');
         }
@@ -524,8 +508,7 @@ class Manager extends Controller
             'vehicle_type' => '',
             'make' => '',
             'model' => '',
-            'manufacturing_year' => '',
-            'error' => ''
+            'manufacturing_year' => ''
         ];
 
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
@@ -538,8 +521,7 @@ class Manager extends Controller
                 'vehicle_type' => trim($_POST['vehicle_type']),
                 'make' => trim($_POST['make']),
                 'model' => trim($_POST['model']),
-                'manufacturing_year' => trim($_POST['manufacturing_year']),
-                'error' => ''
+                'manufacturing_year' => trim($_POST['manufacturing_year'])
             ];
 
             if (empty($data['license_plate']) || 
@@ -548,23 +530,26 @@ class Manager extends Controller
                 empty($data['make']) || 
                 empty($data['model']) || 
                 empty($data['manufacturing_year'])) {
-                $data['error'] = 'Please fill in all fields';
+                setFlashMessage("Please Enter All the Fields", 'error');
             } else {
-                if ($this->vehicleModel->isLicensePlateTaken($data['license_plate'])) {
-                    $data['error'] = 'This license plate is already taken.';
+                if ($this->vehicleModel->isLicensePlateTaken($data['license_plate'])) { // tested
+                    setFlashMessage("License Plate is already used", 'error');
+                    redirect('manager/createVehicle');
                 } else {
                     if (isset($_FILES['image']) && $_FILES['image']['error'] == 0) {
-                        $uploadResult = uploadVehicleImage($_FILES['image'], $data['license_plate']);
+                        $uploadResult = uploadVehicleImage($_FILES['image'], $data['license_plate']);   // tested
                         if ($uploadResult['success']) {
                             $data['image_path'] = $uploadResult['path'];
                         } else {
-                            $data['error'] = $uploadResult['message'];
+                            setFlashMessage("Error when uploading: {$uploadResult['message']}", 'error');
+                            redirect('manager/createVehicle');
                         }
                     } else {
-                        $data['error'] = 'Image file is required.';
+                        setFlashMessage("Please upload an image", 'error');
+                        redirect('manager/createVehicle');
                     }
 
-                    if (empty($data['error'])) {
+
                         if ($this->vehicleModel->createVehicle($data)) {
                             $this->logModel->create(
                                 $_SESSION['user_id'],
@@ -576,10 +561,8 @@ class Manager extends Controller
                             );
                             setFlashMessage('Vehicle created successfully!');
                             redirect('manager/vehicle');
-                        } else {
-                            setFlashMessage('Vehicle creation failed, please try again later!');
+                        
                         }
-                    }
                 }
             }
         }
@@ -591,40 +574,44 @@ class Manager extends Controller
         if (!isLoggedIn()) {
             redirect('users/login');
         }
-
-        $vehicle = $this->vehicleModel->getVehicleById($vehicle_id);
+    
+        $vehicle = $this->vehicleModel->getVehicleById($vehicle_id);    // tested
         if (!$vehicle) {
             setFlashMessage('Vehicle not found', 'error');
             redirect('manager/vehicle');
         }
-
+    
         if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             $license_plate = htmlspecialchars(trim($_POST['license_plate']));
+            $status = htmlspecialchars(trim($_POST['status']));
             $vehicle_type = htmlspecialchars(trim($_POST['vehicle_type']));
             $make = htmlspecialchars(trim($_POST['make']));
             $model = htmlspecialchars(trim($_POST['model']));
             $manufacturing_year = htmlspecialchars(trim($_POST['manufacturing_year']));
-            $color = htmlspecialchars(trim($_POST['color']));
             $capacity = htmlspecialchars(trim($_POST['capacity']));
-
-            if ($vehicle->status === 'In Use') {
-                setFlashMessage('Cannot update the vehicle because it is currently in use.', 'error');
-                redirect('manager/vehicle');
+    
+            // must check if this vehicle is in a route or not, or else its an issue
+            if ($status === 'Maintenance') {
+                if ($routeName = $this->vehicleModel->isVehicleInRoute($vehicle_id)) {
+                    setFlashMessage('Cannot set the vehicle to Maintenance because it is currently assigned to the route: ' . $routeName, 'error');
+                    redirect('manager/vehicle');
+                }
             }
-
+    
             $data = [
                 'vehicle_id' => $vehicle_id,
                 'license_plate' => $license_plate, 
                 'vehicle_type' => $vehicle_type,
                 'make' => $make,
+                'status' => $status,
                 'model' => $model,
                 'manufacturing_year' => $manufacturing_year,
-                'color' => $color,
                 'capacity' => $capacity,
+                'current_image_path' => $vehicle->image_path
             ];
-
+    
             if (isset($_FILES['vehicle_image']) && $_FILES['vehicle_image']['error'] == 0) {
-                $uploadResult = uploadVehicleImage($_FILES['vehicle_image'], $license_plate);
+                $uploadResult = uploadVehicleImage($_FILES['vehicle_image'], $license_plate);   // tested this custom function
                 if ($uploadResult['success']) {
                     $data['image_path'] = $uploadResult['path']; 
                 } else {
@@ -632,8 +619,8 @@ class Manager extends Controller
                     redirect('manager/vehicle');
                 }
             }
-
-            if ($this->vehicleModel->updateVehicle($data)) {
+    
+            if ($this->vehicleModel->updateVehicle($data)) {    // working , tested
                 $this->logModel->create(
                     $_SESSION['user_id'],
                     $_SESSION['email'],
@@ -649,11 +636,11 @@ class Manager extends Controller
                 redirect('manager/vehicle');
             }
         }
-
+    
         $this->view('vehicle_manager/v_update_vehicle', ['vehicle' => $vehicle]);
     }
 
-    public function getVehicleById($id){
+    public function getVehicleById($id){    // tested
         $vehicle = $this->vehicleModel->getVehicleById($id);
         if ($vehicle) {
             echo json_encode(['success' => true, 'vehicle' => $vehicle]);
@@ -662,8 +649,8 @@ class Manager extends Controller
         }
     }
 
-    public function deleteVehicle($id){
-        if ($this->vehicleModel->markAsDeleted($id)) {
+    public function deleteVehicle($id){ // tested
+        if ($this->vehicleModel->markAsDeleted($id)) {  // tested
             $this->logModel->create(
                 $_SESSION['user_id'],
                 $_SESSION['email'],
@@ -680,86 +667,88 @@ class Manager extends Controller
         redirect('manager/vehicle');
     }
 
-    public function addVehicle() {
-        if ($_SERVER['REQUEST_METHOD'] == 'POST') {
-            $license_plate = htmlspecialchars(trim($_POST['license_plate']));
-            $vehicle_type = htmlspecialchars(trim($_POST['vehicle_type']));
-            $make = htmlspecialchars(trim($_POST['make']));
-            $model = htmlspecialchars(trim($_POST['model']));
-            $manufacturing_year = htmlspecialchars(trim($_POST['manufacturing_year']));
-            $color = htmlspecialchars(trim($_POST['color']));
-            $capacity = htmlspecialchars(trim($_POST['capacity']));
+    // public function addVehicle() {
+    //     if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+    //         $license_plate = htmlspecialchars(trim($_POST['license_plate']));
+    //         $vehicle_type = htmlspecialchars(trim($_POST['vehicle_type']));
+    //         $make = htmlspecialchars(trim($_POST['make']));
+    //         $model = htmlspecialchars(trim($_POST['model']));
+    //         $manufacturing_year = htmlspecialchars(trim($_POST['manufacturing_year']));
+    //         $color = htmlspecialchars(trim($_POST['color']));
+    //         $capacity = htmlspecialchars(trim($_POST['capacity']));
 
-            if (isset($_FILES['vehicle_image']) && $_FILES['vehicle_image']['error'] == 0) {
-                $image = $_FILES['vehicle_image'];
-                $target_dir = "/opt/lampp/htdocs/Evergreen_Project/public/uploads/vehicle_photos/";
-                $target_file = $target_dir . $license_plate . ".jpg";
+    //         if (isset($_FILES['vehicle_image']) && $_FILES['vehicle_image']['error'] == 0) {
+    //             $image = $_FILES['vehicle_image'];
+    //             $target_dir = "/opt/lampp/htdocs/Evergreen_Project/public/uploads/vehicle_photos/";
+    //             $target_file = $target_dir . $license_plate . ".jpg";
 
-                if (move_uploaded_file($image['tmp_name'], $target_file)) {
-                    $this->vehicleModel->addVehicle([
-                        'license_plate' => $license_plate,
-                        'vehicle_type' => $vehicle_type,
-                        'make' => $make,
-                        'model' => $model,
-                        'manufacturing_year' => $manufacturing_year,
-                        'color' => $color,
-                        'capacity' => $capacity,
-                        'image_path' => $target_file
-                    ]);
+    //             if (move_uploaded_file($image['tmp_name'], $target_file)) {
+    //                 $this->vehicleModel->addVehicle([
+    //                     'license_plate' => $license_plate,
+    //                     'vehicle_type' => $vehicle_type,
+    //                     'make' => $make,
+    //                     'model' => $model,
+    //                     'manufacturing_year' => $manufacturing_year,
+    //                     'color' => $color,
+    //                     'capacity' => $capacity,
+    //                     'image_path' => $target_file
+    //                 ]);
 
-                    $this->logModel->create(
-                        $_SESSION['user_id'],
-                        $_SESSION['email'],
-                        $_SERVER['REMOTE_ADDR'],
-                        "Vehicle with license plate {$license_plate} added successfully.",
-                        $_SERVER['REQUEST_URI'],     
-                        http_response_code()     
-                    );
+    //                 $this->logModel->create(
+    //                     $_SESSION['user_id'],
+    //                     $_SESSION['email'],
+    //                     $_SERVER['REMOTE_ADDR'],
+    //                     "Vehicle with license plate {$license_plate} added successfully.",
+    //                     $_SERVER['REQUEST_URI'],     
+    //                     http_response_code()     
+    //                 );
 
-                    header('Location: ' . URLROOT . '/manager/vehicle');
-                    exit();
-                } else {
-                    setFlashMessage('Error uploading file.', 'error');
-                }
-            } else {
-                setFlashMessage('No file uploaded or there was an error.', 'error');
-            }
-        }
-    }
+    //                 header('Location: ' . URLROOT . '/manager/vehicle');
+    //                 exit();
+    //             } else {
+    //                 setFlashMessage('Error uploading file.', 'error');
+    //             }
+    //         } else {
+    //             setFlashMessage('No file uploaded or there was an error.', 'error');
+    //         }
+    //     }
+    // }
 
 
-    public function removeVehicle() {
-        if ($_SERVER['REQUEST_METHOD'] == 'POST') {
-            $license_plate = htmlspecialchars(trim($_POST['license_plate']));
 
-            $vehicle = $this->vehicleModel->getVehicleByLicensePlate($license_plate);
-            if ($vehicle) {
-                if ($this->vehicleModel->deleteVehicle($license_plate)) {
-                    $imagePath = "/opt/lampp/htdocs/Evergreen_Project/public/uploads/vehicle_photos/" . $license_plate . ".jpg";
-                    if (file_exists($imagePath)) {
-                        unlink($imagePath);
-                    }
 
-                    $this->logModel->create(
-                        $_SESSION['user_id'],
-                        $_SESSION['email'],
-                        $_SERVER['REMOTE_ADDR'],
-                        "Vehicle with license plate {$license_plate} removed successfully.",
-                        $_SERVER['REQUEST_URI'],     
-                        http_response_code()     
-                    );
+    // public function removeVehicle() {
+    //     if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+    //         $license_plate = htmlspecialchars(trim($_POST['license_plate']));
 
-                    setFlashMessage('Vehicle removed successfully!');
-                    header('Location: ' . URLROOT . '/manager/vehicle');
-                    exit();
-                } else {
-                    setFlashMessage('Error removing vehicle.', 'error');
-                }
-            } else {
-                setFlashMessage('Vehicle not found.', 'error');
-            }
-        }
-    }
+    //         $vehicle = $this->vehicleModel->getVehicleByLicensePlate($license_plate);
+    //         if ($vehicle) {
+    //             if ($this->vehicleModel->deleteVehicle($license_plate)) {
+    //                 $imagePath = "/opt/lampp/htdocs/Evergreen_Project/public/uploads/vehicle_photos/" . $license_plate . ".jpg";
+    //                 if (file_exists($imagePath)) {
+    //                     unlink($imagePath);
+    //                 }
+
+    //                 $this->logModel->create(
+    //                     $_SESSION['user_id'],
+    //                     $_SESSION['email'],
+    //                     $_SERVER['REMOTE_ADDR'],
+    //                     "Vehicle with license plate {$license_plate} removed successfully.",
+    //                     $_SERVER['REQUEST_URI'],     
+    //                     http_response_code()     
+    //                 );
+
+    //                 setFlashMessage('Vehicle removed successfully!');
+    //                 header('Location: ' . URLROOT . '/manager/vehicle');
+    //                 exit();
+    //             } else {
+    //                 setFlashMessage('Error removing vehicle.', 'error');
+    //             }
+    //         } else {
+    //             setFlashMessage('Vehicle not found.', 'error');
+    //         }
+    //     }
+    // }
 
     public function checkVehicleUsage($id){
         $schedules = $this->scheduleModel->getSchedulesByVehicleId($id);
@@ -771,6 +760,7 @@ class Manager extends Controller
             'collections' => !empty($collections)
         ]);
     }
+
 
     public function getVehicleDetails($id){
         ob_clean();
@@ -794,6 +784,10 @@ class Manager extends Controller
             exit;
         }
     }
+
+
+
+
 
 
     /** 
