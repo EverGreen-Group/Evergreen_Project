@@ -260,6 +260,15 @@ class M_Supplier {
         return $this->db->resultSet();
     }
 
+    public function updateComplaintStatus($complaint_id, $status) {
+        $sql = "UPDATE complaints SET status=:status WHERE complaint_id = :complaint_id";
+        $this->db->query($sql);
+        $this->db->bind(':complaint_id', $complaint_id);
+        $this->db->bind(':status', $status);
+
+        return $this->db->execute();
+    }
+
     public function updateStatus($complaint_id, $status)
     {
         $this->db->query("UPDATE complaints SET status = :status WHERE complaint_id = :complaint_id");
