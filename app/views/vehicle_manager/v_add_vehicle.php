@@ -36,14 +36,6 @@
                         </select>
                     </div>
                     <div class="form-group">
-                        <label for="status">Status</label>
-                        <select id="status" name="status">
-                            <option value="Available">Available</option>
-                            <option value="In Use">In Use</option>
-                            <option value="Maintenance">Maintenance</option>
-                        </select>
-                    </div>
-                    <div class="form-group">
                         <label for="license_plate">License Plate Number *</label>
                         <input type="text" id="license_plate" name="license_plate" required 
                                title="Enter a valid Sri Lankan vehicle number (e.g., KA-1234, 19-2345, WP-CAB-1234)"

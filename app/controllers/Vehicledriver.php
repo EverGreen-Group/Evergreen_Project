@@ -30,7 +30,6 @@ class VehicleDriver extends controller {
 
 
     public function index() {
-
         if (!isset($_SESSION['driver_id'])) {
             redirect('login');
             return;
@@ -44,19 +43,31 @@ class VehicleDriver extends controller {
             exit();
         }
 
+        // Get today's schedule
         $schedule = $this->scheduleModel->getTodaysScheduleByDriverId($driverId);
 
-        $allSchedules = $this->scheduleModel->getAllAssignedSchedulesByDriverId($driverId);
-        $data = [
-            'schedule' => $schedule,
-            'allSchedules' => $allSchedules
-        ];
+        // Check if the schedule is empty
+        if ($schedule) {
+            $allSchedules = $this->scheduleModel->getAllAssignedSchedulesByDriverId($driverId);
+            $data = [
+                'schedule' => $schedule,
+                'allSchedules' => $allSchedules
+            ];
 
-        $count = $this->scheduleModel->checkEndedScheduleCollection($schedule->schedule_id);
-        if($count) {
-            $data['collection_completed'] = 1;
+            // Check if the schedule has ended collections
+            $count = $this->scheduleModel->checkEndedScheduleCollection($schedule->schedule_id);
+            if ($count) {
+                $data['collection_completed'] = 1;
+            }
+        } else {
+            // Handle the case where there is no schedule for today
+            $data = [
+                'schedule' => null,
+                'allSchedules' => $this->scheduleModel->getAllAssignedSchedulesByDriverId($driverId),
+                'collection_completed' => 0 // or any other default value you want to set
+            ];
         }
-        
+
         $this->view('vehicle_driver/v_dashboard', $data);
     }
     

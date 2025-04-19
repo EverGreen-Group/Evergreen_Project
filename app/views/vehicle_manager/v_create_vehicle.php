@@ -42,7 +42,7 @@
                         </select>
                     </div>
                     <div class="info-row">
-                        <label class="label" for="capacity">Capacity:</label>
+                        <label class="label" for="capacity">Payload:</label>
                         <input type="number" id="capacity" name="capacity" class="form-control" step="0.01" required>
                     </div>
                     <div class="info-row">
@@ -61,6 +61,10 @@
                     <div class="info-row">
                         <label class="label" for="model">Model:</label>
                         <input type="text" id="model" name="model" class="form-control" required>
+                    </div>
+                    <div class="info-row">
+                        <label class="label" for="color">Colour:</label>
+                        <input type="text" id="color" name="color" class="form-control" required>
                     </div>
                     <div class="info-row">
                         <label class="label" for="manufacturing_year">Manufacturing Year:</label>

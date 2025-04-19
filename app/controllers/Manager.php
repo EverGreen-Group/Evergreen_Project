@@ -503,7 +503,6 @@ class Manager extends Controller
 
         $data = [
             'license_plate' => '',
-            'status' => 'Available',
             'capacity' => '',
             'vehicle_type' => '',
             'make' => '',
@@ -516,7 +515,6 @@ class Manager extends Controller
 
             $data = [
                 'license_plate' => trim($_POST['license_plate']),
-                'status' => trim($_POST['status']),
                 'capacity' => trim($_POST['capacity']),
                 'vehicle_type' => trim($_POST['vehicle_type']),
                 'make' => trim($_POST['make']),
@@ -570,7 +568,7 @@ class Manager extends Controller
         $this->view('vehicle_manager/v_create_vehicle', $data);
     }
 
-    public function updateVehicle($vehicle_id) {
+    public function updateVehicle($vehicle_id) {    // tested
         if (!isLoggedIn()) {
             redirect('users/login');
         }
@@ -583,27 +581,18 @@ class Manager extends Controller
     
         if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             $license_plate = htmlspecialchars(trim($_POST['license_plate']));
-            $status = htmlspecialchars(trim($_POST['status']));
             $vehicle_type = htmlspecialchars(trim($_POST['vehicle_type']));
             $make = htmlspecialchars(trim($_POST['make']));
             $model = htmlspecialchars(trim($_POST['model']));
             $manufacturing_year = htmlspecialchars(trim($_POST['manufacturing_year']));
             $capacity = htmlspecialchars(trim($_POST['capacity']));
     
-            // must check if this vehicle is in a route or not, or else its an issue
-            if ($status === 'Maintenance') {
-                if ($routeName = $this->vehicleModel->isVehicleInRoute($vehicle_id)) {
-                    setFlashMessage('Cannot set the vehicle to Maintenance because it is currently assigned to the route: ' . $routeName, 'error');
-                    redirect('manager/vehicle');
-                }
-            }
     
             $data = [
                 'vehicle_id' => $vehicle_id,
                 'license_plate' => $license_plate, 
                 'vehicle_type' => $vehicle_type,
                 'make' => $make,
-                'status' => $status,
                 'model' => $model,
                 'manufacturing_year' => $manufacturing_year,
                 'capacity' => $capacity,
@@ -665,6 +654,199 @@ class Manager extends Controller
         }
 
         redirect('manager/vehicle');
+    }
+
+
+    public function addMaintenance($vehicleId) {
+        if (!isLoggedIn()) {
+            redirect('auth/login');
+        }
+    
+        $vehicle = $this->vehicleModel->getVehicleById($vehicleId);
+        if (!$vehicle) {
+            setFlashMessage('Vehicle not found', 'error');
+            redirect('manager/vehicle');
+        }
+    
+        if ($vehicle->status == 'Maintenance') {
+            setFlashMessage('Vehicle is already under maintenance', 'error');
+            redirect('manager/vehicle/' . $vehicleId);
+        }
+    
+        if ($routeName = $this->vehicleModel->isVehicleInRoute($vehicleId)) {
+            setFlashMessage('Cannot add maintenance for vehicle currently assigned to the route: ' . $routeName, 'error');
+            redirect('manager/viewMaintenance/' . $vehicleId);
+        }
+    
+        $data = [
+            'vehicle_id' => $vehicleId,
+            'vehicle_info' => $vehicle,
+            'maintenance_type' => 'Repair',
+            'description' => '',
+            'cost' => ''
+        ];
+    
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            $_POST = filter_input_array(INPUT_POST, FILTER_SANITIZE_STRING);
+    
+            $data = [
+                'vehicle_id' => $vehicleId,
+                'vehicle_info' => $vehicle,
+                'maintenance_type' => trim($_POST['maintenance_type']),
+                'description' => trim($_POST['description']),
+                'cost' => trim($_POST['cost'])
+            ];
+    
+            if (empty($data['description']) || empty($data['cost'])) {
+                setFlashMessage('Please fill in all required fields', 'error');
+                redirect('manager/addMaintenance/' . $vehicleId);
+            }
+    
+            if (!is_numeric($data['cost']) || $data['cost'] < 0) {
+                setFlashMessage('Cost must be a positive value', 'error');
+                redirect('manager/addMaintenance/' . $vehicleId);
+            }
+    
+            if ($this->vehicleModel->addMaintenanceLog($data) && 
+                $this->vehicleModel->updateVehicleStatus($vehicleId, 'Maintenance')) {
+                
+                $this->logModel->create(
+                    $_SESSION['user_id'],
+                    $_SESSION['email'],
+                    $_SERVER['REMOTE_ADDR'],
+                    "Maintenance added for vehicle ID: {$vehicleId}",
+                    $_SERVER['REQUEST_URI'],
+                    http_response_code()
+                );
+                
+                setFlashMessage('Maintenance record added successfully!');
+                redirect('manager/viewMaintenance/' . $vehicleId);
+            } else {
+                setFlashMessage('Failed to add maintenance record', 'error');
+            }
+        }
+    
+        $this->view('vehicle_manager/v_add_maintenance', $data);
+    }
+
+    public function updateMaintenance($maintenanceId)
+    {
+        if (!isLoggedIn()) {
+            redirect('auth/login');
+        }
+
+        $maintenance = $this->vehicleModel->getMaintenanceById($maintenanceId);
+
+        if (!$maintenance) {
+            setFlashMessage('Maintenance record not found', 'error');
+            redirect('manager/vehicle');
+        }
+
+        $vehicle = $this->vehicleModel->getVehicleById($maintenance->vehicle_id);
+        if (!$vehicle) {
+            setFlashMessage('Vehicle not found', 'error');
+            redirect('manager/vehicle');
+        }
+
+        $data = [
+            'maintenance_id' => $maintenanceId,
+            'vehicle_id' => $maintenance->vehicle_id,
+            'vehicle_info' => $vehicle,
+            'maintenance_type' => $maintenance->maintenance_type,
+            'description' => $maintenance->description,
+            'cost' => $maintenance->cost
+        ];
+
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+
+            $data['maintenance_type'] = trim($_POST['maintenance_type']);
+            $data['description'] = trim($_POST['description']);
+            $data['cost'] = trim($_POST['cost']);
+            $data['end_date'] = date('Y-m-d');
+            $data['status'] = 'Completed'; 
+            $data['vehicle_id'] = $maintenance->vehicle_id; 
+
+
+            if (empty($data['description']) || empty($data['cost'])) {
+                setFlashMessage('Please fill in all required fields', 'error');
+                redirect('manager/updateMaintenance/' . $maintenanceId);
+            }
+
+            if (!is_numeric($data['cost']) || $data['cost'] < 0) {
+                setFlashMessage('Cost must be a positive value', 'error');
+                redirect('manager/updateMaintenance/' . $maintenanceId);
+            }
+
+            if ($this->vehicleModel->updateMaintenanceLog($maintenanceId, $data)) {
+                $this->logModel->create(
+                    $_SESSION['user_id'],
+                    $_SESSION['email'],
+                    $_SERVER['REMOTE_ADDR'],
+                    "Updated maintenance record ID: {$maintenanceId}",
+                    $_SERVER['REQUEST_URI'],
+                    http_response_code()
+                );
+
+                setFlashMessage('Maintenance record updated successfully!');
+                redirect('manager/updateMaintenance/' . $maintenance->vehicle_id);
+            } else {
+                setFlashMessage('Failed to update maintenance record', 'error');
+            }
+        }
+
+        $this->view('vehicle_manager/v_update_maintenance', $data);
+    }
+
+
+
+    public function viewMaintenance() {
+        if (!isLoggedIn()) {
+            redirect('users/login');
+        }
+
+        $ongoingMaintenance = $this->vehicleModel->getMaintenanceLogs('Ongoing');
+        $completedMaintenance = $this->vehicleModel->getMaintenanceLogs('Completed');
+        
+        $data = [
+            'ongoingMaintenance' => $ongoingMaintenance,
+            'completedMaintenance' => $completedMaintenance
+        ];
+        
+        $this->view('vehicle_manager/v_view_maintenance', $data);
+    }
+    
+    public function completeMaintenance($logId) {   // tested
+        if (!isLoggedIn()) {
+            redirect('users/login');
+        }
+        
+        $maintenanceLog = $this->vehicleModel->getMaintenanceLogById($logId);   // tested
+        
+        if (!$maintenanceLog) {
+            setFlashMessage('Maintenance log not found', 'error');
+            redirect('manager/viewMaintenance');
+        }
+        
+        if ($this->vehicleModel->updateMaintenanceStatus($logId, 'Completed')) {
+            if ($this->vehicleModel->updateVehicleStatus($maintenanceLog->vehicle_id, 'Active')) {
+                $this->logModel->create(
+                    $_SESSION['user_id'],
+                    $_SESSION['email'],
+                    $_SERVER['REMOTE_ADDR'],
+                    "Maintenance completed for vehicle ID: {$maintenanceLog->vehicle_id}",
+                    $_SERVER['REQUEST_URI'],
+                    http_response_code()
+                );
+                
+                setFlashMessage('Maintenance marked as completed successfully!');
+            } else {
+                setFlashMessage('Failed to update vehicle status', 'error');
+            }
+        } else {
+            setFlashMessage('Failed to complete maintenance', 'error');
+        }
+        
+        redirect('manager/viewMaintenance');
     }
 
     // public function addVehicle() {

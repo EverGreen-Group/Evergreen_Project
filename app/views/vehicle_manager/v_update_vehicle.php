@@ -45,14 +45,7 @@
                         <input type="text" id="license_plate" name="license_plate" class="form-control" value="<?php echo htmlspecialchars($vehicle->license_plate); ?>" readonly>
                     </div>
                     <div class="info-row">
-                        <label class="label" for="status">Status:</label>
-                        <select id="status" name="status" class="form-control" required>
-                            <option value="Active" <?php echo $vehicle->status == 'Active' ? 'selected' : ''; ?>>Active</option>
-                            <option value="Maintenance" <?php echo $vehicle->status == 'Maintenance' ? 'selected' : ''; ?>>Maintenance</option>
-                        </select>
-                    </div>
-                    <div class="info-row">
-                        <label class="label" for="capacity">Capacity:</label>
+                        <label class="label" for="capacity">Payload:</label>
                         <input type="number" id="capacity" name="capacity" class="form-control" value="<?php echo htmlspecialchars($vehicle->capacity); ?>" readonly>
                     </div>
                     <div class="info-row">
@@ -66,6 +59,10 @@
                     <div class="info-row">
                         <label class="label" for="model">Model:</label>
                         <input type="text" id="model" name="model" class="form-control" value="<?php echo htmlspecialchars($vehicle->model); ?>" readonly>
+                    </div>
+                    <div class="info-row">
+                        <label class="label" for="color">Colour:</label>
+                        <input type="text" id="color" name="color" class="form-control" value="<?php echo htmlspecialchars($vehicle->color); ?>" readonly>
                     </div>
                     <div class="info-row">
                         <label class="label" for="manufacturing_year">Manufacturing Year:</label>
@@ -209,26 +206,6 @@
         outline: none;
     }
 
-    /* Submit button styling */
-    .btn-primary {
-        display: inline-flex;
-        align-items: center;
-        gap: 8px;
-        padding: 10px 20px;
-        background-color: #10b981;
-        color: white;
-        border: none;
-        border-radius: 6px;
-        font-size: 14px;
-        font-weight: 500;
-        cursor: pointer;
-        transition: background-color 0.2s;
-        margin: 0 0 20px 20px;
-    }
-
-    .btn-primary:hover {
-        background-color: #059669;
-    }
 </style>
 
 <?php require APPROOT . '/views/inc/components/footer.php'; ?> 

@@ -101,18 +101,19 @@
     <div class="order">
         <div class="head">
             <h3>Vehicles</h3>
-            <!-- <a href="<?php echo URLROOT; ?>/manager/createVehicle" class="btn btn-primary">
-                <i class='bx bx-show'></i>
-                View Removed Vehicles
-            </a> -->
+            <a href="<?php echo URLROOT; ?>/manager/viewMaintenance" class="btn btn-primary">
+                <i class='bx bx-wrench'></i>
+                View Maintenance Logs
+            </a>
         </div>
         <table>
             <thead>
                 <tr>
                     <th>Vehicle ID</th>
                     <th>License Plate</th>
-                    <th>Capacity</th>
+                    <th>Payload</th>
                     <th>Type</th>
+                    <th>Colour</th>
                     <th>Status</th>
                     <th>Actions</th>
                 </tr>
@@ -125,6 +126,7 @@
 
                         <td><?php echo htmlspecialchars(floor($vehicle->capacity)) . ' kg'; ?></td>
                         <td><?php echo htmlspecialchars($vehicle->vehicle_type); ?></td>
+                        <td><?php echo htmlspecialchars($vehicle->color); ?></td>
                         <td>
                             <span class="status-badge <?php echo $vehicle->status == 'Active' ? 'added' : 'oranged'; ?>">
                                 <?php echo $vehicle->status == 'Active' ? 'ACTIVE' : 'MAINTAINANCE'; ?>
@@ -150,14 +152,24 @@
                                     <i class='bx bx-cog' style="font-size: 24px; color:green;"></i> <!-- Boxicon for settings -->
                                 </a>
 
-                                <!-- <a 
-                                    href="<?php echo URLROOT; ?>/manager/sendToMaintenance/<?php echo $vehicle->vehicle_id; ?>" 
+                                <?php if($vehicle->status == 'Active'): ?>
+                                <a 
+                                    href="<?php echo URLROOT; ?>/manager/addMaintenance/<?php echo $vehicle->vehicle_id; ?>" 
                                     class="btn btn-tertiary" 
                                     style="display: flex; align-items: center; justify-content: center; width: 40px; height: 40px; border: none; background: none;"
-                                    data-confirm="Send this vehicle to maintenance?"
                                 >
-                                    <i class='bx bx-wrench' style="font-size: 24px; color:orange;"></i>
-                                </a> -->
+                                    <i class='bx bx-wrench' style="font-size: 24px; color: orange;"></i>
+                                </a>
+                                <?php else: ?>
+                                <span 
+                                    class="btn btn-tertiary" 
+                                    style="display: flex; align-items: center; justify-content: center; width: 40px; height: 40px; border: none; background: none; cursor: not-allowed; color: gray;"
+                                    title="This vehicle cannot be sent to maintenance."
+                                >
+                                    <i class='bx bx-wrench' style="font-size: 24px; color: gray;"></i>
+                                </span>
+                                <?php endif;?>
+                                
                                 
                                 <!-- Delete button  -->
                                 <a href="<?php echo URLROOT; ?>/manager/deleteVehicle/<?php echo $vehicle->vehicle_id; ?>" 
