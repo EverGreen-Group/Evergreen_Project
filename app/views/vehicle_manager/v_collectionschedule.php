@@ -490,7 +490,4 @@
 
 </main>
 
-
-
-
 <?php require APPROOT . '/views/inc/components/footer.php'; ?>

@@ -804,40 +804,6 @@ class Supplier extends Controller {
         $this->view('supplier/v_chat', $data);
     }
 
-    // public function sendMessage() {
-    //     if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-    //         http_response_code(405);
-    //         echo json_encode(['success' => false, 'message' => 'Method Not Allowed']);
-    //         return;
-    //     }
-
-    //     $data = json_decode(file_get_contents('php://input'), true);
-    //     if (!isset($data['receiver_id']) || !is_numeric($data['receiver_id']) || !isset($data['message'])) {
-    //         http_response_code(400);
-    //         echo json_encode(['success' => false, 'message' => 'Invalid input']);
-    //         return;
-    //     }
-
-    //     $senderId = $_SESSION['user_id'];
-    //     $receiverId = (int)$data['receiver_id'];
-    //     $message = trim($data['message']);
-
-    //     // Ensure the receiver is a Vehicle Manager (role_id = 4)
-    //     $receiver = $this->chatModel->getUserName($receiverId);
-    //     if (!$receiver || !str_contains($receiver, 'MGR')) {
-    //         http_response_code(400);
-    //         echo json_encode(['success' => false, 'message' => 'Invalid receiver']);
-    //         return;
-    //     }
-
-    //     $result = $this->chatModel->saveMessage($senderId, $receiverId, $message);
-    //     if ($result['success']) {
-    //         echo json_encode(['success' => true, 'message_id' => $result['message_id']]);
-    //     } else {
-    //         http_response_code(500);
-    //         echo json_encode(['success' => false, 'message' => 'Error saving message']);
-    //     }
-    // }
 
     public function sendMessage() {
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
@@ -880,35 +846,6 @@ class Supplier extends Controller {
         }
     }
 
-    // public function getMessages() {
-    //     if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-    //         http_response_code(405);
-    //         echo json_encode(['success' => false, 'message' => 'Method Not Allowed']);
-    //         return;
-    //     }
-
-    //     $data = json_decode(file_get_contents('php://input'), true);
-    //     if (!isset($data['receiver_id']) || !is_numeric($data['receiver_id'])) {
-    //         http_response_code(400);
-    //         echo json_encode(['success' => false, 'message' => 'Invalid receiver ID']);
-    //         return;
-    //     }
-
-    //     $userId = $_SESSION['user_id'];
-    //     $receiverId = (int)$data['receiver_id'];
-
-    //     $messages = $this->chatModel->getMessages($userId, $receiverId);
-    //     if ($messages === false) {
-    //         http_response_code(500);
-    //         echo json_encode(['success' => false, 'message' => 'Error fetching messages']);
-    //         return;
-    //     }
-
-    //     echo json_encode([
-    //         'success' => true,
-    //         'messages' => $messages
-    //     ]);
-    // }
     public function getMessages() {
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
             http_response_code(405);

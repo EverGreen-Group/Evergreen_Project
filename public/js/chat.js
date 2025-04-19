@@ -87,7 +87,8 @@ const Chat = {
                         read_at: null,
                         edited_at: null,
                         message_type: 'text',
-                        sender_name: 'Me'
+                        sender_name: 'Me',
+                        is_deleted: false
                     });
                     this.lastMessageId = Math.max(this.lastMessageId, data.data.message_id);
                     console.log(`sendMessage updated lastMessageId to: ${this.lastMessageId}`);
@@ -145,13 +146,6 @@ const Chat = {
 
             if (data.success && data.data && Array.isArray(data.data.messages)) {
                 this.displayMessages(data.data.messages, false, this.role);
-                if (data.data.messages.length > 0) {
-                    if (typeof toastr !== 'undefined') {
-                        toastr.info('New message received!', 'Message');
-                    } else {
-                        console.log('New message received!');
-                    }
-                }
             } else {
                 const errorMessage = data.message || 'Invalid response structure in fetchNewMessages';
                 this.showError(errorMessage);
@@ -195,12 +189,20 @@ const Chat = {
 
         messages.forEach(message => {
             const existingMessage = document.querySelector(`[data-msg-id="${message.message_id}"]`);
-            if (!existingMessage) {
+            if (existingMessage) {
+                // Update existing message if edited
+                if (message.edited_at && existingMessage.dataset.editedTime !== message.edited_at) {
+                    this.updateMessage(message);
+                }
+                // Remove message if marked as deleted
+                if (message.is_deleted) {
+                    this.deleteMessage(message.message_id);
+                }
+            } else if (!message.is_deleted) {
+                // Append new non-deleted message
                 this.appendMessage(message);
                 this.lastMessageId = Math.max(this.lastMessageId, message.message_id);
                 console.log(`Updated lastMessageId to: ${this.lastMessageId}`);
-            } else {
-                console.log(`Message with ID ${message.message_id} already displayed, skipping.`);
             }
         });
         messagesContainer.scrollTop = messagesContainer.scrollHeight;
@@ -347,7 +349,8 @@ const Chat = {
                                 read_at: messageDiv.dataset.readTime,
                                 edited_at: new Date().toISOString(),
                                 message_type: messageDiv.dataset.messageType,
-                                sender_name: 'Me'
+                                sender_name: 'Me',
+                                is_deleted: false
                             });
                             document.querySelector('.edit-message-modal').style.display = 'none';
                         } else {
@@ -365,9 +368,11 @@ const Chat = {
             }
 
             if (e.target.closest('.delete-msg-btn')) {
-                document.querySelector('.confirm-modal').style.display = 'block';
                 const messageDiv = e.target.closest('.message');
                 const messageId = messageDiv.dataset.msgId;
+
+                document.querySelector('.confirm-modal').style.display = 'block';
+                document.getElementById('confirm-message').textContent = 'Are you sure you want to delete this message?';
 
                 document.getElementById('confirm-ok-btn').onclick = async () => {
                     try {
@@ -379,11 +384,7 @@ const Chat = {
 
                         if (data.success) {
                             this.deleteMessage(messageId);
-                            if (typeof toastr !== 'undefined') {
-                                toastr.success('Message deleted successfully!', 'Success');
-                            } else {
-                                console.log('Message deleted successfully!');
-                            }
+                            document.querySelector('.confirm-modal').style.display = 'none';
                         } else {
                             this.showError(data.message || 'Error deleting message');
                         }
@@ -391,7 +392,6 @@ const Chat = {
                         console.error('Error deleting message:', error);
                         this.showError(`Failed to delete message: ${error.message}`);
                     }
-                    document.querySelector('.confirm-modal').style.display = 'none';
                 };
 
                 document.getElementById('confirm-cancel-btn').onclick = () => {
@@ -419,6 +419,7 @@ const Chat = {
             button.addEventListener('click', () => {
                 document.querySelector('.edit-message-modal').style.display = 'none';
                 document.querySelector('.view-details-modal').style.display = 'none';
+                document.querySelector('.confirm-modal').style.display = 'none';
             });
         });
 
