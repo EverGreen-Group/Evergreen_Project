@@ -573,6 +573,14 @@ class Supplier extends Controller {
         exit;
     }
 
+    public function viewMonthlyIncome() {
+        $data = [
+            'title' => 'Schedule Details'
+        ];
+        $this->view('shared/supplier/v_view_monthly_statement', $data);
+    }
+
+    // Form validation function 
     private function validateRequest($data) {
         return !empty($data['supplier_id']) && !empty($data['totalamount']);
     }
