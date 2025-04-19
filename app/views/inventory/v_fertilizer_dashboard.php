@@ -66,7 +66,6 @@
     </ul>
 
     <!-- Chart Section -->
-    <div class="table-data">
         <div class="order">
             <div class="head">
                 <h3>Monthly Fertilizer Usage</h3>
@@ -220,17 +219,25 @@
     // Get the chart canvas
     const ctx = document.getElementById('fertilizerChart').getContext('2d');
 
-    // Sample data - replace with actual data from your database
-    const fertilizerData = {
-        labels: ['January', 'February', 'March', 'April', 'May', 'June'],
-        datasets: [{
-            label: 'Fertilizer Usage (kg)',
-            data: [1200, 1900, 800, 1600, 2000, 1500],
-            backgroundColor: 'rgba(60, 145, 230, 0.5)',
-            borderColor: 'rgba(60, 145, 230, 1)',
-            borderWidth: 1
-        }]
-    };
+    const chartData = <?= json_encode($data['chart_data']) ?>
+
+// Map months and quantities
+const monthNames = ["January", "February", "March", "April", "May", "June", 
+                    "July", "August", "September", "October", "November", "December"];
+
+const fertilizerData = {
+    labels: chartData.map(entry => {
+        const [year, month] = entry.month.split("-");
+        return monthNames[parseInt(month, 10) - 1];
+    }),
+    datasets: [{
+        label: 'Fertilizer Usage (kg)',
+        data: chartData.map(entry => entry.total_quantity),
+        backgroundColor: 'rgba(60, 145, 230, 0.5)',
+        borderColor: 'rgba(60, 145, 230, 1)',
+        borderWidth: 1
+    }]
+};
 
     // Create the bar chart
     new Chart(ctx, {

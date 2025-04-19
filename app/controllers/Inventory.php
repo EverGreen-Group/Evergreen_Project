@@ -45,25 +45,25 @@ class Inventory extends controller
     public function index()
     {
         // Get the stock validation data
-        
+
         $stockvalidate = $this->stockvalidate->getvalidateStocks();
 
         // Get leaf quantities for the last 7 days
         $leafQuantities = $this->stockvalidate->getleafoflast7days();
 
         $machine = $this->machineModel->getmachines();
-        
+
         // Process the leaf quantities data for the chart
         $normalLeafData = [];
         $superLeafData = [];
         $dates = [];
-        
+
         foreach ($leafQuantities as $record) {
             $date = $record->date;
             if (!in_array($date, $dates)) {
                 $dates[] = $date;
             }
-            
+
             if ($record->leaf_type_id == 1) {
                 $normalLeafData[$date] = $record->total_quantity;
             } else if ($record->leaf_type_id == 2) {
@@ -81,7 +81,7 @@ class Inventory extends controller
                 $superLeafData[$date] = 0;
             }
         }
-        
+
         // Sort by date
         ksort($normalLeafData);
         ksort($superLeafData);
@@ -106,7 +106,7 @@ class Inventory extends controller
             'chartDates' => array_keys($normalLeafData),
             'machines' => $machine,
         ];
-       // var_dump($data);
+        // var_dump($data);
 
 
         $this->view('inventory/v_dashboard', $data);
@@ -197,8 +197,8 @@ class Inventory extends controller
                         $_SESSION['email'],
                         $_SERVER['REMOTE_ADDR'],
                         "Product '{$data['product-name']}' added successfully.",
-                        $_SERVER['REQUEST_URI'],     
-                        http_response_code()     
+                        $_SERVER['REQUEST_URI'],
+                        http_response_code()
                     );
                     setFlashMessage('Added product successfully!');
                     redirect('inventory/product');
@@ -231,15 +231,39 @@ class Inventory extends controller
     public function fertilizerdashboard()
     {
         $fertilizer = $this->fertilizerModel->getfertilizer();
+        $fer_chat_data = $this->fertilizerModel->get_last_6month_quatity();
+
+        $months = [];
+        for ($i = 5; $i >= 0; $i--) {
+            $month = date('Y-m', strtotime("-$i months"));
+            $months[$month] = 0; // default to 0
+        }
+
+        // Step 2: Fill in actual data
+        foreach ($fer_chat_data as $row) {
+            $month = $row->month;
+            $quantity = $row->total_quantity;
+            $months[$month] = (int) $quantity; // overwrite default 0 if found
+        }
+
+        $bar_chart_data = [];
+        foreach ($months as $month => $quantity) {
+            $bar_chart_data[] = [
+                'month' => $month,
+                'total_quantity' => $quantity,
+            ];
+        }
         $data = [
-            'fertilizer' => $fertilizer
+            'fertilizer' => $fertilizer,
+            'chart_data' => $bar_chart_data
         ];
+        // var_dump($fer_chat_data);
 
         $this->view('inventory/v_fertilizer_dashboard', $data);
 
-        echo "<pre>";
-        print_r($data);
-        echo "</pre>";
+        // echo "<pre>";
+        // print_r($data);
+        // echo "</pre>";
     }
 
     public function fertilizer()
@@ -261,14 +285,14 @@ class Inventory extends controller
         }
 
         $fertilizer = $this->fertilizerOrderModel->getfertilizerorderforInventory();
-    
-        $data=[
+
+        $data = [
             'fertilizers' => $fertilizer
         ];
         // echo "<pre>";
         // print_r($data);
         // echo "</pre>";
-        $this->view('inventory/v_fertilizer_available',$data);
+        $this->view('inventory/v_fertilizer_available', $data);
     }
     public function createfertilizer()
     {
@@ -346,8 +370,8 @@ class Inventory extends controller
                         $_SESSION['email'],
                         $_SERVER['REMOTE_ADDR'],
                         "Fertilizer '{$data['fertilizer_name']}' added successfully.",
-                        $_SERVER['REQUEST_URI'],     
-                        http_response_code()     
+                        $_SERVER['REQUEST_URI'],
+                        http_response_code()
                     );
                     setFlashMessage('Fertilizer added successfully!');
                     redirect('inventory/fertilizerdashboard');
@@ -404,8 +428,8 @@ class Inventory extends controller
                         $_SESSION['email'],
                         $_SERVER['REMOTE_ADDR'],
                         "Fertilizer with ID {$id} updated successfully.",
-                        $_SERVER['REQUEST_URI'],     
-                        http_response_code()     
+                        $_SERVER['REQUEST_URI'],
+                        http_response_code()
                     );
                     setFlashMessage('Fertilizer updated successfully!');
                     redirect('inventory/fertilizerdashboard');
@@ -462,7 +486,7 @@ class Inventory extends controller
                 $errors['special_notes'] = 'Special notes are required.';
 
 
-                var_dump($data);
+            var_dump($data);
             if (empty($errors)) {
                 // Save the data to the database
                 $machineModel = $this->model('M_Machine');
@@ -478,7 +502,7 @@ class Inventory extends controller
             } else {
                 // Load the form view with errors
                 var_dump($errors);
-                
+
                 $this->view('inventory/v_machineallocation', $data);
             }
         } elseif (isset($_GET['id']) && isset($_POST['status_allocate'])) {
@@ -586,8 +610,8 @@ class Inventory extends controller
                         $_SESSION['email'],
                         $_SERVER['REMOTE_ADDR'],
                         "Product with ID {$id} updated successfully.",
-                        $_SERVER['REQUEST_URI'],     
-                        http_response_code()     
+                        $_SERVER['REQUEST_URI'],
+                        http_response_code()
                     );
                     setFlashMessage('Product updated successfully');
                     redirect('inventory/product');
@@ -623,8 +647,8 @@ class Inventory extends controller
                     $_SESSION['email'],
                     $_SERVER['REMOTE_ADDR'],
                     "Product with ID {$id} removed successfully.",
-                    $_SERVER['REQUEST_URI'],     
-                    http_response_code()     
+                    $_SERVER['REQUEST_URI'],
+                    http_response_code()
                 );
                 setFlashMessage('Product removed successfully');
             } else {
@@ -633,8 +657,8 @@ class Inventory extends controller
                     $_SESSION['email'],
                     $_SERVER['REMOTE_ADDR'],
                     "Failed to remove product with ID {$id}.",
-                    $_SERVER['REQUEST_URI'],     
-                    http_response_code()     
+                    $_SERVER['REQUEST_URI'],
+                    http_response_code()
                 );
                 setFlashMessage('Product removal failed', 'error');
             }
@@ -658,8 +682,8 @@ class Inventory extends controller
                     $_SESSION['email'],
                     $_SERVER['REMOTE_ADDR'],
                     "Fertilizer with ID {$id} removed successfully.",
-                    $_SERVER['REQUEST_URI'],     
-                    http_response_code()     
+                    $_SERVER['REQUEST_URI'],
+                    http_response_code()
                 );
                 setFlashMessage('Fertilizer removed successfully!');
             } else {
@@ -668,8 +692,8 @@ class Inventory extends controller
                     $_SESSION['email'],
                     $_SERVER['REMOTE_ADDR'],
                     "Failed to remove fertilizer with ID {$id}.",
-                    $_SERVER['REQUEST_URI'],     
-                    http_response_code()     
+                    $_SERVER['REQUEST_URI'],
+                    http_response_code()
                 );
                 setFlashMessage('Fertilizer removal failed!', 'error');
             }
@@ -677,50 +701,50 @@ class Inventory extends controller
         redirect('inventory/fertilizerdashboard');
     }
 
-    
+
     public function payments()
-{
-    $jsonData = file_get_contents("php://input");
-    $input = json_decode($jsonData, true);
+    {
+        $jsonData = file_get_contents("php://input");
+        $input = json_decode($jsonData, true);
 
-    // Log the incoming data
-    error_log(print_r($input, true));
+        // Log the incoming data
+        error_log(print_r($input, true));
 
-    // echo "Received data: " . $jsonData;  
-    if ($_SERVER['REQUEST_METHOD'] == 'POST') {
-        // Check if required fields are present
-        if (isset($input['normalLeafRate'], $input['superLeafRate'], $input['fertilizerStockLower'], $input['fertilizerStockMidLow'], $input['fertilizerStockMidHigh'], $input['leafAge1'], $input['leafAge2'], $input['leafAge3'])) {
-            $data = [
-                'normalLeafRate' => $input['normalLeafRate'],
-                'superLeafRate' => $input['superLeafRate'],
-                'fertilizerStockLower' => $input['fertilizerStockLower'],
-                'fertilizerStockMidLow' => $input['fertilizerStockMidLow'],
-                'fertilizerStockMidHigh' => $input['fertilizerStockMidHigh'],
-                'leafAge1' => $input['leafAge1'],
-                'leafAge2' => $input['leafAge2'],
-                'leafAge3' => $input['leafAge3']
-            ];
+        // echo "Received data: " . $jsonData;  
+        if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+            // Check if required fields are present
+            if (isset($input['normalLeafRate'], $input['superLeafRate'], $input['fertilizerStockLower'], $input['fertilizerStockMidLow'], $input['fertilizerStockMidHigh'], $input['leafAge1'], $input['leafAge2'], $input['leafAge3'])) {
+                $data = [
+                    'normalLeafRate' => $input['normalLeafRate'],
+                    'superLeafRate' => $input['superLeafRate'],
+                    'fertilizerStockLower' => $input['fertilizerStockLower'],
+                    'fertilizerStockMidLow' => $input['fertilizerStockMidLow'],
+                    'fertilizerStockMidHigh' => $input['fertilizerStockMidHigh'],
+                    'leafAge1' => $input['leafAge1'],
+                    'leafAge2' => $input['leafAge2'],
+                    'leafAge3' => $input['leafAge3']
+                ];
 
-            // Log the data array
-            error_log(print_r($data, true));
+                // Log the data array
+                error_log(print_r($data, true));
 
-            $this->inventoryConfigModel->add_inventory_config($data);
-        } else {
-            // Handle missing fields
-            echo "Error: Missing required fields.";
+                $this->inventoryConfigModel->add_inventory_config($data);
+            } else {
+                // Handle missing fields
+                echo "Error: Missing required fields.";
+            }
         }
+
+
+        $fertilizer = $this->fertilizerModel->getfertilizer();
+        $data = [
+            'fertilizer' => $fertilizer
+        ];
+
+
+
+        $this->view('inventory/v_payments', $data);
     }
-
-
-    $fertilizer = $this->fertilizerModel->getfertilizer();
-    $data = [
-        'fertilizer' => $fertilizer
-    ];
-
-   
-
-    $this->view('inventory/v_payments',$data);
-}
 
 
 
@@ -752,7 +776,7 @@ class Inventory extends controller
         $bagsNotApproved = $getBagCountsInCollection->not_finalized_count;
 
         if (empty($bagsForCollection)) {
-            redirect("inventory/"); 
+            redirect("inventory/");
         }
 
         $data = [
@@ -767,22 +791,22 @@ class Inventory extends controller
 
 
         $this->view('inventory/v_view_collection_bags', $data);
-    }  
+    }
 
 
     // APPROVING BAG, MUST IMRPOVE IT FURTHER, 
     public function approveBag($historyId, $collectionId)
     {
         $result = $this->stockvalidate->processApproval($historyId);
-        
+
         if ($result['success']) {
             $this->logModel->create(
                 $_SESSION['user_id'],
                 $_SESSION['email'],
                 $_SERVER['REMOTE_ADDR'],
                 "Bag with history ID {$historyId} approved successfully.",
-                $_SERVER['REQUEST_URI'],     
-                http_response_code()     
+                $_SERVER['REQUEST_URI'],
+                http_response_code()
             );
             setFlashMessage('Bag approval successful!');
         } else {
@@ -791,12 +815,12 @@ class Inventory extends controller
                 $_SESSION['email'],
                 $_SERVER['REMOTE_ADDR'],
                 "Failed to approve bag with history ID {$historyId}.",
-                $_SERVER['REQUEST_URI'],     
-                http_response_code()     
+                $_SERVER['REQUEST_URI'],
+                http_response_code()
             );
             setFlashMessage('Failed to approve this bag', 'error');
         }
-        
+
         redirect("inventory/viewAwaitingInventory/$collectionId");
     }
 
@@ -813,11 +837,11 @@ class Inventory extends controller
                 'leaf_type_id' => trim($_POST['leaf_type_id']),
                 'error' => ''
             ];
-    
+
             if (empty($data['actual_weight_kg']) || !is_numeric($data['actual_weight_kg'])) {
                 $data['error'] = 'Please enter a valid weight';
             }
-    
+
             if (empty($data['error'])) {
                 if ($this->stockvalidate->updateBag($data)) {
                     $collectionId = $this->stockvalidate->getBagCollectionId($historyId);
@@ -826,8 +850,8 @@ class Inventory extends controller
                         $_SESSION['email'],
                         $_SERVER['REMOTE_ADDR'],
                         "Bag with history ID {$historyId} updated successfully.",
-                        $_SERVER['REQUEST_URI'],     
-                        http_response_code()     
+                        $_SERVER['REQUEST_URI'],
+                        http_response_code()
                     );
                     setFlashMessage('Bag properties updated successfully!');
                     redirect("inventory/viewAwaitingInventory/$collectionId");
@@ -837,21 +861,21 @@ class Inventory extends controller
             }
         } else {
             $bag = $this->stockvalidate->getBagByHistoryId($historyId);
-            
+
             if (!$bag) {
                 setFlashMessage('Bag not found, please try again later!', 'error');
                 redirect("inventory/");
             }
-            
+
             $leafTypes = $this->stockvalidate->getLeafTypes();
-            
+
             $data = [
                 'bag' => $bag,
                 'leaf_types' => $leafTypes,
                 'error' => ''
             ];
         }
-    
+
         $this->view('inventory/v_update_bag', $data);
     }
 
@@ -860,15 +884,15 @@ class Inventory extends controller
     {
         // Get active bags (status = 'active')
         $activeBags = $this->stockvalidate->getBagsByStatus('active');
-        
+
         // Get inactive bags (status = 'inactive')
         $inactiveBags = $this->stockvalidate->getBagsByStatus('inactive');
-        
+
         // Calculate statistics
         $totalBags = count($activeBags) + count($inactiveBags);
         $activeBagsCount = count($activeBags);
         $inactiveBagsCount = count($inactiveBags);
-        
+
         // Calculate total capacity
         $totalCapacity = 0;
         foreach ($activeBags as $bag) {
@@ -877,7 +901,7 @@ class Inventory extends controller
         foreach ($inactiveBags as $bag) {
             $totalCapacity += $bag->capacity_kg;
         }
-        
+
         $data = [
             'activeBags' => $activeBags,
             'inactiveBags' => $inactiveBags,
@@ -886,7 +910,7 @@ class Inventory extends controller
             'inactiveBagsCount' => $inactiveBagsCount,
             'totalCapacity' => $totalCapacity
         ];
-        
+
         $this->view('inventory/v_collection_bags', $data);
         var_dump($data);
     }
@@ -898,32 +922,32 @@ class Inventory extends controller
             setFlashMessage('Invalid bag id, bag may not be used!', 'error');
             redirect('inventory/collectionBags');
         }
-        
+
         if (!is_numeric($id)) {
             setFlashMessage('Bag id is not in numeric format', 'error');
             redirect('inventory/collectionBags');
         }
-        
+
         $bag = $this->stockvalidate->getBagById($id);
-        
+
         if (!$bag) {
             setFlashMessage('Bag is not found!', 'error');
             redirect('inventory/collectionBags');
         }
-        
+
         if ($bag->status !== 'active') {
             setFlashMessage('Bag is already inactive!', 'error');
             redirect('inventory/collectionBags');
         }
-        
+
         if ($this->stockvalidate->markAsInactive($id)) {
             $this->logModel->create(
                 $_SESSION['user_id'],
                 $_SESSION['email'],
                 $_SERVER['REMOTE_ADDR'],
                 "Bag with ID {$id} has been marked as inactive.",
-                $_SERVER['REQUEST_URI'],     
-                http_response_code()     
+                $_SERVER['REQUEST_URI'],
+                http_response_code()
             );
             setFlashMessage('Bag has been emptied successfully!');
         } else {
@@ -932,27 +956,27 @@ class Inventory extends controller
                 $_SESSION['email'],
                 $_SERVER['REMOTE_ADDR'],
                 "Failed to mark bag with ID {$id} as inactive.",
-                $_SERVER['REQUEST_URI'],     
-                http_response_code()     
+                $_SERVER['REQUEST_URI'],
+                http_response_code()
             );
             setFlashMessage('Failed to empty the bag!', 'error');
         }
-        
+
         redirect('inventory/collectionBags');
     }
 
     public function deleteBag($bagId)
     {
         $result = $this->stockvalidate->deleteBag($bagId);
-        
+
         if ($result) {
             $this->logModel->create(
                 $_SESSION['user_id'],
                 $_SESSION['email'],
                 $_SERVER['REMOTE_ADDR'],
                 "Bag with ID {$bagId} deleted successfully.",
-                $_SERVER['REQUEST_URI'],     
-                http_response_code()     
+                $_SERVER['REQUEST_URI'],
+                http_response_code()
             );
             setFlashMessage('Bag deleted successfully!');
         } else {
@@ -961,44 +985,45 @@ class Inventory extends controller
                 $_SESSION['email'],
                 $_SERVER['REMOTE_ADDR'],
                 "Failed to delete bag with ID {$bagId}.",
-                $_SERVER['REQUEST_URI'],     
-                http_response_code()     
+                $_SERVER['REQUEST_URI'],
+                http_response_code()
             );
             setFlashMessage('Bag deletion failed!', 'error');
         }
-        
+
         redirect("inventory/collectionBags");
     }
 
 
 
-    public function createBag() {
+    public function createBag()
+    {
         if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             $_POST = filter_input_array(INPUT_POST, FILTER_SANITIZE_STRING);
-            
+
             $data = [
                 'capacity_kg' => trim($_POST['capacity_kg']),
                 'status' => 'inactive'
             ];
-            
+
             if (empty($data['capacity_kg']) || !is_numeric($data['capacity_kg']) || $data['capacity_kg'] <= 0) {
                 setFlashMessage('Please enter a capacity greater than 0!', 'error');
                 redirect('inventory/createBag');
                 exit;
             }
-            
+
             $this->stockvalidate->addBag($data);
             $this->logModel->create(
                 $_SESSION['user_id'],
                 $_SESSION['email'],
                 $_SERVER['REMOTE_ADDR'],
                 "New bag with capacity {$data['capacity_kg']} kg created.",
-                $_SERVER['REQUEST_URI'],     
-                http_response_code()     
+                $_SERVER['REQUEST_URI'],
+                http_response_code()
             );
             redirect('inventory/collectionBags');
         }
-            
+
         $this->view('inventory/v_create_bag');
     }
 
@@ -1006,66 +1031,66 @@ class Inventory extends controller
     {
         // Get leaf quantities data
         $leafQuantities = $this->stockvalidate->getleafoflast7days();
-        
+
         $data = [
             'leafQuantities' => $leafQuantities
         ];
-        
+
         $this->view('inventory/v_raw_leaf_history', $data);
     }
 
     public function manageLeafRate()
     {
 
-            
-            if ($_SERVER['REQUEST_METHOD'] == 'POST') {
-                // Sanitize POST data
-                $_POST = filter_input_array(INPUT_POST, FILTER_SANITIZE_SPECIAL_CHARS);
-        
-                // Initialize data
-                $data = [
-                    'leaf_type_id' => trim($_POST['leaf_type_id']),
-                    'rate' => trim($_POST['rate']),
-                    'error' => ''
-                ];
-        
-                // Validate inputs
-                if (empty($data['leaf_type_id']) || empty($data['rate'])) {
-                    $data['error'] = 'Please fill in all fields';
-                    $this->view('inventory/v_manage_rate_form', $data);
-                    return;
-                }
-        
-                // Validate leaf_type_id is either 1 or 2
-                if (!in_array($data['leaf_type_id'], ['1', '2'])) {
-                    $data['error'] = 'Invalid leaf type selected';
-                    $this->view('inventory/v_manage_rate_form', $data);
-                    return;
-                }
-        
-                // Validate rate is a positive number
-                if (!is_numeric($data['rate']) || $data['rate'] <= 0) {
-                    $data['error'] = 'Rate must be a positive number';
-                    $this->view('inventory/v_manage_rate_form', $data);
-                    return;
-                }
-        
-                // Add leaf rate using model
-                if ($this->stockvalidate->addLeafRate($data)) {
-                    setFlashMessage('Tea leaf rate added successfully!');
-                    redirect('inventory/');
-                } else {
-                    $data['error'] = 'Something went wrong';
-                    $this->view('inventory/v_manage_rate_form', $data);
-                }
+
+        if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+            // Sanitize POST data
+            $_POST = filter_input_array(INPUT_POST, FILTER_SANITIZE_SPECIAL_CHARS);
+
+            // Initialize data
+            $data = [
+                'leaf_type_id' => trim($_POST['leaf_type_id']),
+                'rate' => trim($_POST['rate']),
+                'error' => ''
+            ];
+
+            // Validate inputs
+            if (empty($data['leaf_type_id']) || empty($data['rate'])) {
+                $data['error'] = 'Please fill in all fields';
+                $this->view('inventory/v_manage_rate_form', $data);
+                return;
+            }
+
+            // Validate leaf_type_id is either 1 or 2
+            if (!in_array($data['leaf_type_id'], ['1', '2'])) {
+                $data['error'] = 'Invalid leaf type selected';
+                $this->view('inventory/v_manage_rate_form', $data);
+                return;
+            }
+
+            // Validate rate is a positive number
+            if (!is_numeric($data['rate']) || $data['rate'] <= 0) {
+                $data['error'] = 'Rate must be a positive number';
+                $this->view('inventory/v_manage_rate_form', $data);
+                return;
+            }
+
+            // Add leaf rate using model
+            if ($this->stockvalidate->addLeafRate($data)) {
+                setFlashMessage('Tea leaf rate added successfully!');
+                redirect('inventory/');
             } else {
-                // Initialize empty data
-                $data = [
-                    'leaf_type_id' => '',
-                    'rate' => '',
-                    'error' => ''
-                ];
-            
+                $data['error'] = 'Something went wrong';
+                $this->view('inventory/v_manage_rate_form', $data);
+            }
+        } else {
+            // Initialize empty data
+            $data = [
+                'leaf_type_id' => '',
+                'rate' => '',
+                'error' => ''
+            ];
+
             $this->view('inventory/v_manage_rate_form', $data);
         }
     }
