@@ -198,16 +198,36 @@ class M_Supplier {
 
         return $this->db->resultSet();
     }
-    public function getComplaintById($id)
+
+    //no notes column inside complaints table
+    /*public function resolveComplaint($complaint_id, $resolution_notes)
+    {
+        $this->db->query("UPDATE complaints SET status = 'Resolved', resolution_notes = :notes, updated_at = NOW() WHERE complaint_id = :complaint_id");
+        $this->db->bind(':notes', $resolution_notes);
+        $this->db->bind(':complaint_id', $complaint_id);
+        
+        return $this->db->execute();
+    }*/
+
+    public function resolveComplaint($complaint_id)
+    {
+        $this->db->query("UPDATE complaints SET status = 'Resolved', updated_at = NOW() WHERE complaint_id = :complaint_id");
+        $this->db->bind(':complaint_id', $complaint_id);
+        
+        return $this->db->execute();
+    }
+
+
+    public function getComplaintById($complaint_id)
     {
         $this->db->query("SELECT c.*, CONCAT(p.first_name, ' ', p.last_name) as supplier_name, p.image_path, u.email, p.contact_number as phone 
                           FROM complaints c 
                           JOIN suppliers s ON c.supplier_id = s.supplier_id
                           JOIN profiles p On s.profile_id = p.profile_id
                           JOIN users u on p.user_id = u.user_id 
-                          WHERE c.complaint_id = :id AND c.status != 'Deleted'");
+                          WHERE c.complaint_id = :complaint_id AND c.status != 'Deleted'");
         
-        $this->db->bind(':id', $id);
+        $this->db->bind(':complaint_id', $complaint_id);
         
         return $this->db->single();
     }
@@ -240,22 +260,22 @@ class M_Supplier {
         return $this->db->resultSet();
     }
 
-    public function updateStatus($data)
+    public function updateStatus($complaint_id, $status)
     {
         $this->db->query("UPDATE complaints SET status = :status WHERE complaint_id = :complaint_id");
         
-        $this->db->bind(':complaint_id', $data['complaint_id']);
-        $this->db->bind(':status', $data['status']);
+        $this->db->bind(':complaint_id', $complaint_id);
+        $this->db->bind(':status', $status);
         
         return $this->db->execute();
     }
 
-    public function deleteComplaint($id)
+    public function deleteComplaint($complaint_id)
     {
 
-        $this->db->query("UPDATE complaints SET status = 'Deleted' WHERE complaint_id = :id");
+        $this->db->query("UPDATE complaints SET status = 'Deleted' WHERE complaint_id = :complaint_id");
         
-        $this->db->bind(':id', $id);
+        $this->db->bind(':complaint_id', $complaint_id);
         
         return $this->db->execute();
     }

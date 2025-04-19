@@ -123,7 +123,8 @@
                             <td><span class="status-badge <?php echo strtolower($complaint->status); ?>"><?php echo ucfirst($complaint->status); ?></span></td>
                             <td><a href="<?php echo URLROOT; ?>/manager/viewComplaint/<?php echo $complaint->complaint_id; ?>" class="btn btn-primary" title="View Details">
                                     <i class='bx bx-detail'></i>
-                                </a></td>
+                                </a>
+                            </td>
                         </tr>
                         <?php endforeach; ?>
                     <?php else: ?>
@@ -138,8 +139,12 @@
                     <?php if ($data['totalPages'] > 1): ?>
                         <?php for ($i = 1; $i <= $data['totalPages']; $i++): ?>
                             <a 
-                            href="<?php echo URLROOT; ?>/manager/complaints?page=<?php echo $i; ?>&complaint_id=<?php echo urlencode($complaint_id); ?>&status=<?php echo urlencode($status); ?>&date_from=<?php echo urlencode($date_from); ?>&date_to=<?php echo urlencode($date_to); ?>" 
-                            <?php if ($data['currentPage'] == $i) { echo 'class="active"'; } ?>>
+                                href="<?php echo URLROOT; ?>/manager/complaints?page=<?php echo $i; ?>
+                                    &complaint_id=<?php echo urlencode($data['filters']['complaint_id'] ?? ''); ?>
+                                    &status=<?php echo urlencode($data['filters']['status'] ?? ''); ?>
+                                    &date_from=<?php echo urlencode($data['filters']['date_from'] ?? ''); ?>
+                                    &date_to=<?php echo urlencode($data['filters']['date_to'] ?? ''); ?>" 
+                                <?php if ($data['currentPage'] == $i) { echo 'class="active"'; } ?>>
                                 <?php echo $i; ?>
                             </a>
                         <?php endfor; ?>
@@ -207,7 +212,7 @@
     }
     
 </style>
-<script src="<?php echo URLROOT; ?>/public/css/script.js"></script>
+
 
 
 <?php require APPROOT . '/views/inc/components/footer.php'; ?>
