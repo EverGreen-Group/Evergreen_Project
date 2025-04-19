@@ -24,7 +24,7 @@
     </div>
   </div>
 
-  <!-- Section 1: Your Time Slots -->
+  <!-- Section 1: My Time Slots -->
   <div class="table-data">
     <div class="order">
       <div class="head">
@@ -45,8 +45,8 @@
           </tr>
         </thead>
         <tbody>
-          <?php if (!empty($timeSlots)): ?>
-            <?php foreach ($timeSlots as $slot): ?>
+          <?php if (!empty($availableSlots)): ?>
+            <?php foreach ($availableSlots as $slot): ?>
               <tr>
                 <td><?php echo htmlspecialchars($slot->slot_id); ?></td>
                 <td><?php echo htmlspecialchars($slot->date); ?></td>
@@ -54,14 +54,12 @@
                 <td><span class="status-badge <?php echo strtolower($slot->status); ?>"><?php echo ucfirst($slot->status); ?></span></td>
                 <td>
                   <?php if ($slot->status == 'Available'): ?>
-                  <form method="POST" action="<?php echo URLROOT; ?>/manager/cancelSlot">
-                    <input type="hidden" name="slot_id" value="<?php echo $slot->slot_id; ?>">
-                    <button type="submit" class="btn" style="background-color: rgb(240, 46, 46); color: white; font-size: 0.8rem; border-radius: 20px; height: 25px; width: 70px;" title="Cancel Slot">
-                      Cancel
-                    </button>
-                  </form>
-                  <?php else: ?>
-                    <span class="disabled-action btn" style="background-color:rgb(224, 224, 224); font-size: 0.7rem; color: white; border-radius: 20px; width: 70px;">Cancel</span>
+                    <form method="POST" action="<?php echo URLROOT; ?>/manager/cancelSlot" onclick="return confirmDelete();">
+                      <input type="hidden" name="slot_id" value="<?php echo $slot->slot_id; ?>">
+                      <button type="submit" class="btn" style="background-color: rgba(240, 46, 46, 0.77); color: white; font-size: 0.8rem; border-radius: 20px; height: 25px; width: 70px;" title="Cancel Slot">
+                        Cancel
+                      </button>
+                    </form>
                   <?php endif; ?>
                 </td>
               </tr>
@@ -74,7 +72,45 @@
     </div>
   </div>
 
-  <!-- Section 2: Incoming Appointment Requests -->
+  <!-- Section 2: Booked Slots -->
+  <div class="table-data">
+    <div class="order">
+      <div class="head">
+        <h3>Booked Slots</h3>
+      </div>
+      <table>
+        <thead>
+          <tr>
+            <th>Slot ID</th>
+            <th>Date</th>
+            <th>Time Range</th>
+            <th>Status</th>
+            <th>Supplier ID</th>
+          </tr>
+        </thead>
+        <tbody>
+          <?php if (!empty($bookedSlots)): ?>
+            <?php foreach ($bookedSlots as $slots): ?>
+              <tr>
+                <td><?php echo $slots->slot_id; ?></td>
+                <td><?php echo $slots->date; ?></td>
+                <td><?php echo $slots->start_time . ' - ' . $slots->end_time; ?></td>
+                <td><span class="status-badge <?php echo strtolower($slots->status); ?>"><?php echo ucfirst($slots->status); ?></span></td>
+                <td><?php echo $slots->supplier_id; ?></td>
+              </tr>
+            <?php endforeach;?>
+          <?php else: ?>
+            <tr>
+              <td colspan="5" style="text-align: center;">No booked appointments available.</td>
+            </tr>
+          <?php endif; ?>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+
+  <!-- Section 3: Incoming Appointment Requests -->
   <div class="table-data">
     <div class="order">
       <div class="head">
@@ -166,6 +202,14 @@
     </div>
   </div>
 </main>
+
+<script>
+
+  function confirmDelete() {
+    return confirm("This action cannot be undone, Are you sure you want to delete this slot?");
+  }
+
+</script>
 
 <style>
     .status-badge {

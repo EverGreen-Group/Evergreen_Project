@@ -110,84 +110,80 @@ class Supplier extends Controller {
     }
 
     public function viewAppointments() {
+        
         $timeSlots = $this->appointmentModel->getAvailableTimeSlots();
         $myRequests = $this->appointmentModel->getMyRequests($_SESSION['supplier_id']);
         $confirmedAppointments = $this->appointmentModel->getConfirmedAppointments($_SESSION['supplier_id']);
-
+        
         $data = [
             'time_slots' => $timeSlots,
             'my_requests' => $myRequests,
             'confirmed_appointments' => $confirmedAppointments
         ];
-
+        
         $this->view('supplier/v_time_slots', $data);
     }
-
+    
     public function requestTimeSlot() {
-        if ($_SERVER['REQUEST_METHOD'] != 'POST') {
+        if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+            // Validate the slot ID
+            if (!isset($_POST['slot_id']) || empty($_POST['slot_id'])) {
+                setFlashMessage('Time slot isnt available anymore, please refresh the page!', 'error');
+                redirect('Supplier/viewAppointments');
+                return;
+            }
+            
+            $slotId = trim($_POST['slot_id']);
+            $supplierId = $_SESSION['supplier_id'];
+            
+            $slot = $this->appointmentModel->getSlotById($_POST['slot_id']);
+            if (!$slot || $slot->status !== 'Available') {
+                setFlashMessage('Time slot isnt available anymore.', 'error');
+                redirect('Supplier/viewAppointments');
+                return;
+            }
+
+            // Check if this supplier has already requested the same slot
+            if ($this->appointmentModel->hasAlreadyRequested($slotId, $supplierId)) {
+                setFlashMessage('You have already requested this time slot!', 'error');
+                redirect('Supplier/viewAppointments');
+                return;
+            }
+
+            $existingRequests = $this->appointmentModel->requestedSlotTimes($_SESSION['supplier_id']);
+            foreach ($existingRequests as $existing) {    
+                if ($slot->date == $existing->date){
+                    if (($slot->start_time < $existing->end_time) &&
+                        ($slot->end_time > $existing->start_time)) {
+                            setFlashMessage('You have another appointment within this time period.' , 'error');
+                            redirect('supplier/viewAppointments');
+                            return;
+                        }
+                    
+                }
+            }
+
+            $data = [
+                'supplier_id' => $_SESSION['supplier_id'],
+                'slot_id' => trim($_POST['slot_id']),
+                'status' => 'Pending',
+                'submitted_at' => date('Y-m-d H:i:s')
+            ];
+            
+            // Create the request
+            if ($this->appointmentModel->createRequest($data)) {
+                setFlashMessage('Request sent successfully!');
+                redirect('Supplier/viewAppointments');
+            } else {
+                setFlashMessage('Request failed, please try again later!', 'error');
+                redirect('Supplier/viewAppointments');
+            }
+            
             redirect('Supplier/viewAppointments');
-            return;
-        }
-
-        if (!isset($_POST['slot_id']) || empty($_POST['slot_id'])) {
-            setFlashMessage('Time slot isn\'t available anymore, please refresh the page!', 'error');
-            redirect('Supplier/viewAppointments');
-            return;
-        }
-
-        $slotId = trim($_POST['slot_id']);
-        $supplierId = $_SESSION['supplier_id'];
-
-        $slot = $this->appointmentModel->getSlotById($slotId);
-        if (!$slot || $slot->status !== 'Available') {
-            setFlashMessage('Time slot isn\'t available anymore.', 'error');
-            redirect('Supplier/viewAppointments');
-            return;
-        }
-
-        if ($this->appointmentModel->hasAlreadyRequested($slotId, $supplierId)) {
-            setFlashMessage('You have already requested this time slot!', 'error');
-            redirect('Supplier/viewAppointments');
-            return;
-        }
-
-        $data = [
-            'supplier_id' => $supplierId,
-            'slot_id' => $slotId,
-            'status' => 'Pending',
-            'submitted_at' => date('Y-m-d H:i:s')
-        ];
-
-        if ($this->appointmentModel->createRequest($data)) {
-            setFlashMessage('Request sent successfully!');
         } else {
-            setFlashMessage('Request failed, please try again later!', 'error');
-        }
-
-        redirect('Supplier/viewAppointments');
-    }
-
-    public function cancelRequest($id = null) {
-        if (!$id) {
-            setFlashMessage('Cancellation failed, please try again later!', 'error');
+            // Redirect if accessed directly without POST
             redirect('Supplier/viewAppointments');
-            return;
         }
-
-        $request = $this->appointmentModel->getRequestById($id);
-        if (!$request || $request->supplier_id != $_SESSION['supplier_id'] || $request->status != 'Pending') {
-            setFlashMessage('You cannot cancel this request', 'error');
-            redirect('Supplier/viewAppointments');
-            return;
-        }
-
-        if ($this->appointmentModel->cancelRequest($id, $_SESSION['supplier_id'])) {
-            setFlashMessage('Appointment request cancelled successfully!');
-        } else {
-            setFlashMessage('Failed to cancel the request!', 'error');
-        }
-
-        redirect('Supplier/viewAppointments');
     }
 
     public function notifications() {
