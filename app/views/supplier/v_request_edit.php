@@ -35,7 +35,7 @@
       <div class="order-details-grid">
         <div class="detail-item">
           <span class="label">Order ID:</span>
-          <span class="value"><?php echo $data['order']->order_id; ?></span>
+          <span class="value"><?php echo htmlspecialchars($data['order']->order_id ?? ''); ?></span>
         </div>
         <div class="detail-item">
           <span class="label">Fertilizer Name:</span>
@@ -72,6 +72,11 @@
           <input type="number" id="quantity" name="quantity" max="100" min="1" value="<?php echo $data['order']->quantity; ?>" required>
         </div>
 
+        <div class="form-group">
+          <label for="quantity">Quantity:</label>
+          <input type="number" id="quantity" name="quantity" max="50" min="1" value="<?php echo htmlspecialchars($data['order']->quantity ?? ''); ?>" required oninput="updatePrice()">
+        </div>
+
         <div class="form-group read-only-group">
           <label for="price_per_unit">Price Per Unit:</label>
           <input type="text" id="price_per_unit" name="price_per_unit" readonly>
@@ -82,8 +87,9 @@
           <input type="text" id="total_price" name="total_price" readonly>
         </div>
 
-        <div class="form-group">
+        <div class="form-group button-group">
           <button type="submit" class="submit-btn">Update Request</button>
+          <button type="button" class="back-btn" onclick="window.location.href='<?php echo URLROOT; ?>/Supplier/requestFertilizer'">Back to Requests</button>
         </div>
       </form>
     </div>
@@ -256,6 +262,11 @@ document.addEventListener('DOMContentLoaded', function() {
     display: flex;
     flex-direction: column;
   }
+  .edit-form-card .button-group {
+    display: flex;
+    gap: var(--spacing-md);
+    justify-content: center;
+  }
   .edit-form-card label {
     margin-bottom: var(--spacing-xs);
     color: var(--text-primary);
@@ -270,25 +281,41 @@ document.addEventListener('DOMContentLoaded', function() {
     border-radius: var(--border-radius-sm);
     box-sizing: border-box;
   }
-  .edit-form-card .submit-btn {
-    grid-column: span 2;
+  .edit-form-card .submit-btn,
+  .edit-form-card .back-btn {
     padding: var(--spacing-md);
-    background-color: var(--primary-color);
-    color: white;
     border: none;
     border-radius: var(--border-radius-sm);
     cursor: pointer;
     font-size: 1rem;
     transition: background-color 0.3s ease;
   }
+  .edit-form-card .submit-btn {
+    background-color: var(--primary-color);
+    color: white;
+  }
   .edit-form-card .submit-btn:hover {
     background-color: var(--secondary-color);
+  }
+  .edit-form-card .back-btn {
+    background-color: #6c757d; /* Gray color for the back button */
+    color: white;
+  }
+  .edit-form-card .back-btn:hover {
+    background-color: #5a6268; /* Darker gray on hover */
   }
 
   /* Responsive Adjustments */
   @media (max-width: 768px) {
     .edit-form-card form {
       grid-template-columns: 1fr;
+    }
+    .edit-form-card .button-group {
+      flex-direction: column;
+    }
+    .edit-form-card .submit-btn,
+    .edit-form-card .back-btn {
+      width: 100%;
     }
   }
 </style>

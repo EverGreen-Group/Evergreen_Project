@@ -12,6 +12,7 @@ define('DB_HOST', 'localhost');
 define('DB_USER', 'root');
 define('DB_PASSWORD', '');
 define('DB_NAME','tfms');
+
 //APPROOT
 // //APPROOT
 define('APPROOT',dirname(dirname(__FILE__)));

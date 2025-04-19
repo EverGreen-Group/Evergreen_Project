@@ -404,7 +404,7 @@
     color: #555;
 }
 </style>
-
+<script src="<?php echo URLROOT; ?>/public/css/script.js"></script>
 
 </main>
 

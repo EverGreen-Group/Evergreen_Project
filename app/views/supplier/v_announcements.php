@@ -185,4 +185,6 @@ document.getElementById('announcement-search')?.addEventListener('input', functi
 }
 </style>
 
+<script src="<?php echo URLROOT; ?>/css/script.js"></script>
+
 <?php require APPROOT . '/views/inc/components/footer.php'; ?>

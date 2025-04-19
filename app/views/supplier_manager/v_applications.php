@@ -302,6 +302,7 @@
         object-fit: cover; /* Ensure the image covers the area */
     }
 </style>
+<script src="<?php echo URLROOT; ?>/css/script.js"></script>
 
 <?php require APPROOT . '/views/inc/components/footer.php'; ?>
 
