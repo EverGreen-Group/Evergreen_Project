@@ -24,10 +24,14 @@
                 <p>No announcements found.</p>
             </div>
         <?php else: ?>
-
             <div class="announcements-list">
                 <?php foreach ($data['announcements'] as $announcement): ?>
                     <div class="announcement-item">
+                        <?php if (!empty($announcement->banner)): ?>
+                            <div class="announcement-banner">
+                                <img src="<?php echo URLROOT . '/uploads/announcements/' . htmlspecialchars($announcement->banner); ?>" alt="Banner" style="max-width: 100%; border-radius: 8px; margin-bottom: 10px;">
+                            </div>
+                        <?php endif; ?>
                         <div class="announcement-header">
                             <h4><?php echo htmlspecialchars($announcement->title); ?></h4>
                             <span class="announcement-date">
@@ -44,8 +48,6 @@
                     </div>
                 <?php endforeach; ?>
             </div>
-
-
         <?php endif; ?>
     </div>
 </main>
@@ -185,4 +187,5 @@ document.getElementById('announcement-search')?.addEventListener('input', functi
 }
 </style>
 
+<script src="<?php echo URLROOT; ?>/public/css/script.js"></script>
 <?php require APPROOT . '/views/inc/components/footer.php'; ?>

@@ -2465,23 +2465,439 @@ class Manager extends Controller
     }
 
     //Theekshana Chat part
+    // public function chat() {
+    //     $activeSuppliers = $this->chatModel->getActiveSuppliers();
+    //     error_log("Suppliers in Manager chat(): " . print_r($activeSuppliers, true));
+
+    //     $data = [
+    //         'complaint_id' => trim($_POST['complaint_id']),
+    //         'resolution_notes' => trim($_POST['resolution_notes']),
+    //         'status' => 'Resolved'
+    //     ];
+    
+    //     if ($this->supplierModel->updateStatus($data)) {
+    //         setFlashMessage("Complaint marked as resolved!");
+    //     } else {
+    //         setFlashMessage('Complaint couldnt be marked as resolved, please try again later!', 'error');
+    //     }
+    
+    //     redirect('manager/viewComplaint/' . $data['complaint_id']);
+    // }
+
     public function chat() {
         $activeSuppliers = $this->chatModel->getActiveSuppliers();
         error_log("Suppliers in Manager chat(): " . print_r($activeSuppliers, true));
 
         $data = [
-            'complaint_id' => trim($_POST['complaint_id']),
-            'resolution_notes' => trim($_POST['resolution_notes']),
-            'status' => 'Resolved'
+            'active_suppliers' => $activeSuppliers,
+            'page_title' => 'Chat with Suppliers',
+            'user_id' => $_SESSION['user_id']
         ];
-    
-        if ($this->supplierModel->updateStatus($data)) {
-            setFlashMessage("Complaint marked as resolved!");
-        } else {
-            setFlashMessage('Complaint couldnt be marked as resolved, please try again later!', 'error');
+        
+        $this->view('vehicle_manager/v_chat', $data);
+    }
+
+    public function sendMessage() {
+        header('Content-Type: application/json');
+        if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+            $data = json_decode(file_get_contents("php://input"), true);
+            
+            if (empty($data['receiver_id']) || empty($data['message'])) {
+                echo json_encode(['success' => false, 'message' => 'Missing required fields']);
+                exit();
+            }
+            
+            if (!isset($_SESSION['user_id']) || empty($_SESSION['user_id'])) {
+                echo json_encode(['success' => false, 'message' => 'User not logged in']);
+                exit();
+            }
+            
+            $result = $this->chatModel->saveMessage(
+                $_SESSION['user_id'],
+                $data['receiver_id'],
+                $data['message'],
+                'text'
+            );
+            
+            if ($result['success']) {
+                echo json_encode([
+                    'success' => true,
+                    'data' => [  // Wrap message_id and created_at in a "data" object
+                        'message_id' => $result['message_id'],
+                        'created_at' => $result['created_at']
+                    ]
+                ]);
+            } else {
+                echo json_encode([
+                    'success' => false,
+                    'message' => $result['error'] ?? 'Failed to send message'
+                ]);
+            }
+            exit();
+        }
+        echo json_encode(['success' => false, 'message' => 'Invalid request method']);
+        exit();
+    }
+
+
+    public function getMessages() {
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            error_log("getMessages: Method Not Allowed");
+            http_response_code(405);
+            echo json_encode(['success' => false, 'message' => 'Method Not Allowed']);
+            return;
         }
     
-        redirect('manager/viewComplaint/' . $data['complaint_id']);
+        $data = json_decode(file_get_contents('php://input'), true);
+        if (!isset($data['receiver_id']) || !is_numeric($data['receiver_id'])) {
+            error_log("getMessages: Invalid receiver ID");
+            http_response_code(400);
+            echo json_encode(['success' => false, 'message' => 'Invalid receiver ID']);
+            return;
+        }
+    
+        $userId = $_SESSION['user_id'];
+        $receiverId = (int)$data['receiver_id'];
+        $lastMessageId = isset($data['last_message_id']) && is_numeric($data['last_message_id']) ? (int)$data['last_message_id'] : 0;
+        error_log("getMessages: Fetching messages for user $userId and receiver $receiverId with last_message_id $lastMessageId");
+    
+        try {
+            $messages = $this->chatModel->getMessages($userId, $receiverId, $lastMessageId);
+            echo json_encode([
+                'success' => true,
+                'data' => [
+                    'messages' => $messages
+                ]
+            ]);
+        } catch (Exception $e) {
+            error_log("getMessages: Error fetching messages for user $userId and receiver $receiverId: " . $e->getMessage());
+            http_response_code(500);
+            echo json_encode(['success' => false, 'message' => 'Error fetching messages']);
+        }
+    }
+    
+    public function editMessage() {
+        header('Content-Type: application/json');
+        if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+            $data = json_decode(file_get_contents("php://input"), true);
+            
+            if (empty($data['message_id']) || empty($data['new_message'])) {
+                echo json_encode(['success' => false, 'message' => 'Missing required fields']);
+                exit();
+            }
+            
+            if (!isset($_SESSION['user_id']) || empty($_SESSION['user_id'])) {
+                echo json_encode(['success' => false, 'message' => 'User not logged in']);
+                exit();
+            }
+            
+            $result = $this->chatModel->editMessage(
+                $data['message_id'],
+                $data['new_message'],
+                $_SESSION['user_id']
+            );
+            
+            echo json_encode(['success' => $result]);
+            exit();
+        }
+        echo json_encode(['success' => false, 'message' => 'Invalid request method']);
+        exit();
+    }
+
+    public function deleteMessage() {
+        header('Content-Type: application/json');
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            http_response_code(405);
+            echo json_encode(['success' => false, 'message' => 'Method Not Allowed']);
+            return;
+        }
+    
+        $data = json_decode(file_get_contents('php://input'), true);
+        if (!isset($data['message_id']) || !is_numeric($data['message_id'])) {
+            http_response_code(400);
+            echo json_encode(['success' => false, 'message' => 'Invalid message ID']);
+            return;
+        }
+    
+        if (!isset($_SESSION['user_id'])) {
+            http_response_code(401);
+            echo json_encode(['success' => false, 'message' => 'User not logged in']);
+            return;
+        }
+    
+        $messageId = (int)$data['message_id'];
+        $userId = $_SESSION['user_id'];
+    
+        try {
+            $result = $this->chatModel->deleteMessage($messageId, $userId);
+            if ($result) {
+                echo json_encode(['success' => true]);
+            } else {
+                http_response_code(500);
+                echo json_encode(['success' => false, 'message' => 'Error deleting message']);
+            }
+        } catch (Exception $e) {
+            error_log("Error deleting message: " . $e->getMessage());
+            http_response_code(500);
+            echo json_encode(['success' => false, 'message' => 'Error deleting message']);
+        }
+    }
+
+    //announcements by theekshana
+    public function announcements() {
+        $db = new Database();
+        
+        // Fetch all announcements
+        $db->query("SELECT * FROM announcements ORDER BY created_at DESC");
+        $announcements = $db->resultSet();
+
+        $data = [
+            'announcements' => $announcements,
+            'page_title' => 'Announcements'
+        ];
+
+        $this->view('vehicle_manager/v_announcements', $data);
+    }
+
+    public function createAnnouncementPage() {
+        $data = [
+            'announcement' => (object) [
+                'announcement_id' => '',
+                'title' => '',
+                'content' => '',
+                'banner' => ''
+            ],
+            'error' => ''
+        ];
+        $this->view('vehicle_manager/v_edit_announcement', $data);
+    }
+
+    public function createAnnouncement() {
+        if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+            $title = $_POST['title'] ?? '';
+            $content = $_POST['content'] ?? '';
+            
+            if (empty($title) || empty($content)) {
+                flash('message', 'Title and content are required', 'alert alert-danger');
+                redirect('manager/createAnnouncement');
+                return;
+            }
+
+            $banner = null;
+            if (isset($_FILES['banner']) && $_FILES['banner']['error'] == UPLOAD_ERR_OK) {
+                $file = $_FILES['banner'];
+                if ($file['type'] == 'image/jpeg') {
+                    $banner = uniqid() . '.jpg';
+                    $uploadPath = APPROOT . '/public/uploads/announcements/' . $banner;
+                    if (!is_dir(APPROOT . '/public/uploads/announcements/')) {
+                        mkdir(APPROOT . '/public/uploads/announcements/', 0755, true);
+                    }
+                    if (!move_uploaded_file($file['tmp_name'], $uploadPath)) {
+                        flash('message', 'Failed to upload banner', 'alert alert-danger');
+                        redirect('manager/createAnnouncement');
+                        return;
+                    }
+                } else {
+                    flash('message', 'Only JPEG files are allowed', 'alert alert-danger');
+                    redirect('manager/createAnnouncement');
+                    return;
+                }
+            }
+
+            $db = new Database();
+            $query = "INSERT INTO announcements (title, content, banner, created_by, created_at) 
+                     VALUES (:title, :content, :banner, :created_by, NOW())";
+            
+            $db->query($query);
+            $db->bind(':title', $title);
+            $db->bind(':content', $content);
+            $db->bind(':banner', $banner);
+            $db->bind(':created_by', $_SESSION['user_id']);
+            
+            if ($db->execute()) {
+                flash('message', 'Announcement created successfully', 'alert alert-success');
+                redirect('manager/announcements');
+            } else {
+                flash('message', 'Failed to create announcement', 'alert alert-danger');
+                redirect('manager/createAnnouncement');
+            }
+            return;
+        }
+        
+        flash('message', 'Invalid request method', 'alert alert-danger');
+        redirect('manager/announcements');
+    }
+
+    public function getAnnouncement($id) {
+        header('Content-Type: application/json');
+        
+        $db = new Database();
+        $query = "SELECT * FROM announcements WHERE announcement_id = :id";
+        $db->query($query);
+        $db->bind(':id', $id);
+        
+        $announcement = $db->single();
+        
+        if ($announcement) {
+            echo json_encode(['success' => true, 'announcement' => $announcement]);
+        } else {
+            echo json_encode(['success' => false, 'message' => 'Announcement not found']);
+        }
+        exit();
+    }
+
+    public function updateAnnouncement() {
+        if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+            $announcement_id = $_POST['announcement_id'] ?? '';
+            $title = $_POST['title'] ?? '';
+            $content = $_POST['content'] ?? '';
+            $remove_banner = isset($_POST['remove_banner']) && $_POST['remove_banner'] == '1';
+            
+            if (empty($announcement_id) || empty($title) || empty($content)) {
+                flash('message', 'Missing required fields', 'alert alert-danger');
+                redirect('manager/editAnnouncement/' . $announcement_id);
+                return;
+            }
+
+            $db = new Database();
+            $banner = null;
+
+            // Fetch current announcement to get existing banner
+            $db->query("SELECT banner FROM announcements WHERE announcement_id = :id");
+            $db->bind(':id', $announcement_id);
+            $current = $db->single();
+            $current_banner = $current->banner;
+
+            // Handle banner upload or removal
+            if ($remove_banner && $current_banner) {
+                $banner_path = APPROOT . '/public/uploads/announcements/' . $current_banner;
+                if (file_exists($banner_path)) {
+                    unlink($banner_path);
+                }
+                $banner = null;
+            } elseif (isset($_FILES['banner']) && $_FILES['banner']['error'] == UPLOAD_ERR_OK) {
+                $file = $_FILES['banner'];
+                if ($file['type'] == 'image/jpeg') {
+                    $banner = uniqid() . '.jpg';
+                    $uploadPath = APPROOT . '/public/uploads/announcements/' . $banner;
+                    if (!is_dir(APPROOT . '/public/uploads/announcements/')) {
+                        mkdir(APPROOT . '/public/uploads/announcements/', 0755, true);
+                    }
+                    if (move_uploaded_file($file['tmp_name'], $uploadPath)) {
+                        // Remove old banner if exists
+                        if ($current_banner) {
+                            $old_banner_path = APPROOT . '/public/uploads/announcements/' . $current_banner;
+                            if (file_exists($old_banner_path)) {
+                                unlink($old_banner_path);
+                            }
+                        }
+                    } else {
+                        flash('message', 'Failed to upload banner', 'alert alert-danger');
+                        redirect('manager/editAnnouncement/' . $announcement_id);
+                        return;
+                    }
+                } else {
+                    flash('message', 'Only JPEG files are allowed', 'alert alert-danger');
+                    redirect('manager/editAnnouncement/' . $announcement_id);
+                    return;
+                }
+            } else {
+                $banner = $current_banner; // Keep existing banner
+            }
+
+            $query = "UPDATE announcements 
+                     SET title = :title, content = :content, banner = :banner, updated_at = NOW()
+                     WHERE announcement_id = :id AND created_by = :user_id";
+            
+            $db->query($query);
+            $db->bind(':title', $title);
+            $db->bind(':content', $content);
+            $db->bind(':banner', $banner);
+            $db->bind(':id', $announcement_id);
+            $db->bind(':user_id', $_SESSION['user_id']);
+            
+            if ($db->execute()) {
+                flash('message', 'Announcement updated successfully', 'alert alert-success');
+                redirect('manager/announcements');
+            } else {
+                flash('message', 'Failed to update announcement', 'alert alert-danger');
+                redirect('manager/editAnnouncement/' . $announcement_id);
+            }
+            return;
+        }
+        
+        flash('message', 'Invalid request method', 'alert alert-danger');
+        redirect('manager/announcements');
+    }
+
+    public function deleteAnnouncement() {
+        header('Content-Type: application/json');
+        
+        if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+            $data = json_decode(file_get_contents("php://input"), true);
+            
+            if (empty($data['announcement_id'])) {
+                echo json_encode(['success' => false, 'message' => 'Announcement ID is required']);
+                exit();
+            }
+
+            $db = new Database();
+            // Fetch banner to delete file
+            $db->query("SELECT banner FROM announcements WHERE announcement_id = :id");
+            $db->bind(':id', $data['announcement_id']);
+            $announcement = $db->single();
+            
+            $query = "DELETE FROM announcements 
+                     WHERE announcement_id = :id AND created_by = :user_id";
+            
+            $db->query($query);
+            $db->bind(':id', $data['announcement_id']);
+            $db->bind(':user_id', $_SESSION['user_id']);
+            
+            if ($db->execute()) {
+                // Delete banner file if exists
+                if ($announcement->banner) {
+                    $banner_path = APPROOT . '/public/uploads/announcements/' . $announcement->banner;
+                    if (file_exists($banner_path)) {
+                        unlink($banner_path);
+                    }
+                }
+                echo json_encode(['success' => true, 'message' => 'Announcement deleted successfully']);
+            } else {
+                echo json_encode(['success' => false, 'message' => 'Failed to delete announcement']);
+            }
+            exit();
+        }
+        
+        echo json_encode(['success' => false, 'message' => 'Invalid request method']);
+        exit();
+    }
+
+    public function editAnnouncementPage($id) {
+        try {
+            $db = new Database();
+            $query = "SELECT * FROM announcements WHERE announcement_id = :id AND created_by = :user_id";
+            $db->query($query);
+            $db->bind(':id', $id);
+            $db->bind(':user_id', $_SESSION['user_id']);
+            $announcement = $db->single();
+            
+            if (!$announcement) {
+                flash('message', 'Announcement not found or you do not have permission to edit it', 'alert alert-danger');
+                redirect('manager/announcements');
+                return;
+            }
+
+            $data = [
+                'announcement' => $announcement,
+                'error' => ''
+            ];
+            $this->view('vehicle_manager/v_edit_announcement', $data);
+        } catch (Exception $e) {
+            error_log($e->getMessage());
+            flash('message', 'An error occurred while fetching the announcement', 'alert alert-danger');
+            redirect('manager/announcements');
+        }
     }
     
     public function reopenComplaint($id)
@@ -2604,6 +3020,8 @@ class Manager extends Controller
             redirect('manager/appointments');
         }
     }
+
+
     
 
 

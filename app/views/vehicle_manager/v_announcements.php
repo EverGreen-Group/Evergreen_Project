@@ -28,6 +28,11 @@
             <div class="announcements-list">
                 <?php foreach ($data['announcements'] as $announcement): ?>
                     <div class="announcement-item" data-announcement-id="<?php echo $announcement->announcement_id; ?>">
+                        <?php if (!empty($announcement->banner)): ?>
+                            <div class="announcement-banner">
+                                <img src="<?php echo URLROOT . '/uploads/announcements/' . htmlspecialchars($announcement->banner); ?>" alt="Banner" style="max-width: 100%; border-radius: 8px; margin-bottom: 10px;">
+                            </div>
+                        <?php endif; ?>
                         <div class="announcement-header">
                             <h4><?php echo htmlspecialchars($announcement->title); ?></h4>
                             <span class="announcement-date">
@@ -42,9 +47,9 @@
                             <p><?php echo htmlspecialchars($announcement->content); ?></p>
                         </div>
                         <div class="announcement-footer">
-                            <button class="edit-announcement-btn btn btn-sm btn-warning">
+                            <a href="<?php echo URLROOT; ?>/manager/editAnnouncement/<?php echo $announcement->announcement_id; ?>" class="btn btn-sm btn-warning edit-announcement-btn">
                                 <i class='bx bx-edit'></i> Edit
-                            </button>
+                            </a>
                             <button class="delete-announcement-btn btn btn-sm btn-danger">
                                 <i class='bx bx-trash'></i> Delete
                             </button>
@@ -59,7 +64,7 @@
     <div class="create-announcement-modal" style="display: none;">
         <div class="modal-content">
             <h3>Create Announcement <span class="close-modal" style="float: right; cursor: pointer;">×</span></h3>
-            <form id="create-announcement-form">
+            <form id="create-announcement-form" enctype="multipart/form-data">
                 <div class="form-group">
                     <label for="create-title">Title</label>
                     <input type="text" id="create-title" class="form-control" required>
@@ -68,34 +73,14 @@
                     <label for="create-content">Content</label>
                     <textarea id="create-content" class="form-control" rows="5" required></textarea>
                 </div>
+                <div class="form-group">
+                    <label for="create-banner">Banner Image (JPEG, optional)</label>
+                    <input type="file" id="create-banner" class="form-control" accept="image/jpeg">
+                </div>
                 <div class="button-row">
                     <button type="submit" class="btn btn-primary">Create</button>
                     <button type="button" class="btn btn-secondary close-modal">Cancel</button>
                 </div>
-                
-            </form>
-        </div>
-    </div>
-
-    <!-- Edit Announcement Modal -->
-    <div class="edit-announcement-modal" style="display: none;">
-        <div class="modal-content">
-            <h3>Edit Announcement <span class="close-modal" style="float: right; cursor: pointer;">×</span></h3>
-            <form id="edit-announcement-form">
-                <input type="hidden" id="edit-announcement-id">
-                <div class="form-group">
-                    <label for="edit-title">Title</label>
-                    <input type="text" id="edit-title" class="form-control" required>
-                </div>
-                <div class="form-group">
-                    <label for="edit-content">Content</label>
-                    <textarea id="edit-content" class="form-control" rows="5" required></textarea>
-                </div>
-                <div class="button-row">
-                    <button type="submit" class="btn btn-primary">Save</button>
-                    <button type="button" class="btn btn-secondary close-modal">Cancel</button>
-                </div>
-                
             </form>
         </div>
     </div>
@@ -114,16 +99,23 @@ document.getElementById('create-announcement-form')?.addEventListener('submit', 
     e.preventDefault();
     const title = document.getElementById('create-title').value.trim();
     const content = document.getElementById('create-content').value.trim();
+    const banner = document.getElementById('create-banner').files[0];
 
     if (!title || !content) {
-        alert('Please fill in all fields.');
+        alert('Please fill in title and content fields.');
         return;
+    }
+
+    const formData = new FormData();
+    formData.append('title', title);
+    formData.append('content', content);
+    if (banner) {
+        formData.append('banner', banner);
     }
 
     fetch(`${URLROOT}/manager/createAnnouncement`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ title, content })
+        body: formData
     })
     .then(response => response.json())
     .then(data => {
@@ -137,66 +129,6 @@ document.getElementById('create-announcement-form')?.addEventListener('submit', 
     .catch(error => {
         console.error('Error creating announcement:', error);
         alert('An error occurred while creating the announcement.');
-    });
-});
-
-// Handle Edit Announcement
-document.addEventListener('click', function(e) {
-    if (e.target.classList.contains('edit-announcement-btn') || e.target.closest('.edit-announcement-btn')) {
-        const announcementItem = e.target.closest('.announcement-item');
-        const announcementId = announcementItem.dataset.announcementId;
-
-        fetch(`${URLROOT}/manager/getAnnouncement/${announcementId}`, {
-            method: 'GET',
-            headers: { 'Content-Type': 'application/json' }
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                document.getElementById('edit-announcement-id').value = announcementId;
-                document.getElementById('edit-title').value = data.announcement.title;
-                document.getElementById('edit-content').value = data.announcement.content;
-                document.querySelector('.edit-announcement-modal').style.display = 'block';
-            } else {
-                alert(data.message || 'Failed to fetch announcement.');
-            }
-        })
-        .catch(error => {
-            console.error('Error fetching announcement:', error);
-            alert('An error occurred while fetching the announcement.');
-        });
-    }
-});
-
-// Handle Edit Announcement Form Submission
-document.getElementById('edit-announcement-form')?.addEventListener('submit', function(e) {
-    e.preventDefault();
-    const announcementId = document.getElementById('edit-announcement-id').value;
-    const title = document.getElementById('edit-title').value.trim();
-    const content = document.getElementById('edit-content').value.trim();
-
-    if (!title || !content) {
-        alert('Please fill in all fields.');
-        return;
-    }
-
-    fetch(`${URLROOT}/manager/updateAnnouncement`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ announcement_id: announcementId, title, content })
-    })
-    .then(response => response.json())
-    .then(data => {
-        if (data.success) {
-            alert('Announcement updated successfully!');
-            window.location.reload();
-        } else {
-            alert(data.message || 'Failed to update announcement.');
-        }
-    })
-    .catch(error => {
-        console.error('Error updating announcement:', error);
-        alert('An error occurred while updating the announcement.');
     });
 });
 
@@ -233,7 +165,6 @@ document.addEventListener('click', function(e) {
 document.querySelectorAll('.close-modal').forEach(button => {
     button.addEventListener('click', function() {
         document.querySelector('.create-announcement-modal').style.display = 'none';
-        document.querySelector('.edit-announcement-modal').style.display = 'none';
     });
 });
 
@@ -251,7 +182,7 @@ document.getElementById('announcement-search')?.addEventListener('input', functi
 </script>
 
 <style>
-.button-row{
+.button-row {
     display: flex;
     justify-content: flex-end;
     gap: 10px;
@@ -378,8 +309,7 @@ document.getElementById('announcement-search')?.addEventListener('input', functi
     gap: 10px;
 }
 
-.create-announcement-modal,
-.edit-announcement-modal {
+.create-announcement-modal {
     position: fixed;
     top: 0;
     left: 0;
@@ -392,8 +322,7 @@ document.getElementById('announcement-search')?.addEventListener('input', functi
     z-index: 10000;
 }
 
-.create-announcement-modal .modal-content,
-.edit-announcement-modal .modal-content {
+.create-announcement-modal .modal-content {
     background: white;
     padding: 20px;
     border-radius: 5px;
@@ -403,46 +332,40 @@ document.getElementById('announcement-search')?.addEventListener('input', functi
     margin-top: 10%;
 }
 
-.create-announcement-modal .form-group,
-.edit-announcement-modal .form-group {
+.create-announcement-modal .form-group {
     margin-bottom: 15px;
 }
 
-.create-announcement-modal label,
-.edit-announcement-modal label {
+.create-announcement-modal label {
     display: block;
     margin-bottom: 5px;
     font-weight: 500;
 }
 
 .create-announcement-modal input,
-.create-announcement-modal textarea,
-.edit-announcement-modal input,
-.edit-announcement-modal textarea {
+.create-announcement-modal textarea {
     width: 100%;
     padding: 8px;
     border: 1px solid #ddd;
     border-radius: 4px;
 }
 
-.create-announcement-modal textarea,
-.edit-announcement-modal textarea {
+.create-announcement-modal textarea {
     resize: vertical;
 }
 
-.create-announcement-modal button,
-.edit-announcement-modal button {
+.create-announcement-modal button {
     margin-right: 10px;
 }
 
-.edit-announcement-btn{
+.edit-announcement-btn {
     background-color: #007664;
     color: white;
 }
-.delete-announcement-btn{
+.delete-announcement-btn {
     background-color: #d9534f;
     color: white;
 }
 </style>
-
+<script src="<?php echo URLROOT; ?>/public/css/script.js"></script>
 <?php require APPROOT . '/views/inc/components/footer.php'; ?>
