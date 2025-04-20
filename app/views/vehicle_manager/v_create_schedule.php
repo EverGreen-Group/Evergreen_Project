@@ -422,5 +422,5 @@ document.addEventListener('DOMContentLoaded', function() {
         background-color: #059669;
     }
 </style>
-<script src="<?php echo URLROOT; ?>/css/script.js"></script>
+
 <?php require APPROOT . '/views/inc/components/footer.php'; ?> 

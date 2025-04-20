@@ -301,9 +301,9 @@
 
 
 <style>
-/* Existing Styles */
-:root {
-    --primary-color: var(--mainn, #28a745);
+  /* Root Variables */
+  :root {
+    --primary-color: var(--mainn);
     --secondary-color: #2ecc71;
     --text-primary: #2c3e50;
     --text-secondary: #7f8c8d;
@@ -321,15 +321,14 @@
     --border-radius-sm: 4px;
     --border-radius-md: 8px;
     --border-radius-lg: 12px;
-}
+  }
 
   /* Layout & Common Styles */
   main {
     padding: var(--spacing-sm); /* Reduced left margin */
     max-width: 1200px;
     margin: 0 auto;
-    transition: margin-left 0.3s ease;
-}
+  }
 
   .head-title {
     margin-bottom: var(--spacing-lg);
@@ -337,30 +336,30 @@
     flex-wrap: wrap;
     justify-content: space-between;
     align-items: center;
-}
+  }
 
-.head-title h1 {
+  .head-title h1 {
     color: var(--text-primary);
     font-size: 1.75rem;
     margin-bottom: var(--spacing-sm);
-}
+  }
 
-.breadcrumb {
+  .breadcrumb {
     display: flex;
     align-items: center;
     gap: var(--spacing-sm);
     list-style: none;
     padding: 0;
-}
+  }
 
-.breadcrumb a {
+  .breadcrumb a {
     color: var(--text-secondary);
     text-decoration: none;
-}
+  }
 
-.breadcrumb i {
+  .breadcrumb i {
     color: var(--primary-color);
-}
+  }
 
   /* Table Styles */
   .table-data {
@@ -398,8 +397,8 @@
     border-bottom: 1px solid var(--border-color);
   }
 
-/* Request Form Section */
-.request-form-section {
+  /* Request Form Section */
+  .request-form-section {
     margin-bottom: var(--spacing-xl);
   }
 
@@ -412,18 +411,18 @@
     font-size: 1.25rem;
   }
 
-.request-form-card {
+  .request-form-card {
     background-color: white;
     padding: var(--spacing-lg);
     border-radius: var(--border-radius-lg);
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-}
+  }
 
-.request-form-card form {
+  .request-form-card form {
     display: grid;
     grid-template-columns: 1fr 1fr;
     gap: var(--spacing-lg);
-}
+  }
 
   /* Adjust width of form fields */
   .request-form-card .form-group {
@@ -437,25 +436,25 @@
     width: 100%;
   }
 
-.request-form-card label {
+  .request-form-card label {
     margin-bottom: var(--spacing-xs);
     color: var(--text-primary);
-}
+  }
 
-.request-form-card input[type="text"],
-.request-form-card input[type="number"],
-.request-form-card select {
+  .request-form-card input[type="text"],
+  .request-form-card input[type="number"],
+  .request-form-card select {
     padding: var(--spacing-sm);
     border: 1px solid var(--border-color);
     border-radius: var(--border-radius-sm);
-}
+  }
 
-.read-only-group input {
+  .read-only-group input {
     background-color: var(--background-light);
     cursor: not-allowed;
-}
+  }
 
-.request-form-card .submit-btn {
+  .request-form-card .submit-btn {
     grid-column: span 2;
     padding: var(--spacing-md);
     background-color: var(--primary-color);
@@ -464,18 +463,18 @@
     border-radius: var(--border-radius-sm);
     cursor: pointer;
     font-size: 1rem;
-}
+  }
 
-.request-form-card .submit-btn:hover {
+  .request-form-card .submit-btn:hover {
     background-color: var(--secondary-color);
-}
+  }
 
-/* Request History Section */
-.request-history-section {
+  /* Request History Section */
+  .request-history-section {
     margin-bottom: var(--spacing-xl);
-}
+  }
 
-.schedule-card {
+  .schedule-card {
     background-color: white;
     padding: var(--spacing-lg);
     border-radius: var(--border-radius-lg);
@@ -483,28 +482,28 @@
     margin-bottom: var(--spacing-md);
     display: flex;
     flex-direction: column;
-}
+  }
 
-.card-content {
+  .card-content {
     flex: 1;
-}
+  }
 
-.card-header {
+  .card-header {
     margin-bottom: var(--spacing-md);
-}
+  }
 
-.status-badge {
+  .status-badge {
     display: inline-block;
     background-color: var(--primary-color);
     color: white;
     padding: var(--spacing-xs) var(--spacing-sm);
     border-radius: var(--border-radius-sm);
     font-size: 0.875rem;
-}
+  }
 
-.card-body {
+  .card-body {
     margin-top: var(--spacing-md);
-}
+  }
 
   .schedule-info {
     display: grid;
@@ -519,13 +518,13 @@
     grid-column: 1;
   }
 
-.info-item {
+  .info-item {
     display: flex;
     align-items: center;
     gap: var(--spacing-sm);
   }
 
-.info-item i {
+  .info-item i {
     color: var(--primary-color);
   }
 
@@ -557,83 +556,35 @@
     color: var(--danger-color);
   }
 
-.schedule-action {
+  /* Action Buttons Section */
+  .schedule-action {
     display: flex;
-    gap: var(--spacing-md);
-}
+    gap: var(--spacing-sm);
+    justify-content: flex-end;
+    margin-top: var(--spacing-md);
+    padding-top: var(--spacing-xs);
+    border-top: 1px solid var(--border-color);
+  }
 
-.update-btn,
-.cancel-btn {
-    background: none;
+  .update-btn,
+  .cancel-btn {
+    background: transparent;
     border: none;
     cursor: pointer;
-    font-size: 1.5rem;
-    color: var(--primary-color);
-}
+    font-size: 1.75rem;
+    padding: var(--spacing-xs) var(--spacing-sm);
+    border-radius: var(--border-radius-sm);
+    transition: background-color 0.3s ease, transform 0.2s ease;
+  }
 
-.update-btn:hover {
-    color: var(--secondary-color);
-}
+  .update-btn:hover {
+    background-color: var(--secondary-color);
+    color: white;
+    transform: scale(1.05);
+  }
 
-.cancel-btn:hover {
-    color: var(--warning-color);
-}
-
-/* Checkout Section Styles */
-.checkout-section {
-    margin-bottom: 2rem;
-}
-
-.checkout-section .section-header {
-    border-bottom: 1px solid #e0e0e0;
-    padding-bottom: 0.5rem;
-    margin-bottom: 1rem;
-}
-
-.checkout-section .section-header h3 {
-    margin: 0;
-    font-size: 1.5rem;
-    color: #2c3e50;
-}
-
-.checkout-section .request-form-card {
-    background-color: white;
-    padding: 1.5rem;
-    border-radius: 8px;
-    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
-}
-
-.checkout-section form {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 1rem;
-}
-
-.checkout-section .form-group {
-    display: flex;
-    flex-direction: column;
-}
-
-.checkout-section label {
-    margin-bottom: 0.25rem;
-    color: #2c3e50;
-    font-weight: 500;
-}
-
-.checkout-section input[type="text"],
-.checkout-section input[type="date"] {
-    padding: 0.5rem;
-    border: 1px solid #e0e0e0;
-    border-radius: 4px;
-    font-size: 1rem;
-}
-
-.checkout-section input[type="date"] {
-    color: #7f8c8d;
-}
-
-.checkout-section .submit-btn {
-    background-color: #28a745;
+  .cancel-btn:hover {
+    background-color: var(--warning-color);
     color: white;
     transform: scale(1.05);
   }

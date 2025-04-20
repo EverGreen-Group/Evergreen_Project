@@ -12,7 +12,8 @@
   "require": {
     "endroid/qr-code": "^4.0", 
     "bacon/bacon-qr-code": "^2.0",
-    "cboden/ratchet": "0.4.0"
+    "cboden/ratchet": "0.4.0",
+    "phpmailer/phpmailer": "^6.9"
   },
   "autoload": {
     "psr-4": {
@@ -25,5 +26,8 @@
       "name": "SW33TSTUFF",
       "email": "simaakniyaz@gmail.com"
     }
-  ]
+  ],
+  "require": {
+    "phpmailer/phpmailer": "^6.9"
+  }
 }

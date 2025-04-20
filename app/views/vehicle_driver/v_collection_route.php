@@ -1,5 +1,5 @@
 <?php require APPROOT . '/views/inc/components/header.php'; ?>
-<?php require APPROOT . '/views/inc/components/sidebar_vehicle_driver.php'; ?>
+<?php require APPROOT . '/views/inc/components/sidebar_supplier.php'; ?>
 <?php require APPROOT . '/views/inc/components/topnavbar.php'; ?>
 <link rel="stylesheet" href="<?php echo URLROOT; ?>/css/supplier/collection_1.css">
 <script>
