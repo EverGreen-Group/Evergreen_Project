@@ -12,18 +12,6 @@ const Chat = {
     init(urlRoot, userId, csrfToken) {
         this.URLROOT = urlRoot;
         this.currentUserId = userId;
-
-        if (typeof toastr !== 'undefined') {
-            toastr.options = {
-                closeButton: true,
-                progressBar: true,
-                positionClass: 'toast-top-right',
-                timeOut: '3000'
-            };
-        } else {
-            console.warn('Toastr is not loaded. Notifications will be logged to the console.');
-        }
-
         this.bindEvents();
     },
 
@@ -55,7 +43,7 @@ const Chat = {
         const message = messageInput.value.trim();
 
         if (!message || !this.currentChatUserId) {
-            this.showError('Cannot send message: Message or recipient missing.');
+            this.showError('Cannot send empty messages');
             return;
         }
 
@@ -191,7 +179,6 @@ const Chat = {
             return;
         }
 
-        // Get current message IDs in the UI
         const currentMessageIds = new Set(
             Array.from(document.querySelectorAll('[data-msg-id]')).map(div => parseInt(div.dataset.msgId))
         );
@@ -200,7 +187,6 @@ const Chat = {
         console.log('[displayMessages] Current UI message IDs:', [...currentMessageIds]);
         console.log('[displayMessages] Server message IDs:', [...newMessageIds]);
 
-        // Remove messages that are no longer in the server response (deleted)
         currentMessageIds.forEach(msgId => {
             if (!newMessageIds.has(msgId)) {
                 console.log(`[displayMessages] Removing deleted message ID: ${msgId}`);
@@ -208,11 +194,9 @@ const Chat = {
             }
         });
 
-        // Update or append messages
         messages.forEach(message => {
             const existingMessage = document.querySelector(`[data-msg-id="${message.message_id}"]`);
             if (existingMessage) {
-                // Check if message content or edited_at has changed
                 const currentText = existingMessage.querySelector('b').nextSibling.textContent.trim();
                 const currentEditedAt = existingMessage.dataset.editedTime || 'NULL';
                 const serverEditedAt = message.edited_at || 'NULL';
@@ -271,7 +255,7 @@ const Chat = {
     },
 
     updateMessage(data) {
-        const messagesDiv = document.getElementById('chat-messages'); // Added this line to define messagesDiv
+        const messagesDiv = document.getElementById('chat-messages');
         const messageDiv = document.querySelector(`[data-msg-id="${data.message_id}"]`);
         if (messageDiv) {
             const isSent = data.sender_id == this.currentUserId;
@@ -461,11 +445,73 @@ const Chat = {
     },
 
     showError(message) {
-        if (typeof toastr !== 'undefined') {
-            toastr.error(message, 'Error');
-        } else {
-            console.error('[showError]', message);
+        // Check if a flash container exists, if not create one
+        let flashContainer = document.getElementById('flash-messages');
+        if (!flashContainer) {
+            flashContainer = document.createElement('div');
+            flashContainer.id = 'flash-messages';
+            flashContainer.style.position = 'fixed';
+            flashContainer.style.top = '20px';
+            flashContainer.style.right = '20px';
+            flashContainer.style.zIndex = '1000';
+            flashContainer.style.display = 'flex';
+            flashContainer.style.flexDirection = 'column';
+            flashContainer.style.gap = '10px';
+            document.body.appendChild(flashContainer);
         }
+
+        // Create a flash message element (toast)
+        const flashMessage = document.createElement('div');
+        flashMessage.className = 'toast-message';
+        flashMessage.style.backgroundColor = '#f44336'; // Red background for error
+        flashMessage.style.color = '#fff';
+        flashMessage.style.padding = '12px 20px';
+        flashMessage.style.borderRadius = '8px';
+        flashMessage.style.boxShadow = '0 4px 12px rgba(0, 0, 0, 0.15)';
+        flashMessage.style.fontFamily = "'Poppins', sans-serif";
+        flashMessage.style.fontWeight = '500';
+        flashMessage.style.fontSize = '14px';
+        flashMessage.style.display = 'flex';
+        flashMessage.style.alignItems = 'center';
+        flashMessage.style.gap = '10px';
+        flashMessage.style.maxWidth = '300px';
+        flashMessage.style.opacity = '0';
+        flashMessage.style.transform = 'translateY(-20px)';
+        flashMessage.style.transition = 'opacity 0.3s ease, transform 0.3s ease';
+
+        flashMessage.innerHTML = `
+            <span>${message}</span>
+            <button class="close-toast" style="border: none; background: none; color: #fff; cursor: pointer; font-size: 16px; line-height: 1;">×</button>
+        `;
+
+        // Add the toast to the container
+        flashContainer.appendChild(flashMessage);
+
+        // Trigger the pop-up animation
+        setTimeout(() => {
+            flashMessage.style.opacity = '1';
+            flashMessage.style.transform = 'translateY(0)';
+        }, 10);
+
+        // Automatically remove the toast after 3 seconds
+        setTimeout(() => {
+            flashMessage.style.opacity = '0';
+            flashMessage.style.transform = 'translateY(-20px)';
+            setTimeout(() => {
+                flashMessage.remove();
+            }, 300);
+        }, 3000);
+
+        // Allow manual closing of the toast
+        flashMessage.querySelector('.close-toast').addEventListener('click', () => {
+            flashMessage.style.opacity = '0';
+            flashMessage.style.transform = 'translateY(-20px)';
+            setTimeout(() => {
+                flashMessage.remove();
+            }, 300);
+        });
+
+        console.log('[showError]', message);
     }
 };
 
