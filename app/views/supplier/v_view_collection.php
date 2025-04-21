@@ -32,8 +32,8 @@
                 <th>Collection ID</th>
                 <th>Date</th>
                 <th>Status</th>
-                <th>Driver ID</th>
-                <th>Vehicle ID</th>
+                <!-- <th>Driver ID</th>
+                <th>Vehicle ID</th> -->
                 <th>Quantity</th>
                 <th>Action</th>
               </tr>
@@ -48,8 +48,8 @@
                       <?php echo $collection->status; ?>
                     </span>
                   </td>
-                  <td data-label="Driver ID"><?php echo $collection->driver_id; ?></td>
-                  <td data-label="Vehicle ID"><?php echo $collection->vehicle_id; ?></td>
+                  <!-- <td data-label="Driver ID"><?php echo $collection->driver_id; ?></td>
+                  <td data-label="Vehicle ID"><?php echo $collection->vehicle_id; ?></td> -->
                   <td data-label="Quantity"><?php echo $collection->quantity; ?> kg</td>
                   <td data-label="Action">
                     <a href="<?php echo URLROOT; ?>/supplier/collectionBags/<?php echo $collection->collection_id; ?>" class="view-btn">
