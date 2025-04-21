@@ -87,18 +87,17 @@ const Chat = {
                         read_at: null,
                         edited_at: null,
                         message_type: 'text',
-                        sender_name: 'Me',
-                        is_deleted: false
+                        sender_name: 'Me'
                     });
                     this.lastMessageId = Math.max(this.lastMessageId, data.data.message_id);
-                    console.log(`sendMessage updated lastMessageId to: ${this.lastMessageId}`);
+                    console.log(`[sendMessage] Added message ID: ${data.data.message_id}, lastMessageId: ${this.lastMessageId}`);
                 }
                 messageInput.value = '';
             } else {
                 this.showError(data.message || 'Error sending message');
             }
         } catch (error) {
-            console.error('Error sending message:', error);
+            console.error('[sendMessage] Error:', error);
             this.showError(`Failed to send message: ${error.message}`);
             this.sentMessages.delete(messageKey);
         } finally {
@@ -117,6 +116,8 @@ const Chat = {
                 body: JSON.stringify({ receiver_id: receiverId, last_message_id: 0 })
             });
 
+            console.log('[fetchMessages] Response:', data);
+
             if (data.success && data.data && Array.isArray(data.data.messages)) {
                 this.displayMessages(data.data.messages, true, this.role);
                 this.startPolling(endpoint);
@@ -124,10 +125,10 @@ const Chat = {
                 messagesContainer.innerHTML = 'No messages found.';
                 const errorMessage = data.message || 'Invalid response structure';
                 this.showError(errorMessage);
-                console.error('fetchMessages: Invalid response structure', data);
+                console.error('[fetchMessages] Invalid response:', data);
             }
         } catch (error) {
-            console.error('Error fetching messages:', error);
+            console.error('[fetchMessages] Error:', error);
             messagesContainer.innerHTML = 'Error loading messages.';
             this.showError(`Failed to load messages: ${error.message}`);
         }
@@ -135,24 +136,23 @@ const Chat = {
 
     async fetchNewMessages(receiverId, endpoint) {
         try {
-            console.log(`Fetching new messages with lastMessageId: ${this.lastMessageId}`);
             const data = await this.fetchWithRetry(`${this.URLROOT}/${endpoint}/getMessages`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ receiver_id: receiverId, last_message_id: this.lastMessageId })
+                body: JSON.stringify({ receiver_id: receiverId, last_message_id: 0 })
             });
 
-            console.log('fetchNewMessages response:', data);
+            console.log('[fetchNewMessages] Response:', data);
 
             if (data.success && data.data && Array.isArray(data.data.messages)) {
-                this.displayMessages(data.data.messages, false, this.role);
+                this.displayMessages(data.data.messages, true, this.role);
             } else {
                 const errorMessage = data.message || 'Invalid response structure in fetchNewMessages';
                 this.showError(errorMessage);
-                console.error('fetchNewMessages: Invalid response structure', data);
+                console.error('[fetchNewMessages] Invalid response:', data);
             }
         } catch (error) {
-            console.error('Error fetching new messages:', error);
+            console.error('[fetchNewMessages] Error:', error);
             this.showError(`Failed to load new messages: ${error.message}`);
         }
     },
@@ -175,36 +175,59 @@ const Chat = {
 
     displayMessages(messages, clearPrevious, role) {
         const messagesContainer = document.getElementById('chat-messages');
-        if (clearPrevious) messagesContainer.innerHTML = '';
+        if (clearPrevious) {
+            messagesContainer.innerHTML = '';
+        }
 
         if (!messages || !Array.isArray(messages)) {
             messagesContainer.innerHTML = 'No messages available.';
+            console.log('[displayMessages] No messages or invalid array');
             return;
         }
 
         if (messages.length === 0 && clearPrevious) {
             messagesContainer.innerHTML = 'No messages found.';
+            console.log('[displayMessages] Empty messages array');
             return;
         }
 
+        // Get current message IDs in the UI
+        const currentMessageIds = new Set(
+            Array.from(document.querySelectorAll('[data-msg-id]')).map(div => parseInt(div.dataset.msgId))
+        );
+        const newMessageIds = new Set(messages.map(msg => msg.message_id));
+
+        console.log('[displayMessages] Current UI message IDs:', [...currentMessageIds]);
+        console.log('[displayMessages] Server message IDs:', [...newMessageIds]);
+
+        // Remove messages that are no longer in the server response (deleted)
+        currentMessageIds.forEach(msgId => {
+            if (!newMessageIds.has(msgId)) {
+                console.log(`[displayMessages] Removing deleted message ID: ${msgId}`);
+                this.deleteMessage(msgId);
+            }
+        });
+
+        // Update or append messages
         messages.forEach(message => {
             const existingMessage = document.querySelector(`[data-msg-id="${message.message_id}"]`);
             if (existingMessage) {
-                // Update existing message if edited
-                if (message.edited_at && existingMessage.dataset.editedTime !== message.edited_at) {
+                // Check if message content or edited_at has changed
+                const currentText = existingMessage.querySelector('b').nextSibling.textContent.trim();
+                const currentEditedAt = existingMessage.dataset.editedTime || 'NULL';
+                const serverEditedAt = message.edited_at || 'NULL';
+                if (currentText !== message.message || currentEditedAt !== serverEditedAt) {
+                    console.log(`[displayMessages] Updating message ID: ${message.message_id}, new text: ${message.message}, edited_at: ${serverEditedAt}`);
                     this.updateMessage(message);
                 }
-                // Remove message if marked as deleted
-                if (message.is_deleted) {
-                    this.deleteMessage(message.message_id);
-                }
-            } else if (!message.is_deleted) {
-                // Append new non-deleted message
+            } else {
+                console.log(`[displayMessages] Appending message ID: ${message.message_id}, text: ${message.message}`);
                 this.appendMessage(message);
                 this.lastMessageId = Math.max(this.lastMessageId, message.message_id);
-                console.log(`Updated lastMessageId to: ${this.lastMessageId}`);
             }
         });
+
+        console.log(`[displayMessages] Updated lastMessageId to: ${this.lastMessageId}`);
         messagesContainer.scrollTop = messagesContainer.scrollHeight;
     },
 
@@ -244,9 +267,11 @@ const Chat = {
         `;
         messagesDiv.appendChild(messageDiv);
         messagesDiv.scrollTop = messagesDiv.scrollHeight;
+        console.log(`[appendMessage] Added message ID: ${data.message_id}`);
     },
 
     updateMessage(data) {
+        const messagesDiv = document.getElementById('chat-messages'); // Added this line to define messagesDiv
         const messageDiv = document.querySelector(`[data-msg-id="${data.message_id}"]`);
         if (messageDiv) {
             const isSent = data.sender_id == this.currentUserId;
@@ -278,12 +303,17 @@ const Chat = {
                     </div>
                 </div>
             `;
+            messagesDiv.scrollTop = messagesDiv.scrollHeight;
+            console.log(`[updateMessage] Updated message ID: ${data.message_id}, new text: ${data.message}`);
         }
     },
 
     deleteMessage(messageId) {
         const messageDiv = document.querySelector(`[data-msg-id="${messageId}"]`);
-        if (messageDiv) messageDiv.remove();
+        if (messageDiv) {
+            messageDiv.remove();
+            console.log(`[deleteMessage] Removed message ID: ${messageId}`);
+        }
     },
 
     bindUserSelection(role, endpoint) {
@@ -349,15 +379,15 @@ const Chat = {
                                 read_at: messageDiv.dataset.readTime,
                                 edited_at: new Date().toISOString(),
                                 message_type: messageDiv.dataset.messageType,
-                                sender_name: 'Me',
-                                is_deleted: false
+                                sender_name: 'Me'
                             });
                             document.querySelector('.edit-message-modal').style.display = 'none';
+                            console.log(`[editMessage] Edited message ID: ${messageId}, new text: ${newMessage}`);
                         } else {
                             this.showError(data.message || 'Error editing message');
                         }
                     } catch (error) {
-                        console.error('Error editing message:', error);
+                        console.error('[editMessage] Error:', error);
                         this.showError(`Failed to edit message: ${error.message}`);
                     }
                 };
@@ -385,17 +415,19 @@ const Chat = {
                         if (data.success) {
                             this.deleteMessage(messageId);
                             document.querySelector('.confirm-modal').style.display = 'none';
+                            console.log(`[deleteMessage] Confirmed deletion of message ID: ${messageId}`);
                         } else {
                             this.showError(data.message || 'Error deleting message');
                         }
                     } catch (error) {
-                        console.error('Error deleting message:', error);
+                        console.error('[deleteMessage] Error:', error);
                         this.showError(`Failed to delete message: ${error.message}`);
                     }
                 };
 
                 document.getElementById('confirm-cancel-btn').onclick = () => {
                     document.querySelector('.confirm-modal').style.display = 'none';
+                    console.log('[deleteMessage] Cancelled deletion');
                 };
             }
 
@@ -432,7 +464,7 @@ const Chat = {
         if (typeof toastr !== 'undefined') {
             toastr.error(message, 'Error');
         } else {
-            console.error(message);
+            console.error('[showError]', message);
         }
     }
 };
