@@ -183,6 +183,12 @@ class Route extends Controller{
             setFlashMessage('Route not found', 'error');
             redirect('route');
         }
+
+        $isAssigned = $this->routeModel->isRouteAssigned($id);
+        if ($isAssigned) {
+            setFlashMessage('Cannot edit assigned route.', 'error');
+            redirect('route');
+        }
         
         $availableVehicles = $this->vehicleModel->getAllAvailableVehicles();
         $currentVehicle = $this->vehicleModel->getVehicleById($route->vehicle_id);

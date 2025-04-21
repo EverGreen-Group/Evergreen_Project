@@ -1069,24 +1069,18 @@ class M_CollectionSchedule {
         return $result->count > 0;
     }
 
-    public function checkRouteScheduleConflictExcludingCurrent($routeId, $day, $startTime, $endTime, $currentScheduleId) {
-        $newStartTime = strtotime("2000-01-01 " . $startTime);
-        $newEndTime = strtotime("2000-01-01 " . $endTime);
-                // Convert times for comparison
-        // Get all schedules for this route on this day, excluding the current one
+    public function checkRouteScheduleConflictExcludingCurrent($routeId,$currentScheduleId) {
         $this->db->query("SELECT * FROM collection_schedules 
-                         WHERE route_id = :route_id 
-                         AND day = :day 
-                         AND schedule_id != :current_schedule_id
-                         AND is_deleted = 0");
+                          WHERE route_id = :route_id 
+                          AND schedule_id != :current_schedule_id
+                          AND is_deleted = 0");
         
         $this->db->bind(':route_id', $routeId);
-        $this->db->bind(':day', $day);
         $this->db->bind(':current_schedule_id', $currentScheduleId);
         
         $schedules = $this->db->resultSet();
-        
-        return $this->hasScheduleConflict($newStartTime, $newEndTime, $schedules);
+    
+        return !empty($schedules); //can ret 1 if there is conflict
     }
 
 

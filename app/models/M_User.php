@@ -521,8 +521,8 @@ class M_User {
         $this->db->query("
             UPDATE users SET role_id = :role_id WHERE user_id = :user_id
         ");
-        $this->db->bind(':role_id', $userId);
-        $this->db->bind(':user_id', $roleId);
+        $this->db->bind(':role_id', $roleId);
+        $this->db->bind(':user_id', $userId);
 
         return $this->db->execute();
     }

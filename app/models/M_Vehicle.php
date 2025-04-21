@@ -415,6 +415,16 @@ class M_Vehicle {
         }
     }
 
+    public function isVehicleAssignedToRoute($vehicleId) {
+        $sql = "SELECT COUNT(*) AS count FROM routes r
+                WHERE r.vehicle_id = :vehicle_id AND r.is_deleted = 0";
+        
+        $this->db->query($sql);
+        $this->db->bind(':vehicle_id', $vehicleId);
+        $result = $this->db->single(); 
+        return $result ? $result->count > 0 : false; 
+    }
+
     public function updateVehicleStatus($vehicleId, $status) {
         $this->db->query('UPDATE vehicles SET status = :status WHERE vehicle_id = :vehicle_id');
 

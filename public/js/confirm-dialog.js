@@ -82,6 +82,9 @@ document.addEventListener("DOMContentLoaded", function () {
         // If it's in a form, submit the form
         if (form) {
           form.submit();
+        } else {
+          // If it's a link, navigate to its href
+          window.location.href = button.getAttribute("href");
         }
       });
     });

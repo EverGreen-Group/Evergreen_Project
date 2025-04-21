@@ -205,16 +205,16 @@ class M_SupplierApplication {
     
 
     public function getAllApplications($filters = [], $limit = 5, $offset = 0) {
-        $sql = '
+        $sql = "
         SELECT supplier_applications.*, users.email, managers.manager_id, 
-               CONCAT(profiles.first_name, \' \', profiles.last_name) AS manager_name,
+               CONCAT(profiles.first_name, ' ', profiles.last_name) AS manager_name,
                profiles.image_path AS manager_image
         FROM supplier_applications
         LEFT JOIN users ON supplier_applications.user_id = users.user_id
         LEFT JOIN managers ON managers.manager_id = supplier_applications.reviewed_by
         LEFT JOIN profiles ON profiles.profile_id = managers.profile_id 
         WHERE 1=1
-        ';
+        ";
         
         $params = [];
     

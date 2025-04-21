@@ -575,6 +575,13 @@ class M_Route {
         return $result ? $result->totalUnassigned : 0; 
     }
 
+    public function isRouteAssigned($routeId) {
+        $this->db->query("SELECT COUNT(*) as count FROM collection_schedules WHERE route_id = :route_id AND is_deleted = 0");
+        $this->db->bind(':route_id', $routeId);
+        $result = $this->db->single();
+        return $result && $result->count > 0; 
+    }
+
 
     // I MADE THIS FOR OPTIMIZATIOn, REMOVED THE SEQUENTIAL LINKED LIST LIKE APPROACH!!
 
