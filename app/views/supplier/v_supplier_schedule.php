@@ -2,458 +2,265 @@
 <?php require APPROOT . '/views/inc/components/sidebar_supplier.php'; ?>
 <?php require APPROOT . '/views/inc/components/topnavbar.php'; ?>
 
-<script>
-    const URLROOT = '<?php echo URLROOT; ?>';
-</script>
-
 <main>
-<div id="toast" class="toast" style="display: none;"></div>
-    <div class="head-title">
-        <div class="left">
-            <h1>Schedule Subscription</h1>
-            <ul class="breadcrumb">
-                <li><a href="<?php echo URLROOT; ?>/supplier/dashboard">Dashboard</a></li>
-                <li><i class='bx bx-chevron-right'></i></li>
-                <li><a class="active" href="#">Available Schedules</a></li>
-            </ul>
-        </div>
+  <div class="head-title">
+    <div class="left">
+      <h1>My Schedule</h1>
+      <ul class="breadcrumb">
+        <li>
+          <i class='bx bx-home'></i>
+          <a href="<?php echo URLROOT; ?>/Supplier/dashboard/">Dashboard</a>
+        </li>
+        <li>
+          <span>Schedule</span>
+        </li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="schedule-container">
+    <div class="schedule-box">
+      <h3>Schedule Information</h3>
+      <table class="schedule-table">
+        <tr>
+          <td><strong>Schedule ID:</strong></td>
+          <td><?php echo $data['schedule_id']; ?></td>
+        </tr>
+        <tr>
+          <td><strong>Route ID:</strong></td>
+          <td><?php echo $data['route_id']; ?></td>
+        </tr>
+        <tr>
+          <td><strong>Route Name:</strong></td>
+          <td><?php echo $data['route_name']; ?></td>
+        </tr>
+        <tr>
+          <td><strong>Collection Day:</strong></td>
+          <td><?php echo $data['day']; ?></td>
+        </tr>
+        <tr>
+          <td><strong>Start Time:</strong></td>
+          <td><?php echo date('h:i A', strtotime($data['start_time'])); ?></td>
+        </tr>
+      </table>
     </div>
 
-    <?php if (!empty($data['error'])): ?>
-        <div class="error-message">
-            <?php echo $data['error']; ?>
-        </div>
-    <?php endif; ?>
-
-    <!-- Current Subscriptions Section -->
-    <div class="schedule-section">
-        <div class="section-header">
-            <h3>Your Current Schedule</h3>
-        </div>
-
-        <?php if (!empty($data['subscribedSchedules'])): ?>
-            <?php foreach($data['subscribedSchedules'] as $schedule): ?>
-                <div class="schedule-card">
-                    <div class="card-content">
-                        <div class="card-body">
-                            <div class="info-row">
-                                <div class="info-group">
-                                    <div class="info-item">
-                                        <i class='bx bx-map'></i>
-                                        <span>Route: <strong><?php echo $schedule['route_name']; ?></strong></span>
-                                    </div>
-                                    <div class="info-item">
-                                        <i class='bx bx-calendar'></i>
-                                        <span>Collection Day: <strong><?php echo $schedule['day']; ?></strong></span>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="info-row">
-                                <div class="info-group">
-                                    <div class="info-item">
-                                        <i class='bx bx-time-five'></i>
-                                        <span>Time: <strong><?php echo $schedule['shift_time']; ?></strong></span>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="info-row">
-                                <div class="info-group">
-                                    <div class="info-item">
-                                        <i class='bx bx-car'></i>
-                                        <span>Vehicle: <strong><?php echo $schedule['vehicle']; ?></strong></span>
-                                    </div>
-                                </div>
-                                <!-- <div class="action-buttons">
-                                    <button class="btn-unsubscribe" onclick="unsubscribeFromRoute(<?php echo $schedule['schedule_id']; ?>, <?php echo $_SESSION['supplier_id']; ?>)">
-                                        <i class='bx bx-x-circle'></i>
-                                        Unsubscribe
-                                    </button>
-                                </div> -->
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            <?php endforeach; ?>
+    <div class="schedule-box">
+      <h3>Driver Information</h3>
+      <div class="driver-info">
+        <?php if(!empty($data['driver_image'])): ?>
+          <img src="<?php echo URLROOT; ?>/<?php echo $data['driver_image']; ?>" alt="Driver" class="driver-image">
         <?php else: ?>
-            <div class="no-schedule">
-                <p class="no-routes-message">You are not subscribed to any collection routes.</p>
-            </div>
+          <div class="no-image">No Image Available</div>
         <?php endif; ?>
+        
+        <table class="schedule-table">
+          <tr>
+            <td><strong>Driver ID:</strong></td>
+            <td><?php echo $data['driver_id']; ?></td>
+          </tr>
+          <tr>
+            <td><strong>Name:</strong></td>
+            <td><?php echo $data['driver_name']; ?></td>
+          </tr>
+          <tr>
+            <td><strong>Contact:</strong></td>
+            <td><?php echo $data['contact_number']; ?></td>
+          </tr>
+        </table>
+      </div>
     </div>
 
+    <div class="schedule-box">
+      <h3>Vehicle Information</h3>
+      <div class="vehicle-info">
+        <?php if(!empty($data['vehicle_image'])): ?>
+          <img src="<?php echo URLROOT; ?>/<?php echo $data['vehicle_image']; ?>" alt="Vehicle" class="vehicle-image">
+        <?php else: ?>
+          <div class="no-image">No Image Available</div>
+        <?php endif; ?>
+        
+        <table class="schedule-table">
+          <tr>
+            <td><strong>Vehicle ID:</strong></td>
+            <td><?php echo $data['vehicle_id']; ?></td>
+          </tr>
+          <tr>
+            <td><strong>License Plate:</strong></td>
+            <td><?php echo $data['license_plate']; ?></td>
+          </tr>
+          <tr>
+            <td><strong>Type:</strong></td>
+            <td><?php echo $data['vehicle_type']; ?></td>
+          </tr>
+          <tr>
+            <td><strong>Make:</strong></td>
+            <td><?php echo $data['make']; ?></td>
+          </tr>
+          <tr>
+            <td><strong>Model:</strong></td>
+            <td><?php echo $data['model']; ?></td>
+          </tr>
+          <tr>
+            <td><strong>Color:</strong></td>
+            <td><?php echo $data['color']; ?></td>
+          </tr>
+        </table>
+      </div>
+    </div>
 
+    <div class="reminder">
+      <p><strong>Remember:</strong> Collection occurs every <?php echo $data['day']; ?> starting at <?php echo date('h:i A', strtotime($data['start_time'])); ?>.</p>
+    </div>
+  </div>
 </main>
 
-<style>
-:root {
-  /* Color Variables */
-  --primary-color: #27ae60;
-  --primary-light: rgba(39, 174, 96, 0.1);
-  --secondary-color: #2ecc71;
-  --text-primary: #2c3e50;
-  --text-secondary: #7f8c8d;
-  --background-light: #f8f9fa;
-  --card-bg: #ffffff;
-  --border-color: #e0e0e0;
-  --success-color: #27ae60;
-  --warning-color: #f39c12;
-  --danger-color: #e74c3c;
-  
-  /* Spacing */
-  --spacing-xs: 0.25rem;
-  --spacing-sm: 0.5rem;
-  --spacing-md: 1rem;
-  --spacing-lg: 1.5rem;
-  --spacing-xl: 2rem;
-  
-  /* Border Radius */
-  --border-radius-sm: 4px;
-  --border-radius-md: 8px;
-  --border-radius-lg: 12px;
-  --border-radius-xl: 16px;
-  
-  /* Shadow */
-  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.12);
-  --shadow-md: 0 4px 6px rgba(0, 0, 0, 0.1);
-  --shadow-lg: 0 10px 15px rgba(0, 0, 0, 0.07);
-}
-
-/* Layout & Common Styles */
-main {
-  padding: var(--spacing-lg);
-  max-width: 1200px;
-  margin: 0 auto;
-}
-
-/* Dashboard Header */
-.head-title {
-  margin-bottom: var(--spacing-xl);
-}
-
-.head-title h1 {
-  color: var(--text-primary);
-  font-size: 1.75rem;
-  margin-bottom: var(--spacing-sm);
-}
-
-.breadcrumb {
-  display: flex;
-  align-items: center;
-  gap: var(--spacing-sm);
-  list-style: none;
-  padding: 0;
-}
-
-.breadcrumb a {
-  color: var(--text-secondary);
-  text-decoration: none;
-}
-
-.breadcrumb i {
-  color: var(--primary-color);
-}
-
-/* Schedule Section */
-.schedule-section {
-  background-color: var(--card-bg);
-  border-radius: var(--border-radius-lg);
-  box-shadow: var(--shadow-md);
-  padding: var(--spacing-lg);
-  margin-bottom: var(--spacing-xl);
-}
-
-.section-header {
-  margin-bottom: var(--spacing-lg);
-  border-bottom: 1px solid var(--border-color);
-  padding-bottom: var(--spacing-md);
-}
-
-.section-header h3 {
-  font-size: 1.5rem;
-  color: var(--text-primary);
-  margin: 0;
-}
-
-/* Schedule Cards */
-.schedule-card {
-  background-color: var(--card-bg);
-  border-radius: var(--border-radius-lg);
-  border: 1px solid var(--border-color);
-  box-shadow: var(--shadow-sm);
-  margin-bottom: var(--spacing-md);
-  transition: transform 0.2s, box-shadow 0.2s;
-  overflow: hidden;
-}
-
-.schedule-card:hover {
-  transform: translateY(-3px);
-  box-shadow: var(--shadow-lg);
-}
-
-/* Your Current Subscriptions specific styling */
-.schedule-section:first-of-type .schedule-card {
-  border-left: 4px solid var(--primary-color);
-}
-
-/* Available Routes specific styling */
-.schedule-section:last-of-type .schedule-card {
-  border-left: 4px solid var(--text-secondary);
-}
-
-.card-content {
-  padding: var(--spacing-lg);
-}
-
-.card-body {
-  display: flex;
-  flex-direction: column;
-  gap: var(--spacing-md);
-}
-
-/* Information Layout */
-.info-row {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: var(--spacing-lg);
-}
-
-.info-group {
-  flex: 1;
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-  gap: var(--spacing-md);
-}
-
-.info-item {
-  display: flex;
-  align-items: center;
-  gap: var(--spacing-sm);
-  padding: var(--spacing-sm);
-  border-radius: var(--border-radius-sm);
-}
-
-.info-item i {
-  font-size: 1.2rem;
-  color: var(--primary-color);
-  min-width: 24px;
-}
-
-.info-item span {
-  color: var(--text-primary);
-  font-size: 0.95rem;
-}
-
-.info-item strong {
-  color: var(--text-primary);
-  font-weight: 600;
-}
-
-/* Action Buttons */
-.action-buttons {
-  display: flex;
-  justify-content: flex-end;
-  min-width: 140px;
-}
-
-.btn-subscribe,
-.btn-unsubscribe {
-  display: flex;
-  align-items: center;
-  gap: var(--spacing-sm);
-  padding: var(--spacing-sm) var(--spacing-md);
-  border: none;
-  border-radius: var(--border-radius-md);
-  font-size: 0.9rem;
-  font-weight: 500;
-  cursor: pointer;
-  transition: all 0.3s ease;
-}
-
-.btn-subscribe {
-  background-color: var(--primary-color);
-  color: white;
-}
-
-.btn-subscribe:hover {
-  background-color: var(--secondary-color);
-}
-
-.btn-unsubscribe {
-  background-color: var(--danger-color);
-  color: white;
-}
-
-.btn-unsubscribe:hover {
-  background-color: #c82333;
-}
-
-/* No Schedule Message */
-.no-schedule {
-  text-align: center;
-  padding: var(--spacing-xl);
-  color: var(--text-secondary);
-  background-color: white;
-  border-radius: var(--border-radius-md);
-  border: 1px dashed var(--border-color);
-}
-
-.no-routes-message {
-  color: var(--text-primary);
-  font-weight: 500;
-}
-
-/* Toast Notifications */
-.toast {
-  position: fixed;
-  top: var(--spacing-lg);
-  right: var(--spacing-lg);
-  padding: var(--spacing-md) var(--spacing-lg);
-  border-radius: var(--border-radius-md);
-  z-index: 1000;
-  display: none;
-  animation: slideIn 0.3s ease-in-out;
-  max-width: 350px;
-  box-shadow: var(--shadow-md);
-}
-
-.toast.success {
-  background-color: var(--success-color);
-  color: white;
-}
-
-.toast.error {
-  background-color: var(--danger-color);
-  color: white;
-}
-
-@keyframes slideIn {
-  from {
-    transform: translateX(100%);
-    opacity: 0;
-  }
-  to {
-    transform: translateX(0);
-    opacity: 1;
-  }
-}
-
-@keyframes fadeOut {
-  from {
-    opacity: 1;
-  }
-  to {
-    opacity: 0;
-  }
-}
-
-/* Responsive Design */
-@media screen and (max-width: 768px) {
-  .info-row {
-    flex-direction: column;
-    align-items: flex-start;
-  }
-  
-  .action-buttons {
-    width: 100%;
-    justify-content: flex-start;
-    margin-top: var(--spacing-sm);
-  }
-  
-  .btn-subscribe,
-  .btn-unsubscribe {
-    width: 100%;
-    justify-content: center;
-    padding: var(--spacing-md);
-  }
-}
-
-@media screen and (max-width: 480px) {
-  .card-content {
-    padding: var(--spacing-md);
-  }
-  
-  .info-group {
-    grid-template-columns: 1fr;
-  }
-}
-
-.error-message {
-  background-color: var(--danger-color);
-  color: white;
-  padding: var(--spacing-md);
-  border-radius: var(--border-radius-md);
-  margin-bottom: var(--spacing-lg);
-}
-</style>
-
-<script>
-function showToast(message, type = 'error') {
-    const toast = document.getElementById('toast');
-    toast.textContent = message;
-    toast.className = `toast ${type}`;
-    toast.style.display = 'block';
-
-    // Hide after 3 seconds
-    setTimeout(() => {
-        toast.style.animation = 'fadeOut 0.3s ease-in-out';
-        setTimeout(() => {
-            toast.style.display = 'none';
-            toast.style.animation = '';
-        }, 300);
-    }, 3000);
-}
-
-function subscribeToRoute(scheduleId) {
-    if (confirm('Are you sure you want to subscribe to this collection route?')) {
-        fetch(URLROOT + '/supplier/subscribeToRoute', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/x-www-form-urlencoded',
-            },
-            body: 'schedule_id=' + scheduleId + '&supplier_id=' + <?php echo $_SESSION['supplier_id']; ?>
-        })
-        .then(response => response.text())
-        .then(text => {
-            const result = JSON.parse(text);
-            if (result.success) {
-                showToast('Successfully subscribed to route!', 'success');
-                setTimeout(() => location.reload(), 1000);
-            } else {
-                showToast(result.message || 'Failed to subscribe to route');
-            }
-        })
-        .catch(() => {
-            showToast('An error occurred. Please try again.');
-        });
-    }
-}
-
-function unsubscribeFromRoute(scheduleId, supplierId) {
-    if (confirm('Are you sure you want to unsubscribe from this collection route?')) {
-        fetch(URLROOT + '/supplier/unsubscribeFromRoute', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/x-www-form-urlencoded',
-            },
-            body: 'schedule_id=' + scheduleId + '&supplier_id=' + supplierId
-        })
-        .then(response => response.text())
-        .then(text => {
-            const result = JSON.parse(text);
-            if (result.success) {
-                showToast('Successfully unsubscribed from route!', 'success');
-                setTimeout(() => location.reload(), 1000);
-            } else {
-                showToast(result.message || 'Failed to unsubscribe from route');
-            }
-        })
-        .catch(() => {
-            showToast('An error occurred. Please try again.');
-        });
-    }
-}
-</script>
 <script src="<?php echo URLROOT; ?>/public/css/script.js"></script>
 
 <?php require APPROOT . '/views/inc/components/footer.php'; ?>
+
+<style>
+  main {
+    padding: 20px;
+    max-width: 1000px;
+    margin: 0 auto;
+  }
+
+  .head-title {
+    margin-bottom: 20px;
+  }
+
+  .head-title h1 {
+    color: #333;
+    font-size: 24px;
+    margin-bottom: 10px;
+  }
+
+  .breadcrumb {
+    display: flex;
+    align-items: center;
+    list-style: none;
+    padding: 0;
+    margin: 0;
+  }
+
+  .breadcrumb li {
+    display: inline;
+    margin-right: 10px;
+  }
+
+  .breadcrumb a {
+    color: #666;
+    text-decoration: none;
+  }
+
+  .schedule-container {
+    margin-top: 20px;
+  }
+
+  .schedule-box {
+    background-color: white;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    margin-bottom: 20px;
+    padding: 15px;
+  }
+
+  .schedule-box h3 {
+    margin-top: 0;
+    border-bottom: 1px solid #eee;
+    padding-bottom: 10px;
+    margin-bottom: 15px;
+    color: var(--mainn);
+  }
+
+  .schedule-table {
+    width: 100%;
+    border-collapse: collapse;
+  }
+
+  .schedule-table td {
+    padding: 8px;
+    border-bottom: 1px solid #eee;
+  }
+
+  .schedule-table tr:last-child td {
+    border-bottom: none;
+  }
+
+  .driver-info, .vehicle-info {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 20px;
+  }
+
+  .driver-image, .vehicle-image {
+    width: 150px;
+    height: 150px;
+    object-fit: cover;
+    border: 1px solid #ddd;
+  }
+
+  .no-image {
+    width: 150px;
+    height: 150px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: #f5f5f5;
+    border: 1px solid #ddd;
+    color: #999;
+    font-size: 14px;
+    text-align: center;
+  }
+
+  .reminder {
+    background-color: #f8f9fa;
+    border-left: 4px solid var(--mainn);
+    padding: 10px 15px;
+    margin-top: 20px;
+    border-radius: 3px;
+  }
+
+  .reminder p {
+    margin: 0;
+    color: #555;
+  }
+
+  /* Responsive styles */
+  @media (max-width: 768px) {
+    .driver-info, .vehicle-info {
+      flex-direction: column;
+    }
+    
+    .driver-image, .vehicle-image, .no-image {
+      margin: 0 auto 15px auto;
+    }
+  }
+
+  @media (max-width: 480px) {
+    main {
+      padding: 10px;
+    }
+    
+    .schedule-table td {
+      display: block;
+    }
+    
+    .schedule-table td:first-child {
+      font-weight: bold;
+      padding-bottom: 0;
+      border-bottom: none;
+    }
+    
+    .schedule-table tr {
+      border-bottom: 1px solid #eee;
+      display: block;
+      padding: 5px 0;
+    }
+    
+    .schedule-table tr:last-child {
+      border-bottom: none;
+    }
+  }
+</style>

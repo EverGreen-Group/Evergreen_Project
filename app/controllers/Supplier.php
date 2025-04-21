@@ -226,37 +226,33 @@ class Supplier extends Controller {
     public function schedule() {
         $supplierId = $_SESSION['supplier_id'];
 
-        try {
-            // Get subscribed and available schedules separately
-            $subscribedSchedules = $this->scheduleModel->getSubscribedSchedules($supplierId);
-            $availableSchedules = $this->scheduleModel->getAvailableSchedules($supplierId);
-            
-            $formatSchedule = function($schedule) {
-                return [
-                    'schedule_id' => $schedule->schedule_id,
-                    'route_name' => $schedule->route_name,
-                    'day' => $schedule->day,
-                    'shift_time' => $schedule->shift_time,
-                    'remaining_capacity' => $schedule->remaining_capacity,
-                    'vehicle' => $schedule->license_plate,
-                    'is_subscribed' => (bool)$schedule->is_subscribed
-                ];
-            };
+        $result = $this->supplierModel->getSupplierSchedule($supplierId);
+        if(!$result) {
+            setFlashMessage('You arent in any schedule! Please submit a complaint requesting a collection day!', 'warning');
+            redirect('supplier/');
+        } 
 
-            $data = [
-                'subscribedSchedules' => array_map($formatSchedule, $subscribedSchedules),
-                'availableSchedules' => array_map($formatSchedule, $availableSchedules),
-                'error' => ''
-            ];
-        } catch (Exception $e) {
-            error_log($e->getMessage());
-            
-            $data = [
-                'subscribedSchedules' => [],
-                'availableSchedules' => [],
-                'error' => 'An error occurred while fetching schedules. Please try again later.'
-            ];
-        }
+        $data = [
+            'schedule_id' => $result->schedule_id,
+            'route_id' => $result->route_id,
+            'driver_id' => $result->driver_id,
+            'day' => $result->day,
+            'start_time' =>$result->start_time,
+            'route_name' => $result->route_name,
+            'vehicle_id' => $result->vehicle_id,
+            'license_plate' => $result->license_plate,
+            'vehicle_type' => $result->vehicle_type,
+            'make' => $result->make,
+            'model' => $result->model,
+            'color' => $result->color,
+            'driver_image' => $result->driver_image,
+            'vehicle_image' => $result->vehicle_image,
+            'driver_name' => $result->driver_name,
+            'contact_number' => $result->contact_number
+
+        ];
+
+
 
         $this->view('supplier/v_supplier_schedule', $data);
     }
@@ -683,17 +679,32 @@ class Supplier extends Controller {
     }
 
     public function collections() {
-        $supplier_id = $_SESSION['supplier_id'] ?? null;
-        if (!$supplier_id) {
-            throw new Exception("Supplier ID not found. Please login again!");
-        }
+        
+        $supplierId = $_SESSION['supplier_id'];
 
-        $collectionDetails = $this->collectionModel->getCollectionDetails($supplier_id);
-
+        $collections = $this->collectionModel->getSupplierCollections($supplierId);
+        
         $data = [
-            'collectionDetails' => $collectionDetails
+            'collections' => $collections
         ];
-        $this->view('supplier/v_collections', $data);
+        
+        $this->view('supplier/v_view_collection', $data);
+    }
+
+    public function collectionBags($collection_id) {
+
+
+        $supplier_id = $_SESSION['supplier_id'];
+        
+        // Get bags for this collection that belong to this supplier
+        $bags = $this->collectionModel->getSupplierBagsForCollection($supplier_id, $collection_id);
+        
+        $data = [
+            'collection_id' => $collection_id,
+            'bags' => $bags
+        ];
+        
+        $this->view('supplier/v_collection_bags', $data);
     }
 
     public function getUnallocatedSuppliersByDay($day) {
@@ -710,15 +721,6 @@ class Supplier extends Controller {
         echo json_encode(['success' => true, 'data' => $suppliers]);
     }
 
-    public function getBagDetails($collectionId) {
-        // Fetch bag details from the model using the collection ID
-        $bagDetails = $this->bagModel->getBagsByCollectionId($collectionId);
-
-        // Return the bag details as JSON
-        header('Content-Type: application/json');
-        echo json_encode($bagDetails);
-        exit();
-    }
 
     public function bag($bagId) {
         $data = [

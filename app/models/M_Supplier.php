@@ -282,6 +282,26 @@ class M_Supplier {
         return $this->db->resultSet();
     }
 
+    public function getSupplierSchedule($supplierId) {
+        $this->db->query("
+            SELECT cs.*, r.route_name, v.*, p.*, p.image_path AS driver_image, v.image_path AS vehicle_image, CONCAT(p.first_name, ' ', p.last_name) AS driver_name
+            FROM collection_schedules cs
+            JOIN routes r ON cs.route_id = r.route_id
+            JOIN vehicles v on r.vehicle_id = v.vehicle_id
+            JOIN route_suppliers rs ON r.route_id = rs.route_id
+            JOIN drivers d ON cs.driver_id = d.driver_id
+            JOIN profiles p ON p.profile_id = d.profile_id
+            WHERE rs.supplier_id = :supplier_id
+            AND cs.is_deleted = 0
+            AND r.is_deleted = 0
+            AND rs.is_deleted = 0
+        ");
+    
+        $this->db->bind(':supplier_id', $supplierId);
+        
+        return $this->db->single();
+    }
+
     public function updateStatus($data)
     {
         $this->db->query("UPDATE complaints SET status = :status WHERE complaint_id = :complaint_id");
@@ -477,6 +497,9 @@ class M_Supplier {
         
         return $this->db->resultSet();
     }
+
+
+
 
     
 
