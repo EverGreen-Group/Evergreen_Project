@@ -48,7 +48,7 @@
             </div>
         </li>
 
-        <li class="stat-card">
+        <!-- <li class="stat-card">
             <div class="stat-content">
                 <i class='bx bx-check'></i>
                 <div class="stat-info">
@@ -56,7 +56,7 @@
                     <p>Currently On Duty</p>
                 </div>
             </div>
-        </li>
+        </li> -->
 
     </ul>
 
@@ -103,10 +103,6 @@
     <div class="order">
         <div class="head">
             <h3>Drivers</h3>
-            <a href="<?php echo URLROOT; ?>/manager/viewInactiveDrivers" class="btn btn-primary">
-                <i class='bx bx-show'></i>
-                View Inactive Drivers
-            </a>
         </div>
         <table>
             <thead>
@@ -117,9 +113,7 @@
                     <th>NIC</th>
                     <th>Contact Number</th>
                     <th>License Number</th>
-                    <th>License Expiry</th>
                     <th>Status</th>
-                    <th>Collections Count</th>
                     <th>Actions</th>
                 </tr>
             </thead>
@@ -132,9 +126,11 @@
                         <td><?php echo htmlspecialchars($driver->nic); ?></td>
                         <td><?php echo htmlspecialchars($driver->contact_number); ?></td>
                         <td><?php echo htmlspecialchars($driver->license_number); ?></td>
-                        <td><?php echo htmlspecialchars($driver->license_expiry_date); ?></td>
-                        <td><?php echo htmlspecialchars($driver->status); ?></td>
-                        <td><?php echo htmlspecialchars($driver->collections_count); ?></td>
+                        <td>
+                                    <span class="status-badge <?php echo $driver->status == 'Active' ? 'added' : 'removed'; ?>">
+                                        <?php echo $driver->status; ?>
+                                    </span>
+                                </td>
                         <td>
                             <div style="display: flex; gap: 5px;">
                                 <!-- View button with icon -->
@@ -155,13 +151,6 @@
                                     <i class='bx bx-pencil' style="font-size: 24px; color:green;"></i>
                                 </a>
                                 
-                                <!-- Delete button with icon only -->
-                                <a href="<?php echo URLROOT; ?>/manager/deleteDriver/<?php echo $driver->driver_id; ?>" 
-                                   class="btn btn-tertiary" 
-                                   style="display: flex; align-items: center; justify-content: center; width: 40px; height: 40px; border: none; background: none;" 
-                                   >
-                                    <i class='bx bx-user-x' style="font-size: 24px; color:red;"></i>
-                                </a>
                             </div>
                         </td>
                     </tr>

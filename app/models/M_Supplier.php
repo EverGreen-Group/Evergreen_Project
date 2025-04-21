@@ -218,6 +218,48 @@ class M_Supplier {
         $result = $this->db->single();
         return $result->count ?? 0;
     }
+
+    public function getTotalKgThisMonth($supplierId)
+    {
+        $this->db->query("
+            SELECT SUM(actual_weight_kg) as quantity 
+            FROM bag_usage_history 
+            WHERE supplier_id = :supplier_id
+              AND MONTH(finalized_at) = MONTH(CURRENT_DATE()) 
+              AND YEAR(finalized_at) = YEAR(CURRENT_DATE())
+        ");
+        $this->db->bind(':supplier_id', $supplierId);
+        $result = $this->db->single();
+        return $result->quantity ?? 0;
+    }
+
+    public function kgSuppliedLastCollection($supplierId)
+    {
+        $this->db->query("
+            SELECT collection_id 
+            FROM collection_supplier_records 
+            WHERE supplier_id = :supplier_id 
+            ORDER BY collection_time DESC 
+            LIMIT 1
+        ");
+        $this->db->bind(':supplier_id', $supplierId);
+        $latestCollection = $this->db->single();
+
+        if (!$latestCollection) {
+            return 0; 
+        }
+
+        $collectionId = $latestCollection->collection_id;
+        $this->db->query("
+            SELECT SUM(actual_weight_kg) as quantity 
+            FROM bag_usage_history 
+            WHERE collection_id = :collection_id 
+        ");
+        $this->db->bind(':collection_id', $collectionId);
+        $result = $this->db->single();
+
+        return $result->quantity ?? 0; 
+    }
     
 
     public function getComplaintsByStatus($status)

@@ -62,15 +62,15 @@ class M_Driver{
     }
 
 
-    public function getAllDrivers() {
-        $this->db->query('
-            SELECT d.*, p.first_name, p.last_name, p.nic, p.date_of_birth, p.contact_number, u.email
+    public function getAllDrivers() {   // tested
+        $this->db->query("
+            SELECT d.*, p.first_name, p.last_name, p.nic, p.date_of_birth, p.contact_number, u.email, CONCAT(p.first_name, ' ', p.last_name) AS full_name
             FROM drivers d
             JOIN profiles p ON d.profile_id = p.profile_id
             JOIN users u ON p.user_id = u.user_id
             WHERE d.is_deleted = 0
             ORDER BY d.driver_id DESC
-        ');
+        ");
         
         return $this->db->resultSet();
     }
@@ -130,7 +130,7 @@ class M_Driver{
 
 
 
-    public function getDriverDetails($driverId) {
+    public function getDriverDetails($driverId) {   // tested
         $this->db->query('
             SELECT d.*,p.*
             FROM drivers d
@@ -143,6 +143,58 @@ class M_Driver{
         $this->db->bind(':driver_id', $driverId);
         return $this->db->single();
         
+    }
+
+
+    public function updateDriverProfile($driverId, $data) {
+        $this->db->query('SELECT profile_id FROM drivers WHERE driver_id = :driver_id');
+        $this->db->bind(':driver_id', $driverId);
+        $driver = $this->db->single();
+    
+        if (!$driver) {
+            throw new Exception('Driver not found.');
+        }
+    
+        $profileId = $driver->profile_id;
+    
+        $this->db->query('UPDATE profiles SET 
+            first_name = :first_name, 
+            last_name = :last_name, 
+            nic = :nic, 
+            date_of_birth = :date_of_birth, 
+            contact_number = :contact_number, 
+            image_path = :image_path,
+            updated_at = CURRENT_TIMESTAMP()  -- updating the timestamp
+            WHERE profile_id = :profile_id');
+    
+        // Bind the parameters
+        $this->db->bind(':first_name', $data['first_name']);
+        $this->db->bind(':last_name', $data['last_name']);
+        $this->db->bind(':nic', $data['nic']);
+        $this->db->bind(':date_of_birth', $data['date_of_birth']);
+        $this->db->bind(':contact_number', $data['contact_number']);
+        $this->db->bind(':image_path', $data['image_path']);
+        $this->db->bind(':profile_id', $profileId);
+    
+        // Execute the query and return the result
+        return $this->db->execute();
+    }
+
+    public function updateDriverInfo($driverId, $data) {
+        $this->db->query('UPDATE drivers SET 
+            license_number = :license_number, 
+            hire_date = :hire_date, 
+            status = :status 
+            WHERE driver_id = :driver_id');
+    
+        // Bind the parameters
+        $this->db->bind(':license_number', $data['license_number']);
+        $this->db->bind(':hire_date', $data['hire_date']);
+        $this->db->bind(':status', $data['status']);
+        $this->db->bind(':driver_id', $driverId);
+    
+        // Execute the query and return the result
+        return $this->db->execute();
     }
 
 
@@ -269,17 +321,13 @@ class M_Driver{
     }
 
     public function createDriver($data) {
-        $this->db->query('INSERT INTO drivers (profile_id, license_number, license_expiry_date, hire_date, status, image_path) 
-                          VALUES (:profile_id, :license_number, :license_expiry_date, :hire_date, :status, :image_path)');
+        $this->db->query('INSERT INTO drivers (profile_id,license_number, hire_date) 
+                          VALUES (:profile_id, :license_number, :hire_date)');
         
         $this->db->bind(':profile_id', $data['profile_id']);
         $this->db->bind(':license_number', $data['license_number']);
-        $this->db->bind(':license_expiry_date', $data['license_expiry_date']);
         $this->db->bind(':hire_date', $data['hire_date']);
-        $this->db->bind(':status', $data['status']);
-        $this->db->bind(':image_path', $data['image_path']);
         
-        // Execute
         if($this->db->execute()) {
             return $this->db->lastInsertId();
         } else {

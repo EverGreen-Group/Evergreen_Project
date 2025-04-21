@@ -1545,3 +1545,76 @@ body.dark .auth-form-group input {
   background-color: #ffe2e5;
   color: var(--red);
 }
+
+.status-badge {
+  padding: 5px 10px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: bold;
+  text-transform: uppercase;
+  display: inline-block;
+}
+
+.added {
+  background-color: var(--mainn);
+  color: white;
+}
+
+.updated {
+  background-color: #e1f0ff;
+  color: #3699ff;
+}
+
+.removed {
+  background-color: var(--red);
+  color: white;
+}
+
+.oranged {
+  background-color: #ff822f;
+  color: white;
+}
+
+.unknown {
+  background-color: #eee5ff;
+  color: #7337ee;
+}
+
+/* FOR THAT SMALL IMAGE BALL */
+
+.manager-link {
+  display: flex;
+  align-items: center;
+  text-decoration: none;
+  color: inherit; /* Inherit text color */
+}
+
+.manager-photo {
+  width: 30px; /* Set the desired width */
+  height: 30px; /* Set the desired height */
+  border-radius: 50%; /* Make it circular */
+  margin-right: 8px; /* Space between image and name */
+  object-fit: cover; /* Ensure the image covers the area */
+}
+
+/* TEMP TABLE DATA NICE */
+
+/* 
+
+
+
+.table-data table td {
+  font-family: "Poppins", sans-serif;
+  font-weight: 500;
+  font-size: 20px;
+  color: var(--dark);
+}
+
+.table-data table td a {
+  text-decoration: none;
+  transition: color 0.2s;
+}
+
+.table-data table td a:hover {
+  color: var(--main);
+} */

@@ -49,10 +49,10 @@
 
         <li class="stat-card">
             <div class="stat-content">
-                <i class='bx bx-check'></i>
+                <i class='bx bx-wrench'></i>
                 <div class="stat-info">
-                    <h3><?php echo $availableVehicles; ?></h3>
-                    <p>Currently Available</p>
+                    <h3><?php echo $totalMaintainance; ?></h3>
+                    <p>In Maintainance</p>
                 </div>
             </div>
         </li>
@@ -84,20 +84,12 @@
                     </select>
                 </div>
                 <div class="filter-group">
-                    <label for="capacity">Capacity:</label>
-                    <input type="number" id="capacity" name="capacity" placeholder="Enter capacity" step="0.01">
-                </div>
-                <div class="filter-group">
-                    <label for="make">Make:</label>
-                    <input type="text" id="make" name="make" placeholder="Enter vehicle make">
-                </div>
-                <div class="filter-group">
-                    <label for="model">Model:</label>
-                    <input type="text" id="model" name="model" placeholder="Enter vehicle model">
-                </div>
-                <div class="filter-group">
-                    <label for="manufacturing-year">Manufacturing Year:</label>
-                    <input type="number" id="manufacturing-year" name="manufacturing_year" placeholder="Enter year" min="1900" max="2100">
+                    <label for="status">Status:</label>
+                    <select id="status" name="status">
+                        <option value="">Select Status</option>
+                        <option value="Active">Active</option>
+                        <option value="Maintenance">Maintenance</option>
+                    </select>
                 </div>
                 <button type="submit" class="btn btn-primary">Search</button>
             </form>
@@ -109,9 +101,9 @@
     <div class="order">
         <div class="head">
             <h3>Vehicles</h3>
-            <a href="<?php echo URLROOT; ?>/manager/createVehicle" class="btn btn-primary">
-                <i class='bx bx-show'></i>
-                View Removed Vehicles
+            <a href="<?php echo URLROOT; ?>/manager/viewMaintenance" class="btn btn-primary">
+                <i class='bx bx-wrench'></i>
+                View Maintenance Logs
             </a>
         </div>
         <table>
@@ -119,12 +111,10 @@
                 <tr>
                     <th>Vehicle ID</th>
                     <th>License Plate</th>
-                    <th>Status</th>
-                    <th>Capacity</th>
+                    <th>Payload</th>
                     <th>Type</th>
-                    <th>Make</th>
-                    <th>Model</th>
-                    <th>Manufacturing Year</th>
+                    <th>Colour</th>
+                    <th>Status</th>
                     <th>Actions</th>
                 </tr>
             </thead>
@@ -133,15 +123,18 @@
                     <tr class="vehicle-row" data-vehicle-id="<?php echo htmlspecialchars($vehicle->vehicle_id); ?>">
                         <td><?php echo htmlspecialchars($vehicle->vehicle_id); ?></td>
                         <td><?php echo htmlspecialchars($vehicle->license_plate); ?></td>
-                        <td><?php echo htmlspecialchars($vehicle->status); ?></td>
-                        <td><?php echo htmlspecialchars($vehicle->capacity); ?></td>
+
+                        <td><?php echo htmlspecialchars(floor($vehicle->capacity)) . ' kg'; ?></td>
                         <td><?php echo htmlspecialchars($vehicle->vehicle_type); ?></td>
-                        <td><?php echo htmlspecialchars($vehicle->make); ?></td>
-                        <td><?php echo htmlspecialchars($vehicle->model); ?></td>
-                        <td><?php echo htmlspecialchars($vehicle->manufacturing_year); ?></td>
+                        <td><?php echo htmlspecialchars($vehicle->color); ?></td>
+                        <td>
+                            <span class="status-badge <?php echo $vehicle->status == 'Active' ? 'added' : 'oranged'; ?>">
+                                <?php echo $vehicle->status == 'Active' ? 'ACTIVE' : 'MAINTAINANCE'; ?>
+                            </span>
+                        </td>
                         <td>
                             <div style="display: flex; gap: 5px;">
-                                <!-- View button with icon -->
+                                <!-- View button -->
                                 <a 
                                     href="<?php echo URLROOT; ?>/manager/viewVehicle/<?php echo $vehicle->vehicle_id; ?>" 
                                     class="btn btn-tertiary" 
@@ -150,7 +143,7 @@
                                     <i class='bx bx-show' style="font-size: 24px; color:blue;"></i> <!-- Boxicon for view -->
                                 </a>
 
-                                <!-- Manage button with icon only -->
+                                <!-- Manage button  -->
                                 <a 
                                     href="<?php echo URLROOT; ?>/manager/updateVehicle/<?php echo $vehicle->vehicle_id; ?>" 
                                     class="btn btn-tertiary" 
@@ -158,11 +151,31 @@
                                 >
                                     <i class='bx bx-cog' style="font-size: 24px; color:green;"></i> <!-- Boxicon for settings -->
                                 </a>
+
+                                <?php if($vehicle->status == 'Active'): ?>
+                                <a 
+                                    href="<?php echo URLROOT; ?>/manager/addMaintenance/<?php echo $vehicle->vehicle_id; ?>" 
+                                    class="btn btn-tertiary" 
+                                    style="display: flex; align-items: center; justify-content: center; width: 40px; height: 40px; border: none; background: none;"
+                                >
+                                    <i class='bx bx-wrench' style="font-size: 24px; color: orange;"></i>
+                                </a>
+                                <?php else: ?>
+                                <span 
+                                    class="btn btn-tertiary" 
+                                    style="display: flex; align-items: center; justify-content: center; width: 40px; height: 40px; border: none; background: none; cursor: not-allowed; color: gray;"
+                                    title="This vehicle cannot be sent to maintenance."
+                                >
+                                    <i class='bx bx-wrench' style="font-size: 24px; color: gray;"></i>
+                                </span>
+                                <?php endif;?>
                                 
-                                <!-- Delete button with icon only -->
+                                
+                                <!-- Delete button  -->
                                 <a href="<?php echo URLROOT; ?>/manager/deleteVehicle/<?php echo $vehicle->vehicle_id; ?>" 
                                    class="btn btn-tertiary" 
                                    style="display: flex; align-items: center; justify-content: center; width: 40px; height: 40px; border: none; background: none;" 
+                                   data-confirm="Do you want to delete this vehicle : <?php echo $vehicle->vehicle_id . ' | ' .  $vehicle->license_plate; ?>" 
                                    >
                                     <i class='bx bx-trash' style="font-size: 24px; color:red;"></i> <!-- Boxicon for trash -->
                                 </a>

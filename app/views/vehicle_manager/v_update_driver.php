@@ -24,46 +24,9 @@
             </ul>
         </div>
     </div>
+
     
-    <!-- Error Messages -->
-    <?php if(!empty($data['error'])): ?>
-        <div class="alert alert-danger">
-            <?php echo $data['error']; ?>
-        </div>
-    <?php endif; ?>
-    
-    <form method="POST" action="<?php echo URLROOT; ?>/manager/updateDriver/<?php echo $data['driver']->driver_id; ?>" enctype="multipart/form-data">
-        
-        <!-- Personal Information Section -->
-        <div class="table-data">
-            <div class="order">
-                <div class="head">
-                    <h3>Personal Information</h3>
-                </div>
-                <div class="section-content">
-                    <div class="info-row">
-                        <label class="label" for="first_name">First Name:</label>
-                        <input type="text" id="first_name" name="first_name" class="form-control" value="<?php echo htmlspecialchars($data['profile']->first_name); ?>" required>
-                    </div>
-                    <div class="info-row">
-                        <label class="label" for="last_name">Last Name:</label>
-                        <input type="text" id="last_name" name="last_name" class="form-control" value="<?php echo htmlspecialchars($data['profile']->last_name); ?>" required>
-                    </div>
-                    <div class="info-row">
-                        <label class="label" for="nic">NIC:</label>
-                        <input type="text" id="nic" name="nic" class="form-control" value="<?php echo htmlspecialchars($data['profile']->nic); ?>" readonly>
-                    </div>
-                    <div class="info-row">
-                        <label class="label" for="date_of_birth">Date of Birth:</label>
-                        <input type="date" id="date_of_birth" name="date_of_birth" class="form-control" value="<?php echo htmlspecialchars($data['profile']->date_of_birth); ?>" required>
-                    </div>
-                    <div class="info-row">
-                        <label class="label" for="contact_number">Contact Number:</label>
-                        <input type="tel" id="contact_number" name="contact_number" class="form-control" value="<?php echo htmlspecialchars($data['profile']->contact_number); ?>" required>
-                    </div>
-                </div>
-            </div>
-        </div>
+    <form method="POST" action="<?php echo URLROOT; ?>/manager/updateDriver/<?php echo $data['driver_id']; ?>" enctype="multipart/form-data">
         
         <!-- Driver Information Section -->
         <div class="table-data">
@@ -74,38 +37,33 @@
                 <div class="section-content">
                     <div class="info-row">
                         <label class="label" for="license_number">License Number:</label>
-                        <input type="text" id="license_number" name="license_number" class="form-control" value="<?php echo htmlspecialchars($data['driver']->license_number); ?>" readonly>
-                    </div>
-                    <div class="info-row">
-                        <label class="label" for="license_expiry_date">License Expiry Date:</label>
-                        <input type="date" id="license_expiry_date" name="license_expiry_date" class="form-control" value="<?php echo htmlspecialchars($data['driver']->license_expiry_date); ?>" required>
+                        <input type="text" id="license_number" name="license_number" class="form-control" value="<?php echo htmlspecialchars($data['license_number']); ?>" required>
                     </div>
                     <div class="info-row">
                         <label class="label" for="hire_date">Hire Date:</label>
-                        <input type="date" id="hire_date" name="hire_date" class="form-control" value="<?php echo htmlspecialchars($data['driver']->hire_date); ?>" readonly>
+                        <input type="date" id="hire_date" name="hire_date" class="form-control" value="<?php echo htmlspecialchars($data['hire_date']); ?>" required>
                     </div>
                     <div class="info-row">
                         <label class="label" for="status">Status:</label>
                         <select id="status" name="status" class="form-control" required>
-                            <option value="Active" <?php echo $data['driver']->status == 'Active' ? 'selected' : ''; ?>>Active</option>
-                            <option value="Inactive" <?php echo $data['driver']->status == 'Inactive' ? 'selected' : ''; ?>>Inactive</option>
-                            <option value="On Leave" <?php echo $data['driver']->status == 'On Leave' ? 'selected' : ''; ?>>On Leave</option>
+                            <option value="Active" <?php echo $data['status'] == 'Active' ? 'selected' : ''; ?>>Active</option>
+                            <option value="Inactive" <?php echo $data['status'] == 'Inactive' ? 'selected' : ''; ?>>Inactive</option>
                         </select>
                     </div>
                     
                     <!-- Current image display -->
-                    <?php if(!empty($data['driver']->image_path)): ?>
+                    <?php if (!empty($data['image_path'])): ?>
                     <div class="info-row">
                         <label class="label">Current Image:</label>
                         <div class="image-preview">
-                            <img src="<?php echo URLROOT . '/' . $data['driver']->image_path; ?>" alt="Driver Photo" style="max-width: 200px; max-height: 200px;">
+                            <img src="<?php echo URLROOT . '/' . $data['image_path']; ?>" alt="Driver Photo" style="max-width: 200px; max-height: 200px;">
                         </div>
                     </div>
                     <?php endif; ?>
                     
                     <div class="info-row">
-                        <label class="label" for="driver_image">Upload New Image:</label>
-                        <input type="file" id="driver_image" name="driver_image" class="form-control" accept="image/*">
+                        <label class="label" for="image_path">Upload New Image:</label>
+                        <input type="file" id="image_path" name="image_path" class="form-control" accept="image/*">
                     </div>
                 </div>
             </div>

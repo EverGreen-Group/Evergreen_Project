@@ -47,58 +47,31 @@ class Supplier extends Controller {
 
     public function index() {
         $supplierId = $_SESSION['supplier_id'];
-        $collectionId = $this->collectionModel->checkCollectionExistsUsingSupplierId($supplierId);
-    
-        try {
-            // Get all schedules
-            $allSchedules = $this->scheduleModel->getUpcomingSchedulesBySupplierId($supplierId);
-            $supplierStatus = $this->supplierModel->getSupplierStatus($supplierId);
-            
-            // Organize schedules by day, filtering out already collected schedules for today
-            $todaySchedules = [];
-            $upcomingSchedules = [];
 
-            foreach ($allSchedules as $schedule) {
-                // Skip schedules that already have collections for today
-                // if ($schedule->is_today && $schedule->collection_exists > 0) {
-                //     continue;
-                // }
-                
-                if ($schedule->is_today) {
-                    $todaySchedules[] = $schedule;
-                } else {
-                    $upcomingSchedules[] = $schedule;
-                }
-            }
-            
+        // No of tea leaves kg this month
+        $teaLeavesKg = $this->supplierModel->getTotalKgThisMonth($supplierId);
+        // No of kg last collection
+        $teaLeavesKgLastCollection = $this->supplierModel->kgSuppliedLastCollection($supplierId);
+        $vehicleModel = $this->model('M_Vehicle');
+
+        $collectionId = $this->collectionModel->checkCollectionExistsUsingSupplierId($supplierId);
+        if($collectionId) {
+            $schedule = $this->scheduleModel->getTodayScheduleBySupplierId($supplierId);
+            $collectionDetails = $this->collectionModel->getCollectionDetails($collectionId);
+            $vehicleLocation = $vehicleModel->getVehicleLocation($collectionDetails->vehicle_id);
             $data = [
-                'todaySchedules' => $todaySchedules,
-                'upcomingSchedules' => $upcomingSchedules,
-                'currentWeek' => date('W'),
-                'currentDay' => date('l'),
-                'lastUpdated' => date('Y-m-d H:i:s'),
-                'message' => '',
-                'error' => '',
-                'collectionId' => $collectionId,
-                'is_active' => $supplierStatus
-            ];
-            
-            if (empty($todaySchedules) && empty($upcomingSchedules)) {
-                $data['message'] = 'No upcoming schedules found.';
-            }
-            
-        } catch (Exception $e) {
-            // Log the error
-            error_log($e->getMessage());
-            
-            $data = [
-                'todaySchedules' => [],
-                'upcomingSchedules' => [],
-                'message' => '',
-                'error' => 'An error occurred while fetching schedules. Please try again later.',
-                'collectionId' => $collectionId
+                'schedule' => $schedule,
+                'collectionDetails' => $collectionDetails,
+                'vehicleLocation' => $vehicleLocation,
+                'teaLeavesKg' => $teaLeavesKg,
+                'teaLeavesKgLastCollection' => $teaLeavesKgLastCollection
             ];
         }
+        $supplierStatus = $this->supplierModel->getSupplierStatus($supplierId);
+        $data['is_active'] = $supplierStatus;
+        $data['teaLeavesKg'] = $teaLeavesKg;
+        $data['teaLeavesKgLastCollection'] = $teaLeavesKgLastCollection;
+        
         $this->view('supplier/v_supply_dashboard', $data);
     }
 

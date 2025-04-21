@@ -7,8 +7,8 @@ class M_Vehicle {
         $this->db = new Database();
     }
 
-    public function getAllAvailableVehicles() {
-        $this->db->query("SELECT v.* FROM vehicles v where status = 'Available' AND is_deleted = 0");
+    public function getAllAvailableVehicles() { // tested
+        $this->db->query("SELECT v.* FROM vehicles v where status = 'Active' AND is_deleted = 0");
         return $this->db->resultSet();
     }
 
@@ -49,18 +49,18 @@ class M_Vehicle {
         return $result;
     }
 
-    public function createVehicle($data) {
+    public function createVehicle($data) {  // tested
         try {
             $this->db->beginTransaction();
 
             $sql = "INSERT INTO vehicles (
                 license_plate, vehicle_type,
-                status, make, model, manufacturing_year,
-                color, capacity, image_path
+                make, model, manufacturing_year,
+                capacity, image_path
             ) VALUES (
                 :license_plate, :vehicle_type,
-                :status, :make, :model, :manufacturing_year,
-                :color, :capacity, :image_path
+                :make, :model, :manufacturing_year,
+                :capacity, :image_path
             )";
 
             $this->db->query($sql);
@@ -68,11 +68,9 @@ class M_Vehicle {
             // Bind values with correct data types and NULL handling
             $this->db->bind(':license_plate', $data['license_plate']);
             $this->db->bind(':vehicle_type', $data['vehicle_type']);
-            $this->db->bind(':status', $data['status'] ?: 'Available');
             $this->db->bind(':make', $data['make'] ?: NULL);
             $this->db->bind(':model', $data['model'] ?: NULL);
             $this->db->bind(':manufacturing_year', $data['manufacturing_year'] ?: NULL);
-            $this->db->bind(':color', $data['color'] ?: NULL);
             $this->db->bind(':capacity', $data['capacity'] ?: NULL);
             $this->db->bind(':image_path', $data['image_path'] ?: NULL);
 
@@ -82,48 +80,58 @@ class M_Vehicle {
             return $result;
         } catch (PDOException $e) {
             $this->db->rollBack();
-            error_log("Error creating vehicle: " . $e->getMessage());
             return false;
         }
     }
 
-    public function updateVehicle($data) {
-        // Prepare the SQL statement
+    public function updateVehicle($data) {  // tested
         $this->db->query("UPDATE vehicles SET 
             vehicle_type = :vehicle_type,
             make = :make,
             model = :model,
             manufacturing_year = :manufacturing_year,
-            color = :color,
             capacity = :capacity,
             image_path = :image_path
             WHERE license_plate = :license_plate");
 
-        // Bind the parameters
-        $this->db->bind(':license_plate', $data['license_plate']); // Use the existing license plate
+        $this->db->bind(':license_plate', $data['license_plate']);
         $this->db->bind(':vehicle_type', $data['vehicle_type']);
         $this->db->bind(':make', $data['make']);
         $this->db->bind(':model', $data['model']);
         $this->db->bind(':manufacturing_year', $data['manufacturing_year']);
-        $this->db->bind(':color', $data['color']);
         $this->db->bind(':capacity', $data['capacity']);
         
-        // Bind the image path if it exists
+
         if (isset($data['image_path'])) {
             $this->db->bind(':image_path', $data['image_path']);
         } else {
-            // If no new image is uploaded, bind a default value or keep it unchanged
-            $this->db->bind(':image_path', $data['current_image_path']); // Assuming you have the current image path
+
+            $this->db->bind(':image_path', $data['current_image_path']); 
         }
 
-        // Execute the query
-        return $this->db->execute(); // Return the result of the execution
+
+        return $this->db->execute();
     }
 
     public function getVehicleByRouteId($id) {
         $this->db->query('SELECT * FROM vehicles v JOIN routes r ON r.vehicle_id = v.vehicle_id WHERE route_id = :id');
         $this->db->bind(':id', $id);
         return $this->db->single();
+    }
+
+    public function isVehicleInRoute($vehicle_id) {
+        $this->db->query('SELECT r.route_name FROM routes r WHERE r.vehicle_id = :vehicle_id AND r.is_deleted = 0');
+        $this->db->bind(':vehicle_id', $vehicle_id);
+        $result = $this->db->single();
+    
+        return $result ? $result->route_name : null;
+    }
+
+    public function inMaintainanceCount() {
+        $this->db->query("SELECT COUNT(v.vehicle_id) as count FROM vehicles v WHERE v.status = 'Maintenance' AND v.is_deleted = 0");
+        $result = $this->db->single();
+    
+        return $result ? $result->count : 0;
     }
 
     public function getVehicleByVehicleId($id) {
@@ -146,13 +154,13 @@ class M_Vehicle {
         return $row->count > 0;
     }
 
-    public function getVehicleById($id) {
+    public function getVehicleById($id) {   // tested
         $this->db->query('SELECT * FROM vehicles WHERE vehicle_id = :vehicle_id');
         $this->db->bind(':vehicle_id', $id);
         return $this->db->single();
     }  
     
-    public function getVehicleIdByScheduleId($id) {
+    public function getVehicleIdByScheduleId($id) {     // tested
         $this->db->query('
         SELECT v.* FROM collection_schedules cs 
         JOIN routes r ON cs.route_id = r.route_id
@@ -197,17 +205,6 @@ class M_Vehicle {
         return $result->count > 0;
     }
 
-    public function getVehicleDocuments($vehicleId) {
-        $this->db->query("SELECT * FROM vehicle_document WHERE vehicle_id = :vehicle_id");
-        $this->db->bind(':vehicle_id', $vehicleId);
-        return $this->db->resultSet();
-    }
-
-    public function getMaintenanceRecords($vehicleId) {
-        $this->db->query("SELECT * FROM maintenance_records WHERE vehicle_id = :vehicle_id ORDER BY maintenance_date DESC");
-        $this->db->bind(':vehicle_id', $vehicleId);
-        return $this->db->resultSet();
-    }
 
     public function getAvailableVehiclesByDay($day) {
         $this->db->query('
@@ -249,53 +246,29 @@ class M_Vehicle {
 
     }
 
-    public function getFilteredVehicles($license_plate = null, $vehicle_type = null, $capacity = null, $make = null, $model = null, $manufacturing_year = null) {
-        $sql = "SELECT * FROM vehicles WHERE 1=1 AND is_deleted = 0"; // Start with a base query
-
-        // Build the query based on provided filters
+    public function getFilteredVehicles($license_plate = null, $vehicle_type = null, $status = null) {  // tested
+        $sql = "SELECT * FROM vehicles WHERE 1=1 AND is_deleted = 0"; 
+    
         if (!empty($license_plate)) {
             $sql .= " AND license_plate = :license_plate";
         }
         if (!empty($vehicle_type)) {
             $sql .= " AND vehicle_type = :vehicle_type";
         }
-        if (!empty($capacity)) {
-            $sql .= " AND capacity >= :capacity";
+        if (!empty($status)) {
+            $sql .= " AND status = :status"; 
         }
-        if (!empty($make)) {
-            $sql .= " AND make = :make";
-        }
-        if (!empty($model)) {
-            $sql .= " AND model = :model";
-        }
-        if (!empty($manufacturing_year)) {
-            $sql .= " AND manufacturing_year = :manufacturing_year";
-        }
-
-        // Prepare the statement
+    
         $this->db->query($sql);
-
-        // Bind parameters if they were set
         if (!empty($license_plate)) {
             $this->db->bind(':license_plate', $license_plate);
         }
         if (!empty($vehicle_type)) {
             $this->db->bind(':vehicle_type', $vehicle_type);
         }
-        if (!empty($capacity)) {
-            $this->db->bind(':capacity', $capacity);
+        if (!empty($status)) {
+            $this->db->bind(':status', $status);
         }
-        if (!empty($make)) {
-            $this->db->bind(':make', $make);
-        }
-        if (!empty($model)) {
-            $this->db->bind(':model', $model);
-        }
-        if (!empty($manufacturing_year)) {
-            $this->db->bind(':manufacturing_year', $manufacturing_year);
-        }
-
-        // Execute the query and return the results
         return $this->db->resultSet();
     }
 
@@ -322,7 +295,7 @@ class M_Vehicle {
         }
     }
 
-    public function isLicensePlateTaken($license_plate) {
+    public function isLicensePlateTaken($license_plate) {   // tested
         $this->db->query("SELECT COUNT(*) as count FROM vehicles WHERE license_plate = :license_plate AND is_deleted = 0");
         $this->db->bind(':license_plate', $license_plate);
         
@@ -334,7 +307,7 @@ class M_Vehicle {
 
    // FOR VEHICLE HISTORY
 
-    public function getVehicleCollectionHistory($vehicle_id) {
+    public function getVehicleCollectionHistory($vehicle_id) {  // tested
         $this->db->query("
             SELECT 
                 c.collection_id, 
@@ -347,8 +320,8 @@ class M_Vehicle {
                 cs.start_time AS schedule_start_time,
                 cs.end_time AS schedule_end_time,
                 r.route_name,
-                d.first_name AS driver_first_name,
-                d.last_name AS driver_last_name
+                p.first_name AS driver_first_name,
+                p.last_name AS driver_last_name
             FROM 
                 collections c
             LEFT JOIN 
@@ -357,8 +330,10 @@ class M_Vehicle {
                 routes r ON cs.route_id = r.route_id
             LEFT JOIN 
                 drivers d ON cs.driver_id = d.driver_id
+            LEFT JOIN
+                profiles p ON d.profile_id = p.profile_id
             WHERE 
-                c.vehicle_id = :vehicle_id
+                r.vehicle_id = :vehicle_id
             ORDER BY 
                 c.start_time DESC
         ");
@@ -367,7 +342,7 @@ class M_Vehicle {
         return $this->db->resultSet();
     }
 
-    public function getUpcomingSchedulesForVehicle($vehicle_id) {
+    public function getUpcomingSchedulesForVehicle($vehicle_id) {   // tested
         $this->db->query("
             SELECT 
                 cs.schedule_id, 
@@ -375,22 +350,20 @@ class M_Vehicle {
                 cs.start_time, 
                 cs.end_time,
                 r.route_name,
-                d.first_name AS driver_first_name,
-                d.last_name AS driver_last_name
+                p.first_name AS driver_first_name,
+                p.last_name AS driver_last_name
             FROM 
                 collection_schedules cs
             LEFT JOIN 
                 routes r ON cs.route_id = r.route_id
             LEFT JOIN 
                 drivers d ON cs.driver_id = d.driver_id
+            LEFT JOIN
+                profiles p ON d.profile_id = p.profile_id
             WHERE 
                 cs.is_active = 1 
                 AND cs.is_deleted = 0
-                AND cs.schedule_id IN (
-                    SELECT DISTINCT schedule_id 
-                    FROM collections 
-                    WHERE vehicle_id = :vehicle_id
-                )
+                AND r.vehicle_id = :vehicle_id
             ORDER BY 
                 CASE cs.day
                     WHEN 'Monday' THEN 1
@@ -420,11 +393,117 @@ class M_Vehicle {
         return $result->count > 0;
     }
 
-    public function markAsDeleted($vehicle_id) {
+    public function markAsDeleted($vehicle_id) {    // tested
         $this->db->query("UPDATE vehicles SET is_deleted = 1 WHERE vehicle_id = :vehicle_id");
         $this->db->bind(':vehicle_id', $vehicle_id);
         return $this->db->execute();
     }
+
+    public function addMaintenanceLog($data) {
+        $this->db->query('INSERT INTO maintenance_log (vehicle_id, maintenance_type, description, cost, status) 
+                         VALUES (:vehicle_id, :maintenance_type, :description, :cost, :status)');
+        $this->db->bind(':vehicle_id', $data['vehicle_id']);
+        $this->db->bind(':maintenance_type', $data['maintenance_type']);
+        $this->db->bind(':description', $data['description']);
+        $this->db->bind(':cost', $data['cost']);
+        $this->db->bind(':status', 'Ongoing');
+        
+        if ($this->db->execute()) {
+            return true;
+        } else {
+            return false;
+        }
+    }
+
+    public function isVehicleAssignedToRoute($vehicleId) {
+        $sql = "SELECT COUNT(*) AS count FROM routes r
+                WHERE r.vehicle_id = :vehicle_id AND r.is_deleted = 0";
+        
+        $this->db->query($sql);
+        $this->db->bind(':vehicle_id', $vehicleId);
+        $result = $this->db->single(); 
+        return $result ? $result->count > 0 : false; 
+    }
+
+    public function updateVehicleStatus($vehicleId, $status) {
+        $this->db->query('UPDATE vehicles SET status = :status WHERE vehicle_id = :vehicle_id');
+
+        $this->db->bind(':vehicle_id', $vehicleId);
+        $this->db->bind(':status', $status);
+        
+        // Execute
+        if ($this->db->execute()) {
+            return true;
+        } else {
+            return false;
+        }
+    }
+
+    public function getMaintenanceLogs($status) {
+        $this->db->query('SELECT ml.*, v.license_plate 
+                          FROM maintenance_log ml
+                          JOIN vehicles v ON ml.vehicle_id = v.vehicle_id
+                          WHERE ml.status = :status
+                          ORDER BY ml.created_at DESC');
+        
+        $this->db->bind(':status', $status);
+        
+        return $this->db->resultSet();
+    }
+
+    public function getMaintenanceLogById($logId) {
+        $this->db->query('SELECT * FROM maintenance_log WHERE log_id = :log_id');
+        $this->db->bind(':log_id', $logId);
+        
+        return $this->db->single();
+    }
+
+    public function updateMaintenanceStatus($logId, $status) {  // tested
+        $this->db->query('UPDATE maintenance_log 
+                         SET status = :status, 
+                             end_date = :end_date 
+                         WHERE log_id = :log_id');
+        
+        $this->db->bind(':log_id', $logId);
+        $this->db->bind(':status', $status);
+        $this->db->bind(':end_date', date('Y-m-d')); // Current date
+        
+        return $this->db->execute();
+    }
+    
+
+    public function updateMaintenanceLog($logId, $data)
+    {
+
+        $this->db->query(
+            "UPDATE maintenance_log 
+             SET maintenance_type = :maintenance_type,
+                 description = :description,
+                 cost = :cost,
+                 end_date = :end_date,
+                 status = :status
+             WHERE log_id = :log_id"
+        );
+
+        $this->db->bind(':maintenance_type', $data['maintenance_type']);
+        $this->db->bind(':description', $data['description']);
+        $this->db->bind(':cost', $data['cost']);
+        $this->db->bind(':end_date', $data['end_date']);
+        $this->db->bind(':status', $data['status']);
+        $this->db->bind(':log_id', $logId);
+        return $this->db->execute();
+
+    }
+
+    public function getMaintenanceById($logId)
+    {
+        $this->db->query("SELECT * FROM maintenance_log WHERE log_id = :log_id");
+        $this->db->bind(':log_id', $logId);
+        return $this->db->single();
+    }
+
+    
+
 
 }
 ?>

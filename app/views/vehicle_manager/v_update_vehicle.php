@@ -31,12 +31,7 @@
         </div>
     </div>
     
-    <!-- Error Messages -->
-    <?php if(!empty($data['error'])): ?>
-        <div class="alert alert-danger">
-            <?php echo $data['error']; ?>
-        </div>
-    <?php endif; ?>
+
     
     <form method="POST" action="<?php echo URLROOT; ?>/manager/updateVehicle/<?php echo $vehicle->vehicle_id; ?>" enctype="multipart/form-data">
         <div class="table-data">
@@ -50,15 +45,7 @@
                         <input type="text" id="license_plate" name="license_plate" class="form-control" value="<?php echo htmlspecialchars($vehicle->license_plate); ?>" readonly>
                     </div>
                     <div class="info-row">
-                        <label class="label" for="status">Status:</label>
-                        <select id="status" name="status" class="form-control" required>
-                            <option value="Available" <?php echo $vehicle->status == 'Available' ? 'selected' : ''; ?>>Available</option>
-                            <option value="In Use" <?php echo $vehicle->status == 'In Use' ? 'selected' : ''; ?>>In Use</option>
-                            <option value="Maintenance" <?php echo $vehicle->status == 'Maintenance' ? 'selected' : ''; ?>>Maintenance</option>
-                        </select>
-                    </div>
-                    <div class="info-row">
-                        <label class="label" for="capacity">Capacity:</label>
+                        <label class="label" for="capacity">Payload:</label>
                         <input type="number" id="capacity" name="capacity" class="form-control" value="<?php echo htmlspecialchars($vehicle->capacity); ?>" readonly>
                     </div>
                     <div class="info-row">
@@ -74,6 +61,10 @@
                         <input type="text" id="model" name="model" class="form-control" value="<?php echo htmlspecialchars($vehicle->model); ?>" readonly>
                     </div>
                     <div class="info-row">
+                        <label class="label" for="color">Colour:</label>
+                        <input type="text" id="color" name="color" class="form-control" value="<?php echo htmlspecialchars($vehicle->color); ?>" readonly>
+                    </div>
+                    <div class="info-row">
                         <label class="label" for="manufacturing_year">Manufacturing Year:</label>
                         <input type="number" id="manufacturing_year" name="manufacturing_year" class="form-control" value="<?php echo htmlspecialchars($vehicle->manufacturing_year); ?>" readonly>
                     </div>
@@ -86,132 +77,11 @@
         </div>
 
         <!-- Submit Button -->
-        <button type="submit" class="btn btn-primary">Update Vehicle</button>
+        <button type="submit" class="btn btn-primary" data-confirm="Are you sure that you want to update this vehicle?">Update Vehicle</button>
     </form>
 </main>
 
-<!-- Add JavaScript to handle selections and validation -->
-<script>
-document.addEventListener('DOMContentLoaded', function() {
-    // Form elements
-    const daySelect = document.getElementById('day');
-    const startTimeInput = document.getElementById('start_time');
-    const endTimeInput = document.getElementById('end_time');
-    const routeSelect = document.getElementById('routeSelect');
-    const driverSelect = document.getElementById('driverSelect');
-    
-    // Summary elements
-    const summaryDay = document.getElementById('summaryDay');
-    const summaryTime = document.getElementById('summaryTime');
-    const summaryRoute = document.getElementById('summaryRoute');
-    const summaryDriver = document.getElementById('summaryDriver');
-    
-    // Update summary when day is selected
-    daySelect.addEventListener('change', function() {
-        summaryDay.textContent = this.value || 'Not specified';
-        updateSummary();
-    });
-    
-    // Update summary when times are entered
-    startTimeInput.addEventListener('change', updateTimeDisplay);
-    endTimeInput.addEventListener('change', updateTimeDisplay);
-    
-    function updateTimeDisplay() {
-        if (startTimeInput.value && endTimeInput.value) {
-            // Format times for display
-            const startTime = formatTime(startTimeInput.value);
-            const endTime = formatTime(endTimeInput.value);
-            summaryTime.textContent = `${startTime} - ${endTime}`;
-        } else {
-            summaryTime.textContent = 'Not specified';
-        }
-        updateSummary();
-    }
-    
-    // Format time from 24h to 12h format
-    function formatTime(time24) {
-        const [hours, minutes] = time24.split(':');
-        const hour = parseInt(hours, 10);
-        const period = hour >= 12 ? 'PM' : 'AM';
-        const hour12 = hour % 12 || 12;
-        return `${hour12}:${minutes} ${period}`;
-    }
-    
-    // Update summary when route is selected
-    routeSelect.addEventListener('change', function() {
-        const selectedOption = this.options[this.selectedIndex];
-        if (selectedOption.value) {
-            const routeName = selectedOption.getAttribute('data-route-name');
-            summaryRoute.textContent = routeName;
-        } else {
-            summaryRoute.textContent = 'Not specified';
-        }
-        updateSummary();
-    });
-    
-    // Update summary when driver is selected
-    driverSelect.addEventListener('change', function() {
-        const selectedOption = this.options[this.selectedIndex];
-        if (selectedOption.value) {
-            const firstName = selectedOption.getAttribute('data-first-name');
-            const lastName = selectedOption.getAttribute('data-last-name');
-            summaryDriver.textContent = `${firstName} ${lastName}`;
-        } else {
-            summaryDriver.textContent = 'Not specified';
-        }
-        updateSummary();
-    });
-    
-    // Update overall summary
-    function updateSummary() {
-        // You could add additional validation or UI updates here
-    }
-    
-    // Form validation
-    document.getElementById('createScheduleForm').addEventListener('submit', function(e) {
-        // Basic validation
-        if (!daySelect.value || !startTimeInput.value || !endTimeInput.value || 
-            !routeSelect.value || !driverSelect.value) {
-            e.preventDefault();
-            alert('Please fill in all required fields');
-            return;
-        }
-        
-        // Validate time duration
-        const startTime = new Date(`2000-01-01T${startTimeInput.value}`);
-        let endTime = new Date(`2000-01-01T${endTimeInput.value}`);
-        
-        // If end time is earlier than start time, assume it's the next day
-        if (endTime < startTime) {
-            endTime = new Date(`2000-01-02T${endTimeInput.value}`);
-        }
-        
-        const duration = (endTime - startTime) / (1000 * 60 * 60); // Duration in hours
-        
-        if (duration > 24) {
-            e.preventDefault();
-            alert('Schedule duration cannot exceed 24 hours');
-            return;
-        }
-        
-        // Optional: Check for driver availability
-        const selectedDriverId = driverSelect.value;
-        const selectedDay = daySelect.value;
-        
-        // This could be implemented with an AJAX call to check availability
-        // For now, it's commented out
-        /*
-        fetch(`${URLROOT}/collectionschedules/checkDriverAvailability/${selectedDriverId}/${selectedDay}`)
-            .then(response => response.json())
-            .then(data => {
-                if (!data.available) {
-                    alert(`Warning: This driver already has a schedule on ${selectedDay}.`);
-                }
-            });
-        */
-    });
-});
-</script>
+
 
 <style>
     /* Table Data Container */
@@ -336,26 +206,6 @@ document.addEventListener('DOMContentLoaded', function() {
         outline: none;
     }
 
-    /* Submit button styling */
-    .btn-primary {
-        display: inline-flex;
-        align-items: center;
-        gap: 8px;
-        padding: 10px 20px;
-        background-color: #10b981;
-        color: white;
-        border: none;
-        border-radius: 6px;
-        font-size: 14px;
-        font-weight: 500;
-        cursor: pointer;
-        transition: background-color 0.2s;
-        margin: 0 0 20px 20px;
-    }
-
-    .btn-primary:hover {
-        background-color: #059669;
-    }
 </style>
 
 <?php require APPROOT . '/views/inc/components/footer.php'; ?> 

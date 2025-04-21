@@ -1,0 +1,114 @@
+/* Confirmation dialog styles */
+.confirm-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10000;
+}
+
+.confirm-dialog {
+  background-color: white;
+  border-radius: 10px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+  width: 90%;
+  max-width: 400px;
+  padding: 0;
+  overflow: hidden;
+  animation: dialog-appear 0.3s ease;
+}
+
+.confirm-content {
+  padding: 24px;
+}
+
+.confirm-message {
+  margin: 0 0 24px 0;
+  font-size: 26px;
+  line-height: 1.5;
+  color: #333;
+  text-align: center;
+  font-family: "Poppins", sans-serif;
+  font-weight: 600;
+}
+
+.confirm-buttons {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+}
+
+.confirm-btn {
+  padding: 10px 20px;
+  border-radius: 6px;
+  font-family: "Poppins", sans-serif;
+  font-weight: 600;
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  border: none;
+  outline: none;
+}
+
+.confirm-yes {
+  background-color: var(--main);
+  color: white;
+}
+
+.confirm-yes:hover {
+  filter: brightness(110%);
+  transform: translateY(-1px);
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+}
+
+.confirm-no {
+  background-color: #f1f5f9;
+  color: #475569;
+}
+
+.confirm-no:hover {
+  background-color: #e2e8f0;
+  transform: translateY(-1px);
+}
+
+/* For focus accessibility */
+.confirm-btn:focus {
+  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.5);
+}
+
+@keyframes dialog-appear {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Add a subtle header to the dialog */
+.confirm-dialog::before {
+  content: "";
+  display: block;
+  height: 4px;
+  background: var(--main);
+  width: 100%;
+}
+
+.danger-confirm .confirm-dialog::before {
+  background: var(--red);
+}
+
+.danger-confirm .confirm-yes {
+  background-color: var(--red);
+}
+
+.danger-confirm .confirm-yes:hover {
+  filter: brightness(110%);
+}
