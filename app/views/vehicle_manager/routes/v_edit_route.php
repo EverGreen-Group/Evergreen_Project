@@ -16,23 +16,17 @@
 <main>
     <div class="head-title">
         <div class="left">
-            <h1>Create Route</h1>
+            <h1>Edit Route</h1>
             <ul class="breadcrumb">
                 <li><a href="<?= URLROOT ?>/route">Routes</a></li>
                 <li><i class='bx bx-chevron-right'></i></li>
-                <li><a class="active" href="#">Create Route</a></li>
+                <li><a class="active" href="#">Edit Route</a></li>
             </ul>
         </div>
     </div>
+
     
-    <!-- Error Messages -->
-    <?php if(!empty($data['error'])): ?>
-        <div class="alert alert-danger">
-            <?php echo $data['error']; ?>
-        </div>
-    <?php endif; ?>
-    
-    <form id="createRouteForm" method="POST" action="<?php echo URLROOT; ?>/route/createRoute">
+    <form id="editRouteForm" method="POST" action="<?php echo URLROOT; ?>/route/editRoute/<?php echo $data['route']->route_id; ?>">
     
     <!-- Route Information -->
     <div class="table-data">
@@ -43,7 +37,8 @@
             <div class="section-content">
                 <div class="info-row">
                     <label class="label" for="route_name">Route Name:</label>
-                    <input type="text" id="route_name" name="route_name" class="form-control" required placeholder="Enter route name">
+                    <input type="text" id="route_name" name="route_name" class="form-control" required 
+                           placeholder="Enter route name" value="<?php echo htmlspecialchars($data['route']->route_name); ?>">
                 </div>
             </div>
         </div>
@@ -62,7 +57,8 @@
                         <?php foreach ($data['availableVehicles'] as $vehicle): ?>
                             <option value="<?= $vehicle->vehicle_id ?>" 
                                     data-vehicle-number="<?= htmlspecialchars($vehicle->vehicle_number) ?>"
-                                    data-model="<?= htmlspecialchars($vehicle->model) ?>">
+                                    data-model="<?= htmlspecialchars($vehicle->model) ?>"
+                                    <?php if ($vehicle->vehicle_id == $data['route']->vehicle_id) echo 'selected'; ?>>
                                 <?= htmlspecialchars($vehicle->license_plate) ?> - 
                                 <?= htmlspecialchars($vehicle->vehicle_type) ?> - 
                                 <?= htmlspecialchars($vehicle->make) ?> - 
@@ -76,8 +72,30 @@
         </div>
     </div>
 
+    <!-- Route Statistics (Read-only) -->
+    <div class="table-data">
+        <div class="order">
+            <div class="head">
+                <h3>Route Details</h3>
+            </div>
+            <div class="section-content">
+                <div class="info-row">
+                    <label class="label">Number of Suppliers:</label>
+                    <span class="value"><?php echo htmlspecialchars($data['route']->number_of_suppliers); ?></span>
+                </div>
+                <div class="info-row">
+                    <label class="label">Remaining Capacity:</label>
+                    <span class="value"><?php echo htmlspecialchars($data['route']->remaining_capacity); ?></span>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- Submit Button -->
-    <button type="submit" class="btn btn-primary">Create Route</button>
+    <div class="button-group">
+        <button type="submit" class="btn btn-primary">Update Route</button>
+        <a href="<?php echo URLROOT; ?>/route" class="btn btn-secondary">Cancel</a>
+    </div>
     </form>
     
 </main>
@@ -205,6 +223,13 @@
         outline: none;
     }
 
+    /* Button group styling */
+    .button-group {
+        display: flex;
+        gap: 12px;
+        margin: 0 0 20px 20px;
+    }
+
     /* Submit button styling */
     .btn-primary {
         display: inline-flex;
@@ -219,11 +244,31 @@
         font-weight: 500;
         cursor: pointer;
         transition: background-color 0.2s;
-        margin: 0 0 20px 20px;
     }
 
     .btn-primary:hover {
         background-color: #059669;
+    }
+
+    /* Cancel button styling */
+    .btn-secondary {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 10px 20px;
+        background-color: #6c757d;
+        color: white;
+        border: none;
+        border-radius: 6px;
+        font-size: 14px;
+        font-weight: 500;
+        cursor: pointer;
+        transition: background-color 0.2s;
+        text-decoration: none;
+    }
+
+    .btn-secondary:hover {
+        background-color: #5a6268;
     }
 </style>
 

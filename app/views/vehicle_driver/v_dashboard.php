@@ -5,13 +5,14 @@ require APPROOT . '/views/inc/components/topnavbar.php';
 ?>
 
 <style>
-    /* Clean, simple dashboard styling */
+    /* Updated styling to match supplier dashboard */
     main {
-        padding: 20px;
-        font-family: 'Nunito', Arial, sans-serif;
+        padding: var(--spacing-lg);
         max-width: 1200px;
         margin: 0 auto;
-    }
+        /* background-color: var(--background-light); */
+        }
+
     
     .dashboard-header {
         margin-bottom: 25px;
@@ -29,10 +30,13 @@ require APPROOT . '/views/inc/components/topnavbar.php';
         padding: 0;
         margin: 0;
         font-size: 14px;
+        align-items: center;
     }
     
     .breadcrumb li {
         color: #666;
+        display: flex;
+        align-items: center;
     }
     
     .breadcrumb li a {
@@ -41,17 +45,22 @@ require APPROOT . '/views/inc/components/topnavbar.php';
         margin-right: 8px;
     }
     
-    .breadcrumb li a:after {
-        content: "›";
-        margin-left: 8px;
+    .breadcrumb li i {
+        margin-right: 5px;
+        font-size: 16px;
     }
     
     .section {
         background: #fff;
-        border-radius: 8px;
-        box-shadow: 0 2px 6px rgba(0,0,0,0.1);
-        padding: 20px;
+        border-radius: 12px;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        padding: 24px;
         margin-bottom: 25px;
+        transition: all 0.3s ease;
+    }
+    
+    .section:hover {
+        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
     }
     
     .section-title {
@@ -61,77 +70,70 @@ require APPROOT . '/views/inc/components/topnavbar.php';
         padding-bottom: 10px;
         border-bottom: 1px solid #eee;
         color: #333;
+        font-weight: 600;
     }
     
     .today-schedule {
-        display: grid;
-        grid-template-columns: 2fr 1fr;
-        gap: 20px;
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
     }
     
-    .schedule-info {
-        line-height: 1.6;
+    .info-item {
+        display: flex;
+        align-items: center;
+        margin: 8px 0;
+        color: #333;
     }
     
-    .info-group {
-        margin-bottom: 12px;
-    }
-    
-    .info-label {
+    .info-item strong {
+        width: 120px;
         font-weight: 600;
         color: #555;
+    }
+    
+    /* Styling collection status to match supplier's pill style */
+    .status-pill {
         display: inline-block;
-        width: 100px;
-    }
-    
-    .vehicle-image {
-        text-align: center;
-    }
-    
-    .vehicle-image img {
-        max-width: 100%;
-        max-height: 150px;
-        border-radius: 4px;
-        border: 1px solid #eee;
-    }
-    
-    .action-btn {
-        display: inline-block;
-        background-color: #28a745;
-        color: white;
-        border: none;
-        padding: 10px 16px;
-        border-radius: 4px;
+        padding: 6px 14px;
+        border-radius: 50px;
+        font-size: 14px;
         font-weight: 600;
-        cursor: pointer;
-        margin-top: 15px;
-        text-align: center;
-        text-decoration: none;
     }
     
-    .action-btn:disabled {
-        background-color: #6c757d;
-        cursor: not-allowed;
+    .completed {
+        background-color: #e6f7ed;
+        color: #28a745;
+    }
+    
+    .pending {
+        background-color: #fff4e5;
+        color: #ff9800;
     }
     
     .upcoming-table {
         width: 100%;
-        border-collapse: collapse;
+        border-collapse: separate;
+        border-spacing: 0;
     }
     
     .upcoming-table th {
         background-color: #f8f9fa;
         text-align: left;
-        padding: 12px;
+        padding: 14px;
         font-weight: 600;
         color: #333;
         border-bottom: 2px solid #dee2e6;
     }
     
     .upcoming-table td {
-        padding: 12px;
-        border-bottom: 1px solid #dee2e6;
+        padding: 12px 14px;
+        border-bottom: 1px solid #eee;
         color: #333;
+    }
+    
+    .upcoming-table tr:hover td {
+        background-color: #f9f9f9;
     }
     
     .no-schedule {
@@ -139,6 +141,32 @@ require APPROOT . '/views/inc/components/topnavbar.php';
         font-style: italic;
         padding: 30px 0;
         text-align: center;
+        background-color: #f9f9f9;
+        border-radius: 8px;
+    }
+
+    .action-btn {
+        display: inline-block;
+        background-color: #28a745;
+        color: white;
+        border: none;
+        padding: 10px 16px;
+        border-radius: 8px;
+        font-weight: 600;
+        cursor: pointer;
+        margin-top: 15px;
+        text-align: center;
+        text-decoration: none;
+        transition: all 0.3s ease;
+    }
+    
+    .action-btn:disabled {
+        background-color: #6c757d;
+        cursor: not-allowed;
+    }
+    
+    .action-btn:hover:not(:disabled) {
+        background-color: #218838;
     }
 
     @media (max-width: 768px) {
@@ -152,7 +180,10 @@ require APPROOT . '/views/inc/components/topnavbar.php';
     <div class="dashboard-header">
         <h1>Driver Dashboard</h1>
         <ul class="breadcrumb">
-            <li><a href="<?= URLROOT; ?>">Home</a></li>
+            <li>
+                <i class='bx bx-home'></i>
+                <a href="<?= URLROOT; ?>">Home</a>
+            </li>
             <li>Dashboard</li>
         </ul>
     </div>
@@ -161,60 +192,53 @@ require APPROOT . '/views/inc/components/topnavbar.php';
     <section class="section">
         <h2 class="section-title">Today's Schedule</h2>
         
-        <?php if (!empty($data['todaySchedules'])): 
-            $schedule = $data['todaySchedules'][0]; 
-            $currentTime = time();
-            $startTime = strtotime($schedule->start_time);
-        ?>
+        <?php if (!empty($data['schedule'])): ?>
             <div class="today-schedule">
-                <div class="schedule-info">
-                    <div class="info-group">
-                        <span class="info-label">Route:</span>
-                        <span><?= htmlspecialchars($schedule->route_name) ?></span>
-                    </div>
-                    
-                    <div class="info-group">
-                        <span class="info-label">Vehicle:</span>
-                        <span><?= htmlspecialchars($schedule->vehicle_type) ?> (<?= htmlspecialchars($schedule->license_plate) ?>)</span>
-                    </div>
-                    
-                    <div class="info-group">
-                        <span class="info-label">Start Time:</span>
-                        <span><?= date('h:i A', strtotime($schedule->start_time)) ?></span>
-                    </div>
-                    
-                    <div class="info-group">
-                        <span class="info-label">Date:</span>
-                        <span><?= date('M d, Y', strtotime($schedule->start_time)) ?> (<?= htmlspecialchars($schedule->day) ?>)</span>
-                    </div>
-
-                    <?php if ($currentTime >= $startTime): ?>
+                <div class="info-item">
+                    <strong>Schedule ID:</strong>
+                    <span><?= htmlspecialchars($data['schedule']->schedule_id) ?></span>
+                </div>
+                <div class="info-item">
+                    <strong>Day:</strong>
+                    <span><?= htmlspecialchars($data['schedule']->day) ?></span>
+                </div>
+                <div class="info-item">
+                    <strong>Time:</strong>
+                    <span><?= date('h:i A', strtotime($data['schedule']->start_time)) ?> - <?= date('h:i A', strtotime($data['schedule']->end_time)) ?></span>
+                </div>
+                <div class="info-item">
+                    <strong>Route:</strong>
+                    <span><?= htmlspecialchars($data['schedule']->route_name) ?></span>
+                </div>
+                <div class="info-item">
+                    <strong>Vehicle:</strong>
+                    <span><?= htmlspecialchars($data['schedule']->vehicle_type) ?> (<?= htmlspecialchars($data['schedule']->license_plate) ?>)</span>
+                </div>
+                <div class="info-item">
+                    <strong>Status:</strong>
+                    <?php if (isset($data['collection_completed'])): ?>
+                        <span class="status-pill completed">
+                            Completed
+                        </span>
+                    <?php else: ?>
                         <form action="<?= URLROOT ?>/vehicledriver/createCollection/<?= htmlspecialchars($schedule->schedule_id) ?>" method="POST">
                             <button type="submit" class="action-btn">Start Collection</button>
                         </form>
-                    <?php else: ?>
-                        <button class="action-btn" disabled>Not Available Yet</button>
                     <?php endif; ?>
                 </div>
-                
-                <?php if (!empty($schedule->image_path)): ?>
-                    <div class="vehicle-image">
-                        <img src="<?= URLROOT . '/' . htmlspecialchars($schedule->image_path) ?>" alt="Vehicle Image">
-                    </div>
-                <?php endif; ?>
             </div>
         <?php else: ?>
             <div class="no-schedule">
-                <p>No schedule assigned for today.</p>
+                <p>No schedule available for today.</p>
             </div>
         <?php endif; ?>
     </section>
 
     <!-- Upcoming Schedules Section -->
     <section class="section">
-        <h2 class="section-title">Upcoming Schedules</h2>
+        <h2 class="section-title">Assigned Schedules</h2>
         
-        <?php if (!empty($data['upcomingSchedules'])): ?>
+        <?php if (!empty($data['allSchedules'])): ?>
             <table class="upcoming-table">
                 <thead>
                     <tr>
@@ -226,7 +250,7 @@ require APPROOT . '/views/inc/components/topnavbar.php';
                     </tr>
                 </thead>
                 <tbody>
-                    <?php foreach ($data['upcomingSchedules'] as $schedule): ?>
+                    <?php foreach ($data['allSchedules'] as $schedule): ?>
                         <tr>
                             <td><?= date('M d, Y', strtotime($schedule->start_time)) ?></td>
                             <td><?= htmlspecialchars($schedule->day) ?></td>
@@ -239,10 +263,11 @@ require APPROOT . '/views/inc/components/topnavbar.php';
             </table>
         <?php else: ?>
             <div class="no-schedule">
-                <p>No upcoming schedules available.</p>
+                <p>No assigned schedules available.</p>
             </div>
         <?php endif; ?>
     </section>
 </main>
 
 <?php require APPROOT . '/views/inc/components/footer.php'; ?>
+<script src="<?php echo URLROOT; ?>/public/css/script.js"></script>

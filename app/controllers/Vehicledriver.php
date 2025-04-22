@@ -28,66 +28,46 @@ class VehicleDriver extends controller {
         $this->userModel = $this->model('M_User');
     }
 
-    public function index() { // TESTED, must study this well, bit hard
+
+    public function index() {
         if (!isset($_SESSION['driver_id'])) {
             redirect('login');
             return;
         }
-    
+
         $driverId = $_SESSION['driver_id'];
-    
-        // If a collection is already active for this driver, redirect immediately.
+
         $collectionId = $this->collectionModel->checkCollectionExists($driverId);
         if ($collectionId) {
             redirect('vehicledriver/collection/' . $collectionId);
             exit();
         }
-        
-        try {
-            // Get all upcoming schedules for this driver
-            $allSchedules = $this->scheduleModel->getUpcomingSchedules($driverId);
-            
-            // Determine today's day name, e.g., "Monday"
-            $currentDay = date('l');
-    
-            // Initialize arrays for schedules today and in the future.
-            $todaySchedules = [];
-            $upcomingSchedules = [];
-            
-            foreach ($allSchedules as $schedule) {
-                // If the schedule's day field matches today's day, it's a today's schedule.
-                if (strcasecmp($schedule->day, $currentDay) == 0) {
-                    // Add full start datetime so the view can compare properly
-                    $todayDate = date('Y-m-d');
-                    $schedule->start_datetime = strtotime($todayDate . ' ' . $schedule->start_time);
-                    $schedule->end_datetime = $schedule->start_datetime + 3600; // assume 1 hour
-                    $todaySchedules[] = $schedule;
-                }
-                else {
-                    $upcomingSchedules[] = $schedule;
-                }
-            }
-            
+
+        // Get today's schedule
+        $schedule = $this->scheduleModel->getTodaysScheduleByDriverId($driverId);
+
+        // Check if the schedule is empty
+        if ($schedule) {
+            $allSchedules = $this->scheduleModel->getAllAssignedSchedulesByDriverId($driverId);
             $data = [
-                'todaySchedules'   => $todaySchedules,
-                'upcomingSchedules'=> $upcomingSchedules,
-                'currentWeek'      => date('W'),
-                'currentDay'       => $currentDay,
-                'lastUpdated'      => date('Y-m-d H:i:s')
+                'schedule' => $schedule,
+                'allSchedules' => $allSchedules
             ];
-            
-            if (empty($todaySchedules) && empty($upcomingSchedules)) {
+
+            // Check if the schedule has ended collections
+            $count = $this->scheduleModel->checkEndedScheduleCollection($schedule->schedule_id);
+            if ($count) {
+                $data['collection_completed'] = 1;
             }
-            
-        } catch (Exception $e) {
-            error_log($e->getMessage());
-            
+        } else {
+            // Handle the case where there is no schedule for today
             $data = [
-                'todaySchedules'   => [],
-                'upcomingSchedules'=> []
+                'schedule' => null,
+                'allSchedules' => $this->scheduleModel->getAllAssignedSchedulesByDriverId($driverId),
+                'collection_completed' => 0 // or any other default value you want to set
             ];
         }
-        
+
         $this->view('vehicle_driver/v_dashboard', $data);
     }
     
@@ -159,7 +139,6 @@ class VehicleDriver extends controller {
 
     public function collection($collectionId) { // TESTED
         $collection = $this->collectionModel->getCollectionDetails($collectionId);
-        $driverLocation = $this->getVehicleLocation($collection->vehicle_id);
         $vehicleLocation = $this->vehicleModel->getVehicleLocation($collection->vehicle_id);
         $collectionSuppliers = $this->collectionScheduleModel->getCollectionSupplierRecords($collectionId);
         
@@ -213,14 +192,23 @@ class VehicleDriver extends controller {
     }
 
 
-    public function getVehicleLocation($vehicleId) { // TESTED
+    public function getVehicleLocation($vehicleId) { 
         $vehicleLocation = $this->vehicleModel->getVehicleLocation($vehicleId);
+        
+        // Set proper JSON content type header
+        header('Content-Type: application/json');
+        
         if ($vehicleLocation) {
-            echo json_encode($vehicleLocation);
+            // Return the JSON directly, don't use echo
+            return json_encode($vehicleLocation);
         } else {
-            // Return an error response
-            echo json_encode(['error' => 'Vehicle location not found']);
+            // Add HTTP status code and return instead of echo
+            http_response_code(404);
+            return json_encode(['error' => 'Vehicle location not found']);
         }
+        
+        // Make sure nothing else is output after this
+        exit;
     }
 
 
@@ -331,66 +319,66 @@ class VehicleDriver extends controller {
     }
     
 
-    public function endCollection() { // POSSIBLY A DUPLICATE FROM old version, we are using completeCollection
-        // Get the JSON input
-        $data = json_decode(file_get_contents("php://input"));
+    // public function endCollection() { // POSSIBLY A DUPLICATE FROM old version, we are using completeCollection
+    //     // Get the JSON input
+    //     $data = json_decode(file_get_contents("php://input"));
     
-        if (isset($data->collection_id)) {
-            $collectionId = $data->collection_id;
-            $result = $this->collectionModel->finalizeCollection($collectionId);
+    //     if (isset($data->collection_id)) {
+    //         $collectionId = $data->collection_id;
+    //         $result = $this->collectionModel->finalizeCollection($collectionId);
     
-            if ($result['success']) {
-                // Notifications setup
-                $notificationModel = $this->model('M_Notification');
+    //         if ($result['success']) {
+    //             // Notifications setup
+    //             $notificationModel = $this->model('M_Notification');
     
-                // Get the driver (current session user)
-                $driverUserId = $_SESSION['user_id'];
+    //             // Get the driver (current session user)
+    //             $driverUserId = $_SESSION['user_id'];
     
-                // Get the schedule_id from the collection
-                $scheduleId = $this->collectionModel->getScheduleIdByCollectionId($collectionId);
+    //             // Get the schedule_id from the collection
+    //             $scheduleId = $this->collectionModel->getScheduleIdByCollectionId($collectionId);
     
-                // Notify the driver
-                $notificationModel->createNotification(
-                    $driverUserId,
-                    'Collection Ended',
-                    'You have successfully ended the collection.',
-                    ['link' => 'vehicledriver/']
-                );
+    //             // Notify the driver
+    //             $notificationModel->createNotification(
+    //                 $driverUserId,
+    //                 'Collection Ended',
+    //                 'You have successfully ended the collection.',
+    //                 ['link' => 'vehicledriver/']
+    //             );
     
 
-                // $managerId = $this->userModel->getManagerIdByScheduleId($scheduleId);
-                // $managerUserId = $this->userModel->getUserIdByManagerId($managerId);
-                // if ($managerUserId) {
-                //     $notificationModel->createNotification(
-                //         $managerUserId,
-                //         'Collection Ended',
-                //         'The collection for your schedule has been completed.',
-                //         ['link' => 'collection/details/' . $collectionId]
-                //     );
-                // }
+    //             // $managerId = $this->userModel->getManagerIdByScheduleId($scheduleId);
+    //             // $managerUserId = $this->userModel->getUserIdByManagerId($managerId);
+    //             // if ($managerUserId) {
+    //             //     $notificationModel->createNotification(
+    //             //         $managerUserId,
+    //             //         'Collection Ended',
+    //             //         'The collection for your schedule has been completed.',
+    //             //         ['link' => 'collection/details/' . $collectionId]
+    //             //     );
+    //             // }
     
-                // Notify all suppliers
-                $supplierIds = $this->routeModel->getSupplierIdsByScheduleId($scheduleId);
-                foreach ($supplierIds as $supplierId) {
-                    $supplierUserId = $this->userModel->getUserIdBySupplierId($supplierId);
-                    if ($supplierUserId) {
-                        $notificationModel->createNotification(
-                            $supplierUserId,
-                            'Collection Completed',
-                            'The collection for your schedule has ended.',
-                            ['link' => 'supplier/collectionBags/' . $collectionId]
-                        );
-                    }
-                }
+    //             // Notify all suppliers
+    //             $supplierIds = $this->routeModel->getSupplierIdsByScheduleId($scheduleId);
+    //             foreach ($supplierIds as $supplierId) {
+    //                 $supplierUserId = $this->userModel->getUserIdBySupplierId($supplierId);
+    //                 if ($supplierUserId) {
+    //                     $notificationModel->createNotification(
+    //                         $supplierUserId,
+    //                         'Collection Completed',
+    //                         'The collection for your schedule has ended.',
+    //                         ['link' => 'supplier/collectionBags/' . $collectionId]
+    //                     );
+    //                 }
+    //             }
     
-                echo json_encode(['success' => true, 'message' => 'Collection ended successfully.']);
-            } else {
-                echo json_encode(['success' => false, 'message' => 'Failed to end collection.']);
-            }
-        } else {
-            echo json_encode(['success' => false, 'message' => 'Invalid collection ID.']);
-        }
-    }
+    //             echo json_encode(['success' => true, 'message' => 'Collection ended successfully.']);
+    //         } else {
+    //             echo json_encode(['success' => false, 'message' => 'Failed to end collection.']);
+    //         }
+    //     } else {
+    //         echo json_encode(['success' => false, 'message' => 'Invalid collection ID.']);
+    //     }
+    // }
     
 
 
@@ -406,7 +394,7 @@ class VehicleDriver extends controller {
         $supplier = $this->supplierModel->getSupplierById($supplierId);
         
         // Get bags for this collection and supplier
-        $bags = $this->collectionModel->getCollectionBags($collectionId, $supplierId);
+        $bags = $this->collectionModel->getCollectionBags($collectionId, $supplierId);  // tested
         
         // Format supplier data for display
         $formattedSupplier = [
@@ -652,7 +640,7 @@ class VehicleDriver extends controller {
 
         
         // Check if there are any bags for this supplier in this collection
-        $bags = $this->collectionModel->getBagsByCollectionAndSupplier($collectionId, $supplierId);
+        $bags = $this->collectionModel->getBagsByCollectionAndSupplier($collectionId, $supplierId); // tested
         
         if (!empty($bags)) {
             // Cannot cancel if bags exist

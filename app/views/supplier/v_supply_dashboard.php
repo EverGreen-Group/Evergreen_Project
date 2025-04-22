@@ -4,6 +4,7 @@
 <link rel="stylesheet" href="<?php echo URLROOT; ?>/css/supplier/supplier_dashboard.css">
 
 <main>
+    <!-- <?php print_r($data); ?> -->
     <div class="head-title">
         <div class="left">
             <h1>Supplier Dashboard</h1>
@@ -16,7 +17,7 @@
         </div>
     </div>
 
-    <!-- Availability Toggle Section -->
+
     <div class="availability-section">
         <div class="availability-container">
             <?php 
@@ -39,16 +40,17 @@
             </div>
         </div>
     </div>
-<!-- 
+
+
     <div class="stats-container">
         <div class="stat-item">
             <div class="stat-header">
                 <i class='bx bxs-calendar-check'></i>
-                <span>Collections</span>
+                <span>Leaves supplied</span>
             </div>
             <div class="stat-value">
-                <?php echo isset($data['total_collections']) ? $data['total_collections'] : '3'; ?>
-                <small>this month</small>
+            <?php echo isset($data['teaLeavesKgLastCollection']) ? $data['teaLeavesKgLastCollection'] : '0'; ?>
+                <small>kg last collection</small>
             </div>
         </div>
         <div class="stat-divider"></div>
@@ -58,11 +60,11 @@
                 <span>Tea Leaves</span>
             </div>
             <div class="stat-value">
-                <?php echo isset($data['total_quantity']) ? $data['total_quantity'] : '120'; ?>
+                <?php echo isset($data['teaLeavesKg']) ? floor($data['teaLeavesKg']) : '0'; ?>
                 <small>kg this month</small>
             </div>
         </div>
-    </div> -->
+    </div>
 
     <!-- Action Cards Section -->
     <div class="action-cards-container">
@@ -97,99 +99,87 @@
         </div>
     </div>
 
-    <!-- Schedule Section -->
-    <div class="schedule-section">
-        <div class="section-header">
-            <h3>Upcoming Schedule</h3>
-        </div>
+    <!-- Current Schedule Section -->
+    <?php if (isset($schedule) && $schedule !== false): ?>
+<div class="schedule-section">
+    <div class="section-header">
+        <h2>Current Collection Details</h2>
+    </div>
 
-        <div class="schedule-content">
-            <?php if (!empty($data['todaySchedules'])): ?>
-                <?php $schedule = $data['todaySchedules'][0];?>
-                <div class="collection-card">
-                    
-                    <div class="collection-details">
-                        <div class="details-row">
-                            <div class="detail-item">
-                                <i class='bx bx-calendar'></i>
-                                <span><?php echo date('m/d/Y', strtotime($schedule->start_time)); ?></span>
-                            </div>
-                            
-                            <div class="detail-item">
-                                <i class='bx bx-time-five'></i>
-                                <span><?php echo date('h:i A', strtotime($schedule->start_time)); ?></span>
-                            </div>
-                        </div>
-                        
-                        <div class="details-row">
-                            <div class="detail-item">
-                                <i class='bx bx-user'></i>
-                                <span>Driver: <?php echo htmlspecialchars($schedule->driver_id); ?> - <?php echo htmlspecialchars($schedule->driver_name); ?></span>
-                            </div>
-                            
-                            <div class="detail-item">
-                                <i class='bx bx-car'></i>
-                                <span>Vehicle: <?php echo $schedule->license_plate; ?></span>
-                            </div>
-                        </div>
-                        
-                        <!-- <div class="details-row">
-                            <div class="detail-item">
-                                <i class='bx bx-check-circle'></i>
-                                <span>Current Status: <?php echo $schedule->schedule_status; ?></span>
-                            </div>
-                        </div> -->
-                    </div>
-                    
-                    <div class="collection-status">
-                        <?php if (!empty($data['collectionId'])): ?>
-                            <a href="#" class="view-details-link" onclick="fetchVehicleLocation(<?php echo $schedule->vehicle_id; ?>)">
-                                <i class='bx bx-info-circle'></i>
-                                <span>View Vehicle Location on Google Maps</span>
-                            </a>
+    <div class="schedule-content">
+        <div class="collection-card">
+            <!-- Driver and Vehicle Info -->
+            <div class="personnel-vehicle-container">
+                <!-- Driver Information -->
+                <div class="personnel-card">
+                    <div class="personnel-image">
+                        <?php if (!empty($schedule->driver_image)): ?>
+                            <img src="<?php echo URLROOT; ?>/<?php echo $schedule->driver_image; ?>" alt="Driver Photo">
                         <?php else: ?>
-                            <span class="collection-message">Collection hasn't started yet!</span>
+                            <div class="default-avatar">
+                                <i class='bx bx-user-circle'></i>
+                            </div>
                         <?php endif; ?>
                     </div>
+                    <div class="personnel-details">
+                        <h4><?php echo htmlspecialchars($schedule->driver_name); ?></h4>
+                        <span class="personnel-id">Driver ID: <?php echo htmlspecialchars($schedule->driver_id); ?></span>
+                    </div>
+                </div>
+                
+                <!-- Vehicle Information -->
+                <?php if (!empty($collectionDetails) && isset($collectionDetails->image_path)): ?>
+                <div class="vehicle-card">
+                    <div class="vehicle-image">
+                        <img src="<?php echo URLROOT; ?>/<?php echo $collectionDetails->image_path; ?>" alt="Vehicle Photo">
+                    </div>
+                    <div class="vehicle-details">
+                        <h4><?php echo htmlspecialchars($schedule->vehicle_type); ?></h4>
+                        <span class="vehicle-id">License: <?php echo htmlspecialchars($schedule->license_plate); ?></span>
+                    </div>
+                </div>
+                <?php endif; ?>
 
-                    <script>
-                        // Try this simple version to debug
-                        function fetchVehicleLocation(vehicleId) {
-                            fetch('<?php echo URLROOT; ?>/vehicledriver/getVehicleLocation/' + vehicleId)
-                                .then(response => {
-                                    console.log('Raw response:', response);
-                                    return response.text(); // Get as text first to see raw response
-                                })
-                                .then(text => {
-                                    console.log('Raw text:', text);
-                                    // Try to parse it manually
-                                    try {
-                                        const data = JSON.parse(text);
-                                        console.log('Parsed data:', data);
-                                        if (data && data.latitude && data.longitude) {
-                                            window.open('https://www.google.com/maps?q=' + data.latitude + ',' + data.longitude, '_blank');
-                                        } else {
-                                            alert('Vehicle location data is incomplete: ' + text);
-                                        }
-                                    } catch (e) {
-                                        console.error('JSON parse error:', e);
-                                        alert('Could not parse server response: ' + text);
-                                    }
-                                })
-                                .catch(error => {
-                                    console.error('Fetch error:', error);
-                                });
-                        }
-                    </script>
+            </div>
+            
+            <!-- Schedule Details -->
+            <div class="collection-details">
+                <div class="details-row">
+                    <div class="detail-item">
+                        <i class='bx bx-calendar'></i>
+                        <span><?php echo date('l, F j, Y', strtotime($schedule->start_time)); ?></span>
+                    </div>
+                    
+                    <div class="detail-item">
+                        <i class='bx bx-time-five'></i>
+                        <span><?php echo date('h:i A', strtotime($schedule->start_time)); ?> - <?php echo date('h:i A', strtotime($schedule->end_time)); ?></span>
+                    </div>
                 </div>
-            <?php else: ?>
-                <div class="no-schedule">
-                    <p>No upcoming schedules for today.</p>
+                
+                <div class="details-row">
+                    <div class="detail-item">
+                        <i class='bx bx-map'></i>
+                        <span>Route: <?php echo htmlspecialchars($schedule->route_name); ?></span>
+                    </div>
+                    
                 </div>
-            <?php endif; ?>
+                
+            </div>
+            <div class="collection-status">
+                <div class="vehicle-location">
+                    <a href="https://www.google.com/maps?q=<?php echo $vehicleLocation->latitude; ?>,<?php echo $vehicleLocation->longitude; ?>" target="_blank" class="location-button">
+                        <i class='bx bx-map-pin'></i>
+                        <span>Track Vehicle Location</span>
+                    </a>
+                </div>
+            </div>
+
         </div>
     </div>
+</div>
+<?php endif; ?>
 </main>
 
 <!-- Scripts -->
 <script src="<?php echo URLROOT; ?>/public/css/script.js"></script>
+

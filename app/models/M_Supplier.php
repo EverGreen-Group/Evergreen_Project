@@ -218,6 +218,48 @@ class M_Supplier {
         $result = $this->db->single();
         return $result->count ?? 0;
     }
+
+    public function getTotalKgThisMonth($supplierId)
+    {
+        $this->db->query("
+            SELECT SUM(actual_weight_kg) as quantity 
+            FROM bag_usage_history 
+            WHERE supplier_id = :supplier_id
+              AND MONTH(finalized_at) = MONTH(CURRENT_DATE()) 
+              AND YEAR(finalized_at) = YEAR(CURRENT_DATE())
+        ");
+        $this->db->bind(':supplier_id', $supplierId);
+        $result = $this->db->single();
+        return $result->quantity ?? 0;
+    }
+
+    public function kgSuppliedLastCollection($supplierId)
+    {
+        $this->db->query("
+            SELECT collection_id 
+            FROM collection_supplier_records 
+            WHERE supplier_id = :supplier_id 
+            ORDER BY collection_time DESC 
+            LIMIT 1
+        ");
+        $this->db->bind(':supplier_id', $supplierId);
+        $latestCollection = $this->db->single();
+
+        if (!$latestCollection) {
+            return 0; 
+        }
+
+        $collectionId = $latestCollection->collection_id;
+        $this->db->query("
+            SELECT SUM(actual_weight_kg) as quantity 
+            FROM bag_usage_history 
+            WHERE collection_id = :collection_id 
+        ");
+        $this->db->bind(':collection_id', $collectionId);
+        $result = $this->db->single();
+
+        return $result->quantity ?? 0; 
+    }
     
 
     public function getComplaintsByStatus($status)
@@ -238,6 +280,26 @@ class M_Supplier {
         $this->db->bind(':status', $status);
         
         return $this->db->resultSet();
+    }
+
+    public function getSupplierSchedule($supplierId) {
+        $this->db->query("
+            SELECT cs.*, r.route_name, v.*, p.*, p.image_path AS driver_image, v.image_path AS vehicle_image, CONCAT(p.first_name, ' ', p.last_name) AS driver_name
+            FROM collection_schedules cs
+            JOIN routes r ON cs.route_id = r.route_id
+            JOIN vehicles v on r.vehicle_id = v.vehicle_id
+            JOIN route_suppliers rs ON r.route_id = rs.route_id
+            JOIN drivers d ON cs.driver_id = d.driver_id
+            JOIN profiles p ON p.profile_id = d.profile_id
+            WHERE rs.supplier_id = :supplier_id
+            AND cs.is_deleted = 0
+            AND r.is_deleted = 0
+            AND rs.is_deleted = 0
+        ");
+    
+        $this->db->bind(':supplier_id', $supplierId);
+        
+        return $this->db->single();
     }
 
     public function updateStatus($data)
@@ -435,6 +497,9 @@ class M_Supplier {
         
         return $this->db->resultSet();
     }
+
+
+
 
     
 

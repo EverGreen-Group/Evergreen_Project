@@ -51,17 +51,24 @@
                 <td><?php echo htmlspecialchars($slot->slot_id); ?></td>
                 <td><?php echo htmlspecialchars($slot->date); ?></td>
                 <td><?php echo htmlspecialchars($slot->start_time . ' - ' . $slot->end_time); ?></td>
-                <td><span class="status-badge <?php echo strtolower($slot->status); ?>"><?php echo ucfirst($slot->status); ?></span></td>
+                <td>
+                    <span class="status-badge <?php echo strtolower($slot->status === 'Booked' ? 'oranged' : 'added'); ?>">
+                        <?php echo ucfirst($slot->status); ?>
+                    </span>
+                </td>
                 <td>
                   <?php if ($slot->status == 'Available'): ?>
-                  <form method="POST" action="<?php echo URLROOT; ?>/manager/cancelSlot">
-                    <input type="hidden" name="slot_id" value="<?php echo $slot->slot_id; ?>">
-                    <button type="submit" class="btn" style="background-color: rgb(240, 46, 46); color: white; font-size: 0.8rem; border-radius: 20px; height: 25px; width: 70px;" title="Cancel Slot">
-                      Cancel
-                    </button>
-                  </form>
+                    <a href="<?php echo URLROOT; ?>/manager/cancelSlot/<?php echo $slot->slot_id; ?>" 
+                       class="btn btn-secondary" 
+                       style="display: flex; align-items: center; justify-content: center; width: 40px; height: 40px; border: none; background: none;" 
+                       title="Cancel Slot" 
+                       data-confirm="Are you sure that you want to remove this time slot?">
+                        <i class='bx bx-trash' style="font-size: 24px; color:red;"></i>
+                    </a>
                   <?php else: ?>
-                    <span class="disabled-action btn" style="background-color:rgb(224, 224, 224); font-size: 0.7rem; color: white; border-radius: 20px; width: 70px;">Cancel</span>
+                    <span class="disabled-action btn" style="display: flex; align-items: center; justify-content: center; width: 40px; height: 40px; border: none; background: none; cursor: not-allowed; margin-left:10px;">
+                        <i class='bx bx-trash' style="font-size: 24px; color: grey;"></i>
+                    </span>
                   <?php endif; ?>
                 </td>
               </tr>
@@ -100,7 +107,7 @@
               <tr>
                 <td><?php echo htmlspecialchars($req->request_id); ?></td>
                 <td>
-                    <a href="<?php echo URLROOT; ?>/supplier/view/<?php echo htmlspecialchars($req->profile_id); ?>" class="manager-link">
+                    <a href="<?php echo URLROOT; ?>/manager/manageSupplier/<?php echo htmlspecialchars($req->supplier_id); ?>" class="manager-link">
                         <img src="<?php echo URLROOT . '/' . htmlspecialchars($req->image_path); ?>" alt="Supplier Photo" class="manager-photo">
                         <?php echo htmlspecialchars($req->supplier_name); ?>
                     </a>
@@ -149,7 +156,7 @@
               <tr>
                 <td><?php echo htmlspecialchars($app->appointment_id); ?></td>
                 <td>
-                    <a href="<?php echo URLROOT; ?>/supplier/view/<?php echo htmlspecialchars($app->profile_id); ?>" class="manager-link">
+                    <a href="<?php echo URLROOT; ?>/manager/manageSupplier/<?php echo htmlspecialchars($app->supplier_id); ?>" class="manager-link">
                         <img src="<?php echo URLROOT . '/' . htmlspecialchars($app->image_path); ?>" alt="Supplier Photo" class="manager-photo">
                         <?php echo htmlspecialchars($app->supplier_name); ?>
                     </a>

@@ -1,5 +1,8 @@
 <script src="<?php echo URLROOT; ?>/public/js/notification.js"></script>
+<script src="<?php echo URLROOT; ?>/public/js/confirm-dialog.js"></script>
 <link href="<?php echo URLROOT; ?>/public/css/notification.css" rel="stylesheet" />
+<link href="<?php echo URLROOT; ?>/public/css/confirm-dialog.css" rel="stylesheet" />
+
 
 <section id="content">
     <nav>
@@ -14,7 +17,7 @@
         <input type="checkbox" id="switch-mode" hidden>
         <a href="#" class="notification" id="notificationIcon">
             <i class='bx bxs-bell'></i>
-            <span class="num" style="cursor: pointer;">8</span>
+            <span class="num" style="cursor: pointer;">0</span>
         </a>
         <div class="profile-container">
             <a href="#" class="profile">

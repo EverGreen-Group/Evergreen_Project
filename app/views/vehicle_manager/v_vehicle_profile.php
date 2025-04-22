@@ -97,11 +97,9 @@
                             <thead>
                                 <tr>
                                     <th>Collection ID</th>
-                                    <th>Status</th>
                                     <th>Start Time</th>
                                     <th>End Time</th>
                                     <th>Total Quantity</th>
-                                    <th>Bags Collected</th>
                                     <th>Route</th>
                                     <th>Driver</th>
                                 </tr>
@@ -110,13 +108,9 @@
                                 <?php foreach ($collectionHistory as $collection): ?>
                                     <tr>
                                         <td><?php echo htmlspecialchars($collection->collection_id); ?></td>
-                                        <td class="status-cell <?php echo strtolower($collection->status); ?>">
-                                            <?php echo htmlspecialchars($collection->status); ?>
-                                        </td>
-                                        <td><?php echo !empty($collection->start_time) ? date('d M Y H:i', strtotime($collection->start_time)) : 'N/A'; ?></td>
-                                        <td><?php echo !empty($collection->end_time) ? date('d M Y H:i', strtotime($collection->end_time)) : 'N/A'; ?></td>
+                                        <td><?php echo !empty($collection->start_time) ? date('h:i A', strtotime($collection->start_time)) : 'N/A'; ?></td>
+                                        <td><?php echo !empty($collection->end_time) ? date('h:i A', strtotime($collection->end_time)) : 'N/A'; ?></td>
                                         <td><?php echo htmlspecialchars($collection->total_quantity); ?> kg</td>
-                                        <td><?php echo htmlspecialchars($collection->bags ?? 'N/A'); ?></td>
                                         <td><?php echo htmlspecialchars($collection->route_name ?? 'N/A'); ?></td>
                                         <td>
                                             <?php 
@@ -141,7 +135,7 @@
         <div class="table-data">
             <div class="order">
                 <div class="head">
-                    <h3>Upcoming Schedules</h3>
+                    <h3>Assigned Schedules</h3>
                 </div>
                 <div class="upcoming-schedules">
                     <?php if (!empty($upcomingSchedules)): ?>
@@ -269,7 +263,7 @@
         color: red;
     }
 
-    .collection-history table,
+    /* .collection-history table,
     .upcoming-schedules table {
         width: 100%;
         border-collapse: collapse;
@@ -287,7 +281,7 @@
     .upcoming-schedules table td {
         border: 1px solid #ddd;
         padding: 8px;
-    }
+    } */
 
     .status-cell.pending {
         color: orange;

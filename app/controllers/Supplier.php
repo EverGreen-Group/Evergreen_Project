@@ -47,58 +47,31 @@ class Supplier extends Controller {
 
     public function index() {
         $supplierId = $_SESSION['supplier_id'];
-        $collectionId = $this->collectionModel->checkCollectionExistsUsingSupplierId($supplierId);
-    
-        try {
-            // Get all schedules
-            $allSchedules = $this->scheduleModel->getUpcomingSchedulesBySupplierId($supplierId);
-            $supplierStatus = $this->supplierModel->getSupplierStatus($supplierId);
-            
-            // Organize schedules by day, filtering out already collected schedules for today
-            $todaySchedules = [];
-            $upcomingSchedules = [];
 
-            foreach ($allSchedules as $schedule) {
-                // Skip schedules that already have collections for today
-                // if ($schedule->is_today && $schedule->collection_exists > 0) {
-                //     continue;
-                // }
-                
-                if ($schedule->is_today) {
-                    $todaySchedules[] = $schedule;
-                } else {
-                    $upcomingSchedules[] = $schedule;
-                }
-            }
-            
+        // No of tea leaves kg this month
+        $teaLeavesKg = $this->supplierModel->getTotalKgThisMonth($supplierId);
+        // No of kg last collection
+        $teaLeavesKgLastCollection = $this->supplierModel->kgSuppliedLastCollection($supplierId);
+        $vehicleModel = $this->model('M_Vehicle');
+
+        $collectionId = $this->collectionModel->checkCollectionExistsUsingSupplierId($supplierId);
+        if($collectionId) {
+            $schedule = $this->scheduleModel->getTodayScheduleBySupplierId($supplierId);
+            $collectionDetails = $this->collectionModel->getCollectionDetails($collectionId);
+            $vehicleLocation = $vehicleModel->getVehicleLocation($collectionDetails->vehicle_id);
             $data = [
-                'todaySchedules' => $todaySchedules,
-                'upcomingSchedules' => $upcomingSchedules,
-                'currentWeek' => date('W'),
-                'currentDay' => date('l'),
-                'lastUpdated' => date('Y-m-d H:i:s'),
-                'message' => '',
-                'error' => '',
-                'collectionId' => $collectionId,
-                'is_active' => $supplierStatus
-            ];
-            
-            if (empty($todaySchedules) && empty($upcomingSchedules)) {
-                $data['message'] = 'No upcoming schedules found.';
-            }
-            
-        } catch (Exception $e) {
-            // Log the error
-            error_log($e->getMessage());
-            
-            $data = [
-                'todaySchedules' => [],
-                'upcomingSchedules' => [],
-                'message' => '',
-                'error' => 'An error occurred while fetching schedules. Please try again later.',
-                'collectionId' => $collectionId
+                'schedule' => $schedule,
+                'collectionDetails' => $collectionDetails,
+                'vehicleLocation' => $vehicleLocation,
+                'teaLeavesKg' => $teaLeavesKg,
+                'teaLeavesKgLastCollection' => $teaLeavesKgLastCollection
             ];
         }
+        $supplierStatus = $this->supplierModel->getSupplierStatus($supplierId);
+        $data['is_active'] = $supplierStatus;
+        $data['teaLeavesKg'] = $teaLeavesKg;
+        $data['teaLeavesKgLastCollection'] = $teaLeavesKgLastCollection;
+        
         $this->view('supplier/v_supply_dashboard', $data);
     }
 
@@ -253,37 +226,33 @@ class Supplier extends Controller {
     public function schedule() {
         $supplierId = $_SESSION['supplier_id'];
 
-        try {
-            // Get subscribed and available schedules separately
-            $subscribedSchedules = $this->scheduleModel->getSubscribedSchedules($supplierId);
-            $availableSchedules = $this->scheduleModel->getAvailableSchedules($supplierId);
-            
-            $formatSchedule = function($schedule) {
-                return [
-                    'schedule_id' => $schedule->schedule_id,
-                    'route_name' => $schedule->route_name,
-                    'day' => $schedule->day,
-                    'shift_time' => $schedule->shift_time,
-                    'remaining_capacity' => $schedule->remaining_capacity,
-                    'vehicle' => $schedule->license_plate,
-                    'is_subscribed' => (bool)$schedule->is_subscribed
-                ];
-            };
+        $result = $this->supplierModel->getSupplierSchedule($supplierId);
+        if(!$result) {
+            setFlashMessage('You arent in any schedule! Please submit a complaint requesting a collection day!', 'warning');
+            redirect('supplier/');
+        } 
 
-            $data = [
-                'subscribedSchedules' => array_map($formatSchedule, $subscribedSchedules),
-                'availableSchedules' => array_map($formatSchedule, $availableSchedules),
-                'error' => ''
-            ];
-        } catch (Exception $e) {
-            error_log($e->getMessage());
-            
-            $data = [
-                'subscribedSchedules' => [],
-                'availableSchedules' => [],
-                'error' => 'An error occurred while fetching schedules. Please try again later.'
-            ];
-        }
+        $data = [
+            'schedule_id' => $result->schedule_id,
+            'route_id' => $result->route_id,
+            'driver_id' => $result->driver_id,
+            'day' => $result->day,
+            'start_time' =>$result->start_time,
+            'route_name' => $result->route_name,
+            'vehicle_id' => $result->vehicle_id,
+            'license_plate' => $result->license_plate,
+            'vehicle_type' => $result->vehicle_type,
+            'make' => $result->make,
+            'model' => $result->model,
+            'color' => $result->color,
+            'driver_image' => $result->driver_image,
+            'vehicle_image' => $result->vehicle_image,
+            'driver_name' => $result->driver_name,
+            'contact_number' => $result->contact_number
+
+        ];
+
+
 
         $this->view('supplier/v_supplier_schedule', $data);
     }
@@ -492,23 +461,38 @@ class Supplier extends Controller {
         error_log ($unit);
     }*/
 
-    public function requestFertilizer() {
-        $fertilizerModel = new M_Fertilizer_Order();
-        $data['fertilizer_types'] = $fertilizerModel->getAllFertilizerTypes();
-        $data['orders'] = $fertilizerModel->getAllOrders(); // Switch to getOrderBySupplier() after logging in
-        $data['unit'] = flash('used_unit');
+    public function requestFertilizer() {                       // bug free function
 
-        $this->view('supplier/v_fertilizer_request', $data);
+        $fertilizerModel = new M_Fertilizer_Order();
+        $supplier_id = $_SESSION['supplier_id'];
+        if (!$supplier_id) {
+            throw new Exception('Supplier ID not found!');
+        };
+
+        $fertilizer_types = $fertilizerModel->getAllFertilizerTypes();
+        $orders = $fertilizerModel->getOrdersBySupplier($supplier_id);
+
+        $data = [
+            'fertilizer_types' => $fertilizer_types,
+            'orders' => $orders
+        ];
+
+        if (empty($data['fertilizer_types'])) {
+            setFlashMessage('No available fertilizer stocks');
+        } else{
+            $this->view('supplier/v_fertilizer_request', $data);
+        }
+        
     }
    
-    public function createFertilizerOrder() {
+    public function createFertilizerOrder() {                       // bug free function
         try {
             if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
                 throw new Exception('Invalid request method');
             }
     
             // Check for required fields
-            $required_fields = ['type_id', 'unit', 'total_amount'];
+            $required_fields = ['fertilizer_id', 'quantity'];
             foreach ($required_fields as $field) {
                 if (!isset($_POST[$field]) || empty($_POST[$field])) {
                     throw new Exception("Missing required field: $field");
@@ -521,71 +505,37 @@ class Supplier extends Controller {
                 throw new Exception("Supplier ID not found. Please log in again.");
             }
     
-            // Validate and get fertilizer data
-            $type_id = trim($_POST['type_id']);
-            $fertilizer = $this->fertilizerOrderModel->getFertilizerByTypeId($type_id);
+            // Validate inputs
+            $fertilizer_id = intval($_POST['fertilizer_id']);
+            $quantity = floatval($_POST['quantity']);
+            $total_price = isset($_POST['total_price']) ? floatval($_POST['total_price']) : 0;
     
-            if (!$fertilizer) {
-                throw new Exception('Invalid fertilizer type');
+            if ($quantity <= 0 || $quantity > 100) {
+                throw new Exception('Quantity must be between 1 and 100');
             }
-    
-            $unit = $_POST['unit'];
-            flash('used_unit', $unit);
-    
-            $total_amount = floatval($_POST['total_amount']);
-    
-            // Validate amount
-            if ($total_amount <= 0 || $total_amount > 50) {
-                throw new Exception('Amount must be between 1 and 50');
-            }
-    
-            // Calculate prices
-            $price_column = 'price_' . $unit;
-            if (!isset($fertilizer[$price_column])) {
-                throw new Exception('Invalid unit type');
-            }
-    
-            $price_per_unit = $fertilizer[$price_column];
-            $total_price = $total_amount * $price_per_unit;
-    
+            
             // Create order data
             $order_data = [
                 'supplier_id' => $supplier_id,
-                'type_id' => $fertilizer['type_id'],
-                'fertilizer_name' => $fertilizer['name'],
-                'total_amount' => $total_amount,
-                'unit' => $unit,
-                'price_per_unit' => $price_per_unit,
-                'total_price' => $total_price,
+                'fertilizer_id' => $fertilizer_id,
+                'quantity' => $quantity,
+                'total_amount' => $total_price,
                 'status' => 'Pending',
                 'payment_status' => 'Pending'
             ];
     
             // Create the order
-            /*if ($this->fertilizerOrderModel->createOrder($order_data)) {
-                // Set flash message for when redirected
-                flash('fertilizer_message', 'Order placed successfully!', 'alert alert-success');
-            } else {
-                throw new Exception($this->fertilizerOrderModel->getError() ?? 'Failed to create order');
-            }*/
-
             if ($this->fertilizerOrderModel->createOrder($order_data)) {
-                $_SESSION['fertilizer_message'] = 'Request submitted!';
-                $_SESSION['fertilizer_message_class'] = 'alert-success';
+                setFlashMessage('Order placed successfully!');
             } else {
-                $_SESSION['fertilizer_message'] = 'Request failed!';
-                $_SESSION['fertilizer_message_class'] = 'alert-danger';
+                throw new Exception($this->fertilizerOrderModel->getError() ?? 'Failed to create order!');
             }
-            
-            redirect('Supplier/requestFertilizer');
     
         } catch (Exception $e) {
-            // Set flash message for when redirected
-            flash('fertilizer_message', $e->getMessage(), 'alert alert-danger');
+            setFlashMessage($e->getMessage(), 'error');
         }
-
-        // Redirect back to the fertilizer request page
-        redirect('Supplier/requestFertilizer');
+        
+        redirect('/Supplier/requestFertilizer');
         exit;
     }
 
@@ -602,53 +552,61 @@ class Supplier extends Controller {
     }
 
     public function editFertilizerRequest($order_id) {
-        // Basic check if order exists and belongs to the current supplier
+
         $order = $this->fertilizerOrderModel->getOrderById($order_id);
-        
+    
         if (!$order) {
-            setFlashMessage('Edit fertilizer request failed!', 'error');
+            setFlashMessage('Order not found.', 'error');
+            redirect('supplier/requestFertilizer');
+            return;
+        }
+    
+        if ($order->status !== 'Pending') {
+            setFlashMessage('Only pending orders can be edited!', 'error');
             redirect('supplier/requestFertilizer');
             return;
         }
     
         if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             // Validate inputs
-            $type_id = isset($_POST['type_id']) ? trim($_POST['type_id']) : '';
-            $unit = isset($_POST['unit']) ? trim($_POST['unit']) : '';
-            $total_amount = isset($_POST['total_amount']) ? floatval($_POST['total_amount']) : 0;
-    
-            // Validation checks
-            if (empty($type_id) || empty($unit) || $total_amount <= 0 || $total_amount > 50) {
-                setFlashMessage('Total amount has to be less than 50kg', 'error');
+            $fertilizer_id = isset($_POST['fertilizer_id']) ? intval($_POST['fertilizer_id']) : '';
+            $quantity = isset($_POST['quantity']) ? floatval($_POST['quantity']) : '';
+            $total_price = isset($_POST['total_price']) ? floatval($_POST['total_price']) : 0;
+
+            if ($fertilizer_id !== $order->fertilizer_id) {
+                setFlashMessage('Fertilizer type cannot be updated!');
                 redirect('supplier/editFertilizerRequest/' . $order_id);
                 return;
             }
-    
-            // Get fertilizer details and calculate prices
-            $fertilizer = $this->fertilizerOrderModel->getFertilizerByTypeId($type_id);
             
-            // Calculate price based on unit
-            $price_column = 'price_' . $unit;
-            $price_per_unit = $fertilizer[$price_column];
-            $total_price = $total_amount * $price_per_unit;
     
-            // Prepare update data
+            // recalculate total price if invalid
+            if ($total_price <= 0) {
+                // Calculate price per unit based on original order
+                $price_per_unit = $order->total_amount / $order->quantity;
+                $total_price = $price_per_unit * $quantity;
+                return;
+            }
+    
+            if (empty($fertilizer_id) || $quantity < 1 || $quantity > 100) {
+                setFlashMessage('Total amount has to be greater than 1kg and less than 100kg', 'error');
+                redirect('supplier/editFertilizerRequest/' . $order_id);
+                return;
+            }
+            
             $updateData = [
-                'type_id' => $type_id,
-                'fertilizer_name' => $fertilizer['name'],
-                'total_amount' => $total_amount,
-                'unit' => $unit,
-                'price_per_unit' => $price_per_unit,
-                'total_price' => $total_price,
+                //'fertilizer_id' => $fertilizer_id,
+                'quantity' => $quantity,
+                'total_amount' => $total_price,
                 'last_modified' => date('Y-m-d H:i:s')
             ];
     
             // Update the order
             if ($this->fertilizerOrderModel->updateOrder($order_id, $updateData)) {
-                setFlashMessage('Order request updated sucessfully!');
+                setFlashMessage('Order request updated successfully!');
                 redirect('supplier/requestFertilizer');
             } else {
-                setFlashMessage('Failed to request the order!', 'error');
+                setFlashMessage('Failed to update the order!', 'error');
                 redirect('supplier/editFertilizerRequest/' . $order_id);
             }
         } else {
@@ -662,6 +620,7 @@ class Supplier extends Controller {
     }
     
     public function checkFertilizerOrderStatus($orderId) {
+        
         // Verify that the order belongs to the current logged-in supplier
         if (!$this->isSupplierOrder($orderId)) {
             echo json_encode(['canDelete' => false, 'message' => 'Unauthorized access']);
@@ -687,61 +646,65 @@ class Supplier extends Controller {
         ]);
     }
 
-    public function deleteFertilizerRequest($orderId) {
-        // Set header to return JSON
-        header('Content-Type: application/json');
-    
-        $order = $this->fertilizerOrderModel->getFertilizerOrderById($orderId);
+    public function deleteFertilizerRequest($orderId) {                       // bug free function
+        
+        $order = $this->fertilizerOrderModel->getOrderById($orderId);
         
         if (!$order) {
-            echo json_encode(['success' => false, 'message' => 'Order not found']);
-            header("Refresh:2; url=" . $_SERVER['HTTP_REFERER']);
+            setFlashMessage('Order not found', 'error');
+            redirect('supplier/requestFertilizer');
+            return;
+        }
+        
+        // Check if order can be deleted
+        if (strtolower($order->status) !== 'pending') {
+            setFlashMessage('Only pending orders can be deleted!', 'error');
+            redirect('supplier/requestFertilizer');
             return;
         }
     
-        // Check if order can be deleted
-        if ($order->status !== 'Pending' || $order->payment_status !== 'Pending') {
-            echo json_encode($order->status);
-            echo json_encode($order->payment_status);
-            echo json_encode(['success' => false, 'message' => 'This order cannot be deleted']);
-            header("Refresh:2; url=" . $_SERVER['HTTP_REFERER']);
-            return;
-        }
-
         $res = $this->fertilizerOrderModel->deleteFertilizerOrder($orderId);
     
         if ($res) {
-            echo json_encode(['success' => true, 'message' => 'Order deleted successfully']);
+            setFlashMessage('Order deleted successfully');
         } else {
-            echo json_encode(['success' => false, 'message' => 'Failed to delete order']);
+            setFlashMessage('Failed to delete order!', 'error');
         }
-        header("Refresh:2; url=" . $_SERVER['HTTP_REFERER']);
+        redirect('supplier/requestFertilizer');
     }
 
     private function isSupplierOrder($orderId) {
         $order = $this->fertilizerOrderModel->getFertilizerOrderById($orderId);
         return $order && $order->supplier_id == $_SESSION['user_id'];
     }
-    
-    public function scheduleDetails() {
-        $data = [
-            'title' => 'Schedule Details'
-        ];
-        $this->view('supplier/v_schedule_details', $data);
-    }
 
     public function collections() {
-        $supplier_id = $_SESSION['supplier_id'] ?? null;
-        if (!$supplier_id) {
-            throw new Exception("Supplier ID not found. Please login again!");
-        }
+        
+        $supplierId = $_SESSION['supplier_id'];
 
-        $collectionDetails = $this->collectionModel->getCollectionDetails($supplier_id);
-
+        $collections = $this->collectionModel->getSupplierCollections($supplierId);
+        
         $data = [
-            'collectionDetails' => $collectionDetails
+            'collections' => $collections
         ];
-        $this->view('supplier/v_collections', $data);
+        
+        $this->view('supplier/v_view_collection', $data);
+    }
+
+    public function collectionBags($collection_id) {
+
+
+        $supplier_id = $_SESSION['supplier_id'];
+        
+        // Get bags for this collection that belong to this supplier
+        $bags = $this->collectionModel->getSupplierBagsForCollection($supplier_id, $collection_id);
+        
+        $data = [
+            'collection_id' => $collection_id,
+            'bags' => $bags
+        ];
+        
+        $this->view('supplier/v_collection_bags', $data);
     }
 
     public function getUnallocatedSuppliersByDay($day) {
@@ -758,15 +721,6 @@ class Supplier extends Controller {
         echo json_encode(['success' => true, 'data' => $suppliers]);
     }
 
-    public function getBagDetails($collectionId) {
-        // Fetch bag details from the model using the collection ID
-        $bagDetails = $this->bagModel->getBagsByCollectionId($collectionId);
-
-        // Return the bag details as JSON
-        header('Content-Type: application/json');
-        echo json_encode($bagDetails);
-        exit();
-    }
 
     public function bag($bagId) {
         $data = [

@@ -73,7 +73,7 @@ class Auth extends Controller
                     // Prepare user data
                     $userData = [
                         'email' => $data['email'],
-                        'password' => $data['password'], // Already hashed
+                        'password' => $data['password'], 
                         'role_id' => RoleHelper::getRoleByTitle('Website User'),
                         'account_status' => 'Active'
                     ];
@@ -214,6 +214,8 @@ class Auth extends Controller
             // Validate
             if (empty($data['username']) || empty($data['password'])) {
                 $data['error'] = 'Please fill in all fields';
+            } elseif (!filter_var($data['username'], FILTER_VALIDATE_EMAIL)) {
+                $data['error'] = 'Please enter a valid email address';
             } else {
                 $user = $this->userModel->findUserByEmail($data['username']);
 
@@ -311,7 +313,7 @@ class Auth extends Controller
                             );
                         }
                     } else {
-                        $data['error'] = 'Invalid credentials';
+                        $data['error'] = 'Invalid email or password';
                     }
                 } else {
                     $data['error'] = 'Invalid credentials';
@@ -426,7 +428,7 @@ class Auth extends Controller
 
                 $managers = $this->userModel->getAllManagers();
                 foreach ($managers as $manager) {
-                    $this->notificationModel->create($manager->user_id, 'New supplier application submitted.', 'manager/viewApplications/' . $result);
+                    $this->notificationModel->createNotification($manager->user_id, 'New supplier application submitted.', 'manager/viewApplications/' . $result);
                 }
 
                 redirect('pages/supplier_application_status?submitted=true');

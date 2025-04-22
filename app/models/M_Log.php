@@ -79,6 +79,14 @@ class M_Log {
         $row = $this->db->single();
         return $row->total;
     }
+
+
+    public function getBagLogsByCollection($collectionId) {
+        $sql = "SELECT * FROM bag_logs WHERE collection_id = :collection_id ORDER BY timestamp DESC";
+        $this->db->query($sql);
+        $this->db->bind(':collection_id', $collectionId);
+        return $this->db->resultSet();
+    }
     
 
 } 
