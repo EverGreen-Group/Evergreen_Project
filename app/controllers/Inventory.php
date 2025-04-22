@@ -486,7 +486,7 @@ class Inventory extends controller
                 $errors['special_notes'] = 'Special notes are required.';
 
 
-            var_dump($data);
+            // var_dump($data);
             if (empty($errors)) {
                 // Save the data to the database
                 $machineModel = $this->model('M_Machine');
@@ -522,12 +522,14 @@ class Inventory extends controller
         } else {
             // GET request
             $machines = $this->machineModel->getmachines();
+            $machinechart = $this->machineModel->machinetimeduration();
             $data = [
                 'machines' => $machines
             ];
+            // var_dump($machinechart);
             // Load the form view for GET requests
             $this->view('inventory/v_machineallocation', $data);
-            //var_dump($data);
+            
         }
 
 
@@ -748,23 +750,11 @@ class Inventory extends controller
 
 
 
-    public function getStockValidations()
-    {
-        // Get status filter if provided
-        $status = isset($_GET['status']) ? $_GET['status'] : 'All';
 
-        // Get the data from model
-        $stocks = $this->stockvalidate->getvalidateStocks($status);
-
-        // Return JSON response
-        header('Content-Type: application/json');
-        echo json_encode($stocks);
-        exit();
-    }
 
     public function viewAwaitingInventory($collectionId)
     {
-        $collectionDetails = $this->stockvalidate->getvalidateStocks($collectionId);
+        $collectionDetails = $this->stockvalidate->getvalidateStocks();
 
 
         $bagsForCollection = $this->stockvalidate->getBagForCollection($collectionId);
@@ -775,9 +765,9 @@ class Inventory extends controller
         $bagsApproved = $getBagCountsInCollection->finalized_count;
         $bagsNotApproved = $getBagCountsInCollection->not_finalized_count;
 
-        if (empty($bagsForCollection)) {
-            redirect("inventory/");
-        }
+        // if (empty($bagsForCollection)) {
+        //     redirect("inventory/");
+        // }
 
         $data = [
             'collectionDetails' => $collectionDetails,

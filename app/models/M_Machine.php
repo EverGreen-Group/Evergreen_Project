@@ -42,16 +42,17 @@ class M_Machine
     public function updateMachineByStatus($id, $status)
     {
         $this->db->query('UPDATE machines SET status = :status WHERE id = :id');
-    
+
         // Bind the values
         $this->db->bind(':status', $status);
         $this->db->bind(':id', $id);
 
         return $this->db->execute();
-        
+
     }
 
-    public function leafprice($data){
+    public function leafprice($data)
+    {
         $this->db->query('INSERT INTO leaf_price (normal_leaf_rate, super_leaf_rate, date) VALUES (:normal_leaf_rate, :super_leaf_rate, :date)');
 
         // Bind parameters
@@ -66,6 +67,15 @@ class M_Machine
     public function getleafprice()
     {
         $this->db->query('SELECT * FROM leaf_price ORDER BY id DESC LIMIT 1');
+        return $this->db->resultSet();
+    }
+
+    public function machinetimeduration()
+    {
+        $this->db->query('SELECT DAYNAME(start_time) AS dayname, machine_id, 
+        ROUND(SUM(TIMESTAMPDIFF(SECOND, start_time, end_time)) / 3600, 2) AS total_usage_hours 
+        FROM machine_usage WHERE start_time >= CURDATE() - INTERVAL 7 DAY AND end_time IS NOT NULL AND TIMESTAMPDIFF(SECOND, start_time, end_time) >= 0 
+        GROUP BY dayname, machine_id;');
         return $this->db->resultSet();
     }
 }

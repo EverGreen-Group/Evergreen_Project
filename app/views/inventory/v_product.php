@@ -78,7 +78,7 @@
         <div class="header-actions">
             <div class="search-box">
                 <form method="GET">
-                    <input type="text" name="search" placeholder="Search by date...">
+                    <input type="text" name="search" placeholder="Search by product...">
                     <button class="filter-btn">
                         <i class='bx bx-search-alt-2'></i>
                     </button>
