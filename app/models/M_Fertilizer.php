@@ -22,7 +22,7 @@ class M_Fertilizer
         $this->db->bind('price', $data['price']);
         $this->db->bind('quantity', $data['quantity']);
         $this->db->bind('unit', $data['unit']);
-        $this->db->bind(':image_path', $data['image_path']);
+        $this->db->bind('image_path', $data['image_path']);
 
         //execute
         if ($this->db->execute()) {
@@ -62,24 +62,24 @@ class M_Fertilizer
         return $this->db->single();
     }
 
-    public function updatefertilizer($id, $data)
-    {
-        $sql = 'UPDATE Fertilizer SET fertilizer_name = :fertilizer_name, company_name = :company_name, details = :details, code = :code, price = :price, quantity = :quantity, unit = :unit, image_path = :image_path WHERE id = :id';
+    public function updateFertilizer($id, $data)
+{
+    $sql = 'UPDATE Fertilizer SET fertilizer_name = :fertilizer_name, company_name = :company_name, details = :details, code = :code, price = :price, quantity = :quantity, unit = :unit, image_path = :image_path WHERE id = :id';
+    
+    $this->db->query($sql);
+    $this->db->bind(':id', $id);
+    $this->db->bind(':fertilizer_name', $data['fertilizer_name']);
+    $this->db->bind(':company_name', $data['company_name']);
+    $this->db->bind(':details', $data['details']);
+    $this->db->bind(':code', $data['code']);
+    $this->db->bind(':price', $data['price']);
+    $this->db->bind(':quantity', $data['quantity']);
+    $this->db->bind(':unit', $data['unit']);
+    $this->db->bind(':image_path', $data['image_path']);
+    
+    return $this->db->execute();
+}
 
-        $this->db->query($sql);
-        $this->db->bind('id', $id);
-        $this->db->bind('fertilizer_name', $data['fertilizer_name']);
-        $this->db->bind('company_name', $data['company_name']);
-        $this->db->bind('details', $data['details']);
-        $this->db->bind('code', $data['code']);
-        $this->db->bind('price', $data['price']);
-        $this->db->bind('quantity', $data['quantity']);
-        $this->db->bind('unit', $data['unit']);
-        $this->db->bind(':image_path', $data['image_path']);
-
-        //execute
-        $this->db->execute();
-    }
 
     public function get_last_6month_quatity()
     {
