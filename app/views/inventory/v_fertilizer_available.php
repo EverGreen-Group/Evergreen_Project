@@ -93,16 +93,20 @@
                                     </span>
                                 </td>
                                 <td>
-                                    <form method="POST" action="<?php echo URLROOT; ?>/Inventory/fertilizer?id=<?php echo $fertilizer->order_id; ?>" style="display: inline-block;">
-                                        <button class="btn btn-primary" type="submit" name="status_approve" title="Approve">
-                                            <i class='bx bx-check'></i> Approve
-                                        </button>
-                                    </form>
+                                    <?php if ($fertilizer->status == 'Pending'): ?>
+                                        <form method="POST" action="<?php echo URLROOT; ?>/Inventory/fertilizer?id=<?php echo $fertilizer->order_id; ?>" style="display: inline-block;">
+                                            <button class="btn btn-primary" type="submit" name="status_approve" title="Approve">
+                                                <i class='bx bx-check'></i> Approve
+                                            </button>
+                                        </form>
+                                    
                                     <form method="POST" action="<?php echo URLROOT; ?>/Inventory/fertilizer?id=<?php echo $fertilizer->order_id; ?>" style="display: inline-block; margin-left: 5px;">
                                         <button class="btn btn-danger" type="submit" name="status_reject" title="Reject">
                                             <i class='bx bx-x'></i> Reject
                                         </button>
                                     </form>
+
+                                    <?php endif; ?>
                                 </td>
                             </tr>
                         <?php endforeach; ?>
