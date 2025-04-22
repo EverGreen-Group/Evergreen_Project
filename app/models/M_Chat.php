@@ -270,10 +270,6 @@ class M_Chat {
 
         // Ensure the data matches the expected format for the view
         foreach ($announcements as $announcement) {
-            // Truncate content for display if needed (to match the table display)
-            if (strlen($announcement->content) > 50) {
-                $announcement->content = substr($announcement->content, 0, 47) . '...';
-            }
             // Fallback for sender_name if first_name and last_name are missing
             if (empty($announcement->sender_name) || $announcement->sender_name === ' ') {
                 $announcement->sender_name = 'MGR' . sprintf('%03d', $announcement->user_id);

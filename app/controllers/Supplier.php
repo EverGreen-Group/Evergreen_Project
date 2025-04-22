@@ -951,11 +951,17 @@ class Supplier extends Controller {
         }
     }
 
-    //announcements by Theekshana
     public function announcements() {
         // Ensure the user is logged in and has the Supplier role (role_id = 5)
         if (!isset($_SESSION['user_id']) || $_SESSION['role_id'] != 5) {
-            flash('message', 'Unauthorized access', 'alert alert-danger');
+            // Use session directly for error message
+            if (session_status() == PHP_SESSION_NONE) {
+                session_start();
+            }
+            $_SESSION['flash']['message'] = [
+                'message' => 'Unauthorized access',
+                'class' => 'alert alert-danger'
+            ];
             redirect('auth/login');
             return;
         }

@@ -2,7 +2,9 @@
 <?php require APPROOT . '/views/inc/components/sidebar_vehicle_manager.php'; ?>
 <?php require APPROOT . '/views/inc/components/topnavbar.php'; ?>
 
-<link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
+<link href="<?php echo URLROOT; ?>/public/boxicons/css/boxicons.min.css" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap" rel="stylesheet">
 
 <main>
     <div class="announcements-container">
@@ -11,32 +13,38 @@
             <div class="header-actions">
                 <div class="search-box">
                     <input type="text" id="announcement-search" placeholder="Search announcements...">
-                    <i class='bx bx-search'></i>
+                    <i class="bx bx-search"></i>
                 </div>
-                <button id="create-announcement-btn" class="btn btn-primary">
-                    <i class='bx bx-plus'></i> Create Announcement
-                </button>
+                <a href="<?php echo URLROOT; ?>/manager/createAnnouncement" class="btn btn-primary">
+                    <i class="bx bx-plus"></i> Create Announcement
+                </a>
             </div>
         </div>
 
+        <!-- Debug: Print URLROOT (comment out in production) -->
+        <!-- <p>URLROOT: <?php echo htmlspecialchars(URLROOT); ?></p> -->
+
         <?php if (empty($data['announcements'])): ?>
             <div class="no-announcements">
-                <i class='bx bx-message-square-dots'></i>
+                <i class="bx bx-message-square-dots"></i>
                 <p>No announcements found.</p>
             </div>
         <?php else: ?>
             <div class="announcements-list">
                 <?php foreach ($data['announcements'] as $announcement): ?>
                     <div class="announcement-item" data-announcement-id="<?php echo $announcement->announcement_id; ?>">
-                        <?php if (!empty($announcement->banner)): ?>
+                        <?php if (!empty($announcement->banner) && file_exists('public/uploads/announcements/' . $announcement->banner)): ?>
                             <div class="announcement-banner">
-                                <img src="<?php echo URLROOT . '/uploads/announcements/' . htmlspecialchars($announcement->banner); ?>" alt="Banner" style="max-width: 100%; border-radius: 8px; margin-bottom: 10px;">
+                                <img src="<?php echo URLROOT . '/public/public/uploads/announcements/' . htmlspecialchars($announcement->banner); ?>" alt="Banner" style="max-width: 100%; border-radius: 8px; margin-bottom: 10px;">
                             </div>
+                        <?php else: ?>
+                            <!-- Debug: Banner not found or invalid -->
+                            <!-- <p>Banner not found for ID <?php echo $announcement->announcement_id; ?>: <?php echo htmlspecialchars($announcement->banner ?? 'NULL'); ?></p> -->
                         <?php endif; ?>
                         <div class="announcement-header">
                             <h4><?php echo htmlspecialchars($announcement->title); ?></h4>
                             <span class="announcement-date">
-                                <i class='bx bx-calendar'></i>
+                                <i class="bx bx-calendar"></i>
                                 <?php echo date('F j, Y, g:i a', strtotime($announcement->created_at)); ?>
                                 <?php if ($announcement->updated_at): ?>
                                     <small>(Updated: <?php echo date('F j, Y, g:i a', strtotime($announcement->updated_at)); ?>)</small>
@@ -48,10 +56,10 @@
                         </div>
                         <div class="announcement-footer">
                             <a href="<?php echo URLROOT; ?>/manager/editAnnouncement/<?php echo $announcement->announcement_id; ?>" class="btn btn-sm btn-warning edit-announcement-btn">
-                                <i class='bx bx-edit'></i> Edit
+                                <i class="bx bx-edit"></i> Edit
                             </a>
                             <button class="delete-announcement-btn btn btn-sm btn-danger">
-                                <i class='bx bx-trash'></i> Delete
+                                <i class="bx bx-trash"></i> Delete
                             </button>
                         </div>
                     </div>
@@ -59,78 +67,11 @@
             </div>
         <?php endif; ?>
     </div>
-
-    <!-- Create Announcement Modal -->
-    <div class="create-announcement-modal" style="display: none;">
-        <div class="modal-content">
-            <h3>Create Announcement <span class="close-modal" style="float: right; cursor: pointer;">×</span></h3>
-            <form id="create-announcement-form" enctype="multipart/form-data">
-                <div class="form-group">
-                    <label for="create-title">Title</label>
-                    <input type="text" id="create-title" class="form-control" required>
-                </div>
-                <div class="form-group">
-                    <label for="create-content">Content</label>
-                    <textarea id="create-content" class="form-control" rows="5" required></textarea>
-                </div>
-                <div class="form-group">
-                    <label for="create-banner">Banner Image (JPEG, optional)</label>
-                    <input type="file" id="create-banner" class="form-control" accept="image/jpeg">
-                </div>
-                <div class="button-row">
-                    <button type="submit" class="btn btn-primary">Create</button>
-                    <button type="button" class="btn btn-secondary close-modal">Cancel</button>
-                </div>
-            </form>
-        </div>
-    </div>
 </main>
 
+<script src="https://cdn.jsdelivr.net/npm/toastify-js"></script>
 <script>
 const URLROOT = '<?php echo URLROOT; ?>';
-
-// Show Create Announcement Modal
-document.getElementById('create-announcement-btn')?.addEventListener('click', function() {
-    document.querySelector('.create-announcement-modal').style.display = 'block';
-});
-
-// Handle Create Announcement Form Submission
-document.getElementById('create-announcement-form')?.addEventListener('submit', function(e) {
-    e.preventDefault();
-    const title = document.getElementById('create-title').value.trim();
-    const content = document.getElementById('create-content').value.trim();
-    const banner = document.getElementById('create-banner').files[0];
-
-    if (!title || !content) {
-        alert('Please fill in title and content fields.');
-        return;
-    }
-
-    const formData = new FormData();
-    formData.append('title', title);
-    formData.append('content', content);
-    if (banner) {
-        formData.append('banner', banner);
-    }
-
-    fetch(`${URLROOT}/manager/createAnnouncement`, {
-        method: 'POST',
-        body: formData
-    })
-    .then(response => response.json())
-    .then(data => {
-        if (data.success) {
-            alert('Announcement created successfully!');
-            window.location.reload();
-        } else {
-            alert(data.message || 'Failed to create announcement.');
-        }
-    })
-    .catch(error => {
-        console.error('Error creating announcement:', error);
-        alert('An error occurred while creating the announcement.');
-    });
-});
 
 // Handle Delete Announcement
 document.addEventListener('click', function(e) {
@@ -144,28 +85,52 @@ document.addEventListener('click', function(e) {
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ announcement_id: announcementId })
             })
-            .then(response => response.json())
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                return response.json();
+            })
             .then(data => {
+                Toastify({
+                    text: data.message || (data.success ? 'Announcement deleted successfully!' : 'Failed to delete announcement.'),
+                    duration: 3000,
+                    gravity: 'top',
+                    position: 'right',
+                    backgroundColor: data.success ? '#28a745' : '#d9534f',
+                    style: {
+                        fontFamily: 'Poppins, sans-serif',
+                        fontSize: '16px',
+                        fontWeight: '500',
+                        padding: '12px 20px',
+                        borderRadius: '8px',
+                        boxShadow: '0 4px 10px rgba(0, 0, 0, 0.2)'
+                    }
+                }).showToast();
                 if (data.success) {
-                    alert('Announcement deleted successfully!');
-                    window.location.reload();
-                } else {
-                    alert(data.message || 'Failed to delete announcement.');
+                    setTimeout(() => window.location.reload(), 1000);
                 }
             })
             .catch(error => {
                 console.error('Error deleting announcement:', error);
-                alert('An error occurred while deleting the announcement.');
+                Toastify({
+                    text: 'An error occurred while deleting the announcement.',
+                    duration: 3000,
+                    gravity: 'top',
+                    position: 'right',
+                    backgroundColor: '#d9534f',
+                    style: {
+                        fontFamily: 'Poppins, sans-serif',
+                        fontSize: '16px',
+                        fontWeight: '500',
+                        padding: '12px 20px',
+                        borderRadius: '8px',
+                        boxShadow: '0 4px 10px rgba(0, 0, 0, 0.2)'
+                    }
+                }).showToast();
             });
         }
     }
-});
-
-// Close Modals
-document.querySelectorAll('.close-modal').forEach(button => {
-    button.addEventListener('click', function() {
-        document.querySelector('.create-announcement-modal').style.display = 'none';
-    });
 });
 
 // Search Announcements
@@ -179,14 +144,41 @@ document.getElementById('announcement-search')?.addEventListener('input', functi
             ? 'block' : 'none';
     });
 });
+
+<?php
+if (session_status() == PHP_SESSION_NONE) {
+    session_start();
+}
+if (isset($_SESSION['flash']['message'])): ?>
+    Toastify({
+        text: '<?php echo addslashes($_SESSION['flash']['message']['message']); ?>',
+        duration: 3000,
+        gravity: 'topCopy to clipboard
+        gravity: 'top',
+        position: 'right',
+        backgroundColor: '<?php echo strpos($_SESSION['flash']['message']['class'], 'success') !== false ? '#28a745' : '#d9534f'; ?>',
+        style: {
+            fontFamily: 'Poppins, sans-serif',
+            fontSize: '16px',
+            fontWeight: '500',
+            padding: '12px 20px',
+            borderRadius: '8px',
+            boxShadow: '0 4px 10px rgba(0, 0, 0, 0.2)'
+        }
+    }).showToast();
+    <?php unset($_SESSION['flash']['message']); ?>
+<?php endif; ?>
 </script>
 
 <style>
-.button-row {
-    display: flex;
-    justify-content: flex-end;
-    gap: 10px;
+@font-face {
+    font-family: 'boxicons';
+    src: url('<?php echo URLROOT; ?>/public/boxicons/fonts/boxicons.woff2') format('woff2'),
+         url('<?php echo URLROOT; ?>/public/boxicons/fonts/boxicons.woff') format('woff'),
+         url('<?php echo URLROOT; ?>/public/boxicons/fonts/boxicons.ttf') format('truetype');
+    font-display: swap;
 }
+
 .announcements-container {
     max-width: 1200px;
     margin: 0 auto;
@@ -307,55 +299,6 @@ document.getElementById('announcement-search')?.addEventListener('input', functi
     display: flex;
     justify-content: flex-end;
     gap: 10px;
-}
-
-.create-announcement-modal {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: rgba(0, 0, 0, 0.5);
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    z-index: 10000;
-}
-
-.create-announcement-modal .modal-content {
-    background: white;
-    padding: 20px;
-    border-radius: 5px;
-    width: 500px;
-    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-    margin: 0 auto;
-    margin-top: 10%;
-}
-
-.create-announcement-modal .form-group {
-    margin-bottom: 15px;
-}
-
-.create-announcement-modal label {
-    display: block;
-    margin-bottom: 5px;
-    font-weight: 500;
-}
-
-.create-announcement-modal input,
-.create-announcement-modal textarea {
-    width: 100%;
-    padding: 8px;
-    border: 1px solid #ddd;
-    border-radius: 4px;
-}
-
-.create-announcement-modal textarea {
-    resize: vertical;
-}
-
-.create-announcement-modal button {
-    margin-right: 10px;
 }
 
 .edit-announcement-btn {

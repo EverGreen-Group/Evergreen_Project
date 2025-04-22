@@ -2,7 +2,9 @@
 <?php require APPROOT . '/views/inc/components/sidebar_supplier.php'; ?>
 <?php require APPROOT . '/views/inc/components/topnavbar.php'; ?>
 
-<link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
+<link href="<?php echo URLROOT; ?>/public/boxicons/css/boxicons.min.css" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap" rel="stylesheet">
 
 <main>
     <div class="announcements-container">
@@ -10,9 +12,12 @@
             <h2>Announcements</h2>
             <div class="search-box">
                 <input type="text" id="announcement-search" placeholder="Search announcements...">
-                <i class='bx bx-search'></i>
+                <i class="bx bx-search"></i>
             </div>
         </div>
+
+        <!-- Debug: Print URLROOT (comment out in production) -->
+        <!-- <p>URLROOT: <?php echo htmlspecialchars(URLROOT); ?></p> -->
 
         <?php if (isset($data['error']) && !empty($data['error'])): ?>
             <div class="alert alert-danger">
@@ -20,22 +25,27 @@
             </div>
         <?php elseif (empty($data['announcements'])): ?>
             <div class="no-announcements">
-                <i class='bx bx-message-square-dots'></i>
+                <i class="bx bx-message-square-dots"></i>
                 <p>No announcements found.</p>
             </div>
         <?php else: ?>
             <div class="announcements-list">
                 <?php foreach ($data['announcements'] as $announcement): ?>
                     <div class="announcement-item">
-                        <?php if (!empty($announcement->banner)): ?>
+                        <?php if (!empty($announcement->banner) && file_exists('public/uploads/announcements/' . $announcement->banner)): ?>
                             <div class="announcement-banner">
-                                <img src="<?php echo URLROOT . '/uploads/announcements/' . htmlspecialchars($announcement->banner); ?>" alt="Banner" style="max-width: 100%; border-radius: 8px; margin-bottom: 10px;">
+                                <img src="<?php echo URLROOT . '/public/public/uploads/announcements/' . htmlspecialchars($announcement->banner); ?>" alt="Banner" style="max-width: 100%; border-radius: 8px; margin-bottom: 10px;">
+                                <!-- Debug: Print banner filename (comment out in production) -->
+                                <!-- <?php var_dump($announcement->banner); ?> -->
                             </div>
+                        <?php else: ?>
+                            <!-- Debug: Banner not found or invalid -->
+                            <!-- <p>Banner not found for ID <?php echo $announcement->announcement_id; ?>: <?php echo htmlspecialchars($announcement->banner ?? 'NULL'); ?></p> -->
                         <?php endif; ?>
                         <div class="announcement-header">
                             <h4><?php echo htmlspecialchars($announcement->title); ?></h4>
                             <span class="announcement-date">
-                                <i class='bx bx-calendar'></i>
+                                <i class="bx bx-calendar"></i>
                                 <?php echo date('F j, Y, g:i a', strtotime($announcement->created_at)); ?>
                             </span>
                         </div>
@@ -52,6 +62,7 @@
     </div>
 </main>
 
+<script src="https://cdn.jsdelivr.net/npm/toastify-js"></script>
 <script>
 document.getElementById('announcement-search')?.addEventListener('input', function(e) {
     const searchTerm = e.target.value.toLowerCase();
@@ -64,9 +75,40 @@ document.getElementById('announcement-search')?.addEventListener('input', functi
             ? 'block' : 'none';
     });
 });
+
+<?php
+if (session_status() == PHP_SESSION_NONE) {
+    session_start();
+}
+if (isset($_SESSION['flash']['message'])): ?>
+    Toastify({
+        text: '<?php echo addslashes($_SESSION['flash']['message']['message']); ?>',
+        duration: 3000,
+        gravity: 'top',
+        position: 'right',
+        backgroundColor: '<?php echo strpos($_SESSION['flash']['message']['class'], 'success') !== false ? '#28a745' : '#d9534f'; ?>',
+        style: {
+            fontFamily: 'Poppins, sans-serif',
+            fontSize: '16px',
+            fontWeight: '500',
+            padding: '12px 20px',
+            borderRadius: '8px',
+            boxShadow: '0 4px 10px rgba(0, 0, 0, 0.2)'
+        }
+    }).showToast();
+    <?php unset($_SESSION['flash']['message']); ?>
+<?php endif; ?>
 </script>
 
 <style>
+@font-face {
+    font-family: 'boxicons';
+    src: url('<?php echo URLROOT; ?>/public/boxicons/fonts/boxicons.woff2') format('woff2'),
+         url('<?php echo URLROOT; ?>/public/boxicons/fonts/boxicons.woff') format('woff'),
+         url('<?php echo URLROOT; ?>/public/boxicons/fonts/boxicons.ttf') format('truetype');
+    font-display: swap;
+}
+
 .announcements-container {
     max-width: 1200px;
     margin: 0 auto;
