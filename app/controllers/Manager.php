@@ -446,6 +446,15 @@ class Manager extends Controller
         }
     }
 
+    public function viewRemovedSuppliers() {
+        $removedSuppliers = $this->supplierModel->getRemovedSuppliers();
+        $data = [
+            'removed_suppliers' => $removedSuppliers
+        ];
+
+        $this->view('supplier_manager/v_removed_suppliers', $data);
+    }
+
 
     /** 
      * Vehicle Management
@@ -2333,6 +2342,30 @@ class Manager extends Controller
         $this->view('supplier_manager/v_view_complaint', $data);
     }
 
+    public function resolveComplaint()
+    {
+        if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+            // Make sure to sanitize input
+            $complaintId = trim($_POST['complaint_id']);
+            
+            $data = [
+                'complaint_id' => $complaintId,
+                'status' => 'Resolved'
+            ];
+
+            if ($this->supplierModel->updateStatus($data)) {
+                setFlashMessage('Complaint marked as resolved successfully!', 'success');
+            } else {
+                setFlashMessage('Failed to resolve complaint!', 'error');
+            }
+            
+            // Redirect back to the complaint view page
+            redirect('manager/viewComplaint/' . $complaintId);
+        } else {
+            redirect('manager/complaints');
+        }
+    }
+
     public function applications() {
 
         $approvedPendingRole = $this->model('M_SupplierApplication')->getApprovedPendingRoleApplications();
@@ -2416,29 +2449,6 @@ class Manager extends Controller
         redirect('manager/viewComplaint/' . $data['complaint_id']);
     }
     
-    public function reopenComplaint($id)
-    {
-        $data = [
-            'complaint_id' => $id,
-            'status' => 'Pending'
-        ];
-    
-        if ($this->supplierModel->updateStatus($data)) {
-            $this->logModel->create(
-                $_SESSION['user_id'],
-                $_SESSION['email'],
-                $_SERVER['REMOTE_ADDR'],
-                "Re-opened the complaint: ".$data['complaint_id'],
-                $_SERVER['REQUEST_URI'],     
-                http_response_code()     
-            );
-            setFlashMessage('Complaint reopen sucessfully!');
-        } else {
-            setFlashMessage('Couldnt reopen the complaint, try again later!', 'error');
-        }
-    
-        redirect('manager/viewComplaint/' . $id);
-    }
     
     public function deleteComplaint($id)
     {
