@@ -397,58 +397,116 @@ class Inventory extends controller
         }
     }
 
-    public function updatefertilizer($id)
-    {
-        if ($_SERVER['REQUEST_METHOD'] == 'POST') {
-            $data = [
-                'id' => $id,
-                'fertilizer_name' => $_POST['fertilizer_name'],
-                'company_name' => $_POST['company_name'],
-                'details' => $_POST['details'],
-                'code' => $_POST['code'],
-                'price' => $_POST['price'],
-                'quantity' => $_POST['quantity'],
-                'unit' => $_POST['unit'],
-                'fertilizer_name_err' => '',
-                'company_name_err' => '',
-                'details_err' => '',
-                'code_err' => '',
-                'price_err' => '',
-                'quantity_err' => '',
-                'unit_err' => '',
-            ];
+    public function updatefertilizer($id =null)
+{
+    if ($id === null && isset($_POST['id'])) {
+        $id = $_POST['id'];
+    }
+    if ($id === null) {
+        // Handle the case where no ID is provided
+        die('No fertilizer ID provided');
+    }
+    if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['fertilizer_name'])) {
+        
+        print_r($_POST);
 
-            if (
-                !empty($data['fertilizer_name']) && !empty($data['company_name']) && !empty($data['details'])
-                && !empty($data['code']) && !empty($data['price']) && !empty($data['quantity']) && !empty($data['unit'])
-            ) {
-                if ($this->fertilizerModel->updateFertilizer($data)) {
-                    $this->logModel->create(
-                        $_SESSION['user_id'],
-                        $_SESSION['email'],
-                        $_SERVER['REMOTE_ADDR'],
-                        "Fertilizer with ID {$id} updated successfully.",
-                        $_SERVER['REQUEST_URI'],
-                        http_response_code()
-                    );
-                    setFlashMessage('Fertilizer updated successfully!');
-                    redirect('inventory/fertilizerdashboard');
-                } else {
-                    echo "<pre>";
-                    print_r($data);
-                    echo "</pre>";
-                    die('Something went wrong');
-                }
+        $data = [
+            'id' => $id,
+            'fertilizer_name' => $_POST['fertilizer_name'],
+            'company_name' => $_POST['company_name'],
+            'details' => $_POST['details'],
+            'code' => $_POST['code'],
+            'price' => $_POST['price'],
+            'quantity' => $_POST['quantity'],
+            'unit' => $_POST['unit'],
+            'image_path' => '',
+            'fertilizer_name_err' => '',
+            'company_name_err' => '',
+            'details_err' => '',
+            'code_err' => '',
+            'price_err' => '',
+            'quantity_err' => '',
+            'unit_err' => '',
+        ];
+        
+        // Basic validation
+        if (empty($data['fertilizer_name'])) {
+            $data['fertilizer_name_err'] = 'Please enter fertilizer name';
+        }
+        if (empty($data['company_name'])) {
+            $data['company_name_err'] = 'Please select company name';
+        }
+        if (empty($data['code'])) {
+            $data['code_err'] = 'Please enter code';
+        }
+        if (empty($data['price'])) {
+            $data['price_err'] = 'Please enter price';
+        }
+        if (empty($data['quantity'])) {
+            $data['quantity_err'] = 'Please enter quantity';
+        }
+        if (empty($data['unit'])) {
+            $data['unit_err'] = 'Please select unit';
+        }
+        
+        // Handle image upload
+        if (isset($_FILES['fertilizer_image']) && $_FILES['fertilizer_image']['error'] === UPLOAD_ERR_OK) {
+            $uploadDir = 'uploads/fertilizers/';
+
+            if (!file_exists($uploadDir)) {
+                mkdir($uploadDir, 0777, true);
+            }
+
+            $fileExtension = pathinfo($_FILES['fertilizer_image']['name'], PATHINFO_EXTENSION);
+            $uniqueFilename = uniqid() . '.' . $fileExtension;
+            $uploadPath = $uploadDir . $uniqueFilename;
+
+            if (move_uploaded_file($_FILES['fertilizer_image']['tmp_name'], $uploadPath)) {
+                $data['image_path'] = $uniqueFilename;
+            }
+        }
+        
+        // Check for validation errors
+        if (
+            empty($data['fertilizer_name_err']) && 
+            empty($data['company_name_err']) && 
+            empty($data['code_err']) && 
+            empty($data['price_err']) && 
+            empty($data['quantity_err']) && 
+            empty($data['unit_err'])
+        ) {
+            // print_r($data);
+            if ($this->fertilizerModel->updateFertilizer($id, $data)) {
+                print_r("ghfh");
+                $this->logModel->create(
+                    $_SESSION['user_id'],
+                    $_SESSION['email'],
+                    $_SERVER['REMOTE_ADDR'],
+                    "Fertilizer with ID {$id} updated successfully.",
+                    $_SERVER['REQUEST_URI'],
+                    http_response_code()
+                );
+                setFlashMessage('Fertilizer updated successfully!');
+                redirect('inventory/fertilizerdashboard');
+            } else {
+                die('Something went wrong with the update');
             }
         } else {
+            // If there are errors, load the view with error messages
             $fertilizer = $this->fertilizerModel->getFertilizerById($id);
-            $data = [
-                'id' => $id,
-                'fertilizer' => $fertilizer
-            ];
+            $data['fertilizer'] = $fertilizer;
             $this->view('inventory/v_update_fertilizer', $data);
         }
+    } else {
+        // Initial load of the form
+        $fertilizer = $this->fertilizerModel->getFertilizerById($id);
+        $data = [
+            'id' => $id,
+            'fertilizer' => $fertilizer
+        ];
+        $this->view('inventory/v_update_fertilizer', $data);
     }
+}
 
     public function machine()
     {
