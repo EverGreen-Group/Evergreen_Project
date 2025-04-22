@@ -1956,14 +1956,24 @@ class Manager extends Controller
 
     public function appointments() {
         $this->requireLogin(); 
-
+    
         if(!isset($_SESSION['manager_id'])) {
             redirect('manager/allAppointments');
         }
         
         $managerId = $_SESSION['manager_id'];
-    
-        $timeSlots = $this->appointmentModel->getManagerTimeSlots($managerId);
+        
+        // Check if filters are applied
+        $status = isset($_GET['status']) ? trim($_GET['status']) : '';
+        $date = isset($_GET['date']) ? trim($_GET['date']) : '';
+        
+        // Get filtered time slots (or all if no filters applied)
+        if (!empty($status) || !empty($date)) {
+            $timeSlots = $this->appointmentModel->filteredTimeSlots($managerId, $status, $date);
+        } else {
+            $timeSlots = $this->appointmentModel->getManagerTimeSlots($managerId);
+        }
+        
         $incomingRequests = $this->appointmentModel->getIncomingRequests($managerId);
         $acceptedAppointments = $this->appointmentModel->getAcceptedAppointments($managerId);
     
@@ -1972,7 +1982,7 @@ class Manager extends Controller
             'incomingRequests' => $incomingRequests,
             'acceptedAppointments' => $acceptedAppointments
         ];
-
+    
         $this->view('supplier_manager/v_appointments', $data);
     }
 
