@@ -199,7 +199,11 @@ class M_Appointment {
     }
 
     public function getAvailableTimeSlots() {
-        $this->db->query("SELECT * FROM appointment_slots WHERE status = 'Available'"); // Adjust the query as needed
+        $this->db->query("SELECT s.*, CONCAT(p.first_name, ' ', p.last_name) as manager_name 
+                          FROM appointment_slots s
+                          JOIN managers m ON s.manager_id = m.manager_id
+                          JOIN profiles p ON m.profile_id = p.profile_id
+                          WHERE s.status = 'Available'"); 
         return $this->db->resultSet();
     }
 
@@ -216,9 +220,11 @@ class M_Appointment {
 
     public function getMyRequests($supplierId) {
         $this->db->query("
-            SELECT r.*, sl.date, sl.start_time, sl.end_time, sl.manager_id
+            SELECT r.*, sl.date, sl.start_time, sl.end_time, sl.manager_id, CONCAT(p.first_name, ' ', p.last_name) as manager_name
             FROM appointment_requests r
             JOIN appointment_slots sl ON r.slot_id = sl.slot_id
+            JOIN managers m ON m.manager_id = sl.manager_id
+            JOIN profiles p ON m.profile_id = p.profile_id
             WHERE r.supplier_id = :supplier_id
             ORDER BY sl.date, sl.start_time
         ");
@@ -228,10 +234,12 @@ class M_Appointment {
     
     public function getConfirmedAppointments($supplierId) {
         $this->db->query("
-            SELECT a.*, r.supplier_id, sl.date, sl.start_time, sl.end_time, sl.manager_id
+            SELECT a.*, r.supplier_id, sl.date, sl.start_time, sl.end_time, sl.manager_id, CONCAT(p.first_name, ' ', p.last_name) as manager_name
             FROM appointments a
             JOIN appointment_requests r ON a.request_id = r.request_id
             JOIN appointment_slots sl ON r.slot_id = sl.slot_id
+            JOIN managers m ON sl.manager_id = m.manager_id
+            JOIN profiles p ON m.profile_id = p.profile_id
             WHERE r.supplier_id = :supplier_id
             ORDER BY sl.date, sl.start_time
         ");

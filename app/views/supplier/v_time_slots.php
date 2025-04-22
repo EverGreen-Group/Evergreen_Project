@@ -40,7 +40,7 @@
               </div>
               <div class="slot-manager">
                 <i class='bx bx-user'></i>
-                <span>Manager ID: <?php echo $slot->manager_id; ?></span>
+                <span>Manager Name: <?php echo $slot->manager_name; ?></span>
               </div>
             </div>
             <div class="slot-action">
