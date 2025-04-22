@@ -115,53 +115,27 @@
             <th>Quantity Exported (kg)</th>
             <th>Revenue Earned ($)</th>
             <th>Last Updated</th>
-            <th>Details</th>
+
           </tr>
         </thead>
         <tbody>
-          <tr>
-            <td>Black Tea</td>
-            <td>2000 kg</td>
-            <td>Rs.8000</td>
-            <td>2023-10-10</td>
-            <td>
-              <button class="btn btn-secondary" onclick="viewExportModal()">Details</button>
-            </td>
-          </tr>
-          <tr>
-            <td>Green Tea</td>
-            <td>1500 kg</td>
-            <td>Rs.6000</td>
-            <td>2023-10-12</td>
-            <td>
-              <button class="btn btn-secondary" onclick="viewExportModal()">Details</button>
-            </td>
-          </tr>
-          <tr>
-            <td>Herbal Tea</td>
-            <td>1000 kg</td>
-            <td>Rs.4000</td>
-            <td>2023-10-15</td>
-            <td>
-              <button class="btn btn-secondary" onclick="viewExportModal('')">Details</button>
-            </td>
-          </tr>
-          <tr>
-            <td>Oolong Tea</td>
-            <td>500 kg</td>
-            <td>Rs.2000</td>
-            <td>2023-10-18</td>
-            <td>
-              <button class="btn btn-secondary" onclick="viewExportModal('')">Details</button>
-            </td>
-          </tr>
+          <?php foreach ($data['lastmonth_export'] as $export): ?>
+            <tr>
+              <td><?php echo $export->stock_name; ?></td>
+              <td><?php echo $export->export_quantity; ?> kg</td>
+              <td>Rs.<?php echo $export->export_price; ?></td>
+              <td><?php echo $export->create_at; ?></td>
+
+            </tr>
+          <?php endforeach; ?>
+
         </tbody>
 
         <tfoot>
           <tr>
             <td><strong>Total</strong></td>
-            <td><strong>4000 kg</strong></td>
-            <td><strong>$20000</strong></td>
+            <td><strong><?php echo $data['total_quantity'] ?> kg</strong></td>
+            <td><strong>Rs <?php echo $data['revenue'] ?></strong></td>
             <td></td>
             <td></td>
           </tr>
@@ -206,81 +180,6 @@
   </style>
 
 
-  <div id="viewExportModal" class="modal">
-    <div class="modal-content">
-      <span class="close" onclick="closeModal('viewExportModal')">&times;</span>
-      <h2>Export Details for Black Tea</h2>
-      <div class="stock-modal-content">
-        <div class="stock-modal-details">
-          <form id="blackTeaExportForm">
-            <!-- Total Exports and Revenue -->
-            <div class="detail-group">
-              <h3>Export Summary</h3>
-              <table>
-                <thead>
-                  <tr>
-                    <th>Grade</th>
-                    <th>Quantity Exported (kg)</th>
-                    <th>Revenue Earned ($)</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <tr>
-                    <td>BOPF</td>
-                    <td>3000 kg</td>
-                    <td>Rs.12000</td> <!-- Example revenue -->
-                  </tr>
-                  <tr>
-                    <td>FBOP</td>
-                    <td>1500 kg</td>
-                    <td>Rs.6000</td> <!-- Example revenue -->
-                  </tr>
-                  <tr>
-                    <td>Dust</td>
-                    <td>500 kg</td>
-                    <td>Rs.2000</td> <!-- Example revenue -->
-                  </tr>
-                  <tr>
-                    <td>OP (Orange Pekoe)</td>
-                    <td>800 kg</td>
-                    <td>Rs.3200</td> <!-- Example revenue -->
-                  </tr>
-                  <tr>
-                    <td>FOP (Flowery Orange Pekoe)</td>
-                    <td>700 kg</td>
-                    <td>Rs.2800</td> <!-- Example revenue -->
-                  </tr>
-                  <tr>
-                    <td>GFOP (Golden Flowery Orange Pekoe)</td>
-                    <td>600 kg</td>
-                    <td>Rs.2400</td> <!-- Example revenue -->
-                  </tr>
-                  <tr>
-                    <td>BOP (Broken Orange Pekoe)</td>
-                    <td>1200 kg</td>
-                    <td>Rs.4800</td> <!-- Example revenue -->
-                  </tr>
-                  <tr>
-                    <td>PD (Pekoe Dust)</td>
-                    <td>400 kg</td>
-                    <td>Rs.1600</td> <!-- Example revenue -->
-                  </tr>
-                </tbody>
-                <tfoot>
-                  <tr>
-                    <td><strong>Total</strong></td>
-                    <td><strong>7000 kg</strong></td> <!-- Total quantity exported -->
-                    <td><strong>$28800</strong></td> <!-- Total revenue -->
-                  </tr>
-                </tfoot>
-              </table>
-            </div>
-          </form>
-        </div>
-      </div>
-    </div>
-  </div>
-
 
   <div class="table-data">
     <div class="order">
@@ -311,6 +210,19 @@
               <td><?php echo $export->create_at; ?></td>
             </tr>
           <?php endforeach; ?>
+
+          <?php
+          $green_tea = $data["green_tea"];
+          $black_tea = $data["black_tea"];
+          $herbal_tea = $data["herbal_tea"];
+
+          // Generate dynamic labels for the past 12 months
+          $labels = [];
+          for ($i = 11; $i >= 0; $i--) {
+            $labels[] = date("M Y", strtotime("-$i months"));
+          }
+          ?>
+
           <!-- <tr>
                     <td>John Doe</td>
                     <td>Black Tea</td>
@@ -478,27 +390,11 @@
         new Chart(reportCtx, {
           type: "line",
           data: {
-            labels: [
-              "January",
-              "February",
-              "March",
-              "April",
-              "May",
-              "June",
-              "July",
-              "August",
-              "September",
-              "October",
-              "November",
-              "December",
-            ],
+            labels: <?= json_encode($labels) ?>,
             datasets: [
               {
                 label: "Black Tea",
-                data: [
-                  5000, 480, 500, 5300, 5500, 600, 6200, 6100, 6300, 6400, 6500,
-                  6700,
-                ],
+                data: <?= json_encode($black_tea) ?>,
                 backgroundColor: "rgba(54, 162, 235, 0.2)",
                 borderColor: "#36A2EB",
                 borderWidth: 2,
@@ -507,10 +403,7 @@
               },
               {
                 label: "Green Tea",
-                data: [
-                  3000, 3200, 3100, 3300, 3400, 3500, 3600, 3700, 3800, 3900, 4000,
-                  4100,
-                ],
+                data: <?= json_encode($green_tea) ?>,
                 backgroundColor: "rgba(75, 192, 192, 0.2)",
                 borderColor: "#4BC0C0",
                 borderWidth: 2,
@@ -519,24 +412,9 @@
               },
               {
                 label: "Herbal Tea",
-                data: [
-                  2000, 2100, 2200, 2500, 2400, 2300, 2600, 2700, 2800, 2900, 3000,
-                  3100,
-                ],
+                data: <?= json_encode($herbal_tea) ?>,
                 backgroundColor: "rgba(255, 206, 86, 0.2)",
                 borderColor: "#FFCE56",
-                borderWidth: 2,
-                fill: false,
-                tension: 0.4,
-              },
-              {
-                label: "Oolong Tea",
-                data: [
-                  1500, 1600, 1700, 1800, 1900, 2000, 2100, 2200, 2300, 2400, 2500,
-                  2600,
-                ],
-                backgroundColor: "rgba(153, 102, 255, 0.2)",
-                borderColor: "#9966FF",
                 borderWidth: 2,
                 fill: false,
                 tension: 0.4,

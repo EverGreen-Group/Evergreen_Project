@@ -5,7 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title><?php echo SITENAME; ?></title>
     <link rel="stylesheet" href="<?php echo URLROOT; ?>/css/pages/machineallo.css" />
-    <link rel="stylesheet" href="<?php echo URLROOT; ?>/css/components/style.css" />
     <link rel="stylesheet" href="<?php echo URLROOT; ?>/css/components/topnavbar_style.css" />
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
@@ -26,64 +25,54 @@
 
             </div>
         </div>
+        <div class="table-data">
+            <div class="order">
 
-        <div style="display: flex;">
-            <div class="table-data">
-
-                <div class="">
-                    <table>
-                        <thead>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Machine</th>
+                            <th>Status</th>
+                            <th>Button</th>
+                            <th>Button</th>
+                            <th>Details</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <!-- <pre><?= print_r($data) ?></pre> -->
+                        <?php foreach ($data['machines'] as $machine): ?>
                             <tr>
-                                <th>Machine</th>
-                                <th>Status</th>
-                                <th>Button</th>
-                                <th>Button</th>
-                                <th>Details</th>
+
+                                <td>
+                                    <div class="machine-info">
+                                        <span class="machine-icon"></span>
+                                        <span><?php echo $machine->machine_name; ?></span>
+                                    </div>
+                                </td>
+                                <td><span class="status completed"><?php echo $machine->status; ?></span></td>
+                                <td>
+                                    <form method="POST"
+                                        action="<?php echo URLROOT; ?>/Inventory/machine?id=<?php echo $machine->id; ?>">
+                                        <button type="submit" name="status_allocate"
+                                            class="btn btn-primary">Allocate</button>
+                                    </form>
+                                </td>
+                                <td>
+                                    <form method="POST"
+                                        action="<?php echo URLROOT; ?>/Inventory/machine?id=<?php echo $machine->id; ?>">
+                                        <button type="submit" name="status_deallocate"
+                                            class="btn btn-tertiary">Deallocate</button>
+                                    </form>
+                                </td>
+                                <td><button class="btn detail" onclick="">details</button></td>
                             </tr>
-                        </thead>
-                        <tbody>
-                            <!-- <pre><?= print_r($data) ?></pre> -->
-                            <?php foreach ($data['machines'] as $machine): ?>
-                                <tr>
-
-                                    <td>
-                                        <div class="machine-info">
-                                            <span class="machine-icon"></span>
-                                            <span><?php echo $machine->machine_name; ?></span>
-                                        </div>
-                                    </td>
-                                    <td><span class="status completed"><?php echo $machine->status; ?></span></td>
-                                    <td>
-                                        <form method="POST"
-                                            action="<?php echo URLROOT; ?>/Inventory/machine?id=<?php echo $machine->id; ?>">
-                                            <button type="submit" name="status_allocate"
-                                                class="btn btn-primary">Allocate</button>
-                                        </form>
-                                    </td>
-                                    <td>
-                                        <form method="POST"
-                                            action="<?php echo URLROOT; ?>/Inventory/machine?id=<?php echo $machine->id; ?>">
-                                            <button type="submit" name="status_deallocate"
-                                                class="btn btn-tertiary">Deallocate</button>
-                                        </form>
-                                    </td>
-                                    <td><button class="btn detail" onclick="">details</button></td>
-                                </tr>
-                            <?php endforeach; ?>
-                        </tbody>
-                    </table>
-
-                </div>
-            </div>
-
-            <div class="chart-container-2">
-
-                <h2>Weekly Machine Allocation Statistics</h2>
-                <canvas id="machineAllocationChart"></canvas>
-
+                        <?php endforeach; ?>
+                    </tbody>
+                </table>
 
             </div>
         </div>
+
         <div class="" style="margin: 20px; padding: 20px; background: white; border-radius: 10px; width: 98%;">
             <h1>Add New Machine Form</h1>
             <form name="abcd" action="<?php echo URLROOT ?>/Inventory/machine" method="POST">

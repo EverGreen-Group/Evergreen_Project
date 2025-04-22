@@ -28,8 +28,8 @@
 			<i class='bx bxs-calendar-check'></i>
 			<span class="text">
 				<h3>
-					<?= isset($data['totalstock']->total_sum)
-						? $data['totalstock']->total_sum
+					<?= isset($data['totalstock'])
+						? $data['totalstock']
 						: "0"; ?>
 				</h3>
 
@@ -39,15 +39,19 @@
 		<li>
 			<i class='bx bxs-group'></i>
 			<span class="text">
-				<h3>2834</h3>
-				<p>Export Stock</p>
+				<h3><?= isset($data['kgApprovedToday'])
+						? $data['kgApprovedToday']
+						: "0"; ?></h3>
+				<p>Approved Stock</p>
 
 			</span>
 		</li>
 		<li>
 			<i class='bx bxs-dollar-circle'></i>
 			<span class="text">
-				<h3>2543</h3>
+				<h3><?= isset($data['fertilizerOrders'])
+						? $data['fertilizerOrders']
+						: "0"; ?></h3>
 				<p>Fertilizer Orders</p>
 			</span>
 		</li>
@@ -114,10 +118,7 @@
 		<div class="order">
 			<div class="head">
 				<h3>Validate Stock</h3>
-				<!-- <a href="<?php echo URLROOT; ?>/manager/createVehicle" class="btn btn-primary">
-					<i class='bx bx-show'></i>
-					View Stock Validation History
-				</a> -->
+				
 			</div>
 
 			<table>
@@ -162,6 +163,11 @@
 		</div>
 	</div>
 
+	<?php 
+	// echo "<pre>";
+	// print_r($data);
+	// echo "</pre>";
+	?>
 
 
 

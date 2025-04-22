@@ -1,13 +1,15 @@
 <?php
-class M_Fertilizer{
+class M_Fertilizer
+{
     private $db;
 
     public function __construct()
     {
-        $this ->db =new Database();
+        $this->db = new Database();
     }
 
-    public function createFertilizer($data){
+    public function createFertilizer($data)
+    {
 
         $sql = 'INSERT INTO Fertilizer (fertilizer_name, company_name, details, code, price, quantity, unit,image_path)
         VALUES(:fertilizer_name, :company_name, :details, :code, :price, :quantity, :unit, :image_path)';
@@ -23,16 +25,16 @@ class M_Fertilizer{
         $this->db->bind(':image_path', $data['image_path']);
 
         //execute
-        if($this->db->execute()){
+        if ($this->db->execute()) {
             return true;
-        }
-        else{
+        } else {
             return false;
         }
-        
+
     }
 
-    public function getfertilizer(){
+    public function getfertilizer()
+    {
         $sql = "SELECT * FROM Fertilizer";
         $this->db->query($sql);
 
@@ -44,21 +46,24 @@ class M_Fertilizer{
         }
     }
 
-    public function deleteFertilizer($id){
+    public function deleteFertilizer($id)
+    {
         $sql = "DELETE FROM Fertilizer WHERE id = :id";
         $this->db->query($sql);
         $this->db->bind('id', $id);
         return $this->db->execute();
     }
 
-    public function getFertilizerById($id){
+    public function getFertilizerById($id)
+    {
         $sql = "SELECT * FROM Fertilizer WHERE id = :id";
         $this->db->query($sql);
         $this->db->bind('id', $id);
         return $this->db->single();
     }
 
-    public function updatefertilizer($id, $data){
+    public function updatefertilizer($id, $data)
+    {
         $sql = 'UPDATE Fertilizer SET fertilizer_name = :fertilizer_name, company_name = :company_name, details = :details, code = :code, price = :price, quantity = :quantity, unit = :unit, image_path = :image_path WHERE id = :id';
 
         $this->db->query($sql);
@@ -74,6 +79,15 @@ class M_Fertilizer{
 
         //execute
         $this->db->execute();
+    }
+
+    public function get_last_6month_quatity()
+    {
+        $this->db->query("SELECT DATE_FORMAT(create_at, '%Y-%m') AS month, 
+        fertilizer_name, SUM(quantity) AS total_quantity FROM Fertilizer WHERE create_at >= DATE_SUB(CURDATE(), INTERVAL 6 MONTH) 
+        GROUP BY month ORDER BY month ASC;");
+
+        return $this->db->resultset();
     }
 }
 
