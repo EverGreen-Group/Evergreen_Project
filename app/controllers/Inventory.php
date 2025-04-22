@@ -136,7 +136,7 @@ class Inventory extends controller
         if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             $_POST = filter_input_array(INPUT_POST);
             $data = [
-                'product-name' => trim($_POST['product-name']),
+                'product-name' => trim($_POST['product_name']),
                 "location" => trim($_POST['location']),
                 "details" => trim($_POST['details']),
                 "grade" => trim($_POST['grade']),
