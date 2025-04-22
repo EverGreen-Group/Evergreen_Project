@@ -27,7 +27,7 @@
                     <?php if (!empty($data['announcement']->banner) && file_exists('public/uploads/announcements/' . $data['announcement']->banner)): ?>
                         <div class="current-banner">
                             <p>Current Banner:</p>
-                            <img src="<?php echo URLROOT . '/Uploads/announcements/' . htmlspecialchars($data['announcement']->banner); ?>" alt="Current Banner">
+                            <img src="<?php echo URLROOT . '/public/public/uploads/announcements/' . htmlspecialchars($data['announcement']->banner); ?>" alt="Current Banner">
                             <!-- Debug: Print URLROOT and banner (comment out in production) -->
                             <!-- <p>URLROOT: <?php echo htmlspecialchars(URLROOT); ?></p> -->
                             <!-- <?php var_dump($data['announcement']->banner); ?> -->
