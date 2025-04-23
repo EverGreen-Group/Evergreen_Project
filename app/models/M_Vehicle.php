@@ -55,11 +55,11 @@ class M_Vehicle {
 
             $sql = "INSERT INTO vehicles (
                 license_plate, vehicle_type,
-                make, model, manufacturing_year,
+                make, model, manufacturing_year, color,
                 capacity, image_path
             ) VALUES (
                 :license_plate, :vehicle_type,
-                :make, :model, :manufacturing_year,
+                :make, :model, :manufacturing_year, :color,
                 :capacity, :image_path
             )";
 
@@ -71,6 +71,7 @@ class M_Vehicle {
             $this->db->bind(':make', $data['make'] ?: NULL);
             $this->db->bind(':model', $data['model'] ?: NULL);
             $this->db->bind(':manufacturing_year', $data['manufacturing_year'] ?: NULL);
+            $this->db->bind(':color', $data['color'] ?: NULL);
             $this->db->bind(':capacity', $data['capacity'] ?: NULL);
             $this->db->bind(':image_path', $data['image_path'] ?: NULL);
 
@@ -91,6 +92,7 @@ class M_Vehicle {
             model = :model,
             manufacturing_year = :manufacturing_year,
             capacity = :capacity,
+            color = :color,
             image_path = :image_path
             WHERE license_plate = :license_plate");
 
@@ -98,6 +100,7 @@ class M_Vehicle {
         $this->db->bind(':vehicle_type', $data['vehicle_type']);
         $this->db->bind(':make', $data['make']);
         $this->db->bind(':model', $data['model']);
+        $this->db->bind(':color', $data['color']);
         $this->db->bind(':manufacturing_year', $data['manufacturing_year']);
         $this->db->bind(':capacity', $data['capacity']);
         

@@ -278,9 +278,7 @@ class M_Payment {
 
     // Helper to get the transport cost per unique collection
     private function getTransportCost() {
-        $this->db->query("SELECT cost_per_collection FROM transport_cost_configuration LIMIT 1");
-        $result = $this->db->single();
-        return ($result) ? $result->cost_per_collection : 0;
+        return 100;
     }
 
 

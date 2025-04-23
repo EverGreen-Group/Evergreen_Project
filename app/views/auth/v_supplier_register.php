@@ -1,5 +1,7 @@
 <?php require APPROOT . '/views/inc/components/header_public.php'; ?>
 <link rel="stylesheet" href="<?php echo URLROOT; ?>/css/pages/supplier_registration.css">
+<!-- Add Leaflet CSS -->
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
 
 <main class="supplier-registration-main">
     <div class="container mt-5 pt-5">
@@ -24,17 +26,12 @@
                                     <i class='bx bx-user-circle'></i>
                                 </div>
                                 <div class="profile-photo-input">
-                                    <!-- <label for="profile_photo" class="custom-file-upload">
-                                        <i class='bx bx-upload'></i> Upload Photo
-                                    </label> -->
                                     <input type="file" id="profile_photo" name="profile_photo" accept="image/*" required>
                                     <p class="helper-text">Upload a clear photo of yourself (JPG or PNG, max 5MB)</p>
                                     <p id="photo-selected" class="file-selected"></p>
                                 </div>
                             </div>
                         </div>
-                        
-                    
                     </div>
                     
                     <!-- Address Information -->
@@ -118,6 +115,9 @@
     </div>
 </main>
 
+<!-- Add Leaflet JS (Make sure it loads before your script) -->
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+
 <script>
 // File upload previews
 document.querySelectorAll('input[type="file"]').forEach(input => {
@@ -162,44 +162,51 @@ document.querySelectorAll('input[type="file"]').forEach(input => {
     });
 });
 
+// Leaflet map implementation
 let map, marker;
-function initMap() {
-    // must set to factory using env file
-    const defaultCenter = { lat: 7.8731, lng: 80.7718 };
-    
-    map = new google.maps.Map(document.getElementById("map"), {
-        zoom: 8,
-        center: defaultCenter,
-    });
-    
 
-    marker = new google.maps.Marker({
-        position: defaultCenter,
-        map: map,
+document.addEventListener('DOMContentLoaded', function() {
+    initMap();
+});
+
+function initMap() {
+    // Center map around Colombo, Sri Lanka
+    const defaultCenter = [6.9022055, 79.8611529]; // [latitude, longitude]
+    
+    // Initialize map
+    map = L.map('map').setView(defaultCenter, 17);
+    
+    // Add OpenStreetMap tiles
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+    }).addTo(map);
+    
+    // Add a draggable marker
+    marker = L.marker(defaultCenter, {
         draggable: true,
         title: "Your tea cultivation location"
+    }).addTo(map);
+    
+    // Update coordinates when marker is dragged
+    marker.on('dragend', function() {
+        const position = marker.getLatLng();
+        updateCoordinates(position);
     });
     
-
-    google.maps.event.addListener(marker, 'dragend', function() {
-        updateCoordinates(marker.getPosition());
+    // Add click event to map to set marker position
+    map.on('click', function(e) {
+        marker.setLatLng(e.latlng);
+        updateCoordinates(e.latlng);
     });
     
-
-    google.maps.event.addListener(map, 'click', function(event) {
-        marker.setPosition(event.latLng);
-        updateCoordinates(event.latLng);
-    });
+    // Initialize coordinates fields
+    updateCoordinates(marker.getLatLng());
 }
 
 function updateCoordinates(position) {
-    document.getElementById('latitude').value = position.lat().toFixed(6);
-    document.getElementById('longitude').value = position.lng().toFixed(6);
+    document.getElementById('latitude').value = position.lat.toFixed(6);
+    document.getElementById('longitude').value = position.lng.toFixed(6);
 }
-</script>
-
-<script async defer
-    src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAC8AYYCYuMkIUAjQWsAwQDiqbMmLa-7eo&callback=initMap">
 </script>
 
 <style>

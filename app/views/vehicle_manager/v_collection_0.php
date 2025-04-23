@@ -159,21 +159,6 @@
             </tbody>
         </table>
 
-        <!-- Pagination -->
-        <div class="table-pagination">
-            <div class="pagination">
-                <?php if ($totalCollections > 0): ?>
-                    <?php $totalPages = ceil($totalCollections / 5); // Assuming 5 is the limit ?>
-                    <?php for ($i = 1; $i <= $totalPages; $i++): ?>
-                        <a 
-                        href="<?php echo URLROOT; ?>/manager/collection?page=<?php echo $i; ?>&collection_id=<?php echo urlencode($filters['collection_id']); ?>&schedule_id=<?php echo urlencode($filters['schedule_id']); ?>&status=<?php echo urlencode($filters['status']); ?>&start_date=<?php echo urlencode($filters['start_date']); ?>&end_date=<?php echo urlencode($filters['end_date']); ?>" 
-                        <?php if ($currentPage == $i) { echo 'class="active"'; } ?>>
-                            <?php echo $i; ?>
-                        </a>
-                    <?php endfor; ?>
-                <?php endif; ?>
-            </div>
-        </div>
     </div>
 </div>
 

@@ -81,7 +81,7 @@
                                 <a href="<?php echo URLROOT; ?>/vehicledriver/updateBag/<?php echo $data['collection']->collection_id; ?>/<?php echo $data['supplier']['id']; ?>/<?php echo $bag->bag_id; ?>" class="mini-btn edit">
                                     <i class='bx bx-edit'></i> Edit
                                 </a>
-                                <a href="<?php echo URLROOT; ?>/vehicledriver/removeBag/<?php echo $bag->bag_id; ?>/<?php echo $data['collection']->collection_id; ?>/<?php echo $data['supplier']['id']; ?>" class="mini-btn delete" onclick="return confirm('Are you sure you want to remove this bag?');">
+                                <a data-confirm="Are you sure you want to remove the bag?" href="<?php echo URLROOT; ?>/vehicledriver/removeBag/<?php echo $bag->bag_id; ?>/<?php echo $data['collection']->collection_id; ?>/<?php echo $data['supplier']['id']; ?>" class="mini-btn delete">
                                     <i class='bx bx-trash'></i> Remove
                                 </a>
                             </div>
@@ -103,7 +103,7 @@
             </div>
             
             <div class="actions-container" style="margin-top: 20px;">
-                <button id="finalizeButton" class="action-btn primary" <?php echo empty($data['bags']) ? 'disabled' : ''; ?> onclick="finalizeCollection()">
+                <button id="finalizeButton" class="action-btn primary" <?php echo empty($data['bags']) ? 'disabled' : ''; ?> href="<?php echo URLROOT; ?>/vehicledriver/finalizeCollection/<?php echo $data['collection']->collection_id; ?>/<?php echo $data['supplier']['id']; ?>" data-confirm="Are you sure you want to finalize the collection for this supplier?">
                     <i class='bx bx-check-circle'></i>
                     Finalize Collection
                 </button>
@@ -140,16 +140,6 @@
         }
     }
     
-    function finalizeCollection() {
-        if (confirm('Are you sure you want to finalize this collection?')) {
-            // Create a form and submit it
-            const form = document.createElement('form');
-            form.method = 'POST';
-            form.action = '<?php echo URLROOT; ?>/vehicledriver/finalizeCollection/<?php echo $data['collection']->collection_id; ?>/<?php echo $data['supplier']['id']; ?>';
-            document.body.appendChild(form);
-            form.submit();
-        }
-    }
 </script> 
 
 

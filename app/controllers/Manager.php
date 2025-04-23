@@ -68,7 +68,7 @@ class Manager extends Controller
         ];
         
         $page = isset($_GET['page']) && is_numeric($_GET['page']) ? (int)$_GET['page'] : 1;
-        $limit = 2; 
+        $limit = 10; 
         $offset = ($page - 1) * $limit;
 
         $applications = $this->model('M_SupplierApplication')->getAllApplications($filters, $limit, $offset);
@@ -507,6 +507,7 @@ class Manager extends Controller
             'vehicle_type' => '',
             'make' => '',
             'model' => '',
+            'color' => '',
             'manufacturing_year' => ''
         ];
 
@@ -519,6 +520,7 @@ class Manager extends Controller
                 'vehicle_type' => trim($_POST['vehicle_type']),
                 'make' => trim($_POST['make']),
                 'model' => trim($_POST['model']),
+                'color' => trim($_POST['color']),
                 'manufacturing_year' => trim($_POST['manufacturing_year'])
             ];
 
@@ -527,6 +529,7 @@ class Manager extends Controller
                 empty($data['vehicle_type']) || 
                 empty($data['make']) || 
                 empty($data['model']) || 
+                empty($data['color']) || 
                 empty($data['manufacturing_year'])) {
                 setFlashMessage("Please Enter All the Fields", 'error');
             } else {
@@ -584,6 +587,7 @@ class Manager extends Controller
             $vehicle_type = htmlspecialchars(trim($_POST['vehicle_type']));
             $make = htmlspecialchars(trim($_POST['make']));
             $model = htmlspecialchars(trim($_POST['model']));
+            $color = htmlspecialchars(trim($_POST['color']));
             $manufacturing_year = htmlspecialchars(trim($_POST['manufacturing_year']));
             $capacity = htmlspecialchars(trim($_POST['capacity']));
     
@@ -594,6 +598,7 @@ class Manager extends Controller
                 'vehicle_type' => $vehicle_type,
                 'make' => $make,
                 'model' => $model,
+                'color' => $color,
                 'manufacturing_year' => $manufacturing_year,
                 'capacity' => $capacity,
                 'current_image_path' => $vehicle->image_path
@@ -1529,7 +1534,6 @@ class Manager extends Controller
      */
 
     public function collection() {
-        // Get dashboard stats from the model
         $stats = $this->userModel->getDashboardStats();
         $stats['collections'] = (array)$stats['collections'];
 
@@ -1540,8 +1544,6 @@ class Manager extends Controller
         $end_date = isset($_GET['end_date']) ? $_GET['end_date'] : null;
 
         $page = isset($_GET['page']) && is_numeric($_GET['page']) ? (int)$_GET['page'] : 1;
-        $limit = 5; 
-        $offset = ($page - 1) * $limit;
 
         if ($collection_id || $schedule_id || $status || $start_date || $end_date) {
             $allCollections = $this->collectionModel->getFilteredCollections(
@@ -1549,9 +1551,7 @@ class Manager extends Controller
                 $schedule_id, 
                 $status, 
                 $start_date, 
-                $end_date,
-                $limit,
-                $offset
+                $end_date
             );
         } else {
             $allCollections = $this->collectionModel->getFilteredCollections(
@@ -1559,9 +1559,7 @@ class Manager extends Controller
                 null, 
                 "Completed", 
                 null, 
-                null,
-                $limit,
-                $offset 
+                null
             );
         }
 
@@ -2070,25 +2068,14 @@ class Manager extends Controller
         }
     }
 
-    public function cancelSlot() {
-        $this->requireLogin();
+    public function cancelSlot($slotId) {
         
-        // Check if form was submitted
-        if ($_SERVER['REQUEST_METHOD'] == 'POST') {
-            $slotId = isset($_POST['slot_id']) ? $_POST['slot_id'] : null;
-            
-            if ($slotId) {
-                $managerId = $_SESSION['manager_id'];
-                
-                // Call the model method to cancel the slot
-                if ($this->appointmentModel->cancelSlot($slotId, $managerId)) {
-                } else {
-                }
-            } else {
-            }
+        
+        if ($slotId) {
+
+            $this->appointmentModel->cancelSlot($slotId);
         }
-        
-        // Redirect back to the appointments page
+        setFlashMessage("Custom time slot deleted successfully!");
         redirect('manager/appointments');
     }
 

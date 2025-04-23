@@ -146,8 +146,8 @@
           <tr>
             <th>Appointment ID</th>
             <th>Supplier</th>
-            <th>Slot</th>
-            <th>Status</th>
+            <th>Date</th>
+            <th>Time</th>
           </tr>
         </thead>
         <tbody>
@@ -161,8 +161,8 @@
                         <?php echo htmlspecialchars($app->supplier_name); ?>
                     </a>
                 </td>
-                <td><?php echo htmlspecialchars($app->date . ' (' . $app->start_time . ' - ' . $app->end_time . ')'); ?></td>
-                <td><span class="status-badge approved">Accepted</span></td>
+                <td><?php echo htmlspecialchars($app->date); ?></td>
+                <td><?php echo htmlspecialchars(date('h:i A',strtotime($app->start_time))); ?></td>
               </tr>
             <?php endforeach; ?>
           <?php else: ?>

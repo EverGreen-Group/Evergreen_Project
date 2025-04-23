@@ -81,7 +81,7 @@ class M_Appointment {
         // Auto-delete expired booked slots (at noon of the slot date)
         $this->cleanupExpiredBookedSlots();
         
-        $this->db->query("SELECT * FROM appointment_slots WHERE manager_id = :manager_id");
+        $this->db->query("SELECT * FROM appointment_slots WHERE manager_id = :manager_id AND date >= CURDATE()");
         $this->db->bind(':manager_id', $managerId);
         return $this->db->resultSet();
     }
@@ -108,6 +108,7 @@ class M_Appointment {
             JOIN suppliers s ON r.supplier_id = s.supplier_id
             JOIN profiles p ON s.profile_id = p.profile_id
             WHERE sl.manager_id = :manager_id
+            AND sl.date >= CURDATE();
         ");
         $this->db->bind(':manager_id', $managerId);
         return $this->db->resultSet();
@@ -172,7 +173,10 @@ class M_Appointment {
     }
 
     public function getAvailableTimeSlots() {
-        $this->db->query("SELECT * FROM appointment_slots WHERE status = 'Available'"); // Adjust the query as needed
+        $this->db->query("SELECT * FROM appointment_slots a
+        INNER JOIN managers m ON a.manager_id = m.manager_id
+        INNER JOIN profiles p ON m.profile_id = p.profile_id
+        WHERE a.status = 'Available'"); 
         return $this->db->resultSet();
     }
 
@@ -189,9 +193,11 @@ class M_Appointment {
 
     public function getMyRequests($supplierId) {
         $this->db->query("
-            SELECT r.*, sl.date, sl.start_time, sl.end_time, sl.manager_id
+            SELECT r.*, sl.date, sl.start_time, sl.end_time, sl.manager_id, p.*
             FROM appointment_requests r
             JOIN appointment_slots sl ON r.slot_id = sl.slot_id
+            JOIN managers m ON sl.manager_id = m.manager_id
+            JOIN profiles p ON m.profile_id = p.profile_id
             WHERE r.supplier_id = :supplier_id
             ORDER BY sl.date, sl.start_time
         ");
@@ -201,10 +207,12 @@ class M_Appointment {
     
     public function getConfirmedAppointments($supplierId) {
         $this->db->query("
-            SELECT a.*, r.supplier_id, sl.date, sl.start_time, sl.end_time, sl.manager_id
+            SELECT a.*, r.supplier_id, sl.date, sl.start_time, sl.end_time, sl.manager_id, p.*
             FROM appointments a
             JOIN appointment_requests r ON a.request_id = r.request_id
             JOIN appointment_slots sl ON r.slot_id = sl.slot_id
+            JOIN managers m ON sl.manager_id = m.manager_id
+            JOIN profiles p ON m.profile_id = p.profile_id
             WHERE r.supplier_id = :supplier_id
             ORDER BY sl.date, sl.start_time
         ");
@@ -272,22 +280,14 @@ class M_Appointment {
     }
     
     // Add function to cancel a time slot
-    public function cancelSlot($slotId, $managerId) {
-        // First, delete any pending requests for this slot
-        $this->db->query("DELETE FROM appointment_requests 
-                         WHERE slot_id = :slot_id 
-                         AND status = 'Pending'");
-        $this->db->bind(':slot_id', $slotId);
-        $this->db->execute();
+    public function cancelSlot($slotId) {
         
         // Then delete the slot itself
         $this->db->query("DELETE FROM appointment_slots 
                          WHERE slot_id = :slot_id 
-                         AND manager_id = :manager_id 
                          AND status = 'Available'");
         
         $this->db->bind(':slot_id', $slotId);
-        $this->db->bind(':manager_id', $managerId);
         
         return $this->db->execute();
     }

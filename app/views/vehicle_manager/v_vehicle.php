@@ -109,7 +109,9 @@
         <table>
             <thead>
                 <tr>
+
                     <th>Vehicle ID</th>
+                    <th>Image</th>
                     <th>License Plate</th>
                     <th>Payload</th>
                     <th>Type</th>
@@ -121,9 +123,12 @@
             <tbody>
                 <?php foreach ($allVehicles as $vehicle): ?>
                     <tr class="vehicle-row" data-vehicle-id="<?php echo htmlspecialchars($vehicle->vehicle_id); ?>">
-                        <td><?php echo htmlspecialchars($vehicle->vehicle_id); ?></td>
-                        <td><?php echo htmlspecialchars($vehicle->license_plate); ?></td>
 
+                        <td><?php echo htmlspecialchars($vehicle->vehicle_id); ?></td>
+                        <td>
+                            <img src="<?php echo URLROOT . '/' . htmlspecialchars($vehicle->image_path); ?>" alt="Vehicle Image" style="width: 100px; height: 100px; object-fit: cover; border-radius: 5px;">
+                        </td>
+                        <td><?php echo htmlspecialchars($vehicle->license_plate); ?></td>
                         <td><?php echo htmlspecialchars(floor($vehicle->capacity)) . ' kg'; ?></td>
                         <td><?php echo htmlspecialchars($vehicle->vehicle_type); ?></td>
                         <td><?php echo htmlspecialchars($vehicle->color); ?></td>
@@ -169,7 +174,6 @@
                                     <i class='bx bx-wrench' style="font-size: 24px; color: gray;"></i>
                                 </span>
                                 <?php endif;?>
-                                
                                 
                                 <!-- Delete button  -->
                                 <a href="<?php echo URLROOT; ?>/manager/deleteVehicle/<?php echo $vehicle->vehicle_id; ?>" 
