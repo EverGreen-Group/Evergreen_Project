@@ -28,8 +28,8 @@
 			<i class='bx bxs-calendar-check'></i>
 			<span class="text">
 				<h3>
-					<?= isset($data['totalstock'])
-						? $data['totalstock']
+					<?= isset($data['awaitingInventory'])
+						? $data['awaitingInventory']
 						: "0"; ?>
 				</h3>
 
@@ -85,8 +85,7 @@
 		<div class="todo">
 			<div class="head">
 				<h3>Machine Allocation Statics</h3>
-				<i class='bx bx-plus'></i>
-				<i class='bx bx-filter'></i>
+				
 			</div>
 			<?php
 			$machines = $data['machines'];

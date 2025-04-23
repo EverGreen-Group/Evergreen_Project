@@ -95,6 +95,8 @@
                                 <td>
                                     <?php if ($fertilizer->status == 'Pending'): ?>
                                         <form method="POST" action="<?php echo URLROOT; ?>/Inventory/fertilizer?id=<?php echo $fertilizer->order_id; ?>" style="display: inline-block;">
+                                            <input hidden value="<?php echo $fertilizer->fertilizer_id; ?>" name="fertilizer_id">
+                                            <input hidden type="number" value="<?php echo $fertilizer->quantity;?>" name="quantity">
                                             <button class="btn btn-primary" type="submit" name="status_approve" title="Approve">
                                                 <i class='bx bx-check'></i> Approve
                                             </button>
