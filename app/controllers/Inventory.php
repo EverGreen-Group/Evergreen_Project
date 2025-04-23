@@ -764,37 +764,33 @@ class Inventory extends controller
 
     public function payments()
     {
-        $jsonData = file_get_contents("php://input");
-        $input = json_decode($jsonData, true);
+        
 
-        // Log the incoming data
-        error_log(print_r($input, true));
 
         // echo "Received data: " . $jsonData;  
-        if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+        if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['rate_config'])) {
             // Check if required fields are present
-            if (isset($input['normalLeafRate'], $input['superLeafRate'], $input['fertilizerStockLower'], $input['fertilizerStockMidLow'], $input['fertilizerStockMidHigh'], $input['leafAge1'], $input['leafAge2'], $input['leafAge3'])) {
+            $_POST = filter_input_array(INPUT_POST);
+           
                 $data = [
-                    'normalLeafRate' => $input['normalLeafRate'],
-                    'superLeafRate' => $input['superLeafRate'],
-                    'fertilizerStockLower' => $input['fertilizerStockLower'],
-                    'fertilizerStockMidLow' => $input['fertilizerStockMidLow'],
-                    'fertilizerStockMidHigh' => $input['fertilizerStockMidHigh'],
-                    'leafAge1' => $input['leafAge1'],
-                    'leafAge2' => $input['leafAge2'],
-                    'leafAge3' => $input['leafAge3']
+                    'normal_leaf_rate' => $_POST['normal_leaf_rate'],
+                    'super_leaf_rate' => $_POST['super_leaf_rate'],
+                    'fertilizer_stock_lower' => $_POST['fertilizer_stock_lower'],
+                    'fertilizer_stock_mid_low' => $_POST['fertilizer_stock_mid_low'],
+                    'fertilizer_stock_mid_high' => $_POST['fertilizer_stock_mid_high'],
+                    'Leaf_age_1' => $_POST['Leaf_age_1'],
+                    'Leaf_age_2' => $_POST['Leaf_age_2'],
+                    'Leaf_age_3' => $_POST['Leaf_age_3']
                 ];
 
                 // Log the data array
-                error_log(print_r($data, true));
+                // error_log(print_r($data, true));
 
+                // print_r("qwe");
                 $this->inventoryConfigModel->add_inventory_config($data);
-            } else {
-                // Handle missing fields
-                echo "Error: Missing required fields.";
+                
             }
-        }
-
+            
 
         $fertilizer = $this->fertilizerModel->getfertilizer();
         $data = [
@@ -960,7 +956,7 @@ class Inventory extends controller
         ];
 
         $this->view('inventory/v_collection_bags', $data);
-        var_dump($data);
+        // var_dump($data);
     }
 
 
@@ -1047,7 +1043,7 @@ class Inventory extends controller
     public function createBag()
     {
         if ($_SERVER['REQUEST_METHOD'] == 'POST') {
-            $_POST = filter_input_array(INPUT_POST, FILTER_SANITIZE_STRING);
+            $_POST = filter_input_array(INPUT_POST);
 
             $data = [
                 'capacity_kg' => trim($_POST['capacity_kg']),
