@@ -53,6 +53,7 @@
       body: JSON.stringify(data),
     }).then(response => {
       console.log("Response:", response);
+      location.reload();
     })
       .catch(error => {
         console.error("Error:", error);
