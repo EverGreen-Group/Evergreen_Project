@@ -8,6 +8,7 @@
   <div class="head-title">
     <div class="left">
       <h1>Fertilizer Requests</h1>
+      <a href="http://localhost/Evergreen_Project/pages/FertilizerTypes" class="btn">View Fertilizer Types</a>
       <ul class="breadcrumb">
         <li>
           <i class='bx bx-home'></i>
