@@ -278,14 +278,14 @@
               <div class="detail-row">
                 <span class="label">Reg-No:</span>
                 <span class="value">
-                  <input type="text" id="exportRegNo" name="reg-no" required
+                  <input type="text" id="exportRegNo" name="reg-no" required value="EP-"
                     style="width: 100%; padding: 8px; box-sizing: border-box;">
                 </span>
               </div>
               <div class="detail-row">
                 <span class="label">Manager Name:</span>
                 <span class="value">
-                  <input type="text" id="exportmanager" name="manager" required
+                  <input type="text" id="exportmanager" value="<?php echo $managerName?>" name="manager" required readonly
                     style="width: 100%; padding: 8px; box-sizing: border-box;">
                 </span>
               </div>

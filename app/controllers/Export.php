@@ -1,14 +1,17 @@
 <?php
 
 require_once APPROOT . '/models/M_Export.php';
+require_once APPROOT .'/models/M_User.php';
 class Export extends controller
 {
 
     private $exportModel;
+    private $profileModel;
     public function __construct()
     {
 
         $this->exportModel = new M_Export();
+        $this->profileModel = new M_User();
 
     }
 
@@ -20,6 +23,7 @@ class Export extends controller
 
         // Debugging: Log received input
         error_log(print_r($input, true));
+
 
         if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             // Validate JSON data
@@ -51,12 +55,17 @@ class Export extends controller
             }
 
 
+            
 
         } else {
             // Handle GET request
             $exportall = $this->exportModel->get_export_data();
             $lastmonth_exports = $this->exportModel->get_lastmonth_exportdata();
             $tea_exports = $this->exportModel->get_tea_export_data_last12months();
+            $managerdetails = $this->profileModel->getProfile($_SESSION['user_id']);
+           
+
+            $managerName = $managerdetails['profile']->first_name . ' ' . $managerdetails['profile']->last_name;
 
             $revenue = 0;
             $total_quantity = 0;
@@ -109,9 +118,12 @@ class Export extends controller
                 'green_tea' => $green_tea_data,
                 'black_tea' => $black_tea_data,
                 'herbal_tea' => $herbal_tea_data,
+                'managerName' => $managerName,
+
             ];
 
             //  var_dump($data);
+            // print_r($managerName);
             $this->view('inventory/v_export', $data);
         }
 
