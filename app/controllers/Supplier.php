@@ -792,7 +792,6 @@ class Supplier extends Controller {
     public function chat() {
         // Ensure the user is logged in and has the Supplier role (role_id = 7)
         if (!isset($_SESSION['user_id']) || $_SESSION['role_id'] != 5) {
-            flash('message', 'Unauthorized access', 'alert alert-danger');
             redirect('auth/login');
             return;
         }

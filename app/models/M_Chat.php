@@ -8,11 +8,22 @@ class M_Chat {
 
     public function getActiveSuppliers() {
         try {
-            $sql = "SELECT u.user_id, p.first_name, p.last_name
+            $userId = $_SESSION['user_id']; 
+    
+            // Fixed SQL to properly count unread messages only
+            $sql = "SELECT u.user_id, p.first_name, p.last_name, 
+                           COUNT(CASE WHEN m.read_at IS NULL AND m.sender_id = u.user_id AND m.receiver_id = :user_id THEN 1 ELSE NULL END) AS unread_count
                     FROM users u
-                    LEFT JOIN profiles p ON u.user_id = p.user_id
-                    WHERE u.role_id = 5"; 
+                    JOIN profiles p ON u.user_id = p.user_id
+                    JOIN suppliers s ON s.profile_id = p.profile_id
+                    LEFT JOIN messages m ON m.sender_id = u.user_id AND m.receiver_id = :user_id
+                    WHERE u.role_id = 5 
+                    GROUP BY u.user_id
+                    ORDER BY unread_count DESC, p.last_name ASC;
+                    "; 
+    
             $stmt = $this->db->prepare($sql);
+            $stmt->bindParam(':user_id', $userId, PDO::PARAM_INT);
             $stmt->execute();
             return $stmt->fetchAll(PDO::FETCH_OBJ);
         } catch (PDOException $e) {
@@ -23,11 +34,19 @@ class M_Chat {
 
     public function getActiveManagers() {
         try {
-            $sql = "SELECT u.user_id, p.first_name, p.last_name
+            $userId = $_SESSION['user_id']; 
+
+            $sql = "SELECT u.user_id, p.first_name, p.last_name, 
+                           COUNT(CASE WHEN m.read_at IS NULL AND m.sender_id = u.user_id AND m.receiver_id = :user_id THEN 1 ELSE NULL END) AS unread_count
                     FROM users u
-                    LEFT JOIN profiles p ON u.user_id = p.user_id
-                    WHERE u.role_id = 12";
+                    JOIN profiles p ON u.user_id = p.user_id
+                    LEFT JOIN messages m ON m.sender_id = u.user_id AND m.receiver_id = :user_id
+                    WHERE u.role_id = 12
+                    GROUP BY u.user_id
+                    ORDER BY unread_count DESC, p.last_name ASC;";
+
             $stmt = $this->db->prepare($sql);
+            $stmt->bindParam(':user_id', $userId, PDO::PARAM_INT);
             $stmt->execute();
             return $stmt->fetchAll(PDO::FETCH_OBJ);
         } catch (PDOException $e) {
