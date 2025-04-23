@@ -44,7 +44,7 @@
                 <div class="section-content">
                     <div class="info-row">
                         <label class="label" for="product_name">Product Name:</label>
-                        <input type="text" id="product_name" name="product_name" class="form-control" required
+                        <input type="text" id="product_name" name="product_name" class="form-control"
                             value="<?php echo isset($data['product_name']) ? $data['product_name'] : ''; ?>">
                     </div>
                     <div class="info-row">
@@ -63,7 +63,7 @@
                     <div class="info-row">
                         <label class="label" for="grade">Grade:</label>
                         <input type="text" id="grade" name="grade" class="form-control" placeholder="Enter Grade"
-                            required value="<?php echo isset($data['grade']) ? $data['grade'] : ''; ?>">
+                             value="<?php echo isset($data['grade']) ? $data['grade'] : ''; ?>">
                     </div>
                 </div>
             </div>
@@ -100,8 +100,8 @@
                     <div class="info-row">
                         <label class="label" for="price">Price:</label>
                         <div class="input-with-prefix" style="display:flex; align-items:center;">
-                            <span class="prefix" style="margin-right:5px;">$</span>
-                            <input type="number" id="price" name="price" class="form-control" required
+                            <span class="prefix" style="margin-right:5px;">Rs.</span>
+                            <input type="number" id="price" name="price" class="form-control" 
                                 value="<?php echo isset($data['price']) ? $data['price'] : ''; ?>">
                         </div>
                     </div>
@@ -118,7 +118,7 @@
                 <div class="section-content">
                     <div class="info-row">
                         <label class="label" for="quantity">Quantity:</label>
-                        <input type="number" id="quantity" name="quantity" class="form-control" required
+                        <input type="number" id="quantity" name="quantity" class="form-control"  min=0
                             value="<?php echo isset($data['quantity']) ? $data['quantity'] : ''; ?>">
                     </div>
                     <div class="info-row">
