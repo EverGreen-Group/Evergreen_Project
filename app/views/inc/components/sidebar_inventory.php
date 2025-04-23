@@ -23,7 +23,7 @@
       </a>
     </li>
     <li class="<?php echo (basename($_SERVER['REQUEST_URI']) == 'collectionBags') ? 'active' : ''; ?>">
-      <a href="../inventory/collectionBags">
+      <a href="<?php echo URLROOT; ?>/inventory/collectionBags">
         <i class="bx bx-trip"></i>
         <span class="text">Bag</span>
       </a>
@@ -34,15 +34,15 @@
         <span class="text">Machine Allocation</span>
       </a>
     </li>
-    <li class="<?php echo (basename($_SERVER['REQUEST_URI']) == 'export') ? 'active' : ''; ?>">
-      <a href="../export/release">
+    <li class="<?php echo (basename($_SERVER['REQUEST_URI']) == 'release') ? 'active' : ''; ?>">
+      <a href="<?php echo URLROOT; ?>/export/release">
         <i class="bx bxs-group"></i>
         <span class="text">Export</span>
       </a>
     </li>
 
     <li class="<?php echo (basename($_SERVER['REQUEST_URI']) == 'payments') ? 'active' : ''; ?>">
-      <a href="../inventory/payments">
+      <a href="<?php echo URLROOT; ?>/inventory/payments">
         <i class="bx bxs-group"></i>
         <span class="text">Payments</span>
       </a>
