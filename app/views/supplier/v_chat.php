@@ -17,11 +17,15 @@
             <div class="managers-list">
                 <?php foreach($data['active_managers'] as $manager): ?>
                     <div class="user-item" data-user-id="<?php echo $manager->user_id; ?>">
-                        <div class="manager-info">
-                            <h4><?php echo htmlspecialchars(($manager->first_name && $manager->last_name) ? $manager->first_name . ' ' . $manager->last_name : 'MGR' . sprintf('%03d', $manager->user_id)); ?></h4>
-                            <p>MGR<?php echo sprintf('%03d', $manager->user_id);?></p>
+                        <div class="supplier-info" style="display: flex; align-items: center; justify-content: space-between;">
+                            <h4 style="margin: 0;"><?php echo htmlspecialchars(($manager->first_name && $manager->last_name) ? $manager->first_name . ' ' . $manager->last_name : 'SUP' . sprintf('%03d', $manager->user_id)); ?></h4>
+                            <div class="supplier-status">
+                                <?php if ($manager->unread_count > 0): ?>
+                                    <span class="unread-count"><?php echo htmlspecialchars($manager->unread_count); ?></span>
+
+                                <?php endif; ?>
+                            </div>
                         </div>
-                        <div class="status-dot offline"></div>
                     </div>
                 <?php endforeach; ?>
             </div>
@@ -108,6 +112,26 @@
     Chat.bindSearch('manager-search');
     Chat.bindMessageActions('supplier');
 </script>
+
+
+<style>
+.unread-count {
+    background-color: red; /* Change to your desired color */
+    color: white;
+    border-radius: 50%; /* Makes it circular */
+    padding: 5px; /* Adjust padding for better appearance */
+    font-size: 14px;
+    display: inline-flex; /* Use flexbox for centering */
+    align-items: center; /* Center vertically */
+    justify-content: center; /* Center horizontally */
+    min-width: 20px; /* Minimum width for the count */
+    height: 20px; /* Fixed height for circular shape */
+    text-align: center;
+    font-weight: bold; /* Make the text bold */
+    position: relative; /* Positioning for better layout */
+    margin-left: 5px; /* Space between the name and the count */
+}
+</style>
 
 
 

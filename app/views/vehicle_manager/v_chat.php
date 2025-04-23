@@ -3,7 +3,6 @@
 <?php require APPROOT . '/views/inc/components/topnavbar.php'; ?>
 
 <link rel="stylesheet" href="<?php echo URLROOT; ?>/css/chat.css">
-<link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
 
 <main>
     <!-- Rest of the HTML remains the same -->
@@ -16,11 +15,15 @@
             <div class="suppliers-list">
                 <?php foreach($data['active_suppliers'] as $supplier): ?>
                     <div class="user-item" data-user-id="<?php echo $supplier->user_id; ?>">
-                        <div class="supplier-info">
-                            <h4><?php echo htmlspecialchars(($supplier->first_name && $supplier->last_name) ? $supplier->first_name . ' ' . $supplier->last_name : 'SUP' . sprintf('%03d', $supplier->user_id)); ?></h4>
-                            <p>SUP<?php echo sprintf('%03d', $supplier->user_id);?></p>
+                        <div class="supplier-info" style="display: flex; align-items: center; justify-content: space-between;">
+                            <h4 style="margin: 0;"><?php echo htmlspecialchars(($supplier->first_name && $supplier->last_name) ? $supplier->first_name . ' ' . $supplier->last_name : 'SUP' . sprintf('%03d', $supplier->user_id)); ?></h4>
+                            <div class="supplier-status">
+                                <?php if ($supplier->unread_count > 0): ?>
+                                    <span class="unread-count"><?php echo htmlspecialchars($supplier->unread_count); ?></span>
+
+                                <?php endif; ?>
+                            </div>
                         </div>
-                        <div class="status-dot offline"></div>
                     </div>
                 <?php endforeach; ?>
             </div>
@@ -107,6 +110,25 @@
     Chat.bindSearch('supplier-search');
     Chat.bindMessageActions('manager');
 </script>
+
+<style>
+.unread-count {
+    background-color: red; /* Change to your desired color */
+    color: white;
+    border-radius: 50%; /* Makes it circular */
+    padding: 5px; /* Adjust padding for better appearance */
+    font-size: 14px;
+    display: inline-flex; /* Use flexbox for centering */
+    align-items: center; /* Center vertically */
+    justify-content: center; /* Center horizontally */
+    min-width: 20px; /* Minimum width for the count */
+    height: 20px; /* Fixed height for circular shape */
+    text-align: center;
+    font-weight: bold; /* Make the text bold */
+    position: relative; /* Positioning for better layout */
+    margin-left: 5px; /* Space between the name and the count */
+}
+</style>
 
 
 
