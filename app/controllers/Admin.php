@@ -203,6 +203,12 @@ class Admin extends Controller
             }
     
             $paymentModel = $this->model('M_Payment');
+
+            $reportExist = $paymentModel->checkIfAlreadyExists($year, $month);
+            if($reportExist) {
+                setFlashMessage('Report for this year and month already exists!', 'warning');
+                redirect('admin/payments');
+            }
             
             try {
                 $result = $paymentModel->generateMonthlyPayment($year, $month, $normalLeafRate, $superLeafRate);

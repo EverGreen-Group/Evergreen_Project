@@ -47,33 +47,28 @@ class Supplier extends Controller {
 
     public function index() {
         $supplierId = $_SESSION['supplier_id'];
-
-        // No of tea leaves kg this month
-        $teaLeavesKg = $this->supplierModel->getTotalKgThisMonth($supplierId);
-        // No of kg last collection
-        $teaLeavesKgLastCollection = $this->supplierModel->kgSuppliedLastCollection($supplierId);
+    
+        // Tea leaves data
+        // $teaLeavesKg = $this->supplierModel->getTotalKgThisMonth($supplierId);
+        // $teaLeavesKgLastCollection = $this->supplierModel->kgSuppliedLastCollection($supplierId);
         $vehicleModel = $this->model('M_Vehicle');
-
-        $collectionId = $this->collectionModel->checkCollectionExistsUsingSupplierId($supplierId);
-        if($collectionId) {
-            $schedule = $this->scheduleModel->getTodayScheduleBySupplierId($supplierId);
-            $collectionDetails = $this->collectionModel->getCollectionDetails($collectionId);
-            $vehicleLocation = $vehicleModel->getVehicleLocation($collectionDetails->vehicle_id);
-            $data = [
-                'schedule' => $schedule,
-                'collectionDetails' => $collectionDetails,
-                'vehicleLocation' => $vehicleLocation,
-                'teaLeavesKg' => $teaLeavesKg,
-                'teaLeavesKgLastCollection' => $teaLeavesKgLastCollection
-            ];
-        }
+    
+        // Assigned schedule (general one)
+        $assignedSchedule = $this->supplierModel->getSupplierSchedule($supplierId);
+    
         $supplierStatus = $this->supplierModel->getSupplierStatus($supplierId);
         $data['is_active'] = $supplierStatus;
-        $data['teaLeavesKg'] = $teaLeavesKg;
-        $data['teaLeavesKgLastCollection'] = $teaLeavesKgLastCollection;
-        
+        // $data['teaLeavesKg'] = $teaLeavesKg;
+        // $data['teaLeavesKgLastCollection'] = $teaLeavesKgLastCollection;
+    
+        // Add general assigned schedule if available
+        if ($assignedSchedule) {
+            $data['assignedSchedule'] = $assignedSchedule;
+        }
+    
         $this->view('supplier/v_supply_dashboard', $data);
     }
+    
 
     public function viewAppointments() {
         // Fetch all required data for the view
@@ -391,6 +386,29 @@ class Supplier extends Controller {
             }
         } else {
             redirect('supplier/complaints');
+        }
+    }
+
+    public function resolveComplaint() {
+        if($_SERVER['REQUEST_METHOD'] == 'POST') {
+
+            $complaintId = $_POST['complaint_id'];
+            if($complaintId) {
+                $result = $this->complaintModel->markResolved($complaintId);
+                if($result) {
+                    setFlashMessage('Complaint marked as resolved successfully!');
+                    redirect('manager/complaints');
+                }
+
+                setFlashMessage('Complaint couldnt be marked as resolved!', 'error');
+                redirect('manager/complaints');
+                
+            }
+            setFlashMessage('You havent selected the complaint!', 'warning');
+            redirect('manager/complaints');
+
+
+
         }
     }
 

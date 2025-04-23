@@ -18,4 +18,12 @@ class M_Complaint {
         $this->db->bind(':supplier_id', $supplier_id);
         return $this->db->resultSet();
     }
+
+    public function markResolved($complaintId) {
+        $sql = "UPDATE complaints SET status = 'Resolved' WHERE complaint_id = :complaint_id";
+        $this->db->query($sql);
+        $this->db->bind(':complaint_id', $complaintId);
+        return $this->db->execute();
+        
+    }
 }

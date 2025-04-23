@@ -141,6 +141,13 @@ class VehicleDriver extends controller {
         $collection = $this->collectionModel->getCollectionDetails($collectionId);
         $vehicleLocation = $this->vehicleModel->getVehicleLocation($collection->vehicle_id);
         $collectionSuppliers = $this->collectionScheduleModel->getCollectionSupplierRecords($collectionId);
+
+
+        if($collection->collection_status !== 'Pending') {
+            setFlashMessage("You have already completed this collection. You have no access here!", 'warning');
+            redirect('vehicledriver/');
+        }
+
         
         $leafTypesResult = $this->collectionModel->getCollectionTeaLeafTypes();
         $leafTypes = $leafTypesResult['success'] ? $leafTypesResult['leafTypes'] : [];
@@ -389,6 +396,17 @@ class VehicleDriver extends controller {
     public function collectionBags($collectionId, $supplierId) { // tested, the page we land right into after we created a collection
         // Get the collection details
         $collection = $this->collectionModel->getCollectionDetails($collectionId);
+
+        if($collection->collection_status !== 'Pending') {
+            setFlashMessage("You have already completed this collection. You have no access here!", 'warning');
+            redirect('vehicledriver/');
+        }
+
+        $collectionSupplierRecord = $this->collectionModel->getCollectionSupplierRecordDetails($collectionId,$supplierId);
+        if($collectionSupplierRecord->status !== 'Added') {
+            setFlashMessage("You have already completed this collection. You have no access here!", 'warning');
+            redirect('vehicledriver/');
+        }
         
         // Get the supplier details
         $supplier = $this->supplierModel->getSupplierById($supplierId);
@@ -421,6 +439,18 @@ class VehicleDriver extends controller {
     public function addBag($collectionId, $supplierId) { // USING THIS OK, TESTED
         $collection = $this->collectionModel->getCollectionDetails($collectionId);
         $supplier = $this->supplierModel->getSupplierById($supplierId);
+
+
+        if($collection->collection_status !== 'Pending') {
+            setFlashMessage("You have already completed this collection. You have no access here!", 'warning');
+            redirect('vehicledriver/');
+        }
+
+        $collectionSupplierRecord = $this->collectionModel->getCollectionSupplierRecordDetails($collectionId,$supplierId);
+        if($collectionSupplierRecord->status !== 'Added') {
+            setFlashMessage("You have already completed this collection. You have no access here!", 'warning');
+            redirect('vehicledriver/');
+        }
         
         $leafTypesResult = $this->collectionModel->getCollectionTeaLeafTypes();
         $leafTypes = $leafTypesResult['success'] ? $leafTypesResult['leafTypes'] : [];
@@ -510,8 +540,18 @@ class VehicleDriver extends controller {
             redirect("vehicledriver/collectionBags/$collectionId/$supplierId");
         }
         
-        // Get the collection details
         $collection = $this->collectionModel->getCollectionDetails($collectionId);
+
+        if($collection->collection_status !== 'Pending') {
+            setFlashMessage("You have already completed this collection. You have no access here!", 'warning');
+            redirect('vehicledriver/');
+        }
+
+        $collectionSupplierRecord = $this->collectionModel->getCollectionSupplierRecordDetails($collectionId,$supplierId);
+        if($collectionSupplierRecord->status !== 'Added') {
+            setFlashMessage("You have already completed this collection. You have no access here!", 'warning');
+            redirect('vehicledriver/');
+        }
         
         // Get the supplier details
         $supplier = $this->supplierModel->getSupplierById($supplierId);

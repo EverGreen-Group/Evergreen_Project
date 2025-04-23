@@ -4,7 +4,6 @@
 <link rel="stylesheet" href="<?php echo URLROOT; ?>/css/supplier/supplier_dashboard.css">
 
 <main>
-    <!-- <?php print_r($data); ?> -->
     <div class="head-title">
         <div class="left">
             <h1>Supplier Dashboard</h1>
@@ -14,6 +13,25 @@
                     <a href="<?php echo URLROOT; ?>/Supplier/dashboard/">Dashboard</a>
                 </li>
             </ul>
+        </div>
+    </div>
+
+    <!-- Profile Card Section -->
+    <div class="profile-card">
+        <div class="profile-image">
+            <?php
+                $profileImageSrc = URLROOT . '/uploads/supplier_photos/default-supplier.png'; 
+                if (isset($_SESSION['profile_image_path']) && !empty($_SESSION['profile_image_path'])) {
+                    $profileImageSrc = URLROOT . '/' . $_SESSION['profile_image_path'];
+                }
+            ?>
+            <img src="<?php echo htmlspecialchars($profileImageSrc); ?>" alt="Profile Photo">
+        </div>
+        <div class="profile-info">
+            <?php if (isset($_SESSION['full_name'])): ?>
+                <h2 class="welcome-text">Welcome back, <?php echo htmlspecialchars($_SESSION['full_name']); ?></h2>
+                <p class="last-login-text">Last login: <?php echo isset($_SESSION['last_login']) ? htmlspecialchars($_SESSION['last_login']) : date('M d, Y h:i A'); ?></p>
+            <?php endif; ?>
         </div>
     </div>
 
@@ -41,145 +59,836 @@
         </div>
     </div>
 
+    <!-- Assigned Schedule Section -->
+    <div class="schedule-section">
 
-    <div class="stats-container">
-        <div class="stat-item">
-            <div class="stat-header">
-                <i class='bx bxs-calendar-check'></i>
-                <span>Leaves supplied</span>
-            </div>
-            <div class="stat-value">
-            <?php echo isset($data['teaLeavesKgLastCollection']) ? $data['teaLeavesKgLastCollection'] : '0'; ?>
-                <small>kg last collection</small>
+        <?php if (isset($assignedSchedule) && $assignedSchedule): ?>
+        <div class="schedule-content">
+            <div class="assigned-schedule-card">
+                <div class="schedule-header">
+                    <i class='bx bx-calendar-check'></i>
+                    <h3>Your Collection Schedule</h3>
+                    <div class="next-date">Next: <?php echo date('M d, Y', strtotime('next ' . $assignedSchedule->day)); ?></div>
+                </div>
+                
+                <div class="schedule-info">
+                    <div class="schedule-time">
+                        <div class="day-badge"><?php echo htmlspecialchars($assignedSchedule->day); ?></div>
+                        <div class="time"><?php echo date("h:i A", strtotime($assignedSchedule->start_time)); ?></div>
+                        <div class="route"><i class='bx bx-map'></i> <?php echo htmlspecialchars($assignedSchedule->route_name); ?></div>
+                    </div>
+                    
+                    <div class="personnel-vehicle-info">
+                        <!-- Driver Info -->
+                        <div class="personnel-info">
+                            <div class="section-title">Driver</div>
+                            <div class="person-card">
+                                <div class="person-image">
+                                    <img src="<?php echo URLROOT; ?>/<?php echo htmlspecialchars($assignedSchedule->driver_image); ?>" alt="Driver" class="driver-image">
+                                </div>
+                                <div class="person-details">
+                                    <h4><?php echo htmlspecialchars($assignedSchedule->driver_name); ?></h4>
+                                    <span><i class='bx bx-phone'></i> <?php echo htmlspecialchars($assignedSchedule->contact_number); ?></span>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Vehicle Info -->
+                        <div class="vehicle-info">
+                            <div class="section-title">Vehicle</div>
+                            <div class="vehicle-card">
+                                <div class="vehicle-image">
+                                    <img src="<?php echo URLROOT; ?>/<?php echo htmlspecialchars($assignedSchedule->vehicle_image); ?>" alt="Vehicle" class="vehicle-image">
+                                </div>
+                                <div class="vehicle-details">
+                                    <h4><?php echo htmlspecialchars($assignedSchedule->license_plate); ?></h4>
+                                    <div class="vehicle-specs">
+                                        <span class="spec"><i class='bx bx-car'></i> <?php echo htmlspecialchars($assignedSchedule->make . ' ' . $assignedSchedule->model .' ' . $assignedSchedule->color); ?></span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
-        <div class="stat-divider"></div>
-        <div class="stat-item">
-            <div class="stat-header">
-                <i class='bx bx-leaf'></i>
-                <span>Tea Leaves</span>
-            </div>
-            <div class="stat-value">
-                <?php echo isset($data['teaLeavesKg']) ? floor($data['teaLeavesKg']) : '0'; ?>
-                <small>kg this month</small>
-            </div>
+        <?php else: ?>
+        <div class="no-schedule-message">
+            <i class='bx bx-calendar-x'></i>
+            <p>You're not assigned to any collection schedule yet.</p>
+            <a href="<?php echo URLROOT; ?>/supplier/support" class="btn-contact-support">Contact Support</a>
         </div>
+        <?php endif; ?>
     </div>
 
-    <!-- Action Cards Section -->
-    <div class="action-cards-container">
-        <div class="action-card">
-            <div class="action-content">
-                <div class="action-icon">
-                    <i class='bx bx-calendar'></i>
-                </div>
-                <div class="action-text">View Schedule</div>
-                <a href="<?php echo URLROOT; ?>/supplier/schedule" class="action-button">
-                    <div class="button-content">
-                        <i class='bx bx-calendar-edit'></i>
-                        <span>View Your Schedule</span>
-                    </div>
-                </a>
-            </div>
+    <!-- Recent Activity Section -->
+    <div class="recent-activity-section">
+        <div class="section-header">
+            <h2><i class='bx bx-history'></i> Recent Activity</h2>
+            <a href="<?php echo URLROOT; ?>/supplier/history" class="view-all-button">View All <i class='bx bx-right-arrow-alt'></i></a>
         </div>
         
-        <div class="action-card">
-            <div class="action-content">
-                <div class="action-icon">
-                    <i class='bx bx-history'></i>
-                </div>
-                <div class="action-text">View Past Collections</div>
-                <a href="<?php echo URLROOT; ?>/supplier/collections" class="action-button">
-                    <div class="button-content">
-                        <i class='bx bx-list-ul'></i>
-                        <span>Access Past Collections</span>
+        <div class="activity-list">
+            <?php if (isset($data['recent_activities']) && !empty($data['recent_activities'])): ?>
+                <?php foreach($data['recent_activities'] as $activity): ?>
+                <div class="activity-item">
+                    <div class="activity-icon">
+                        <i class='bx <?php echo htmlspecialchars($activity->icon ?? 'bx-check-circle'); ?>'></i>
                     </div>
-                </a>
-            </div>
+                    <div class="activity-content">
+                        <p><?php echo htmlspecialchars($activity->description); ?></p>
+                        <span class="activity-time"><?php echo htmlspecialchars($activity->created_at); ?></span>
+                    </div>
+                </div>
+                <?php endforeach; ?>
+            <?php else: ?>
+                <div class="no-activity-message">
+                    <p>No recent activity to display.</p>
+                </div>
+            <?php endif; ?>
         </div>
     </div>
-
-    <!-- Current Schedule Section -->
-    <?php if (isset($schedule) && $schedule !== false): ?>
-<div class="schedule-section">
-    <div class="section-header">
-        <h2>Current Collection Details</h2>
-    </div>
-
-    <div class="schedule-content">
-        <div class="collection-card">
-            <!-- Driver and Vehicle Info -->
-            <div class="personnel-vehicle-container">
-                <!-- Driver Information -->
-                <div class="personnel-card">
-                    <div class="personnel-image">
-                        <?php if (!empty($schedule->driver_image)): ?>
-                            <img src="<?php echo URLROOT; ?>/<?php echo $schedule->driver_image; ?>" alt="Driver Photo">
-                        <?php else: ?>
-                            <div class="default-avatar">
-                                <i class='bx bx-user-circle'></i>
-                            </div>
-                        <?php endif; ?>
-                    </div>
-                    <div class="personnel-details">
-                        <h4><?php echo htmlspecialchars($schedule->driver_name); ?></h4>
-                        <span class="personnel-id">Driver ID: <?php echo htmlspecialchars($schedule->driver_id); ?></span>
-                    </div>
-                </div>
-                
-                <!-- Vehicle Information -->
-                <?php if (!empty($collectionDetails) && isset($collectionDetails->image_path)): ?>
-                <div class="vehicle-card">
-                    <div class="vehicle-image">
-                        <img src="<?php echo URLROOT; ?>/<?php echo $collectionDetails->image_path; ?>" alt="Vehicle Photo">
-                    </div>
-                    <div class="vehicle-details">
-                        <h4><?php echo htmlspecialchars($schedule->vehicle_type); ?></h4>
-                        <span class="vehicle-id">License: <?php echo htmlspecialchars($schedule->license_plate); ?></span>
-                    </div>
-                </div>
-                <?php endif; ?>
-
-            </div>
-            
-            <!-- Schedule Details -->
-            <div class="collection-details">
-                <div class="details-row">
-                    <div class="detail-item">
-                        <i class='bx bx-calendar'></i>
-                        <span><?php echo date('l, F j, Y', strtotime($schedule->start_time)); ?></span>
-                    </div>
-                    
-                    <div class="detail-item">
-                        <i class='bx bx-time-five'></i>
-                        <span><?php echo date('h:i A', strtotime($schedule->start_time)); ?> - <?php echo date('h:i A', strtotime($schedule->end_time)); ?></span>
-                    </div>
-                </div>
-                
-                <div class="details-row">
-                    <div class="detail-item">
-                        <i class='bx bx-map'></i>
-                        <span>Route: <?php echo htmlspecialchars($schedule->route_name); ?></span>
-                    </div>
-                    
-                </div>
-                
-            </div>
-            <div class="collection-status">
-                <div class="vehicle-location">
-                    <a href="https://www.google.com/maps?q=<?php echo $vehicleLocation->latitude; ?>,<?php echo $vehicleLocation->longitude; ?>" target="_blank" class="location-button">
-                        <i class='bx bx-map-pin'></i>
-                        <span>Track Vehicle Location</span>
-                    </a>
-                </div>
-            </div>
-
-        </div>
-    </div>
-</div>
-<?php endif; ?>
 </main>
 
-<!-- Scripts -->
 <script src="<?php echo URLROOT; ?>/public/css/script.js"></script>
+
+<style>
+    :root {
+        --main-light: #e6f3ff;
+        --main-dark: #2a75c0;
+        --green: #28a745;
+        --green-light: #e6f7e9;
+        --red: #dc3545;
+        --red-light: #ffefef;
+        --orange: #fd7e14;
+        --orange-light: #fff8e6;
+        --gray: #666;
+        --gray-light: #f5f5f5;
+        --gray-dark: #333;
+        --shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        --radius: 10px;
+        --radius-sm: 5px;
+        --radius-lg: 20px;
+        --transition: all 0.3s ease;
+    }
+
+    /* Basic Layout & Typography */
+    main {
+        padding: 24px;
+        color: var(--gray-dark);
+    }
+
+    h1, h2, h3, h4 {
+        margin: 0;
+        font-weight: 600;
+    }
+
+    .head-title {
+        margin-bottom: 24px;
+    }
+
+    .head-title h1 {
+        font-size: 1.8rem;
+        color: var(--gray-dark);
+    }
+
+    .breadcrumb {
+        display: flex;
+        align-items: center;
+        list-style: none;
+        padding: 0;
+        margin: 8px 0 0;
+    }
+
+    .breadcrumb li {
+        display: flex;
+        align-items: center;
+        color: var(--gray);
+    }
+
+    .breadcrumb li a {
+        color: var(--main);
+        text-decoration: none;
+    }
+
+    .breadcrumb li i {
+        margin-right: 5px;
+    }
+
+    /* Card Components */
+    .profile-card, .availability-section, .schedule-section, .stats-container, .recent-activity-section {
+        background-color: #ffffff;
+        border-radius: var(--radius);
+        box-shadow: var(--shadow);
+        margin-bottom: 24px;
+        overflow: hidden;
+        transition: var(--transition);
+    }
+
+    .profile-card:hover, .availability-section:hover, .schedule-section:hover, .stats-container:hover, .recent-activity-section:hover {
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
+    }
+
+    /* Profile Card Styling */
+    .profile-card {
+        display: flex;
+        align-items: center;
+        padding: 24px;
+    }
+
+    .profile-image {
+        width: 90px;
+        height: 90px;
+        border-radius: 50%;
+        overflow: hidden;
+        margin-right: 24px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+        border: 3px solid #fff;
+    }
+
+    .profile-image img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+
+    .profile-info h2 {
+        margin-bottom: 8px;
+        font-size: 1.5rem;
+    }
+
+    .last-login-text {
+        color: var(--gray);
+        margin: 0;
+        font-size: 0.9rem;
+    }
+
+    /* Stats Container */
+    .stats-container {
+        display: flex;
+        padding: 24px;
+    }
+
+    .stat-item {
+        flex: 1;
+        text-align: center;
+        padding: 0 15px;
+    }
+
+    .stat-header {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        margin-bottom: 12px;
+    }
+
+    .stat-header i {
+        font-size: 2.2rem;
+        color: var(--main);
+        margin-bottom: 8px;
+    }
+
+    .stat-header span {
+        color: var(--gray);
+        font-size: 0.95rem;
+    }
+
+    .stat-value {
+        font-size: 2rem;
+        font-weight: 700;
+        color: var(--gray-dark);
+    }
+
+    .stat-value small {
+        display: block;
+        font-size: 0.85rem;
+        font-weight: 400;
+        color: var(--gray);
+        margin-top: 5px;
+    }
+
+    .stat-divider {
+        width: 1px;
+        background-color: #e0e0e0;
+    }
+
+    .status-indicator .active-status {
+        color: var(--green);
+    }
+
+    .status-indicator .inactive-status {
+        color: var(--red);
+    }
+
+    /* Availability Section */
+    .availability-section {
+        padding: 20px;
+    }
+
+    .availability-container {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .availability-header h3 {
+        margin-bottom: 5px;
+        font-size: 1.2rem;
+    }
+
+    .availability-header p {
+        margin: 0;
+        color: var(--gray);
+        font-size: 0.9rem;
+    }
+
+    .availability-right {
+        display: flex;
+        align-items: center;
+    }
+
+    .status-pill {
+        display: inline-block;
+        padding: 6px 15px;
+        border-radius: var(--radius-lg);
+        font-weight: 500;
+        font-size: 0.9rem;
+        margin-right: 15px;
+    }
+
+    .status-pill.available {
+        background-color: var(--green-light);
+        color: var(--green);
+    }
+
+    .status-pill.unavailable {
+        background-color: var(--red-light);
+        color: var(--red);
+    }
+
+    .toggle-switch {
+        position: relative;
+        display: inline-block;
+        width: 60px;
+        height: 30px;
+    }
+
+    .toggle-switch input {
+        opacity: 0;
+        width: 0;
+        height: 0;
+    }
+
+    .slider {
+        position: absolute;
+        cursor: pointer;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background-color: #ccc;
+        transition: .4s;
+    }
+
+    .slider:before {
+        position: absolute;
+        content: "";
+        height: 22px;
+        width: 22px;
+        left: 4px;
+        bottom: 4px;
+        background-color: white;
+        transition: .4s;
+    }
+
+    input:checked + .slider {
+        background-color: var(--green);
+    }
+
+    input:focus + .slider {
+        box-shadow: 0 0 1px var(--green);
+    }
+
+    input:checked + .slider:before {
+        transform: translateX(30px);
+    }
+
+    .slider.round {
+        border-radius: 34px;
+    }
+
+    .slider.round:before {
+        border-radius: 50%;
+    }
+
+    /* Schedule Section */
+    .schedule-section {
+        padding: 0;
+    }
+
+    .section-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 18px 24px;
+        border-bottom: 1px solid #eee;
+    }
+
+    .section-header h2 {
+        display: flex;
+        align-items: center;
+        font-size: 1.3rem;
+        color: var(--gray-dark);
+    }
+
+    .section-header h2 i {
+        margin-right: 10px;
+        color: var(--main);
+    }
+
+    .view-all-button {
+        display: flex;
+        align-items: center;
+        color: var(--main);
+        text-decoration: none;
+        font-weight: 500;
+        font-size: 0.95rem;
+    }
+
+    .view-all-button i {
+        margin-left: 5px;
+        transition: transform 0.2s;
+    }
+
+    .view-all-button:hover i {
+        transform: translateX(3px);
+    }
+
+    .assigned-schedule-card {
+        background-color: #f9f9f9;
+        border-radius: 0 0 var(--radius) var(--radius);
+        overflow: hidden;
+    }
+
+    .schedule-header {
+        display: flex;
+        align-items: center;
+        padding: 16px 24px;
+        background-color: var(--green-light);
+        position: relative;
+    }
+
+    .schedule-header i {
+        margin-right: 12px;
+        font-size: 1.5rem;
+        color: var(--green);
+    }
+
+    .schedule-header h3 {
+        margin: 0;
+        font-size: 1.2rem;
+        color: var(--gray-dark);
+        flex-grow: 1;
+    }
+
+    .next-date {
+        background-color: var(--green);
+        color: white;
+        padding: 5px 12px;
+        border-radius: var(--radius-lg);
+        font-size: 0.85rem;
+        font-weight: 500;
+        letter-spacing: 0.5px;
+    }
+
+    .schedule-info {
+        padding: 24px;
+    }
+
+    .schedule-time {
+        display: flex;
+        align-items: center;
+        margin-bottom: 24px;
+        padding-bottom: 16px;
+        border-bottom: 1px dashed #e0e0e0;
+    }
+
+    .day-badge {
+        background-color: var(--main);
+        color: white;
+        padding: 8px 16px;
+        border-radius: var(--radius-lg);
+        font-weight: 500;
+        margin-right: 16px;
+        letter-spacing: 0.5px;
+        box-shadow: 0 2px 5px rgba(60, 145, 230, 0.3);
+    }
+
+    .time {
+        font-size: 1.25rem;
+        font-weight: 600;
+        color: var(--gray-dark);
+        margin-right: 20px;
+        letter-spacing: 0.5px;
+    }
+
+    .route {
+        display: flex;
+        align-items: center;
+        color: var(--gray);
+        font-size: 1rem;
+    }
+
+    .route i {
+        margin-right: 5px;
+        color: var(--main);
+    }
+
+    .personnel-vehicle-info {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 24px;
+        margin-bottom: 24px;
+    }
+
+    .personnel-info, .vehicle-info {
+        flex: 1;
+        min-width: 280px;
+    }
+
+    .section-title {
+        font-weight: 600;
+        color: var(--gray);
+        margin-bottom: 12px;
+        border-left: 3px solid var(--main);
+        padding-left: 10px;
+        font-size: 0.95rem;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+    .person-card, .vehicle-card {
+        display: flex;
+        background-color: white;
+        border-radius: var(--radius-sm);
+        padding: 16px;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        transition: var(--transition);
+    }
+
+    .person-card:hover, .vehicle-card:hover {
+        box-shadow: 0 3px 8px rgba(0, 0, 0, 0.15);
+    }
+
+    .person-image, .vehicle-image {
+        width: 70px;
+        height: 70px;
+        border-radius: var(--radius-sm);
+        overflow: hidden;
+        margin-right: 16px;
+    }
+
+    .person-image img, .vehicle-image img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+
+    .person-details h4, .vehicle-details h4 {
+        margin: 0 0 8px 0;
+        color: var(--gray-dark);
+    }
+
+    .person-details span, .vehicle-details span {
+        display: flex;
+        align-items: center;
+        color: var(--gray);
+        font-size: 0.9rem;
+    }
+
+    .person-details span i, .vehicle-details span i {
+        margin-right: 5px;
+    }
+
+    .vehicle-specs {
+        display: flex;
+        flex-direction: column;
+        margin-top: 8px;
+    }
+
+    .spec {
+        display: flex;
+        align-items: center;
+        margin-bottom: 5px;
+        color: var(--gray);
+        font-size: 0.9rem;
+    }
+
+    .spec i {
+        margin-right: 8px;
+        color: var(--main);
+    }
+
+    .schedule-actions {
+        display: flex;
+        gap: 12px;
+        margin-top: 20px;
+    }
+
+    .btn-action {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 10px 18px;
+        border-radius: var(--radius-sm);
+        text-decoration: none;
+        font-weight: 500;
+        font-size: 0.9rem;
+        transition: var(--transition);
+    }
+
+    .btn-action i {
+        margin-right: 8px;
+    }
+
+    .btn-action.view {
+        background-color: var(--main-light);
+        color: var(--main);
+    }
+
+    .btn-action.view:hover {
+        background-color: var(--main);
+        color: white;
+    }
+
+    .btn-action.report {
+        background-color: var(--orange-light);
+        color: var(--orange);
+    }
+
+    .btn-action.report:hover {
+        background-color: var(--orange);
+        color: white;
+    }
+
+    .no-schedule-message {
+        text-align: center;
+        padding: 40px 24px;
+        color: var(--gray);
+    }
+
+    .no-schedule-message i {
+        font-size: 3.5rem;
+        margin-bottom: 16px;
+        display: block;
+        color: var(--gray);
+    }
+
+    .no-schedule-message p {
+        margin-bottom: 20px;
+        font-size: 1.1rem;
+    }
+
+    .btn-contact-support {
+        display: inline-block;
+        padding: 10px 20px;
+        background-color: var(--main);
+        color: white;
+        text-decoration: none;
+        border-radius: var(--radius-sm);
+        font-weight: 500;
+        transition: var(--transition);
+    }
+
+    .btn-contact-support:hover {
+        background-color: var(--main-dark);
+        transform: translateY(-2px);
+    }
+
+    /* Recent Activity Section */
+    .recent-activity-section {
+        padding: 0;
+    }
+
+    .activity-list {
+        padding: 16px 24px;
+    }
+
+    .activity-item {
+        display: flex;
+        align-items: flex-start;
+        padding: 14px 0;
+        border-bottom: 1px solid #eee;
+    }
+
+    .activity-item:last-child {
+        border-bottom: none;
+    }
+
+    .activity-icon {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        background-color: var(--main-light);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-right: 16px;
+        flex-shrink: 0;
+    }
+
+    .activity-icon i {
+        font-size: 1.2rem;
+        color: var(--main);
+    }
+
+    .activity-content p {
+        margin: 0 0 5px 0;
+        color: var(--gray-dark);
+    }
+
+    .activity-time {
+        color: var(--gray);
+        font-size: 0.85rem;
+    }
+
+    .no-activity-message {
+        text-align: center;
+        padding: 24px;
+        color: var(--gray);
+    }
+
+    /* Responsive adjustments */
+    @media screen and (max-width: 1024px) {
+        .stats-container {
+            flex-wrap: wrap;
+        }
+        
+        .stat-item {
+            flex: 1 0 calc(50% - 30px);
+            margin-bottom: 20px;
+        }
+        
+        .stat-divider {
+            display: none;
+        }
+    }
+
+    @media screen and (max-width: 768px) {
+        .availability-container {
+            flex-direction: column;
+            align-items: flex-start;
+        }
+        
+        .availability-right {
+            margin-top: 16px;
+            width: 100%;
+            justify-content: space-between;
+        }
+        
+        .personnel-vehicle-info {
+            flex-direction: column;
+        }
+        
+        .personnel-info, .vehicle-info {
+            width: 100%;
+        }
+        
+        .schedule-header {
+            flex-direction: column;
+            align-items: flex-start;
+        }
+        
+        .schedule-header h3 {
+            margin-bottom: 10px;
+        }
+        
+        .next-date {
+            align-self: flex-start;
+        }
+        
+        .schedule-time {
+            flex-direction: column;
+            align-items: flex-start;
+        }
+        
+        .day-badge, .time {
+            margin-bottom: 10px;
+        }
+        
+        .profile-card {
+            flex-direction: column;
+            text-align: center;
+        }
+        
+        .profile-image {
+            margin-right: 0;
+            margin-bottom: 16px;
+        }
+    }
+
+    @media screen and (max-width: 480px) {
+        .stat-item {
+            flex: 100%;
+        }
+        
+        .schedule-actions {
+            flex-direction: column;
+        }
+        
+        .btn-action {
+            width: 100%;
+        }
+    }
+
+
+    /* Add this to your existing CSS, preferably in the media query section for max-width: 768px */
+
+@media screen and (max-width: 768px) {
+    /* Your existing media query styles */
+    .availability-container {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+    
+    .availability-left {
+        margin-bottom: 15px; /* Add spacing between status and toggle */
+    }
+    
+    .toggle-wrapper {
+        width: 100%;
+        display: flex;
+        justify-content: flex-start; /* Align toggle to the left on mobile */
+    }
+    
+    /* Make toggle width consistent */
+    .toggle-switch {
+        width: 60px;
+        height: 30px;
+        display: block; /* Ensure proper display */
+    }
+    
+    /* Ensure slider keeps correct position */
+    input:checked + .slider:before {
+        transform: translateX(30px);
+    }
+}
+
+/* For even smaller screens, you might want to adjust further */
+@media screen and (max-width: 480px) {
+    .availability-section {
+        padding: 15px; /* Slightly reduce padding on very small screens */
+    }
+    
+    .toggle-wrapper form {
+        width: 100%; /* Full width form */
+    }
+    
+    .status-pill {
+        width: 100%;
+        text-align: center;
+        margin-bottom: 10px;
+    }
+}
+</style>
 
