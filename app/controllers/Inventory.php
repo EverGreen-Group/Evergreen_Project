@@ -52,6 +52,8 @@ class Inventory extends controller
         $leafQuantities = $this->stockvalidate->getleafoflast7days();
 
         $machine = $this->machineModel->getmachines();
+        $fertilizer = $this->fertilizerOrderModel->getfertilizerorderforInventory();
+        $awaitingstock = $this->stockvalidate->getvalidateStocks();
 
         // Process the leaf quantities data for the chart
         $normalLeafData = [];
@@ -86,9 +88,9 @@ class Inventory extends controller
         ksort($normalLeafData);
         ksort($superLeafData);
 
-        $awaitingInventory = 5;
-        $kgApprovedToday = 150;
-        $fertilizerOrders = 3;
+        $awaitingInventory = count($awaitingstock);
+        $kgApprovedToday = 100;
+        $fertilizerOrders = count($fertilizer);
         $activeBags = $this->stockvalidate->getBagsByStatus('active');
         $inactiveBags = $this->stockvalidate->getBagsByStatus('inactive');
 
@@ -271,7 +273,20 @@ class Inventory extends controller
 
         if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['status_approve'])) {
             $us = $_GET['id'];
+
             // var_dump($us);
+            $fid = $_POST['fertilizer_id'];
+            $fquantity = $_POST['quantity'];
+
+            $fertilizer = $this->fertilizerModel->getFertilizerById($fid);
+            if ($fertilizer) {
+                $newfquantity = max(0, $fertilizer->quantity - $fquantity);
+                $this->fertilizerModel->updatFertilizerwhenapprove($fid, $newfquantity);
+                setFlashMessage("Fertilizer Approved Successfully");
+            } else {
+                // Handle error: Fertilizer not found
+                setFlashMessage("Fertilizer not found");
+            }
 
             $this->fertilizerOrderModel->updateFertilizerByStatus($us, 'Approved');
             // redirect('Inventory/fertilizerdashboard');
@@ -279,19 +294,19 @@ class Inventory extends controller
         } elseif ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['status_reject'])) {
             $us = $_GET['id'];
 
-            $this->fertilizerOrderModel->updateFertilizerByStatus($us, 'Rejected');
+            $this->fertilizerOrderModel->updateFertilizerByStatus($us, 'Cancelled');
             // redirect('Inventory/fertilizerdashboard');
 
+
         }
+      
 
         $fertilizer = $this->fertilizerOrderModel->getfertilizerorderforInventory();
 
         $data = [
             'fertilizers' => $fertilizer
         ];
-        // echo "<pre>";
-        // print_r($data);
-        // echo "</pre>";
+       
         $this->view('inventory/v_fertilizer_available', $data);
     }
     public function createfertilizer()
@@ -397,116 +412,116 @@ class Inventory extends controller
         }
     }
 
-    public function updatefertilizer($id =null)
-{
-    if ($id === null && isset($_POST['id'])) {
-        $id = $_POST['id'];
-    }
-    if ($id === null) {
-        // Handle the case where no ID is provided
-        die('No fertilizer ID provided');
-    }
-    if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['fertilizer_name'])) {
-        
-        print_r($_POST);
+    public function updatefertilizer($id = null)
+    {
+        if ($id === null && isset($_POST['id'])) {
+            $id = $_POST['id'];
+        }
+        if ($id === null) {
+            // Handle the case where no ID is provided
+            die('No fertilizer ID provided');
+        }
+        if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['fertilizer_name'])) {
 
-        $data = [
-            'id' => $id,
-            'fertilizer_name' => $_POST['fertilizer_name'],
-            'company_name' => $_POST['company_name'],
-            'details' => $_POST['details'],
-            'code' => $_POST['code'],
-            'price' => $_POST['price'],
-            'quantity' => $_POST['quantity'],
-            'unit' => $_POST['unit'],
-            'image_path' => '',
-            'fertilizer_name_err' => '',
-            'company_name_err' => '',
-            'details_err' => '',
-            'code_err' => '',
-            'price_err' => '',
-            'quantity_err' => '',
-            'unit_err' => '',
-        ];
-        
-        // Basic validation
-        if (empty($data['fertilizer_name'])) {
-            $data['fertilizer_name_err'] = 'Please enter fertilizer name';
-        }
-        if (empty($data['company_name'])) {
-            $data['company_name_err'] = 'Please select company name';
-        }
-        if (empty($data['code'])) {
-            $data['code_err'] = 'Please enter code';
-        }
-        if (empty($data['price'])) {
-            $data['price_err'] = 'Please enter price';
-        }
-        if (empty($data['quantity'])) {
-            $data['quantity_err'] = 'Please enter quantity';
-        }
-        if (empty($data['unit'])) {
-            $data['unit_err'] = 'Please select unit';
-        }
-        
-        // Handle image upload
-        if (isset($_FILES['fertilizer_image']) && $_FILES['fertilizer_image']['error'] === UPLOAD_ERR_OK) {
-            $uploadDir = 'uploads/fertilizers/';
+            print_r($_POST);
 
-            if (!file_exists($uploadDir)) {
-                mkdir($uploadDir, 0777, true);
+            $data = [
+                'id' => $id,
+                'fertilizer_name' => $_POST['fertilizer_name'],
+                'company_name' => $_POST['company_name'],
+                'details' => $_POST['details'],
+                'code' => $_POST['code'],
+                'price' => $_POST['price'],
+                'quantity' => $_POST['quantity'],
+                'unit' => $_POST['unit'],
+                'image_path' => '',
+                'fertilizer_name_err' => '',
+                'company_name_err' => '',
+                'details_err' => '',
+                'code_err' => '',
+                'price_err' => '',
+                'quantity_err' => '',
+                'unit_err' => '',
+            ];
+
+            // Basic validation
+            if (empty($data['fertilizer_name'])) {
+                $data['fertilizer_name_err'] = 'Please enter fertilizer name';
+            }
+            if (empty($data['company_name'])) {
+                $data['company_name_err'] = 'Please select company name';
+            }
+            if (empty($data['code'])) {
+                $data['code_err'] = 'Please enter code';
+            }
+            if (empty($data['price'])) {
+                $data['price_err'] = 'Please enter price';
+            }
+            if (empty($data['quantity'])) {
+                $data['quantity_err'] = 'Please enter quantity';
+            }
+            if (empty($data['unit'])) {
+                $data['unit_err'] = 'Please select unit';
             }
 
-            $fileExtension = pathinfo($_FILES['fertilizer_image']['name'], PATHINFO_EXTENSION);
-            $uniqueFilename = uniqid() . '.' . $fileExtension;
-            $uploadPath = $uploadDir . $uniqueFilename;
+            // Handle image upload
+            if (isset($_FILES['fertilizer_image']) && $_FILES['fertilizer_image']['error'] === UPLOAD_ERR_OK) {
+                $uploadDir = 'uploads/fertilizers/';
 
-            if (move_uploaded_file($_FILES['fertilizer_image']['tmp_name'], $uploadPath)) {
-                $data['image_path'] = $uniqueFilename;
+                if (!file_exists($uploadDir)) {
+                    mkdir($uploadDir, 0777, true);
+                }
+
+                $fileExtension = pathinfo($_FILES['fertilizer_image']['name'], PATHINFO_EXTENSION);
+                $uniqueFilename = uniqid() . '.' . $fileExtension;
+                $uploadPath = $uploadDir . $uniqueFilename;
+
+                if (move_uploaded_file($_FILES['fertilizer_image']['tmp_name'], $uploadPath)) {
+                    $data['image_path'] = $uniqueFilename;
+                }
             }
-        }
-        
-        // Check for validation errors
-        if (
-            empty($data['fertilizer_name_err']) && 
-            empty($data['company_name_err']) && 
-            empty($data['code_err']) && 
-            empty($data['price_err']) && 
-            empty($data['quantity_err']) && 
-            empty($data['unit_err'])
-        ) {
-            // print_r($data);
-            if ($this->fertilizerModel->updateFertilizer($id, $data)) {
-                print_r("ghfh");
-                $this->logModel->create(
-                    $_SESSION['user_id'],
-                    $_SESSION['email'],
-                    $_SERVER['REMOTE_ADDR'],
-                    "Fertilizer with ID {$id} updated successfully.",
-                    $_SERVER['REQUEST_URI'],
-                    http_response_code()
-                );
-                setFlashMessage('Fertilizer updated successfully!');
-                redirect('inventory/fertilizerdashboard');
+
+            // Check for validation errors
+            if (
+                empty($data['fertilizer_name_err']) &&
+                empty($data['company_name_err']) &&
+                empty($data['code_err']) &&
+                empty($data['price_err']) &&
+                empty($data['quantity_err']) &&
+                empty($data['unit_err'])
+            ) {
+                // print_r($data);
+                if ($this->fertilizerModel->updateFertilizer($id, $data)) {
+                    print_r("ghfh");
+                    $this->logModel->create(
+                        $_SESSION['user_id'],
+                        $_SESSION['email'],
+                        $_SERVER['REMOTE_ADDR'],
+                        "Fertilizer with ID {$id} updated successfully.",
+                        $_SERVER['REQUEST_URI'],
+                        http_response_code()
+                    );
+                    setFlashMessage('Fertilizer updated successfully!');
+                    redirect('inventory/fertilizerdashboard');
+                } else {
+                    die('Something went wrong with the update');
+                }
             } else {
-                die('Something went wrong with the update');
+                // If there are errors, load the view with error messages
+                $fertilizer = $this->fertilizerModel->getFertilizerById($id);
+                $data['fertilizer'] = $fertilizer;
+                $this->view('inventory/v_update_fertilizer', $data);
             }
         } else {
-            // If there are errors, load the view with error messages
+            // Initial load of the form
             $fertilizer = $this->fertilizerModel->getFertilizerById($id);
-            $data['fertilizer'] = $fertilizer;
+            $data = [
+                'id' => $id,
+                'fertilizer' => $fertilizer
+            ];
             $this->view('inventory/v_update_fertilizer', $data);
         }
-    } else {
-        // Initial load of the form
-        $fertilizer = $this->fertilizerModel->getFertilizerById($id);
-        $data = [
-            'id' => $id,
-            'fertilizer' => $fertilizer
-        ];
-        $this->view('inventory/v_update_fertilizer', $data);
     }
-}
 
     public function machine()
     {
@@ -587,7 +602,7 @@ class Inventory extends controller
             // var_dump($machinechart);
             // Load the form view for GET requests
             $this->view('inventory/v_machineallocation', $data);
-            
+
         }
 
 
@@ -764,33 +779,33 @@ class Inventory extends controller
 
     public function payments()
     {
-        
+
 
 
         // echo "Received data: " . $jsonData;  
         if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['rate_config'])) {
             // Check if required fields are present
             $_POST = filter_input_array(INPUT_POST);
-           
-                $data = [
-                    'normal_leaf_rate' => $_POST['normal_leaf_rate'],
-                    'super_leaf_rate' => $_POST['super_leaf_rate'],
-                    'fertilizer_stock_lower' => $_POST['fertilizer_stock_lower'],
-                    'fertilizer_stock_mid_low' => $_POST['fertilizer_stock_mid_low'],
-                    'fertilizer_stock_mid_high' => $_POST['fertilizer_stock_mid_high'],
-                    'Leaf_age_1' => $_POST['Leaf_age_1'],
-                    'Leaf_age_2' => $_POST['Leaf_age_2'],
-                    'Leaf_age_3' => $_POST['Leaf_age_3']
-                ];
 
-                // Log the data array
-                // error_log(print_r($data, true));
+            $data = [
+                'normal_leaf_rate' => $_POST['normal_leaf_rate'],
+                'super_leaf_rate' => $_POST['super_leaf_rate'],
+                'fertilizer_stock_lower' => $_POST['fertilizer_stock_lower'],
+                'fertilizer_stock_mid_low' => $_POST['fertilizer_stock_mid_low'],
+                'fertilizer_stock_mid_high' => $_POST['fertilizer_stock_mid_high'],
+                'Leaf_age_1' => $_POST['Leaf_age_1'],
+                'Leaf_age_2' => $_POST['Leaf_age_2'],
+                'Leaf_age_3' => $_POST['Leaf_age_3']
+            ];
 
-                // print_r("qwe");
-                $this->inventoryConfigModel->add_inventory_config($data);
-                
-            }
-            
+            // Log the data array
+            // error_log(print_r($data, true));
+
+            // print_r("qwe");
+            $this->inventoryConfigModel->add_inventory_config($data);
+
+        }
+
 
         $fertilizer = $this->fertilizerModel->getfertilizer();
         $data = [
