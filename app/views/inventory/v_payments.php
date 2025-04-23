@@ -158,87 +158,92 @@
     </div>
 
     <!-- Rate Configuration Section -->
-    <div class="table-data">
-        <div class="order">
-            <div class="head">
-                <h3>Rate Configuration</h3>
-                <button class="btn-save" onclick="saveRateConfig()">
-                    <i class='bx bx-save'></i> Save Changes
-                </button>
-            </div>
-
-            <div class="config-grid">
-                <!-- Base Rates Section -->
-                <div class="config-section">
-                    <h4><i class='bx bx-money'></i> Base Rates</h4>
-                    <div class="config-item">
-                        <label>Normal Leaf Rate</label>
-                        <div class="input-control">
-                            <span class="prefix">Rs.</span>
-                            <input type="number" id="normal_leaf_rate" value="95" step="0.50" min="0">
-                            <span class="suffix">/kg</span>
-                        </div>
-                    </div>
-                    <div class="config-item">
-                        <label>Super Leaf Rate</label>
-                        <div class="input-control">
-                            <span class="prefix">Rs.</span>
-                            <input type="number" id="super_leaf_rate" value="120" step="0.50" min="0">
-                            <span class="suffix">/kg</span>
-                        </div>
-                    </div>
+    <form method="post" Action="<?php echo URLROOT ?>/Inventory/payments">
+    <input type="hidden" name="rate_config" value="1">
+        <div class="table-data">
+            <div class="order">
+                <div class="head">
+                    <h3>Rate Configuration</h3>
+                    <button class="btn-save" type="submit">
+                        <i class='bx bx-save'></i> Save Changes
+                    </button>
                 </div>
 
-                <!-- Moisture Content Deductions -->
-                <div class="config-section">
-                    <h4><i class='bx bx-droplet'></i> Fertilizer Stock Limitation</h4>
-                    <div class="config-item">
-                        <label>Lower Stock Limit</label>
-                        <div class="input-control">
-                            <input type="number" id="fertilizer_stock_lower" value="200" min="1000" max="10000">
-                            <span class="suffix">kg</span>
+                <div class="config-grid">
+                    <!-- Base Rates Section -->
+                    <div class="config-section">
+                        <h4><i class='bx bx-money'></i> Base Rates</h4>
+                        <div class="config-item">
+                            <label>Normal Leaf Rate</label>
+                            <div class="input-control">
+                                <span class="prefix">Rs.</span>
+                                <input type="number" name="normal_leaf_rate" value="95" step="0.50" min="0">
+                                <span class="suffix">/kg</span>
+                            </div>
                         </div>
-                    </div>
-                    <div class="config-item">
-                        <label>Should Import Limit</label>
-                        <div class="range-input">
-                            <input type="number" id="fertilizer_stock_mid_low" value="10000" min="1000" max="20000">
-                            <span>kg to</span>
-                            <input type="number" id="fertilizer_stock_mid_high" value="72000" min="100000" max="70000">
-                            <span>kg</span>
+                        <div class="config-item">
+                            <label>Super Leaf Rate</label>
+                            <div class="input-control">
+                                <span class="prefix">Rs.</span>
+                                <input type="number" name="super_leaf_rate" value="120" step="0.50" min="0">
+                                <span class="suffix">/kg</span>
+                            </div>
                         </div>
                     </div>
 
-                </div>
+                    <!-- Moisture Content Deductions -->
+                    <div class="config-section">
+                        <h4><i class='bx bx-droplet'></i> Fertilizer Stock Limitation</h4>
+                        <div class="config-item">
+                            <label>Lower Stock Limit</label>
+                            <div class="input-control">
+                                <input type="number" name="fertilizer_stock_lower" value="1200" min="1000" max="10000">
+                                <span class="suffix">kg</span>
+                            </div>
+                        </div>
+                        <div class="config-item">
+                            <label>Should Import Limit</label>
+                            <div class="range-input">  
+                                <input type="number" name="fertilizer_stock_mid_low" value="10000" min="1000"
+                                    max="20000">
+                                <span>kg to</span>
+                                <input type="number" name="fertilizer_stock_mid_high" value="72000" min="10000"
+                                    max="100000">
+                                <span>kg</span>
+                            </div>
+                        </div>
 
-                <!-- Leaf Age Deductions -->
-                <div class="config-section">
-                    <h4><i class='bx bx-time'></i> Leaf Age Deductions</h4>
-                    <div class="config-item">
-                        <label>6-10 Hours Old</label>
-                        <div class="input-control">
-                            <input type="number" id="Leaf_age_1" value="2" min="0" max="100">
-                            <span class="suffix">% deduction</span>
-                        </div>
                     </div>
-                    <div class="config-item">
-                        <label>1 Day Old</label>
-                        <div class="input-control">
-                            <input type="number" id="Leaf_age_2" value="5">
-                            <span class="suffix">% deduction</span>
+
+                    <!-- Leaf Age Deductions -->
+                    <div class="config-section">
+                        <h4><i class='bx bx-time'></i> Leaf Age Deductions</h4>
+                        <div class="config-item">
+                            <label>6-10 Hours Old</label>
+                            <div class="input-control">
+                                <input type="number" name="Leaf_age_1" value="2" min="0" max="100">
+                                <span class="suffix">% deduction</span>
+                            </div>
                         </div>
-                    </div>
-                    <div class="config-item">
-                        <label>Over 1 Day Old</label>
-                        <div class="input-control">
-                            <input type="number" id="Leaf_age_3" value="8">
-                            <span class="suffix">% deduction</span>
+                        <div class="config-item">
+                            <label>1 Day Old</label>
+                            <div class="input-control">
+                                <input type="number" name="Leaf_age_2" value="5">
+                                <span class="suffix">% deduction</span>
+                            </div>
+                        </div>
+                        <div class="config-item">
+                            <label>Over 1 Day Old</label>
+                            <div class="input-control">
+                                <input type="number" name="Leaf_age_3" value="8">
+                                <span class="suffix">% deduction</span>
+                            </div>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
-    </div>
+    </form>
 
     <div id="statementContent" class="pdf-only">
         <!-- Today's Pending Payments -->
