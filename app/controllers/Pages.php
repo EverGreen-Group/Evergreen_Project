@@ -2,12 +2,18 @@
 
 require_once APPROOT . '/helpers/auth_middleware.php';
 require_once '../app/models/M_Supplier.php';
+require_once '../app/models/M_Products.php';
+require_once '../app/models/M_Fertilizer_Order.php'; //tempo
 
 class Pages extends Controller {
 
     private $supplierModel;
+    private $productModel; // Declare productModel property
+    private $fertilizerOrderModel;//tempo
     public function __construct() {
         $this->supplierModel = new M_Supplier();
+        $this->productModel = new M_Products();
+        $this->fertilizerOrderModel = new M_Fertilizer_Order(); //tempo
     }
 
     public function index() {
@@ -17,14 +23,39 @@ class Pages extends Controller {
         } else {
             $hasSubmittedApplication = false;
         }
+        $products = $this->productModel->getAllProducts(); // Fetch products
 
 
         $data = [
             'title' => 'Welcome to Evergreen',
-            'hasSubmittedApplication' => $hasSubmittedApplication
+            'hasSubmittedApplication' => $hasSubmittedApplication,
+            'products' => $products
         ];
         
         $this->view('pages/landing', $data);
+    }
+    //newwly added by theekshana
+    public function store() {
+        $products = $this->productModel->getAllProducts();
+
+        $data = [
+            'title' => 'Our Store',
+            'products' => $products
+        ];
+
+        $this->view('pages/store', $data);
+    }
+
+    //temporary function to test fertilizer order
+    public function fertilizerTypes() {
+        $fertilizers = $this->fertilizerOrderModel->getAllFertilizerTypes();
+
+        $data = [
+            'title' => 'Fertilizer Types',
+            'fertilizers' => $fertilizers
+        ];
+
+        $this->view('pages/fertilizer_types', $data);
     }
 
     private function checkApplicationStatus() {
