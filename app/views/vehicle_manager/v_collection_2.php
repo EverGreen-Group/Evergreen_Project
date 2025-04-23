@@ -32,15 +32,6 @@
             </div>
         </li>
 
-        <li class="stat-card">
-            <div class="stat-content">
-                <i class='bx bx-basket'></i>
-                <div class="stat-info">
-                    <h3><?php echo $data['vehicleRemainingCapacity'] . ' kg' ?></h3>
-                    <p>Remaining Capacity</p>
-                </div>
-            </div>
-        </li>
     </ul>
 
     <div class="table-data">

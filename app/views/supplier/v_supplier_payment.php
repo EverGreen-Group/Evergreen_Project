@@ -495,11 +495,7 @@
   }
 
   /* Layout & Common Styles */
-  main {
-    padding: var(--spacing-lg);
-    max-width: 1400px;
-    margin: 0 auto;
-  }
+
 
   .card {
     background-color: var(--background-card);

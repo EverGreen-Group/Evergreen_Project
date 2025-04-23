@@ -115,10 +115,6 @@
     <div class="order">
         <div class="head">
             <h3>Supplier Applications</h3>
-            <a href="<?php echo URLROOT; ?>/manager/createVehicle" class="btn btn-primary">
-                <i class='bx bx-cog'></i>
-                Manage Application Constraints
-            </a>
         </div>
         <table>
             <thead>

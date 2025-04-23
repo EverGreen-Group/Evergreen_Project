@@ -123,22 +123,23 @@ function togglePasswordVisibility() {
         color: #fff; 
     }
 
-    body::before {
+        body::before {
         content: '';
         position: absolute;
         top: 0;
         left: 0;
         right: 0;
         bottom: 0;
+        background-image: url('<?php echo URLROOT; ?>/public/img/factory_landscape.png');
         background-size: cover; 
         background-position: center; 
         background-repeat: no-repeat;
-        filter: blur(8px); 
+        /* filter: blur(8px);  */
         z-index: -1; 
     }
 
     .auth-container {
-        /* background-color: rgba(0, 0, 0, 0.4);  */
+        background-color: rgba(0, 0, 0, 0.4); 
         padding: 0px;
         border-radius: 0px;
         position: relative; 

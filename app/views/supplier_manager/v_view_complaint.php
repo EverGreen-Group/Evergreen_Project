@@ -18,25 +18,6 @@
         </div>
     </div>
 
-    <!-- Resolve Modal -->
-    <div id="resolveModal" class="modal">
-        <div class="modal-content">
-            <span class="close">&times;</span>
-            <h2>Resolve Complaint</h2>
-            <form id="resolveForm" action="<?= URLROOT ?>/manager/resolveComplaint" method="post">
-                <input type="hidden" id="complaint_id" name="complaint_id" value="">
-                <div class="form-group">
-                    <label for="resolution_notes">Resolution Notes:</label>
-                    <textarea id="resolution_notes" name="resolution_notes" rows="4" required></textarea>
-                </div>
-                <div class="form-actions">
-                    <button type="button" class="btn-cancel" onclick="closeModal()">Cancel</button>
-                    <button type="submit" class="btn-submit">Resolve</button>
-                </div>
-            </form>
-        </div>
-    </div>
-
     <!-- Complaint Status -->
     <div class="table-data">
         <div class="order">
@@ -69,19 +50,20 @@
                 </div>
                 
                 <div class="action-buttons">
-                    <?php if ($data['complaint']->status === 'Pending'): ?>
-                        <button class="btn btn-primary" onclick="showResolveModal(<?= $data['complaint']->complaint_id ?>)">
-                            <i class='bx bx-check-circle'></i> Mark as Resolved
-                        </button>
-                    <?php elseif ($data['complaint']->status === 'Resolved'): ?>
-                        <button class="btn btn-secondary" onclick="reopenComplaint(<?= $data['complaint']->complaint_id ?>)">
-                            <i class='bx bx-revision'></i> Reopen Complaint
+                    <form action="<?php echo URLROOT; ?>/supplier/resolveComplaint" method="POST" style="display: inline;">
+                        <input type="hidden" name="complaint_id" value="<?= $data['complaint']->complaint_id ?>">
+                        <?php if ($data['complaint']->status === 'Pending'): ?>
+                            <button type="submit" class="btn btn-primary">
+                                <i class='bx bx-check-circle'></i> Mark as Resolved
+                            </button>
+                        <?php endif; ?>
+                    </form>
+
+                    <?php if ($data['complaint']->status !== 'Resolved'): ?>
+                        <button class="btn btn-tertiary" onclick="confirmDelete(<?= $data['complaint']->complaint_id ?>)">
+                            <i class='bx bx-trash'></i> Delete
                         </button>
                     <?php endif; ?>
-                    
-                    <button class="btn btn-tertiary" onclick="confirmDelete(<?= $data['complaint']->complaint_id ?>)">
-                        <i class='bx bx-trash'></i> Delete
-                    </button>
                 </div>
             </div>
         </div>
