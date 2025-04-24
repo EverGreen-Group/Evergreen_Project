@@ -3,7 +3,6 @@
 <?php require APPROOT . '/views/inc/components/topnavbar.php'; ?>
 
 <link href="<?php echo URLROOT; ?>/public/boxicons/css/boxicons.min.css" rel="stylesheet">
-<link href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css" rel="stylesheet">
 <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap" rel="stylesheet">
 
 <main>
@@ -67,6 +66,18 @@
             </div>
         <?php endif; ?>
     </div>
+
+    <!-- Custom Confirmation Modal -->
+    <div id="confirmModal" class="modal" style="display: none;">
+        <div class="modal-content">
+            <h3>Confirm Action</h3>
+            <p>Are you sure you want to delete this announcement?</p>
+            <div class="modal-actions">
+                <button id="confirmDelete" class="btn btn-danger">OK</button>
+                <button id="cancelDelete" class="btn btn-success">Cancel</button>
+            </div>
+        </div>
+    </div>
 </main>
 
 <script src="https://cdn.jsdelivr.net/npm/toastify-js"></script>
@@ -74,64 +85,57 @@
 const URLROOT = '<?php echo URLROOT; ?>';
 
 // Handle Delete Announcement
-document.addEventListener('click', function(e) {
+document.addEventListener('click', (e) => {
     if (e.target.classList.contains('delete-announcement-btn') || e.target.closest('.delete-announcement-btn')) {
-        if (confirm('Are you sure you want to delete this announcement?')) {
-            const announcementItem = e.target.closest('.announcement-item');
-            const announcementId = announcementItem.dataset.announcementId;
+        const announcementItem = e.target.closest('.announcement-item');
+        const announcementId = announcementItem.dataset.announcementId;
+        const confirmModal = document.getElementById('confirmModal');
+        const resultModal = document.getElementById('resultModal');
+        const resultTitle = document.getElementById('resultModalTitle');
+        const resultMessage = document.getElementById('resultModalMessage');
+        const resultClose = document.getElementById('resultModalClose');
 
+        confirmModal.style.display = 'flex';
+
+        document.getElementById('confirmDelete').onclick = () => {
             fetch(`${URLROOT}/manager/deleteAnnouncement`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ announcement_id: announcementId })
             })
             .then(response => {
-                if (!response.ok) {
-                    throw new Error(`HTTP error! status: ${response.status}`);
-                }
+                if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
                 return response.json();
             })
             .then(data => {
-                Toastify({
-                    text: data.message || (data.success ? 'Announcement deleted successfully!' : 'Failed to delete announcement.'),
-                    duration: 3000,
-                    gravity: 'top',
-                    position: 'right',
-                    backgroundColor: data.success ? '#28a745' : '#d9534f',
-                    style: {
-                        fontFamily: 'Poppins, sans-serif',
-                        fontSize: '16px',
-                        fontWeight: '500',
-                        padding: '12px 20px',
-                        borderRadius: '8px',
-                        boxShadow: '0 4px 10px rgba(0, 0, 0, 0.2)'
-                    }
-                }).showToast();
-                if (data.success) {
-                    setTimeout(() => window.location.reload(), 1000);
-                }
+                resultTitle.textContent = data.success ? 'Success' : 'Error';
+                resultMessage.textContent = data.message || (data.success ? 'Announcement deleted successfully!' : 'Failed to delete announcement.');
+                resultClose.className = `btn ${data.success ? 'btn-success' : 'btn-danger'}`; // Green for success, red for error
+                resultModal.style.display = 'flex';
+                if (data.success) setTimeout(() => window.location.reload(), 2000); // Reload after 2 seconds on success
             })
             .catch(error => {
                 console.error('Error deleting announcement:', error);
-                Toastify({
-                    text: 'An error occurred while deleting the announcement.',
-                    duration: 3000,
-                    gravity: 'top',
-                    position: 'right',
-                    backgroundColor: '#d9534f',
-                    style: {
-                        fontFamily: 'Poppins, sans-serif',
-                        fontSize: '16px',
-                        fontWeight: '500',
-                        padding: '12px 20px',
-                        borderRadius: '8px',
-                        boxShadow: '0 4px 10px rgba(0, 0, 0, 0.2)'
-                    }
-                }).showToast();
+                resultTitle.textContent = 'Error';
+                resultMessage.textContent = 'An error occurred while deleting the announcement.';
+                resultClose.className = 'btn btn-danger';
+                resultModal.style.display = 'flex';
             });
-        }
+
+            confirmModal.style.display = 'none';
+        };
+
+        document.getElementById('cancelDelete').onclick = () => {
+            confirmModal.style.display = 'none';
+        };
+
+        // Close the result modal
+        resultClose.onclick = () => {
+            resultModal.style.display = 'none';
+        };
     }
 });
+
 
 // Search Announcements
 document.getElementById('announcement-search')?.addEventListener('input', function(e) {
@@ -145,29 +149,45 @@ document.getElementById('announcement-search')?.addEventListener('input', functi
     });
 });
 
-<?php
-if (session_status() == PHP_SESSION_NONE) {
-    session_start();
-}
-if (isset($_SESSION['flash']['message'])): ?>
-    Toastify({
-        text: '<?php echo addslashes($_SESSION['flash']['message']['message']); ?>',
-        duration: 3000,
-        gravity: 'topCopy to clipboard
-        gravity: 'top',
-        position: 'right',
-        backgroundColor: '<?php echo strpos($_SESSION['flash']['message']['class'], 'success') !== false ? '#28a745' : '#d9534f'; ?>',
-        style: {
-            fontFamily: 'Poppins, sans-serif',
-            fontSize: '16px',
-            fontWeight: '500',
-            padding: '12px 20px',
-            borderRadius: '8px',
-            boxShadow: '0 4px 10px rgba(0, 0, 0, 0.2)'
-        }
-    }).showToast();
-    <?php unset($_SESSION['flash']['message']); ?>
-<?php endif; ?>
+
+// Handle Delete Announcement
+document.addEventListener('click', (e) => {
+    if (e.target.classList.contains('delete-announcement-btn') || e.target.closest('.delete-announcement-btn')) {
+        const announcementItem = e.target.closest('.announcement-item');
+        const announcementId = announcementItem.dataset.announcementId;
+        const confirmModal = document.getElementById('confirmModal');
+
+        confirmModal.style.display = 'flex';
+
+        document.getElementById('confirmDelete').onclick = () => {
+            fetch(`${URLROOT}/manager/deleteAnnouncement`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ announcement_id: announcementId })
+            })
+            .then(response => {
+                if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+                return response.json();
+            })
+            .then(data => {
+                // Reload the page regardless of success or failure
+                window.location.reload();
+            })
+            .catch(error => {
+                console.error('Error deleting announcement:', error);
+                // Reload the page even if there's an error
+                window.location.reload();
+            });
+
+            confirmModal.style.display = 'none';
+        };
+
+        document.getElementById('cancelDelete').onclick = () => {
+            confirmModal.style.display = 'none';
+        };
+    }
+});
+
 </script>
 
 <style>
@@ -220,7 +240,7 @@ if (isset($_SESSION['flash']['message'])): ?>
 }
 
 .search-box input:focus {
-    border-color: #28a745;
+    border-color:#007664;
 }
 
 .search-box i {
@@ -240,7 +260,7 @@ if (isset($_SESSION['flash']['message'])): ?>
 .no-announcements i {
     font-size: 48px;
     margin-bottom: 10px;
-    color: #28a745;
+    color: #007664;
 }
 
 .announcements-list {
@@ -308,6 +328,65 @@ if (isset($_SESSION['flash']['message'])): ?>
 .delete-announcement-btn {
     background-color: #d9534f;
     color: white;
+}
+
+.modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 9999;
+}
+
+.modal-content {
+    background: #fff;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+    width: 400px;
+    text-align: center;
+}
+
+.modal-content h3 {
+    font-size: 18px;
+    font-weight: 600;
+    margin-bottom: 10px;
+    color: #333;
+}
+
+.modal-content p {
+    font-size: 16px;
+    color: #555;
+    margin-bottom: 20px;
+}
+
+.modal-actions {
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+}
+
+.btn-danger {
+    background-color: #d9534f;
+    color: white;
+    padding: 10px 20px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+.btn-success {
+    background-color: #007664;
+    color: white;
+    padding: 10px 20px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
 }
 </style>
 <script src="<?php echo URLROOT; ?>/public/css/script.js"></script>

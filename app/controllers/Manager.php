@@ -2916,9 +2916,11 @@ class Manager extends Controller
                         error_log("Deleted banner: {$banner_path}");
                     }
                 }
+                setFlashMessage('Announcement deleted successfully!');
                 echo json_encode(['success' => true, 'message' => 'Announcement deleted successfully']);
             } else {
                 echo json_encode(['success' => false, 'message' => 'Failed to delete announcement']);
+                setFlashMessage('Failed to delete announcement', 'alert alert-danger');
             }
             exit();
         }

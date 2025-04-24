@@ -196,12 +196,16 @@ main {
     display: flex;
     align-items: center;
     gap: 8px;
-    background-color: rgb(255, 0, 0);
+    background-color: #d9534f;
     color: var(--light);
     padding: 10px 20px;
     border-radius: 5px;
     text-decoration: none;
     transition: background-color 0.3s ease;
+}
+
+.btn-secondary {
+    background-color: #007664;
 }
 
 /* Style the icon buttons directly within the message */
@@ -263,6 +267,7 @@ main {
     padding: 80px;
     box-sizing: border-box;
     z-index: 9999;
+    padding-top:13%;
 }
 
 .edit-message-modal .modal-content,
