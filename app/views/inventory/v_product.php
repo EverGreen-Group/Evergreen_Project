@@ -124,38 +124,7 @@
             </div>
 
             <div class="product-grid">
-                <?php foreach ($data['products'] as $product): ?>
-                    <div class="product-card"
-                        onclick="openProductModal(<?php echo htmlspecialchars(json_encode($product)); ?>)">
-                        <div class="product-image">
-                            <?php if (!empty($product->image_path)): ?>
-                                <img src="<?php echo URLROOT; ?>/uploads/products/<?php echo $product->image_path; ?>"
-                                    alt="<?php echo $product->product_name; ?>">
-                            <?php else: ?>
-                                <img src="<?php echo URLROOT; ?>/img/default-product.png" alt="Default Product Image">
-                            <?php endif; ?>
-                        </div>
-                        <div class="product-info">
-                            <h3><?php echo $product->product_name; ?></h3>
-                            <p>Quantity: <?php echo $product->quantity; ?>     <?php echo $product->unit; ?></p>
-                            <p>Price: Rs.<?php echo $product->price; ?></p>
-                        </div>
-                    </div>
-                <?php endforeach; ?>
-            </div>
-        </div>
-    </div>
-
-
-
-    <!-- <div class="table-data">
-            <div class="order">
-                <div class="head">
-                    <h2><img src="<?php echo URLROOT; ?>/img/warehouse-svgrepo-com.svg" alt="Warehouse Icon"
-                    style="width: 24px; heignt:24px"> Total Products</h2>
-                    <span class="product-info">(<?php echo count($data['products']); ?> products)</span>
-                </div>
-                <div class="product-grid">
+                <?php if (!empty($data['products'])): ?>
                     <?php foreach ($data['products'] as $product): ?>
                         <div class="product-card"
                             onclick="openProductModal(<?php echo htmlspecialchars(json_encode($product)); ?>)">
@@ -169,16 +138,22 @@
                             </div>
                             <div class="product-info">
                                 <h3><?php echo $product->product_name; ?></h3>
-                                <p>Quantity: <?php echo $product->quantity; ?>     <?php echo $product->unit; ?></p>
+                                <p>Quantity: <?php echo $product->quantity; ?>         <?php echo $product->unit; ?></p>
                                 <p>Price: Rs.<?php echo $product->price; ?></p>
                             </div>
                         </div>
                     <?php endforeach; ?>
-                </div>
+                <?php else: ?>
+                    <tr>
+                        <td colspan="5" style="text-align:center;">No Products have Listed</td>
+                    </tr>
+                <?php endif; ?>
             </div>
         </div>
+    </div>
 
- -->
+
+
 
 
     <!-- Product Modal -->
@@ -230,14 +205,6 @@
         </div>
     </div>
 
-    <!-- Pagination -->
-    <div class="pagination">
-        <button class="prev">&lt;</button>
-        <button class="page-number active">1</button>
-        <button class="page-number">2</button>
-        <button class="page-number">3</button>
-        <button class="next">&gt;</button>
-    </div>
 
 </main>
 <?php require APPROOT . '/views/inc/components/footer.php' ?>

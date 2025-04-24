@@ -38,13 +38,7 @@
     <div class="table-data">
         <div class="order">
             <div class="head">
-                <h3>Monthly Payment Overview - 2024</h3>
-                <div class="head-info">
-                    <select class="year-select">
-                        <option value="2024">2024</option>
-                        <option value="2023">2023</option>
-                    </select>
-                </div>
+                <h3>Monthly Income Overview - 2024</h3>
             </div>
             <table class="payment-overview-table">
                 <thead>
@@ -53,10 +47,9 @@
                         <th>Total Suppliers</th>
                         <th>Total Tea Weight (kg)</th>
                         <th>Gross Amount (Rs.)</th>
-                        <th>Fertilizer Deductions (Rs.)</th>
-                        <th>Net Amount (Rs.)</th>
-                        <th>Status</th>
-                        <th>Action</th>
+                        <th>Export Amount</th>
+                        <th>Net Profit (Rs.)</th>
+                        
                     </tr>
                 </thead>
                 <tbody>
@@ -67,9 +60,7 @@
                         <td>285,740.00</td>
                         <td>65,000.00</td>
                         <td>220,740.00</td>
-                        <td><span class="status pending">Pending</span></td>
-                        <td><a href="<?php echo URLROOT; ?>/supplier/monthlyPayments/2024-03" class="view-btn">View
-                                Details</a></td>
+                        
                     </tr>
                     <tr class="clickable-row">
                         <td>February</td>
@@ -78,9 +69,7 @@
                         <td>265,300.00</td>
                         <td>48,000.00</td>
                         <td>217,300.00</td>
-                        <td><span class="status processed">Completed</span></td>
-                        <td><a href="<?php echo URLROOT; ?>/supplier/monthlyPayments/2024-02" class="view-btn">View
-                                Details</a></td>
+                        
                     </tr>
                     <tr class="clickable-row">
                         <td>January</td>
@@ -89,9 +78,7 @@
                         <td>248,500.00</td>
                         <td>52,000.00</td>
                         <td>196,500.00</td>
-                        <td><span class="status processed">Completed</span></td>
-                        <td><a href="<?php echo URLROOT; ?>/supplier/monthlyPayments/2024-01" class="view-btn">View
-                                Details</a></td>
+                        
                     </tr>
                 </tbody>
                 <tfoot>
