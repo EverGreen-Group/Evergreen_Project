@@ -895,9 +895,9 @@ class Inventory extends controller
         $bagsApproved = $getBagCountsInCollection->finalized_count;
         $bagsNotApproved = $getBagCountsInCollection->not_finalized_count;
 
-        // if (empty($bagsForCollection)) {
-        //     redirect("inventory/");
-        // }
+        if (empty($bagsForCollection)) {
+            redirect("inventory/");
+        }
 
         $data = [
             'collectionDetails' => $collectionDetails,

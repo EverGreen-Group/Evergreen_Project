@@ -731,7 +731,7 @@ class M_Collection {
         $this->db->query($sql);
         $this->db->bind(":collection_id", $collectionId);
         $this->db->bind(":supplier_id", $supplierId);
-        $this->db->single();
+        return $this->db->single();
     }
 
 
