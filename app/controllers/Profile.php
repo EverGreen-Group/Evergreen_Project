@@ -62,7 +62,7 @@ class Profile extends Controller {
             try {
 
                 // Sanitize POST data
-                $_POST = filter_input_array(INPUT_POST, FILTER_SANITIZE_STRING);
+                // $_POST = filter_input_array(INPUT_POST, FILTER_SANITIZE_STRING);
 
                 $data = [
                     'user_id' => $_SESSION['user_id'],

@@ -138,7 +138,7 @@ class Inventory extends controller
     public function createproduct()
     {
         if ($_SERVER['REQUEST_METHOD'] == 'POST') {
-            $_POST = filter_input_array(INPUT_POST);
+            // $_POST = filter_input_array(INPUT_POST);
             $data = [
                 'product-name' => trim($_POST['product_name']),
                 "location" => trim($_POST['location']),
@@ -372,7 +372,7 @@ class Inventory extends controller
     public function createfertilizer()
     {
         if ($_SERVER['REQUEST_METHOD'] == 'POST') {
-            $_POST = filter_input_array(INPUT_POST);
+            // $_POST = filter_input_array(INPUT_POST);
 
             $data = [
                 'fertilizer_name' => $_POST['fertilizer_name'],
@@ -588,8 +588,8 @@ class Inventory extends controller
     {
         if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['machine_name'])) {
             // Sanitize POST data
-            var_dump($_POST);
-            $_POST = filter_input_array(INPUT_POST);
+            // var_dump($_POST);
+            // $_POST = filter_input_array(INPUT_POST);
             // Collect form data
 
             $data = [
@@ -684,7 +684,7 @@ class Inventory extends controller
     public function updateproduct($id)
     {
         if ($_SERVER['REQUEST_METHOD'] == 'POST') {
-            $_POST = filter_input_array(INPUT_POST, FILTER_SANITIZE_STRING);
+            // $_POST = filter_input_array(INPUT_POST);
 
             $data = [
                 'id' => $id,
@@ -846,7 +846,7 @@ class Inventory extends controller
         // echo "Received data: " . $jsonData;  
         if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['rate_config'])) {
             // Check if required fields are present
-            $_POST = filter_input_array(INPUT_POST);
+            // $_POST = filter_input_array(INPUT_POST);
 
             $data = [
                 'normal_leaf_rate' => $_POST['normal_leaf_rate'],
@@ -1119,7 +1119,7 @@ class Inventory extends controller
     public function createBag()
     {
         if ($_SERVER['REQUEST_METHOD'] == 'POST') {
-            $_POST = filter_input_array(INPUT_POST);
+            // $_POST = filter_input_array(INPUT_POST);
 
             $data = [
                 'capacity_kg' => trim($_POST['capacity_kg']),
@@ -1165,7 +1165,7 @@ class Inventory extends controller
 
         if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             // Sanitize POST data
-            $_POST = filter_input_array(INPUT_POST, FILTER_SANITIZE_SPECIAL_CHARS);
+            // $_POST = filter_input_array(INPUT_POST, FILTER_SANITIZE_SPECIAL_CHARS);
 
             // Initialize data
             $data = [

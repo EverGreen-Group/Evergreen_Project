@@ -41,7 +41,7 @@ class Auth extends Controller
     
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             // Sanitize POST data
-            $_POST = filter_input_array(INPUT_POST, FILTER_SANITIZE_STRING);
+            // $_POST = filter_input_array(INPUT_POST, FILTER_SANITIZE_STRING);
     
             // Check if this is an OTP verification submission
             if (isset($_POST['otp'])) {
@@ -206,7 +206,7 @@ class Auth extends Controller
         ];
 
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-            $_POST = filter_input_array(INPUT_POST);
+            // $_POST = filter_input_array(INPUT_POST);
 
             $data['username'] = trim($_POST['username']);
             $data['password'] = trim($_POST['password']);
@@ -504,7 +504,7 @@ class Auth extends Controller
         ];
 
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-            $_POST = filter_input_array(INPUT_POST);
+            // $_POST = filter_input_array(INPUT_POST);
             $data['email'] = trim($_POST['email']);
 
             // Validate email
@@ -715,7 +715,7 @@ class Auth extends Controller
         }
 
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-            $_POST = filter_input_array(INPUT_POST, FILTER_SANITIZE_STRING);
+            // $_POST = filter_input_array(INPUT_POST, FILTER_SANITIZE_STRING);
 
             $currentPassword = trim($_POST['current_password']);
             $newPassword = trim($_POST['new_password']);
