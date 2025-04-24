@@ -144,8 +144,7 @@ document.getElementById('banner')?.addEventListener('change', function(e) {
 
 .form-group input:focus,
 .form-group textarea:focus {
-    border-color: #28a745;
-    box-shadow: 0 0 0 3px rgba(40, 167, 69, 0.1);
+    border-color: #007664;
     outline: none;
 }
 
@@ -190,7 +189,7 @@ document.getElementById('banner')?.addEventListener('change', function(e) {
 }
 
 .btn-primary {
-    background-color: #28a745;
+    background-color: #007664;
     color: white;
     border: none;
     padding: 12px 30px;
@@ -202,7 +201,7 @@ document.getElementById('banner')?.addEventListener('change', function(e) {
 }
 
 .btn-primary:hover {
-    background-color: #218838;
+    background-color: #007664;
     transform: translateY(-2px);
 }
 
