@@ -29,10 +29,28 @@
     <div class="order">
       <div class="head">
         <h3>My Time Slots</h3>
-        <a href="<?php echo URLROOT; ?>/manager/createSlot" class="btn btn-primary">
-          <i class='bx bx-plus'></i>
-          Create Time Slot
-        </a>
+        <div class="action-buttons">
+          <form action="<?php echo URLROOT; ?>/manager/appointments" method="GET" class="search-form">
+            <div class="filter-group">
+              <label for="status">Status:</label>
+              <select id="status" name="status">
+                <option value="">All Statuses</option>
+                <option value="Available" <?php echo (isset($_GET['status']) && $_GET['status'] == 'Available') ? 'selected' : ''; ?>>Available</option>
+                <option value="Booked" <?php echo (isset($_GET['status']) && $_GET['status'] == 'Booked') ? 'selected' : ''; ?>>Booked</option>
+              </select>
+            </div>
+            <div class="filter-group">
+              <label for="date">Date:</label>
+              <input type="date" id="date" name="date" value="<?php echo isset($_GET['date']) ? htmlspecialchars($_GET['date']) : ''; ?>">
+            </div>
+            <button type="submit" class="btn btn-primary">Search</button>
+            <a href="<?php echo URLROOT; ?>/manager/appointments" class="btn btn-primary">Reset</a>
+          </form>
+          <a href="<?php echo URLROOT; ?>/manager/createSlot" class="btn btn-primary create-slot-btn">
+            <i class='bx bx-plus'></i>
+            Create Time Slot
+          </a>
+        </div>
       </div>
       <table>
         <thead>
@@ -266,6 +284,111 @@
         object-fit: cover; /* Ensure the image covers the area */
     }
 
+    /* Improved styles for action buttons and search form */
+    .action-buttons {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+
+    .search-form {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-left: auto; /* push form to the right */
+    }
+
+    .filter-group {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+
+    .filter-group label {
+        font-size: 12px;
+        margin-bottom: 4px;
+    }
+
+    .filter-group select,
+    .filter-group input {
+        padding: 8px 10px;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        font-size: 14px;
+        min-width: 120px;
+        max-width: 150px;
+        height: 38px;
+    }
+
+    /* Style for all buttons in the search form */
+    .search-form .btn {
+        padding: 8px 15px;
+        height: 38px;
+        font-size: 14px;
+        display: flex;
+        align-items: right;
+        justify-content: center;
+        border-radius: 4px;
+        margin: 0;
+    }
+
+    .create-slot-btn {
+        white-space: nowrap;
+        height: 38px;
+        padding: 8px 15px;
+        font-size: 14px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 4px;
+    }
+
+    /* Make it responsive */
+    @media (max-width: 992px) {
+        .action-buttons {
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 15px;
+        }
+        
+        .search-form {
+            width: 100%;
+            flex-wrap: wrap;
+        }
+        
+        .create-slot-btn {
+            margin-top: 10px;
+            align-self: flex-start;
+        }
+    }
+
+    @media (max-width: 768px) {
+        .filter-group {
+            min-width: 45%;
+        }
+        
+        .search-form .btn {
+            margin-top: 10px;
+        }
+    }
+
+    @media (max-width: 576px) {
+        .filter-group {
+            min-width: 100%;
+            margin-bottom: 10px;
+        }
+        
+        .search-form {
+            flex-direction: column;
+            align-items: stretch;
+        }
+        
+        .search-form .btn {
+            width: 100%;
+        }
+    }
 </style>
 
 <?php require APPROOT . '/views/inc/components/footer.php'; ?>

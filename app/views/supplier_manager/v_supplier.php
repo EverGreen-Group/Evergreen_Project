@@ -99,10 +99,6 @@
             <div class="order">
                 <div class="head">
                     <h3>Active Suppliers</h3>
-                    <a href="<?php echo URLROOT; ?>/manager/viewInactiveSuppliers" class="btn btn-primary">
-                        <i class='bx bx-pie-chart'></i>
-                        View Unallocated Suppliers
-                    </a>
                     <a href="<?php echo URLROOT; ?>/manager/viewRemovedSuppliers" class="btn btn-primary">
                         <i class='bx bx-trash' ></i>
                         View Removed Suppliers

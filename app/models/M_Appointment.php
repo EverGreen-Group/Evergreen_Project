@@ -85,6 +85,33 @@ class M_Appointment {
         $this->db->bind(':manager_id', $managerId);
         return $this->db->resultSet();
     }
+
+    public function filteredTimeSlots($managerId, $status = '', $date = '') {
+        $sql = "SELECT * FROM appointment_slots WHERE manager_id = :manager_id";
+        $params = [':manager_id' => $managerId];
+        
+        // Add status filter if provided
+        if (!empty($status)) {
+            $sql .= " AND status = :status";
+            $params[':status'] = $status;
+        }
+        
+        // Add date filter if provided
+        if (!empty($date)) {
+            $sql .= " AND date = :date";
+            $params[':date'] = $date;
+        }
+        
+        // Add order by to sort results
+        $sql .= " ORDER BY date DESC, start_time ASC";
+        
+        $this->db->query($sql);
+        foreach ($params as $param => $value) {
+            $this->db->bind($param, $value);
+        }
+        
+        return $this->db->resultSet();
+    }
     
     public function getIncomingRequests($managerId) {   // tested
         $this->db->query("
@@ -173,10 +200,11 @@ class M_Appointment {
     }
 
     public function getAvailableTimeSlots() {
-        $this->db->query("SELECT * FROM appointment_slots a
-        INNER JOIN managers m ON a.manager_id = m.manager_id
-        INNER JOIN profiles p ON m.profile_id = p.profile_id
-        WHERE a.status = 'Available'"); 
+        $this->db->query("SELECT s.*, CONCAT(p.first_name, ' ', p.last_name) as manager_name, p.* 
+                          FROM appointment_slots s
+                          JOIN managers m ON s.manager_id = m.manager_id
+                          JOIN profiles p ON m.profile_id = p.profile_id
+                          WHERE s.status = 'Available'"); 
         return $this->db->resultSet();
     }
 

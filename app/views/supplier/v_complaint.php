@@ -30,11 +30,11 @@
                         <label for="complaint-type">Complaint Type</label>
                         <select id="complaint-type" name="complaint_type" required>
                             <option value="">Select type</option>
-                            <option value="quality">Quality Issues</option>
-                            <option value="delivery">Delivery Problems</option>
-                            <option value="payment">Payment Issues</option>
-                            <option value="service">Customer Service</option>
-                            <option value="other">Other</option>
+                            <option value="Quality Issue">Quality Issues</option>
+                            <option value="Delivery Problems">Delivery Problems</option>
+                            <option value="Payment Issues">Payment Issues</option>
+                            <option value="Customer Service">Customer Service</option>
+                            <option value="Other">Other</option>
                         </select>
                     </div>
 
@@ -60,15 +60,6 @@
                         </div>
                     </div>
 
-
-                    <div class="form-group">
-                        <label for="priority">Priority Level</label>
-                        <select id="priority" name="priority" required>
-                            <option value="low">Low</option>
-                            <option value="medium">Medium</option>
-                            <option value="high">High</option>
-                        </select>
-                    </div>
 
                     <div class="form-actions">
                         <button type="submit" class="btn btn-secondary">Submit Complaint</button>

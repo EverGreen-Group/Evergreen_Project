@@ -446,6 +446,15 @@ class Manager extends Controller
         }
     }
 
+    public function viewRemovedSuppliers() {
+        $removedSuppliers = $this->supplierModel->getRemovedSuppliers();
+        $data = [
+            'removed_suppliers' => $removedSuppliers
+        ];
+
+        $this->view('supplier_manager/v_removed_suppliers', $data);
+    }
+
 
     /** 
      * Vehicle Management
@@ -697,7 +706,6 @@ class Manager extends Controller
         ];
     
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-            $_POST = filter_input_array(INPUT_POST, FILTER_SANITIZE_STRING);
     
             $data = [
                 'vehicle_id' => $vehicleId,
@@ -1954,14 +1962,24 @@ class Manager extends Controller
 
     public function appointments() {
         $this->requireLogin(); 
-
+    
         if(!isset($_SESSION['manager_id'])) {
             redirect('manager/allAppointments');
         }
         
         $managerId = $_SESSION['manager_id'];
-    
-        $timeSlots = $this->appointmentModel->getManagerTimeSlots($managerId);
+        
+        // Check if filters are applied
+        $status = isset($_GET['status']) ? trim($_GET['status']) : '';
+        $date = isset($_GET['date']) ? trim($_GET['date']) : '';
+        
+        // Get filtered time slots (or all if no filters applied)
+        if (!empty($status) || !empty($date)) {
+            $timeSlots = $this->appointmentModel->filteredTimeSlots($managerId, $status, $date);
+        } else {
+            $timeSlots = $this->appointmentModel->getManagerTimeSlots($managerId);
+        }
+        
         $incomingRequests = $this->appointmentModel->getIncomingRequests($managerId);
         $acceptedAppointments = $this->appointmentModel->getAcceptedAppointments($managerId);
     
@@ -1970,7 +1988,7 @@ class Manager extends Controller
             'incomingRequests' => $incomingRequests,
             'acceptedAppointments' => $acceptedAppointments
         ];
-
+    
         $this->view('supplier_manager/v_appointments', $data);
     }
 
@@ -2310,6 +2328,30 @@ class Manager extends Controller
         $this->view('supplier_manager/v_view_complaint', $data);
     }
 
+    public function resolveComplaint()
+    {
+        if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+            // Make sure to sanitize input
+            $complaintId = trim($_POST['complaint_id']);
+            
+            $data = [
+                'complaint_id' => $complaintId,
+                'status' => 'Resolved'
+            ];
+
+            if ($this->supplierModel->updateStatus($data)) {
+                setFlashMessage('Complaint marked as resolved successfully!', 'success');
+            } else {
+                setFlashMessage('Failed to resolve complaint!', 'error');
+            }
+            
+            // Redirect back to the complaint view page
+            redirect('manager/viewComplaint/' . $complaintId);
+        } else {
+            redirect('manager/complaints');
+        }
+    }
+
     public function applications() {
 
         $approvedPendingRole = $this->model('M_SupplierApplication')->getApprovedPendingRoleApplications();
@@ -2393,29 +2435,6 @@ class Manager extends Controller
         redirect('manager/viewComplaint/' . $data['complaint_id']);
     }
     
-    public function reopenComplaint($id)
-    {
-        $data = [
-            'complaint_id' => $id,
-            'status' => 'Pending'
-        ];
-    
-        if ($this->supplierModel->updateStatus($data)) {
-            $this->logModel->create(
-                $_SESSION['user_id'],
-                $_SESSION['email'],
-                $_SERVER['REMOTE_ADDR'],
-                "Re-opened the complaint: ".$data['complaint_id'],
-                $_SERVER['REQUEST_URI'],     
-                http_response_code()     
-            );
-            setFlashMessage('Complaint reopen sucessfully!');
-        } else {
-            setFlashMessage('Couldnt reopen the complaint, try again later!', 'error');
-        }
-    
-        redirect('manager/viewComplaint/' . $id);
-    }
     
     public function deleteComplaint($id)
     {

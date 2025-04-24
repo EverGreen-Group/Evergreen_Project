@@ -331,14 +331,23 @@ class Supplier extends Controller {
             // Sanitize input
             $_POST = filter_input_array(INPUT_POST, FILTER_SANITIZE_STRING);
     
-            $supplierId = $_SESSION['supplier_id']; 
-    
+            $supplierId = trim($_SESSION['supplier_id']); 
+
+            $complaint_type = $_POST['complaint_type'];
+            if ($complaint_type == 'Quality Issues' || $complaint_type == 'Payment Issues') {
+                $priority = 'High';
+            } else if ($complaint_type == 'Delivery Problems' || $complaint_type == 'Customer Service') {
+                $priority = 'Medium';
+            } else {
+                $priority = 'Low';
+            }
+     
             $data = [
                 'supplier_id' => $supplierId,
                 'complaint_type' => trim($_POST['complaint_type']),
                 'subject' => trim($_POST['subject']),
                 'description' => trim($_POST['description']),
-                'priority' => trim($_POST['priority']),
+                'priority' => $priority,
                 'image_path' => null,
             ];
     
