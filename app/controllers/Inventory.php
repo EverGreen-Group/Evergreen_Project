@@ -284,13 +284,13 @@ class Inventory extends controller
         foreach ($fertilizer2 as $recod) {
 
             if ($recod->status == 'Approved') {
-                $approvedCount +=1;
+                $approvedCount += 1;
             }
             if ($recod->status == 'Pending') {
-                $pendingCount +=1;
+                $pendingCount += 1;
             }
-            
-           
+
+
         }
         $data = [
             'fertilizer' => $fertilizer,
@@ -348,13 +348,13 @@ class Inventory extends controller
         foreach ($fertilizer as $recod) {
 
             if ($recod->status == 'Approved') {
-                $approvedCount +=1;
+                $approvedCount += 1;
             }
             if ($recod->status == 'Pending') {
-                $pendingCount +=1;
+                $pendingCount += 1;
             }
-            
-           
+
+
         }
         $totalorders = count($fertilizer);
 
