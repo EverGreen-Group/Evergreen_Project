@@ -2669,7 +2669,7 @@ class Manager extends Controller
             $content = $_POST['content'] ?? '';
             
             if (empty($title) || empty($content)) {
-                $this->flash('message', 'Title and content are required', 'alert alert-danger');
+                setFlashMessage("This field is required.", "error");
                 redirect('manager/createAnnouncement');
                 return;
             }
@@ -2682,7 +2682,7 @@ class Manager extends Controller
 
                 // Validate file size (max 2MB)
                 if ($file['size'] > 2 * 1024 * 1024) {
-                    $this->flash('message', 'Banner file size exceeds 2MB', 'alert alert-danger');
+                    setFlashMessage("File size exceeds 2MB limit", "error");
                     redirect('manager/createAnnouncement');
                     return;
                 }
@@ -2693,21 +2693,21 @@ class Manager extends Controller
                     if (!is_dir('public/uploads/announcements/')) {
                         if (!mkdir('public/uploads/announcements/', 0755, true)) {
                             error_log("Failed to create directory: public/uploads/announcements/");
-                            $this->flash('message', 'Failed to create upload directory', 'alert alert-danger');
+                            setFlashMessage("Failed to create directory for uploads", "error");
                             redirect('manager/createAnnouncement');
                             return;
                         }
                     }
                     if (!move_uploaded_file($file['tmp_name'], $uploadPath)) {
                         error_log("Failed to upload banner: Name={$file['name']}, Size={$file['size']}, Error={$file['error']}, Path={$uploadPath}");
-                        $this->flash('message', 'Failed to upload banner. Please try again.', 'alert alert-danger');
+                        setFlashMessage("Failed to upload banner. Please try again.", "error");
                         redirect('manager/createAnnouncement');
                         return;
                     }
                     // Log successful upload
                     error_log("Banner uploaded successfully: {$banner}");
                 } else {
-                    $this->flash('message', 'Only JPEG files are allowed', 'alert alert-danger');
+                    setFlashMessage("Invalid file type. Only JPEG images are allowed.", "error");
                     redirect('manager/createAnnouncement');
                     return;
                 }
@@ -2722,7 +2722,7 @@ class Manager extends Controller
                 ];
                 $error_msg = isset($error_codes[$_FILES['banner']['error']]) ? $error_codes[$_FILES['banner']['error']] : 'Unknown upload error';
                 error_log("Banner upload error: Code={$_FILES['banner']['error']}, Message={$error_msg}");
-                $this->flash('message', "Error uploading banner: {$error_msg}", 'alert alert-danger');
+                setFlashMessage($error_msg, "error");
                 redirect('manager/createAnnouncement');
                 return;
             }
@@ -2740,14 +2740,14 @@ class Manager extends Controller
             if ($db->execute()) {
                 // Log banner filename saved to DB
                 error_log("Announcement created with banner: " . ($banner ?? 'NULL'));
-                $this->flash('message', 'Announcement created successfully', 'alert alert-success');
+                setFlashMessage('Announcement created successfully!', 'alert alert-success');
                 redirect('manager/announcements');
             } else {
                 // Delete uploaded banner if DB insert fails
                 if ($banner && file_exists('public/uploads/announcements/' . $banner)) {
                     unlink('public/uploads/announcements/' . $banner);
                 }
-                $this->flash('message', 'Failed to create announcement', 'alert alert-danger');
+                setFlashMessage('Failed to create announcement. Please try again.', 'alert alert-danger');
                 redirect('manager/createAnnouncement');
             }
             return;
@@ -2783,7 +2783,7 @@ class Manager extends Controller
             $remove_banner = isset($_POST['remove_banner']) && $_POST['remove_banner'] == '1';
             
             if (empty($announcement_id) || empty($title) || empty($content)) {
-                $this->flash('message', 'Missing required fields', 'alert alert-danger');
+                setFlashMessage("This field is required.", "error");
                 redirect('manager/editAnnouncement/' . $announcement_id);
                 return;
             }
@@ -2812,7 +2812,7 @@ class Manager extends Controller
 
                 // Validate file size (max 2MB)
                 if ($file['size'] > 2 * 1024 * 1024) {
-                    $this->flash('message', 'Banner file size exceeds 2MB', 'alert alert-danger');
+                    setFlashMessage("File size exceeds 2MB limit", "error");
                     redirect('manager/editAnnouncement/' . $announcement_id);
                     return;
                 }
@@ -2822,7 +2822,7 @@ class Manager extends Controller
                     if (!is_dir('public/uploads/announcements/')) {
                         if (!mkdir('public/uploads/announcements/', 0755, true)) {
                             error_log("Failed to create directory: public/uploads/announcements/");
-                            $this->flash('message', 'Failed to create upload directory', 'alert alert-danger');
+                            setFlashMessage("Failed to create directory for uploads", "error");
                             redirect('manager/editAnnouncement/' . $announcement_id);
                             return;
                         }
@@ -2839,12 +2839,12 @@ class Manager extends Controller
                         error_log("Banner uploaded successfully: {$banner}");
                     } else {
                         error_log("Failed to upload banner: Name={$file['name']}, Size={$file['size']}, Error={$file['error']}, Path={$uploadPath}");
-                        $this->flash('message', 'Failed to upload banner. Please try again.', 'alert alert-danger');
+                        setFlashMessage('Failed to upload banner. Please try again.', 'alert alert-danger');
                         redirect('manager/editAnnouncement/' . $announcement_id);
                         return;
                     }
                 } else {
-                    $this->flash('message', 'Only JPEG files are allowed', 'alert alert-danger');
+                    setFlashMessage('Only JPEG files are allowed', 'alert alert-danger');
                     redirect('manager/editAnnouncement/' . $announcement_id);
                     return;
                 }
@@ -2866,20 +2866,20 @@ class Manager extends Controller
             if ($db->execute()) {
                 // Log banner filename saved to DB
                 error_log("Announcement updated with banner: " . ($banner ?? 'NULL'));
-                $this->flash('message', 'Announcement updated successfully', 'alert alert-success');
+               setFlashMessage('Announcement updated successfully', 'alert alert-success');
                 redirect('manager/announcements');
             } else {
                 // Delete uploaded banner if DB update fails
                 if ($banner && $banner != $current_banner && file_exists('public/uploads/announcements/' . $banner)) {
                     unlink('public/uploads/announcements/' . $banner);
                 }
-                $this->flash('message', 'Failed to update announcement', 'alert alert-danger');
+                setFlashMessage('Failed to update announcement', 'alert alert-danger');
                 redirect('manager/editAnnouncement/' . $announcement_id);
             }
             return;
         }
         
-        $this->flash('message', 'Invalid request method', 'alert alert-danger');
+        setFlashMessage('Invalid request method', 'alert alert-danger');
         redirect('manager/announcements');
     }
 
@@ -2937,7 +2937,7 @@ class Manager extends Controller
             $announcement = $db->single();
             
             if (!$announcement) {
-                $this->flash('message', 'Announcement not found or you do not have permission to edit it', 'alert alert-danger');
+                setFlashMessage('Announcement not found or you do not have permission to edit it', 'alert alert-danger');
                 redirect('manager/announcements');
                 return;
             }
@@ -2949,7 +2949,7 @@ class Manager extends Controller
             $this->view('vehicle_manager/v_edit_announcement', $data);
         } catch (Exception $e) {
             error_log("Error fetching announcement ID {$id}: " . $e->getMessage());
-            $this->flash('message', 'An error occurred while fetching the announcement', 'alert alert-danger');
+            setFlashMessage('Failed to fetch announcement', 'alert alert-danger');
             redirect('manager/announcements');
         }
     }

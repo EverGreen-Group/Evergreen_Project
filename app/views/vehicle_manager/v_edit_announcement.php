@@ -10,7 +10,7 @@
     <div class="edit-announcement-container">
         <h2><?php echo empty($data['announcement']->announcement_id) ? 'Create Announcement' : 'Edit Announcement'; ?></h2>
         <div class="form-card">
-            <form action="<?php echo URLROOT; ?>/manager/<?php echo empty($data['announcement']->announcement_id) ? 'createAnnouncement' : 'updateAnnouncement'; ?>" method="POST" enctype="multipart/form-data" id="announcement-form">
+            <form action="<?php echo URLROOT; ?>/manager/<?php echo empty($data['announcement']->announcement_id) ? 'createAnnouncement' : 'updateAnnouncement'; ?>" method="POST" enctype="multipart/form-data" id="announcement-form" novalidate>
                 <input type="hidden" name="announcement_id" value="<?php echo htmlspecialchars($data['announcement']->announcement_id); ?>">
                 <div class="form-group">
                     <label for="title">Title <span class="required">*</span></label>
@@ -48,28 +48,6 @@
 
 <script src="https://cdn.jsdelivr.net/npm/toastify-js"></script>
 <script>
-<?php
-if (session_status() == PHP_SESSION_NONE) {
-    session_start();
-}
-if (isset($_SESSION['flash']['message'])): ?>
-    Toastify({
-        text: '<?php echo addslashes($_SESSION['flash']['message']['message']); ?>',
-        duration: 3000,
-        gravity: 'top',
-        position: 'right',
-        backgroundColor: '<?php echo strpos($_SESSION['flash']['message']['class'], 'success') !== false ? '#28a745' : '#d9534f'; ?>',
-        style: {
-            fontFamily: 'Poppins, sans-serif',
-            fontSize: '16px',
-            fontWeight: '500',
-            padding: '12px 20px',
-            borderRadius: '8px',
-            boxShadow: '0 4px 10px rgba(0, 0, 0, 0.2)'
-        }
-    }).showToast();
-    <?php unset($_SESSION['flash']['message']); ?>
-<?php endif; ?>
 
 // Client-side banner preview
 document.getElementById('banner')?.addEventListener('change', function(e) {
@@ -82,11 +60,11 @@ document.getElementById('banner')?.addEventListener('change', function(e) {
             e.target.value = '';
             return;
         }
-        if (file.size > 2 * 1024 * 1024) {
-            alert('Banner file size exceeds 2MB.');
-            e.target.value = '';
-            return;
-        }
+        // if (file.size > 2 * 1024 * 1024) {
+        //     alert('Banner file size exceeds 2MB.');
+        //     e.target.value = '';
+        //     return;
+        // }
         const reader = new FileReader();
         reader.onload = function(e) {
             const img = document.createElement('img');
@@ -245,6 +223,19 @@ document.getElementById('banner')?.addEventListener('change', function(e) {
     transform: translateY(-2px);
 }
 
+#announcement-form #content {
+    width: 100%;
+    left: 0;
+    max-height: 100px;
+}
+
+#announcement-form textarea{
+    resize:vertical;
+}
+
+#announcement-form > div:nth-child(4) > div.current-banner > label > input[type=checkbox] {
+    width: 25px;
+}
 /* Fade-in animation */
 @keyframes fadeIn {
     from {
