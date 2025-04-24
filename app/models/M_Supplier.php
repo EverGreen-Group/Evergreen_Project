@@ -219,6 +219,46 @@ class M_Supplier {
         return $result->count ?? 0;
     }
 
+    public function getComplaintsByStatus($status)
+    {
+        $this->db->query("SELECT c.*, CONCAT(p.first_name, ' ', p.last_name) as supplier_name, p.image_path 
+                          FROM complaints c 
+                          JOIN suppliers s ON c.supplier_id = s.supplier_id 
+                          JOIN profiles p On s.profile_id = p.profile_id 
+                          WHERE c.status = :status 
+                          ORDER BY 
+                              CASE c.priority 
+                                  WHEN 'high' THEN 1 
+                                  WHEN 'medium' THEN 2 
+                                  WHEN 'low' THEN 3 
+                              END,
+                              c.created_at DESC");
+        
+        $this->db->bind(':status', $status);
+        
+        return $this->db->resultSet();
+    }
+
+    public function updateStatus($data)
+    {
+        $this->db->query("UPDATE complaints SET status = :status WHERE complaint_id = :complaint_id");
+        
+        $this->db->bind(':complaint_id', $data['complaint_id']);
+        $this->db->bind(':status', $data['status']);
+        
+        return $this->db->execute();
+    }
+
+    public function deleteComplaint($id)
+    {
+
+        $this->db->query("UPDATE complaints SET status = 'Deleted' WHERE complaint_id = :id");
+        
+        $this->db->bind(':id', $id);
+        
+        return $this->db->execute();
+    }
+
     public function getTotalKgThisMonth($supplierId)
     {
         $this->db->query("
@@ -262,26 +302,6 @@ class M_Supplier {
     }
     
 
-    public function getComplaintsByStatus($status)
-    {
-        $this->db->query("SELECT c.*, CONCAT(p.first_name, ' ', p.last_name) as supplier_name, p.image_path 
-                          FROM complaints c 
-                          JOIN suppliers s ON c.supplier_id = s.supplier_id 
-                          JOIN profiles p On s.profile_id = p.profile_id 
-                          WHERE c.status = :status 
-                          ORDER BY 
-                              CASE c.priority 
-                                  WHEN 'high' THEN 1 
-                                  WHEN 'medium' THEN 2 
-                                  WHEN 'low' THEN 3 
-                              END,
-                              c.created_at DESC");
-        
-        $this->db->bind(':status', $status);
-        
-        return $this->db->resultSet();
-    }
-
     public function getSupplierSchedule($supplierId) {
         $this->db->query("
             SELECT cs.*, r.route_name, v.*, p.*, p.image_path AS driver_image, v.image_path AS vehicle_image, CONCAT(p.first_name, ' ', p.last_name) AS driver_name
@@ -300,26 +320,6 @@ class M_Supplier {
         $this->db->bind(':supplier_id', $supplierId);
         
         return $this->db->single();
-    }
-
-    public function updateStatus($data)
-    {
-        $this->db->query("UPDATE complaints SET status = :status WHERE complaint_id = :complaint_id");
-        
-        $this->db->bind(':complaint_id', $data['complaint_id']);
-        $this->db->bind(':status', $data['status']);
-        
-        return $this->db->execute();
-    }
-
-    public function deleteComplaint($id)
-    {
-
-        $this->db->query("UPDATE complaints SET status = 'Deleted' WHERE complaint_id = :id");
-        
-        $this->db->bind(':id', $id);
-        
-        return $this->db->execute();
     }
 
 
@@ -445,6 +445,14 @@ class M_Supplier {
             'supplier' => $supplier,
             'user' => $user
         ];
+    }
+
+    public function getRemovedSuppliers() {
+        $this->db->query("SELECT s.* , CONCAT(p.first_name, ' ', p.last_name) as supplier_name 
+                          FROM suppliers s
+                          JOIN profiles p ON s.profile_id = p.profile_id
+                          WHERE is_deleted = 1");
+        return $this->db->resultSet();
     }
     
     public function updateSupplierProfile($data) {

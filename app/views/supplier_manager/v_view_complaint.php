@@ -6,7 +6,6 @@
 <link rel="stylesheet" href="<?php echo URLROOT; ?>/css/vehicle_manager/collection/collection.css">
 
 <main>
-    <!-- <?php print_r($data); ?> -->
     <div class="head-title">
         <div class="left">
             <h1>Complaint Details</h1>
@@ -138,6 +137,34 @@
     <?php endif; ?>
 </main>
 
+
+<script>
+    function showResolveModal(id) {
+        document.getElementById('complaint_id').value = id;
+        document.getElementById('resolveModal').style.display = 'block';
+    }
+
+    function closeModal() {
+        document.getElementById('resolveModal').style.display = 'none';
+    }
+
+    document.getElementsByClassName('close')[0].onclick = function() {
+        closeModal();
+    }
+
+    window.onclick = function(event) {
+        const modal = document.getElementById('resolveModal');
+        if (event.target == modal) {
+            closeModal();
+        }
+    }
+
+    function confirmDelete(id) {
+        if (confirm('Are you sure you want to delete this complaint? This action cannot be undone.')) {
+            window.location.href = '<?= URLROOT ?>/manager/deleteComplaint/' + id;
+        }
+    }
+</script>
 
 
 <style>
@@ -395,40 +422,42 @@
         border-radius: 4px;
         cursor: pointer;
     }
+
+    .btn-cancel, .btn-submit {
+        padding: 8px 16px;
+        border: none;
+        border-radius: 4px;
+        font-size: 14px;
+        cursor: pointer;
+        transition: background-color 0.2s;
+    }
+
+    .btn-cancel {
+        background-color: #e5e7eb;
+        color: #4b5563;
+    }
+
+    .btn-cancel:hover {
+        background-color: #d1d5db;
+    }
+
+    .btn-submit {
+        background-color: #10b981;
+        color: white;
+    }
+
+    .btn-submit:hover {
+        background-color: #059669;
+    }
+
+    .form-actions {
+        display: flex;
+        justify-content: flex-end;
+        gap: 10px;
+        margin-top: 20px;
+    }
 </style>
 
-<script>
-    function showResolveModal(id) {
-        document.getElementById('complaint_id').value = id;
-        document.getElementById('resolveModal').style.display = 'block';
-    }
 
-    function closeModal() {
-        document.getElementById('resolveModal').style.display = 'none';
-    }
-
-    document.getElementsByClassName('close')[0].onclick = function() {
-        closeModal();
-    }
-
-    window.onclick = function(event) {
-        const modal = document.getElementById('resolveModal');
-        if (event.target == modal) {
-            closeModal();
-        }
-    }
-
-    function reopenComplaint(id) {
-        if (confirm('Are you sure you want to reopen this complaint?')) {
-            window.location.href = '<?= URLROOT ?>/manager/reopenComplaint/' + id;
-        }
-    }
-
-    function confirmDelete(id) {
-        if (confirm('Are you sure you want to delete this complaint? This action cannot be undone.')) {
-            window.location.href = '<?= URLROOT ?>/manager/deleteComplaint/' + id;
-        }
-    }
-</script>
 
 <?php require APPROOT . '/views/inc/components/footer.php'; ?>

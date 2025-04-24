@@ -297,7 +297,7 @@ class M_User {
 
     public function getUserIdByDriverId($driverId) {    // tested
         $this->db->query("SELECT p.user_id FROM drivers d INNER JOIN profiles p ON d.profile_id = p.profile_id WHERE driver_id = :driver_id");
-        $this->db->bind(':supplier_id', $driverId);
+        $this->db->bind(':driver_id', $driverId);
         return $this->db->single()->user_id ?? null;
     }
 

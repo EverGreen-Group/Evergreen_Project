@@ -3,7 +3,7 @@
         'name' => 'simaak/evergreen_project',
         'pretty_version' => 'dev-main',
         'version' => 'dev-main',
-        'reference' => 'c2ef21a89729e819d69c374fbde155f4b3b235b0',
+        'reference' => '075e9a4624b6b1e176ef065d1ec5c9fb94f48c3a',
         'type' => 'library',
         'install_path' => __DIR__ . '/../../',
         'aliases' => array(),
@@ -22,7 +22,7 @@
         'simaak/evergreen_project' => array(
             'pretty_version' => 'dev-main',
             'version' => 'dev-main',
-            'reference' => 'c2ef21a89729e819d69c374fbde155f4b3b235b0',
+            'reference' => '075e9a4624b6b1e176ef065d1ec5c9fb94f48c3a',
             'type' => 'library',
             'install_path' => __DIR__ . '/../../',
             'aliases' => array(),
