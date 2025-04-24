@@ -20,44 +20,37 @@
     </div>
   </div>
 
-  <!-- Section 1: Your Time Slots -->
-  <div class="table-data">
-    <div class="order">
-      <div class="head">
-        <h3>Available Fertilizer Types</h3>
-      </div>
-      <table>
-        <thead>
-          <tr>
-            <th>Fertilizer ID</th>
-            <th>Fertilizer Name</th>
-            <th>Company Name</th>
-            <th>Code</th>
-            <th>Description</th>
-            <th>Price</th>
-            <th>Available Quantity</th>
-          </tr>
-        </thead>
-        <tbody>
-          <?php if (isset($fertilizer_types) && !empty($fertilizer_types)): ?>
-            <?php foreach ($fertilizer_types as $fertilizer): ?>
-              <tr>
-                <td><?php echo $fertilizer->fertilizer_id; ?></td>
-                <td><?php echo $fertilizer->fertilizer_name; ?></td>
-                <td><?php echo $fertilizer->company_name; ?></td>
-                <td><?php echo $fertilizer->code; ?></td>
-                <td><?php echo $fertilizer->details; ?></td>
-                <td><?php echo $fertilizer->price; ?></td>
-                <td><?php echo $fertilizer->quantity; ?></td>
-              </tr>
-            <?php endforeach; ?>
-          <?php else: ?>
-            <tr><td colspan="6" style="text-align:center;">No fertilizer stocks available.</td></tr>
-          <?php endif; ?>
-        </tbody>
-      </table>
-    </div>
-  </div>
+  <section class="fertilizer-section">
+        <h2>Our Fertilizer Types</h2>
+        <div class="product-controls">
+            <input type="text" id="fertilizerSearch" placeholder="Search fertilizers by name..." class="search-input">
+            <select id="fertilizerSort" class="sort-select">
+                <option value="name-asc">Sort by Name (A-Z)</option>
+                <option value="name-desc">Sort by Name (Z-A)</option>
+                <option value="price-asc">Sort by Price (Low to High)</option>
+                <option value="price-desc">Sort by Price (High to Low)</option>
+            </select>
+        </div>
+        <div class="product-grid" id="fertilizerGrid">
+            <?php if (isset($fertilizer_types) && !empty($fertilizer_types)): ?>
+                <?php foreach ($fertilizer_types as $fertilizer): ?>
+                    <div class="product-card" data-fertilizer='<?php echo htmlspecialchars(json_encode($fertilizer)); ?>'>
+                        <div class="product-image">
+                            <img src="<?php echo URLROOT; ?>/img/default-product.png" alt="<?php echo $fertilizer->fertilizer_name; ?>">
+                        </div>
+                        <div class="product-info">
+                            <h3><?php echo $fertilizer->fertilizer_name; ?></h3>
+                            <p>Company: <?php echo $fertilizer->company_name; ?></p>
+                            <p>Quantity: <?php echo $fertilizer->quantity; ?></p>
+                            <p>Price: Rs.<?php echo $fertilizer->price; ?></p>
+                        </div>
+                    </div>
+                <?php endforeach; ?>
+            <?php else: ?>
+                <p>No fertilizers available at the moment.</p>
+            <?php endif; ?>
+        </div>
+    </section>
 
   <!-- New Fertilizer Request Form Section -->
   <div class="request-form-section">
@@ -326,7 +319,7 @@
   /* Layout & Common Styles */
   main {
     padding: var(--spacing-sm); /* Reduced left margin */
-    max-width: 1200px;
+    max-width:100%;
     margin: 0 auto;
   }
 
@@ -361,41 +354,161 @@
     color: var(--primary-color);
   }
 
-  /* Table Styles */
-  .table-data {
-    margin-bottom: var(--spacing-xxl); /* Increased gap between fertilizer types and form */
+
+/*cards*/
+  .fertilizer-main {
+      background: none;
+      min-height: 100vh;
+      padding: 0 5%;
+      color: #000;
+      margin-top: 100px;
   }
 
-  .table-data .order {
-    background-color: white;
-    padding: var(--spacing-md);
-    border-radius: var(--border-radius-lg);
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  .fertilizer-section {
+      background: #fff;
+      padding: 45px 0 10px;
+      border-radius: 20px;
+      margin-top: 20px;
+      margin-bottom: 30px;
   }
 
-  .table-data .head {
-    display: flex;
-    align-items: center;
-    grid-gap: 16px;
-    margin-bottom: 16px;
+  .fertilizer-section h2 {
+      color: #333;
+      text-align: center;
+      font-size: 2.5rem;
+      margin-bottom: 3rem;
   }
 
-  .table-data table {
-    width: 100%;
-    border-collapse: collapse;
+  .product-controls {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      max-width: 1200px;
+      margin: 20px auto;
+      padding: 0 2rem;
+      gap: 20px;
   }
 
-  .table-data table th {
-    padding: var(--spacing-sm);
-    text-align: left;
-    background-color: var(--background-light);
-    color: var(--text-primary);
+  .search-input {
+      padding: 10px;
+      width: 100%;
+      max-width: 300px;
+      border: 1px solid #ddd;
+      border-radius: 5px;
+      font-size: 1rem;
   }
 
-  .table-data table td {
-    padding: var(--spacing-sm);
-    border-bottom: 1px solid var(--border-color);
+  .sort-select {
+      padding: 10px;
+      border: 1px solid #ddd;
+      border-radius: 5px;
+      font-size: 1rem;
+      cursor: pointer;
   }
+
+  .product-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+      gap: 20px;
+      max-width: 1200px;
+      padding: 2rem;
+  }
+
+  .product-card {
+      border: 1px solid #ddd;
+      border-radius: 8px;
+      overflow: hidden;
+      cursor: pointer;
+      transition: transform 0.2s;
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+  }
+
+  .product-card:hover {
+      transform: scale(1.05);
+  }
+
+  .product-image img {
+      width: 100%;
+      height: 200px;
+      object-fit: cover;
+  }
+
+  .product-info {
+      padding: 15px;
+      text-align: center;
+  }
+
+  .product-info h3 {
+      margin: 0;
+      font-size: 1.2em;
+      color: #333;
+  }
+
+  .product-info p {
+      margin: 5px 0;
+      color: #555;
+  }
+
+  /* Modal Styles */
+  .modal {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.5);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      z-index: 1000;
+  }
+
+  .modal-content {
+      background: white;
+      padding: 20px;
+      border-radius: 8px;
+      max-width: 500px;
+      text-align: center;
+  }
+
+  .modal-content img {
+      max-width: 100%;
+      height: auto;
+      margin: 10px 0;
+  }
+
+  .modal-content button {
+      background-color: #22a45d;
+      color: white;
+      padding: 10px 20px;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+  }
+
+  .modal-content button:hover {
+      background-color: #1b8e4a;
+  }
+
+  @media (max-width: 768px) {
+      .product-grid {
+          grid-template-columns: 1fr;
+      }
+
+      .product-controls {
+          flex-direction: column;
+          align-items: stretch;
+      }
+
+      .search-input, .sort-select {
+          max-width: 100%;
+      }
+
+      .fertilizer-section h2 {
+          font-size: 1.5rem;
+      }
+  }
+
 
   /* Request Form Section */
   .request-form-section {

@@ -2740,7 +2740,7 @@ class Manager extends Controller
             if ($db->execute()) {
                 // Log banner filename saved to DB
                 error_log("Announcement created with banner: " . ($banner ?? 'NULL'));
-                setFlashMessage('Announcement created successfully!', 'alert alert-success');
+                setFlashMessage('Announcement created successfully!');
                 redirect('manager/announcements');
             } else {
                 // Delete uploaded banner if DB insert fails
@@ -2866,7 +2866,7 @@ class Manager extends Controller
             if ($db->execute()) {
                 // Log banner filename saved to DB
                 error_log("Announcement updated with banner: " . ($banner ?? 'NULL'));
-               setFlashMessage('Announcement updated successfully', 'alert alert-success');
+               setFlashMessage('Announcement updated successfully');
                 redirect('manager/announcements');
             } else {
                 // Delete uploaded banner if DB update fails

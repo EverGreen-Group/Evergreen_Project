@@ -13,7 +13,7 @@ class Pages extends Controller {
     public function __construct() {
         $this->supplierModel = new M_Supplier();
         $this->productModel = new M_Products();
-        $this->fertilizerOrderModel = new M_Fertilizer_Order(); //tempo
+        $this->fertilizerOrderModel = new M_Fertilizer_Order();
     }
 
     public function index() {
