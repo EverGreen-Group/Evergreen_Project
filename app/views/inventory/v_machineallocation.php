@@ -35,7 +35,7 @@
                             <th>Status</th>
                             <th>Button</th>
                             <th>Button</th>
-                            <th>Details</th>
+                            
                         </tr>
                     </thead>
                     <tbody>
@@ -64,7 +64,7 @@
                                             class="btn btn-tertiary">Deallocate</button>
                                     </form>
                                 </td>
-                                <td><button class="btn detail" onclick="">details</button></td>
+                                
                             </tr>
                         <?php endforeach; ?>
                     </tbody>

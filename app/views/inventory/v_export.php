@@ -300,7 +300,7 @@
               <div class="detail-row">
                 <span class="label">Quantity (kg):</span>
                 <span class="value">
-                  <input type="number" id="exportQuantity" name="quantity" required
+                  <input type="number" id="exportQuantity" name="quantity" required min=0
                     style="width: 100%; padding: 8px; box-sizing: border-box;">
                 </span>
               </div>
@@ -308,7 +308,7 @@
               <div class="detail-row">
                 <span class="label">Price per kg ($):</span>
                 <span class="value">
-                  <input type="number" id="exportPrice" name="price" required
+                  <input type="number" id="exportPrice" name="price" required min=0
                     style="width: 100%; padding: 8px; box-sizing: border-box;" step="0.01">
                 </span>
               </div>

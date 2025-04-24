@@ -38,8 +38,8 @@
             <div class="stat-content">
                 <i class='bx bxs-check-circle'></i>
                 <div class="stat-info">
-                    <h3><?php echo isset($data['totalVehicles']) ? $data['totalVehicles'] : '0'; ?></h3>
-                    <p>Accept Orders</p>
+                    <h3><?php echo isset($data['approvedCount']) ? $data['approvedCount'] : '0'; ?></h3>
+                    <p>Approved Orders</p>
                 </div>
             </div>
         </li>
@@ -48,8 +48,8 @@
             <div class="stat-content">
                 <i class='bx bxs-x-circle'></i>
                 <div class="stat-info">
-                    <h3><?php echo isset($data['a']) ? $data['a'] : '0'; ?></h3>
-                    <p>Reject Orders</p>
+                    <h3><?php echo isset($data['pendingCount']) ? $data['pendingCount'] : '0'; ?></h3>
+                    <p>Pending Orders</p>
                 </div>
             </div>
         </li>
@@ -58,8 +58,8 @@
             <div class="stat-content">
                 <i class='bx bxs-package'></i>
                 <div class="stat-info">
-                    <h3><?php echo isset($data['b']) ? $data['b'] : '0'; ?></h3>
-                    <p>Available Orders</p>
+                    <h3><?php echo isset($data['totalorder']) ? $data['totalorder'] : '0'; ?></h3>
+                    <p>Total Orders</p>
                 </div>
             </div>
         </li>

@@ -35,7 +35,7 @@
             <div class="stat-content">
                 <i class='bx bxs-leaf'></i>
                 <div class="stat-info">
-                    <h3><?php echo isset($totalFertilizers) ? $totalFertilizers : 0; ?></h3>
+                    <h3><?php echo isset($data['totalorder']) ? $data['totalorder'] : 0; ?></h3>
                     <p>Total Orders</p>
                 </div>
             </div>
@@ -45,7 +45,7 @@
             <div class="stat-content">
                 <i class='bx bx-check-circle'></i>
                 <div class="stat-info">
-                    <h3><?php echo isset($approvedCount) ? $approvedCount : 0; ?></h3>
+                    <h3><?php echo isset($data['approvedCount']) ? $data['approvedCount'] : 0; ?></h3>
                     <p>Approved</p>
                 </div>
             </div>
@@ -55,7 +55,7 @@
             <div class="stat-content">
                 <i class='bx bx-time'></i>
                 <div class="stat-info">
-                    <h3><?php echo isset($pendingCount) ? $pendingCount : 0; ?></h3>
+                    <h3><?php echo isset($data['pendingCount']) ? $data['pendingCount'] : 0; ?></h3>
                     <p>Pending</p>
                 </div>
             </div>
@@ -71,7 +71,8 @@
                 <thead>
                     <tr>
                         <th>Name</th>
-                        <th>Location</th>
+                        <th>Address</th>
+                        <th>quantity</th>
                         <th>Inventory Date</th>
                         <th>Status</th>
                         <th>Actions</th>
@@ -83,6 +84,7 @@
                             <tr>
                                 <td><?php echo htmlspecialchars($fertilizer->first_name); ?></td>
                                 <td><?php echo htmlspecialchars($fertilizer->address); ?></td>
+                                <td><?php echo htmlspecialchars($fertilizer->quantity); ?>kg</td>
                                 <td><?php echo htmlspecialchars($fertilizer->order_date); ?></td>
                                 <td>
                                     <span class="status-badge <?php 

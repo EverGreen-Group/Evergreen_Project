@@ -35,20 +35,16 @@ class M_Fertilizer
 
     public function getfertilizer()
     {
-        $sql = "SELECT * FROM Fertilizer";
+        $sql = "SELECT * FROM Fertilizer WHERE is_deleted = 0";
         $this->db->query($sql);
+        return $this->db->resultSet();
 
-        try {
-            return $this->db->resultSet();
-        } catch (PDOException $e) {
-            error_log("Database Error: " . $e->getMessage());
-            return false;
-        }
+
     }
 
     public function deleteFertilizer($id)
     {
-        $sql = "DELETE FROM Fertilizer WHERE id = :id";
+        $sql = "UPDATE Fertilizer SET is_deleted = 1 WHERE id = :id";
         $this->db->query($sql);
         $this->db->bind('id', $id);
         return $this->db->execute();
@@ -80,7 +76,7 @@ class M_Fertilizer
         return $this->db->execute();
     }
 
-    public function updatFertilizerwhenapprove($id,$quantity)
+    public function updatFertilizerwhenapprove($id, $quantity)
     {
         $sql = "UPDATE Fertilizer SET quantity=:quantity WHERE id = :id";
         $this->db->query($sql);

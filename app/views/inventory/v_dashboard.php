@@ -40,8 +40,8 @@
 			<i class='bx bxs-group'></i>
 			<span class="text">
 				<h3><?= isset($data['kgApprovedToday'])
-						? $data['kgApprovedToday']
-						: "0"; ?></h3>
+					? $data['kgApprovedToday']
+					: "0"; ?></h3>
 				<p>Approved Stock</p>
 
 			</span>
@@ -50,8 +50,8 @@
 			<i class='bx bxs-dollar-circle'></i>
 			<span class="text">
 				<h3><?= isset($data['fertilizerOrders'])
-						? $data['fertilizerOrders']
-						: "0"; ?></h3>
+					? $data['fertilizerOrders']
+					: "0"; ?></h3>
 				<p>Fertilizer Orders</p>
 			</span>
 		</li>
@@ -85,7 +85,7 @@
 		<div class="todo">
 			<div class="head">
 				<h3>Machine Allocation Statics</h3>
-				
+
 			</div>
 			<?php
 			$machines = $data['machines'];
@@ -117,7 +117,7 @@
 		<div class="order">
 			<div class="head">
 				<h3>Validate Stock</h3>
-				
+
 			</div>
 
 			<table>
@@ -133,24 +133,26 @@
 				<tbody>
 					<?php if (!empty($stockvalidate)): ?>
 						<?php foreach ($stockvalidate as $req): ?>
-							<tr>
-								<td><?php echo htmlspecialchars($req->collection_id); ?></td>
-								<td><?php echo htmlspecialchars($req->total_quantity); ?></td>
-								<td><?php echo htmlspecialchars($req->end_time); ?></td>
-								<td>
-									<span class="status-badge awaiting"><?php echo htmlspecialchars($req->status); ?></span>
-								</td>
-								<td>
-									<div style="display: flex; gap: 5px;">
-										<a href="<?php echo URLROOT; ?>/inventory/viewAwaitingInventory/<?php echo $req->collection_id; ?>"
-											class="btn btn-tertiary"
-											style="display: flex; align-items: center; justify-content: center; width: 40px; height: 40px; border: none; background: none;"
-											title="View Awaiting Inventory Details">
-											<i class='bx bx-add-to-queue' style="font-size: 24px; color:var(--main);"></i>
-										</a>
-									</div>
-								</td>
-							</tr>
+							<?php if ($req->total_quantity != 0): ?>
+								<tr>
+									<td><?php echo htmlspecialchars($req->collection_id); ?></td>
+									<td><?php echo htmlspecialchars($req->total_quantity); ?></td>
+									<td><?php echo htmlspecialchars($req->end_time); ?></td>
+									<td>
+										<span class="status-badge awaiting"><?php echo htmlspecialchars($req->status); ?></span>
+									</td>
+									<td>
+										<div style="display: flex; gap: 5px;">
+											<a href="<?php echo URLROOT; ?>/inventory/viewAwaitingInventory/<?php echo $req->collection_id; ?>"
+												class="btn btn-tertiary"
+												style="display: flex; align-items: center; justify-content: center; width: 40px; height: 40px; border: none; background: none;"
+												title="View Awaiting Inventory Details">
+												<i class='bx bx-add-to-queue' style="font-size: 24px; color:var(--main);"></i>
+											</a>
+										</div>
+									</td>
+								</tr>
+							<?php endif; ?>
 						<?php endforeach; ?>
 					<?php else: ?>
 						<tr>
@@ -162,7 +164,7 @@
 		</div>
 	</div>
 
-	<?php 
+	<?php
 	// echo "<pre>";
 	// print_r($data);
 	// echo "</pre>";

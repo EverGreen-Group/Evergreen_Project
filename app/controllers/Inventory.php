@@ -118,8 +118,10 @@ class Inventory extends controller
     public function product()
     {
         $products = $this->productModel->getAllProducts();
+        $totalProducts = count($products);
         $data = [
-            'products' => $products
+            'products' => $products,
+            'totalProducts' => $totalProducts,
         ];
 
         if (isset($_GET['search'])) {
@@ -136,7 +138,7 @@ class Inventory extends controller
     public function createproduct()
     {
         if ($_SERVER['REQUEST_METHOD'] == 'POST') {
-            $_POST = filter_input_array(INPUT_POST);
+            // $_POST = filter_input_array(INPUT_POST);
             $data = [
                 'product-name' => trim($_POST['product_name']),
                 "location" => trim($_POST['location']),
@@ -147,7 +149,6 @@ class Inventory extends controller
                 "unit" => trim($_POST['unit']),
                 'image_path' => '',
                 'product-name_err' => '',
-                "location_err" => '',
                 "details_err" => '',
                 "code_err" => '',
                 "price_err" => '',
@@ -174,21 +175,41 @@ class Inventory extends controller
 
             if (empty($data['product-name'])) {
                 $data['product-name_err'] = 'Please enter product name';
-            }
-            if (empty($data['location'])) {
-                $data['location_err'] = 'Please enter location';
+                setFlashMessage($data['product-name_err'], 'error');
+                redirect('inventory/createproduct');
             }
             if (empty($data['details'])) {
                 $data['details_err'] = 'Please enter product details';
+                setFlashMessage($data['details_err'], 'error');
+                redirect('inventory/createproduct');
             }
+            if (empty($data['grade'])) {
+                $data['grade_err'] = "Please enter a grade.";
+                setFlashMessage($data['grade_err'], 'error');
+                redirect('inventory/createproduct');
+            } elseif (substr($data['grade'], 0, 2) !== 'GT') {
+
+                $data['grade_err'] = "Grade must start with 'GT'.";
+                setFlashMessage($data['grade_err'], 'error');
+                redirect('inventory/createproduct');
+            } elseif (strlen($data['grade']) < 5) {
+                $data['grade_err'] = "Code must be at least 7 characters long.";
+                setFlashMessage($data['grade_err'], 'error');
+                redirect('inventory/createproduct');
+            }
+
             if (empty($data['price'])) {
                 $data['price_err'] = 'Please enter price';
+                setFlashMessage($data['price_err'], 'error');
+                redirect('inventory/createproduct');
             }
             if (empty($data['quantity'])) {
                 $data['quantity_err'] = 'Please enter quantity';
+                setFlashMessage($data['quantity_err'], 'error');
+                redirect('inventory/createproduct');
             }
             if (
-                empty($data['product-name_err']) && empty($data['location_err']) &&
+                empty($data['product-name_err']) &&
                 empty($data['details_err']) && empty($data['price_err']) &&
                 empty($data['quantity_err'])
             ) {
@@ -211,7 +232,8 @@ class Inventory extends controller
                     die('Something went wrong');
                 }
             } else {
-                $this->view('inventory/v_createproduct', $data);
+                setFlashMessage('Added product successfully!', 'error');
+                redirect('inventory/createproduct');
             }
 
         } else {
@@ -255,9 +277,27 @@ class Inventory extends controller
                 'total_quantity' => $quantity,
             ];
         }
+        $fertilizer2 = $this->fertilizerOrderModel->getfertilizerorderforInventory();
+        $approvedCount = 0;
+        $pendingCount = 0;
+
+        foreach ($fertilizer2 as $recod) {
+
+            if ($recod->status == 'Approved') {
+                $approvedCount += 1;
+            }
+            if ($recod->status == 'Pending') {
+                $pendingCount += 1;
+            }
+
+
+        }
         $data = [
             'fertilizer' => $fertilizer,
-            'chart_data' => $bar_chart_data
+            'chart_data' => $bar_chart_data,
+            'totalorder' => count($fertilizer),
+            'approvedCount' => $approvedCount,
+            'pendingCount' => $pendingCount,
         ];
         // var_dump($fer_chat_data);
 
@@ -299,20 +339,40 @@ class Inventory extends controller
 
 
         }
-      
+
 
         $fertilizer = $this->fertilizerOrderModel->getfertilizerorderforInventory();
+        $approvedCount = 0;
+        $pendingCount = 0;
+
+        foreach ($fertilizer as $recod) {
+
+            if ($recod->status == 'Approved') {
+                $approvedCount += 1;
+            }
+            if ($recod->status == 'Pending') {
+                $pendingCount += 1;
+            }
+
+
+        }
+        $totalorders = count($fertilizer);
 
         $data = [
-            'fertilizers' => $fertilizer
+            'fertilizers' => $fertilizer,
+            'totalorder' => $totalorders,
+            'approvedCount' => $approvedCount,
+            'pendingCount' => $pendingCount,
+
+
         ];
-       
+
         $this->view('inventory/v_fertilizer_available', $data);
     }
     public function createfertilizer()
     {
         if ($_SERVER['REQUEST_METHOD'] == 'POST') {
-            $_POST = filter_input_array(INPUT_POST);
+            // $_POST = filter_input_array(INPUT_POST);
 
             $data = [
                 'fertilizer_name' => $_POST['fertilizer_name'],
@@ -362,16 +422,17 @@ class Inventory extends controller
                 $data['details_err'] = "Please Enter Details";
             }
             if (empty($data['code'])) {
-                $data['code_err'] = "Please Enter Code";
+                $data['code_err'] = "Please enter a code.";
+            } elseif (substr($data['code'], 0, 2) !== 'FT') {
+                $data['code_err'] = "Code must start with 'FT'.";
+            } elseif (strlen($data['code']) < 7) {
+                $data['code_err'] = "Code must be at least 7 characters long.";
             }
             if (empty($data['price'])) {
                 $data['price_err'] = "Please Enter Price";
             }
             if (empty($data['quantity'])) {
                 $data['quantity_err'] = "Please Enter Quantity";
-            }
-            if (empty($data['unit'])) {
-                $data['unit_err'] = "Please Enter Unit";
             }
 
             if (
@@ -527,8 +588,8 @@ class Inventory extends controller
     {
         if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['machine_name'])) {
             // Sanitize POST data
-            var_dump($_POST);
-            $_POST = filter_input_array(INPUT_POST);
+            // var_dump($_POST);
+            // $_POST = filter_input_array(INPUT_POST);
             // Collect form data
 
             $data = [
@@ -623,7 +684,7 @@ class Inventory extends controller
     public function updateproduct($id)
     {
         if ($_SERVER['REQUEST_METHOD'] == 'POST') {
-            $_POST = filter_input_array(INPUT_POST, FILTER_SANITIZE_STRING);
+            // $_POST = filter_input_array(INPUT_POST);
 
             $data = [
                 'id' => $id,
@@ -785,7 +846,7 @@ class Inventory extends controller
         // echo "Received data: " . $jsonData;  
         if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['rate_config'])) {
             // Check if required fields are present
-            $_POST = filter_input_array(INPUT_POST);
+            // $_POST = filter_input_array(INPUT_POST);
 
             $data = [
                 'normal_leaf_rate' => $_POST['normal_leaf_rate'],
@@ -834,9 +895,9 @@ class Inventory extends controller
         $bagsApproved = $getBagCountsInCollection->finalized_count;
         $bagsNotApproved = $getBagCountsInCollection->not_finalized_count;
 
-        // if (empty($bagsForCollection)) {
-        //     redirect("inventory/");
-        // }
+        if (empty($bagsForCollection)) {
+            redirect("inventory/");
+        }
 
         $data = [
             'collectionDetails' => $collectionDetails,
@@ -1058,7 +1119,7 @@ class Inventory extends controller
     public function createBag()
     {
         if ($_SERVER['REQUEST_METHOD'] == 'POST') {
-            $_POST = filter_input_array(INPUT_POST);
+            // $_POST = filter_input_array(INPUT_POST);
 
             $data = [
                 'capacity_kg' => trim($_POST['capacity_kg']),
@@ -1104,7 +1165,7 @@ class Inventory extends controller
 
         if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             // Sanitize POST data
-            $_POST = filter_input_array(INPUT_POST, FILTER_SANITIZE_SPECIAL_CHARS);
+            // $_POST = filter_input_array(INPUT_POST, FILTER_SANITIZE_SPECIAL_CHARS);
 
             // Initialize data
             $data = [

@@ -45,7 +45,7 @@ class M_Products{
     }
 
     public function getAllProducts() {
-        $sql = "SELECT * FROM product ORDER BY product_name ASC";
+        $sql = "SELECT * FROM product WHERE is_deleted = 0 ORDER BY product_name ASC";
         $this->db->query($sql);
         
         try {
@@ -63,7 +63,7 @@ class M_Products{
     }
     
     public function deleteProduct($id) {
-        $this->db->query('DELETE FROM product WHERE id = :id');
+        $this->db->query('UPDATE product SET is_deleted = 1 WHERE id = :id');
         $this->db->bind(':id', $id);
         return $this->db->execute();
     }
