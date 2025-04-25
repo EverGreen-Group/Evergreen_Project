@@ -454,6 +454,57 @@ class M_Supplier {
                           WHERE is_deleted = 1");
         return $this->db->resultSet();
     }
+
+    public function removeSupplier($supplierId) {
+        $this->db->query("
+        SELECT * FROM collection_schedules cs
+        INNER JOIN routes r ON cs.route_id = r.route_id
+        INNER JOIN route_suppliers rs ON r.route_id = rs.route_id
+        INNER JOIN suppliers s ON rs.supplier_id = s.supplier_id 
+        WHERE s.supplier_id = :supplier_id
+        AND r.is_deleted = 0
+        AND cs.is_deleted = 0
+        ");
+
+        $this->db->bind(":supplier_id", $supplierId);
+        $result1 = $this->db->resultSet();
+        if($result1) {
+            setFlashMessage("This supplier is currently in a schedule, therefore please remove them first!", 'warning');
+            return 0;
+        } else {
+            $this->db->query("UPDATE suppliers SET is_active = 0, is_deleted = 1 WHERE supplier_id = :supplier_id");
+            $this->db->bind(":supplier_id", $supplierId);
+            $result2 = $this->db->execute();
+            if($result2) {
+                return 1;
+            } else {
+                return 2;
+            }
+        }
+    }
+
+    public function restoreSupplier($supplierId) {
+        // Check if the supplier exists and is currently deleted
+        $this->db->query("SELECT * FROM suppliers WHERE supplier_id = :supplier_id AND is_deleted = 1");
+        $this->db->bind(":supplier_id", $supplierId);
+        $result = $this->db->single(); // Fetch a single record
+    
+        if (!$result) {
+            setFlashMessage("Supplier not found or is not deleted.", 'error');
+            return 0; // Supplier not found or not deleted
+        }
+    
+        // Restore the supplier
+        $this->db->query("UPDATE suppliers SET is_active = 1, is_deleted = 0 WHERE supplier_id = :supplier_id");
+        $this->db->bind(":supplier_id", $supplierId);
+        $result2 = $this->db->execute();
+    
+        if ($result2) {
+            return 1; // Successfully restored
+        } else {
+            return 2; // Failed to restore
+        }
+    }
     
     public function updateSupplierProfile($data) {
         $this->db->beginTransaction();

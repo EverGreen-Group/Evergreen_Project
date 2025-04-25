@@ -294,7 +294,7 @@ class Manager extends Controller
         $supplier_status = isset($_GET['supplier_status']) ? $_GET['supplier_status'] : null;
 
         $page = isset($_GET['page']) && is_numeric($_GET['page']) ? (int)$_GET['page'] : 1;
-        $limit = 3; 
+        $limit = 5; 
         $offset = ($page - 1) * $limit;
 
         // Apply filters to get suppliers with pagination
@@ -453,6 +453,36 @@ class Manager extends Controller
         ];
 
         $this->view('supplier_manager/v_removed_suppliers', $data);
+    }
+
+    public function removeSupplier($supplierId) {
+        $result = $this->supplierModel->removeSupplier($supplierId);
+        if($result == 1) {
+            setFlashMessage('Removed supplier successfully!');
+            redirect('manager/supplier');
+
+        } elseif ($result == 0) {
+            redirect('manager/supplier');
+        } else {
+            setFlashMessage("Couldnt delete the supplier, please try again later", 'error');
+            redirect('manager/supplier');
+        }
+
+    }
+
+    public function restoreSupplier($supplierId) {
+        $result = $this->supplierModel->restoreSupplier($supplierId);
+        
+        if ($result == 1) {
+            setFlashMessage('Restored supplier successfully!');
+            redirect('manager/supplier');
+        } elseif ($result == 0) {
+            setFlashMessage('Supplier not found or is not deleted.', 'error');
+            redirect('manager/supplier');
+        } else {
+            setFlashMessage("Could not restore the supplier, please try again later", 'error');
+            redirect('manager/supplier');
+        }
     }
 
 
