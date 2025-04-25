@@ -19,7 +19,7 @@
     </div>
 
     <!-- Error Messages -->
-    <?php setFlashMessage('bag_message'); ?>
+    
 
     <form id="createBagForm" method="POST" action="<?php echo URLROOT; ?>/inventory/createBag">
 
@@ -43,12 +43,12 @@
         <div class="table-data">
             <div class="order">
                 <div class="head">
-                    <h3>QR Code Preview</h3>
+                    <h3>Next Bag Id</h3>
                 </div>
                 <div class="section-content">
                     <div class="qr-container">
-                        <div id="qrcode"></div>
-                        <p class="qr-explanation">QR code will be generated upon bag creation</p>
+                        <h1><?php echo $data['next_bag_id'] ?></h1>
+                        <!-- <p class="qr-explanation">QR code will be generated upon bag creation</p> -->
                     </div>
                 </div>
             </div>

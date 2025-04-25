@@ -356,9 +356,17 @@ class Inventory extends controller
 
             $fertilizer = $this->fertilizerModel->getFertilizerById($fid);
             if ($fertilizer) {
-                $newfquantity = max(0, $fertilizer->quantity - $fquantity);
-                $this->fertilizerModel->updatFertilizerwhenapprove($fid, $newfquantity);
-                setFlashMessage("Fertilizer Approved Successfully");
+                $newfquantity =  $fertilizer->quantity - $fquantity;
+
+                if ($newfquantity < 0) {
+
+                    setFlashMessage("Insufficient fertilizer quantity", "error");
+                    redirect('inventory/fertilizer');
+                }else {
+                
+                    $this->fertilizerModel->updatFertilizerwhenapprove($fid, $newfquantity);
+                    setFlashMessage("Fertilizer Approved Successfully");
+                }
             } else {
                 // Handle error: Fertilizer not found
                 setFlashMessage("Fertilizer not found");
@@ -1317,8 +1325,13 @@ class Inventory extends controller
             );
             redirect('inventory/collectionBags');
         }
+        $lastid = $this->stockvalidate->getLastBagId();
+        $newid= $lastid->bag_id + 1;
+        $data = [
+            'next_bag_id' => $newid,
+        ];
 
-        $this->view('inventory/v_create_bag');
+        $this->view('inventory/v_create_bag',$data);
     }
 
     public function rawLeafHistory()
