@@ -202,274 +202,376 @@
 <?php require APPROOT . '/views/inc/components/footer.php'; ?>
 
 <style>
-  /* Root Variables */
-  :root {
-    --primary-color: var(--mainn);
-    --secondary-color: #2ecc71;
-    --text-primary: #2c3e50;
-    --text-secondary: #7f8c8d;
-    --background-light: #f8f9fa;
-    --border-color: #e0e0e0;
-    --completed-color: #2ecc71;
-    --pending-color: #f39c12;
-    --finalized-color: #3498db;
-    --table-header-bg: #f5f5f5;
-    --card-background: white;
-    --spacing-xs: 0.25rem;
-    --spacing-sm: 0.5rem;
-    --spacing-md: 1rem;
-    --spacing-lg: 1.5rem;
-    --spacing-xl: 2rem;
-    --border-radius-sm: 4px;
-    --border-radius-md: 8px;
-    --border-radius-lg: 12px;
-    --shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.1);
-  }
+/* Root Variables */
+:root {
+  --primary-color: var(--mainn);
+  --secondary-color: #2ecc71;
+  --text-primary: #2c3e50;
+  --text-secondary: #7f8c8d;
+  --background-light: #f8f9fa;
+  --border-color: #e0e0e0;
+  --completed-color: #2ecc71;
+  --pending-color: #f39c12;
+  --finalized-color: #3498db;
+  --table-header-bg: #f5f5f5;
+  --card-background: white;
+  --spacing-xs: 0.25rem;
+  --spacing-sm: 0.5rem;
+  --spacing-md: 1rem;
+  --spacing-lg: 1.5rem;
+  --spacing-xl: 2rem;
+  --border-radius-sm: 4px;
+  --border-radius-md: 8px;
+  --border-radius-lg: 12px;
+  --shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
 
-  /* Layout & Common Styles */
+/* Layout & Common Styles */
+main {
+  padding: var(--spacing-lg);
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.head-title {
+  margin-bottom: var(--spacing-xl);
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.head-title h1 {
+  color: var(--text-primary);
+  font-size: 1.75rem;
+  margin-bottom: var(--spacing-sm);
+}
+
+.breadcrumb {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.breadcrumb a {
+  color: var(--text-secondary);
+  text-decoration: none;
+  transition: color 0.2s;
+}
+
+.breadcrumb a:hover {
+  color: var(--primary-color);
+}
+
+.breadcrumb i {
+  color: var(--primary-color);
+}
+
+.section-header {
+  margin-top: var(--spacing-lg);
+  margin-bottom: var(--spacing-md);
+}
+
+.section-header h3 {
+  font-size: 1.25rem;
+  color: var(--text-primary);
+  margin: 0;
+}
+
+/* Flash Messages */
+.alert {
+  padding: var(--spacing-md);
+  margin-bottom: var(--spacing-lg);
+  border-radius: var(--border-radius-md);
+  background-color: var(--secondary-color);
+  color: white;
+}
+
+.alert-error {
+  background-color: #e74c3c;
+}
+
+/* Profile Section */
+.profile-section {
+  margin-bottom: var(--spacing-xl);
+}
+
+.profile-container {
+  background-color: white;
+  border-radius: var(--border-radius-lg);
+  box-shadow: var(--shadow-sm);
+  overflow: hidden;
+}
+
+/* Profile Photo Container */
+.profile-photo-container {
+  display: flex;
+  justify-content: center;
+  margin: var(--spacing-md) 0;
+}
+
+.profile-image {
+  width: 200px;
+  height: 200px;
+  border-radius: 50%;
+  overflow: hidden;
+  box-shadow: var(--shadow-sm);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background-color: var(--background-light);
+}
+
+.profile-image img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.profile-image.no-image {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-size: 5rem;
+  color: var(--text-secondary);
+}
+
+.table-wrapper {
+  width: 100%;
+  overflow-x: auto;
+}
+
+.profile-table {
+  width: 100%;
+  border-collapse: collapse;
+  table-layout: fixed;
+}
+
+/* Fix for the hover effect */
+.profile-table tr {
+  background-color: transparent;
+  transition: none;
+}
+
+.profile-table tr:hover {
+  background-color: transparent;
+}
+
+.profile-table td {
+  padding: var(--spacing-md);
+  text-align: left;
+  border-bottom: 1px solid var(--border-color);
+  vertical-align: top;
+  background-color: transparent;
+}
+
+.profile-table tr:last-child td {
+  border-bottom: none;
+}
+
+.form-control {
+  width: 100%;
+  padding: var(--spacing-sm);
+  border: 1px solid var(--border-color);
+  border-radius: var(--border-radius-sm);
+  font-size: 1rem;
+  margin-top: var(--spacing-xs);
+  box-sizing: border-box;
+  background-color: white;
+  transition: border-color 0.3s;
+}
+
+.form-control:focus {
+  outline: none;
+  border-color: var(--primary-color);
+}
+
+.form-control[readonly] {
+  background-color: var(--background-light);
+  cursor: not-allowed;
+}
+
+label {
+  display: block;
+  font-weight: 500;
+  color: var(--text-primary);
+  margin-bottom: var(--spacing-xs);
+}
+
+.form-text {
+  display: block;
+  margin-top: var(--spacing-xs);
+  color: var(--text-secondary);
+  font-size: 0.875rem;
+}
+
+.form-actions {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: var(--spacing-lg);
+  margin-bottom: var(--spacing-lg);
+  padding: 0 var(--spacing-md);
+}
+
+.update-btn, .btn-secondary {
+  background-color: var(--primary-color);
+  color: white;
+  border: none;
+  padding: var(--spacing-sm) var(--spacing-lg);
+  border-radius: var(--border-radius-sm);
+  font-size: 1rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.3s, transform 0.2s;
+}
+
+.update-btn:hover, .btn-secondary:hover {
+  background-color: #219653;
+  transform: translateY(-2px);
+}
+
+
+
+/* Mobile Cards View */
+@media (max-width: 768px) {
   main {
-    padding: var(--spacing-lg);
-    max-width: 1200px;
-    margin: 0 auto;
-  }
-
-  .head-title {
-    margin-bottom: var(--spacing-xl);
-    display: flex;
-    flex-wrap: wrap;
-    justify-content: space-between;
-    align-items: center;
-  }
-
-  .head-title h1 {
-    color: var(--text-primary);
-    font-size: 1.75rem;
-    margin-bottom: var(--spacing-sm);
-  }
-
-  .breadcrumb {
-    display: flex;
-    align-items: center;
-    gap: var(--spacing-sm);
-    list-style: none;
-    padding: 0;
-  }
-
-  .breadcrumb a {
-    color: var(--text-secondary);
-    text-decoration: none;
-  }
-
-  .breadcrumb i {
-    color: var(--primary-color);
-  }
-
-  .section-header {
-    margin-top: var(--spacing-lg);
-    margin-bottom: var(--spacing-md);
-  }
-
-  .section-header h3 {
-    font-size: 1.25rem;
-    color: var(--text-primary);
-  }
-
-  /* Flash Messages */
-  .alert {
     padding: var(--spacing-md);
-    margin-bottom: var(--spacing-lg);
-    border-radius: var(--border-radius-md);
-    background-color: var(--secondary-color);
-    color: white;
   }
-
-  .alert-error {
-    background-color: #e74c3c;
-  }
-
-  /* Profile Section */
-  .profile-section {
-    margin-bottom: var(--spacing-xl);
+  
+  .head-title {
+    flex-direction: column;
+    align-items: flex-start;
   }
 
   .profile-container {
-    background-color: white;
-    border-radius: var(--border-radius-lg);
-    box-shadow: var(--shadow-sm);
-    overflow: hidden;
-  }
-
-  /* Profile Photo Container */
-  .profile-photo-container {
-    display: flex;
-    justify-content: center;
-    margin: var(--spacing-md) 0;
-  }
-
-  .profile-image {
-    width: 200px;
-    height: 200px;
-    border-radius: 50%;
-    overflow: hidden;
-    box-shadow: var(--shadow-sm);
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    background-color: var(--background-light);
-  }
-
-  .profile-image img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-  }
-
-  .profile-image.no-image {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    font-size: 5rem;
-    color: var(--text-secondary);
-  }
-
-  .table-wrapper {
-    width: 100%;
-    overflow-x: auto;
+    padding: var(--spacing-sm);
   }
 
   .profile-table {
+    display: block;
     width: 100%;
-    border-collapse: collapse;
+  }
+
+  .profile-table tbody {
+    display: block;
+    width: 100%;
+  }
+
+  .profile-table tr {
+    display: block;
+    width: 100%;
+    margin-bottom: var(--spacing-md);
+    border: 1px solid var(--border-color);
+    border-radius: var(--border-radius-md);
+    overflow: hidden;
   }
 
   .profile-table td {
+    display: block;
+    width: 100%;
     padding: var(--spacing-md);
     text-align: left;
+    position: relative;
+    padding-top: 2.5rem;
     border-bottom: 1px solid var(--border-color);
+    box-sizing: border-box;
   }
 
-  .profile-table tr:last-child td {
+  .profile-table td:last-child {
     border-bottom: none;
   }
 
-  .form-control {
+  .profile-table td:before {
+    content: attr(data-label);
+    position: absolute;
+    top: var(--spacing-xs);
+    left: var(--spacing-md);
     width: 100%;
-    padding: var(--spacing-sm);
-    border: 1px solid var(--border-color);
-    border-radius: var(--border-radius-sm);
-    font-size: 1rem;
-    margin-top: var(--spacing-xs);
-  }
-
-  .form-control:focus {
-    outline: none;
-    border-color: var(--primary-color);
-  }
-
-  .form-control[readonly] {
-    background-color: var(--background-light);
-    cursor: not-allowed;
-  }
-
-  label {
-    display: block;
-    font-weight: 500;
+    font-weight: 600;
     color: var(--text-primary);
-    margin-bottom: var(--spacing-xs);
-  }
-
-  .form-text {
-    display: block;
-    margin-top: var(--spacing-xs);
-    color: var(--text-secondary);
     font-size: 0.875rem;
   }
 
   .form-actions {
-    display: flex;
-    justify-content: flex-end;
-    margin-top: var(--spacing-lg);
-    margin-bottom: var(--spacing-lg);
+    justify-content: center;
+    padding: var(--spacing-md) 0;
+  }
+  
+  .profile-image {
+    width: 150px;
+    height: 150px;
+  }
+}
+
+/* Extra small devices */
+@media (max-width: 480px) {
+  main {
+    padding: var(--spacing-sm);
   }
 
-  .update-btn {
-    background-color: var(--primary-color);
-    color: white;
-    border: none;
-    padding: var(--spacing-sm) var(--spacing-lg);
-    border-radius: var(--border-radius-sm);
-    font-size: 1rem;
-    font-weight: 500;
-    cursor: pointer;
-    transition: background-color 0.3s;
+  .head-title {
+    margin-bottom: var(--spacing-md);
   }
 
-  .update-btn:hover {
-    background-color: #219653;
+  .head-title h1 {
+    font-size: 1.5rem;
   }
 
-  .password-btn {
-    background-color: #3498db;
+  .section-header h3 {
+    font-size: 1.125rem;
   }
-
-  .password-btn:hover {
-    background-color: #2980b9;
+  
+  .profile-image {
+    width: 120px;
+    height: 120px;
   }
-
-  /* Mobile Cards View */
-  @media (max-width: 768px) {
-    main {
-      padding: var(--spacing-md);
-    }
-    
-    .head-title {
-      flex-direction: column;
-      align-items: flex-start;
-    }
-
-    .profile-table, .profile-table tbody, .profile-table tr, .profile-table td {
-      display: block;
-      width: 100%;
-    }
-
-    .profile-table td {
-      padding: var(--spacing-sm);
-      text-align: left;
-      position: relative;
-      padding-left: 50%;
-    }
-
-    .profile-table td:before {
-      content: attr(data-label);
-      position: absolute;
-      left: var(--spacing-sm);
-      width: 45%;
-      white-space: nowrap;
-      font-weight: 600;
-      color: var(--text-primary);
-    }
-
-    .form-actions {
-      justify-content: center;
-    }
+  
+  .profile-table td {
+    padding: 2.5rem var(--spacing-sm) var(--spacing-sm);
   }
-
-  /* Extra small devices */
-  @media (max-width: 480px) {
-    main {
-      padding: var(--spacing-sm);
-    }
-
-    .head-title {
-      margin-bottom: var(--spacing-md);
-    }
-
-    .head-title h1 {
-      font-size: 1.5rem;
-    }
-
-    .section-header h3 {
-      font-size: 1.125rem;
-    }
+  
+  .profile-table td:before {
+    left: var(--spacing-sm);
   }
+  
+  .update-btn, .btn-secondary {
+    width: 100%;
+    padding: var(--spacing-sm);
+  }
+}
+</style>
+
+<style>
+/* Add these specific rules to override any global hover effects */
+.profile-table,
+.profile-table tr,
+.profile-table td,
+.profile-table tbody {
+  background-color: white !important; /* Force white background */
+  transition: none !important; /* Disable any transitions */
+}
+
+.profile-table tr:hover,
+.profile-table tr:hover td {
+  background-color: white !important; /* Force white background on hover */
+  color: inherit !important; /* Keep text color the same */
+}
+
+/* If the hover effect is coming from a parent element */
+.profile-container:hover .profile-table tr,
+.profile-container:hover .profile-table td {
+  background-color: white !important;
+}
+
+/* This will fix the background color in the password change section specifically */
+.profile-section .profile-container {
+  background-color: white !important;
+}
+
+.profile-section .profile-container:hover {
+  background-color: white !important;
+}
 </style>

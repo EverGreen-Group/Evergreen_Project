@@ -288,17 +288,34 @@ class M_Dashbord
         
         return $this->db->resultSet();
     }
+
+    public function getInactiveBags() {
+        $this->db->query('
+            SELECT c.*, buh.*
+            FROM collection_bags c
+            INNER JOIN (
+                SELECT bag_id, MAX(finalized_at) AS latest_finalized
+                FROM bag_usage_history
+                WHERE is_finalized = 1
+                GROUP BY bag_id
+            ) AS latest ON latest.bag_id = c.bag_id
+            INNER JOIN bag_usage_history buh ON buh.bag_id = latest.bag_id AND buh.finalized_at = latest.latest_finalized
+            WHERE c.status = "inactive" AND c.is_deleted = 0
+        ');
+
+        return $this->db->resultSet();
+    }
     
-    public function markAsInactive($bagId) {
+    public function markAsActive($bagId) {
         $this->db->query('UPDATE collection_bags SET status = :status WHERE bag_id = :bag_id');
-        $this->db->bind(':status', 'inactive');
+        $this->db->bind(':status', 'active');
         $this->db->bind(':bag_id', $bagId);
         
         return $this->db->execute();
     }
     
     public function deleteBag($bagId) {
-        $this->db->query('UPDATE collection_bags SET is_deleted = 1 AND status = "inactive" WHERE bag_id = :bag_id');
+        $this->db->query('UPDATE collection_bags SET is_deleted = 1 AND status = "active" WHERE bag_id = :bag_id');
         $this->db->bind(':bag_id', $bagId);
         
         return $this->db->execute();
@@ -356,6 +373,13 @@ class M_Dashbord
         } else {
             return false;
         }
+    }
+
+    public function getBagUsageHistory() {
+        $sql = "SELECT * FROM bag_usage_history buh INNER JOIN leaf_types lt ON buh.leaf_type_id = lt.leaf_type_id";
+        $this->db->query($sql);
+        return $this->db->resultSet();
+
     }
 
 
