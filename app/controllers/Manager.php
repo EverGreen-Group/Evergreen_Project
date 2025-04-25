@@ -2664,53 +2664,101 @@ class Manager extends Controller
     }
 
     public function createAnnouncement() {
+        error_log("----------- CREATE ANNOUNCEMENT START -----------");
+    
         if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+            error_log("POST data: " . print_r($_POST, true));
+            error_log("FILES data: " . print_r($_FILES, true));
+    
             $title = $_POST['title'] ?? '';
             $content = $_POST['content'] ?? '';
-            
+    
             if (empty($title) || empty($content)) {
-                setFlashMessage("This field is required.", "error");
+                setFlashMessage("Title and content are required.", "error");
                 redirect('manager/createAnnouncement');
                 return;
             }
-
+    
             $banner = null;
+    
             if (isset($_FILES['banner']) && $_FILES['banner']['error'] == UPLOAD_ERR_OK) {
                 $file = $_FILES['banner'];
-                // Log file details for debugging
-                error_log("Banner upload attempt: Name={$file['name']}, Size={$file['size']}, Type={$file['type']}, Error={$file['error']}");
-
-                // Validate file size (max 2MB)
+    
+                // Validations
                 if ($file['size'] > 2 * 1024 * 1024) {
                     setFlashMessage("File size exceeds 2MB limit", "error");
                     redirect('manager/createAnnouncement');
                     return;
                 }
-                // Validate file type
-                if ($file['type'] == 'image/jpeg') {
-                    $banner = uniqid() . '.jpg';
-                    $uploadPath = 'public/uploads/announcements/' . $banner;
-                    if (!is_dir('public/uploads/announcements/')) {
-                        if (!mkdir('public/uploads/announcements/', 0755, true)) {
-                            error_log("Failed to create directory: public/uploads/announcements/");
-                            setFlashMessage("Failed to create directory for uploads", "error");
-                            redirect('manager/createAnnouncement');
-                            return;
-                        }
-                    }
-                    if (!move_uploaded_file($file['tmp_name'], $uploadPath)) {
-                        error_log("Failed to upload banner: Name={$file['name']}, Size={$file['size']}, Error={$file['error']}, Path={$uploadPath}");
-                        setFlashMessage("Failed to upload banner. Please try again.", "error");
-                        redirect('manager/createAnnouncement');
-                        return;
-                    }
-                    // Log successful upload
-                    error_log("Banner uploaded successfully: {$banner}");
-                } else {
-                    setFlashMessage("Invalid file type. Only JPEG images are allowed.", "error");
+    
+                $allowedTypes = ['image/jpeg', 'image/png'];
+                if (!in_array($file['type'], $allowedTypes)) {
+                    setFlashMessage("Invalid file type. Only JPEG and PNG allowed.", "error");
                     redirect('manager/createAnnouncement');
                     return;
                 }
+    
+                $uploadDir = dirname(APPROOT) . '/public/uploads/announcements/';
+
+                error_log("The upload dir is " . $uploadDir);
+                if (!is_dir($uploadDir)) {
+                    error_log("Upload dir not found, trying relative path.");
+                    $uploadDir = 'public/uploads/announcements/';
+                }
+    
+                if (!is_dir($uploadDir)) {
+                    error_log("Creating upload directory: " . $uploadDir);
+                    if (!mkdir($uploadDir, 0777, true)) {
+                        $err = error_get_last();
+                        error_log("mkdir failed: " . ($err ? $err['message'] : 'Unknown error'));
+                        setFlashMessage("Server error: Cannot create upload directory.", "error");
+                        redirect('manager/createAnnouncement');
+                        return;
+                    }
+                }
+    
+                chmod($uploadDir, 0777); // Just in case
+    
+                $extension = strtolower(pathinfo($file['name'], PATHINFO_EXTENSION));
+                $banner = uniqid() . '.' . $extension;
+                $uploadPath = $uploadDir . $banner;
+    
+                // Check tmp_name exists
+                if (!file_exists($file['tmp_name'])) {
+                    error_log("Temp file does not exist: " . $file['tmp_name']);
+                    setFlashMessage("Temporary upload file missing. Try again.", "error");
+                    redirect('manager/createAnnouncement');
+                    return;
+                }
+    
+                // Check if upload dir is writable
+                if (!is_writable($uploadDir)) {
+                    error_log("Upload directory not writable: " . $uploadDir);
+                    setFlashMessage("Server error: Upload folder not writable.", "error");
+                    redirect('manager/createAnnouncement');
+                    return;
+                }
+    
+                // Attempt move
+                if (!move_uploaded_file($file['tmp_name'], $uploadPath)) {
+                    $err = error_get_last();
+                    error_log("move_uploaded_file failed: " . ($err ? $err['message'] : 'Unknown error'));
+    
+                    // Fallback copy
+                    if (!copy($file['tmp_name'], $uploadPath)) {
+                        $err = error_get_last();
+                        error_log("copy fallback also failed: " . ($err ? $err['message'] : 'Unknown error'));
+                        setFlashMessage("Failed to upload image. Server error.", "error");
+                        redirect('manager/createAnnouncement');
+                        return;
+                    } else {
+                        error_log("File copied successfully to: " . $uploadPath);
+                    }
+                } else {
+                    error_log("File uploaded via move_uploaded_file to: " . $uploadPath);
+                }
+    
+                chmod($uploadPath, 0644);
             } elseif (isset($_FILES['banner']) && $_FILES['banner']['error'] != UPLOAD_ERR_NO_FILE) {
                 $error_codes = [
                     UPLOAD_ERR_INI_SIZE => 'File size exceeds server limit',
@@ -2720,42 +2768,45 @@ class Manager extends Controller
                     UPLOAD_ERR_CANT_WRITE => 'Failed to write file to disk',
                     UPLOAD_ERR_EXTENSION => 'File upload stopped by extension'
                 ];
-                $error_msg = isset($error_codes[$_FILES['banner']['error']]) ? $error_codes[$_FILES['banner']['error']] : 'Unknown upload error';
-                error_log("Banner upload error: Code={$_FILES['banner']['error']}, Message={$error_msg}");
+                $error_msg = $error_codes[$_FILES['banner']['error']] ?? 'Unknown upload error';
+                error_log("Upload error code: {$_FILES['banner']['error']} - {$error_msg}");
                 setFlashMessage($error_msg, "error");
                 redirect('manager/createAnnouncement');
                 return;
             }
-
-            $db = new Database();
-            $query = "INSERT INTO announcements (title, content, banner, created_by, created_at) 
-                     VALUES (:title, :content, :banner, :created_by, NOW())";
-            
-            $db->query($query);
-            $db->bind(':title', $title);
-            $db->bind(':content', $content);
-            $db->bind(':banner', $banner);
-            $db->bind(':created_by', $_SESSION['user_id']);
-            
-            if ($db->execute()) {
-                // Log banner filename saved to DB
-                error_log("Announcement created with banner: " . ($banner ?? 'NULL'));
-                setFlashMessage('Announcement created successfully!');
-                redirect('manager/announcements');
-            } else {
-                // Delete uploaded banner if DB insert fails
-                if ($banner && file_exists('public/uploads/announcements/' . $banner)) {
-                    unlink('public/uploads/announcements/' . $banner);
+    
+            try {
+                $db = new Database();
+                $query = "INSERT INTO announcements (title, content, banner, created_by, created_at) 
+                          VALUES (:title, :content, :banner, :created_by, NOW())";
+                $db->query($query);
+                $db->bind(':title', $title);
+                $db->bind(':content', $content);
+                $db->bind(':banner', $banner);
+                $db->bind(':created_by', $_SESSION['user_id']);
+    
+                if ($db->execute()) {
+                    setFlashMessage('Announcement created successfully!');
+                    redirect('manager/announcements');
+                } else {
+                    if ($banner && file_exists($uploadPath)) unlink($uploadPath);
+                    setFlashMessage('Database error. Please try again.', 'alert alert-danger');
+                    redirect('manager/createAnnouncement');
                 }
-                setFlashMessage('Failed to create announcement. Please try again.', 'alert alert-danger');
+            } catch (Exception $e) {
+                error_log("DB Exception: " . $e->getMessage());
+                if ($banner && file_exists($uploadPath)) unlink($uploadPath);
+                setFlashMessage('System error occurred. Please try again.', 'alert alert-danger');
                 redirect('manager/createAnnouncement');
             }
-            return;
+        } else {
+            redirect('manager/createAnnouncementPage');
         }
-        
-        // For GET requests, redirect to the create announcement page
-        redirect('manager/createAnnouncementPage');
+    
+        error_log("----------- CREATE ANNOUNCEMENT END -----------");
     }
+    
+    
 
     public function getAnnouncement($id) {
         header('Content-Type: application/json');
@@ -2787,19 +2838,19 @@ class Manager extends Controller
                 redirect('manager/editAnnouncement/' . $announcement_id);
                 return;
             }
-
+    
             $db = new Database();
             $banner = null;
-
+    
             // Fetch current announcement to get existing banner
             $db->query("SELECT banner FROM announcements WHERE announcement_id = :id");
             $db->bind(':id', $announcement_id);
             $current = $db->single();
             $current_banner = $current ? $current->banner : null;
-
+    
             // Handle banner upload or removal
             if ($remove_banner && $current_banner) {
-                $banner_path = 'public/uploads/announcements/' . $current_banner;
+                $banner_path = dirname(APPROOT) . '/public/uploads/announcements/' . $current_banner;
                 if (file_exists($banner_path)) {
                     unlink($banner_path);
                     error_log("Removed banner: {$banner_path}");
@@ -2809,7 +2860,7 @@ class Manager extends Controller
                 $file = $_FILES['banner'];
                 // Log file details for debugging
                 error_log("Banner upload attempt (update): Name={$file['name']}, Size={$file['size']}, Type={$file['type']}, Error={$file['error']}");
-
+    
                 // Validate file size (max 2MB)
                 if ($file['size'] > 2 * 1024 * 1024) {
                     setFlashMessage("File size exceeds 2MB limit", "error");
@@ -2818,9 +2869,9 @@ class Manager extends Controller
                 }
                 if ($file['type'] == 'image/jpeg') {
                     $banner = uniqid() . '.jpg';
-                    $uploadPath = 'public/uploads/announcements/' . $banner;
-                    if (!is_dir('public/uploads/announcements/')) {
-                        if (!mkdir('public/uploads/announcements/', 0755, true)) {
+                    $uploadPath = dirname(APPROOT) . '/public/uploads/announcements/' . $banner;
+                    if (!is_dir(dirname(APPROOT) . '/public/uploads/announcements/')) {
+                        if (!mkdir(dirname(APPROOT) . '/public/uploads/announcements/', 0755, true)) {
                             error_log("Failed to create directory: public/uploads/announcements/");
                             setFlashMessage("Failed to create directory for uploads", "error");
                             redirect('manager/editAnnouncement/' . $announcement_id);
@@ -2830,7 +2881,7 @@ class Manager extends Controller
                     if (move_uploaded_file($file['tmp_name'], $uploadPath)) {
                         // Remove old banner if exists
                         if ($current_banner) {
-                            $old_banner_path = 'public/uploads/announcements/' . $current_banner;
+                            $old_banner_path = dirname(APPROOT) . '/public/uploads/announcements/' . $current_banner;
                             if (file_exists($old_banner_path)) {
                                 unlink($old_banner_path);
                                 error_log("Removed old banner: {$old_banner_path}");
@@ -2851,7 +2902,7 @@ class Manager extends Controller
             } else {
                 $banner = $current_banner; // Keep existing banner
             }
-
+    
             $query = "UPDATE announcements 
                      SET title = :title, content = :content, banner = :banner, updated_at = NOW()
                      WHERE announcement_id = :id AND created_by = :user_id";
@@ -2866,12 +2917,12 @@ class Manager extends Controller
             if ($db->execute()) {
                 // Log banner filename saved to DB
                 error_log("Announcement updated with banner: " . ($banner ?? 'NULL'));
-               setFlashMessage('Announcement updated successfully');
+                setFlashMessage('Announcement updated successfully');
                 redirect('manager/announcements');
             } else {
                 // Delete uploaded banner if DB update fails
-                if ($banner && $banner != $current_banner && file_exists('public/uploads/announcements/' . $banner)) {
-                    unlink('public/uploads/announcements/' . $banner);
+                if ($banner && $banner != $current_banner && file_exists(dirname(APPROOT) . '/public/uploads/announcements/' . $banner)) {
+                    unlink(dirname(APPROOT) . '/public/uploads/announcements/' . $banner);
                 }
                 setFlashMessage('Failed to update announcement', 'alert alert-danger');
                 redirect('manager/editAnnouncement/' . $announcement_id);
@@ -2882,6 +2933,7 @@ class Manager extends Controller
         setFlashMessage('Invalid request method', 'alert alert-danger');
         redirect('manager/announcements');
     }
+    
 
     public function deleteAnnouncement() {
         header('Content-Type: application/json');

@@ -2,9 +2,6 @@
 <?php require APPROOT . '/views/inc/components/sidebar_vehicle_manager.php'; ?>
 <?php require APPROOT . '/views/inc/components/topnavbar.php'; ?>
 
-<link href="<?php echo URLROOT; ?>/public/boxicons/css/boxicons.min.css" rel="stylesheet">
-<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap" rel="stylesheet">
-
 <main>
     <div class="announcements-container">
         <div class="announcements-header">
@@ -20,9 +17,6 @@
             </div>
         </div>
 
-        <!-- Debug: Print URLROOT (comment out in production) -->
-        <!-- <p>URLROOT: <?php echo htmlspecialchars(URLROOT); ?></p> -->
-
         <?php if (empty($data['announcements'])): ?>
             <div class="no-announcements">
                 <i class="bx bx-message-square-dots"></i>
@@ -31,15 +25,20 @@
         <?php else: ?>
             <div class="announcements-list">
                 <?php foreach ($data['announcements'] as $announcement): ?>
-                    <div class="announcement-item" data-announcement-id="<?php echo $announcement->announcement_id; ?>">
-                        <?php if (!empty($announcement->banner) && file_exists('public/uploads/announcements/' . $announcement->banner)): ?>
+                    <div class="announcement-item" data-id="<?php echo $announcement->announcement_id; ?>">
+                        <?php 
+                            $uploadPath = dirname(APPROOT) . '/public/uploads/announcements/' . $announcement->banner;
+                            if (!empty($announcement->banner) && file_exists($uploadPath)): 
+                        ?>
                             <div class="announcement-banner">
-                                <img src="<?php echo URLROOT . '/public/public/uploads/announcements/' . htmlspecialchars($announcement->banner); ?>" alt="Banner" style="max-width: 100%; border-radius: 8px; margin-bottom: 10px;">
+                                <img 
+                                    src="<?php echo URLROOT . '/public/uploads/announcements/' . htmlspecialchars($announcement->banner); ?>" 
+                                    alt="Banner" 
+                                    style="max-width:100%;border-radius:8px;margin-bottom:10px;"
+                                >
                             </div>
-                        <?php else: ?>
-                            <!-- Debug: Banner not found or invalid -->
-                            <!-- <p>Banner not found for ID <?php echo $announcement->announcement_id; ?>: <?php echo htmlspecialchars($announcement->banner ?? 'NULL'); ?></p> -->
                         <?php endif; ?>
+
                         <div class="announcement-header">
                             <h4><?php echo htmlspecialchars($announcement->title); ?></h4>
                             <span class="announcement-date">
@@ -50,14 +49,19 @@
                                 <?php endif; ?>
                             </span>
                         </div>
+
                         <div class="announcement-body">
-                            <p><?php echo htmlspecialchars($announcement->content); ?></p>
+                            <p><?php echo nl2br(htmlspecialchars($announcement->content)); ?></p>
                         </div>
+
                         <div class="announcement-footer">
-                            <a href="<?php echo URLROOT; ?>/manager/editAnnouncement/<?php echo $announcement->announcement_id; ?>" class="btn btn-sm btn-warning edit-announcement-btn">
+                            <a 
+                                href="<?php echo URLROOT; ?>/manager/editAnnouncement/<?php echo $announcement->announcement_id; ?>" 
+                                class="btn btn-primary"
+                            >
                                 <i class="bx bx-edit"></i> Edit
                             </a>
-                            <button class="delete-announcement-btn btn btn-sm btn-danger">
+                            <button class="btn btn-sm btn-danger delete-btn">
                                 <i class="bx bx-trash"></i> Delete
                             </button>
                         </div>
@@ -67,127 +71,68 @@
         <?php endif; ?>
     </div>
 
-    <!-- Custom Confirmation Modal -->
-    <div id="confirmModal" class="modal" style="display: none;">
+    <!-- Confirmation Modal -->
+    <div id="confirmModal" class="modal" style="display:none;">
         <div class="modal-content">
-            <h3>Confirm Action</h3>
+            <h3>Confirm Deletion</h3>
             <p>Are you sure you want to delete this announcement?</p>
             <div class="modal-actions">
-                <button id="confirmDelete" class="btn btn-danger">OK</button>
-                <button id="cancelDelete" class="btn btn-success">Cancel</button>
+                <button id="confirmDelete" class="btn btn-danger">Yes, Delete</button>
+                <button id="cancelDelete" class="btn btn-secondary">Cancel</button>
             </div>
         </div>
     </div>
 </main>
 
-<script src="https://cdn.jsdelivr.net/npm/toastify-js"></script>
 <script>
-const URLROOT = '<?php echo URLROOT; ?>';
+const BASE = '<?php echo URLROOT; ?>';
 
-// Handle Delete Announcement
-document.addEventListener('click', (e) => {
-    if (e.target.classList.contains('delete-announcement-btn') || e.target.closest('.delete-announcement-btn')) {
-        const announcementItem = e.target.closest('.announcement-item');
-        const announcementId = announcementItem.dataset.announcementId;
-        const confirmModal = document.getElementById('confirmModal');
-        const resultModal = document.getElementById('resultModal');
-        const resultTitle = document.getElementById('resultModalTitle');
-        const resultMessage = document.getElementById('resultModalMessage');
-        const resultClose = document.getElementById('resultModalClose');
-
-        confirmModal.style.display = 'flex';
-
-        document.getElementById('confirmDelete').onclick = () => {
-            fetch(`${URLROOT}/manager/deleteAnnouncement`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ announcement_id: announcementId })
-            })
-            .then(response => {
-                if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
-                return response.json();
-            })
-            .then(data => {
-                resultTitle.textContent = data.success ? 'Success' : 'Error';
-                resultMessage.textContent = data.message || (data.success ? 'Announcement deleted successfully!' : 'Failed to delete announcement.');
-                resultClose.className = `btn ${data.success ? 'btn-success' : 'btn-danger'}`; // Green for success, red for error
-                resultModal.style.display = 'flex';
-                if (data.success) setTimeout(() => window.location.reload(), 2000); // Reload after 2 seconds on success
-            })
-            .catch(error => {
-                console.error('Error deleting announcement:', error);
-                resultTitle.textContent = 'Error';
-                resultMessage.textContent = 'An error occurred while deleting the announcement.';
-                resultClose.className = 'btn btn-danger';
-                resultModal.style.display = 'flex';
-            });
-
-            confirmModal.style.display = 'none';
-        };
-
-        document.getElementById('cancelDelete').onclick = () => {
-            confirmModal.style.display = 'none';
-        };
-
-        // Close the result modal
-        resultClose.onclick = () => {
-            resultModal.style.display = 'none';
-        };
-    }
-});
-
-
-// Search Announcements
-document.getElementById('announcement-search')?.addEventListener('input', function(e) {
-    const searchTerm = e.target.value.toLowerCase();
+// Search
+document.getElementById('announcement-search')?.addEventListener('input', e => {
+    const term = e.target.value.toLowerCase();
     document.querySelectorAll('.announcement-item').forEach(item => {
-        const title = item.querySelector('h4')?.textContent.toLowerCase() || '';
-        const content = item.querySelector('.announcement-body p')?.textContent.toLowerCase() || '';
-        item.style.display = 
-            title.includes(searchTerm) || content.includes(searchTerm) 
-            ? 'block' : 'none';
+        const text = item.textContent.toLowerCase();
+        item.style.display = text.includes(term) ? '' : 'none';
     });
 });
 
-
-// Handle Delete Announcement
-document.addEventListener('click', (e) => {
-    if (e.target.classList.contains('delete-announcement-btn') || e.target.closest('.delete-announcement-btn')) {
-        const announcementItem = e.target.closest('.announcement-item');
-        const announcementId = announcementItem.dataset.announcementId;
-        const confirmModal = document.getElementById('confirmModal');
-
-        confirmModal.style.display = 'flex';
-
-        document.getElementById('confirmDelete').onclick = () => {
-            fetch(`${URLROOT}/manager/deleteAnnouncement`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ announcement_id: announcementId })
-            })
-            .then(response => {
-                if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
-                return response.json();
-            })
-            .then(data => {
-                // Reload the page regardless of success or failure
-                window.location.reload();
-            })
-            .catch(error => {
-                console.error('Error deleting announcement:', error);
-                // Reload the page even if there's an error
-                window.location.reload();
-            });
-
-            confirmModal.style.display = 'none';
-        };
-
-        document.getElementById('cancelDelete').onclick = () => {
-            confirmModal.style.display = 'none';
-        };
+// Delete flow
+let targetId = null;
+document.body.addEventListener('click', e => {
+    if (e.target.closest('.delete-btn')) {
+        targetId = e.target.closest('.announcement-item').dataset.id;
+        document.getElementById('confirmModal').style.display = 'flex';
     }
 });
 
+document.getElementById('confirmDelete').onclick = () => {
+    fetch(`${BASE}/manager/deleteAnnouncement`, {
+        method: 'POST',
+        headers: {'Content-Type':'application/json'},
+        body: JSON.stringify({ announcement_id: targetId })
+    })
+    .then(r => r.json())
+    .then(res => {
+        Toastify({
+            text: res.message,
+            duration: 3000,
+            gravity: "top",
+            position: "right",
+            backgroundColor: res.success ? "green" : "red"
+        }).showToast();
+        if (res.success) setTimeout(() => location.reload(), 1500);
+    })
+    .catch(() => {
+        Toastify({ text: "Error deleting.", duration:3000, gravity:"top", position:"right", backgroundColor:"red" }).showToast();
+    })
+    .finally(() => {
+        document.getElementById('confirmModal').style.display = 'none';
+    });
+};
+
+document.getElementById('cancelDelete').onclick = () => {
+    document.getElementById('confirmModal').style.display = 'none';
+};
 </script>
 
 <style>

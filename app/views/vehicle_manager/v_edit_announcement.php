@@ -2,41 +2,40 @@
 <?php require APPROOT . '/views/inc/components/sidebar_vehicle_manager.php'; ?>
 <?php require APPROOT . '/views/inc/components/topnavbar.php'; ?>
 
-<link href="<?php echo URLROOT; ?>/public/boxicons/css/boxicons.min.css" rel="stylesheet">
-<link href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css" rel="stylesheet">
-<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap" rel="stylesheet">
-
 <main>
     <div class="edit-announcement-container">
         <h2><?php echo empty($data['announcement']->announcement_id) ? 'Create Announcement' : 'Edit Announcement'; ?></h2>
         <div class="form-card">
             <form action="<?php echo URLROOT; ?>/manager/<?php echo empty($data['announcement']->announcement_id) ? 'createAnnouncement' : 'updateAnnouncement'; ?>" method="POST" enctype="multipart/form-data" id="announcement-form" novalidate>
                 <input type="hidden" name="announcement_id" value="<?php echo htmlspecialchars($data['announcement']->announcement_id); ?>">
+                
                 <div class="form-group">
                     <label for="title">Title <span class="required">*</span></label>
                     <input type="text" id="title" name="title" class="form-control" value="<?php echo htmlspecialchars($data['announcement']->title); ?>" required>
                 </div>
+
                 <div class="form-group">
                     <label for="content">Content <span class="required">*</span></label>
                     <textarea id="content" name="content" class="form-control" rows="8" required><?php echo htmlspecialchars($data['announcement']->content); ?></textarea>
                 </div>
+
                 <div class="form-group">
                     <label for="banner">Banner Image (JPEG, max 2MB, optional)</label>
-                    <input type="file" id="banner" name="banner" class="form-control" accept="image/jpeg">
+                    <input type="file" id="banner" name="banner" class="form-control" accept="image/jpeg,image/png">
+                    
                     <div id="banner-preview" class="banner-preview"></div>
+
                     <?php if (!empty($data['announcement']->banner) && file_exists('public/uploads/announcements/' . $data['announcement']->banner)): ?>
                         <div class="current-banner">
                             <p>Current Banner:</p>
-                            <img src="<?php echo URLROOT . '/public/public/uploads/announcements/' . htmlspecialchars($data['announcement']->banner); ?>" alt="Current Banner">
-                            <!-- Debug: Print URLROOT and banner (comment out in production) -->
-                            <!-- <p>URLROOT: <?php echo htmlspecialchars(URLROOT); ?></p> -->
-                            <!-- <?php var_dump($data['announcement']->banner); ?> -->
+                            <img src="<?php echo URLROOT . '/public/uploads/announcements/' . htmlspecialchars($data['announcement']->banner); ?>" alt="Current Banner">
                             <label class="remove-banner-label">
                                 <input type="checkbox" name="remove_banner" value="1"> Remove Banner
                             </label>
                         </div>
                     <?php endif; ?>
                 </div>
+
                 <div class="button-row">
                     <button type="submit" class="btn btn-primary"><?php echo empty($data['announcement']->announcement_id) ? 'Create' : 'Update'; ?></button>
                     <a href="<?php echo URLROOT; ?>/manager/announcements" class="btn btn-secondary">Cancel</a>
@@ -46,25 +45,13 @@
     </div>
 </main>
 
-<script src="https://cdn.jsdelivr.net/npm/toastify-js"></script>
 <script>
-
 // Client-side banner preview
 document.getElementById('banner')?.addEventListener('change', function(e) {
     const preview = document.getElementById('banner-preview');
     preview.innerHTML = '';
     const file = e.target.files[0];
     if (file) {
-        if (file.type !== 'image/jpeg') {
-            alert('Please upload a JPEG image.');
-            e.target.value = '';
-            return;
-        }
-        // if (file.size > 2 * 1024 * 1024) {
-        //     alert('Banner file size exceeds 2MB.');
-        //     e.target.value = '';
-        //     return;
-        // }
         const reader = new FileReader();
         reader.onload = function(e) {
             const img = document.createElement('img');
@@ -228,13 +215,14 @@ document.getElementById('banner')?.addEventListener('change', function(e) {
     max-height: 100px;
 }
 
-#announcement-form textarea{
-    resize:vertical;
+#announcement-form textarea {
+    resize: vertical;
 }
 
 #announcement-form > div:nth-child(4) > div.current-banner > label > input[type=checkbox] {
     width: 25px;
 }
+
 /* Fade-in animation */
 @keyframes fadeIn {
     from {
