@@ -556,9 +556,10 @@ class Auth extends Controller
     public function profile()
     {
         $userId = $_SESSION['user_id'];
-        $supplierModel = $this->model('M_Supplier');
 
-        if(RoleHelper::hasRole(5)) {
+
+        if(isset($_SESSION['supplier_id'])) {
+            $supplierModel = $this->model('M_Supplier');
             $profileData = $supplierModel->getSupplierProfile($userId);
             
         } else {
@@ -589,7 +590,7 @@ class Auth extends Controller
             ];
             
 
-            if(RoleHelper::hasRole(5)) { // for the supplier only
+            if(isset($_SESSION['supplier_id'])) { // for the supplier only
                 $profileData = $supplierModel->getSupplierProfile($userId);
                 $data['supplier_id'] = $profileData['supplier']->supplier_id;
                 $data['profile_id'] = $profileData['profile']->profile_id;
@@ -616,8 +617,8 @@ class Auth extends Controller
                     $data['image_path'] = $uploadPath;
                     setFlashMessage('Image uploaded successfully!');
                 } else {
-                    setFlashMessage('Image upload failed, try again later!');
-                    redirect('Supplier/profile');
+                    setFlashMessage('Image upload failed, try again later!', 'warning');
+                    redirect('auth/profile');
                 }
             }
             if (RoleHelper::hasRole(5)) {

@@ -35,7 +35,7 @@ class M_Fertilizer
 
     public function getfertilizer()
     {
-        $sql = "SELECT * FROM Fertilizer";
+        $sql = "SELECT * FROM Fertilizer where is_deleted = 0";
         $this->db->query($sql);
 
         try {
@@ -48,7 +48,7 @@ class M_Fertilizer
 
     public function deleteFertilizer($id)
     {
-        $sql = "DELETE FROM Fertilizer WHERE id = :id";
+        $sql = "UPDATE Fertilizer SET is_deleted = 1 WHERE id = :id";
         $this->db->query($sql);
         $this->db->bind('id', $id);
         return $this->db->execute();
