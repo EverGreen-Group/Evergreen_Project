@@ -95,6 +95,7 @@
     <?php if (!empty($data['my_requests'])): ?>
       <div class="requests-container">
         <?php foreach($data['my_requests'] as $request): ?>
+          <?php if($request->status == 'Pending'): ?>
           <div class="request-card searchable-item" data-status="<?php echo strtolower($request->status); ?>" data-date="<?php echo date('Y-m-d', strtotime($request->date)); ?>">
             <div class="card-content">
               <div class="card-header">
@@ -134,6 +135,7 @@
               </div>
             </div>
           </div>
+          <?php endif; ?>
         <?php endforeach; ?>
       </div>
     <?php else: ?>

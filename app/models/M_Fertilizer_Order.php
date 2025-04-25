@@ -144,7 +144,7 @@ class M_Fertilizer_Order {
     }
 
     public function getAllFertilizerTypes() {                       // bug free function
-        $this->db->query("SELECT id as fertilizer_id, fertilizer_name, company_name, details, code, price, quantity FROM Fertilizer WHERE quantity > 0");
+        $this->db->query("SELECT id as fertilizer_id, fertilizer_name, company_name, details, code, price, quantity, image_path FROM Fertilizer WHERE quantity > 0 AND is_deleted = 0");
         return $this->db->resultset();
     }
   
