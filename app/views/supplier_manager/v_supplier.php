@@ -45,7 +45,7 @@
                     </div>
                 </li>
 
-                <li class="stat-card">
+                <!-- <li class="stat-card">
                     <div class="stat-content">
                         <i class='bx bx-check'></i>
                         <div class="stat-info">
@@ -53,7 +53,7 @@
                             <p>Currently Active</p>
                         </div>
                     </div>
-                </li>
+                </li> -->
 
             </ul>
 
@@ -140,7 +140,7 @@
                                             
                                             <!-- Delete button with icon only -->
                                             <a 
-                                                href="<?php echo URLROOT; ?>/manager/deleteSupplier/<?php echo $supplier->supplier_id; ?>" 
+                                                href="<?php echo URLROOT; ?>/manager/removeSupplier/<?php echo $supplier->supplier_id; ?>" 
                                                 class="btn btn-tertiary" 
                                                 style="display: flex; align-items: center; justify-content: center; width: 40px; height: 40px; border: none; background: none;" 
                                             >
