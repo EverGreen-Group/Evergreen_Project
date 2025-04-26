@@ -46,6 +46,10 @@ class Pages extends Controller {
         $this->view('pages/store', $data);
     }
 
+    public function about() {
+        $this->view('pages/about');
+    }
+
     //temporary function to test fertilizer order
     public function fertilizerTypes() {
         $fertilizers = $this->fertilizerOrderModel->getAllFertilizerTypes();
