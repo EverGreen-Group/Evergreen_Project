@@ -56,5 +56,18 @@ class M_Inventory_Config{
         return $this->db->resultSet();
     }
 
+    public function get_income_by_month(){
+        $this->db->query("SELECT 
+            DATE_FORMAT(create_at, '%Y-%m') AS month,
+            SUM(export_price * export_quantity) AS total_income
+        FROM export_data
+        WHERE create_at >= DATE_SUB(CURDATE(), INTERVAL 3 MONTH)
+        GROUP BY month
+        ORDER BY month ASC
+        ");
+        return $this->db->resultSet();
+    }
+
+
 
 }

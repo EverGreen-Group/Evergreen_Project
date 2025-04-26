@@ -1043,16 +1043,49 @@ class Inventory extends controller
 
             // Log the data array
             // error_log(print_r($data, true));
-
+           
             // print_r("qwe");
             $this->inventoryConfigModel->add_inventory_config($data);
 
         }
 
+        $totalteaweight = $this->inventoryConfigModel->get_total_tea_weightBymonth();
+        $export= $this->inventoryConfigModel->get_total_tea_weightBymonth_export();
+        $netincome = $this->inventoryConfigModel->get_income_by_month();
+
+        $data2 = [];
+
+        $exportAmountsByMonth = [];
+        foreach ($export as $exp) {
+            $exportAmountsByMonth[$exp->month] = $exp->total_quantity;
+        }
+
+        $netincomeByMonth = [];
+        foreach ($netincome as $net) {
+            $netincomeByMonth[$net->month] = $net->total_income;
+        }
+        
+        // Step 2: Merge data into a single array for the view
+        $overviewData = [];
+        foreach ($totalteaweight as $tea) {
+            $month = $tea->month;
+            $overviewData[] = [
+                'month' => $month,
+                'total_tea_weight' => $tea->total_quantity,
+                'export_amount' => isset($exportAmountsByMonth[$month]) ? $exportAmountsByMonth[$month] : '0',
+                'net_income' => isset($netincomeByMonth[$month]) ? $netincomeByMonth[$month]:'0' // Placeholder
+            ];
+        }
+
+
+        var_dump($netincomeByMonth);
+        var_dump($export);
 
         $fertilizer = $this->fertilizerModel->getfertilizer();
         $data = [
-            'fertilizer' => $fertilizer
+            'overviewData' => $overviewData,
+            'fertilizer' => $fertilizer,
+            
         ];
 
 

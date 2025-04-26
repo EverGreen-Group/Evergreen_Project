@@ -67,10 +67,10 @@
 					View Raw Leaf History
 				</a>
 
-				<a href="<?php echo URLROOT; ?>/inventory/payments" class="btn btn-primary">
+				<!-- <a href="<?php echo URLROOT; ?>/inventory/payments" class="btn btn-primary">
 					<i class='bx bx-cog'></i>
 					Manage Rates
-				</a>
+				</a> -->
 
 			</div>
 			<div class="chart-container-wrapper" style="position:relative; width:100%; height:300px; padding:20px;">

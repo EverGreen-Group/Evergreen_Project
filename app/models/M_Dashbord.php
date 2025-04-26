@@ -220,7 +220,7 @@ class M_Dashbord
     }
 
 
-    // UPDATE PART PLS RECHECK ISHAN
+    // UPDATE PART
 
     // Get bag by history_id
     public function getBagByHistoryId($historyId)

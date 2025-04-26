@@ -53,7 +53,7 @@
       body: JSON.stringify(data),
     }).then(response => {
       console.log("Response:", response);
-      location.reload();
+      // location.reload();
     })
       .catch(error => {
         console.error("Error:", error);
@@ -270,6 +270,7 @@
     <div class="modal-content">
       <span class="close" onclick="closeModal('addExportModal')">&times;</span>
       <h2>Add Export Record</h2>
+      <form method="post" action="<?php echo URLROOT?>/Export/release">
       <div class="stock-modal-content">
         <div class="vehicle-modal-content">
           <div class="vehicle-modal-details">
@@ -306,7 +307,7 @@
               </div>
 
               <div class="detail-row">
-                <span class="label">Price per kg ($):</span>
+                <span class="label">Price per kg (Rs):</span>
                 <span class="value">
                   <input type="number" id="exportPrice" name="price" required min=0
                     style="width: 100%; padding: 8px; box-sizing: border-box;" step="0.01">
@@ -330,11 +331,12 @@
             </div>
           </div>
           <div style="text-align: center; margin-top: 20px;">
-            <button type="submit" class="btn btn-primary full-width" onclick="addExportRecord(event)">ADD EXPORT
+            <button type="submit" class="btn btn-primary full-width" name="add_export">ADD EXPORT
               RECORD</button>
           </div>
         </div>
       </div>
+      </form>
     </div>
   </div>
 
