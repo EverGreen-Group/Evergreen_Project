@@ -48,22 +48,22 @@ class Export extends controller
 
              // Price validation
             
-            if (!is_numeric($data['price'])) {
+            if (!is_numeric($data['export_price'])) {
                 setFlashMessage('Price must be a number', 'error');
                 redirect('export/release');
             }
-            if ((float) $data['price'] <= 0) {
+            if ((float) $data['export_price'] <= 0) {
                 setFlashMessage('Price must be greater than zero', 'error');
                 redirect('export/release');
             }
 
             // Quantity validation
             
-            if (!is_numeric($data['quantity'])) {
+            if (!is_numeric($data['export_quantity'])) {
                 setFlashMessage('Quantity must be a number', 'error');
                 redirect('export/release');
             }
-            if ((float) $data['quantity'] <= 0) {
+            if ((float) $data['export_quantity'] <= 0) {
                 setFlashMessage('Quantity must be greater than zero', 'error');
                 redirect('export/release');
             }

@@ -7,6 +7,7 @@ require_once APPROOT . '/models/M_Machine.php';
 require_once APPROOT . '/models/M_Inventory_Config.php';
 require_once APPROOT . '/models/M_Fertilizer_Order.php';
 require_once '../app/models/M_Products.php';
+require_once APPROOT . '/services/EmailService.php';
 
 class Inventory extends controller
 {
@@ -20,6 +21,8 @@ class Inventory extends controller
     private $leafchartdata;
     private $fertilizerOrderModel;
     private $logModel;
+    private $notificationModel;
+    private $userModel;
 
 
 
@@ -36,6 +39,8 @@ class Inventory extends controller
         $this->inventoryConfigModel = new M_Inventory_Config();
         $this->leafchartdata = new M_Dashbord();
         $this->fertilizerOrderModel = new M_Fertilizer_Order();
+        $this->notificationModel = $this->model('M_Notification');
+        $this->userModel = $this->model('M_User');
 
         $this->logModel = $this->model('M_Log');
 
@@ -348,13 +353,14 @@ class Inventory extends controller
 
     public function fertilizer()
     {
-
         if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['status_approve'])) {
             $us = $_GET['id'];
 
-            // var_dump($us);
             $fid = $_POST['fertilizer_id'];
-            $fquantity = $_POST['quantity'];
+            $fquantity = $_POST['order_quantity'];
+            $supplierId = $_POST['supplier_id'];
+            $supplierName = $_POST['full_name'];
+            $supplierEmail = $_POST['supplier_email'];
 
             $fertilizer = $this->fertilizerModel->getFertilizerById($fid);
             if ($fertilizer) {
@@ -375,23 +381,43 @@ class Inventory extends controller
             }
 
             $this->fertilizerOrderModel->updateFertilizerByStatus($us, 'Approved');
+            
+            // Send notification email
+            $emailService = new EmailService();
+            $emailService->sendFertilizerRequest($supplierEmail, $supplierName, 'Accept');
+
+            $this->notificationModel->createNotification(
+                $this->userModel->getUserIdBySupplierId($supplierId),
+                'Fertilizer Request',
+                'Your fertilizer request has been accepted.',
+                ['link' => 'supplier/requestFertilizer/']
+            );
+
             // redirect('Inventory/fertilizerdashboard');
 
         } elseif ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['status_reject'])) {
             $us = $_GET['id'];
 
             $this->fertilizerOrderModel->updateFertilizerByStatus($us, 'Cancelled');
+            
+            // Send rejection email
+            $supplierId = $_POST['supplier_id'];
+            $supplierName = $_POST['full_name'];
+            $supplierEmail = $_POST['supplier_email'];
+            $emailService = new EmailService();
+            $emailService->sendFertilizerRequest($supplierEmail, $supplierName, 'Reject');
+
             // redirect('Inventory/fertilizerdashboard');
-
-
         }
 
 
-        $fertilizer = $this->fertilizerOrderModel->getfertilizerorderforInventory();
+        $fertilizerRequest = $this->fertilizerOrderModel->getfertilizerorderforInventory();
+        $fertilizer = $this->fertilizerModel->getfertilizer();
+        
         $approvedCount = 0;
         $pendingCount = 0;
 
-        foreach ($fertilizer as $recod) {
+        foreach ($fertilizerRequest as $recod) {
 
             if ($recod->status == 'Approved') {
                 $approvedCount += 1;
@@ -402,15 +428,14 @@ class Inventory extends controller
 
 
         }
-        $totalorders = count($fertilizer);
+        $totalorders = count($fertilizerRequest);
 
         $data = [
-            'fertilizers' => $fertilizer,
+            'fertilizerRequest' => $fertilizerRequest,
+            'fertilizer' => $fertilizer,
             'totalorder' => $totalorders,
             'approvedCount' => $approvedCount,
             'pendingCount' => $pendingCount,
-
-
         ];
 
         $this->view('inventory/v_fertilizer_available', $data);
@@ -539,7 +564,7 @@ class Inventory extends controller
                         http_response_code()
                     );
                     setFlashMessage('Fertilizer added successfully!');
-                    redirect('inventory/fertilizerdashboard');
+                    redirect('inventory/fertilizer');
                 } else {
                     echo "<pre>";
                     print_r($data);
@@ -573,7 +598,6 @@ class Inventory extends controller
         }
         if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['fertilizer_name'])) {
 
-            print_r($_POST);
 
             $data = [
                 'id' => $id,
@@ -703,7 +727,7 @@ class Inventory extends controller
                         http_response_code()
                     );
                     setFlashMessage('Fertilizer updated successfully!');
-                    redirect('inventory/fertilizerdashboard');
+                    redirect('inventory/fertilizer');
                 } else {
                     die('Something went wrong with the update');
                 }
@@ -1222,12 +1246,13 @@ class Inventory extends controller
         $activeBags = $this->stockvalidate->getBagsByStatus('active');
 
         // Get inactive bags (status = 'inactive')
-        $inactiveBags = $this->stockvalidate->getBagsByStatus('inactive');
+        $inactiveBags1 = $this->stockvalidate->getBagsByStatus('inactive');
+        $inactiveBags = $this->stockvalidate->getInactiveBags();
 
         // Calculate statistics
-        $totalBags = count($activeBags) + count($inactiveBags);
+        $totalBags = count($activeBags) + count($inactiveBags1);
         $activeBagsCount = count($activeBags);
-        $inactiveBagsCount = count($inactiveBags);
+        $inactiveBagsCount = count($inactiveBags1);
 
         // Calculate total capacity
         $totalCapacity = 0;
@@ -1252,7 +1277,7 @@ class Inventory extends controller
     }
 
 
-    public function markAsInactive($id = null)
+    public function markAsActive($id = null)
     {
         if (!$id) {
             setFlashMessage('Invalid bag id, bag may not be used!', 'error');
@@ -1271,17 +1296,17 @@ class Inventory extends controller
             redirect('inventory/collectionBags');
         }
 
-        if ($bag->status !== 'active') {
-            setFlashMessage('Bag is already inactive!', 'error');
+        if ($bag->status !== 'inactive') {
+            setFlashMessage('Bag is already active!', 'error');
             redirect('inventory/collectionBags');
         }
 
-        if ($this->stockvalidate->markAsInactive($id)) {
+        if ($this->stockvalidate->markAsActive($id)) {
             $this->logModel->create(
                 $_SESSION['user_id'],
                 $_SESSION['email'],
                 $_SERVER['REMOTE_ADDR'],
-                "Bag with ID {$id} has been marked as inactive.",
+                "Bag with ID {$id} has been marked as active.",
                 $_SERVER['REQUEST_URI'],
                 http_response_code()
             );
@@ -1291,7 +1316,7 @@ class Inventory extends controller
                 $_SESSION['user_id'],
                 $_SESSION['email'],
                 $_SERVER['REMOTE_ADDR'],
-                "Failed to mark bag with ID {$id} as inactive.",
+                "Failed to mark bag with ID {$id} as active.",
                 $_SERVER['REQUEST_URI'],
                 http_response_code()
             );
@@ -1339,7 +1364,7 @@ class Inventory extends controller
 
             $data = [
                 'capacity_kg' => trim($_POST['capacity_kg']),
-                'status' => 'inactive'
+                'status' => 'active'
             ];
 
             if (empty($data['capacity_kg']) || !is_numeric($data['capacity_kg']) || $data['capacity_kg'] <= 0) {
@@ -1434,6 +1459,50 @@ class Inventory extends controller
 
             $this->view('inventory/v_manage_rate_form', $data);
         }
+    }
+
+
+    public function viewFertilizerRequests(){
+        $fertilizerRequest = $this->fertilizerOrderModel->getfertilizerorderforInventory();
+        $data = [
+            'fertilizerRequest' => $fertilizerRequest
+        ];
+        // echo "<pre>";
+        // print_r($fertilizerRequest);
+        // echo "</pre>";
+
+        $this->view('inventory/v_fertilizer_request', $data);
+    }
+
+    public function markRequestAsPaid($orderId) {
+        if(!$orderId) {
+            setFlashMessage('No order id exists', 'warning');
+            redirect('inventory/viewFertilizerRequests');
+        }
+
+        $status = 'Paid';
+        $this->fertilizerOrderModel->updatePaymentStatus($orderId, $status);
+        redirect('inventory/viewFertilizerRequests');
+    }
+
+    public function markRequestAsFailed($orderId) {
+        if(!$orderId) {
+            setFlashMessage('No order id exists', 'warning');
+            redirect('inventory/viewFertilizerRequests');
+        }
+
+        $status = 'Failed';
+        $this->fertilizerOrderModel->updatePaymentStatus($orderId, $status);
+        redirect('inventory/viewFertilizerRequests');
+    }
+
+    public function viewBagUsageHistory() {
+        $bagHistory = $this->stockvalidate->getBagUsageHistory();
+        $data = [
+            'bagHistory' => $bagHistory
+        ];
+
+        $this->view('inventory/v_bag_usage_history', $data);
     }
 
 }
