@@ -363,5 +363,10 @@ class M_Dashbord
         }
     }
 
+    public function getcompletecollections()
+    {
+        $this->db->query('SELECT * FROM collections WHERE status = "Completed"');
+        return $this->db->resultSet();
+    }
 
 }

@@ -84,21 +84,14 @@
       <i class='bx bxs-shopping-bag'></i>
       <span class="text">
         <p>Total Exports</p>
-        <h3><?php echo isset($data['totalVehicles']) ? $data['totalVehicles'] : '0'; ?></h3>
+        <h3><?php echo isset($data['all_exports_count']) ? $data['all_exports_count'] : '0'; ?></h3>
       </span>
     </li>
     <li>
       <i class='bx bxs-user'></i>
       <span class="text">
         <p>Total Exports For Last Month</p>
-        <h3><?php echo isset($data['a']) ? $data['a'] : '0'; ?></h3>
-      </span>
-    </li>
-    <li>
-      <i class='bx bxs-user'></i>
-      <span class="text">
-        <p>Ready to Export</p>
-        <h3><?php echo isset($data['b']) ? $data['b'] : '0'; ?></h3>
+        <h3><?php echo isset($data['lastmonth_exports_count']) ? $data['lastmonth_exports_count'] : '0'; ?></h3>
       </span>
     </li>
   </ul>

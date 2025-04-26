@@ -54,6 +54,7 @@ class Inventory extends controller
         $machine = $this->machineModel->getmachines();
         $fertilizer = $this->fertilizerOrderModel->getfertilizerorderforInventory();
         $awaitingstock = $this->stockvalidate->getvalidateStocks();
+        $approvecollection = $this->stockvalidate->getcompletecollections();
 
         // Process the leaf quantities data for the chart
         $normalLeafData = [];
@@ -89,13 +90,14 @@ class Inventory extends controller
         ksort($superLeafData);
 
         $awaitingInventory = count($awaitingstock);
-        $kgApprovedToday = 100;
+        $kgApprovedToday = count($approvecollection);
         $fertilizerOrders = count($fertilizer);
         $activeBags = $this->stockvalidate->getBagsByStatus('active');
         $inactiveBags = $this->stockvalidate->getBagsByStatus('inactive');
 
         $activeBagsCount = count($activeBags);
         $inactiveBagsCount = count($inactiveBags);
+        
 
         $data = [
             'stockvalidate' => $stockvalidate,
@@ -1078,8 +1080,7 @@ class Inventory extends controller
         }
 
 
-        var_dump($netincomeByMonth);
-        var_dump($export);
+        
 
         $fertilizer = $this->fertilizerModel->getfertilizer();
         $data = [
