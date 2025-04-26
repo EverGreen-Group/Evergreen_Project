@@ -31,4 +31,43 @@ class M_Inventory_Config{
         
 
     }
+    public function get_total_tea_weightBymonth() {
+        $this->db->query("
+           SELECT 
+            DATE_FORMAT(finalized_at, '%Y-%m') AS month,
+            SUM(actual_weight_kg) AS total_quantity
+        FROM bag_usage_history
+        WHERE finalized_at >= DATE_SUB(CURDATE(), INTERVAL 3 MONTH)
+        GROUP BY month
+        ORDER BY month ASC
+        ");
+        return $this->db->resultSet();
+    }
+
+    public function get_total_tea_weightBymonth_export(){
+        $this->db->query("SELECT 
+            DATE_FORMAT(create_at, '%Y-%m') AS month,
+            SUM(export_quantity) AS total_quantity
+        FROM export_data
+        WHERE create_at >= DATE_SUB(CURDATE(), INTERVAL 3 MONTH)
+        GROUP BY month
+        ORDER BY month ASC
+        ");
+        return $this->db->resultSet();
+    }
+
+    public function get_income_by_month(){
+        $this->db->query("SELECT 
+            DATE_FORMAT(create_at, '%Y-%m') AS month,
+            SUM(export_price * export_quantity) AS total_income
+        FROM export_data
+        WHERE create_at >= DATE_SUB(CURDATE(), INTERVAL 3 MONTH)
+        GROUP BY month
+        ORDER BY month ASC
+        ");
+        return $this->db->resultSet();
+    }
+
+
+
 }

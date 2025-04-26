@@ -27,72 +27,39 @@
                 </li>
             </ul>
         </div>
-        <div class="head-actions">
+        <!-- <div class="head-actions">
             <button class="btn-download" id="downloadBtn">
                 <i class='bx bx-download'></i> Export Report
             </button>
-        </div>
+        </div> -->
     </div>
 
     <!-- Monthly Supplier Payrolls -->
     <div class="table-data">
         <div class="order">
             <div class="head">
-                <h3>Monthly Income Overview - 2024</h3>
+                <h3>Income Overview of Last 3 Month</h3>
             </div>
             <table class="payment-overview-table">
-                <thead>
-                    <tr>
-                        <th>Month</th>
-                        <th>Total Suppliers</th>
-                        <th>Total Tea Weight (kg)</th>
-                        <th>Gross Amount (Rs.)</th>
-                        <th>Export Amount</th>
-                        <th>Net Profit (Rs.)</th>
-                        
-                    </tr>
-                </thead>
-                <tbody>
-                    <tr class="clickable-row">
-                        <td>March</td>
-                        <td>15</td>
-                        <td>2,450.5</td>
-                        <td>285,740.00</td>
-                        <td>65,000.00</td>
-                        <td>220,740.00</td>
-                        
-                    </tr>
-                    <tr class="clickable-row">
-                        <td>February</td>
-                        <td>14</td>
-                        <td>2,280.0</td>
-                        <td>265,300.00</td>
-                        <td>48,000.00</td>
-                        <td>217,300.00</td>
-                        
-                    </tr>
-                    <tr class="clickable-row">
-                        <td>January</td>
-                        <td>13</td>
-                        <td>2,150.0</td>
-                        <td>248,500.00</td>
-                        <td>52,000.00</td>
-                        <td>196,500.00</td>
-                        
-                    </tr>
-                </tbody>
-                <tfoot>
-                    <tr>
-                        <td><strong>Year Total</strong></td>
-                        <td><strong>14 (avg)</strong></td>
-                        <td><strong>6,880.5</strong></td>
-                        <td><strong>799,540.00</strong></td>
-                        <td><strong>165,000.00</strong></td>
-                        <td><strong>634,540.00</strong></td>
-                        <td colspan="2"></td>
-                    </tr>
-                </tfoot>
-            </table>
+    <thead>
+        <tr>
+            <th>Month</th>
+            <th>Total Tea Weight (kg)</th>
+            <th>Export Amount (kg)</th>
+            <th>Net Income (Rs.)</th>
+        </tr>
+    </thead>
+    <tbody>
+        <?php foreach ($overviewData as $row): ?>
+            <tr class="clickable-row">
+                <td><?= date('F Y', strtotime($row['month'].'-01')) ?></td>
+                <td><?= number_format($row['total_tea_weight'], 2) ?></td>
+                <td><?= number_format($row['export_amount'], 2) ?></td>
+                <td><?= number_format($row['net_income'], 2) ?></td>
+            </tr>
+        <?php endforeach; ?>
+    </tbody>
+</table>
         </div>
     </div>
 
@@ -110,7 +77,7 @@
                         <th>Total Quantity (kg)</th>
                         <th>Unit Price (Rs.)</th>
                         <th>Total Value (Rs.)</th>
-                        <th>No. of Orders</th>
+                       
                     </tr>
                 </thead>
                 <tbody>
@@ -120,14 +87,14 @@
                         foreach ($data['fertilizer'] as $item) {
                             $totalValue = $item->quantity * $item->price;
                             $grandTotal += $totalValue;
-                            $numOrders = rand(5, 20); // Replace this with your actual logic
+                            $numOrders = 1; // Replace this with your actual logic
                             ?>
                             <tr>
                                 <td><?php echo htmlspecialchars($item->fertilizer_name); ?></td>
                                 <td><?php echo htmlspecialchars($item->quantity); ?></td>
                                 <td><?php echo number_format($item->price, 2); ?></td>
                                 <td><?php echo number_format($totalValue, 2); ?></td>
-                                <td><?php echo $numOrders; ?></td>
+                               
                             </tr>
                             <?php
                         }
@@ -144,7 +111,7 @@
         </div>
     </div>
 
-    <!-- Rate Configuration Section -->
+    <!-- Rate Configuration Section
     <form method="post" Action="<?php echo URLROOT ?>/Inventory/payments">
     <input type="hidden" name="rate_config" value="1">
         <div class="table-data">
@@ -157,7 +124,7 @@
                 </div>
 
                 <div class="config-grid">
-                    <!-- Base Rates Section -->
+                    
                     <div class="config-section">
                         <h4><i class='bx bx-money'></i> Base Rates</h4>
                         <div class="config-item">
@@ -178,7 +145,7 @@
                         </div>
                     </div>
 
-                    <!-- Moisture Content Deductions -->
+                    
                     <div class="config-section">
                         <h4><i class='bx bx-droplet'></i> Fertilizer Stock Limitation</h4>
                         <div class="config-item">
@@ -202,7 +169,7 @@
 
                     </div>
 
-                    <!-- Leaf Age Deductions -->
+                
                     <div class="config-section">
                         <h4><i class='bx bx-time'></i> Leaf Age Deductions</h4>
                         <div class="config-item">
@@ -230,15 +197,15 @@
                 </div>
             </div>
         </div>
-    </form>
+    </form> -->
 
-    <div id="statementContent" class="pdf-only">
-        <!-- Today's Pending Payments -->
+    <!-- <div id="statementContent" class="pdf-only">
+        
         <div class="table-data">
             <div class="order statement-container">
-                <!-- Header Section -->
+                
                 <div class="statement-header">
-                    <!-- Company Info Section -->
+                    
                     <div class="company-info">
                         <div class="logo-container">
                             <img src="<?php echo URLROOT; ?>/public/img/logo.svg" alt="Tea Factory Logo" class="logo">
@@ -250,7 +217,7 @@
                         </div>
                     </div>
 
-                    <!-- Info Row -->
+                    
                     <div class="info-row">
                         <div class="supplier-details">
                             <h3>John Doe</h3>
@@ -272,7 +239,7 @@
                     </div>
                 </div>
 
-                <!-- Collection Records -->
+                
                 <div class="collection-records">
                     <h3 class="section-title">Collection Records</h3>
                     <table class="records-table">
@@ -361,7 +328,7 @@
                     </table>
                 </div>
 
-                <!-- Add after the collection-records div -->
+                
                 <div class="fertilizer-records">
                     <h3 class="section-title">Fertilizer Orders</h3>
                     <table class="records-table fertilizer-table">
@@ -396,7 +363,7 @@
                     </table>
                 </div>
 
-                <!-- Add Summary Section -->
+                
                 <div class="statement-summary">
                     <table class="summary-table">
                         <tr>
@@ -415,7 +382,7 @@
                 </div>
             </div>
         </div>
-    </div>
+    </div> -->
 </main>
 
 

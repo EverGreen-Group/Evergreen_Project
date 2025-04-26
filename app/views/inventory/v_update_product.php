@@ -110,7 +110,7 @@
                         <div class="info-row">
                             <label class="label" for="price">Price:</label>
                             <div class="input-with-prefix" style="display:flex; align-items:center;">
-                                <span class="prefix" style="margin-right:5px;">$</span>
+                                <span class="prefix" style="margin-right:5px;">Rs.</span>
                                 <input type="number" id="price" name="price" class="form-control" required value="<?php echo $data['product']->price ?? ''; ?>">
                             </div>
                         </div>

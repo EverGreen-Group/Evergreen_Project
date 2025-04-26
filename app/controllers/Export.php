@@ -19,39 +19,67 @@ class Export extends controller
     {
 
         // Get JSON input
-        $input = json_decode(file_get_contents("php://input"), true);
+        // $input = json_decode(file_get_contents("php://input"), true);
 
         // Debugging: Log received input
-        error_log(print_r($input, true));
+        // error_log(print_r($input, true));
 
 
-        if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+        if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['add_export'])) {
             // Validate JSON data
-            if (!isset($input['StockType'], $input['company'], $input['notes'], $input['Manager'], $input['price'], $input['Quantity'], $input['RegNo'])) {
+            if (!isset($_POST['stock-name'], $_POST['company-name'], $_POST['notes'], $_POST['manager'], $_POST['price'], $_POST['quantity'], $_POST['reg-no'])) {
                 http_response_code(400);
-                echo json_encode(['error' => 'Missing required fields']);
-                return;
+                // echo json_encode(['error' => 'Missing required fields']);
+                setFlashMessage('Missing required fields','error');
+                redirect('export/release');
+                
             }
 
             // Trim and sanitize input
             $data = [
-                'stock_name' => trim($input['StockType']),
-                'export_company' => trim($input['company']),
-                'note' => trim($input['notes']),
-                'manager_name' => trim($input['Manager']),
-                'export_price' => trim($input['price']),
-                'export_quantity' => trim($input['Quantity']),
-                'reg_no' => trim($input['RegNo']),
+                'stock_name' => trim($_POST['stock-name']),
+                'export_company' => trim($_POST['company-name']),
+                'note' => trim($_POST['notes']),
+                'manager_name' => trim($_POST['manager']),
+                'export_price' => trim($_POST['price']),
+                'export_quantity' => trim($_POST['quantity']),
+                'reg_no' => trim($_POST['reg-no']),
             ];
+
+             // Price validation
+            
+            if (!is_numeric($data['export_price'])) {
+                setFlashMessage('Price must be a number', 'error');
+                redirect('export/release');
+            }
+            if ((float) $data['export_price'] <= 0) {
+                setFlashMessage('Price must be greater than zero', 'error');
+                redirect('export/release');
+            }
+
+            // Quantity validation
+            
+            if (!is_numeric($data['export_quantity'])) {
+                setFlashMessage('Quantity must be a number', 'error');
+                redirect('export/release');
+            }
+            if ((float) $data['export_quantity'] <= 0) {
+                setFlashMessage('Quantity must be greater than zero', 'error');
+                redirect('export/release');
+            }
 
             // Insert data into database
             if ($this->exportModel->add_export_data($data)) {
-                http_response_code(201); // Created
-                echo json_encode(['message' => 'Export record added successfully']);
+                setFlashMessage('Export record added successfully','success');
+                redirect('export/release');
+                // http_response_code(201); // Created
+                // echo json_encode(['message' => 'Export record added successfully']);
 
             } else {
-                http_response_code(500);
-                echo json_encode(['error' => 'Database insertion failed']);
+                // http_response_code(500);
+                // echo json_encode(['error' => 'Database insertion failed']);
+                setFlashMessage('Database insertion failed','error');
+                redirect('export/release');
             }
 
 
@@ -107,10 +135,13 @@ class Export extends controller
                 }
             }
 
+            $l_m_e_count=count($lastmonth_exports);
+            $allexportcount=count($exportall);
 
-            
 
             $data = [
+                'all_exports_count' => $allexportcount,
+                'lastmonth_exports_count' => $l_m_e_count,
                 'exports' => $exportall,
                 'lastmonth_export' => $lastmonth_exports,
                 'revenue' => $revenue,

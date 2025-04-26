@@ -27,7 +27,7 @@
     </div>
 
 
-    <div class="table-data">
+    <!-- <div class="table-data">
         <div class="order">
             <div class="head">
                 <h3>Accepted Fertilizer Requests</h3>
@@ -72,7 +72,7 @@
                                 <td>
                                     <?php if ($fertilizer->payment_status == 'Pending'): ?>
                                         <div style="display: flex; gap: 5px;">
-                                            <!-- Approve button -->
+                                           
                                             <a href="<?php echo URLROOT; ?>/Inventory/markRequestAsPaid/<?php echo $fertilizer->order_id; ?>" 
                                                class="btn btn-tertiary" 
                                                style="display: flex; align-items: center; justify-content: center; width: 40px; height: 40px; border: none; background: none;"
@@ -80,7 +80,7 @@
                                                 <i class='bx bx-check-circle' style="font-size: 24px; color:green;"></i>
                                             </a>
                                             
-                                            <!-- Mark as Paid button -->
+                                            
                                             <a href="<?php echo URLROOT; ?>/Inventory/markRequestAsFailed/<?php echo $fertilizer->order_id; ?>" 
                                                class="btn btn-tertiary" 
                                                style="display: flex; align-items: center; justify-content: center; width: 40px; height: 40px; border: none; background: none;"
@@ -101,7 +101,7 @@
                 </tbody>
             </table>
         </div>
-    </div>
+    </div> -->
 
 
 
@@ -119,13 +119,14 @@
                         <th>Fertilizer Name</th>
                         <th>Company Name</th>
                         <th>Quantity</th>
+                        <th>Status</th>
                         <th>Inventory Date</th>
                     </tr>
                 </thead>
                 <tbody>
                     <?php if (!empty($data['fertilizerRequest'])): ?>
                         <?php foreach ($data['fertilizerRequest'] as $fertilizer): ?>
-                            <?php if($fertilizer->payment_status == 'Pending' || $fertilizer->payment_status == 'Approved'): ?>
+                            <?php if($fertilizer->status == 'Cancelled' || $fertilizer->status == 'Approved'): ?>
                             <tr>
                                 <td><?php echo htmlspecialchars($fertilizer->order_id); ?></td>
                                 <td>
@@ -137,6 +138,13 @@
                                 <td><?php echo htmlspecialchars($fertilizer->fertilizer_name); ?></td>
                                 <td><?php echo htmlspecialchars($fertilizer->company_name); ?></td>
                                 <td><?php echo htmlspecialchars($fertilizer->order_quantity); ?> kg</td>
+                                <td>
+                                    <span class="status-badge <?php 
+                                        echo $fertilizer->status == 'cancelled' ? 'removed' : 
+                                            ($fertilizer->status == 'Approved' ? 'added' : 'removed'); 
+                                    ?>">
+                                        <?php echo htmlspecialchars($fertilizer->status); ?>
+                                    </span>
                                 <td><?php echo htmlspecialchars($fertilizer->order_date); ?></td>
                             </tr>
                             <?php endif; ?>

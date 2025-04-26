@@ -53,7 +53,7 @@
       body: JSON.stringify(data),
     }).then(response => {
       console.log("Response:", response);
-      location.reload();
+      // location.reload();
     })
       .catch(error => {
         console.error("Error:", error);
@@ -84,21 +84,14 @@
       <i class='bx bxs-shopping-bag'></i>
       <span class="text">
         <p>Total Exports</p>
-        <h3><?php echo isset($data['totalVehicles']) ? $data['totalVehicles'] : '0'; ?></h3>
+        <h3><?php echo isset($data['all_exports_count']) ? $data['all_exports_count'] : '0'; ?></h3>
       </span>
     </li>
     <li>
       <i class='bx bxs-user'></i>
       <span class="text">
         <p>Total Exports For Last Month</p>
-        <h3><?php echo isset($data['a']) ? $data['a'] : '0'; ?></h3>
-      </span>
-    </li>
-    <li>
-      <i class='bx bxs-user'></i>
-      <span class="text">
-        <p>Ready to Export</p>
-        <h3><?php echo isset($data['b']) ? $data['b'] : '0'; ?></h3>
+        <h3><?php echo isset($data['lastmonth_exports_count']) ? $data['lastmonth_exports_count'] : '0'; ?></h3>
       </span>
     </li>
   </ul>
@@ -270,6 +263,7 @@
     <div class="modal-content">
       <span class="close" onclick="closeModal('addExportModal')">&times;</span>
       <h2>Add Export Record</h2>
+      <form method="post" action="<?php echo URLROOT?>/Export/release">
       <div class="stock-modal-content">
         <div class="vehicle-modal-content">
           <div class="vehicle-modal-details">
@@ -306,7 +300,7 @@
               </div>
 
               <div class="detail-row">
-                <span class="label">Price per kg ($):</span>
+                <span class="label">Price per kg (Rs):</span>
                 <span class="value">
                   <input type="number" id="exportPrice" name="price" required min=0
                     style="width: 100%; padding: 8px; box-sizing: border-box;" step="0.01">
@@ -330,11 +324,12 @@
             </div>
           </div>
           <div style="text-align: center; margin-top: 20px;">
-            <button type="submit" class="btn btn-primary full-width" onclick="addExportRecord(event)">ADD EXPORT
+            <button type="submit" class="btn btn-primary full-width" name="add_export">ADD EXPORT
               RECORD</button>
           </div>
         </div>
       </div>
+      </form>
     </div>
   </div>
 

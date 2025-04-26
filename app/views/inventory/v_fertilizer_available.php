@@ -24,9 +24,9 @@
                 <li><a class="active" href="#">Fertilizer</a></li>
             </ul>
         </div>
-        <a href="<?php echo URLROOT; ?>/inventory/fertilizerdashboard">
+        <!-- <a href="<?php echo URLROOT; ?>/inventory/fertilizerdashboard">
             <button class="btn btn-primary">Fertilizer Dashboard</button>
-        </a>
+        </a> -->
     </div>
 
     <!-- Stats section similar to collection bags -->

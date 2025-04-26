@@ -49,7 +49,7 @@
                     <div class="info-row">
                         <label class="label" for="actual_weight_kg">Actual Weight (kg):</label>
                         <input type="number" step="0.01" id="actual_weight_kg" name="actual_weight_kg"
-                            class="form-control" value="<?= $data['bag']->actual_weight_kg ?>" required>
+                            class="form-control" value="<?= $data['bag']->actual_weight_kg ?>" required min=0>
                     </div>
                     <div class="info-row">
                         <label class="label" for="leaf_age">Leaf Age:</label>

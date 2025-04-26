@@ -220,7 +220,7 @@ class M_Dashbord
     }
 
 
-    // UPDATE PART PLS RECHECK ISHAN
+    // UPDATE PART
 
     // Get bag by history_id
     public function getBagByHistoryId($historyId)
@@ -328,6 +328,11 @@ class M_Dashbord
         
         return $this->db->execute();
     }
+    public function getLastbagId() {
+        $this->db->query('SELECT bag_id FROM collection_bags ORDER BY bag_id DESC LIMIT 1');
+        
+        return $this->db->single();
+    }
 
 
     // TOTAL QUANTITY, BAGS, APPROVED, REMAINING BAGS IN A GIVEN COLLECTION FOR THE VALIDATION PAGE
@@ -375,6 +380,11 @@ class M_Dashbord
         }
     }
 
+    public function getcompletecollections()
+    {
+        $this->db->query('SELECT * FROM collections WHERE status = "Completed"');
+        return $this->db->resultSet();
+    }
     public function getBagUsageHistory() {
         $sql = "SELECT * FROM bag_usage_history buh INNER JOIN leaf_types lt ON buh.leaf_type_id = lt.leaf_type_id";
         $this->db->query($sql);

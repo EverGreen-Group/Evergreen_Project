@@ -154,7 +154,7 @@
   }
 </style>
 
-<script>
+<!-- <script>
 // Add this script at the bottom of your page, just above the closing PHP footer require
 
 document.addEventListener('DOMContentLoaded', function() {
@@ -227,7 +227,7 @@ document.addEventListener('DOMContentLoaded', function() {
     }
   });
 });
-</script>
+</script> -->
 
 <style>
 /* Add these styles to your existing <style> tag or CSS file */

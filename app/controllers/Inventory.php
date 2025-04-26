@@ -59,6 +59,7 @@ class Inventory extends controller
         $machine = $this->machineModel->getmachines();
         $fertilizer = $this->fertilizerOrderModel->getfertilizerorderforInventory();
         $awaitingstock = $this->stockvalidate->getvalidateStocks();
+        $approvecollection = $this->stockvalidate->getcompletecollections();
 
         // Process the leaf quantities data for the chart
         $normalLeafData = [];
@@ -94,13 +95,14 @@ class Inventory extends controller
         ksort($superLeafData);
 
         $awaitingInventory = count($awaitingstock);
-        $kgApprovedToday = 100;
+        $kgApprovedToday = count($approvecollection);
         $fertilizerOrders = count($fertilizer);
         $activeBags = $this->stockvalidate->getBagsByStatus('active');
         $inactiveBags = $this->stockvalidate->getBagsByStatus('inactive');
 
         $activeBagsCount = count($activeBags);
         $inactiveBagsCount = count($inactiveBags);
+        
 
         $data = [
             'stockvalidate' => $stockvalidate,
@@ -123,8 +125,20 @@ class Inventory extends controller
     public function product()
     {
         $products = $this->productModel->getAllProducts();
+        $Allproducts = $this->productModel->getproduct();
+        $inactivecount=0;
+
+        foreach ($Allproducts as $recod) {
+            if ($recod->is_deleted == 1) {
+                $inactivecount +=1;
+                
+            }
+            
+        }
+
         $totalProducts = count($products);
         $data = [
+            'totalInactive'=>$inactivecount,
             'products' => $products,
             'totalProducts' => $totalProducts,
         ];
@@ -203,16 +217,40 @@ class Inventory extends controller
                 redirect('inventory/createproduct');
             }
 
+            // Price validation
             if (empty($data['price'])) {
                 $data['price_err'] = 'Please enter price';
                 setFlashMessage($data['price_err'], 'error');
-                redirect('inventory/createproduct');
+                redirect('inventory/createproduct/');
             }
+            if (!is_numeric($data['price'])) {
+                $data['price_err'] = 'Price must be a number';
+                setFlashMessage($data['price_err'], 'error');
+                redirect('inventory/createproduct/');
+            }
+            if ((float) $data['price'] <= 0) {
+                $data['price_err'] = 'Price must be greater than zero';
+                setFlashMessage($data['price_err'], 'error');
+                redirect('inventory/createproduct/');
+            }
+
+            // Quantity validation
             if (empty($data['quantity'])) {
                 $data['quantity_err'] = 'Please enter quantity';
                 setFlashMessage($data['quantity_err'], 'error');
-                redirect('inventory/createproduct');
+                redirect('inventory/createproduct/');
             }
+            if (!is_numeric($data['quantity'])) {
+                $data['quantity_err'] = 'Quantity must be a number';
+                setFlashMessage($data['quantity_err'], 'error');
+                redirect('inventory/createproduct/');
+            }
+            if ((float) $data['quantity'] <= 0) {
+                $data['quantity_err'] = 'Quantity must be greater than zero';
+                setFlashMessage($data['quantity_err'], 'error');
+                redirect('inventory/createproduct/');
+            }
+
             if (
                 empty($data['product-name_err']) &&
                 empty($data['details_err']) && empty($data['price_err']) &&
@@ -326,9 +364,17 @@ class Inventory extends controller
 
             $fertilizer = $this->fertilizerModel->getFertilizerById($fid);
             if ($fertilizer) {
-                $newfquantity = max(0, $fertilizer->quantity - $fquantity);
-                $this->fertilizerModel->updatFertilizerwhenapprove($fid, $newfquantity);
-                setFlashMessage("Fertilizer Approved Successfully");
+                $newfquantity =  $fertilizer->quantity - $fquantity;
+
+                if ($newfquantity < 0) {
+
+                    setFlashMessage("Insufficient fertilizer quantity", "error");
+                    redirect('inventory/fertilizer');
+                }else {
+                
+                    $this->fertilizerModel->updatFertilizerwhenapprove($fid, $newfquantity);
+                    setFlashMessage("Fertilizer Approved Successfully");
+                }
             } else {
                 // Handle error: Fertilizer not found
                 setFlashMessage("Fertilizer not found");
@@ -367,10 +413,29 @@ class Inventory extends controller
 
         $fertilizerRequest = $this->fertilizerOrderModel->getfertilizerorderforInventory();
         $fertilizer = $this->fertilizerModel->getfertilizer();
+        
+        $approvedCount = 0;
+        $pendingCount = 0;
+
+        foreach ($fertilizerRequest as $recod) {
+
+            if ($recod->status == 'Approved') {
+                $approvedCount += 1;
+            }
+            if ($recod->status == 'Pending') {
+                $pendingCount += 1;
+            }
+
+
+        }
+        $totalorders = count($fertilizerRequest);
 
         $data = [
             'fertilizerRequest' => $fertilizerRequest,
-            'fertilizer' => $fertilizer
+            'fertilizer' => $fertilizer,
+            'totalorder' => $totalorders,
+            'approvedCount' => $approvedCount,
+            'pendingCount' => $pendingCount,
         ];
 
         $this->view('inventory/v_fertilizer_available', $data);
@@ -414,31 +479,74 @@ class Inventory extends controller
                     $data['image_path'] = $uniqueFilename;
                 }
             } else {
-                print_r("no file found");
+
+                setFlashMessage("no file found", "error");
             }
 
             // Validation
             if (empty($data['fertilizer_name'])) {
                 $data['fertilizer_name_err'] = "Please Enter Fertilizer name";
+                setFlashMessage($data['fertilizer_name_err'], 'error');
+                redirect('inventory/createfertilizer');
             }
             if (empty($data['company_name'])) {
                 $data['company_name_err'] = "Please Enter Company name";
+                setFlashMessage($data['company_name_err'], 'error');
+                redirect('inventory/createfertilizer');
             }
             if (empty($data['details'])) {
                 $data['details_err'] = "Please Enter Details";
+
+                setFlashMessage($data['details_err'], 'error');
+                redirect('inventory/createfertilizer');
             }
             if (empty($data['code'])) {
                 $data['code_err'] = "Please enter a code.";
+                setFlashMessage($data['code_err'], 'error');
+                redirect('inventory/createfertilizer');
             } elseif (substr($data['code'], 0, 2) !== 'FT') {
                 $data['code_err'] = "Code must start with 'FT'.";
+                setFlashMessage($data['code_err'], 'error');
+                redirect('inventory/createfertilizer');
+
             } elseif (strlen($data['code']) < 7) {
                 $data['code_err'] = "Code must be at least 7 characters long.";
+                setFlashMessage($data['code_err'], 'error');
+                redirect('inventory/createfertilizer');
             }
+
+            // Price validation
             if (empty($data['price'])) {
-                $data['price_err'] = "Please Enter Price";
+                $data['price_err'] = 'Please enter price';
+                setFlashMessage($data['price_err'], 'error');
+                redirect('inventory/createfertilizer/');
             }
+            if (!is_numeric($data['price'])) {
+                $data['price_err'] = 'Price must be a number';
+                setFlashMessage($data['price_err'], 'error');
+                redirect('inventory/createfertilizer/');
+            }
+            if ((float) $data['price'] <= 0) {
+                $data['price_err'] = 'Price must be greater than zero';
+                setFlashMessage($data['price_err'], 'error');
+                redirect('inventory/createfertilizer/');
+            }
+
+            // Quantity validation
             if (empty($data['quantity'])) {
-                $data['quantity_err'] = "Please Enter Quantity";
+                $data['quantity_err'] = 'Please enter quantity';
+                setFlashMessage($data['quantity_err'], 'error');
+                redirect('inventory/createfertilizer/');
+            }
+            if (!is_numeric($data['quantity'])) {
+                $data['quantity_err'] = 'Quantity must be a number';
+                setFlashMessage($data['quantity_err'], 'error');
+                redirect('inventory/createfertilizer/');
+            }
+            if ((float) $data['quantity'] <= 0) {
+                $data['quantity_err'] = 'Quantity must be greater than zero';
+                setFlashMessage($data['quantity_err'], 'error');
+                redirect('inventory/createfertilizer/');
             }
 
             if (
@@ -510,25 +618,76 @@ class Inventory extends controller
                 'unit_err' => '',
             ];
 
-            // Basic validation
+            // Fertilizer Name validation
             if (empty($data['fertilizer_name'])) {
                 $data['fertilizer_name_err'] = 'Please enter fertilizer name';
+                setFlashMessage($data['fertilizer_name_err'], 'error');
+                redirect('inventory/updatefertilizer/' . $data['id']);
             }
+
+            // Company Name validation
             if (empty($data['company_name'])) {
                 $data['company_name_err'] = 'Please select company name';
+                setFlashMessage($data['company_name_err'], 'error');
+                redirect('inventory/updatefertilizer/' . $data['id']);
             }
+
+            // Code validation
             if (empty($data['code'])) {
                 $data['code_err'] = 'Please enter code';
+                setFlashMessage($data['code_err'], 'error');
+                redirect('inventory/updatefertilizer/' . $data['id']);
+            } elseif (substr($data['code'], 0, 2) !== 'FT') {
+                $data['code_err'] = "Code must start with 'FT'.";
+                setFlashMessage($data['code_err'], 'error');
+                redirect('inventory/updatefertilizer/' . $data['id']);
+            } elseif (strlen($data['code']) < 7) {
+                $data['code_err'] = "Code must be at least 7 characters long.";
+                setFlashMessage($data['code_err'], 'error');
+                redirect('inventory/updatefertilizer/' . $data['id']);
             }
+
+            // Price validation
             if (empty($data['price'])) {
                 $data['price_err'] = 'Please enter price';
+                setFlashMessage($data['price_err'], 'error');
+                redirect('inventory/updatefertilizer/' . $data['id']);
             }
+            if (!is_numeric($data['price'])) {
+                $data['price_err'] = 'Price must be a number';
+                setFlashMessage($data['price_err'], 'error');
+                redirect('inventory/updatefertilizer/' . $data['id']);
+            }
+            if ((float) $data['price'] <= 0) {
+                $data['price_err'] = 'Price must be greater than zero';
+                setFlashMessage($data['price_err'], 'error');
+                redirect('inventory/updatefertilizer/' . $data['id']);
+            }
+
+            // Quantity validation
             if (empty($data['quantity'])) {
                 $data['quantity_err'] = 'Please enter quantity';
+                setFlashMessage($data['quantity_err'], 'error');
+                redirect('inventory/updatefertilizer/' . $data['id']);
             }
+            if (!is_numeric($data['quantity'])) {
+                $data['quantity_err'] = 'Quantity must be a number';
+                setFlashMessage($data['quantity_err'], 'error');
+                redirect('inventory/updatefertilizer/' . $data['id']);
+            }
+            if ((float) $data['quantity'] <= 0) {
+                $data['quantity_err'] = 'Quantity must be greater than zero';
+                setFlashMessage($data['quantity_err'], 'error');
+                redirect('inventory/updatefertilizer/' . $data['id']);
+            }
+
+            // Unit validation
             if (empty($data['unit'])) {
                 $data['unit_err'] = 'Please select unit';
+                setFlashMessage($data['unit_err'], 'error');
+                redirect('inventory/updatefertilizer/' . $data['id']);
             }
+
 
             // Handle image upload
             if (isset($_FILES['fertilizer_image']) && $_FILES['fertilizer_image']['error'] === UPLOAD_ERR_OK) {
@@ -726,25 +885,69 @@ class Inventory extends controller
 
             if (empty($data['product-name'])) {
                 $data['product-name_err'] = 'Please enter product name';
-            }
-            if (empty($data['location'])) {
-                $data['location_err'] = 'Please enter location';
+                setFlashMessage($data['product-name_err'], 'error');
+                redirect('inventory/updateproduct/' . $id);
             }
             if (empty($data['details'])) {
                 $data['details_err'] = 'Please enter product details';
+                setFlashMessage($data['details_err'], 'error');
+                redirect('inventory/updateproduct/' . $id);
             }
+            if (empty($data['grade'])) {
+                $data['grade_err'] = "Please enter a grade.";
+                setFlashMessage($data['grade_err'], 'error');
+                redirect('inventory/updateproduct/' . $id);
+            } elseif (substr($data['grade'], 0, 2) !== 'GT') {
+
+                $data['grade_err'] = "Grade must start with 'GT'.";
+                setFlashMessage($data['grade_err'], 'error');
+                redirect('inventory/updateproduct/' . $id);
+            } elseif (strlen($data['grade']) < 5) {
+                $data['grade_err'] = "Code must be at least 7 characters long.";
+                setFlashMessage($data['grade_err'], 'error');
+                redirect('inventory/updateproduct/' . $id);
+            }
+
+            // Price validation
             if (empty($data['price'])) {
                 $data['price_err'] = 'Please enter price';
+                setFlashMessage($data['price_err'], 'error');
+                redirect('inventory/updateproduct/' . $id);
             }
+            if (!is_numeric($data['price'])) {
+                $data['price_err'] = 'Price must be a number';
+                setFlashMessage($data['price_err'], 'error');
+                redirect('inventory/updateproduct/' . $id);
+            }
+            if ((float) $data['price'] <= 0) {
+                $data['price_err'] = 'Price must be greater than zero';
+                setFlashMessage($data['price_err'], 'error');
+                redirect('inventory/updateproduct/' . $id);
+            }
+
+            // Quantity validation
             if (empty($data['quantity'])) {
                 $data['quantity_err'] = 'Please enter quantity';
+                setFlashMessage($data['quantity_err'], 'error');
+                redirect('inventory/updateproduct/' . $id);
+            }
+            if (!is_numeric($data['quantity'])) {
+                $data['quantity_err'] = 'Quantity must be a number';
+                setFlashMessage($data['quantity_err'], 'error');
+                redirect('inventory/updateproduct/' . $id);
+            }
+            if ((float) $data['quantity'] <= 0) {
+                $data['quantity_err'] = 'Quantity must be greater than zero';
+                setFlashMessage($data['quantity_err'], 'error');
+                redirect('inventory/updateproduct/' . $id);
             }
 
             if (
-                empty($data['product-name_err']) && empty($data['location_err']) &&
+                empty($data['product-name_err']) &&
                 empty($data['details_err']) && empty($data['price_err']) &&
                 empty($data['quantity_err'])
             ) {
+
                 if ($this->productModel->updateProduct($data)) {
                     $this->logModel->create(
                         $_SESSION['user_id'],
@@ -866,16 +1069,48 @@ class Inventory extends controller
 
             // Log the data array
             // error_log(print_r($data, true));
-
+           
             // print_r("qwe");
             $this->inventoryConfigModel->add_inventory_config($data);
 
         }
 
+        $totalteaweight = $this->inventoryConfigModel->get_total_tea_weightBymonth();
+        $export= $this->inventoryConfigModel->get_total_tea_weightBymonth_export();
+        $netincome = $this->inventoryConfigModel->get_income_by_month();
+
+        $data2 = [];
+
+        $exportAmountsByMonth = [];
+        foreach ($export as $exp) {
+            $exportAmountsByMonth[$exp->month] = $exp->total_quantity;
+        }
+
+        $netincomeByMonth = [];
+        foreach ($netincome as $net) {
+            $netincomeByMonth[$net->month] = $net->total_income;
+        }
+        
+        // Step 2: Merge data into a single array for the view
+        $overviewData = [];
+        foreach ($totalteaweight as $tea) {
+            $month = $tea->month;
+            $overviewData[] = [
+                'month' => $month,
+                'total_tea_weight' => $tea->total_quantity,
+                'export_amount' => isset($exportAmountsByMonth[$month]) ? $exportAmountsByMonth[$month] : '0',
+                'net_income' => isset($netincomeByMonth[$month]) ? $netincomeByMonth[$month]:'0' // Placeholder
+            ];
+        }
+
+
+        
 
         $fertilizer = $this->fertilizerModel->getfertilizer();
         $data = [
-            'fertilizer' => $fertilizer
+            'overviewData' => $overviewData,
+            'fertilizer' => $fertilizer,
+            
         ];
 
 
@@ -1011,13 +1246,13 @@ class Inventory extends controller
         $activeBags = $this->stockvalidate->getBagsByStatus('active');
 
         // Get inactive bags (status = 'inactive')
-        // $inactiveBags = $this->stockvalidate->getBagsByStatus('inactive');
+        $inactiveBags1 = $this->stockvalidate->getBagsByStatus('inactive');
         $inactiveBags = $this->stockvalidate->getInactiveBags();
 
         // Calculate statistics
-        $totalBags = count($activeBags) + count($inactiveBags);
+        $totalBags = count($activeBags) + count($inactiveBags1);
         $activeBagsCount = count($activeBags);
-        $inactiveBagsCount = count($inactiveBags);
+        $inactiveBagsCount = count($inactiveBags1);
 
         // Calculate total capacity
         $totalCapacity = 0;
@@ -1129,7 +1364,7 @@ class Inventory extends controller
 
             $data = [
                 'capacity_kg' => trim($_POST['capacity_kg']),
-                'status' => 'inactive'
+                'status' => 'active'
             ];
 
             if (empty($data['capacity_kg']) || !is_numeric($data['capacity_kg']) || $data['capacity_kg'] <= 0) {
@@ -1149,8 +1384,13 @@ class Inventory extends controller
             );
             redirect('inventory/collectionBags');
         }
+        $lastid = $this->stockvalidate->getLastBagId();
+        $newid= $lastid->bag_id + 1;
+        $data = [
+            'next_bag_id' => $newid,
+        ];
 
-        $this->view('inventory/v_create_bag');
+        $this->view('inventory/v_create_bag',$data);
     }
 
     public function rawLeafHistory()
@@ -1227,6 +1467,9 @@ class Inventory extends controller
         $data = [
             'fertilizerRequest' => $fertilizerRequest
         ];
+        // echo "<pre>";
+        // print_r($fertilizerRequest);
+        // echo "</pre>";
 
         $this->view('inventory/v_fertilizer_request', $data);
     }

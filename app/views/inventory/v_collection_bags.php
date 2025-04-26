@@ -41,7 +41,7 @@
       <div class="stat-content">
         <i class='bx bxs-shopping-bag'></i>
         <div class="stat-info">
-          <h3><?php echo isset($activeBagsCount) ? $activeBagsCount : 0; ?></h3>
+          <h3><?php echo isset($inactiveBagsCount) ? $inactiveBagsCount : 0; ?></h3>
           <p>Bags In Use</p>
         </div>
       </div>
@@ -51,7 +51,7 @@
       <div class="stat-content">
         <i class='bx bx-shopping-bag'></i>
         <div class="stat-info">
-          <h3><?php echo isset($inactiveBagsCount) ? $inactiveBagsCount : 0; ?></h3>
+          <h3><?php echo isset($activeBagsCount) ? $activeBagsCount : 0; ?></h3>
           <p>Available Bags</p>
         </div>
       </div>
