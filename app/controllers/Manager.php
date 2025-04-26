@@ -23,6 +23,7 @@ class Manager extends Controller
     private $appointmentModel;
     private $notificationModel;
     private $logModel;
+    private $taskModel;
 
     //----------------------------------------
     // CONSTRUCTOR
@@ -51,6 +52,7 @@ class Manager extends Controller
         $this->chatModel = $this->model('M_Chat');
         $this->appointmentModel = $this->model('M_Appointment');
         $this->logModel = $this->model('M_Log');
+        $this->taskModel = $this->model('M_Tasks');
 
     }
 
@@ -2979,6 +2981,91 @@ class Manager extends Controller
     
         redirect('manager/viewComplaint/' . $id);
     }
+
+    //new crud practice
+    private function restrictToManager() {
+        if (!isset($_SESSION['user_id']) || $_SESSION['role_id'] != 12) {
+            redirect('auth/login');
+            return false;
+        }
+        return true;
+    }
+
+    // List all tasks
+    public function tasks() {
+        if (!$this->restrictToManager()) return;
+
+        $data = [
+            'tasks' => $this->taskModel->getTasksByCreator($_SESSION['user_id']),
+            'page_title' => 'Tasks'
+        ];
+        $this->view('vehicle_manager/v_tasks', $data);
+    }
+
+    public function editTask($id = null) {
+        if (!$this->restrictToManager()) return;
+
+        $task = $id ? $this->taskModel->getTaskById($id, $_SESSION['user_id']) : (object)[
+            'task_id' => '',
+            'title' => '',
+            'description' => '',
+            'priority' => 'Low',
+            'due_date' => ''
+        ];
+
+        if ($id && !$task) {
+            redirect('manager/tasks');
+            return;
+        }
+
+        $data = ['task' => $task];
+        $this->view('vehicle_manager/v_edit_task', $data);
+    }
+
+    public function createTask() {
+        if (!$this->restrictToManager()) return;
+
+        if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+            $title = trim($_POST['title'] ?? '');
+            $description = trim($_POST['description'] ?? '');
+            $priority = $_POST['priority'] ?? 'Low';
+            $due_date = !empty($_POST['due_date']) ? $_POST['due_date'] : null;
+
+            if (empty($title)) {
+                redirect('manager/editTask');
+                return;
+            }
+
+            $db = new Database();
+            $query = "INSERT INTO tasks (title, description, priority, due_date, created_by, created_at) 
+                      VALUES (:title, :description, :priority, :due_date, :created_by, NOW())";
+            $db->query($query);
+            $db->bind(':title', $title);
+            $db->bind(':description', $description);
+            $db->bind(':priority', $priority);
+            $db->bind(':due_date', $due_date);
+            $db->bind(':created_by', $_SESSION['user_id']);
+
+            $db->execute();
+            redirect('manager/tasks');
+        } else {
+            redirect('manager/editTask');
+        }
+    }
+
+    public function deleteTask($id) {
+        if (!$this->restrictToManager()) return;
+
+        $db = new Database();
+        $query = "DELETE FROM tasks WHERE task_id = :task_id AND created_by = :created_by";
+        $db->query($query);
+        $db->bind(':task_id', $id);
+        $db->bind(':created_by', $_SESSION['user_id']);
+        $db->execute();
+        redirect('manager/tasks');
+    }
+
+
     
     public function deleteComplaint($id)
     {

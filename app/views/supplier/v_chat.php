@@ -7,6 +7,7 @@
 
 
 <main>
+    <?php var_dump($data)?>
     <!-- Rest of the HTML remains the same -->
     <div class="chat-container">
         <div class="managers-sidebar">
@@ -50,6 +51,10 @@
                     <button id="send-message-btn">
                         <i class='bx bx-send'></i>
                     </button>
+
+                    <!-- File upload -->
+                    <input type="file" id="file-upload">
+                    <a href="upload/download.pdf">download file</a>
                 </div>
             </div>
         </div>
@@ -94,6 +99,7 @@
             </div>
         </div>
     </div>
+
 </main>
 <script src="<?php echo URLROOT; ?>/public/css/script.js"></script>
 <script type="module">

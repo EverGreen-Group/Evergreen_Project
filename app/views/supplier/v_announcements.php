@@ -6,6 +6,18 @@
 <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap" rel="stylesheet">
 
 <main>
+
+<div class="filter-box">
+        <select id="date-filter" name="date_filter">
+            <option value="all">All Announcements</option>
+            <option value="today">Today</option>
+            <option value="week">This Week</option>
+        </select>
+    </div>
+<button id="clear-search-btn" class="btn btn-secondary">
+    <i class="bx bx-reset"></i> Clear
+</button>
+
     <div class="announcements-container">
         <div class="announcements-header">
             <h2>Announcements</h2>
@@ -74,6 +86,43 @@ document.getElementById('announcement-search')?.addEventListener('input', functi
             ? 'block' : 'none';
     });
 });
+
+document.getElementById('date-filter').addEventListener('change', function(e) {
+    const filter = e.target.value;
+    const now = new Date();
+    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    const weekAgo = new Date(now.getFullYear(), now.getMonth(), now.getDate() - 7);
+
+    document.querySelectorAll('.announcement-item').forEach(item => {
+        const dateText = item.querySelector('.announcement-date').textContent;
+        const announcementDate = new Date(dateText.split('(')[0].trim()); // Extract date
+        let show = false;
+
+        if (filter === 'all') {
+            show = true;
+        } else if (filter === 'today' && announcementDate >= today) {
+            show = true;
+        } else if (filter === 'week' && announcementDate >= weekAgo) {
+            show = true;
+        }
+
+        item.style.display = show ? 'block' : 'none';
+    });
+});
+
+document.getElementById('clear-search-btn').addEventListener('click', () => {
+    const searchInput = document.getElementById('announcement-search');
+    const filterDropdown = document.getElementById('date-filter');
+    
+    searchInput.value = ''; // Clear search input
+    filterDropdown.value = 'all'; // Reset dropdown to "All"
+    
+    document.querySelectorAll('.announcement-item').forEach(item => {
+        item.style.display = 'block'; // Show all announcements
+    });
+});
+
+
 
 <?php
 if (session_status() == PHP_SESSION_NONE) {
