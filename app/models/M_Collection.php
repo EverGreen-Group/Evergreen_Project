@@ -727,6 +727,7 @@ class M_Collection {
 // NEW STUFF NEED TO TEST IT
 
     public function getCollectionSupplierRecordDetails($collectionId, $supplierId) {
+
         $sql = "SELECT * FROM collection_supplier_records WHERE collection_id = :collection_id AND supplier_id = :supplier_id";
         $this->db->query($sql);
         $this->db->bind(":collection_id", $collectionId);

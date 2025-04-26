@@ -144,7 +144,7 @@ class M_Fertilizer_Order {
     }
 
     public function getAllFertilizerTypes() {                       // bug free function
-        $this->db->query("SELECT id as fertilizer_id, fertilizer_name, company_name, details, code, price, quantity FROM Fertilizer WHERE quantity > 0");
+        $this->db->query("SELECT id as fertilizer_id, fertilizer_name, company_name, details, code, price, quantity, image_path FROM Fertilizer WHERE quantity > 0 AND is_deleted = 0");
         return $this->db->resultset();
     }
   
@@ -184,16 +184,34 @@ class M_Fertilizer_Order {
         return $this->db->single();
     }
 	
-    public function updatePaymentStatus($order_id, $payment_status) {
-        $this->db->query("UPDATE fertilizer_orders SET payment_status = :payment_status WHERE order_id = :order_id");
-        $this->db->bind(':payment_status', $payment_status);
-        $this->db->bind(':order_id', $order_id);
-        return $this->db->execute();
-    }
+    // public function updatePaymentStatus($order_id, $payment_status) {
+    //     $this->db->query("UPDATE fertilizer_orders SET payment_status = :payment_status WHERE order_id = :order_id");
+    //     $this->db->bind(':payment_status', $payment_status);
+    //     $this->db->bind(':order_id', $order_id);
+    //     return $this->db->execute();
+    // }
 
     
     public function getfertilizerorderforInventory(){
-        $this->db->query("SELECT fo.order_id, pr.first_name, sup.address, fo.order_date,fo.status, fo.fertilizer_id, fo.quantity FROM fertilizer_orders fo LEFT JOIN suppliers sup ON fo.supplier_id=sup.supplier_id JOIN profiles pr ON sup.profile_id = pr.profile_id
+        $this->db->query("SELECT 
+            fo.order_id,
+            fo.payment_status, 
+            pr.*, 
+            CONCAT(pr.first_name, ' ', pr.last_name) AS full_name, 
+            sup.supplier_id, 
+            sup.address,
+            u.email, 
+            fo.order_date,
+            fo.status, 
+            fo.fertilizer_id, 
+            fo.quantity AS order_quantity,  
+            f.fertilizer_name, 
+            f.company_name
+        FROM fertilizer_orders fo 
+        JOIN Fertilizer f ON f.id = fo.fertilizer_id 
+        LEFT JOIN suppliers sup ON fo.supplier_id = sup.supplier_id 
+        JOIN profiles pr ON sup.profile_id = pr.profile_id
+        JOIN users u ON pr.user_id = u.user_id
         ");
         return $this->db->resultset();
     }
@@ -202,6 +220,13 @@ class M_Fertilizer_Order {
         $this->db->query("UPDATE fertilizer_orders SET status = :status WHERE order_id = :id");
         $this->db->bind(':status', $status);
         $this->db->bind(':id', $id);
+        return $this->db->execute();
+    }
+
+    public function updatePaymentStatus($orderId, $status) {
+        $this->db->query("UPDATE fertilizer_orders SET payment_status = :status WHERE order_id = :order_id");
+        $this->db->bind(':status', $status);
+        $this->db->bind(':order_id', $orderId);
         return $this->db->execute();
     }
     

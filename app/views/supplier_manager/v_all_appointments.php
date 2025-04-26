@@ -59,7 +59,7 @@
                 <td><?php echo htmlspecialchars($appointment->appointment_id); ?></td>
                 <td>
                   <?php if (isset($appointment->supplier_id)): ?>
-                    <a href="<?php echo URLROOT; ?>/supplier/view/<?php echo $appointment->supplier_id; ?>" class="supplier-link">
+                    <a href="<?php echo URLROOT; ?>/manager/managesupplier/<?php echo $appointment->supplier_id; ?>" class="supplier-link">
                       <i class='bx bx-user'></i> ID: <?php echo htmlspecialchars($appointment->supplier_id); ?>
                     </a>
                   <?php else: ?>

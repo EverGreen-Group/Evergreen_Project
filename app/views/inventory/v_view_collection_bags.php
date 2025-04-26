@@ -117,7 +117,7 @@
                       <a href="<?php echo URLROOT; ?>/inventory/approveBag/<?php echo $bag->history_id; ?>/<?php echo $bag->collection_id; ?>"
                         class="btn btn-success"
                         style="display: flex; align-items: center; justify-content: center; width: 40px; height: 40px; border: none; background: none;"
-                        title="Approve Bag" onclick="return confirm('Are you sure you want to approve this bag?');">
+                        title="Approve Bag" data-confirm="Are you sure you want to approve this bag?">
                         <i class='bx bx-check-circle' style="font-size: 24px; color:green;"></i>
                       </a>
 

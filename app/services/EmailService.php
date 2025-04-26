@@ -1,4 +1,3 @@
-
 <?php
 use PHPMailer\PHPMailer\PHPMailer;
 use PHPMailer\PHPMailer\SMTP;
@@ -97,7 +96,25 @@ class EmailService {
         return $this->send($email, $subject, $htmlBody, $plainBody);
     }
     
-    // Add more specific email methods as needed
+    public function sendFertilizerRequest($email, $name, $state) {
+        if ($state == 'Accept') {
+            $subject = "Evergreen Fertilizer Request";
+            $htmlBody = "Hello <b>{$name}</b>,<br><br>Your fertilizer request has been accepted! You may collect it from our inventory. <br><br> Evergreen Tea Factory";
+            
+            // Define the plain text body
+            $plainBody = "Hello {$name},\n\nYour fertilizer request has been accepted! You may collect it from our inventory.\n\nEvergreen Tea Factory";
+            
+            return $this->send($email, $subject, $htmlBody, $plainBody);
+        } elseif ($state == 'Reject') {
+            $subject = "Evergreen Fertilizer Request";
+            $htmlBody = "Hello <b>{$name}</b>,<br><br>Your fertilizer request has been rejected. If you have any questions, please contact us.<br><br> Evergreen Tea Factory";
+            
+            // Define the plain text body
+            $plainBody = "Hello {$name},\n\nYour fertilizer request has been rejected. If you have any questions, please contact us.\n\nEvergreen Tea Factory";
+            
+            return $this->send($email, $subject, $htmlBody, $plainBody);
+        }
+    }
 }
 
 ?>

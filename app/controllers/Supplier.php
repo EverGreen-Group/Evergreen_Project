@@ -792,9 +792,8 @@ class Supplier extends Controller {
     // Chat-related methods
 
     public function chat() {
-        // Ensure the user is logged in and has the Supplier role (role_id = 5)
-        if (!isset($_SESSION['user_id']) || $_SESSION['role_id'] != 7) {
-            flash('message', 'Unauthorized access', 'alert alert-danger');
+        // Ensure the user is logged in and has the Supplier role (role_id = 7)
+        if (!isset($_SESSION['user_id']) || $_SESSION['role_id'] != 5) {
             redirect('auth/login');
             return;
         }
@@ -812,35 +811,42 @@ class Supplier extends Controller {
         $this->view('supplier/v_chat', $data);
     }
 
+
     public function sendMessage() {
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
             http_response_code(405);
             echo json_encode(['success' => false, 'message' => 'Method Not Allowed']);
             return;
         }
-
+    
         $data = json_decode(file_get_contents('php://input'), true);
         if (!isset($data['receiver_id']) || !is_numeric($data['receiver_id']) || !isset($data['message'])) {
             http_response_code(400);
             echo json_encode(['success' => false, 'message' => 'Invalid input']);
             return;
         }
-
+    
         $senderId = $_SESSION['user_id'];
         $receiverId = (int)$data['receiver_id'];
         $message = trim($data['message']);
-
-        // Ensure the receiver is a Vehicle Manager (role_id = 4)
+    
+        // Ensure the receiver is a Vehicle Manager (role_id = 4 or 12)
         $receiver = $this->chatModel->getUserName($receiverId);
         if (!$receiver || !str_contains($receiver, 'MGR')) {
             http_response_code(400);
             echo json_encode(['success' => false, 'message' => 'Invalid receiver']);
             return;
         }
-
+    
         $result = $this->chatModel->saveMessage($senderId, $receiverId, $message);
         if ($result['success']) {
-            echo json_encode(['success' => true, 'message_id' => $result['message_id']]);
+            echo json_encode([
+                'success' => true,
+                'data' => [  // Wrap message_id and created_at in a "data" object
+                    'message_id' => $result['message_id'],
+                    'created_at' => $result['created_at']
+                ]
+            ]);
         } else {
             http_response_code(500);
             echo json_encode(['success' => false, 'message' => 'Error saving message']);
@@ -853,32 +859,32 @@ class Supplier extends Controller {
             echo json_encode(['success' => false, 'message' => 'Method Not Allowed']);
             return;
         }
-
+    
         $data = json_decode(file_get_contents('php://input'), true);
         if (!isset($data['receiver_id']) || !is_numeric($data['receiver_id'])) {
             http_response_code(400);
             echo json_encode(['success' => false, 'message' => 'Invalid receiver ID']);
             return;
         }
-
-
+    
         $userId = $_SESSION['user_id'];
         $receiverId = (int)$data['receiver_id'];
-
-        $messages = $this->chatModel->getMessages($userId, $receiverId);
-        if ($messages === false) {
+        $lastMessageId = isset($data['last_message_id']) && is_numeric($data['last_message_id']) ? (int)$data['last_message_id'] : 0;
+    
+        try {
+            $messages = $this->chatModel->getMessages($userId, $receiverId, $lastMessageId);
+            echo json_encode([
+                'success' => true,
+                'data' => [
+                    'messages' => $messages
+                ]
+            ]);
+        } catch (Exception $e) {
+            error_log("Error fetching messages: " . $e->getMessage());
             http_response_code(500);
             echo json_encode(['success' => false, 'message' => 'Error fetching messages']);
-            return;
         }
-
-        echo json_encode([
-            'success' => true,
-            'messages' => $messages
-        ]);
     }
-
-    
 
     public function editMessage() {
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
@@ -908,36 +914,55 @@ class Supplier extends Controller {
     }
 
     public function deleteMessage() {
+        header('Content-Type: application/json');
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
             http_response_code(405);
             echo json_encode(['success' => false, 'message' => 'Method Not Allowed']);
             return;
         }
-
+    
         $data = json_decode(file_get_contents('php://input'), true);
         if (!isset($data['message_id']) || !is_numeric($data['message_id'])) {
             http_response_code(400);
             echo json_encode(['success' => false, 'message' => 'Invalid message ID']);
             return;
         }
-
+    
+        if (!isset($_SESSION['user_id'])) {
+            http_response_code(401);
+            echo json_encode(['success' => false, 'message' => 'User not logged in']);
+            return;
+        }
+    
         $messageId = (int)$data['message_id'];
         $userId = $_SESSION['user_id'];
-
-        $result = $this->chatModel->deleteMessage($messageId, $userId);
-        if ($result) {
-            echo json_encode(['success' => true]);
-        } else {
+    
+        try {
+            $result = $this->chatModel->deleteMessage($messageId, $userId);
+            if ($result) {
+                echo json_encode(['success' => true]);
+            } else {
+                http_response_code(500);
+                echo json_encode(['success' => false, 'message' => 'Error deleting message']);
+            }
+        } catch (Exception $e) {
+            error_log("Error deleting message: " . $e->getMessage());
             http_response_code(500);
             echo json_encode(['success' => false, 'message' => 'Error deleting message']);
         }
     }
 
-    //announcements by Theekshana
     public function announcements() {
         // Ensure the user is logged in and has the Supplier role (role_id = 5)
-        if (!isset($_SESSION['user_id']) || $_SESSION['role_id'] != 7) {
-            flash('message', 'Unauthorized access', 'alert alert-danger');
+        if (!isset($_SESSION['user_id']) || $_SESSION['role_id'] != 5) {
+            // Use session directly for error message
+            if (session_status() == PHP_SESSION_NONE) {
+                session_start();
+            }
+            $_SESSION['flash']['message'] = [
+                'message' => 'Unauthorized access',
+                'class' => 'alert alert-danger'
+            ];
             redirect('auth/login');
             return;
         }
@@ -951,7 +976,7 @@ class Supplier extends Controller {
                 'error' => ''
             ];
         } catch (Exception $e) {
-            error_log($e->getMessage());
+            error_log("Error fetching announcements for supplier ID {$_SESSION['supplier_id']}: " . $e->getMessage());
             $data = [
                 'announcements' => [],
                 'error' => 'An error occurred while fetching announcements. Please try again later.'
@@ -959,18 +984,5 @@ class Supplier extends Controller {
         }
     
         $this->view('supplier/v_announcements', $data);
-    }
-
-    public function getAnnouncementsForSupplier($supplierId) {
-        // Fetch announcements created by Vehicle Managers (role_id = 4)
-        $this->db->query("
-            SELECT a.announcement_id, a.title, a.content, a.created_at, a.updated_at, 
-                   CONCAT(u.first_name, ' ', u.last_name) AS sender_name
-            FROM announcements a
-            JOIN users u ON a.created_by = u.user_id
-            WHERE u.role_id = 4
-            ORDER BY a.created_at DESC
-        ");
-        return $this->db->resultSet();
     }
 }

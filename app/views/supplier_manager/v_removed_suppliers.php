@@ -38,6 +38,7 @@
             <th>Application ID</th>
             <th>Approved On</th>
             <th>Last Updated</th>
+            <th>Actions</th>
           </tr>
         </thead>
         <tbody>
@@ -49,11 +50,21 @@
                         <td><?php echo $supplier->application_id; ?></td>
                         <td><?php echo $supplier->approved_at; ?></td>
                         <td><?php echo $supplier->last_updated; ?></td>
+                        <td>
+                            <a 
+                                href="<?php echo URLROOT; ?>/manager/restoreSupplier/<?php echo $supplier->supplier_id; ?>" 
+                                class="btn btn-tertiary" 
+                                style="display: flex; align-items: center; justify-content: center; width: 40px; height: 40px; border: none; background: none;" 
+                                title="Restore Supplier"
+                            >
+                                <i class='bx bx-user-check' style="font-size: 24px; color:green;"></i>
+                            </a>
+                        </td>
                     </tr>
                 <?php endforeach;?>
             <?php else: ?>
                 <tr>
-                    <td colspan="5" style="text-align: center;">No removed suppliers found.</td>
+                    <td colspan="6" style="text-align: center;">No removed suppliers found.</td>
                 </tr>
             <?php endif; ?>
         </tbody>

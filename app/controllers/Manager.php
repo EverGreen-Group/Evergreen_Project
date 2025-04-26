@@ -294,7 +294,7 @@ class Manager extends Controller
         $supplier_status = isset($_GET['supplier_status']) ? $_GET['supplier_status'] : null;
 
         $page = isset($_GET['page']) && is_numeric($_GET['page']) ? (int)$_GET['page'] : 1;
-        $limit = 3; 
+        $limit = 5; 
         $offset = ($page - 1) * $limit;
 
         // Apply filters to get suppliers with pagination
@@ -453,6 +453,36 @@ class Manager extends Controller
         ];
 
         $this->view('supplier_manager/v_removed_suppliers', $data);
+    }
+
+    public function removeSupplier($supplierId) {
+        $result = $this->supplierModel->removeSupplier($supplierId);
+        if($result == 1) {
+            setFlashMessage('Removed supplier successfully!');
+            redirect('manager/supplier');
+
+        } elseif ($result == 0) {
+            redirect('manager/supplier');
+        } else {
+            setFlashMessage("Couldnt delete the supplier, please try again later", 'error');
+            redirect('manager/supplier');
+        }
+
+    }
+
+    public function restoreSupplier($supplierId) {
+        $result = $this->supplierModel->restoreSupplier($supplierId);
+        
+        if ($result == 1) {
+            setFlashMessage('Restored supplier successfully!');
+            redirect('manager/supplier');
+        } elseif ($result == 0) {
+            setFlashMessage('Supplier not found or is not deleted.', 'error');
+            redirect('manager/supplier');
+        } else {
+            setFlashMessage("Could not restore the supplier, please try again later", 'error');
+            redirect('manager/supplier');
+        }
     }
 
 
@@ -2399,8 +2429,6 @@ class Manager extends Controller
         $this->view('supplier_manager/v_all_complaints', $data);
     }
 
-    
-
     public function payments()
     {
         $data = [];
@@ -2416,23 +2444,549 @@ class Manager extends Controller
     }
 
     //Theekshana Chat part
+
     public function chat() {
         $activeSuppliers = $this->chatModel->getActiveSuppliers();
         error_log("Suppliers in Manager chat(): " . print_r($activeSuppliers, true));
 
         $data = [
-            'complaint_id' => trim($_POST['complaint_id']),
-            'resolution_notes' => trim($_POST['resolution_notes']),
-            'status' => 'Resolved'
+            'active_suppliers' => $activeSuppliers,
+            'page_title' => 'Chat with Suppliers',
+            'user_id' => $_SESSION['user_id']
         ];
-    
-        if ($this->supplierModel->updateStatus($data)) {
-            setFlashMessage("Complaint marked as resolved!");
-        } else {
-            setFlashMessage('Complaint couldnt be marked as resolved, please try again later!', 'error');
+        
+        $this->view('vehicle_manager/v_chat', $data);
+    }
+
+    public function sendMessage() {
+        header('Content-Type: application/json');
+        if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+            $data = json_decode(file_get_contents("php://input"), true);
+            
+            if (empty($data['receiver_id']) || empty($data['message'])) {
+                echo json_encode(['success' => false, 'message' => 'Missing required fields']);
+                exit();
+            }
+            
+            if (!isset($_SESSION['user_id']) || empty($_SESSION['user_id'])) {
+                echo json_encode(['success' => false, 'message' => 'User not logged in']);
+                exit();
+            }
+            
+            $result = $this->chatModel->saveMessage(
+                $_SESSION['user_id'],
+                $data['receiver_id'],
+                $data['message'],
+                'text'
+            );
+            
+            if ($result['success']) {
+                echo json_encode([
+                    'success' => true,
+                    'data' => [  // Wrap message_id and created_at in a "data" object
+                        'message_id' => $result['message_id'],
+                        'created_at' => $result['created_at']
+                    ]
+                ]);
+            } else {
+                echo json_encode([
+                    'success' => false,
+                    'message' => $result['error'] ?? 'Failed to send message'
+                ]);
+            }
+            exit();
+        }
+        echo json_encode(['success' => false, 'message' => 'Invalid request method']);
+        exit();
+    }
+
+
+    public function getMessages() {
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            error_log("getMessages: Method Not Allowed");
+            http_response_code(405);
+            echo json_encode(['success' => false, 'message' => 'Method Not Allowed']);
+            return;
         }
     
-        redirect('manager/viewComplaint/' . $data['complaint_id']);
+        $data = json_decode(file_get_contents('php://input'), true);
+        if (!isset($data['receiver_id']) || !is_numeric($data['receiver_id'])) {
+            error_log("getMessages: Invalid receiver ID");
+            http_response_code(400);
+            echo json_encode(['success' => false, 'message' => 'Invalid receiver ID']);
+            return;
+        }
+    
+        $userId = $_SESSION['user_id'];
+        $receiverId = (int)$data['receiver_id'];
+        $lastMessageId = isset($data['last_message_id']) && is_numeric($data['last_message_id']) ? (int)$data['last_message_id'] : 0;
+        error_log("getMessages: Fetching messages for user $userId and receiver $receiverId with last_message_id $lastMessageId");
+    
+        try {
+            $messages = $this->chatModel->getMessages($userId, $receiverId, $lastMessageId);
+            echo json_encode([
+                'success' => true,
+                'data' => [
+                    'messages' => $messages
+                ]
+            ]);
+        } catch (Exception $e) {
+            error_log("getMessages: Error fetching messages for user $userId and receiver $receiverId: " . $e->getMessage());
+            http_response_code(500);
+            echo json_encode(['success' => false, 'message' => 'Error fetching messages']);
+        }
+    }
+    
+    public function editMessage() {
+        header('Content-Type: application/json');
+        if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+            $data = json_decode(file_get_contents("php://input"), true);
+            
+            if (empty($data['message_id']) || empty($data['new_message'])) {
+                echo json_encode(['success' => false, 'message' => 'Missing required fields']);
+                exit();
+            }
+            
+            if (!isset($_SESSION['user_id']) || empty($_SESSION['user_id'])) {
+                echo json_encode(['success' => false, 'message' => 'User not logged in']);
+                exit();
+            }
+            
+            $result = $this->chatModel->editMessage(
+                $data['message_id'],
+                $data['new_message'],
+                $_SESSION['user_id']
+            );
+            
+            echo json_encode(['success' => $result]);
+            exit();
+        }
+        echo json_encode(['success' => false, 'message' => 'Invalid request method']);
+        exit();
+    }
+
+    public function deleteMessage() {
+        header('Content-Type: application/json');
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            http_response_code(405);
+            echo json_encode(['success' => false, 'message' => 'Method Not Allowed']);
+            return;
+        }
+    
+        $data = json_decode(file_get_contents('php://input'), true);
+        if (!isset($data['message_id']) || !is_numeric($data['message_id'])) {
+            http_response_code(400);
+            echo json_encode(['success' => false, 'message' => 'Invalid message ID']);
+            return;
+        }
+    
+        if (!isset($_SESSION['user_id'])) {
+            http_response_code(401);
+            echo json_encode(['success' => false, 'message' => 'User not logged in']);
+            return;
+        }
+    
+        $messageId = (int)$data['message_id'];
+        $userId = $_SESSION['user_id'];
+    
+        try {
+            $result = $this->chatModel->deleteMessage($messageId, $userId);
+            if ($result) {
+                echo json_encode(['success' => true]);
+            } else {
+                http_response_code(500);
+                echo json_encode(['success' => false, 'message' => 'Error deleting message']);
+            }
+        } catch (Exception $e) {
+            error_log("Error deleting message: " . $e->getMessage());
+            http_response_code(500);
+            echo json_encode(['success' => false, 'message' => 'Error deleting message']);
+        }
+    }
+
+    //announcements
+    // Set a flash message in the session
+    protected function flash($name, $message, $class = 'alert alert-success') {
+        if (session_status() == PHP_SESSION_NONE) {
+            session_start();
+        }
+        $_SESSION['flash'][$name] = [
+            'message' => $message,
+            'class' => $class
+        ];
+    }
+
+    public function announcements() {
+        $db = new Database();
+        
+        // Fetch all announcements
+        $db->query("SELECT * FROM announcements ORDER BY created_at DESC");
+        $announcements = $db->resultSet();
+
+        $data = [
+            'announcements' => $announcements,
+            'page_title' => 'Announcements'
+        ];
+
+        $this->view('vehicle_manager/v_announcements', $data);
+    }
+
+    public function createAnnouncementPage() {
+        $data = [
+            'announcement' => (object) [
+                'announcement_id' => '',
+                'title' => '',
+                'content' => '',
+                'banner' => ''
+            ],
+            'error' => ''
+        ];
+        $this->view('vehicle_manager/v_edit_announcement', $data);
+    }
+
+    public function createAnnouncement() {
+        error_log("----------- CREATE ANNOUNCEMENT START -----------");
+    
+        if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+            error_log("POST data: " . print_r($_POST, true));
+            error_log("FILES data: " . print_r($_FILES, true));
+    
+            $title = $_POST['title'] ?? '';
+            $content = $_POST['content'] ?? '';
+    
+            if (empty($title) || empty($content)) {
+                setFlashMessage("Title and content are required.", "error");
+                redirect('manager/createAnnouncement');
+                return;
+            }
+    
+            $banner = null;
+    
+            if (isset($_FILES['banner']) && $_FILES['banner']['error'] == UPLOAD_ERR_OK) {
+                $file = $_FILES['banner'];
+    
+                // Validations
+                if ($file['size'] > 2 * 1024 * 1024) {
+                    setFlashMessage("File size exceeds 2MB limit", "error");
+                    redirect('manager/createAnnouncement');
+                    return;
+                }
+    
+                $allowedTypes = ['image/jpeg', 'image/png'];
+                if (!in_array($file['type'], $allowedTypes)) {
+                    setFlashMessage("Invalid file type. Only JPEG and PNG allowed.", "error");
+                    redirect('manager/createAnnouncement');
+                    return;
+                }
+    
+                $uploadDir = dirname(APPROOT) . '/public/uploads/announcements/';
+
+                error_log("The upload dir is " . $uploadDir);
+                if (!is_dir($uploadDir)) {
+                    error_log("Upload dir not found, trying relative path.");
+                    $uploadDir = 'public/uploads/announcements/';
+                }
+    
+                if (!is_dir($uploadDir)) {
+                    error_log("Creating upload directory: " . $uploadDir);
+                    if (!mkdir($uploadDir, 0777, true)) {
+                        $err = error_get_last();
+                        error_log("mkdir failed: " . ($err ? $err['message'] : 'Unknown error'));
+                        setFlashMessage("Server error: Cannot create upload directory.", "error");
+                        redirect('manager/createAnnouncement');
+                        return;
+                    }
+                }
+    
+                chmod($uploadDir, 0777); // Just in case
+    
+                $extension = strtolower(pathinfo($file['name'], PATHINFO_EXTENSION));
+                $banner = uniqid() . '.' . $extension;
+                $uploadPath = $uploadDir . $banner;
+    
+                // Check tmp_name exists
+                if (!file_exists($file['tmp_name'])) {
+                    error_log("Temp file does not exist: " . $file['tmp_name']);
+                    setFlashMessage("Temporary upload file missing. Try again.", "error");
+                    redirect('manager/createAnnouncement');
+                    return;
+                }
+    
+                // Check if upload dir is writable
+                if (!is_writable($uploadDir)) {
+                    error_log("Upload directory not writable: " . $uploadDir);
+                    setFlashMessage("Server error: Upload folder not writable.", "error");
+                    redirect('manager/createAnnouncement');
+                    return;
+                }
+    
+                // Attempt move
+                if (!move_uploaded_file($file['tmp_name'], $uploadPath)) {
+                    $err = error_get_last();
+                    error_log("move_uploaded_file failed: " . ($err ? $err['message'] : 'Unknown error'));
+    
+                    // Fallback copy
+                    if (!copy($file['tmp_name'], $uploadPath)) {
+                        $err = error_get_last();
+                        error_log("copy fallback also failed: " . ($err ? $err['message'] : 'Unknown error'));
+                        setFlashMessage("Failed to upload image. Server error.", "error");
+                        redirect('manager/createAnnouncement');
+                        return;
+                    } else {
+                        error_log("File copied successfully to: " . $uploadPath);
+                    }
+                } else {
+                    error_log("File uploaded via move_uploaded_file to: " . $uploadPath);
+                }
+    
+                chmod($uploadPath, 0644);
+            } elseif (isset($_FILES['banner']) && $_FILES['banner']['error'] != UPLOAD_ERR_NO_FILE) {
+                $error_codes = [
+                    UPLOAD_ERR_INI_SIZE => 'File size exceeds server limit',
+                    UPLOAD_ERR_FORM_SIZE => 'File size exceeds form limit',
+                    UPLOAD_ERR_PARTIAL => 'File only partially uploaded',
+                    UPLOAD_ERR_NO_TMP_DIR => 'Missing temporary folder',
+                    UPLOAD_ERR_CANT_WRITE => 'Failed to write file to disk',
+                    UPLOAD_ERR_EXTENSION => 'File upload stopped by extension'
+                ];
+                $error_msg = $error_codes[$_FILES['banner']['error']] ?? 'Unknown upload error';
+                error_log("Upload error code: {$_FILES['banner']['error']} - {$error_msg}");
+                setFlashMessage($error_msg, "error");
+                redirect('manager/createAnnouncement');
+                return;
+            }
+    
+            try {
+                $db = new Database();
+                $query = "INSERT INTO announcements (title, content, banner, created_by, created_at) 
+                          VALUES (:title, :content, :banner, :created_by, NOW())";
+                $db->query($query);
+                $db->bind(':title', $title);
+                $db->bind(':content', $content);
+                $db->bind(':banner', $banner);
+                $db->bind(':created_by', $_SESSION['user_id']);
+    
+                if ($db->execute()) {
+                    setFlashMessage('Announcement created successfully!');
+                    redirect('manager/announcements');
+                } else {
+                    if ($banner && file_exists($uploadPath)) unlink($uploadPath);
+                    setFlashMessage('Database error. Please try again.', 'alert alert-danger');
+                    redirect('manager/createAnnouncement');
+                }
+            } catch (Exception $e) {
+                error_log("DB Exception: " . $e->getMessage());
+                if ($banner && file_exists($uploadPath)) unlink($uploadPath);
+                setFlashMessage('System error occurred. Please try again.', 'alert alert-danger');
+                redirect('manager/createAnnouncement');
+            }
+        } else {
+            redirect('manager/createAnnouncementPage');
+        }
+    
+        error_log("----------- CREATE ANNOUNCEMENT END -----------");
+    }
+    
+    
+
+    public function getAnnouncement($id) {
+        header('Content-Type: application/json');
+        
+        $db = new Database();
+        $query = "SELECT * FROM announcements WHERE announcement_id = :id";
+        $db->query($query);
+        $db->bind(':id', $id);
+        
+        $announcement = $db->single();
+        
+        if ($announcement) {
+            echo json_encode(['success' => true, 'announcement' => $announcement]);
+        } else {
+            echo json_encode(['success' => false, 'message' => 'Announcement not found']);
+        }
+        exit();
+    }
+
+    public function updateAnnouncement() {
+        if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+            $announcement_id = $_POST['announcement_id'] ?? '';
+            $title = $_POST['title'] ?? '';
+            $content = $_POST['content'] ?? '';
+            $remove_banner = isset($_POST['remove_banner']) && $_POST['remove_banner'] == '1';
+            
+            if (empty($announcement_id) || empty($title) || empty($content)) {
+                setFlashMessage("This field is required.", "error");
+                redirect('manager/editAnnouncement/' . $announcement_id);
+                return;
+            }
+    
+            $db = new Database();
+            $banner = null;
+    
+            // Fetch current announcement to get existing banner
+            $db->query("SELECT banner FROM announcements WHERE announcement_id = :id");
+            $db->bind(':id', $announcement_id);
+            $current = $db->single();
+            $current_banner = $current ? $current->banner : null;
+    
+            // Handle banner upload or removal
+            if ($remove_banner && $current_banner) {
+                $banner_path = dirname(APPROOT) . '/public/uploads/announcements/' . $current_banner;
+                if (file_exists($banner_path)) {
+                    unlink($banner_path);
+                    error_log("Removed banner: {$banner_path}");
+                }
+                $banner = null;
+            } elseif (isset($_FILES['banner']) && $_FILES['banner']['error'] == UPLOAD_ERR_OK) {
+                $file = $_FILES['banner'];
+                // Log file details for debugging
+                error_log("Banner upload attempt (update): Name={$file['name']}, Size={$file['size']}, Type={$file['type']}, Error={$file['error']}");
+    
+                // Validate file size (max 2MB)
+                if ($file['size'] > 2 * 1024 * 1024) {
+                    setFlashMessage("File size exceeds 2MB limit", "error");
+                    redirect('manager/editAnnouncement/' . $announcement_id);
+                    return;
+                }
+                if ($file['type'] == 'image/jpeg') {
+                    $banner = uniqid() . '.jpg';
+                    $uploadPath = dirname(APPROOT) . '/public/uploads/announcements/' . $banner;
+                    if (!is_dir(dirname(APPROOT) . '/public/uploads/announcements/')) {
+                        if (!mkdir(dirname(APPROOT) . '/public/uploads/announcements/', 0755, true)) {
+                            error_log("Failed to create directory: public/uploads/announcements/");
+                            setFlashMessage("Failed to create directory for uploads", "error");
+                            redirect('manager/editAnnouncement/' . $announcement_id);
+                            return;
+                        }
+                    }
+                    if (move_uploaded_file($file['tmp_name'], $uploadPath)) {
+                        // Remove old banner if exists
+                        if ($current_banner) {
+                            $old_banner_path = dirname(APPROOT) . '/public/uploads/announcements/' . $current_banner;
+                            if (file_exists($old_banner_path)) {
+                                unlink($old_banner_path);
+                                error_log("Removed old banner: {$old_banner_path}");
+                            }
+                        }
+                        error_log("Banner uploaded successfully: {$banner}");
+                    } else {
+                        error_log("Failed to upload banner: Name={$file['name']}, Size={$file['size']}, Error={$file['error']}, Path={$uploadPath}");
+                        setFlashMessage('Failed to upload banner. Please try again.', 'alert alert-danger');
+                        redirect('manager/editAnnouncement/' . $announcement_id);
+                        return;
+                    }
+                } else {
+                    setFlashMessage('Only JPEG files are allowed', 'alert alert-danger');
+                    redirect('manager/editAnnouncement/' . $announcement_id);
+                    return;
+                }
+            } else {
+                $banner = $current_banner; // Keep existing banner
+            }
+    
+            $query = "UPDATE announcements 
+                     SET title = :title, content = :content, banner = :banner, updated_at = NOW()
+                     WHERE announcement_id = :id AND created_by = :user_id";
+            
+            $db->query($query);
+            $db->bind(':title', $title);
+            $db->bind(':content', $content);
+            $db->bind(':banner', $banner);
+            $db->bind(':id', $announcement_id);
+            $db->bind(':user_id', $_SESSION['user_id']);
+            
+            if ($db->execute()) {
+                // Log banner filename saved to DB
+                error_log("Announcement updated with banner: " . ($banner ?? 'NULL'));
+                setFlashMessage('Announcement updated successfully');
+                redirect('manager/announcements');
+            } else {
+                // Delete uploaded banner if DB update fails
+                if ($banner && $banner != $current_banner && file_exists(dirname(APPROOT) . '/public/uploads/announcements/' . $banner)) {
+                    unlink(dirname(APPROOT) . '/public/uploads/announcements/' . $banner);
+                }
+                setFlashMessage('Failed to update announcement', 'alert alert-danger');
+                redirect('manager/editAnnouncement/' . $announcement_id);
+            }
+            return;
+        }
+        
+        setFlashMessage('Invalid request method', 'alert alert-danger');
+        redirect('manager/announcements');
+    }
+    
+
+    public function deleteAnnouncement() {
+        header('Content-Type: application/json');
+        
+        if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+            $data = json_decode(file_get_contents("php://input"), true);
+            
+            if (empty($data['announcement_id'])) {
+                echo json_encode(['success' => false, 'message' => 'Announcement ID is required']);
+                exit();
+            }
+
+            $db = new Database();
+            // Fetch banner to delete file
+            $db->query("SELECT banner FROM announcements WHERE announcement_id = :id");
+            $db->bind(':id', $data['announcement_id']);
+            $announcement = $db->single();
+            
+            $query = "DELETE FROM announcements 
+                     WHERE announcement_id = :id AND created_by = :user_id";
+            
+            $db->query($query);
+            $db->bind(':id', $data['announcement_id']);
+            $db->bind(':user_id', $_SESSION['user_id']);
+            
+            if ($db->execute()) {
+                // Delete banner file if exists
+                if ($announcement->banner) {
+                    $banner_path = 'public/uploads/announcements/' . $announcement->banner;
+                    if (file_exists($banner_path)) {
+                        unlink($banner_path);
+                        error_log("Deleted banner: {$banner_path}");
+                    }
+                }
+                setFlashMessage('Announcement deleted successfully!');
+                echo json_encode(['success' => true, 'message' => 'Announcement deleted successfully']);
+            } else {
+                echo json_encode(['success' => false, 'message' => 'Failed to delete announcement']);
+                setFlashMessage('Failed to delete announcement', 'alert alert-danger');
+            }
+            exit();
+        }
+        
+        echo json_encode(['success' => false, 'message' => 'Invalid request method']);
+        exit();
+    }
+
+    public function editAnnouncement($id) {
+        try {
+            $db = new Database();
+            $query = "SELECT * FROM announcements WHERE announcement_id = :id AND created_by = :user_id";
+            $db->query($query);
+            $db->bind(':id', $id);
+            $db->bind(':user_id', $_SESSION['user_id']);
+            $announcement = $db->single();
+            
+            if (!$announcement) {
+                setFlashMessage('Announcement not found or you do not have permission to edit it', 'alert alert-danger');
+                redirect('manager/announcements');
+                return;
+            }
+
+            $data = [
+                'announcement' => $announcement,
+                'error' => ''
+            ];
+            $this->view('vehicle_manager/v_edit_announcement', $data);
+        } catch (Exception $e) {
+            error_log("Error fetching announcement ID {$id}: " . $e->getMessage());
+            setFlashMessage('Failed to fetch announcement', 'alert alert-danger');
+            redirect('manager/announcements');
+        }
     }
     
     
@@ -2532,6 +3086,8 @@ class Manager extends Controller
             redirect('manager/appointments');
         }
     }
+
+
     
 
 
