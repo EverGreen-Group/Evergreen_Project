@@ -21,27 +21,18 @@
   </div>
 
   <section class="fertilizer-section">
-        <h2>Our Fertilizer Types</h2>
-        <div class="product-controls">
-            <input type="text" id="fertilizerSearch" placeholder="Search fertilizers by name..." class="search-input">
-            <select id="fertilizerSort" class="sort-select">
-                <option value="name-asc">Sort by Name (A-Z)</option>
-                <option value="name-desc">Sort by Name (Z-A)</option>
-                <option value="price-asc">Sort by Price (Low to High)</option>
-                <option value="price-desc">Sort by Price (High to Low)</option>
-            </select>
-        </div>
+
         <div class="product-grid" id="fertilizerGrid">
             <?php if (isset($fertilizer_types) && !empty($fertilizer_types)): ?>
                 <?php foreach ($fertilizer_types as $fertilizer): ?>
                     <div class="product-card" data-fertilizer='<?php echo htmlspecialchars(json_encode($fertilizer)); ?>'>
                         <div class="product-image">
-                            <img src="<?php echo URLROOT; ?>/img/default-product.png" alt="<?php echo $fertilizer->fertilizer_name; ?>">
+                            <img src="<?php echo URLROOT; ?>/uploads/fertilizers/<?php echo $fertilizer->image_path?>" alt="<?php echo $fertilizer->fertilizer_name; ?>">
                         </div>
                         <div class="product-info">
                             <h3><?php echo $fertilizer->fertilizer_name; ?></h3>
                             <p>Company: <?php echo $fertilizer->company_name; ?></p>
-                            <p>Quantity: <?php echo $fertilizer->quantity; ?></p>
+                            <p>Details: <?php echo $fertilizer->details; ?></p>
                             <p>Price: Rs.<?php echo $fertilizer->price; ?></p>
                         </div>
                     </div>
