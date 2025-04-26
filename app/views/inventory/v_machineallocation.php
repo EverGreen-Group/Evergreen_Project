@@ -85,7 +85,7 @@
                     <input type="text" id="brand" name="brand" placeholder="Enter Brand" required>
                 </div>
                 <div class="form-group">
-                    <label for="started-date">Started Date</label>
+                    <label for="started-date">Installation Date</label>
                     <input type="date" id="started-date" name="started_date" required>
                 </div>
                 <div class="form-group">
