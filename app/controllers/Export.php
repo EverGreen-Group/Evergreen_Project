@@ -135,10 +135,13 @@ class Export extends controller
                 }
             }
 
+            $l_m_e_count=count($lastmonth_exports);
+            $allexportcount=count($exportall);
 
-            
 
             $data = [
+                'all_exports_count' => $allexportcount,
+                'lastmonth_exports_count' => $l_m_e_count,
                 'exports' => $exportall,
                 'lastmonth_export' => $lastmonth_exports,
                 'revenue' => $revenue,
