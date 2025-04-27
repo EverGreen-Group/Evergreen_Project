@@ -1,2 +1,4 @@
 public/uploads/*
 /vendor/
+.env
+/app/config/email.php

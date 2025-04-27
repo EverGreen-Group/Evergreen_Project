@@ -12,6 +12,7 @@ class RoleHelper {
     const EMPLOYEE_MANAGER = 9;
     const VEHICLE_MANAGER = 10;
     const INVENTORY_MANAGER = 11;
+    const MANAGER = 12;
 
     // Check if user has specific role
     public static function hasRole($roleId) {
@@ -105,7 +106,7 @@ class RoleHelper {
             8 => 'drivingpartner',   // Driving Partner
             9 => 'employeemanager',  // Employee Manager
             11 => 'inventorymanager', // Inventory Manager
-            10 => 'vehiclemanager',  // Vehicle Manager
+            10 => 'manager',  // Vehicle Manager
             5 => 'supplier',         // Supplier
             2 => 'suppliermanager'   // Supplier Manager
             // ... add other role mappings as needed ...

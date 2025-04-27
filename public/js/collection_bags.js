@@ -221,7 +221,7 @@ function showBagDetails(bagId) {
   const content = document.getElementById("collectionBagDetailsContent");
 
   // Fetch bag details from the server
-  fetch(`${URLROOT}/vehiclemanager/getBagDetails/${bagId}`)
+  fetch(`${URLROOT}/manager/getBagDetails/${bagId}`)
     .then((response) => response.json())
     .then((data) => {
       if (data.success) {
@@ -348,7 +348,7 @@ function addNewBag(event) {
   };
 
   // Construct the URL using URLROOT
-  const url = `${URLROOT}/vehiclemanager/createBag`; // Adjust the path as necessary
+  const url = `${URLROOT}/manager/createBag`; // Adjust the path as necessary
 
   // Send the data to the server
   fetch(url, {
@@ -383,7 +383,7 @@ document.addEventListener("DOMContentLoaded", function () {
 });
 
 function fetchBags() {
-  fetch(`${URLROOT}/vehiclemanager/getBags`) // Adjust the URL as necessary
+  fetch(`${URLROOT}/manager/getBags`) // Adjust the URL as necessary
     .then((response) => response.json())
     .then((data) => {
       if (data.success) {
@@ -421,7 +421,7 @@ function populateBagsTable(bags) {
 
 function openUpdateBagModal(bagId) {
   // Fetch the bag details from the server
-  fetch(`${URLROOT}/vehiclemanager/getBagDetails/${bagId}`)
+  fetch(`${URLROOT}/manager/getBagDetails/${bagId}`)
     .then((response) => response.json())
     .then((data) => {
       if (data.success) {
@@ -506,7 +506,7 @@ function updateBag(event, bagId) {
   };
 
   // Construct the URL using URLROOT
-  const url = `${URLROOT}/vehiclemanager/updateBag`; // Adjust the path as necessary
+  const url = `${URLROOT}/manager/updateBag`; // Adjust the path as necessary
 
   // Send the data to the server
   fetch(url, {
@@ -538,7 +538,7 @@ function updateBag(event, bagId) {
 function removeBag(bagId) {
   if (confirm("Are you sure you want to remove this bag?")) {
     // Construct the URL using URLROOT
-    const url = `${URLROOT}/vehiclemanager/removeBag`; // Adjust the path as necessary
+    const url = `${URLROOT}/manager/removeBag`; // Adjust the path as necessary
     const imagePath = `${UPLOADROOT}/qr_codes/${bagId}.png`; // Correct file path for the image
 
     // Prepare data to send to the server
@@ -562,7 +562,7 @@ function removeBag(bagId) {
           alert("Bag removed successfully!");
 
           // Now delete the image
-          return fetch(`${URLROOT}/vehiclemanager/deleteBagQR/`, {
+          return fetch(`${URLROOT}/manager/deleteBagQR/`, {
             method: "DELETE",
             headers: {
               "Content-Type": "application/json",
@@ -587,4 +587,99 @@ function removeBag(bagId) {
         alert("An error occurred while removing the bag.");
       });
   }
+}
+
+// Add this new function for bag cards
+function showBagCardDetails(bagId, capacity, weight, status, route) {
+  const content = document.getElementById("bagCardDetailsContent");
+
+  // Hardcoded values for demonstration
+  const bagDetails = {
+    bag_id: bagId,
+    capacity: capacity,
+    weight: weight,
+    status: status,
+    route: route,
+    assigned_supplier: "Supplier A",
+    collection_id: "COL001",
+    driver: "John Doe",
+    leaf_type: "Green Tea",
+    moisture: "65",
+    last_modified: "2024-03-15",
+    actual_capacity: "45",
+  };
+
+  content.innerHTML = `
+        <div class="vehicle-modal-content">
+            <div class="vehicle-modal-image">
+                <img src="/Evergreen_Project/uploads/qr_codes/73.png" alt="QR Code BAGG" />
+            </div>
+            
+            <div class="vehicle-modal-details">
+                <div class="detail-group">
+                    <h3>Basic Information</h3>
+                    <div class="detail-row">
+                        <span class="label">Bag ID:</span>
+                        <span class="value">${bagDetails.bag_id}</span>
+                    </div>
+                    <div class="detail-row">
+                        <span class="label">Status:</span>
+                        <span class="value">${bagDetails.status}</span>
+                    </div>
+                    <div class="detail-row">
+                        <span class="label">Assigned Route:</span>
+                        <span class="value">${bagDetails.route}</span>
+                    </div>
+                    <div class="detail-row">
+                        <span class="label">Assigned Supplier:</span>
+                        <span class="value">${bagDetails.assigned_supplier}</span>
+                    </div>
+                </div>
+
+                <div class="detail-group">
+                    <h3>Specifications</h3>
+                    <div class="specifications-container">
+                        <div class="specifications-left">
+                            <div class="detail-row">
+                                <span class="label">Capacity:</span>
+                                <span class="value">${bagDetails.capacity}</span>
+                            </div>
+                            <div class="detail-row">
+                                <span class="label">Actual Capacity:</span>
+                                <span class="value">${bagDetails.actual_capacity} kg</span>
+                            </div>
+                            <div class="detail-row">
+                                <span class="label">Leaf Type:</span>
+                                <span class="value">${bagDetails.leaf_type}</span>
+                            </div>
+                            <div class="detail-row">
+                                <span class="label">Last Modified:</span>
+                                <span class="value">${bagDetails.last_modified}</span>
+                            </div>
+                        </div>
+                        <div class="specifications-right">
+                            <div class="detail-row">
+                                <span class="label">Collection ID:</span>
+                                <span class="value">${bagDetails.collection_id}</span>
+                            </div>
+                            <div class="detail-row">
+                                <span class="label">Added By Driver:</span>
+                                <span class="value">${bagDetails.driver}</span>
+                            </div>
+                            <div class="detail-row">
+                                <span class="label">Moisture:</span>
+                                <span class="value">${bagDetails.moisture}%</span>
+                            </div>
+                            <div class="detail-row">
+                                <span class="label">Bag Weight:</span>
+                                <span class="value">${bagDetails.weight}</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    `;
+
+  document.getElementById("bagCardDetailsModal").style.display = "block";
 }

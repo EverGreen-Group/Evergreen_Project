@@ -1,11 +1,7 @@
 <?php
-
-function flash($name = '') {
-    if (isset($_SESSION['flash_messages'][$name])) {
-        $flash = $_SESSION['flash_messages'][$name];
-        echo '<div class="' . $flash['class'] . '" id="msg-flash">' . $flash['message'] . '</div>';
-        unset($_SESSION['flash_messages'][$name]);
-    }
-} 
-
-?>
+// Flash message helper
+function setFlashMessage($message, $type = 'success') {
+    // Use actual session storage instead of JavaScript injection
+    $_SESSION['flash_message'] = $message;
+    $_SESSION['flash_type'] = $type;
+}

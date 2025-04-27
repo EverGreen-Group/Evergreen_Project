@@ -1,13 +1,26 @@
 <?php require APPROOT . '/views/inc/components/header.php'; ?>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
 <!-- Side bar -->
 <?php require APPROOT.'/views/inc/components/sidebar_vehicle_manager.php'; ?>
 <!-- Top nav bar -->
 <?php require APPROOT . '/views/inc/components/topnavbar.php'; ?>
 
+
+<link rel="stylesheet" href="<?php echo URLROOT; ?>/css/vehicle_manager/vehicle/vehicle.css">
+<link rel="stylesheet" href="<?php echo URLROOT; ?>/css/vehicle_manager/collection/collection.css">
+<link rel="stylesheet" href="<?php echo URLROOT; ?>/css/vehicle_manager/collection/calendar.css">
+<script>
+    const URLROOT = '<?php echo URLROOT; ?>';
+    const UPLOADROOT = '<?php echo UPLOADROOT; ?>';
+</script>
+<script src="<?php echo URLROOT; ?>/public/js/vehicle_manager/vehicle.js"></script>
+
 <!-- MAIN -->
 <main>
-  <!-- Team Management Section -->
+
+
+  <!-- Driver Management Section -->
   <div class="head-title">
       <div class="left">
           <h1>Driver Management</h1>
@@ -18,159 +31,135 @@
   </div>
 
   <div class="action-buttons">
-      <a href="<?php echo URLROOT; ?>/vehiclemanager/addDriver" class="btn btn-primary">
-          <i class='bx bx-plus'></i>
-          Add New Driver
-      </a>
+        <a href="<?php echo URLROOT; ?>/manager/createDriver" class="btn btn-primary">
+            <i class='bx bx-plus'></i>
+            Add new driver
+        </a>
+    </div>
 
-      <a href="<?php echo URLROOT; ?>/vehiclemanager/updateDriver" class="btn btn-primary">
-          <i class='bx bx-plus'></i>
-          Update Driver
-      </a>
-  </div>
+    <ul class="dashboard-stats">
+        <li class="stat-card">
+            <div class="stat-content">
+                <i class='bx bxs-user'></i>
+                <div class="stat-info">
+                    <h3><?php echo $total_drivers; ?></h3>
+                    <p>Total Drivers</p>
+                </div>
+            </div>
+        </li>
 
+        <!-- <li class="stat-card">
+            <div class="stat-content">
+                <i class='bx bx-check'></i>
+                <div class="stat-info">
+                    <h3><?php echo $on_duty_drivers; ?></h3>
+                    <p>Currently On Duty</p>
+                </div>
+            </div>
+        </li> -->
 
-  <ul class="box-info">
-    <li>
-        <i class='bx bxs-group'></i>
-        <span class="text">
-          <p>Total Drivers</p>
-          <h3><?php echo $total_drivers; ?></h3>
-        </span>
-    </li>
-    <li>
-        <i class='bx bxs-user-check'></i>
-        <span class="text">
-          <p>On Duty</p>
-          <h3><?php echo $on_duty_drivers; ?></h3>
-        </span>
-    </li>
-    <li>
-        <i class='bx bxs-user-x'></i>
-        <span class="text">
-          <p>Unassigned Drivers</p>
-          <h3><?php echo $unassigned_drivers_count; ?></h3>
-        </span>
-    </li>
-  </ul>
+    </ul>
 
-  <div class="table-data table-container">
-      <div class="order">
-          <div class="head">
-              <h3>Unassigned Drivers</h3>
-          </div>
-          <table>
-              <thead>
-                  <tr>
-                      <th>Driver ID</th>
-                      <th>Name</th>
-                      <th>Contact</th>
-                      <th>Status</th>
-                      <th></th>
-                  </tr>
-              </thead>
-              <tbody>
-                  <?php foreach ($data['unassigned_drivers'] as $driver): ?>
-                      <tr>
-                          <td><?php echo htmlspecialchars($driver->driver_id); ?></td>
-                          <td><?php echo htmlspecialchars($driver->driver_name); ?></td>
-                          <td><?php echo htmlspecialchars($driver->contact_number); ?></td>
-                          <td>
-                              <span class="status completed"><?php echo htmlspecialchars($driver->status); ?></span>
-                          </td>
-                          <td>
-                              <a href="<?php echo URLROOT; ?>/profile/driver/<?php echo $driver->user_id; ?>" class="btn btn-view">View Profile</a>
+  <div class="table-data">
+    <div class="order">
+        <div class="head">
+            <h3>Search Filters</h3>
+            <i class='bx bx-search'></i>
+        </div>
+        <div class="filter-options">
+            <form action="<?php echo URLROOT; ?>/manager/driver" method="GET">
+                <div class="filter-group">
+                    <label for="name">Name:</label>
+                    <input type="text" id="name" name="name" placeholder="Enter driver name">
+                </div>
+                <div class="filter-group">
+                    <label for="nic">NIC:</label>
+                    <input type="text" id="nic" name="nic" placeholder="Enter NIC">
+                </div>
+                <div class="filter-group">
+                    <label for="contact_number">Contact Number:</label>
+                    <input type="text" id="contact_number" name="contact_number" placeholder="Enter contact number">
+                </div>
+                <div class="filter-group">
+                    <label for="license_number">License Number:</label>
+                    <input type="text" id="license_number" name="license_number" placeholder="Enter license number">
+                </div>
+                <div class="filter-group">
+                    <label for="status">Status:</label>
+                    <select id="status" name="driver_status">
+                        <option value="">Select Status</option>
+                        <option value="Active">Active</option>
+                        <option value="Inactive">Inactive</option>
+                        <option value="On Leave">On Leave</option>
+                    </select>
+                </div>
+                <button type="submit" class="btn btn-primary">Search</button>
+            </form>
+        </div>
+    </div>
+</div>
 
-                          </td>
-                      </tr>
-                  <?php endforeach; ?>
-              </tbody>
-          </table>
-      </div>
-  </div>
+<div class="table-data">
+    <div class="order">
+        <div class="head">
+            <h3>Drivers</h3>
+        </div>
+        <table>
+            <thead>
+                <tr>
+                    <th>Driver ID</th>
+                    <th>Name</th>
+                    <th>Email</th>
+                    <th>NIC</th>
+                    <th>Contact Number</th>
+                    <th>License Number</th>
+                    <th>Status</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                <?php foreach ($drivers as $driver): ?>
+                    <tr class="driver-row" data-driver-id="<?php echo htmlspecialchars($driver->driver_id); ?>">
+                        <td><?php echo htmlspecialchars($driver->driver_id); ?></td>
+                        <td><?php echo htmlspecialchars($driver->first_name . ' ' . $driver->last_name); ?></td>
+                        <td><?php echo htmlspecialchars($driver->email); ?></td>
+                        <td><?php echo htmlspecialchars($driver->nic); ?></td>
+                        <td><?php echo htmlspecialchars($driver->contact_number); ?></td>
+                        <td><?php echo htmlspecialchars($driver->license_number); ?></td>
+                        <td>
+                                    <span class="status-badge <?php echo $driver->status == 'Active' ? 'added' : 'removed'; ?>">
+                                        <?php echo $driver->status; ?>
+                                    </span>
+                                </td>
+                        <td>
+                            <div style="display: flex; gap: 5px;">
+                                <!-- View button with icon -->
+                                <a 
+                                    href="<?php echo URLROOT; ?>/manager/viewDriver/<?php echo $driver->driver_id; ?>" 
+                                    class="btn btn-tertiary" 
+                                    style="display: flex; align-items: center; justify-content: center; width: 40px; height: 40px; border: none; background: none;"
+                                >
+                                    <i class='bx bx-show' style="font-size: 24px; color:blue;"></i>
+                                </a>
 
-  <!-- Section for All Drivers -->
-  <div class="table-data table-container">
-      <div class="order">
-          <div class="head">
-              <h3>All Drivers</h3>
-          </div>
-          <table>
-              <thead>
-                  <tr>
-                      <th>Driver ID</th>
-                      <th>Name</th>
-                      <th>Contact</th>
-                      <th>Status</th>
-                      <th></th>
-                  </tr>
-              </thead>
-              <tbody>
-                  <?php foreach ($data['all_drivers'] as $driver): ?>
-                      <tr>
-                          <td><?php echo htmlspecialchars($driver->driver_id); ?></td>
-                          <td><?php echo htmlspecialchars($driver->driver_name); ?></td>
-                          <td><?php echo htmlspecialchars($driver->contact_number); ?></td>
-                          <td>
-                              <span class="status completed"><?php echo htmlspecialchars($driver->status); ?></span>
-                          </td>
-                          <td>
-                              <a href="<?php echo URLROOT; ?>/profile/driver/<?php echo $driver->user_id; ?>" class="btn btn-view">View Profile</a>
-                              
-
-                          </td>
-                          <td>
-                          <form action="<?php echo URLROOT; ?>/vehiclemanager/removeDriver/<?php echo $driver->user_id; ?>" method="POST" style="display:inline;">
-                                  <button type="submit" class="btn btn-remove" onclick="return confirm('Are you sure you want to remove this driver?');">
-                                      <i class='bx bx-trash'></i>
-                                  </button>
-                              </form>
-                          </td>
-                      </tr>
-                  <?php endforeach; ?>
-              </tbody>
-          </table>
-      </div>
-  </div>
+                                <!-- Manage button with icon only -->
+                                <a 
+                                    href="<?php echo URLROOT; ?>/manager/updateDriver/<?php echo $driver->driver_id; ?>" 
+                                    class="btn btn-tertiary" 
+                                    style="display: flex; align-items: center; justify-content: center; width: 40px; height: 40px; border: none; background: none;"
+                                >
+                                    <i class='bx bx-pencil' style="font-size: 24px; color:green;"></i>
+                                </a>
+                                
+                            </div>
+                        </td>
+                    </tr>
+                <?php endforeach; ?>
+            </tbody>
+        </table>
+    </div>
+</div>
 
 </main>
 
-
-
 <?php require APPROOT . '/views/inc/components/footer.php'; ?>
-
-<style>
-.btn-view {
-    display: inline-block; /* Make it behave like a button */
-    padding: 2px 5px; /* Add some padding */
-    background-color: var(--main); /* Button background color */
-    color: white; /* Text color */
-    text-align: center; /* Center the text */
-    text-decoration: none; /* Remove underline */
-    border: none; /* Remove border */
-    border-radius: 4px; /* Slightly round the corners */
-    transition: background-color 0.3s; /* Smooth transition for hover effect */
-}
-
-.btn-view:hover {
-    background-color: #0056b3; /* Darker shade on hover */
-}
-
-.btn-remove {
-    display: inline-block; /* Make it behave like a button */
-    padding: 2px 5px; /* Add some padding */
-    background-color: #dc3545; /* Red background color for remove */
-    color: white; /* Text color */
-    text-align: center; /* Center the text */
-    text-decoration: none; /* Remove underline */
-    border: none; /* Remove border */
-    border-radius: 4px; /* Slightly round the corners */
-    transition: background-color 0.3s; /* Smooth transition for hover effect */
-    margin-left: 5px; /* Space between buttons */
-    cursor: pointer; /* Change cursor to pointer */
-}
-
-.btn-remove:hover {
-    background-color: #c82333; /* Darker shade on hover */
-}
-</style>

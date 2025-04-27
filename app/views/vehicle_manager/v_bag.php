@@ -18,12 +18,12 @@
   </div>
 
   <div class="action-buttons">
-      <a href="<?php echo URLROOT; ?>/vehiclemanager/addBag" class="btn btn-primary">
+      <a href="<?php echo URLROOT; ?>/manager/addBag" class="btn btn-primary">
           <i class='bx bx-plus'></i>
           Add New Bag
       </a>
 
-      <a href="<?php echo URLROOT; ?>/vehiclemanager/updateBag" class="btn btn-primary">
+      <a href="<?php echo URLROOT; ?>/manager/updateBag" class="btn btn-primary">
           <i class='bx bx-plus'></i>
           Update Bag Details
       </a>
@@ -46,9 +46,6 @@
     </li>
   </ul>
 
-
-  <?php flash('vehicle_message'); ?>
-  <!-- New section for vehicle cards -->
   <!-- <div class="vehicle-cards-section">
       <h2>All Vehicles</h2>
       <div class="vehicle-cards-container" id="vehicleCardsContainer">
@@ -73,7 +70,7 @@
               </div>
           <?php endforeach; ?>
       </div>
-  </div> -->
+  </div> 
 
 
   <div class="table-data">

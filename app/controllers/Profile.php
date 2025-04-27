@@ -6,10 +6,12 @@ require_once '../app/helpers/RoleHelper.php';
 class Profile extends Controller {
     private $userModel;
     private $driverModel;
+    private $logModel;
 
     public function __construct() {
         $this->userModel = $this->model('M_User');
         $this->driverModel = $this->model('M_Driver');
+        $this->logModel = $this->model('M_Log');
     }
 
     public function index() {
@@ -58,13 +60,9 @@ class Profile extends Controller {
     public function update() {
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             try {
-                // Check if user has permission to update profile
-                if (!RoleHelper::canUpdateProfile()) {
-                    throw new Exception('You do not have permission to update this profile');
-                }
 
                 // Sanitize POST data
-                $_POST = filter_input_array(INPUT_POST, FILTER_SANITIZE_STRING);
+                // $_POST = filter_input_array(INPUT_POST, FILTER_SANITIZE_STRING);
 
                 $data = [
                     'user_id' => $_SESSION['user_id'],
@@ -81,7 +79,16 @@ class Profile extends Controller {
 
                 // Update user profile
                 if ($this->userModel->updateUser($data)) {
-                    flash('profile_message', 'Profile Updated Successfully', 'alert alert-success');
+
+                    $this->logModel->create(
+                        $_SESSION['user_id'],
+                        $_SESSION['email'],
+                        $_SERVER['REMOTE_ADDR'],
+                        "Updated the profile",
+                        $_SERVER['REQUEST_URI'],     
+                        http_response_code()     
+                    );
+                    setFlashMessage('Profile updated successfully!');
                 } else {
                     throw new Exception('Error updating profile');
                 }
@@ -89,7 +96,7 @@ class Profile extends Controller {
                 redirect('profile');
 
             } catch (Exception $e) {
-                flash('profile_message', $e->getMessage(), 'alert alert-danger');
+                setFlashMessage('Profile update failed!', 'error');
                 redirect('profile');
             }
         } else {
@@ -114,7 +121,16 @@ class Profile extends Controller {
 
                 // Update password
                 if ($this->userModel->updatePassword($data)) {
-                    flash('profile_message', 'Password Updated Successfully', 'alert alert-success');
+
+                    $this->logModel->create(
+                        $_SESSION['user_id'],
+                        $_SESSION['email'],
+                        $_SERVER['REMOTE_ADDR'],
+                        "Updated the account password",
+                        $_SERVER['REQUEST_URI'],     
+                        http_response_code()     
+                    );
+                    setFlashMessage('Password updated successfully!');
                 } else {
                     throw new Exception('Error updating password');
                 }
@@ -122,7 +138,7 @@ class Profile extends Controller {
                 redirect('profile');
 
             } catch (Exception $e) {
-                flash('profile_message', $e->getMessage(), 'alert alert-danger');
+                setFlashMessage('Password update failed: ' . $e, 'error');
                 redirect('profile');
             }
         }
@@ -147,7 +163,6 @@ class Profile extends Controller {
                 
                 // Move uploaded file
                 if (move_uploaded_file($file['tmp_name'], $file_path)) {
-                    // Save to database
                     if ($this->userModel->updateProfileImage($_SESSION['user_id'], $file_path)) {
                         echo json_encode(['success' => true, 'file_path' => $file_path]);
                     } else {
@@ -165,7 +180,6 @@ class Profile extends Controller {
 
     public function updateDriverInfo() {
         if (!RoleHelper::hasRole(RoleHelper::DRIVER)) {
-            flash('profile_message', 'Unauthorized access', 'alert alert-danger');
             redirect('profile');
             return;
         }
@@ -174,7 +188,6 @@ class Profile extends Controller {
 
     public function updateSupplierInfo() {
         if (!RoleHelper::hasRole(RoleHelper::SUPPLIER)) {
-            flash('profile_message', 'Unauthorized access', 'alert alert-danger');
             redirect('profile');
             return;
         }

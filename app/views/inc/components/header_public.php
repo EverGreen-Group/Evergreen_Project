@@ -6,8 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title><?php echo SITENAME; ?></title>
     <link rel="stylesheet" href="<?php echo URLROOT; ?>/public/css/style.css">
-    <link href="https://unpkg.com/boxicons@2.0.9/css/boxicons.min.css" rel="stylesheet" />
-    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500&display=swap" rel="stylesheet">
+    <!-- <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500&display=swap" rel="stylesheet"> -->
 </head>
 <style>
     body {
@@ -164,7 +163,7 @@
                 </a>
                 <a href="<?php echo URLROOT; ?>/pages/store"
                     class="<?php echo ($_GET['url'] ?? '') === 'pages/store' ? 'active' : ''; ?>">
-                    STORE
+                    PRODUCT
                 </a>
                 <a href="<?php echo URLROOT; ?>/pages/about"
                     class="<?php echo ($_GET['url'] ?? '') === 'pages/store' ? 'active' : ''; ?>">

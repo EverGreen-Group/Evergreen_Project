@@ -6,7 +6,7 @@
 
 // Conditional inclusion of the sidebar based on user role
 if (RoleHelper::hasRole(RoleHelper::SUPPLIER_MANAGER)) {
-    require APPROOT . '/views/inc/components/sidebar_suppliermanager.php';
+    require APPROOT . '/views/inc/components/sidebar_vehicle_manager.php';
 } else {
     require APPROOT . '/views/inc/components/sidebar_supplier.php';
 }

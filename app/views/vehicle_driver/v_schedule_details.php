@@ -36,6 +36,26 @@ if (isset($data['collection']) && $data['collection']) {
                     strtolower($data['collection']->status) === 'completed');
 }
 
+
+// A TEST
+$currentDateTime = new DateTime();
+$currentDay = $currentDateTime->format('l'); // Get the current day (e.g., 'Monday')
+$currentTime = $currentDateTime->format('H:i'); // Get the current time (e.g., '14:00')
+
+// Assuming $data['schedule']->start_time is a datetime string
+$scheduleStartTime = new DateTime($data['schedule']->start_time);
+$scheduleDay = $scheduleStartTime->format('l'); // Get the scheduled day
+$scheduleStartHour = $scheduleStartTime->format('H:i'); // Get the scheduled start time
+$scheduleEndHour = (new DateTime($data['schedule']->end_time))->format('H:i'); // Get the scheduled end time
+
+// Check if a collection exists and its status
+$collectionExists = isset($data['collection']) && is_object($data['collection']) && !empty((array)$data['collection']);
+$collectionStatus = $collectionExists ? $data['collection']->status : null;
+
+
+
+//
+
 // Print conditions
 // echo "<div class='conditions'>";
 // echo "<p>Schedule day: " . htmlspecialchars($data['schedule']->day) . "</p>";
@@ -48,6 +68,7 @@ if (isset($data['collection']) && $data['collection']) {
 ?>
 
 <main class="schedule-details-main">
+    <!-- <?php print_r($data); ?> -->
     <div class="content-header">
         <div class="header-text">
             <h1>Collection Details</h1>
@@ -118,8 +139,15 @@ if (isset($data['collection']) && $data['collection']) {
             
             <section class="collection-status">
                 <h2>Collection Status</h2>
+
+                <?php if ($collectionCompleted): ?>
+                    <div class="collection-stage">
+                        <div class="collection-actions">
+                            <h4>Collection is complete for the day! Come back next week.</h4>
+                        </div>
+                    </div>
                 
-                <?php if (!isset($data['collection']) || (is_object($data['collection']) && empty((array)$data['collection']))): ?>
+                <?php elseif (!isset($data['collection']) || (is_object($data['collection']) && empty((array)$data['collection']))): ?>
                     <!-- No collection exists for this schedule - Show button to create collection -->
                     <div class="collection-stage">
                         <h3>Create Collection</h3>
@@ -135,8 +163,6 @@ if (isset($data['collection']) && $data['collection']) {
                         <h3>Collection Approval Status</h3>
                         
                         <?php 
-                        // Debug the collection data
-
                         // Safe check for vehicle manager approval
                         if (!property_exists($data['collection'], 'vehicle_manager_approved') || 
                             !$data['collection']->vehicle_manager_approved): 
@@ -166,119 +192,6 @@ if (isset($data['collection']) && $data['collection']) {
     </div>
 </main>
 
-<script>
-
-document.addEventListener("DOMContentLoaded", function () {
-    const form = document.querySelector(".bag-assignment-form");
-    const input = document.querySelector(".bag-id-input");  // Changed from bag-token-input
-    const addButton = document.querySelector(".add-bag-btn");
-    const bagsList = document.querySelector(".assigned-bags-list");
-    const assignedBags = new Set();
-
-  // Add bag when button is clicked
-  addButton.addEventListener("click", async function () {
-    await addBag();
-  });
-
-  // Add bag when Enter is pressed
-  input.addEventListener("keypress", async function (e) {
-    if (e.key === "Enter") {
-      e.preventDefault();
-      await addBag();
-    }
-  });
-
-  async function addBag() {
-    const bagId = input.value.trim();
-    if (!bagId) return;
-
-    if (assignedBags.has(bagId)) {
-      alert("This bag is already assigned");
-      return;
-    }
-
-    try {
-      // Check if bag exists and is available
-      const response = await fetch(
-        `${URLROOT}/vehicledriver/checkBag/${bagId}`
-      );
-      const data = await response.json();
-
-      if (!data.success) {
-        alert(data.message);
-        return;
-      }
-
-      // Add bag to the list
-      assignedBags.add(bagId);
-
-      // Create bag element with capacity and weight info
-      const bagElement = document.createElement("div");
-      bagElement.className = "assigned-bag";
-      bagElement.dataset.bagId = bagId;
-      bagElement.innerHTML = `
-              <div class="bag-info">
-                  <span class="bag-id">Bag #${bagId}</span>
-                  <span class="bag-capacity">Capacity: ${
-                    data.data.capacity_kg
-                  } kg</span>
-                  <span class="bag-weight">Weight: ${
-                    data.data.bag_weight_kg || 0
-                  } kg</span>
-              </div>
-              <button type="button" class="remove-bag-btn">
-                  <i class='bx bx-trash'></i>
-              </button>
-              <input type="hidden" name="bags[]" value="${bagId}">
-          `;
-
-      // Add remove functionality
-      const removeButton = bagElement.querySelector(".remove-bag-btn");
-      removeButton.addEventListener("click", function () {
-        assignedBags.delete(bagId);
-        bagElement.remove();
-
-        // Show "No bags" message if list is empty
-        if (assignedBags.size === 0) {
-          bagsList.innerHTML =
-            '<p class="no-bags-message">No bags assigned yet</p>';
-        }
-      });
-
-      // Remove "No bags" message if it exists
-      const noBagsMessage = bagsList.querySelector(".no-bags-message");
-      if (noBagsMessage) {
-        noBagsMessage.remove();
-      }
-
-      // Add bag to the list
-      bagsList.appendChild(bagElement);
-
-      // Clear input
-      input.value = "";
-      input.focus();
-    } catch (error) {
-      console.error("Error checking bag:", error);
-      alert("Error checking bag. Please try again.");
-    }
-  }
-
-  // Form submission
-  form.addEventListener("submit", function (e) {
-    e.preventDefault();
-
-    if (assignedBags.size === 0) {
-      alert("Please assign at least one bag before submitting.");
-      return;
-    }
-
-    // Submit form
-    this.submit();
-  });
-});
-
-
-</script>
 
 <?php require APPROOT . '/views/inc/components/footer.php'; ?>
 

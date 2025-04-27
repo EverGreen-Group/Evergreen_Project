@@ -1,6 +1,3 @@
-<!-- Flash Messages -->
-<?php flash('schedule_error'); ?>
-<?php flash('schedule_success'); ?>
 
 <!-- Info Alert Box -->
 <?php if (isset($data['restrictions'])): ?>

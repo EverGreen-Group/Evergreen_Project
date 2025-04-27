@@ -1,404 +1,213 @@
 <?php require APPROOT . '/views/inc/components/header.php'; ?>
-
-<!-- Side bar -->
-<?php require APPROOT . '/views/inc/components/sidebar_suppliermanager.php'; ?>
-<!-- Top nav bar -->
+<?php require APPROOT.'/views/inc/components/sidebar_vehicle_manager.php'; ?>
 <?php require APPROOT . '/views/inc/components/topnavbar.php'; ?>
 
-<!-- MAIN -->
-            <main>
-                <div class="head-title">
-                    <div class="left">
-                        <h1>Complaints Management</h1>
-                        <ul class="breadcrumb">
-                            <li><a href="#">Dashboard</a></li>
-                            <li><i class='bx bx-chevron-right'></i></li>
-                            <li><a class="active" href="#">Complaints</a></li>
-                        </ul>
-                    </div>
-                    <div class="head-actions">
-                        <button class="btn-download" onclick="exportComplaints()">
-                            <i class='bx bx-download'></i> Export Report
-                        </button>
-                    </div>
+<link rel="stylesheet" href="<?php echo URLROOT; ?>/css/vehicle_manager/vehicle/vehicle.css">
+<link rel="stylesheet" href="<?php echo URLROOT; ?>/css/vehicle_manager/collection/collection.css">
+
+<script>
+    const URLROOT = '<?php echo URLROOT; ?>';
+    const UPLOADROOT = '<?php echo UPLOADROOT; ?>';
+</script>
+
+<main>
+  <div class="head-title">
+    <div class="left">
+        <h1>Manage Complaints</h1>
+        <ul class="breadcrumb">
+            <li><a href="#">Dashboard</a></li>
+            <li><i class='bx bx-chevron-right'></i></li>
+            <li><a class="active" href="#">Complaints</a></li>
+        </ul>
+    </div>
+  </div>
+
+  <ul class="dashboard-stats">
+        <li class="stat-card">
+            <div class="stat-content">
+                <i class='bx bxs-file-plus'></i>
+                <div class="stat-info">
+                    <h3><?php echo isset($totalComplaints) ? $totalComplaints : 0; ?></h3>
+                    <p>Total Complaints</p>
                 </div>
-
-                <!-- Box Info -->
-                <ul class="box-info">
-                    <li>
-                        <i class='bx bx-message-error'></i>
-                        <span class="text">
-                            <h3>12</h3>
-                            <p>New Complaints</p>
-                            <small>+3 from yesterday</small>
-                        </span>
-                    </li>
-                    <li>
-                        <i class='bx bx-loader-circle'></i>
-                        <span class="text">
-                            <h3>8</h3>
-                            <p>In Progress</p>
-                            <small>Pending Resolution</small>
-                        </span>
-                    </li>
-                    <li>
-                        <i class='bx bx-check-circle'></i>
-                        <span class="text">
-                            <h3>85%</h3>
-                            <p>Resolution Rate</p>
-                            <small>4h Avg. Response Time</small>
-                        </span>
-                    </li>
-                </ul>
-
-                <!-- Complaints Analytics -->
-                <div class="table-data">
-                    <!-- Complaint Types Chart -->
-                    <div class="order" style="flex: 1;">
-                        <div class="head">
-                            <h3>Types of Complaints</h3>
-                            <select class="period-select">
-                                <option value="this-month">This Month</option>
-                                <option value="last-month">Last Month</option>
-                                <option value="last-3-months">Last 3 Months</option>
-                            </select>
-                        </div>
-                        <div class="chart-container">
-                            <canvas id="complaintTypesChart"></canvas>
-                        </div>
-                    </div>
-
-                    <!-- Missed Collection -->
-                    <div class="order" style="flex: 1;">
-                        <div class="head">
-                            <h3>Missed Collection</h3>
-                        </div>
-                        <div class="table-data">
-                            <table>
-                                <thead>
-                                    <tr>
-                                        <th>Supplier ID</th>
-                                        <th>Supplier Name</th>
-                                        <th>Missed Date</th>
-                                        <th>Reason</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    <tr>
-                                        <td>SUP27429</td>
-                                        <td>John Doe</td>
-                                        <td>2024-03-01</td>
-                                        <td>Late Arrival</td>
-                                    </tr>
-                                    <tr>
-                                        <td>SUP13445</td>
-                                        <td>Sarah Smith</td>
-                                        <td>2024-03-02</td>
-                                        <td>Vehicle Breakdown</td>
-                                    </tr>
-                                    <tr>
-                                        <td>SUP98765</td>
-                                        <td>Michael Brown</td>
-                                        <td>2024-03-03</td>
-                                        <td>Weather Conditions</td>
-                                    </tr>
-                                    <!-- Add more rows as needed -->
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Complaints Table -->
-                <div class="table-data">
-                    <div class="order">
-                        <div class="head">
-                            <h3>Recent Complaints</h3>
-                        </div>
-                        
-                        <table>
-                            <thead>
-                                <tr>
-                                    <th>Complaint ID</th>
-                                    <th>Supplier</th>
-                                    <th>Category</th>
-                                    <th>Subject</th>
-                                    <th>Submitted</th>
-                                    <th>Actions</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <tr>
-                                    <td>#CM2024-001</td>
-                                    <td>
-                                        <div class="supplier-info">
-                                            <span class="id">SUP27429</span>
-                                            <span class="name">John Doe</span>
-                                        </div>
-                                    </td>
-                                    <td>Payment Delay</td>
-                                    <td>Late payment for February delivery</td>
-                                    <td>
-                                        <div class="time-info">
-                                            <span class="date">Mar 15, 2024</span>
-                                            <span class="time">08:30 AM</span>
-                                        </div>
-                                    </td>
-                                    <td>
-                                        <button class="btn-action" title="View Details">
-                                            <i class='bx bx-show'></i> View
-                                        </button>
-                                    </td>
-                                </tr>
-                                <!-- More complaint rows... -->
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-            </main>
             </div>
-        </section>
-        <script src="<?php echo URLROOT; ?>/css/components/script.js"></script>
-        <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-        <script>
-        // Initialize the complaints type chart
-        document.addEventListener('DOMContentLoaded', function() {
-            const ctx = document.getElementById('complaintTypesChart').getContext('2d');
-            new Chart(ctx, {
-                type: 'pie',
-                data: {
-                    labels: [
-                        'Quality Issues',
-                        'Late Delivery',
-                        'Quantity Discrepancy',
-                        'Communication Issues',
-                        'Payment Disputes'
-                    ],
-                    datasets: [{
-                        data: [30, 25, 20, 15, 10],
-                        backgroundColor: [
-                            '#86E211',      // Primary color (your green)
-                            '#FF6B6B',      // Red
-                            '#4ECDC4',      // Teal
-                            '#45B7D1',      // Blue
-                            '#96A5C8'       // Grey
-                        ],
-                        borderWidth: 0
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: {
-                        legend: {
-                            position: 'right',
-                            labels: {
-                                boxWidth: 12,
-                                padding: 20,
-                                font: {
-                                    size: 12
-                                }
-                            }
-                        },
-                        tooltip: {
-                            callbacks: {
-                                label: function(context) {
-                                    const value = context.raw;
-                                    const total = context.dataset.data.reduce((a, b) => a + b, 0);
-                                    const percentage = ((value / total) * 100).toFixed(1);
-                                    return `${percentage}% (${value} complaints)`;
-                                }
-                            }
-                        }
-                    }
-                }
-            });
-        });
-        </script>
-        <style>
-        .chart-container {
-            height: 300px;
-            padding: 1rem;
-            position: relative;
-        }
+        </li>
 
-        .performance-list {
-            padding: 1rem;
-            display: flex;
-            flex-direction: column;
-            gap: 1rem;
-        }
+        <li class="stat-card">
+            <div class="stat-content">
+                <i class='bx bx-check-circle'></i>
+                <div class="stat-info">
+                    <h3><?php echo isset($resolvedComplaints) ? $resolvedComplaints : 0; ?></h3>
+                    <p>Resolved</p>
+                </div>
+            </div>
+        </li>
 
-        .performance-item {
-            background: #f8f9fa;
-            padding: 1rem;
-            border-radius: 8px;
-            display: flex;
-            flex-direction: column;
-            gap: 0.5rem;
-        }
+        <li class="stat-card">
+            <div class="stat-content">
+                <i class='bx bx-x-circle'></i>
+                <div class="stat-info">
+                    <h3><?php echo isset($pendingComplaints) ? $pendingComplaints : 0; ?></h3>
+                    <p>Pending</p>
+                </div>
+            </div>
+        </li>
+    </ul>
 
-        .supplier-details {
-            display: flex;
-            gap: 1rem;
-            align-items: center;
-        }
 
-        .supplier-id {
-            color: #666;
-            font-size: 0.9rem;
-        }
+    <div class="table-data">
+        <div class="order">
+            <div class="head">
+                <h3>Search Filters</h3>
+                <i class='bx bx-search'></i>
+            </div>
+            <div class="filter-options">
+            <form action="<?php echo URLROOT; ?>/manager/complaints" method="GET">
+                    <div class="filter-group">
+                        <label for="complaint-id">Complaint ID:</label>
+                        <input type="text" id="complaint-id" name="complaint_id" placeholder="Enter complaint ID">
+                    </div>
+                    <div class="filter-group">
+                        <label for="status">Status:</label>
+                        <select id="status" name="status">
+                            <option value="">All Statuses</option>
+                            <option value="pending">Pending</option>
+                            <option value="resolved">Resolved</option>
+                        </select>
+                    </div>
+                    <div class="filter-group">
+                        <label for="date-from">Date From:</label>
+                        <input type="date" id="date-from" name="date_from">
+                    </div>
+                    <div class="filter-group">
+                        <label for="date-to">Date To:</label>
+                        <input type="date" id="date-to" name="date_to">
+                    </div>
+                    <button type="submit" class="btn btn-primary">Search</button>
+                </form>
+            </div>
+        </div>
+    </div>
 
-        .supplier-name {
-            font-weight: 500;
-        }
+    <div class="table-data">
+        <div class="order">
+            <div class="head">
+                <h3>All Complaints</h3>
+            </div>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Complaint ID</th>
+                        <th>Supplier</th>
+                        <th>Subject</th>
+                        <th>Date Filed</th>
+                        <th>Priority</th>
+                        <th>Status</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <?php if (!empty($data['complaints'])): ?>
+                        <?php foreach ($data['complaints'] as $complaint): ?>
+                        <tr>
+                            <td><?php echo htmlspecialchars($complaint->complaint_id); ?></td>
+                            <td>
+                                <a href="<?php echo URLROOT; ?>/manager/viewSupplier/<?php echo htmlspecialchars($complaint->supplier_id); ?>" class="manager-link">
+                                    <img src="<?php echo URLROOT . '/' . htmlspecialchars($complaint->image_path); ?>" alt="Supplier Photo" class="manager-photo">
+                                    <?php echo htmlspecialchars($complaint->supplier_name); ?>
+                                </a>
+                            </td>
+                            <td><?php echo htmlspecialchars($complaint->subject); ?></td>
+                            <td><?php echo htmlspecialchars($complaint->created_at); ?></td>
+                            <td><span class="priority-badge <?php echo strtolower($complaint->priority); ?>"><?php echo ucfirst($complaint->priority); ?></span></td>
+                            <td><span class="status-badge <?php echo strtolower($complaint->status); ?>"><?php echo ucfirst($complaint->status); ?></span></td>
+                            <td><a href="<?php echo URLROOT; ?>/manager/viewComplaint/<?php echo $complaint->complaint_id; ?>" class="btn btn-primary" title="View Details">
+                                    <i class='bx bx-detail'></i>
+                                </a></td>
+                        </tr>
+                        <?php endforeach; ?>
+                    <?php else: ?>
+                        <tr><td colspan="7" style="text-align:center;">No complaints found</td></tr>
+                    <?php endif; ?>
+                </tbody>
+            </table>
 
-        .issue-count {
-            font-weight: 600;
-            padding: 0.2rem 0.5rem;
-            border-radius: 4px;
-            display: inline-block;
-            width: fit-content;
-        }
+            <!-- Pagination -->
+            <div class="table-pagination">
+                <div class="pagination">
+                    <?php if ($data['totalPages'] > 1): ?>
+                        <?php for ($i = 1; $i <= $data['totalPages']; $i++): ?>
+                            <a 
+                            href="<?php echo URLROOT; ?>/manager/complaints?page=<?php echo $i; ?>&complaint_id=<?php echo urlencode($complaint_id); ?>&status=<?php echo urlencode($status); ?>&date_from=<?php echo urlencode($date_from); ?>&date_to=<?php echo urlencode($date_to); ?>" 
+                            <?php if ($data['currentPage'] == $i) { echo 'class="active"'; } ?>>
+                                <?php echo $i; ?>
+                            </a>
+                        <?php endfor; ?>
+                    <?php endif; ?>
+                </div>
+            </div>
+        </div>
+    </div>
+</main>
 
-        .issue-count.critical {
-            background-color: #ffe5e5;
-            color: #d32f2f;
-        }
-
-        .issue-count.high {
-            background-color: #fff3e0;
-            color: #ef6c00;
-        }
-
-        .issue-types {
-            color: #666;
-            font-size: 0.9rem;
-        }
-
-        .period-select {
-            padding: 0.5rem;
-            border: 1px solid var(--grey);
-            border-radius: 4px;
-            outline: none;
-        }
-
-        .status {
-            padding: 0.2rem 0.5rem;
-            border-radius: 4px;
-            font-weight: bold;
-        }
-
-        .status.action-required {
-            background-color: #ffe5e5; /* Light red */
-            color: #d32f2f; /* Dark red */
-        }
-
-        .status.resolved {
-            background-color: #d4edda; /* Light green */
-            color: #155724; /* Dark green */
-        }
-
-        .table-data {
-            margin-top: 20px;
-        }
-
-        table {
-            width: 100%;
-            border-collapse: collapse;
-        }
-
-        th, td {
-            padding: 12px 15px;
-            text-align: left;
-            border-bottom: 1px solid #ddd;
-        }
-
-        th {
-            background-color: #f4f4f4;
-            color: #333;
-        }
-
-        tbody tr:hover {
-            background-color: #f1f1f1; /* Light grey on hover */
-        }
-
-        .status {
-            padding: 0.2rem 0.5rem;
-            border-radius: 4px;
-            font-weight: bold;
-        }
-
-        .status.new {
-            background-color: #e7f3fe; /* Light blue */
-            color: #31708f; /* Dark blue */
-        }
-
-        .status.in-progress {
-            background-color: #fff3cd; /* Light yellow */
-            color: #856404; /* Dark yellow */
-        }
-
-        .status.resolved {
-            background-color: #d4edda; /* Light green */
-            color: #155724; /* Dark green */
-        }
-
-        .priority {
-            padding: 0.2rem 0.5rem;
-            border-radius: 4px;
-            font-weight: bold;
-        }
-
-        .priority.high {
-            background-color: #f8d7da; /* Light red */
-            color: #721c24; /* Dark red */
-        }
-
-        .priority.medium {
-            background-color: #fff3cd; /* Light yellow */
-            color: #856404; /* Dark yellow */
-        }
-
-        .priority.low {
-            background-color: #d4edda; /* Light green */
-            color: #155724; /* Dark green */
-        }
-
-        .search-box {
-            display: flex;
-            align-items: center;
-            border: 1px solid var(--grey);
-            border-radius: 4px;
-            padding: 5px;
-        }
-
-        .search-box input {
-            border: none;
-            outline: none;
-            padding: 5px;
-        }
-
-        .filter-select {
-            margin-left: 10px;
-            padding: 5px;
-            border: 1px solid var(--grey);
-            border-radius: 4px;
-        }
-
-        .btn-action {
-            background-color: #007bff; /* Bootstrap primary color */
-            color: white;
-            border: none;
-            border-radius: 4px;
-            padding: 5px 10px;
-            cursor: pointer;
-        }
-
-        .btn-action:hover {
-            background-color: #0056b3; /* Darker shade on hover */
-        }
-        </style>
-    </body>
-</html>
+<style>
+    .status-badge,
+    .priority-badge {
+        padding: 5px 10px;
+        border-radius: 20px;
+        font-size: 12px;
+        font-weight: bold;
+        text-transform: uppercase;
+    }
     
+    /* Status badges */
+    .new {
+        background-color: #FFF4DE;
+        color: #FFA800;
+    }
+    
+    .in-progress {
+        background-color: #EEE5FF;
+        color: #8950FC;
+    }
+    
+    .resolved {
+        background-color: #E8FFF3;
+        color: #1BC5BD;
+    }
+
+    .high {
+        background-color: #F64E60;
+        color: white;
+    }
+
+    .medium {
+        background-color: #FFA800;
+        color: white;
+    }
+
+    .low {
+        background-color: #3699FF;
+        color: white;
+    }
+
+    .manager-link {
+        display: flex;
+        align-items: center;
+        text-decoration: none;
+        color: inherit;
+    }
+
+    .manager-photo {
+        width: 30px;
+        height: 30px;
+        border-radius: 50%;
+        margin-right: 8px;
+        object-fit: cover;
+    }
+    
+</style>
+
+
+
+<?php require APPROOT . '/views/inc/components/footer.php'; ?>

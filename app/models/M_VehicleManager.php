@@ -11,26 +11,15 @@ class M_VehicleManager {
     public function getDashboardStats() {
         $stats = [];
 
-        // Get vehicle stats
         $this->db->query("SELECT 
-            COUNT(*) as total_vehicles,
-            SUM(CASE WHEN status = 'Available' THEN 1 ELSE 0 END) as available_vehicles
-            FROM vehicles");
-        $stats['vehicles'] = $this->db->single();
-
-        // Get driver stats
-        $this->db->query("SELECT 
-            COUNT(*) as total_drivers,
-            SUM(CASE WHEN status = 'Available' THEN 1 ELSE 0 END) as available_drivers
-            FROM drivers");
-        $stats['drivers'] = $this->db->single();
-
-        // Get partner stats
-        $this->db->query("SELECT 
-            COUNT(*) as total_partners,
-            SUM(CASE WHEN status = 'Available' THEN 1 ELSE 0 END) as available_partners
-            FROM driving_partners");
-        $stats['partners'] = $this->db->single();
+            COUNT(*) as total_collections,
+            SUM(CASE WHEN status = 'In Progress' THEN 1 ELSE 0 END) as in_progress,
+            SUM(CASE WHEN status = 'Completed' AND DATE(collection_completed_at) = CURDATE() THEN 1 ELSE 0 END) as completed_today,
+            SUM(CASE WHEN DATE(start_time) = CURDATE() THEN 1 ELSE 0 END) as total_today,
+            SUM(CASE WHEN status = 'In Progress' OR status = 'Awaiting Inventory Addition' THEN 1 ELSE 0 END) as total_ongoing
+            FROM collections");
+        $stats['collections'] = $this->db->single();
+        
 
         return $stats;
     }

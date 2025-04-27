@@ -1,18 +1,19 @@
 <?php
-// Update the include to use APPROOT instead of URLROOT
-include_once APPROOT . '/services/GoogleMapsService.php';
 
-class VehicleDriver extends controller {
+
+class VehicleDriver extends controller
+{
     private $collectionScheduleModel;
     private $driverModel;
-    private $teamModel;
     private $vehicleModel;
     private $routeModel;
     private $collectionModel;
-    private $googleMapsService;
     private $scheduleModel;
+    private $supplierModel;
+    private $userModel;
 
-    public function __construct() {
+    public function __construct()
+    {
         if (!RoleHelper::hasAnyRole([RoleHelper::ADMIN, RoleHelper::DRIVER])) {
             // Redirect unauthorized access
             redirect('');
@@ -22,624 +23,700 @@ class VehicleDriver extends controller {
         $this->collectionScheduleModel = $this->model('M_CollectionSchedule');
         $this->collectionModel = $this->model('M_Collection');
         $this->driverModel = $this->model('M_Driver');
-        $this->teamModel = $this->model('M_Team');
         $this->vehicleModel = $this->model('M_Vehicle');
         $this->routeModel = $this->model('M_Route');
-        $this->googleMapsService = new GoogleMapsService();
         $this->scheduleModel = $this->model('M_CollectionSchedule');
+        $this->supplierModel = $this->model('M_Supplier');
+        $this->userModel = $this->model('M_User');
     }
 
-    public function index() {
-        // Assuming you have a way to get the driverId, e.g., from session or request
-        $driverId = $_SESSION['driver_id']; // Assuming the driver ID is stored in the session
 
-        // Check if the driver ID is set
-        if (empty($driverId)) {
-            $data = [
-                'upcomingShifts' => [],
-                'message' => 'Driver ID not found in session.'
-            ];
-            $this->view('vehicle_driver/v_dashboard', $data);
+    public function index()
+    {
+        if (!isset($_SESSION['driver_id'])) {
+            redirect('login');
             return;
         }
 
-        // Get upcoming schedules for the driver
-        $upcomingShifts = $this->scheduleModel->getUpcomingSchedules($driverId);
+        $driverId = $_SESSION['driver_id'];
 
-        // Prepare data for the view
-        if (empty($upcomingShifts)) {
+        $collectionId = $this->collectionModel->checkCollectionExists($driverId);
+        if ($collectionId) {
+            redirect('vehicledriver/collection/' . $collectionId);
+            exit();
+        }
+
+        // Get today's schedule
+        $schedule = $this->scheduleModel->getTodaysScheduleByDriverId($driverId);
+
+        // Check if the schedule is empty
+        if ($schedule) {
+            $allSchedules = $this->scheduleModel->getAllAssignedSchedulesByDriverId($driverId);
             $data = [
-                'upcomingShifts' => [],
-                'message' => 'No schedules assigned.'
+                'schedule' => $schedule,
+                'allSchedules' => $allSchedules
             ];
+
+            // Check if the schedule has ended collections
+            $count = $this->scheduleModel->checkEndedScheduleCollection($schedule->schedule_id);
+            if ($count) {
+                $data['collection_completed'] = 1;
+            }
         } else {
+            // Handle the case where there is no schedule for today
             $data = [
-                'upcomingShifts' => $upcomingShifts
+                'schedule' => null,
+                'allSchedules' => $this->scheduleModel->getAllAssignedSchedulesByDriverId($driverId),
+                'collection_completed' => 0 // or any other default value you want to set
             ];
         }
 
-        // Load the view with the data
         $this->view('vehicle_driver/v_dashboard', $data);
     }
+
 
     // protected function isAjaxRequest() {
     //     return !empty($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) === 'xmlhttprequest';
     // }
 
-    public function profile() {
+    public function profile()
+    {
         $data = [];
         $this->view('pages/profile', $data);
     }
 
-    public function team() {
-        $data = [];
-        $this->view('vehicle_driver/v_team', $data);
-    }
-
-    public function route() {
-        $data = [];
-        $this->view('vehicle_driver/v_route', $data);
-    }
-
-    public function shift() {
-        $driverModel = $this->model('M_Driver');
-        $scheduleModel = $this->model('M_CollectionSchedule');
-        
-        // Get driver's team ID
-        $driverDetails = $driverModel->getDriverDetails($_SESSION['user_id']);
-        $teamId = $driverDetails->team_id ?? null;
-    
-        if (!$teamId) {
-            $data = [
-                'upcomingShifts' => [],
-                'message' => 'No team assigned'
-            ];
+    public function updateVehicle($vehicleId, $latitude, $longitude)
+    { // TESTED
+        // Ensure the parameters are valid
+        if (is_numeric($vehicleId) && is_numeric($latitude) && is_numeric($longitude)) {
+            $this->collectionModel->updateVehicleLocation($vehicleId, $latitude, $longitude);
         } else {
-            // Get upcoming schedules for the team
-            $upcomingShifts = $scheduleModel->getUpcomingSchedules($teamId);
-            $data = [
-                'upcomingShifts' => $upcomingShifts,
-                'currentTeam' => $driverDetails->current_team
-            ];
-        }
-    
-        $this->view('shared/management/shift', $data);
-    }
-    
-    public function scheduleDetails($id) {
-        // Get schedule details by ID
-        $schedule = $this->model('M_CollectionSchedule')->getScheduleById($id);
-        if (!$schedule) {
-            redirect('vehicledriver/shift');
-        }
-    
-        // Get related route and vehicle information
-        $route = $this->model('M_Route')->getRouteById($schedule->route_id);
-        $vehicle = $this->model('M_Vehicle')->getVehicleByRouteId($schedule->vehicle_id);
-    
-        // Get collection details for the schedule
-        $collectionId = $this->collectionModel->getUpcomingCollectionIdByScheduleId($id);
-        $collections = $collectionId ? $this->collectionModel->getUpcomingCollectionDetailsByScheduleId($id) : [];
-        // $collection = isset($collections[0]) ? $collections[0] : null;
-    
-        // Get route suppliers for the route
-        $routeSuppliers = $this->routeModel->getRouteSuppliersByRouteId($route->route_id);
-    
-        // Prepare default values for collection-related data
-        $collectionBags = $collections ? $this->collectionModel->getCollectionBagsByCollectionId($collectionId) : [];
-        $bagsAdded = $collection->bags_added ?? 0;
-        $fertilizerDistributed = $collection->fertilizer_distributed ?? 0;
-        $collectionCompleted = (is_object($collections) && isset($collection->end_time) && $collections->end_time !== null) ? true : false;
 
-    
-        // Prepare data to pass to the view
-        $data = [
-            'schedule' => $schedule,
-            'route' => $route,
-            'vehicle' => $vehicle,
-            'collectionBags' => $collectionBags,
-            'collection' => (object) $collections,
-            'routeSuppliers' => $routeSuppliers,
-            'bagsAdded' => $bagsAdded,
-            'fertilizerDistributed' => $fertilizerDistributed,
-            'collectionCompleted' => $collectionCompleted
-        ];
-    
-        // Render the view with the data
-        $this->view('vehicle_driver/v_schedule_details', $data);
-    }
-    
-    
-
-    private function checkShiftTime($scheduleTime, $windowMinutes = 10) {
-        try {
-            $scheduleDateTime = new DateTime($scheduleTime);
-            $now = new DateTime();
-            $diff = ($scheduleDateTime->getTimestamp() - $now->getTimestamp()) / 60;
-            return $diff <= $windowMinutes && $diff >= -360;
-        } catch (Exception $e) {
-            // Log the error
-            error_log("Date parsing error: " . $e->getMessage());
-            return false;
         }
     }
 
-    public function v_collection_route() {
-        $data = [];
-        $this->view('vehicle_driver/v_collection_route', $data);
-    }
 
-    public function setReady($scheduleId) {
-        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-            redirect('vehicledriver/a');
-        }
 
-        $schedule = $this->scheduleModel->getScheduleById($scheduleId);
-        if (!$schedule) {
-            redirect('vehicledriver/b');
-        }
 
-        // Check if within time window
-        $shiftDateTime = date('Y-m-d ') . $schedule->start_time;
-        if (!$this->checkShiftTime($shiftDateTime)) {
-            redirect('vehicledriver/scheduleDetails/' . $scheduleId);
-        }
+    // public function scheduleDetails($id) {
+    //     // Get schedule details by ID
+    //     $schedule = $this->model('M_CollectionSchedule')->getScheduleById($id);
+    //     if (!$schedule) {
+    //         redirect('vehicledriver/shift');
+    //     }
 
-        $currentUserId = $_SESSION['user_id'];
-        
-        // First check if collection exists, if not create it
-        $collection = $this->collectionScheduleModel->getCollectionByScheduleId($scheduleId);
-        if (!$collection) {
-            $this->collectionScheduleModel->createInitialCollection($scheduleId);
-        }
-        
-        // Then set the user as ready
-        $this->collectionScheduleModel->setUserReady($scheduleId, $currentUserId);
-        redirect('vehicledriver/scheduleDetails/' . $scheduleId);
-    }
+    //     // Get related route and vehicle information
+    //     $route = $this->model('M_Route')->getRouteById($schedule->route_id);
+    //     $vehicle = $this->model('M_Vehicle')->getVehicleByRouteId($schedule->vehicle_id);
 
-    public function staff() {
-        $data = [];
-        $this->view('vehicle_driver/v_staff', $data);
-    }
+    //     // Get collection details for the schedule
+    //     $collection = $this->collectionModel->getUpcomingCollectionDetailsByScheduleId($id);
 
-    public function settings() {
-        $data = [];
-        $this->view('vehicle_driver/v_settings', $data);
-    }
+    //     // Get route suppliers for the route
+    //     $routeSuppliers = $this->routeModel->getRouteSuppliersByRouteId($route->route_id);
 
-    public function personal_details() {
-        $data = [];
-        $this->view('vehicle_driver/v_personal_details', $data);
-    }
+    //     // Prepare default values for collection-related data
+    //     $bagsAdded = $collection->bags_added ?? 0;
+    //     $fertilizerDistributed = $collection->fertilizer_distributed ?? 0;
+    //     $collectionCompleted = $collection && $collection->end_time !== null;
 
-    public function logout() {
-        // Handle logout functionality
-    }
+    //     // Prepare data to pass to the view
+    //     $data = [
+    //         'schedule' => $schedule,
+    //         'route' => $route,
+    //         'vehicle' => $vehicle,
+    //         'collection' => $collection,
+    //         'routeSuppliers' => $routeSuppliers,
+    //         'bagsAdded' => $bagsAdded,
+    //         'fertilizerDistributed' => $fertilizerDistributed,
+    //         'collectionCompleted' => $collectionCompleted
+    //     ];
 
-    public function collection($collectionId) {
+    //     // Render the view with the data
+    //     $this->view('vehicle_driver/v_schedule_details', $data);
+    // }
+
+
+
+
+
+
+
+    public function collection($collectionId)
+    { // TESTED
         $collection = $this->collectionModel->getCollectionDetails($collectionId);
-        // if (!$collection) {
-        //     redirect('vehicledriver/shift');
-        // }
-
-
-
-
-
-        // Replace hardcoded location with actual driver location
-        $driverLocation = $this->getCurrentDriverLocation();
         $vehicleLocation = $this->vehicleModel->getVehicleLocation($collection->vehicle_id);
-
-        // Get all suppliers for this collection
         $collectionSuppliers = $this->collectionScheduleModel->getCollectionSupplierRecords($collectionId);
 
-        // Format suppliers for the view
-        $formattedSuppliers = array_map(function($supplier) {
+
+        if ($collection->collection_status !== 'Pending') {
+            setFlashMessage("You have already completed this collection. You have no access here!", 'warning');
+            redirect('vehicledriver/');
+        }
+
+
+        $leafTypesResult = $this->collectionModel->getCollectionTeaLeafTypes();
+        $leafTypes = $leafTypesResult['success'] ? $leafTypesResult['leafTypes'] : [];
+
+
+        $formatSupplier = function ($supplier) {
             return [
                 'id' => $supplier->supplier_id,
                 'supplierName' => $supplier->supplier_name,
                 'remarks' => 'Call upon arrival',
                 'location' => [
-                    'lat' => (float)$supplier->latitude,
-                    'lng' => (float)$supplier->longitude
+                    'lat' => (float) $supplier->latitude,
+                    'lng' => (float) $supplier->longitude
                 ],
                 'address' => $supplier->address ?? 'No address provided',
-                'image' => $supplier->profile_image ? 
-                    URLROOT . '/public/uploads/supplier_photos/' . $supplier->profile_image : 
-                    URLROOT . '/public/img/default-user.png',
+                'image' => $supplier->image_path,
                 'estimatedCollection' => $supplier->average_collection,
                 'status' => $supplier->status,
                 'contact' => $supplier->contact_number,
                 'arrival_time' => $supplier->arrival_time,
+                'stop_order' => $supplier->stop_order ?? null
             ];
-        }, $collectionSuppliers);
+        };
+
+        $formattedSuppliers = [];
+        $currentSupplier = null;
+
+        foreach ($collectionSuppliers as $supplier) {
+            if (!$currentSupplier && !$supplier->arrival_time && $supplier->status != 'Collected' && $supplier->status != 'No Show') {
+                $currentSupplier = $formatSupplier($supplier);
+            }
+
+            if ($supplier->status !== 'Collected') {
+                $formattedSuppliers[] = $formatSupplier($supplier);
+            }
+        }
 
         $data = [
             'pageTitle' => 'Collection Route',
             'driverName' => $collection->first_name,
-            'vehicleInfo' => 'TEST VEHICLE',
-            'driverLocation' => $driverLocation,
             'collections' => $formattedSuppliers,
             'collection' => $collection,
-            'vehicleLocation' => $vehicleLocation  
+            'vehicleLocation' => $vehicleLocation,
+            'currentSupplier' => $currentSupplier,
+            'leafTypes' => $leafTypes
         ];
 
         $this->view('vehicle_driver/v_collection_route', $data);
     }
 
-    public function markArrival() {
-        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-            // Get JSON data from request body
-            $jsonData = json_decode(file_get_contents('php://input'), true);
-            
-            $collection_id = $jsonData['collection_id'];
-            $supplier_id = $jsonData['supplier_id'];
-            
-            $data = [
-                'collection_id' => $collection_id,
-                'supplier_id' => $supplier_id,
-                'arrival_time' => date('Y-m-d H:i:s')
-            ];
-            
-            if ($this->collectionModel->updateArrivalTime($data)) {
-                echo json_encode(['status' => 'success']);
-            } else {
-                echo json_encode(['status' => 'error', 'message' => 'Failed to update arrival time']);
-            }
-        }
-    }
 
+    public function getVehicleLocation($vehicleId)
+    {
+        $vehicleLocation = $this->vehicleModel->getVehicleLocation($vehicleId);
 
-    // Add this new method to get current driver location
-    private function getCurrentDriverLocation() {
-        // If you have a stored location in session or database, retrieve it
-        // Otherwise, get it from browser geolocation
-        return [
-            'lat' => $_SESSION['driver_lat'] ?? null,
-            'lng' => $_SESSION['driver_lng'] ?? null
-        ];
-    }
+        // Set proper JSON content type header
+        header('Content-Type: application/json');
 
-    public function markSupplierArrival($collectionId, $supplierId, $arrivalTime, $latitude = null, $longitude = null) {
-        $sql = "UPDATE collection_supplier_records 
-                SET arrival_time = :arrival_time,
-                    latitude = :latitude,
-                    longitude = :longitude
-                WHERE collection_id = :collection_id 
-                AND supplier_id = :supplier_id";
-                
-        $params = [
-            ':arrival_time' => $arrivalTime,
-            ':latitude' => $latitude,
-            ':longitude' => $longitude,
-            ':collection_id' => $collectionId,
-            ':supplier_id' => $supplierId
-        ];
-        
-        return $this->db->query($sql, $params);
-    }
-
-    public function leave() {
-        $userId = $_SESSION['user_id'];
-        $leaveModel = $this->model('M_Leave');
-        
-        // Get leave balances first
-        $leaveBalances = $leaveModel->getLeaveBalance($userId);
-        
-        $data = [
-            'title' => 'Leave Management',
-            'leaveBalance' => (object)[
-                'annual' => $this->findLeaveBalanceByName($leaveBalances, 'Annual Leave'),
-                'sick' => $this->findLeaveBalanceByName($leaveBalances, 'Sick Leave')
-            ],
-            'pendingLeaveCount' => $leaveModel->getPendingLeaveCount($userId),
-            'leaveHistory' => $leaveModel->getLeaveHistory($userId),
-            'leaveTypes' => $leaveModel->getLeaveTypes(),
-            'availableSwapUsers' => $leaveModel->getAvailableSwapUsers($userId, $_SESSION['role_id']),
-            'swapRequests' => $leaveModel->getSwapRequests($userId)
-        ];
-        
-        $this->view('vehicle_driver/v_leave', $data);
-    }
-
-    public function handle_swap_request() {
-        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-            redirect('vehicledriver/leave');
-        }
-
-        $jsonData = json_decode(file_get_contents('php://input'), true);
-        $leaveModel = $this->model('M_Leave');
-        
-        $success = $leaveModel->updateSwapRequest(
-            $jsonData['requestId'], 
-            $jsonData['action'], 
-            $_SESSION['user_id']
-        );
-
-        echo json_encode(['success' => $success]);
-    }
-
-    // Add this helper method
-    private function findLeaveBalanceByName($balances, $leaveName) {
-        if (!is_array($balances) && !is_object($balances)) {
-            return 0;
-        }
-        foreach ($balances as $balance) {
-            if ($balance->name === $leaveName) {
-                return $balance->remaining_days;
-            }
-        }
-        return 0;
-    }
-
-
-    public function collectionRoute($collectionId) {
-        if ($_SERVER['REQUEST_METHOD'] == 'POST') {
-            try {
-                $collection = $this->collectionScheduleModel->getCollectionById($collectionId);
-                if (!$collection) {
-                    redirect('vehicledriver/');
-                }
-
-                // Verify conditions before starting
-                if (!$collection->vehicle_manager_approved || 
-                    !$collection->partner_approved || 
-                    !$collection->initial_weight_bridge || 
-                    !$collection->bags) {
-                    redirect('vehicledriver/scheduleDetails/' . $collection->schedule_id);
-                }
-
-                // Start the collection
-                if ($this->collectionScheduleModel->startCollection($collectionId)) {
-                    $routeSuppliers = $this->routeModel->getRouteSuppliers($collection->schedule_id);
-                    $collectionSupplierRecords = $this->collectionScheduleModel->getCollectionSuppliers($collectionId);
-                    $data = [
-                        'collection' => $collection,
-                        'routeSuppliers' => $routeSuppliers,
-                        'collectionSupplierRecords' => $collectionSupplierRecords
-                    ];
-                    $this->view('vehicle_driver/v_collection_route', $data);
-                } else {
-                    redirect('vehicledriver/scheduleDetails/' . $collection->schedule_id);
-                }
-            } catch (Exception $e) {
-                redirect('vehicledriver/scheduleDetails/' . $collection->schedule_id);
-            }
+        if ($vehicleLocation) {
+            // Return the JSON directly, don't use echo
+            return json_encode($vehicleLocation);
         } else {
-            // Handle GET request
-            $collection = $this->collectionScheduleModel->getCollectionById($collectionId);
-            if ($collection && $collection->start_time) {
-                $routeSuppliers = $this->routeModel->getRouteSuppliers($collection->schedule_id);
-                $collectionSupplierRecords = $this->collectionScheduleModel->getCollectionSuppliers($collectionId);
-                $data = [
-                    'collection' => $collection,
-                    'routeSuppliers' => $routeSuppliers,
-                    'collectionSupplierRecords' => $collectionSupplierRecords
-                ];
-                $this->view('vehicle_driver/v_collection_route', $data);
-            } else {
-                redirect('vehicledriver/scheduleDetails/' . $collection->schedule_id);
-            }
-        }
-    }
-
-    public function setDriverReady($collectionId, $scheduleId) {
-        $this->collectionModel->setDriverReady($collectionId);
-        redirect('vehicledriver/scheduleDetails/' . $scheduleId);
-
-    }
-
-    public function collectionStatus($collectionId) {
-        $collection = $this->collectionScheduleModel->getCollectionById($collectionId);
-        if (!$collection) {
-            redirect('vehicledriver/shift');
+            // Add HTTP status code and return instead of echo
+            http_response_code(404);
+            return json_encode(['error' => 'Vehicle location not found']);
         }
 
-        // Get all supplier records for this collection
-        $collectionSupplierRecords = $this->collectionScheduleModel->getCollectionSuppliers($collectionId);
-        
-        // Find the current supplier (first one without arrival_time)
-        $currentSupplier = null;
-        $currentStopNumber = 0;
-        foreach ($collectionSupplierRecords as $index => $record) {
-            if (!$record->arrival_time) {
-                $currentSupplier = $record;
-                $currentStopNumber = $index + 1;
-                break;
-            }
-        }
-
-        $data = [
-            'collection' => $collection,
-            'currentSupplier' => $currentSupplier,
-            'currentStopNumber' => $currentStopNumber,
-            'collectionSupplierRecords' => $collectionSupplierRecords
-        ];
-
-        $this->view('vehicle_driver/v_collection_status', $data);
+        // Make sure nothing else is output after this
+        exit;
     }
 
 
-    public function setReadyTest() {
-        $data = [];
-        $this->view('v_schedule_details.php', $data);
-    }
+
+    // public function collectionStatus($collectionId) { // OLD PART I THINK, DIDNT COME ACROSS THIS
+    //     $collection = $this->collectionScheduleModel->getCollectionById($collectionId);
+    //     if (!$collection) {
+    //         redirect('vehicledriver/shift');
+    //     }
+
+    //     // Get all supplier records for this collection
+    //     $collectionSupplierRecords = $this->collectionScheduleModel->getCollectionSuppliers($collectionId);
+
+    //     // Find the current supplier (first one without arrival_time)
+    //     $currentSupplier = null;
+    //     $currentStopNumber = 0;
+    //     foreach ($collectionSupplierRecords as $index => $record) {
+    //         if (!$record->arrival_time and $record->status != 'Collected') {
+    //             $currentSupplier = $record;
+    //             $currentStopNumber = $index + 1;
+    //             break;
+    //         }
+    //     }
+
+    //     $data = [
+    //         'collection' => $collection,
+    //         'currentSupplier' => $currentSupplier,
+    //         'currentStopNumber' => $currentStopNumber,
+    //         'collectionSupplierRecords' => $collectionSupplierRecords
+    //     ];
+
+    //     $this->view('vehicle_driver/v_collection_status', $data);
+    // }
 
 
-    public function approveTemp($collectionId) {
-        // Load the collection model
-        $this->collectionModel = $this->model('M_Collection');
 
-        // Prepare the data to update
-        $data = [
-            'collection_id' => $collectionId,
-            // 'status' => 'In Progress',
-            'status' => 'Pending',
-            'vehicle_manager_approved' => 1,
-            'initial_weight_bridge' => 13000,
-            'vehicle_manager_id' => 5, // Temporary vehicle manager ID
-            'vehicle_manager_approved_at' => date('Y-m-d H:i:s') // Current datetime
-        ];
 
-        // Update the collection in the database
-        if ($this->collectionModel->updateCollection($data)) {
-            // Redirect or set a success message
-            redirect('vehicledriver/scheduleDetails/' . $collectionId);
+
+    public function finalizeCollection($collectionId, $supplierId)
+    { // WHEN WE ARE DONE WITH A SUPPLIER, TESTED
+
+        $result = $this->collectionModel->finalizeSupplierCollection($collectionId, $supplierId);
+
+        if ($result) {
+            setFlashMessage('Collection finalized sucessfully!');
+            redirect("vehicledriver/collection/$collectionId");
         } else {
-            // Handle the error (e.g., set an error message)
-            redirect('vehicledriver/shift'); // Redirect to a suitable page on failure
+            setFlashMessage('Failed to finalize the collection!', 'error');
+            redirect("vehicledriver/collectionBags/$collectionId/$supplierId");
         }
     }
 
-    public function assignBags() {
-        error_log('assignBags method called');
-        error_log('Request Method: ' . $_SERVER['REQUEST_METHOD']);
+
+
+    public function createCollection($scheduleId)
+    { // TESTED
         if ($_SERVER['REQUEST_METHOD'] == 'POST') {
-            // Get schedule_id and bags from POST data
-            $scheduleId = $_POST['schedule_id'] ?? null;
-            $bags = $_POST['bags'] ?? [];
-            
-            // Debug: Log the incoming data
-            error_log(print_r($_POST, true));
-            
-            if (!$scheduleId || empty($bags)) {
-                flash('schedule_message', 'Missing schedule ID or no bags were selected', 'alert alert-danger');
-                redirect('vehicledriver/scheduleDetails/' . $scheduleId);
-                return;
+
+            $supplierCount = $this->routeModel->getSupplierCountByScheduleId($scheduleId);
+            if ($supplierCount < 1) {
+                redirect('vehicledriver/' . $scheduleId);
             }
 
-            // Attempt to create collection with bags
-            if ($this->collectionModel->createCollectionWithBags($scheduleId, $bags)) {
-                flash('schedule_message', 'Bags assigned successfully', 'alert alert-success');
-            } else {
-                flash('schedule_message', 'Failed to assign bags', 'alert alert-danger');
-            }
-            
-            redirect('vehicledriver/scheduleDetails/' . $scheduleId);
-        } else {
-            redirect('vehicledriver');
-        }
-    }
-
-    public function checkBag($bagId) {
-        $result = $this->collectionModel->checkBag($bagId);
-        header('Content-Type: application/json');
-        echo json_encode($result);
-    }
-
-    public function updateVehicleLocation() {
-        if (!$this->isAjaxRequest()) {
-            redirect('pages/error');
-            return;
-        }
-
-        $data = json_decode(file_get_contents('php://input'));
-        
-        if (!$data || !isset($data->collection_id, $data->latitude, $data->longitude)) {
-            echo json_encode(['success' => false, 'message' => 'Invalid data']);
-            return;
-        }
-
-        try {
-            // Get vehicle ID from collection -> schedule -> route -> vehicle chain
-            $vehicleId = $this->collectionModel->getVehicleIdFromCollection($data->collection_id);
-            
-            if (!$vehicleId) {
-                throw new Exception('Vehicle not found');
-            }
-
-            // Update vehicle location
-            $result = $this->vehicleModel->updateLocation(
-                $vehicleId, 
-                $data->latitude, 
-                $data->longitude
-            );
-
-            echo json_encode([
-                'success' => $result,
-                'message' => $result ? 'Location updated' : 'Failed to update location'
-            ]);
-
-        } catch (Exception $e) {
-            echo json_encode(['success' => false, 'message' => $e->getMessage()]);
-        }
-    }
-
-    public function submitCollection() {
-        if (!$this->isAjaxRequest()) {
-            redirect('pages/error');
-            return;
-        }
-
-        $data = json_decode(file_get_contents('php://input'));
-        
-        $result = $this->collectionModel->addCollection($data);
-        
-        header('Content-Type: application/json');
-        echo json_encode($result);
-    }
-
-    public function addBagToCollection() {
-        error_log(print_r($_POST, true));
-        if (!$this->isAjaxRequest()) {
-            redirect('pages/error');
-            return;
-        }
-
-        $data = json_decode(file_get_contents('php://input'));
-        
-        // Add to bag_usage_history
-        $result = $this->collectionModel->addBagUsageHistory($data);
-        
-        header('Content-Type: application/json');
-        echo json_encode($result);
-    }
-
-    public function finalizeCollection() {
-        // if (!$this->isAjaxRequest()) {
-        //     redirect('pages/error');
-        //     return;
-        // }
-
-        $data = json_decode(file_get_contents('php://input'));
-        
-        // Update collection_supplier_records
-        $result = $this->collectionModel->finalizeSupplierCollection($data);
-        
-        header('Content-Type: application/json');
-        echo json_encode($result);
-    }
-
-    public function getAssignedBags($supplierId) {
-        // if (!$this->isAjaxRequest()) {
-        //     redirect('pages/error');
-        //     return;
-        // }
-
-        $result = $this->collectionModel->getAssignedBags($supplierId);
-        
-        header('Content-Type: application/json');
-        echo json_encode($result);
-    }
-
-    public function createCollection($scheduleId) {
-        if ($_SERVER['REQUEST_METHOD'] == 'POST') {
-            // Logic to create a collection
             $collectionId = $this->collectionModel->createCollection($scheduleId);
 
             if ($collectionId) {
-                flash('schedule_message', 'Collection created successfully. Awaiting vehicle manager approval.', 'alert alert-success');
-                redirect('vehicledriver/scheduleDetails/' . $scheduleId);
+                $notificationModel = $this->model('M_Notification');
+
+                $driverUserId = $_SESSION['user_id']; //THIS IS US in the driver pov
+                $notificationModel->createNotification(
+                    $driverUserId,
+                    'Collection has started for' . $scheduleId,
+                    'You have started the collection.',
+                    ['link' => 'vehicledriver/']
+                );
+
+                // Notify the manager
+                // $managerId = $this->userModel->getManagerIdByScheduleId($scheduleId);
+                // $managerUserId = $this->userModel->getUserIdByManagerId($managerId);
+                // if ($managerUserId) {
+                //     $notificationModel->createNotification(
+                //         $managerUserId,
+                //         'Collection Started',
+                //         'A collection has started for your schedule.',
+                //         ['link' => 'collection/details/' . $collectionId]
+                //     );
+                // }
+
+                // Notify each supplier
+                $supplierIds = $this->userModel->getSupplierIdsByScheduleId($scheduleId);
+                foreach ($supplierIds as $supplierId) {
+                    $supplierUserId = $this->userModel->getUserIdBySupplierId($supplierId);
+                    if ($supplierUserId) {
+                        $notificationModel->createNotification(
+                            $supplierUserId,
+                            'Collection Started',
+                            'The collection for your schedule has started.',
+                            ['link' => 'supplier/']
+                        );
+                    }
+                }
+
+                redirect('vehicledriver/collection/' . $collectionId);
             } else {
-                flash('schedule_message', 'Failed to create collection', 'alert alert-danger');
-                redirect('vehicledriver/scheduleDetails/' . $scheduleId);
+                redirect('vehicledriver/');
             }
         } else {
-            // If not a POST request, show the form or redirect
-            redirect('vehicledriver/scheduleDetails/' . $scheduleId);
+            redirect('vehicledriver/' . $scheduleId);
         }
     }
+
+
+    // public function endCollection() { // POSSIBLY A DUPLICATE FROM old version, we are using completeCollection
+    //     // Get the JSON input
+    //     $data = json_decode(file_get_contents("php://input"));
+
+    //     if (isset($data->collection_id)) {
+    //         $collectionId = $data->collection_id;
+    //         $result = $this->collectionModel->finalizeCollection($collectionId);
+
+    //         if ($result['success']) {
+    //             // Notifications setup
+    //             $notificationModel = $this->model('M_Notification');
+
+    //             // Get the driver (current session user)
+    //             $driverUserId = $_SESSION['user_id'];
+
+    //             // Get the schedule_id from the collection
+    //             $scheduleId = $this->collectionModel->getScheduleIdByCollectionId($collectionId);
+
+    //             // Notify the driver
+    //             $notificationModel->createNotification(
+    //                 $driverUserId,
+    //                 'Collection Ended',
+    //                 'You have successfully ended the collection.',
+    //                 ['link' => 'vehicledriver/']
+    //             );
+
+
+    //             // $managerId = $this->userModel->getManagerIdByScheduleId($scheduleId);
+    //             // $managerUserId = $this->userModel->getUserIdByManagerId($managerId);
+    //             // if ($managerUserId) {
+    //             //     $notificationModel->createNotification(
+    //             //         $managerUserId,
+    //             //         'Collection Ended',
+    //             //         'The collection for your schedule has been completed.',
+    //             //         ['link' => 'collection/details/' . $collectionId]
+    //             //     );
+    //             // }
+
+    //             // Notify all suppliers
+    //             $supplierIds = $this->routeModel->getSupplierIdsByScheduleId($scheduleId);
+    //             foreach ($supplierIds as $supplierId) {
+    //                 $supplierUserId = $this->userModel->getUserIdBySupplierId($supplierId);
+    //                 if ($supplierUserId) {
+    //                     $notificationModel->createNotification(
+    //                         $supplierUserId,
+    //                         'Collection Completed',
+    //                         'The collection for your schedule has ended.',
+    //                         ['link' => 'supplier/collectionBags/' . $collectionId]
+    //                     );
+    //                 }
+    //             }
+
+    //             echo json_encode(['success' => true, 'message' => 'Collection ended successfully.']);
+    //         } else {
+    //             echo json_encode(['success' => false, 'message' => 'Failed to end collection.']);
+    //         }
+    //     } else {
+    //         echo json_encode(['success' => false, 'message' => 'Invalid collection ID.']);
+    //     }
+    // }
+
+
+
+
+    /**
+     * Show collection bags for a specific supplier
+     */
+    public function collectionBags($collectionId, $supplierId)
+    { // tested, the page we land right into after we created a collection
+        // Get the collection details
+        $collection = $this->collectionModel->getCollectionDetails($collectionId);
+
+        if ($collection->collection_status !== 'Pending') {
+            setFlashMessage("You have already completed this collection. You have no access here! 1", 'warning');
+            redirect('vehicledriver/');
+        }
+
+        $collectionSupplierRecord = $this->collectionModel->getCollectionSupplierRecordDetails($collectionId, $supplierId);
+        if ($collectionSupplierRecord->status !== 'Added') {
+            setFlashMessage("You have already completed this collection. You have no access here! 2" . $collectionSupplierRecord, 'warning');
+            redirect('vehicledriver/');
+        }
+
+        // Get the supplier details
+        $supplier = $this->supplierModel->getSupplierById($supplierId);
+
+        // Get bags for this collection and supplier
+        $bags = $this->collectionModel->getCollectionBags($collectionId, $supplierId);  // tested
+
+        // Format supplier data for display
+        $formattedSupplier = [
+            'id' => $supplier->supplier_id,
+            'supplierName' => $supplier->supplier_name,
+            'image' => $supplier->image_path,
+            'estimatedCollection' => $supplier->average_collection,
+            'contact' => $supplier->contact_number
+        ];
+
+        $data = [
+            'pageTitle' => 'Collection Bags',
+            'collection' => $collection,
+            'supplier' => $formattedSupplier,
+            'bags' => $bags
+        ];
+
+        $this->view('vehicle_driver/v_collection_bags', $data);
+    }
+
+    /**
+     * Show add bag form
+     */
+    public function addBag($collectionId, $supplierId)
+    { // USING THIS OK, TESTED
+        $collection = $this->collectionModel->getCollectionDetails($collectionId);
+        $supplier = $this->supplierModel->getSupplierById($supplierId);
+
+
+        if ($collection->collection_status !== 'Pending') {
+            setFlashMessage("You have already completed this collection. You have no access here!", 'warning');
+            redirect('vehicledriver/');
+        }
+
+        $collectionSupplierRecord = $this->collectionModel->getCollectionSupplierRecordDetails($collectionId, $supplierId);
+        if ($collectionSupplierRecord->status !== 'Added') {
+            setFlashMessage("You have already completed this collection. You have no access here!", 'warning');
+            redirect('vehicledriver/');
+        }
+
+        $leafTypesResult = $this->collectionModel->getCollectionTeaLeafTypes();
+        $leafTypes = $leafTypesResult['success'] ? $leafTypesResult['leafTypes'] : [];
+
+        $formattedSupplier = [
+            'id' => $supplier->supplier_id,
+            'supplierName' => $supplier->supplier_name,
+            'image' => $supplier->image_path,
+            'estimatedCollection' => $supplier->average_collection,
+            'contact' => $supplier->contact_number
+        ];
+
+        $data = [
+            'pageTitle' => 'Add Collection Bag',
+            'collection' => $collection,
+            'supplier' => $formattedSupplier,
+            'leafTypes' => $leafTypes
+        ];
+        // setFlashMessage("Added the bag successfully!");
+
+        $this->view('vehicle_driver/v_collection_bag_add', $data);
+    }
+
+    /**
+     * Save a new bag
+     */
+    public function saveBag()
+    { // IS USED TESTED!
+        // Check if it's a POST request
+        if ($_SERVER['REQUEST_METHOD'] != 'POST') {
+            redirect('vehicledriver/');
+        }
+
+        $collectionId = filter_input(INPUT_POST, 'collection_id', FILTER_SANITIZE_NUMBER_INT);
+        $supplierId = filter_input(INPUT_POST, 'supplier_id', FILTER_SANITIZE_NUMBER_INT);
+        $bagId = filter_input(INPUT_POST, 'bag_id', FILTER_SANITIZE_STRING);
+        $actualWeight = filter_input(INPUT_POST, 'actual_weight', FILTER_SANITIZE_NUMBER_FLOAT, FILTER_FLAG_ALLOW_FRACTION);
+        $leafType = filter_input(INPUT_POST, 'leaf_type', FILTER_SANITIZE_NUMBER_INT);
+        $leafAge = filter_input(INPUT_POST, 'leaf_age', FILTER_SANITIZE_STRING);
+        $moistureLevel = filter_input(INPUT_POST, 'moisture_level', FILTER_SANITIZE_STRING);
+        $notes = filter_input(INPUT_POST, 'notes', FILTER_SANITIZE_STRING);
+
+        // Validation for actual weight
+        if ($actualWeight <= 0) {
+            setFlashMessage('Weight must be a positive value.', 'error');
+            redirect("vehicledriver/collectionBags/$collectionId/$supplierId");
+            return;
+        }
+
+        if ($actualWeight > 40) {
+            setFlashMessage('Weight cannot exceed capacity!', 'error');
+            redirect("vehicledriver/collectionBags/$collectionId/$supplierId");
+            return;
+        }
+
+        $bagData = [
+            'collection_id' => $collectionId,
+            'supplier_id' => $supplierId,
+            'bag_id' => $bagId,
+            'actual_weight' => $actualWeight,
+            'leaf_type_id' => $leafType,
+            'leaf_age' => $leafAge,
+            'moisture_level' => $moistureLevel,
+            'notes' => $notes
+        ];
+
+        $result = $this->collectionModel->saveBag($bagData);
+
+        if (!$result['success']) {
+            setFlashMessage($result['message'], 'error');
+        } else {
+            setFlashMessage("Assigned the bag to the supplier!");
+        }
+        redirect("vehicledriver/collectionBags/$collectionId/$supplierId");
+    }
+
+    /**
+     * Show update bag form
+     */
+    public function updateBag($collectionId, $supplierId, $bagId)
+    { // TESTED
+
+
+        // Get the bag details
+        $bag = $this->collectionModel->getBagById($bagId, $collectionId);
+
+        if (!$bag) {
+            setFlashMessage('Bag not found, please retry!', 'error');
+            redirect("vehicledriver/collectionBags/$collectionId/$supplierId");
+        }
+
+        $collection = $this->collectionModel->getCollectionDetails($collectionId);
+
+        if ($collection->collection_status !== 'Pending') {
+            setFlashMessage("You have already completed this collection. You have no access here!", 'warning');
+            redirect('vehicledriver/');
+        }
+
+        $collectionSupplierRecord = $this->collectionModel->getCollectionSupplierRecordDetails($collectionId, $supplierId);
+        if ($collectionSupplierRecord->status !== 'Added') {
+            setFlashMessage("You have already completed this collection. You have no access here!", 'warning');
+            redirect('vehicledriver/');
+        }
+
+        // Get the supplier details
+        $supplier = $this->supplierModel->getSupplierById($supplierId);
+
+        // Get leaf types for dropdown
+        $leafTypesResult = $this->collectionModel->getCollectionTeaLeafTypes();
+        $leafTypes = $leafTypesResult['success'] ? $leafTypesResult['leafTypes'] : [];
+
+
+        $data = [
+            'pageTitle' => 'Update Collection Bag',
+            'collection' => $collection,
+            'supplier_id' => $supplierId,
+            'bag' => $bag,
+            'leafTypes' => $leafTypes
+        ];
+
+        $this->view('vehicle_driver/v_collection_bag_update', $data);
+    }
+
+    /**
+     * Update bag submission
+     */
+    public function updateBagSubmit()
+    { //TESTED
+        // Check if it's a POST request
+        if ($_SERVER['REQUEST_METHOD'] != 'POST') {
+            redirect('vehicledriver/');
+        }
+
+        // Sanitize and validate POST data
+        $historyId = filter_input(INPUT_POST, 'history_id', FILTER_SANITIZE_NUMBER_INT);
+        $collectionId = filter_input(INPUT_POST, 'collection_id', FILTER_SANITIZE_NUMBER_INT);
+        $supplierId = filter_input(INPUT_POST, 'supplier_id', FILTER_SANITIZE_NUMBER_INT);
+        $bagId = filter_input(INPUT_POST, 'bag_id', FILTER_SANITIZE_STRING);
+        $actualWeight = filter_input(INPUT_POST, 'actual_weight', FILTER_SANITIZE_NUMBER_FLOAT, FILTER_FLAG_ALLOW_FRACTION);
+        $leafType = filter_input(INPUT_POST, 'leaf_type', FILTER_SANITIZE_NUMBER_INT);
+        $leafAge = filter_input(INPUT_POST, 'leaf_age', FILTER_SANITIZE_STRING);
+        $moistureLevel = filter_input(INPUT_POST, 'moisture_level', FILTER_SANITIZE_STRING);
+        $notes = filter_input(INPUT_POST, 'notes', FILTER_SANITIZE_STRING);
+
+        // Create bag data array
+        $bagData = [
+            'history_id' => $historyId,
+            'bag_id' => $bagId,
+            'collection_id' => $collectionId,
+            'supplier_id' => $supplierId,
+            'actual_weight' => $actualWeight,
+            'leaf_type' => $leafType,
+            'leaf_age' => $leafAge,
+            'moisture_level' => $moistureLevel,
+            'notes' => $notes
+        ];
+
+        // Update the bag
+        $result = $this->collectionModel->updateBag($bagData);
+
+        if ($result['success']) {
+            setFlashMessage($result['message']);
+        } else {
+
+            setFlashMessage($result['message'], 'error');
+        }
+
+        redirect("vehicledriver/collectionBags/$collectionId/$supplierId");
+    }
+
+
+    public function removeBag($bagId, $collectionId, $supplierId)
+    {  //TESTED
+        // Delete the bag
+        $this->collectionModel->deleteBag($bagId, $collectionId);
+        setFlashMessage("Removed the bag sucessfully!");
+
+        // Redirect back to bags list
+        redirect("vehicledriver/collectionBags/$collectionId/$supplierId");
+    }
+
+    public function getBagDetails($bagId = null)
+    { // DIDNT COME ACROSS THIS YET IN NORMAL DRIVER PART
+        // Settting to json tyipe
+        header('Content-Type: application/json');
+
+
+        if (!$bagId) {
+            $bagId = isset($_POST['bag_id']) ? $_POST['bag_id'] : null;
+        }
+
+
+        if (!$bagId) {
+            echo json_encode([
+                'success' => false,
+                'message' => 'No bag ID provided'
+            ]);
+            return;
+        }
+
+
+        $capacityResult = $this->collectionModel->getBagCapacity($bagId);
+
+
+        echo json_encode([
+            'success' => $capacityResult['success'],
+            'capacity' => $capacityResult['capacity'],
+            'bag_id' => $bagId
+        ]);
+    }
+
+    public function completeCollection($collectionId)
+    { // tESTED
+        // Update the collection status to awaiting inventory addition
+        $result = $this->collectionModel->completeCollection($collectionId);
+
+        if ($result) {
+            setFlashMessage('Collection completed sucessfully!');
+        } else {
+            setFlashMessage('Collection completion failed!');
+        }
+
+        redirect('vehicledriver/');
+    }
+
+    public function cancelSupplierCollection($collectionId, $supplierId)
+    { // tESTED
+
+        // We have to follow some steps. 
+        // We intially need to check the bag_usage_history for that supplier_id and collection_id, 
+        // if its empty we may proceed to the next step.
+
+
+
+
+        // Check if there are any bags for this supplier in this collection
+        $bags = $this->collectionModel->getBagsByCollectionAndSupplier($collectionId, $supplierId); // tested
+
+        if (!empty($bags)) {
+            // Cannot cancel if bags exist
+            setFlashMessage('Cannot cancel collection for this supplier, there are bags already assigned. First remove them!', 'error');
+            redirect("vehicledriver/collectionBags/$collectionId/$supplierId");
+            return;
+        }
+
+        // Update the status to 'No Show'
+        if ($this->collectionModel->updateSupplierCollectionStatus($collectionId, $supplierId, 'No Show')) {
+            setFlashMessage('Marked the supplier as unavailable!');
+        } else {
+            setFlashMessage('Couldnt mark this supplier as unavailable!', 'error');
+        }
+
+        redirect("vehicledriver/collection/$collectionId");
+    }
+
 }
 
 ?>

@@ -22,10 +22,10 @@
         <span class="text">Fertilizer</span>
       </a>
     </li>
-    <li class="<?php echo (basename($_SERVER['REQUEST_URI']) == 'order') ? 'active' : ''; ?>">
-      <a href="../inventory/order">
+    <li class="<?php echo (basename($_SERVER['REQUEST_URI']) == 'collectionBags') ? 'active' : ''; ?>">
+      <a href="<?php echo URLROOT; ?>/inventory/collectionBags">
         <i class="bx bx-trip"></i>
-        <span class="text">Order</span>
+        <span class="text">Bag</span>
       </a>
     </li>
     <li class="<?php echo (basename($_SERVER['REQUEST_URI']) == 'machine') ? 'active' : ''; ?>">
@@ -34,15 +34,15 @@
         <span class="text">Machine Allocation</span>
       </a>
     </li>
-    <li class="<?php echo (basename($_SERVER['REQUEST_URI']) == 'export') ? 'active' : ''; ?>">
-      <a href="../export/release">
+    <li class="<?php echo (basename($_SERVER['REQUEST_URI']) == 'release') ? 'active' : ''; ?>">
+      <a href="<?php echo URLROOT; ?>/export/release">
         <i class="bx bxs-group"></i>
         <span class="text">Export</span>
       </a>
     </li>
 
     <li class="<?php echo (basename($_SERVER['REQUEST_URI']) == 'payments') ? 'active' : ''; ?>">
-      <a href="../inventory/payments">
+      <a href="<?php echo URLROOT; ?>/inventory/payments">
         <i class="bx bxs-group"></i>
         <span class="text">Payments</span>
       </a>
@@ -53,14 +53,14 @@
         <span class="text">Recodes</span>
       </a>
     </li> -->
-  </ul>
-  <ul class="side-menu">
-    <li>
+    <!-- <li class="<?php echo (basename($_SERVER['REQUEST_URI']) == 'settings') ? 'active' : ''; ?>">
       <a href="../inventory/settings">
         <i class="bx bxs-cog"></i>
-        <span class="text">Settings</span>
+        <span class="text">Payment</span>
       </a>
-    </li>
+    </li> -->
+  </ul>
+  <ul class="side-menu">
     <li>
         <a href="<?php echo URLROOT; ?>/auth/logout" class="logout">
             <i class="bx bxs-log-out-circle"></i>

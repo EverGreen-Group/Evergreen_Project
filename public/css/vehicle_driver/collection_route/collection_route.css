@@ -36,3 +36,9 @@
   background: #2196f3;
   color: white;
 }
+
+/* Add this to your CSS file */
+.border-supplier {
+  border: 1px solid #ccc; /* Light gray border */
+  border-radius: 5px; /* Optional: rounded corners */
+}

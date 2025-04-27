@@ -1,9 +1,11 @@
 <?php
 class Collectionschedules extends Controller {
     private $collectionScheduleModel;
+    private $logModel;
 
     public function __construct() {
         $this->collectionScheduleModel = $this->model('M_CollectionSchedule');
+        $this->logModel = $this->model('M_Log');
     }
 
 
@@ -17,66 +19,18 @@ class Collectionschedules extends Controller {
             'schedule' => $schedule
         ]);
     }    
-    public function create() {
-        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-            redirect('vehiclemanager/dashboard');
-        }
-
-        // Get and sanitize POST data
-        $data = [
-            'route_id' => trim($_POST['route_id']),
-            'driver_id' => trim($_POST['driver_id']),
-            // Removed vehicle_id since it's no longer used
-            'shift_id' => trim($_POST['shift_id']),
-            'week_number' => trim($_POST['week_number']),
-            'day' => trim($_POST['day']) // Changed from days_of_week to day
-        ];
-
-        // Debug: Print data
-        error_log(print_r($data, true));
-
-        // Validation rules
-        $errors = [];
-
-
-        // Validate day selection
-        if (empty($data['day'])) {
-            $errors[] = "Please select a day of the week";
-        }
-
-        // If there are any errors, display them and redirect
-        if (!empty($errors)) {
-            foreach ($errors as $error) {
-                flash('schedule_create_error', $error, 'alert alert-danger');
-            }
-            redirect('vehiclemanager/');
-            return;
-        }
-
-
-
-        // Create schedule for this day
-        if (!$this->collectionScheduleModel->create($data)) {
-            flash('schedule_create_error', "Failed to create schedule for {$data['day']}", 'alert alert-danger');
-            redirect('vehiclemanager/');
-            return;
-        }
-
-        flash('schedule_create_success', 'Collection schedule created successfully!', 'alert alert-success');
-        redirect('vehiclemanager/');
-    }
 
     public function toggleActive() {
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $schedule_id = $_POST['schedule_id'];
             
             if ($this->collectionScheduleModel->toggleActive($schedule_id)) {
-                flash('schedule_success', 'Schedule status updated successfully');
+                setFlashMessage('Schedule status updated sucessfully');
             } else {
-                flash('schedule_error', 'Failed to update schedule status');
+                setFlashMessage('Unable to update the schedle status!', 'error');
             }
             
-            redirect('vehiclemanager/');
+            redirect('manager/');
         }
     }
 
@@ -85,12 +39,20 @@ class Collectionschedules extends Controller {
             $schedule_id = $_POST['schedule_id'];
             
             if ($this->collectionScheduleModel->delete($schedule_id)) {
-                flash('schedule_success', 'Schedule deleted successfully');
+                $this->logModel->create(
+                    $_SESSION['user_id'],
+                    $_SESSION['email'],
+                    $_SERVER['REMOTE_ADDR'],
+                    "Schedule with ID {$schedule_id} deleted successfully.",
+                    $_SERVER['REQUEST_URI'],     
+                    http_response_code()     
+                );
+                setFlashMessage('Schedule status deleted successfully');
             } else {
-                flash('schedule_error', 'Failed to delete schedule');
+                setFlashMessage('Unable to delete the schedule', 'error');
             }
             
-            redirect('vehiclemanager/');
+            redirect('manager/');
         }
     }
 
@@ -100,26 +62,38 @@ class Collectionschedules extends Controller {
                 'schedule_id' => $_POST['schedule_id'],
                 'route_id' => $_POST['route_id'],
                 'driver_id' => $_POST['driver_id'],
-                // Removed vehicle_id since it's no longer used
                 'shift_id' => $_POST['shift_id'],
-                'week_number' => $_POST['week_number'],
-                // Removed day since it's not necessary to update
             ];
-    
-            // Check for schedule conflicts (excluding current schedule)
+
             if ($this->collectionScheduleModel->checkConflict($data)) {
-                flash('schedule_error', "Schedule conflict detected for the selected route", 'alert alert-danger');
-                redirect('vehiclemanager/');
+                setFlashMessage('Cannot update the schedule, a conflict exists!', 'error');
+                redirect('manager/');
                 return;
             }
     
             if ($this->collectionScheduleModel->update($data)) {
-                flash('schedule_success', 'Collection schedule updated successfully');
+                $this->logModel->create(
+                    $_SESSION['user_id'],
+                    $_SESSION['email'],
+                    $_SERVER['REMOTE_ADDR'],
+                    "Schedule with ID {$data['schedule_id']} updated successfully.",
+                    $_SERVER['REQUEST_URI'],     
+                    http_response_code()     
+                );
+                setFlashMessage('Schedule updated successfully');
             } else {
-                flash('schedule_error', 'Failed to update collection schedule');
+                $this->logModel->create(
+                    $_SESSION['user_id'],
+                    $_SESSION['email'],
+                    $_SERVER['REMOTE_ADDR'],
+                    "Failed to update schedule with ID {$data['schedule_id']}.",
+                    $_SERVER['REQUEST_URI'],     
+                    http_response_code()     
+                );
+                setFlashMessage('Failed to update the schedule');
             }
     
-            redirect('vehiclemanager/');
+            redirect('manager/');
         }
     }
 
@@ -139,5 +113,31 @@ class Collectionschedules extends Controller {
         
         header('Content-Type: application/json');
         echo json_encode($schedule);
+    }
+
+
+    public function showCollectionSchedules() {
+        $schedules = $this->collectionScheduleModel->getSchedulesForNextWeek();
+        
+        // Pass the schedules to the view
+        $data = [
+            'schedules' => $schedules,
+        ];
+        
+        $this->view('vehicle_manager/v_collection', $data);
+    }
+
+    public function getScheduleDetails($scheduleId) {
+        if ($_SERVER['REQUEST_METHOD'] === 'GET') {
+            $schedule = $this->collectionScheduleModel->getScheduleById($scheduleId);
+            
+            if ($schedule) {
+                echo json_encode(['success' => true, 'schedule' => $schedule]);
+            } else {
+                echo json_encode(['success' => false, 'message' => 'Schedule not found']);
+            }
+        } else {
+            echo json_encode(['success' => false, 'message' => 'Invalid request method']);
+        }
     }
 } 

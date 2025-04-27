@@ -1,1136 +1,528 @@
 <?php
-
 require APPROOT . '/views/inc/components/header.php';
 require APPROOT . '/views/inc/components/sidebar_vehicle_driver.php';
 require APPROOT . '/views/inc/components/topnavbar.php';
 ?>
+<link rel="stylesheet" href="<?php echo URLROOT; ?>/css/vehicle_driver/driver_dashboard.css">
 
 <main>
-    <!-- <?php print_r($_SESSION); ?> -->
     <div class="head-title">
         <div class="left">
-            <h1>Vehicle Driver Dashboard</h1>
+            <h1>Driver Dashboard</h1>
             <ul class="breadcrumb">
-                <li><a href="#">Dashboard</a></li>
-                <li>Overview</li>
+                <li>
+                    <i class='bx bx-home'></i>
+                    <a href="<?php echo URLROOT; ?>/VehicleDriver/dashboard/">Dashboard</a>
+                </li>
             </ul>
         </div>
     </div>
 
-<!-- Quick Stats -->
-<?php
-    // Get current date and time
-    $currentTime = time();
-    $today = date('Y-m-d');
-    
-    // Initialize variables for next collection
-    $nextCollectionTime = "No upcoming collections";
-    $nextCollectionLocation = "N/A";
-    
-    // Variables for today's progress
-    $totalTodayShifts = 0;
-    $completedTodayShifts = 0;
-    
-    if (!empty($data['upcomingShifts'])) {
-        $nextShift = null;
-        
-        foreach ($data['upcomingShifts'] as $shift) {
-            // Check if shift is for today
-            if ($shift->day === strtolower(date('l'))) {
-                $totalTodayShifts++;
-                
-                $shiftDateTime = $today . ' ' . $shift->start_time;
-                $shiftTimestamp = strtotime($shiftDateTime);
-                $shiftEndDateTime = $today . ' ' . $shift->end_time;
-                $shiftEndTimestamp = strtotime($shiftEndDateTime);
-                
-                // Count completed shifts
-                if ($currentTime > $shiftEndTimestamp) {
-                    $completedTodayShifts++;
+    <!-- Profile Card Section -->
+    <div class="profile-card">
+        <div class="profile-image">
+            <?php
+                $profileImageSrc = URLROOT . '/uploads/driver_photos/default-driver.png'; 
+                if (isset($_SESSION['profile_image_path']) && !empty($_SESSION['profile_image_path'])) {
+                    $profileImageSrc = URLROOT . '/' . $_SESSION['profile_image_path'];
                 }
-                
-                // Find next upcoming shift
-                if ($currentTime < $shiftTimestamp && ($nextShift === null || $shiftTimestamp < strtotime($today . ' ' . $nextShift->start_time))) {
-                    $nextShift = $shift;
-                }
-            }
-        }
-        
-        // Format next collection time and location if found
-        if ($nextShift !== null) {
-            $nextCollectionTime = date('g:i A', strtotime($today . ' ' . $nextShift->start_time));
-            $nextCollectionLocation = $nextShift->route_name ?? 'Route Location';
-        }
-    }
-?>
-
-<ul class="route-box-info">
-    <li>
-        <i class='bx bxs-time'></i>
-        <span class="text">
-            <p>Current Time</p>
-            <h3 id="current-time">--:--</h3>
-            <span>Local Time</span>
-        </span>
-    </li>
-    <li>
-        <i class='bx bxs-timer'></i>
-        <span class="text">
-            <p>Next Collection</p>
-            <h3><?php echo $nextCollectionTime; ?></h3>
-            <span><?php echo $nextCollectionLocation; ?></span>
-        </span>
-    </li>
-    <!-- <li>
-        <i class='bx bxs-calendar'></i>
-        <span class="text">
-            <p>Today's Progress</p>
-            <h3><?php echo $completedTodayShifts . '/' . $totalTodayShifts; ?></h3>
-            <span>Collections</span>
-        </span>
-    </li> -->
-</ul>
-
-<script>
-function updateCurrentTime() {
-    const currentTimeElement = document.getElementById('current-time');
-    const now = new Date();
-    currentTimeElement.textContent = now.toLocaleTimeString('en-US', {
-        hour: 'numeric',
-        minute: '2-digit',
-        hour12: true
-    });
-}
-
-// Update immediately and then every second
-updateCurrentTime();
-setInterval(updateCurrentTime, 1000);
-</script>
-
-
-    <!-- Shift Management Section -->
-    <div class="shift-content">
-        <section class="upcoming-shifts">
-            <h2>Upcoming Shifts</h2>
-            <?php if (isset($data['error'])): ?>
-                <div class="alert alert-warning"><?php echo $data['error']; ?></div>
-            <?php else: ?>
-                <!-- Table view (shows above 600px) -->
-                <?php
-            // echo "<pre style='background: #f5f5f5; padding: 10px; margin: 10px 0;'>";
-            // echo "Current Time: " . date('Y-m-d H:i:s', time()) . "\n\n";
-            
-            if (!empty($data['upcomingShifts'])) {
-                foreach ($data['upcomingShifts'] as $shift) {
-                    $currentTime = time();
-                    $todayDate = date('Y-m-d');
-                    $shiftDateTime = $todayDate . ' ' . $shift->start_time;
-                    $shiftEndDateTime = $todayDate . ' ' . $shift->end_time;
-                    $shiftTimestamp = strtotime($shiftDateTime);
-                    $shiftEndTimestamp = strtotime($shiftEndDateTime);
-                    $timeUntilShift = $shiftTimestamp - $currentTime;
-                    $hoursUntilShift = $timeUntilShift / 3600; // Convert seconds to hours
-
-                    $isWithinTimeframe = ($hoursUntilShift <= 5 && $hoursUntilShift > 0) || 
-                    ($currentTime >= $shiftTimestamp && $currentTime <= $shiftEndTimestamp);
-                    
-                    // echo "Shift Details:\n";
-                    // echo "Day: " . $shift->day . "\n";
-                    // echo "Start Time: " . $shiftDateTime . " (timestamp: $shiftTimestamp)\n";
-                    // echo "End Time: " . $shiftEndDateTime . " (timestamp: $shiftEndTimestamp)\n";
-                    // echo "Current Time Timestamp: $currentTime\n";
-                    // echo "Hours until shift: " . number_format($hoursUntilShift, 2) . "\n";
-                    // echo "Is within 5 hours: " . ($isWithinTimeframe ? "Yes" : "No") . "\n";
-                    // echo "Is Future Shift: " . ($hoursUntilShift > 0 ? "Yes" : "No") . "\n\n";
-                }
-            }
-            echo "</pre>";
             ?>
-
-                <table class="shift-table">
-                    <thead>
-                        <tr>
-                            <th>Day</th>
-                            <th>Time</th>
-                            <th class="hide-mobile">Countdown</th>
-                            <th><i class='bx bx-dots-vertical-rounded'></i></th>
-                        </tr>
-                    </thead>
-                        <?php 
-                        if (!empty($data['upcomingShifts'])):
-                            $sortedShifts = [];
-                            foreach ($data['upcomingShifts'] as $shift) {
-                                $currentTime = time();
-                                $todayDate = date('Y-m-d');
-                                $shiftDateTime = $todayDate . ' ' . $shift->start_time;
-                                $shiftEndDateTime = $todayDate . ' ' . $shift->end_time;
-                                $shiftTimestamp = strtotime($shiftDateTime);
-                                $shiftEndTimestamp = strtotime($shiftEndDateTime);
-                                
-                                // Calculate hours until shift
-                                $timeUntilShift = $shiftTimestamp - $currentTime;
-                                $hoursUntilShift = $timeUntilShift / 3600;
-                                
-                                // Check if shift is within 5 hours or ongoing
-                                $isWithinTimeframe = ($hoursUntilShift <= 5 && $hoursUntilShift > 0) || 
-                                ($currentTime >= $shiftTimestamp && $currentTime <= $shiftEndTimestamp);
-                                
-                                if ($hoursUntilShift > 0 || ($currentTime >= $shiftTimestamp && $currentTime <= $shiftEndTimestamp)) {
-                                    $sortedShifts[] = [
-                                        'day' => $shift->day,
-                                        'startDateTime' => $shiftDateTime,
-                                        'endDateTime' => $shiftEndDateTime,
-                                        'timestamp' => $shiftTimestamp,
-                                        'isWithinTimeframe' => $isWithinTimeframe,
-                                        'shift' => $shift,
-                                        'hoursUntilShift' => $hoursUntilShift
-                                    ];
-                                }
-                            }
-                            
-                            usort($sortedShifts, function($a, $b) {
-                                return $a['timestamp'] - $b['timestamp'];
-                            });
-                            
-                            foreach ($sortedShifts as $sortedShift):
-                                $shift = $sortedShift['shift'];
-                        ?>
-                            <tr>
-                                <td><?php echo ucfirst($sortedShift['day']); ?></td>
-                                <td><?php echo $shift->start_time; ?></td>
-                                <td class="hide-mobile">
-                                    <span class="countdown" data-start="<?php echo $sortedShift['startDateTime']; ?>">
-                                        Calculating...
-                                    </span>
-                                </td>
-                                <td>
-                                    <a href="<?php echo URLROOT; ?>/vehicledriver/scheduleDetails/<?php echo $shift->schedule_id; ?>" 
-                                    class="btn-icon">
-                                        <i class='bx bx-right-arrow-alt'></i>
-                                    </a>
-                                </td>
-                            </tr>
-                        <?php 
-                            endforeach;
-                        else: 
-                        ?>
-                            <tr>
-                                <td colspan="4" class="text-center">No shifts available</td>
-                            </tr>
-                        <?php endif; ?>
-                    </tbody>
-                </table>
-
-                <!-- Card view (shows below 600px) -->
-                <div class="shifts-card-container">
-                    <?php 
-                    if (!empty($sortedShifts)):
-                        foreach ($sortedShifts as $sortedShift):
-                            $shift = $sortedShift['shift'];
-                    ?>
-                        <div class="shift-card">
-                            <div class="shift-card-header">
-                                <span class="shift-card-day"><?php echo ucfirst($sortedShift['day']); ?></span>
-                                <span class="shift-card-time"><?php echo $shift->start_time; ?></span>
-                            </div>
-                            <div class="shift-card-details">
-                                <div class="shift-card-countdown">
-                                    <span class="countdown" data-start="<?php echo $sortedShift['startDateTime']; ?>">
-                                        Calculating...
-                                    </span>
-                                </div>
-                            </div>
-                            <div class="shift-card-footer">
-                                <span class="shift-card-status"><?php echo $sortedShift['isOngoing'] ? 'Active' : 'Upcoming'; ?></span>
-                                <a href="<?php echo URLROOT; ?>/vehicledriver/scheduleDetails/<?php echo $shift->schedule_id; ?>" 
-                                class="btn-icon">
-                                    <i class='bx bx-right-arrow-alt'></i>
-                                </a>
-                            </div>
-                        </div>
-                    <?php 
-                        endforeach;
-                    else: 
-                    ?>
-                        <div class="shift-card">
-                            <p class="text-center">No shifts available</p>
-                        </div>
-                    <?php endif; ?>
-                </div>
+            <img src="<?php echo htmlspecialchars($profileImageSrc); ?>" alt="Profile Photo">
+        </div>
+        <div class="profile-info">
+            <?php if (isset($_SESSION['full_name'])): ?>
+                <h2 class="welcome-text">Welcome back, <?php echo htmlspecialchars($_SESSION['full_name']); ?></h2>
+                <p class="last-login-text">Last login: <?php echo isset($_SESSION['last_login']) ? htmlspecialchars($_SESSION['last_login']) : date('M d, Y h:i A'); ?></p>
             <?php endif; ?>
-        </section>
+        </div>
+    </div>
+
+    <!-- Today's Schedule Section -->
+    <div class="schedule-section">
+        <div class="section-header">
+            <h2><i class='bx bx-calendar-check'></i> Today's Schedule</h2>
+        </div>
+
+        <?php if (!empty($data['schedule'])): ?>
+        <div class="schedule-content">
+            <div class="assigned-schedule-card">
+                <div class="schedule-header">
+                    <i class='bx bx-calendar-check'></i>
+                    <h3>Collection Schedule</h3>
+                    <div class="next-date">Today: <?php echo date('M d, Y'); ?></div>
+                </div>
+                
+                <div class="schedule-info">
+                    <div class="schedule-time">
+                        <div class="day-badge"><?php echo htmlspecialchars($data['schedule']->day); ?></div>
+                        <div class="time">
+                            <?php echo date("h:i A", strtotime($data['schedule']->start_time)); ?>
+                        </div>
+                        <div class="route"><i class='bx bx-map'></i> <?php echo htmlspecialchars($data['schedule']->route_name); ?></div>
+                    </div>
+                    
+                    <div class="schedule-details">
+                        <div class="detail-item">
+                            <strong>Schedule ID:</strong>
+                            <span><?php echo htmlspecialchars($data['schedule']->schedule_id); ?></span>
+                        </div>
+                        <div class="detail-item">
+                            <strong>Vehicle:</strong>
+                            <span><?php echo htmlspecialchars($data['schedule']->vehicle_type); ?> (<?php echo htmlspecialchars($data['schedule']->license_plate); ?>)</span>
+                        </div>
+                        <div class="detail-item">
+                            <strong>Status:</strong>
+                            <?php if (isset($data['collection_completed'])): ?>
+                                <span class="status-pill completed">Completed</span>
+                            <?php else: ?>
+                                <span class="status-pill pending">Pending</span>
+                            <?php endif; ?>
+                        </div>
+                        
+                        <?php if (!isset($data['collection_completed'])): ?>
+                        <div class="schedule-actions">
+                            <form action="<?php echo URLROOT; ?>/vehicledriver/createCollection/<?php echo htmlspecialchars($data['schedule']->schedule_id); ?>" method="POST">
+                                <button type="submit" class="btn-action start">
+                                    <i class='bx bx-play-circle'></i> Start Collection
+                                </button>
+                            </form>
+                        </div>
+                        <?php endif; ?>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <?php else: ?>
+        <div class="no-schedule-message">
+            <i class='bx bx-calendar-x'></i>
+            <p>No schedule available for today.</p>
+        </div>
+        <?php endif; ?>
+    </div>
+
+    <!-- Assigned Schedules Section -->
+    <div class="upcoming-schedules-section">
+        <div class="section-header">
+            <h2><i class='bx bx-calendar'></i> Assigned Schedules</h2>
+        </div>
+        
+        <?php if (!empty($data['allSchedules'])): ?>
+        <div class="table-container">
+            <table class="schedules-table">
+                <thead>
+                    <tr>
+                        <th>Date</th>
+                        <th>Day</th>
+                        <th>Time</th>
+                        <th>Route</th>
+                        <th>Vehicle</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <?php foreach ($data['allSchedules'] as $schedule): ?>
+                    <tr>
+                        <td><?php echo date('M d, Y', strtotime($schedule->start_time)); ?></td>
+                        <td><?php echo htmlspecialchars($schedule->day); ?></td>
+                        <td><?php echo date('h:i A', strtotime($schedule->start_time)); ?></td>
+                        <td><?php echo htmlspecialchars($schedule->route_name); ?></td>
+                        <td><?php echo htmlspecialchars($schedule->vehicle_type); ?> (<?php echo htmlspecialchars($schedule->license_plate); ?>)</td>
+                    </tr>
+                    <?php endforeach; ?>
+                </tbody>
+            </table>
+        </div>
+        <?php else: ?>
+        <div class="no-schedule-message">
+            <i class='bx bx-calendar-x'></i>
+            <p>No assigned schedules available.</p>
+        </div>
+        <?php endif; ?>
     </div>
 </main>
 
-<script>
-// Update current time
-function updateCurrentTime() {
-    const now = new Date();
-    const hours = String(now.getHours()).padStart(2, '0');
-    const minutes = String(now.getMinutes()).padStart(2, '0');
-    document.getElementById('current-time').textContent = `${hours}:${minutes}`;
-}
-
-// Improved countdown function
-function updateCountdowns() {
-    document.querySelectorAll('.countdown').forEach(function(element) {
-        const startTime = new Date(element.dataset.start).getTime();
-        const now = new Date().getTime();
-        const distance = startTime - now;
-
-        if (distance < 0) {
-            element.innerHTML = "Started";
-            return;
-        }
-
-        // Calculate time units
-        const days = Math.floor(distance / (1000 * 60 * 60 * 24));
-        const hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-        const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
-        const seconds = Math.floor((distance % (1000 * 60)) / 1000);
-
-        // Format the display based on the remaining time
-        let displayText = '';
-        if (days > 0) {
-            displayText = `${days}d ${hours}h`;
-        } else if (hours > 0) {
-            displayText = `${hours}h ${minutes}m`;
-        } else if (minutes > 0) {
-            displayText = `${minutes}m ${seconds}s`;
-        } else {
-            displayText = `${seconds}s`;
-        }
-
-        element.innerHTML = displayText;
-    });
-}
-
-// Initialize and set intervals
-setInterval(updateCurrentTime, 1000);
-setInterval(updateCountdowns, 1000);
-updateCurrentTime();
-updateCountdowns();
-</script>
+<script src="<?php echo URLROOT; ?>/public/css/script.js"></script>
 
 <style>
-.route-box-info {
-    display: flex;
-    justify-content: space-between;
-    gap: 16px;
-    margin-top: 24px;
-    margin-bottom: 24px;
-    list-style: none;
-    padding: 0;
-    flex-wrap: wrap;
-}
-
-.route-box-info li {
-    flex: 1;
-    min-width: 100%;
-    background: var(--light);
-    border-radius: 20px;
-    padding: 16px;
-    display: flex;
-    align-items: center;
-    gap: 16px;
-    margin-bottom: 8px;
-}
-
-.route-box-info li i {
-    font-size: 24px;
-    color: var(--main);
-    background: var(--light-main);
-    border-radius: 10%;
-    padding: 12px;
-}
-
-.route-box-info li .text h3 {
-    font-size: 20px;
-    font-weight: 600;
-    color: var(--dark);
-    margin: 0;
-}
-
-.route-box-info li .text p {
-    font-size: 14px;
-    color: var(--dark-grey);
-    margin: 0;
-}
-
-/* Table Styles */
-table {
-    width: 100%;
-    border-collapse: collapse;
-}
-
-th, td {
-    padding: 12px;
-    text-align: left;
-    border-bottom: 1px solid var(--border-color);
-}
-
-th {
-    font-weight: 600;
-    color: var(--dark-grey);
-}
-
-.status {
-    padding: 6px 12px;
-    border-radius: 20px;
-    font-size: 14px;
-}
-
-.status.completed {
-    background: var(--light-success);
-    color: var(--success);
-}
-
-.status.pending {
-    background: var(--light-warning);
-    color: var(--warning);
-}
-
-/* Add shift management styles from v_shift.php */
-.shift-management-main {
-    padding: 2rem;
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    line-height: 1.6;
-    color: #333;
-}
-
-.shift-header {
-    margin-bottom: 2rem;
-}
-
-.shift-header h1 {
-    font-size: 2.25rem;
-    font-weight: 600;
-    color: #2c3e50;
-}
-
-.shift-content {
-    display: grid;
-    grid-template-columns: 1fr;
-    gap: 1rem;
-    margin-top: 24px;
-}
-
-.shift-content section {
-    background-color: #fff;
-    border-radius: 8px;
-    padding: 1rem;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-}
-
-.shift-content h2 {
-    font-size: 1.5rem;
-    font-weight: 600;
-    color: #2c3e50;
-    margin-bottom: 1rem;
-}
-
-.shift-table {
-    width: 100%;
-    border-collapse: collapse;
-    table-layout: fixed;
-}
-
-.shift-table th,
-.shift-table td {
-    padding: 0.75rem;
-    text-align: left;
-    border-bottom: 1px solid #e0e0e0;
-}
-
-.shift-table th {
-    font-weight: 600;
-    background-color: #f8f9fa;
-    color: #2c3e50;
-}
-
-.status-pending,
-.status-accepted,
-.status-active {
-    padding: 0.25rem 0.5rem;
-    border-radius: 4px;
-    font-size: 0.85rem;
-    font-weight: 600;
-}
-
-.status-pending {
-    background-color: #fff3cd;
-    color: #856404;
-}
-
-.status-accepted,
-.status-active {
-    background-color: #d4edda;
-    color: #155724;
-}
-
-.btn {
-    padding: 0.5rem 1rem;
-    border-radius: 5px;
-    font-weight: 600;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-    font-size: 0.9rem;
-    transition: background-color 0.3s, transform 0.1s;
-    border: none;
-    cursor: pointer;
-}
-
-.btn-sm {
-    padding: 0.25rem 0.5rem;
-    font-size: 0.8rem;
-}
-
-.btn-primary {
-    background-color: #007664;
-    color: #fff;
-}
-
-.btn-primary:hover {
-    background-color: #005a4d;
-}
-
-.btn-secondary {
-    background-color: #F06E6E;
-    color: #fff;
-}
-
-.btn-secondary:hover {
-    background-color: #e85c5c;
-}
-
-.action-buttons {
-    display: flex;
-    gap: 1rem;
-    flex-wrap: wrap;
-}
-
-#shift-calendar {
-    height: 400px;
-    max-width: 100%;
-    overflow-x: auto;
-}
-
-.countdown {
-    font-family: monospace;
-    font-weight: bold;
-    color: #2c3e50;
-}
-
-/* Additional Calendar Styles */
-.fc-event {
-    border: none !important;
-    padding: 3px !important;
-    margin: 2px !important;
-}
-
-.fc-content {
-    padding: 4px;
-}
-
-.fc-title {
-    font-weight: bold;
-    font-size: 0.9em;
-    margin-bottom: 2px;
-}
-
-.fc-location {
-    font-size: 0.8em;
-    color: #666;
-    margin-bottom: 2px;
-}
-
-.fc-time {
-    font-size: 0.8em;
-    color: #444;
-}
-
-.fc-day-today {
-    background: #f8f9fa !important;
-}
-
-.fc-button-primary {
-    background-color: #007664 !important;
-    border-color: #005a4d !important;
-}
-
-.fc-button-primary:hover {
-    background-color: #005a4d !important;
-    border-color: #004a3f !important;
-}
-
-.fc-button-primary:disabled {
-    background-color: #339989 !important;
-    border-color: #2d8579 !important;
-}
-
-/* Responsive typography */
-@media screen and (max-width: 768px) {
-    .head-title h1 {
-        font-size: 1.25rem;
+    :root {
+        --main-light: #e6f3ff;
+        --main-dark: #2a75c0;
+        --green: #28a745;
+        --green-light: #e6f7e9;
+        --red: #dc3545;
+        --red-light: #ffefef;
+        --orange: #fd7e14;
+        --orange-light: #fff8e6;
+        --gray: #666;
+        --gray-light: #f5f5f5;
+        --gray-dark: #333;
+        --shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        --radius: 10px;
+        --radius-sm: 5px;
+        --radius-lg: 20px;
+        --transition: all 0.3s ease;
     }
 
-    .shift-content h2 {
-        font-size: 1.1rem;
-        margin-bottom: 0.75rem;
-    }
-
-    .route-box-info li i {
-        font-size: 24px;
-        padding: 12px;
-    }
-
-    .route-box-info li .text h3 {
-        font-size: 18px;
-    }
-
-    .btn {
-        padding: 0.4rem 0.8rem;
-        font-size: 0.8rem;
-    }
-
-    .shift-table th,
-    .shift-table td,
-    .table-data th,
-    .table-data td {
-        padding: 8px;
-        font-size: 0.9rem;
-    }
-
-    .status, .status-active {
-        padding: 4px 8px;
-        font-size: 0.75rem;
-    }
-}
-
-/* Table responsiveness */
-@media screen and (max-width: 640px) {
-    .shift-table, .table-data table {
-        display: block;
-    }
-
-    .shift-table th, 
-    .shift-table td,
-    .table-data th,
-    .table-data td {
-        min-width: 120px;
-    }
-
-    /* Hide status and countdown columns */
-    .shift-table th:nth-child(4),
-    .shift-table td:nth-child(4),
-    .shift-table th:nth-child(5),
-    .shift-table td:nth-child(5),
-    .table-data th:nth-child(5),
-    .table-data td:nth-child(5) {
-        display: none;
-    }
-}
-
-@media screen and (max-width: 480px) {
-    /* Hide team column as well */
-    .shift-table th:nth-child(3),
-    .shift-table td:nth-child(3),
-    .table-data th:nth-child(4),
-    .table-data td:nth-child(4) {
-        display: none;
-    }
-}
-
-/* For very small screens, ensure only essential columns are visible */
-@media screen and (max-width: 412px) {
+    /* Basic Layout & Typography */
     main {
-        padding: 12px;
+        padding: 24px;
+        color: var(--gray-dark);
     }
 
-    .shift-content section {
-        padding: 12px;
-        width: 100%;
-        overflow-x: hidden;
-    }
-
-    .shift-table {
-        width: 100%;
-        overflow-x: visible;
-    }
-
-    .shift-table th, 
-    .shift-table td {
-        padding: 8px 4px;
-        font-size: 0.85rem;
-        white-space: nowrap;
-        overflow: hidden;
-        text-overflow: ellipsis;
-    }
-
-    .shift-table th:first-child,
-    .shift-table td:first-child {
-        width: 30%;
-    }
-
-    .shift-table th:nth-child(2),
-    .shift-table td:nth-child(2) {
-        width: 50%;
-    }
-
-    .shift-table th:last-child,
-    .shift-table td:last-child {
-        width: 20%;
-        position: relative;
-        padding-right: 0;
-        text-align: center;
-    }
-
-    .btn-icon {
-        display: inline-flex !important;
-        align-items: center;
-        justify-content: center;
-        width: 32px;
-        height: 32px;
-        padding: 0;
+    h1, h2, h3, h4 {
         margin: 0;
-        font-size: 1.2rem;
-        background: transparent;
-        border-radius: 4px;
+        font-weight: 600;
     }
 
-    .btn-icon i {
-        display: inline-block !important;
-        font-size: 1.2rem;
-    }
-}
-
-/* Ensure buttons are touch-friendly */
-@media (hover: none) {
-    .btn {
-        min-height: 44px;
-    }
-}
-
-/* Add specific styles for Samsung S8 and similar sizes */
-@media screen and (max-width: 360px) {
-    .route-box-info li {
-        padding: 12px;
-        gap: 12px;
-    }
-
-    .route-box-info li i {
-        font-size: 20px;
-        padding: 10px;
-    }
-
-    .route-box-info li .text h3 {
-        font-size: 16px;
+    .head-title {
+        margin-bottom: 24px;
     }
 
     .head-title h1 {
-        font-size: 1.1rem;
+        font-size: 1.8rem;
+        color: var(--gray-dark);
     }
 
     .breadcrumb {
-        font-size: 0.8rem;
+        display: flex;
+        align-items: center;
+        list-style: none;
+        padding: 0;
+        margin: 8px 0 0;
     }
 
-    .shift-content section {
-        padding: 0.75rem;
+    .breadcrumb li {
+        display: flex;
+        align-items: center;
+        color: var(--gray);
     }
 
-    .shift-table th:first-child,
-    .shift-table td:first-child {
-        width: 30%;
+    .breadcrumb li a {
+        color: var(--main);
+        text-decoration: none;
     }
 
-    .shift-table th:nth-child(2),
-    .shift-table td:nth-child(2) {
-        width: 50%;
+    .breadcrumb li i {
+        margin-right: 5px;
     }
 
-    .shift-table th:last-child,
-    .shift-table td:last-child {
-        width: 20%;
-        display: table-cell !important;
-        text-align: center;
+    /* Card Components */
+    .profile-card, .schedule-section, .upcoming-schedules-section {
+        background-color: #ffffff;
+        border-radius: var(--radius);
+        box-shadow: var(--shadow);
+        margin-bottom: 24px;
+        overflow: hidden;
+        transition: var(--transition);
     }
 
-    .btn-icon {
-        width: 28px;
-        height: 28px;
-        min-width: unset;
-        min-height: unset;
-    }
-}
-
-.btn-icon {
-    color: #007664;
-    font-size: 1.2rem;
-    padding: 4px 8px;
-    border-radius: 4px;
-    transition: background-color 0.3s, transform 0.1s;
-}
-
-.btn-icon:hover {
-    background-color: #005a4d;
-    transform: scale(1.05);
-}
-
-/* Add these calendar-specific styles for smaller screens */
-@media screen and (max-width: 412px) {
-    /* Calendar container */
-    #shift-calendar {
-        height: 300px; /* Reduce overall height */
+    .profile-card:hover, .schedule-section:hover, .upcoming-schedules-section:hover {
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
     }
 
-    /* Calendar header */
-    .fc-header-toolbar {
-        padding: 8px 0 !important;
-        margin-bottom: 0.5em !important;
+    /* Profile Card Styling */
+    .profile-card {
+        display: flex;
+        align-items: center;
+        padding: 24px;
     }
 
-    .fc-toolbar-title {
-        font-size: 1rem !important; /* Smaller title */
+    .profile-image {
+        width: 90px;
+        height: 90px;
+        border-radius: 50%;
+        overflow: hidden;
+        margin-right: 24px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+        border: 3px solid #fff;
     }
 
-    .fc-button {
-        padding: 4px 8px !important;
-        font-size: 0.8rem !important;
+    .profile-image img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
     }
 
-    /* Calendar body */
-    .fc-daygrid-day {
-        min-height: 40px !important; /* Smaller day cells */
+    .profile-info h2 {
+        margin-bottom: 8px;
+        font-size: 1.5rem;
     }
 
-    .fc-daygrid-day-number {
-        font-size: 0.8rem !important;
-        padding: 4px !important;
+    .last-login-text {
+        color: var(--gray);
+        margin: 0;
+        font-size: 0.9rem;
     }
 
-    /* Event styles */
-    .fc-event {
-        margin: 1px !important;
-        padding: 2px !important;
+    /* Schedule Section */
+    .schedule-section, .upcoming-schedules-section {
+        padding: 0;
     }
 
-    .fc-event-title {
-        font-size: 0.7rem !important;
+    .section-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 18px 24px;
+        border-bottom: 1px solid #eee;
     }
 
-    .fc-event-time {
-        font-size: 0.7rem !important;
+    .section-header h2 {
+        display: flex;
+        align-items: center;
+        font-size: 1.3rem;
+        color: var(--gray-dark);
     }
 
-    /* Week header */
-    .fc-col-header-cell {
-        padding: 4px !important;
+    .section-header h2 i {
+        margin-right: 10px;
+        color: var(--main);
     }
 
-    .fc-col-header-cell-cushion {
-        font-size: 0.8rem !important;
+    .assigned-schedule-card {
+        background-color: #f9f9f9;
+        border-radius: 0 0 var(--radius) var(--radius);
+        overflow: hidden;
     }
 
-    /* Make events more compact */
-    .fc-daygrid-event-harness {
-        margin-top: 1px !important;
-        margin-bottom: 1px !important;
+    .schedule-header {
+        display: flex;
+        align-items: center;
+        padding: 16px 24px;
+        background-color: var(--green-light);
+        position: relative;
     }
 
-    /* Adjust spacing */
-    .fc-daygrid-day-frame {
-        padding: 2px !important;
-    }
-}
-
-/* Even smaller screens */
-@media screen and (max-width: 360px) {
-    #shift-calendar {
-        height: 280px;
+    .schedule-header i {
+        margin-right: 12px;
+        font-size: 1.5rem;
+        color: var(--green);
     }
 
-    .fc-toolbar-title {
-        font-size: 0.9rem !important;
+    .schedule-header h3 {
+        margin: 0;
+        font-size: 1.2rem;
+        color: var(--gray-dark);
+        flex-grow: 1;
     }
 
-    .fc-daygrid-day {
-        min-height: 35px !important;
-    }
-}
-
-/* Add this media query to hide calendar on smaller screens */
-@media screen and (max-width: 1035px) {
-    .shift-calendar {
-        display: none !important;
-    }
-}
-
-/* Hide team field for screens less than 620px */
-@media screen and (max-width: 620px) {
-    .shift-table th:nth-child(3),
-    .shift-table td:nth-child(3),
-    .shift-table th:nth-child(4),
-    .shift-table td:nth-child(4),
-    .shift-table th:nth-child(5),
-    .shift-table td:nth-child(5) {
-        display: none;
+    .next-date {
+        background-color: var(--green);
+        color: white;
+        padding: 5px 12px;
+        border-radius: var(--radius-lg);
+        font-size: 0.85rem;
+        font-weight: 500;
+        letter-spacing: 0.5px;
     }
 
-    /* Adjust remaining columns */
-    .shift-table th:first-child,
-    .shift-table td:first-child {
-        width: 35%;
+    .schedule-info {
+        padding: 24px;
     }
 
-    .shift-table th:nth-child(2),
-    .shift-table td:nth-child(2) {
-        width: 45%;
+    .schedule-time {
+        display: flex;
+        align-items: center;
+        margin-bottom: 24px;
+        padding-bottom: 16px;
+        border-bottom: 1px dashed #e0e0e0;
     }
 
-    .shift-table th:last-child,
-    .shift-table td:last-child {
-        width: 20%;
-    }
-}
-
-/* Hide time field for screens less than 400px */
-@media screen and (max-width: 400px) {
-    .shift-table th:nth-child(2),
-    .shift-table td:nth-child(2) {
-        display: none;
+    .day-badge {
+        background-color: var(--main);
+        color: white;
+        padding: 8px 16px;
+        border-radius: var(--radius-lg);
+        font-weight: 500;
+        margin-right: 16px;
+        letter-spacing: 0.5px;
+        box-shadow: 0 2px 5px rgba(60, 145, 230, 0.3);
     }
 
-    /* Adjust remaining columns */
-    .shift-table th:first-child,
-    .shift-table td:first-child {
-        width: 70%;
+    .time {
+        font-size: 1.25rem;
+        font-weight: 600;
+        color: var(--gray-dark);
+        margin-right: 20px;
+        letter-spacing: 0.5px;
     }
 
-    .shift-table th:last-child,
-    .shift-table td:last-child {
-        width: 30%;
-        display: table-cell !important;
-        text-align: center;
+    .route {
+        display: flex;
+        align-items: center;
+        color: var(--gray);
+        font-size: 1rem;
     }
 
-    /* Ensure icon remains visible */
-    .btn-icon {
-        display: inline-flex !important;
+    .route i {
+        margin-right: 5px;
+        color: var(--main);
+    }
+
+    .schedule-details {
+        display: flex;
+        flex-direction: column;
+        gap: 16px;
+    }
+
+    .detail-item {
+        display: flex;
+        align-items: center;
+    }
+
+    .detail-item strong {
+        width: 120px;
+        font-weight: 600;
+        color: var(--gray-dark);
+    }
+
+    .status-pill {
+        display: inline-block;
+        padding: 6px 15px;
+        border-radius: var(--radius-lg);
+        font-weight: 500;
+        font-size: 0.9rem;
+    }
+
+    .status-pill.completed {
+        background-color: var(--green-light);
+        color: var(--green);
+    }
+
+    .status-pill.pending {
+        background-color: var(--orange-light);
+        color: var(--orange);
+    }
+
+    .schedule-actions {
+        margin-top: 16px;
+    }
+
+    .btn-action {
+        display: flex;
         align-items: center;
         justify-content: center;
-        width: 32px;
-        height: 32px;
-    }
-}
-
-/* First, hide the card container by default */
-.shifts-card-container {
-    display: none;
-}
-
-/* Show cards only below 590px */
-@media screen and (max-width: 590px) {
-    .shift-table {
-        display: none; /* Hide the table */
-    }
-
-    .shifts-card-container {
-        display: flex;
-        flex-direction: column;
-        gap: 12px;
-        padding: 8px 0;
-    }
-
-    /* Rest of the card styles remain the same */
-    .shift-card {
-        background: #fff;
-        border-radius: 8px;
-        padding: 16px;
-        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-        display: flex;
-        flex-direction: column;
-        gap: 8px;
-    }
-
-    .shift-card-header {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        margin-bottom: 4px;
-    }
-
-    .shift-card-day {
-        font-weight: 600;
-        font-size: 1.1rem;
-        color: #333;
-    }
-
-    .shift-card-time {
-        color: #007664;
+        padding: 10px 18px;
+        border-radius: var(--radius-sm);
+        border: none;
+        text-decoration: none;
         font-weight: 500;
-    }
-
-    .shift-card-details {
-        display: flex;
-        flex-direction: column;
-        gap: 4px;
         font-size: 0.9rem;
-        color: #666;
+        transition: var(--transition);
+        cursor: pointer;
     }
 
-    .shift-card-team {
-        display: flex;
-        align-items: center;
-        gap: 4px;
+    .btn-action i {
+        margin-right: 8px;
     }
 
-    .shift-card-team i {
-        font-size: 1rem;
-        color: #007664;
+    .btn-action.start {
+        background-color: var(--green);
+        color: white;
     }
 
-    .shift-card-footer {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        margin-top: 8px;
-        padding-top: 8px;
-        border-top: 1px solid #eee;
+    .btn-action.start:hover {
+        background-color: var(--green);
+        opacity: 0.9;
+        transform: translateY(-2px);
     }
 
-    .shift-card-status {
-        font-size: 0.85rem;
-        padding: 4px 8px;
-        border-radius: 4px;
-        background: #e6f3f0;
-        color: #007664;
+    .no-schedule-message {
+        text-align: center;
+        padding: 40px 24px;
+        color: var(--gray);
     }
 
-    .shift-card .btn-icon {
-        color: #007664;
-        padding: 8px;
-        border-radius: 6px;
-        transition: all 0.2s;
+    .no-schedule-message i {
+        font-size: 3.5rem;
+        margin-bottom: 16px;
+        display: block;
+        color: var(--gray);
     }
 
-    .shift-card .btn-icon:hover {
-        background: #007664;
-        color: #fff;
-    }
-}
-
-/* Ensure table is visible above 590px */
-@media screen and (min-width: 591px) {
-    .shift-table {
-        display: table;
+    .no-schedule-message p {
+        margin-bottom: 20px;
+        font-size: 1.1rem;
     }
 
-    .shifts-card-container {
-        display: none !important;
+    /* Table Styling */
+    .table-container {
+        padding: 16px 24px;
+        overflow-x: auto;
     }
-}
 
-/* Filter dropdown styles */
-.filter-dropdown {
-    position: relative;
-    margin-left: auto;
-}
+    .schedules-table {
+        width: 100%;
+        border-collapse: separate;
+        border-spacing: 0;
+    }
 
-.filter-dropdown select {
-    padding: 6px 12px;
-    border: 1px solid #ddd;
-    border-radius: 4px;
-    background: #fff;
-    font-size: 0.9rem;
-    color: #333;
-    cursor: pointer;
-}
+    .schedules-table th {
+        background-color: #f8f9fa;
+        text-align: left;
+        padding: 14px;
+        font-weight: 600;
+        color: var(--gray-dark);
+        border-bottom: 2px solid #dee2e6;
+    }
 
-/* Enhanced card styles */
-.swap-card {
-    background: #fff;
-    border-radius: 8px;
-    padding: 16px;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-    margin-bottom: 16px;
-}
+    .schedules-table td {
+        padding: 12px 14px;
+        border-bottom: 1px solid #eee;
+        color: var(--gray-dark);
+    }
 
-.swap-card-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 16px;
-}
+    .schedules-table tr:hover td {
+        background-color: #f9f9f9;
+    }
 
-.swap-card-requester {
-    font-weight: 600;
-    font-size: 1.1rem;
-}
+    /* Responsive adjustments */
+    @media screen and (max-width: 768px) {
+        .schedule-time {
+            flex-direction: column;
+            align-items: flex-start;
+        }
+        
+        .day-badge, .time {
+            margin-bottom: 10px;
+        }
+        
+        .profile-card {
+            flex-direction: column;
+            text-align: center;
+        }
+        
+        .profile-image {
+            margin-right: 0;
+            margin-bottom: 16px;
+        }
+        
+        .schedule-header {
+            flex-direction: column;
+            align-items: flex-start;
+        }
+        
+        .schedule-header h3 {
+            margin-bottom: 10px;
+        }
+        
+        .next-date {
+            align-self: flex-start;
+        }
+    }
 
-.swap-details {
-    display: grid;
-    gap: 16px;
-    margin-bottom: 16px;
-    padding: 12px;
-    background: #f8f9fa;
-    border-radius: 6px;
-}
-
-.requester-shift,
-.your-shift {
-    padding: 12px;
-    background: #fff;
-    border-radius: 4px;
-}
-
-.requester-shift h4,
-.your-shift h4 {
-    margin-bottom: 8px;
-    color: #007664;
-    font-size: 0.9rem;
-}
-
-.shift-info {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    margin-bottom: 4px;
-    font-size: 0.9rem;
-}
-
-.shift-info i {
-    color: #007664;
-    font-size: 1rem;
-}
-
-.swap-card-actions {
-    display: flex;
-    gap: 8px;
-    margin-top: 12px;
-}
-
-.btn-approve,
-.btn-reject {
-    padding: 8px 16px;
-    border: none;
-    border-radius: 4px;
-    font-size: 0.9rem;
-    cursor: pointer;
-    transition: all 0.2s;
-}
-
-.btn-approve {
-    background: #007664;
-    color: #fff;
-}
-
-.btn-reject {
-    background: #dc3545;
-    color: #fff;
-}
+    @media screen and (max-width: 480px) {
+        .detail-item {
+            flex-direction: column;
+            align-items: flex-start;
+        }
+        
+        .detail-item strong {
+            width: 100%;
+            margin-bottom: 5px;
+        }
+        
+        .btn-action {
+            width: 100%;
+        }
+    }
 </style>
-
-<script src="<?php echo URLROOT; ?>/css/components/script.js"></script>
-
-<?php require APPROOT . '/views/inc/components/footer.php'; ?>

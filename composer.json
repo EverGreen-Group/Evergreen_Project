@@ -1,18 +1,34 @@
 {
-    "name": "simaak/evergreen_project",
-    "description": "A tea factory collection management system",
-    "require": {
-        "endroid/qr-code": "^2.0"
+  "name": "simaak/evergreen_project",
+  "description": "A tea factory collection management system",
+  "config": {
+    "platform": {
+      "php": "8.2.12" 
     },
-    "autoload": {
-        "psr-4": {
-            "Simaak\\EvergreenProject\\": "src/"
-        }
-    },
-    "authors": [
-        {
-            "name": "SW33TSTUFF",
-            "email": "simaakniyaz@gmail.com"
-        }
-    ]
+    "http": {
+        "timeout": 300
+    }
+  },
+  "require": {
+    "endroid/qr-code": "^4.0", 
+    "bacon/bacon-qr-code": "^2.0",
+    "cboden/ratchet": "0.4.0",
+    "phpmailer/phpmailer": "^6.9",
+    "vlucas/phpdotenv": "*"
+  },
+  "autoload": {
+    "psr-4": {
+      "Simaak\\EvergreenProject\\": "app/",
+      "App\\": "app/" 
+    }
+  },
+  "authors": [
+    {
+      "name": "SW33TSTUFF",
+      "email": "simaakniyaz@gmail.com"
+    }
+  ],
+  "require": {
+    "phpmailer/phpmailer": "^6.9"
+  }
 }
