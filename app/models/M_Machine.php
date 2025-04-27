@@ -11,14 +11,14 @@ class M_Machine
 
     public function insertMachineData($data)
     {
-        $this->db->query('INSERT INTO machines (machine_name, brand, started_date, last_maintenance, next_maintenance, total_working_hours, special_notes)
-                          VALUES (:machine_name, :brand, :started_date, :last_maintenance, :next_maintenance, :total_working_hours, :special_notes)');
+        $this->db->query('INSERT INTO machines (machine_name, brand, started_date, model_number, next_maintenance, total_working_hours, special_notes)
+                          VALUES (:machine_name, :brand, :started_date, :model_number, :next_maintenance, :total_working_hours, :special_notes)');
 
         // Bind parameters
         $this->db->bind(':machine_name', $data['machine_name']);
         $this->db->bind(':brand', $data['brand']);
         $this->db->bind(':started_date', $data['started_date']);
-        $this->db->bind(':last_maintenance', $data['last_maintenance']);
+        $this->db->bind(':model_number', $data['model_number']);
         $this->db->bind(':next_maintenance', $data['next_maintenance']);
         $this->db->bind(':total_working_hours', $data['total_working_hours']);
         $this->db->bind(':special_notes', $data['special_notes']);
@@ -31,6 +31,13 @@ class M_Machine
     {
         $this->db->query('SELECT * FROM machines');
         return $this->db->resultSet();
+    }
+
+    public function getmachineById($id){
+
+        $this->db->query('SELECT * FROM machines WHERE id = :id');
+        $this->db->bind(':id',$id);
+        return $this->db->single();
     }
 
     public function gettimesofmachine()
