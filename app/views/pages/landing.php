@@ -33,31 +33,31 @@
         <div class="features-grid">
             <div class="feature-card">
                 <div class="feature-icon">
-                    <i class='bx bxs-calendar-check'></i>
+                    <img src="<?php echo URLROOT; ?>/public/img/icons/announcement-icon.png" alt="Factory Announcements">
                 </div>
-                <h3>Easy Scheduling</h3>
-                <p>Schedule your tea leaf collections with just a few clicks</p>
+                <h3>Factory Announcements</h3>
+                <p>Stay updated with important factory announcements and policy changes</p>
             </div>
             <div class="feature-card">
                 <div class="feature-icon">
-                    <i class='bx bxs-truck'></i>
+                    <img src="<?php echo URLROOT; ?>/public/img/icons/payment-icon.png" alt="Payment Reports">
                 </div>
-                <h3>Real-time Tracking</h3>
-                <p>Track your collection vehicle's location in real-time</p>
+                <h3>Detailed Payment Reports</h3>
+                <p>Access comprehensive factory collection payment breakdowns and history</p>
             </div>
             <div class="feature-card">
                 <div class="feature-icon">
-                    <i class='bx bxs-report'></i>
+                    <img src="<?php echo URLROOT; ?>/public/img/icons/chat-icon.png" alt="Direct Communication">
                 </div>
-                <h3>Detailed Reports</h3>
-                <p>Access comprehensive reports of your supplies and earnings</p>
+                <h3>Direct Communication</h3>
+                <p>Chat directly with factory managers for immediate assistance</p>
             </div>
             <div class="feature-card">
                 <div class="feature-icon">
-                    <i class='bx bxs-wallet'></i>
+                    <img src="<?php echo URLROOT; ?>/public/img/icons/appointment-icon.png" alt="Appointment Booking">
                 </div>
-                <h3>Quick Payments</h3>
-                <p>Receive payments quickly and track all transactions</p>
+                <h3>Appointment Booking</h3>
+                <p>Seamless booking system for factory appointments and consultations</p>
             </div>
         </div>
     </section>
@@ -196,17 +196,31 @@
     }
 
     .features-section {
-        background: #fff;
+        background: url('<?php echo URLROOT; ?>/public/img/factory_landscape.png') center center/cover no-repeat;
         padding: 80px 0;
         border-radius: 30px 30px 0 0;
         margin-top: 40px;
+        position: relative;
+    }
+
+    .features-section::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(255, 255, 255, 0.05);
+        border-radius: 30px 30px 0 0;
     }
 
     .features-section h2 {
-        color: #333;
+        color: white;
         text-align: center;
         font-size: 2.5rem;
         margin-bottom: 3rem;
+        position: relative;
+        z-index: 1;
     }
 
     .features-grid {
@@ -216,6 +230,8 @@
         max-width: 1200px;
         margin: 0 auto;
         padding: 0 2rem;
+        position: relative;
+        z-index: 1;
     }
 
     .feature-card {
@@ -232,19 +248,18 @@
     }
 
     .feature-icon {
-        width: 70px;
-        height: 70px;
-        background: #e8f5e9;
-        border-radius: 50%;
-        display: flex;
-        align-items: center;
-        justify-content: center;
+        width: 200px;
+        height: 200px;
         margin: 0 auto 1.5rem;
+        border-radius: 8px;
+        overflow: hidden;
+        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
     }
 
-    .feature-icon i {
-        font-size: 2rem;
-        color: #1b5e20;
+    .feature-icon img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
     }
 
     .feature-card h3 {
@@ -300,6 +315,7 @@
         }
 
         .hero-text {
+            max-width: 100%;
             margin: 0; /* Remove any margin if needed */
         }
 

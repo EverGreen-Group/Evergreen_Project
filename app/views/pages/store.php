@@ -19,7 +19,7 @@
                     <div class="product-card" data-product='<?php echo htmlspecialchars(json_encode($product)); ?>'>
                         <div class="product-image">
                             <?php if (!empty($product->image_path)): ?>
-                                <img src="<?php echo URLROOT; ?>/Uploads/products/<?php echo $product->image_path; ?>" alt="<?php echo $product->product_name; ?>">
+                                <img src="<?php echo URLROOT; ?>/public/uploads/products/<?php echo $product->image_path; ?>" alt="<?php echo $product->product_name; ?>">
                             <?php else: ?>
                                 <img src="<?php echo URLROOT; ?>/img/default-product.png" alt="Default Product Image">
                             <?php endif; ?>
@@ -222,7 +222,7 @@
             card.onclick = () => openProductModal(product);
             card.innerHTML = `
                 <div class="product-image">
-                    <img src="${product.image_path ? `${window.URLROOT}/Uploads/products/${product.image_path}` : `${window.URLROOT}/img/default-product.png`}" alt="${product.product_name}">
+                    <img src="${product.image_path ? `${window.URLROOT}/uploads/products/${product.image_path}` : `${window.URLROOT}/img/default-product.png`}" alt="${product.product_name}">
                 </div>
                 <div class="product-info">
                     <h3>${product.product_name}</h3>
@@ -283,7 +283,7 @@
         modal.innerHTML = `
             <div class="modal-content">
                 <h2>${product.product_name}</h2>
-                <img src="${product.image_path ? `${window.URLROOT}/Uploads/products/${product.image_path}` : `${window.URLROOT}/img/default-product.png`}" alt="${product.product_name}">
+                <img src="${product.image_path ? `${window.URLROOT}/uploads/products/${product.image_path}` : `${window.URLROOT}/img/default-product.png`}" alt="${product.product_name}">
                 <p><strong>Price:</strong> Rs.${product.price}</p>
                 <p><strong>Quantity:</strong> ${product.quantity} ${product.unit}</p>
                 <p><strong>Location:</strong> ${product.location}</p>
