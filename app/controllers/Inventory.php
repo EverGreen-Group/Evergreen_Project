@@ -400,6 +400,8 @@ class Inventory extends controller
 
             $this->fertilizerOrderModel->updateFertilizerByStatus($us, 'Cancelled');
 
+
+
             // Send rejection email
             $supplierId = $_POST['supplier_id'];
             $supplierName = $_POST['full_name'];
@@ -776,7 +778,7 @@ class Inventory extends controller
                 $startedDate = strtotime($data['started_date']);
                 if ($startedDate >= time()) {
                     $errors['started_date'] = 'Started date must be in the past.';
-                    setFlashMessage($errors['started_date'],'error');
+                    setFlashMessage($errors['started_date'], 'error');
                     redirect('Inventory/machine');
                 }
             }
@@ -791,7 +793,7 @@ class Inventory extends controller
                 $nextMaintenance = strtotime($data['next_maintenance']);
                 if ($nextMaintenance <= time()) {
                     $errors['next_maintenance'] = 'Next maintenance date must be in the future.';
-                    setFlashMessage($errors['next_maintenance'],'error');
+                    setFlashMessage($errors['next_maintenance'], 'error');
                     redirect('Inventory/machine');
                 }
             }
@@ -1253,6 +1255,7 @@ class Inventory extends controller
                         $_SERVER['REQUEST_URI'],
                         http_response_code()
                     );
+
                     setFlashMessage('Bag properties updated successfully!');
                     redirect("inventory/viewAwaitingInventory/$collectionId");
                 } else {
