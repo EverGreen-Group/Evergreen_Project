@@ -64,7 +64,13 @@
                                             class="btn btn-tertiary">Deallocate</button>
                                     </form>
                                 </td>
-                                
+                                <td>
+                                    <form method="POST"
+                                        action="<?php echo URLROOT; ?>/Inventory/machine?id=<?php echo $machine->id; ?>">
+                                        <button type="submit" name="status_repair"
+                                            class="btn btn-tertiary">Disable</button>
+                                    </form>
+                                </td>
                             </tr>
                         <?php endforeach; ?>
                     </tbody>
@@ -85,28 +91,29 @@
                     <input type="text" id="brand" name="brand" placeholder="Enter Brand" required>
                 </div>
                 <div class="form-group">
+                    <label for="model_number">Model Number</label>
+                    <input type="text" id="last-maintenance" name="model_number"
+                        placeholder="Enter model number" required>
+                </div>
+                <div class="form-group">
                     <label for="started-date">Installation Date</label>
                     <input type="date" id="started-date" name="started_date" required>
                 </div>
-                <div class="form-group">
-                    <label for="last-maintenance">Last Maintenance (in days)</label>
-                    <input type="number" id="last-maintenance" name="last_maintenance"
-                        placeholder="Enter days since last maintenance" required>
-                </div>
+               
                 <div class="form-group">
                     <label for="next-maintenance">Next Maintenance Details</label>
-                    <input type="text" id="next-maintenance" name="next_maintenance"
+                    <input type="date" id="next-maintenance" name="next_maintenance"
                         placeholder="Enter next maintenance details" required>
                 </div>
                 <div class="form-group">
                     <label for="total-working-hours">Total Working Hours</label>
-                    <input type="text" id="total-working-hours" name="total_working_hours"
-                        placeholder="Enter total working hours" required>
+                    <input type="number" id="total-working-hours" name="total_working_hours"
+                        placeholder="Enter total working hours of past" min="0" required>
                 </div>
                 <div class="form-group">
                     <label for="specialnote">Special Notes</label>
                     <textarea id="specialnotes" name="specialnotes" style="height: 100px; width: 100%;"
-                        placeholder="Enter Any Special Details" required></textarea>
+                        placeholder="Enter Any Special Details" ></textarea>
                 </div>
 
                 <button type="submit" class="btn-submit">Submit</button>

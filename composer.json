@@ -13,7 +13,8 @@
     "endroid/qr-code": "^4.0", 
     "bacon/bacon-qr-code": "^2.0",
     "cboden/ratchet": "0.4.0",
-    "phpmailer/phpmailer": "^6.9"
+    "phpmailer/phpmailer": "^6.9",
+    "vlucas/phpdotenv": "*"
   },
   "autoload": {
     "psr-4": {
