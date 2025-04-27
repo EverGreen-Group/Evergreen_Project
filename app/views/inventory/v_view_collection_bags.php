@@ -157,7 +157,7 @@
             <th>Leaf Age</th>
             <th>Moisture Level</th>
             <th>Leaf Type</th>
-            <th>Payment Amount</th>
+            <!-- <th>Payment Amount</th> -->
             <th>Finalized At</th>
           </tr>
         </thead>
@@ -194,9 +194,9 @@
                       <span class="status-badge super"><?php echo htmlspecialchars($bag->name); ?></span>
                     <?php endif; ?>
                   </td>
-                  <td>
+                  <!-- <td>
                     <?php echo htmlspecialchars($bag->payment_amount ? 'Rs. ' . number_format($bag->payment_amount, 2) : 'Not set'); ?>
-                  </td>
+                  </td> -->
                   <td><?php echo htmlspecialchars($bag->finalized_at ?? 'Not set'); ?></td>
                 </tr>
               <?php endif; ?>

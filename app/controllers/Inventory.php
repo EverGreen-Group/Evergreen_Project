@@ -102,7 +102,7 @@ class Inventory extends controller
 
         $activeBagsCount = count($activeBags);
         $inactiveBagsCount = count($inactiveBags);
-        
+
 
         $data = [
             'stockvalidate' => $stockvalidate,
@@ -126,19 +126,19 @@ class Inventory extends controller
     {
         $products = $this->productModel->getAllProducts();
         $Allproducts = $this->productModel->getproduct();
-        $inactivecount=0;
+        $inactivecount = 0;
 
         foreach ($Allproducts as $recod) {
             if ($recod->is_deleted == 1) {
-                $inactivecount +=1;
-                
+                $inactivecount += 1;
+
             }
-            
+
         }
 
         $totalProducts = count($products);
         $data = [
-            'totalInactive'=>$inactivecount,
+            'totalInactive' => $inactivecount,
             'products' => $products,
             'totalProducts' => $totalProducts,
         ];
@@ -364,14 +364,14 @@ class Inventory extends controller
 
             $fertilizer = $this->fertilizerModel->getFertilizerById($fid);
             if ($fertilizer) {
-                $newfquantity =  $fertilizer->quantity - $fquantity;
+                $newfquantity = $fertilizer->quantity - $fquantity;
 
                 if ($newfquantity < 0) {
 
                     setFlashMessage("Insufficient fertilizer quantity", "error");
                     redirect('inventory/fertilizer');
-                }else {
-                
+                } else {
+
                     $this->fertilizerModel->updatFertilizerwhenapprove($fid, $newfquantity);
                     setFlashMessage("Fertilizer Approved Successfully");
                 }
@@ -381,7 +381,7 @@ class Inventory extends controller
             }
 
             $this->fertilizerOrderModel->updateFertilizerByStatus($us, 'Approved');
-            
+
             // Send notification email
             $emailService = new EmailService();
             $emailService->sendFertilizerRequest($supplierEmail, $supplierName, 'Accept');
@@ -399,7 +399,9 @@ class Inventory extends controller
             $us = $_GET['id'];
 
             $this->fertilizerOrderModel->updateFertilizerByStatus($us, 'Cancelled');
-            
+
+
+
             // Send rejection email
             $supplierId = $_POST['supplier_id'];
             $supplierName = $_POST['full_name'];
@@ -413,7 +415,7 @@ class Inventory extends controller
 
         $fertilizerRequest = $this->fertilizerOrderModel->getfertilizerorderforInventory();
         $fertilizer = $this->fertilizerModel->getfertilizer();
-        
+
         $approvedCount = 0;
         $pendingCount = 0;
 
@@ -760,28 +762,46 @@ class Inventory extends controller
                 'machine_name' => trim($_POST['machine_name']),
                 'brand' => trim($_POST['brand']),
                 'started_date' => trim($_POST['started_date']),
-                'last_maintenance' => trim($_POST['last_maintenance']),
+                'model_number' => trim($_POST['model_number']),
                 'next_maintenance' => trim($_POST['next_maintenance']),
                 'total_working_hours' => trim($_POST['total_working_hours']),
                 'special_notes' => trim($_POST['specialnotes']),
             ];
 
             // Validate data
+            // Validate data
             $errors = [];
-            if (empty($data['machine_name']))
-                $errors['machine_name'] = 'Machine name is required.';
-            if (empty($data['brand']))
-                $errors['brand'] = 'Brand is required.';
-            if (empty($data['started_date']))
+
+            if (empty($data['started_date'])) {
                 $errors['started_date'] = 'Started date is required.';
-            if (empty($data['last_maintenance']))
-                $errors['last_maintenance'] = 'Last maintenance is required.';
-            if (empty($data['next_maintenance']))
+            } else {
+                $startedDate = strtotime($data['started_date']);
+                if ($startedDate >= time()) {
+                    $errors['started_date'] = 'Started date must be in the past.';
+                    setFlashMessage($errors['started_date'], 'error');
+                    redirect('Inventory/machine');
+                }
+            }
+
+            if (empty($data['model_number'])) {
+                $errors['model_number'] = 'Model number is required.';
+            }
+
+            if (empty($data['next_maintenance'])) {
                 $errors['next_maintenance'] = 'Next maintenance is required.';
-            if (empty($data['total_working_hours']))
+            } else {
+                $nextMaintenance = strtotime($data['next_maintenance']);
+                if ($nextMaintenance <= time()) {
+                    $errors['next_maintenance'] = 'Next maintenance date must be in the future.';
+                    setFlashMessage($errors['next_maintenance'], 'error');
+                    redirect('Inventory/machine');
+                }
+            }
+
+            if (empty($data['total_working_hours'])) {
                 $errors['total_working_hours'] = 'Total working hours are required.';
-            if (empty($data['special_notes']))
-                $errors['special_notes'] = 'Special notes are required.';
+            }
+
 
 
             // var_dump($data);
@@ -806,16 +826,38 @@ class Inventory extends controller
         } elseif (isset($_GET['id']) && isset($_POST['status_allocate'])) {
             $us = $_GET['id'];
 
-            $machineModel = $this->model('M_Machine');
-            $machineModel->updateMachineByStatus($us, 'Allocated');
-            redirect('Inventory/machine');
+
+
+            $machine1 = $this->machineModel->getmachineById($us);
+            if ($machine1->status == 'Ready') {
+                $this->machineModel->updateMachineByStatus($us, 'Allocated');
+                setFlashMessage("Machine State Changed");
+                redirect('Inventory/machine');
+            } else {
+                setFlashMessage("Machine Should be in Ready State", 'error');
+                redirect('Inventory/machine');
+            }
 
         } elseif (isset($_GET['id']) && isset($_POST['status_deallocate'])) {
             $us = $_GET['id'];
 
             $machineModel = $this->model('M_Machine');
-            $machineModel->updateMachineByStatus($us, 'Repair');
+            $machineModel->updateMachineByStatus($us, 'Ready');
+            setFlashMessage("Machine State Changed");
             redirect('Inventory/machine');
+
+        } elseif (isset($_GET['id']) && isset($_POST['status_repair'])) {
+            $us = $_GET['id'];
+
+            $machine1 = $this->machineModel->getmachineById($us);
+            if ($machine1->status == 'Ready') {
+                $this->machineModel->updateMachineByStatus($us, 'Repair');
+                setFlashMessage("Machine State Changed");
+                redirect('Inventory/machine');
+            } else {
+                setFlashMessage("Machine Should be in Ready State", 'error');
+                redirect('Inventory/machine');
+            }
 
         } else {
             // GET request
@@ -1069,14 +1111,14 @@ class Inventory extends controller
 
             // Log the data array
             // error_log(print_r($data, true));
-           
+
             // print_r("qwe");
             $this->inventoryConfigModel->add_inventory_config($data);
 
         }
 
         $totalteaweight = $this->inventoryConfigModel->get_total_tea_weightBymonth();
-        $export= $this->inventoryConfigModel->get_total_tea_weightBymonth_export();
+        $export = $this->inventoryConfigModel->get_total_tea_weightBymonth_export();
         $netincome = $this->inventoryConfigModel->get_income_by_month();
 
         $data2 = [];
@@ -1090,7 +1132,7 @@ class Inventory extends controller
         foreach ($netincome as $net) {
             $netincomeByMonth[$net->month] = $net->total_income;
         }
-        
+
         // Step 2: Merge data into a single array for the view
         $overviewData = [];
         foreach ($totalteaweight as $tea) {
@@ -1099,18 +1141,18 @@ class Inventory extends controller
                 'month' => $month,
                 'total_tea_weight' => $tea->total_quantity,
                 'export_amount' => isset($exportAmountsByMonth[$month]) ? $exportAmountsByMonth[$month] : '0',
-                'net_income' => isset($netincomeByMonth[$month]) ? $netincomeByMonth[$month]:'0' // Placeholder
+                'net_income' => isset($netincomeByMonth[$month]) ? $netincomeByMonth[$month] : '0' // Placeholder
             ];
         }
 
 
-        
+
 
         $fertilizer = $this->fertilizerModel->getfertilizer();
         $data = [
             'overviewData' => $overviewData,
             'fertilizer' => $fertilizer,
-            
+
         ];
 
 
@@ -1213,6 +1255,7 @@ class Inventory extends controller
                         $_SERVER['REQUEST_URI'],
                         http_response_code()
                     );
+
                     setFlashMessage('Bag properties updated successfully!');
                     redirect("inventory/viewAwaitingInventory/$collectionId");
                 } else {
@@ -1385,12 +1428,12 @@ class Inventory extends controller
             redirect('inventory/collectionBags');
         }
         $lastid = $this->stockvalidate->getLastBagId();
-        $newid= $lastid->bag_id + 1;
+        $newid = $lastid->bag_id + 1;
         $data = [
             'next_bag_id' => $newid,
         ];
 
-        $this->view('inventory/v_create_bag',$data);
+        $this->view('inventory/v_create_bag', $data);
     }
 
     public function rawLeafHistory()
@@ -1462,7 +1505,8 @@ class Inventory extends controller
     }
 
 
-    public function viewFertilizerRequests(){
+    public function viewFertilizerRequests()
+    {
         $fertilizerRequest = $this->fertilizerOrderModel->getfertilizerorderforInventory();
         $data = [
             'fertilizerRequest' => $fertilizerRequest
@@ -1474,8 +1518,9 @@ class Inventory extends controller
         $this->view('inventory/v_fertilizer_request', $data);
     }
 
-    public function markRequestAsPaid($orderId) {
-        if(!$orderId) {
+    public function markRequestAsPaid($orderId)
+    {
+        if (!$orderId) {
             setFlashMessage('No order id exists', 'warning');
             redirect('inventory/viewFertilizerRequests');
         }
@@ -1485,8 +1530,9 @@ class Inventory extends controller
         redirect('inventory/viewFertilizerRequests');
     }
 
-    public function markRequestAsFailed($orderId) {
-        if(!$orderId) {
+    public function markRequestAsFailed($orderId)
+    {
+        if (!$orderId) {
             setFlashMessage('No order id exists', 'warning');
             redirect('inventory/viewFertilizerRequests');
         }
@@ -1496,7 +1542,8 @@ class Inventory extends controller
         redirect('inventory/viewFertilizerRequests');
     }
 
-    public function viewBagUsageHistory() {
+    public function viewBagUsageHistory()
+    {
         $bagHistory = $this->stockvalidate->getBagUsageHistory();
         $data = [
             'bagHistory' => $bagHistory

@@ -191,10 +191,6 @@
                                 <span id="modal-product-quantity"></span> <span id="modal-product-unit"></span>
                             </div>
                         </div>
-                        <div class="info-group">
-                            <label>Unit:</label>
-
-                        </div>
                     </div>
                 </div>
             </div>

@@ -62,7 +62,7 @@
                     </div>
                     <div class="info-row">
                         <label class="label" for="grade">Grade:</label>
-                        <input type="text" id="grade" name="grade" class="form-control" placeholder="Enter Grade"
+                        <input type="text" id="grade" name="grade" class="form-control" placeholder="Enter Grade(shouls Start with GT)"
                              value="<?php echo isset($data['grade']) ? $data['grade'] : ''; ?>">
                     </div>
                 </div>
