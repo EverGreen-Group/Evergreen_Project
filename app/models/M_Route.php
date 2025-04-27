@@ -16,15 +16,8 @@ class M_Route {
     }
 
 
-    /* ========================================================================
-       CRUD Methods (Create, Update, Delete)
-       ======================================================================== */
 
-    /**
-     * Create a new route.
-     */
-    public function createRoute($routeName, $vehicleId) {   //tested
-        // Check for duplicate route name
+    public function createRoute($routeName, $vehicleId) {   
         if ($this->isDuplicateRouteName($routeName)) {
             return false; 
         }
@@ -49,7 +42,6 @@ class M_Route {
     }
 
     public function editRoute($routeId, $routeName, $vehicleId) {
-        // Get current route information
         $this->db->query("SELECT vehicle_id, remaining_capacity FROM routes WHERE route_id = :route_id");
         $this->db->bind(':route_id', $routeId);
         $currentRoute = $this->db->single();
@@ -59,12 +51,10 @@ class M_Route {
             $this->db->bind(':vehicle_id', $currentRoute->vehicle_id);
             $currentVehicle = $this->db->single();
             
-            // the new vehicles capacity
             $this->db->query("SELECT capacity FROM vehicles WHERE vehicle_id = :vehicle_id");
             $this->db->bind(':vehicle_id', $vehicleId);
             $newVehicle = $this->db->single();
             
-            // we can get the routes filled kg with current vehicle capacity - remaining capacity
             $suppliersCapacity = $currentVehicle->capacity - $currentRoute->remaining_capacity;
             
             if ($newVehicle->capacity < $suppliersCapacity) {
@@ -76,7 +66,6 @@ class M_Route {
             $newRemainingCapacity = $currentRoute->remaining_capacity;
         }
         
-        // Update the route
         $this->db->query("UPDATE routes SET route_name = :route_name, vehicle_id = :vehicle_id, remaining_capacity = :remaining_capacity WHERE route_id = :route_id");
         $this->db->bind(':route_name', $routeName);
         $this->db->bind(':vehicle_id', $vehicleId);
@@ -86,25 +75,9 @@ class M_Route {
         return $this->db->execute();
     }
 
-    /**
-     * Update the order of a supplier within a route.
-     */
-    public function updateRouteOrder($routeId, $supplierId, $order) {
-        $this->db->query("UPDATE route_suppliers 
-                          SET supplier_order = :order 
-                          WHERE route_id = :route_id 
-                          AND supplier_id = :supplier_id");
-        
-        $this->db->bind(':order', $order);
-        $this->db->bind(':route_id', $routeId);
-        $this->db->bind(':supplier_id', $supplierId);
-        
-        return $this->db->execute();
-    }
 
-    /**
-     * Soft delete a route and its associated route_suppliers.
-     */
+
+
     public function deleteRoute($route_id) {
         // Check if the route is in any active collection schedules
         $this->db->query("SELECT COUNT(*) as count, schedule_id FROM collection_schedules WHERE route_id = :route_id AND collection_schedules.is_deleted = 0");
@@ -135,9 +108,7 @@ class M_Route {
         }
     }
 
-    /**
-     * Add a supplier to a route.
-     */
+
     public function addSupplierToRoute($routeId, $supplierId, $stopOrder) { // tested
         $sql = "INSERT INTO route_suppliers (route_id, supplier_id, stop_order) VALUES (:route_id, :supplier_id, :stop_order)";
         $stmt = $this->db->prepare($sql);
@@ -148,23 +119,16 @@ class M_Route {
         return $stmt->execute(); 
     }
 
-    /**
-     * Update the remaining capacity of a route based on the vehicle capacity and total average collection.
-     */
-    public function updateRemainingCapacity($routeId, $action = 'add') {    // tested
-        // Get the vehicle capacity
-        $vehicleCapacity = $this->getVehicleCapacityByRouteId($routeId);    // tested
 
-        // Get the total average collection for the route
-        $totalSum = $this->getTotalRouteSuppliersSum($routeId); // tested
+    public function updateRemainingCapacity($routeId, $action = 'add') {    
+        $vehicleCapacity = $this->getVehicleCapacityByRouteId($routeId);   
 
-        // Calculate remaining capacity
+        $totalSum = $this->getTotalRouteSuppliersSum($routeId); 
+
         $remainingCapacity = $vehicleCapacity - $totalSum;
 
-        // Determine the adjustment for the number of suppliers
         $supplierAdjustment = ($action === 'add') ? 1 : -1;
 
-        // Update the remaining capacity and adjust supplier count in the database
         $sql = "UPDATE routes SET remaining_capacity = :remaining_capacity, number_of_suppliers = number_of_suppliers + :supplier_adjustment WHERE route_id = :route_id";
         $this->db->query($sql);
         $this->db->bind(':remaining_capacity', $remainingCapacity);
@@ -200,7 +164,7 @@ class M_Route {
 
     //  gtting all the undeleted routes
 
-    public function getAllUndeletedRoutes($limit = 5, $offset = 0) {    // tested
+    public function getAllUndeletedRoutes() {    
         $this->db->query("
             SELECT r.*, 
                 v.*, 
@@ -219,53 +183,33 @@ class M_Route {
             ) AS assigned ON r.route_id = assigned.route_id
             WHERE r.is_deleted = 0
             GROUP BY r.route_id
-            ORDER BY r.route_id ASC 
-            LIMIT :limit OFFSET :offset
+            ORDER BY r.route_id ASC
         ");
         
-        $this->db->bind(':limit', $limit, PDO::PARAM_INT);
-        $this->db->bind(':offset', $offset, PDO::PARAM_INT);
 
         return $this->db->resultSet();
     }
 
-    /**
-     * Get the total count of undeleted routes.
-     */
+
     public function getTotalRoutes() {
         $this->db->query("SELECT COUNT(*) as totalRoutes FROM routes WHERE is_deleted = 0");
         $result = $this->db->single();
         return $result ? $result->totalRoutes : 0;
     }
-    
-    /**
-     * Get the total count of active routes.
-     */
+
     public function getTotalActiveRoutes() {
         $sql = "SELECT COUNT(*) as total FROM routes WHERE status = 'Active' AND is_deleted = 0";
-        $stmt = $this->db->query($sql);
-        if ($stmt) {
-            $count = $stmt->fetchColumn();
-            error_log("Total active routes count: " . $count);
-            return (int)$count;
-        }
-        error_log("Error getting active routes: " . print_r($this->db->errorInfo(), true));
-        return 0;
+        $this->db->query($sql);
+        $result = $this->db->single();
+        return (int)$result->total;
     }
     
-    /**
-     * Get the total count of inactive routes.
-     */
+
     public function getTotalInactiveRoutes() {
         $sql = "SELECT COUNT(*) as total FROM routes WHERE status = 'Inactive' AND is_deleted = 0";
-        $stmt = $this->db->query($sql);
-        if ($stmt) {
-            $count = $stmt->fetchColumn();
-            error_log("Total inactive routes count: " . $count);
-            return (int)$count;
-        }
-        error_log("Error getting inactive routes: " . print_r($this->db->errorInfo(), true));
-        return 0;
+        $this->db->query($sql);
+        $result = $this->db->single();
+        return (int)$result->total;
     }
 
     /**
@@ -412,14 +356,7 @@ class M_Route {
     }
 
 
-    /* ========================================================================
-       AJAX Methods (Data Retrieval for AJAX Calls)
-       ======================================================================== */
-
-    /**
-     * Get unallocated suppliers (those not assigned to any active route).
-     */
-    public function getUnallocatedSuppliers() { // actually should call it unassigned, tested
+    public function getUnallocatedSuppliers() { 
         $this->db->query("
             SELECT DISTINCT
                 s.*,
@@ -429,21 +366,18 @@ class M_Route {
                 CONCAT(s.latitude, ', ', s.longitude) as coordinates
             FROM suppliers s
             JOIN profiles p ON s.profile_id = p.profile_id
-            LEFT JOIN route_suppliers rs ON s.supplier_id = rs.supplier_id AND rs.is_deleted = 0  -- check active only
-            LEFT JOIN routes r ON rs.route_id = r.route_id AND r.is_deleted = 0  -- taking only active route
-            WHERE rs.supplier_id IS NULL  -- Supplier is not in any active route
+            LEFT JOIN route_suppliers rs ON s.supplier_id = rs.supplier_id AND rs.is_deleted = 0  
+            LEFT JOIN routes r ON rs.route_id = r.route_id AND r.is_deleted = 0 
+            WHERE rs.supplier_id IS NULL 
             AND s.is_active = 1
             AND s.is_deleted = 0;
         ");
         
         $result = $this->db->resultSet();
-        error_log('Unallocated suppliers query result: ' . print_r($result, true));
         return $result;
     }
 
-    /**
-     * Get suppliers associated with a specific collection.
-     */
+
     public function getSuppliersInCollection($collectionId) {
         $this->db->query("
             SELECT 
@@ -583,19 +517,15 @@ class M_Route {
     }
 
 
-    // I MADE THIS FOR OPTIMIZATIOn, REMOVED THE SEQUENTIAL LINKED LIST LIKE APPROACH!!
 
     public function optimizeRouteStopOrders($routeId) {
         $suppliers = $this->getRouteSuppliersByRouteId($routeId);
         
-        // if empty nothing to update
         if (empty($suppliers)) {
             return true;
         }
         
-        // if only 1 supplier then its simply set to 1
         if (count($suppliers) == 1) {
-            // Assuming $suppliers is an array of objects
             $sql = "UPDATE route_suppliers SET stop_order = 1 
                     WHERE route_id = :route_id 
                       AND supplier_id = :supplier_id";
@@ -637,14 +567,12 @@ class M_Route {
         $route = [];
         
         while (count($remaining) > 0) {
-            // Find the closest supplier from the current point.
             $nearestIndex = $this->findNearest($currentPoint, $remaining);
             $nearest = $remaining[$nearestIndex];
             
             $route[] = $nearest->supplier_id;
 
             unset($remaining[$nearestIndex]);
-            // re-iindexing the array so that the index are ordered again
             $remaining = array_values($remaining);
         }
         
@@ -654,11 +582,8 @@ class M_Route {
     private function findNearest($point, $suppliers) {
         $minDistance=PHP_FLOAT_MAX;
         $nearestIndex=0;
-
-        // simple short value finding
         
         foreach ($suppliers as $index =>$supplier){
-            // frp, current point to the supplier
             $distance = $this->calculateDistance($point->latitude, $point->longitude,$supplier->latitude, $supplier->longitude
             );
             
@@ -702,27 +627,23 @@ class M_Route {
     }
 
     private function calculateDistance($lat1, $lon1, $lat2, $lon2) {
-        // Convert degrees to radians
         $lat1 = $lat1 * (pi() / 180);
         $lon1 = $lon1 * (pi() / 180);
         $lat2 = $lat2 * (pi() / 180);
         $lon2 = $lon2 * (pi() / 180);
     
-        // Earth's radius in kilometers
         $earthRadius = 6371;
     
-        // Differences in coordinates
         $diffLat = $lat2 - $lat1;
         $diffLon = $lon2 - $lon1;
     
-        // Haversine formula
+
         $a = sin($diffLat / 2) * sin($diffLat / 2) +
              cos($lat1) * cos($lat2) *
              sin($diffLon / 2) * sin($diffLon / 2);
     
         $c = 2 * atan2(sqrt($a), sqrt(1 - $a));
     
-        // Final distance
         $distance = $earthRadius * $c;
     
         return $distance;
