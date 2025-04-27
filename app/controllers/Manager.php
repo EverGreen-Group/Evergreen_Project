@@ -1994,7 +1994,7 @@ class Manager extends Controller
         $this->requireLogin(); 
     
         if(!isset($_SESSION['manager_id'])) {
-            redirect('manager/allAppointments');
+            redirect('auth/login');
         }
         
         $managerId = $_SESSION['manager_id'];
@@ -2066,29 +2066,45 @@ class Manager extends Controller
             ];
             
             if (strtotime($data['date']) < strtotime(date('Y-m-d'))) {
-                $data['date_err'] = 'Time slots must be scheduled for future dates';
+                setFlashMessage('Time slots must be scheduled for future dates','error');
+                redirect('manager/appointments');
+                return;
             }
             
             $start_timestamp = strtotime($data['start_time']);
             $end_timestamp = strtotime($data['end_time']);
 
             if ($start_timestamp >= $end_timestamp) {
-                $data['time_err'] = 'End time must be after start time';
+                setFlashMessage('End time must be after start time','error');
+                redirect('manager/appointments');
+                return;
             } else {
 
                 $duration_minutes = ($end_timestamp - $start_timestamp) / 60;
 
                 if ($duration_minutes < 30) {
-                    $data['time_err'] = 'Time slots must be at least 30 minutes long';
+                    setFlashMessage('Time slots must be at least 30 minutes long','error');
+                    redirect('manager/appointments');
+                    return;
                 } else if ($duration_minutes > 120) {
-                    $data['time_err'] = 'Time slots cannot exceed 2 hours';
+                    setFlashMessage('Time slots cannot exceed 2 hours','error') ;
+                    redirect('manager/appointments');
+                    return;
                 }
+            }
+
+            if ($start_timestamp < strtotime('08:00') || $end_timestamp > strtotime('18:00')) {
+                setFlashMessage('Time slots must be created between 8:00AM and 06:00PM','error');
+                redirect('manager/appointments');
+                return;
             }
             
             // Check if slot already exists or overlaps with another slot
             $overlap = $this->appointmentModel->isSlotOverlapping($data);
             if ($overlap) {
-                $data['time_err'] = 'This time slot overlaps with an existing slot';
+                setFlashMessage('This time slot overlaps with an existing slot','error');
+                redirect('manager/appointments');
+                return;
             }
             
             // Make sure no errors
@@ -2100,7 +2116,6 @@ class Manager extends Controller
                 }
             }
             
-            // If there were errors, show the form again with the error messages
             $this->view('supplier_manager/v_create_slot', $data);
         } else {
             $data = [
@@ -2117,14 +2132,40 @@ class Manager extends Controller
     }
 
     public function cancelSlot($slotId) {
+        $this->requireLogin();
         
+        $managerId = $_SESSION['manager_id'];
         
         if ($slotId) {
-
-            $this->appointmentModel->cancelSlot($slotId);
+            $incomingSlot = $this->appointmentModel->getIncomingRequests($managerId);
+            
+            // Check if there's a pending request for this slot
+            $isPendingRequest = false;
+            foreach ($incomingSlot as $slot) {
+                if ($slot->slot_id == $slotId) {
+                    $isPendingRequest = true;
+                    break;
+                }
+            }
+    
+            // If pending request exists, set message and exit early
+            if ($isPendingRequest) {
+                setFlashMessage('Cannot cancel time slot. Pending request for this time slot is already present.', 'alert alert-danger');
+                redirect('manager/appointments');
+                return; // This is crucial - exit the function here
+            }
+            
+            // Only reach this code if no pending request exists
+            if ($this->appointmentModel->cancelSlot($slotId, $managerId)) {
+                setFlashMessage('Time slot canceled successfully');
+            } else {
+                setFlashMessage('Unable to cancel time slot. It may already be booked or requested.', 'alert alert-danger');
+            }
+            redirect('manager/appointments');
+        } else {
+            setFlashMessage('Invalid request', 'alert alert-danger');
+            redirect('manager/appointments');
         }
-        setFlashMessage("Custom time slot deleted successfully!");
-        redirect('manager/appointments');
     }
 
 

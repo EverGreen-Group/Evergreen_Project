@@ -104,7 +104,7 @@
     <div class="order">
       <div class="head">
         <h3>Incoming Requests</h3>
-        <a href="<?php echo URLROOT; ?>/manager/appointments" class="btn btn-primary">
+        <a href="<?php echo URLROOT; ?>/manager/rejectedAppointments" class="btn btn-primary">
           <i class='bx bx-show'></i>
           View Rejected Requests
         </a>
