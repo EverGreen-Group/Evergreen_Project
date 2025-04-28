@@ -37,12 +37,19 @@ class Supplier extends Controller {
         $this->complaintModel = new M_Complaint();
         $this->bagModel = new M_Bag();
         $this->appointmentModel = $this->model('M_Appointment');
-        $this->chatModel = new M_Chat(); // Initialize the chat model
+        $this->chatModel = new M_Chat(); 
 
         $this->bagModel = new M_Bag();
         $this->userModel = $this->model('M_User');
         $supplierDetails = $this->supplierModel->getSupplierDetailsByUserId($_SESSION['user_id']);
         $_SESSION['supplier_id'] = $supplierDetails->supplier_id;
+
+        $activeManagers = $this->chatModel->getActiveManagers();
+        $unreadCount = 0;
+        foreach ($activeManagers as $manager) {
+            $unreadCount += $manager->unread_count;
+        }
+        $_SESSION['unread_messages'] = $unreadCount;
     }
 
     public function index() {

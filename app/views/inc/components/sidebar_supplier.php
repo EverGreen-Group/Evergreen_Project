@@ -19,6 +19,23 @@
 					<span class="text">Dashboard</span>
 				</a>
 			</li>
+			<li class="<?php echo (basename($_SERVER['REQUEST_URI']) == 'announcements') ? 'active' : ''; ?>">
+				<a href="<?php echo URLROOT; ?>/supplier/announcements">
+					<i class='bx bxs-megaphone'></i>
+					<span class="text">View Announcements</span>
+				</a>
+			</li>
+
+			<li class="<?php echo (basename($_SERVER['REQUEST_URI']) == 'chat') ? 'active' : ''; ?>">
+				<a href="<?php echo URLROOT; ?>/supplier/chat">
+					<i class='bx bxs-message-dots'></i>
+					<span class="text">Chat</span>
+					<?php if(isset($_SESSION['unread_messages']) && $_SESSION['unread_messages'] > 0): ?>
+						<span class="notification-badge"><?php echo $_SESSION['unread_messages']; ?></span>
+					<?php endif; ?>
+				</a>
+			</li>
+
 			<li class="<?php echo (basename($_SERVER['REQUEST_URI']) == 'collections') ? 'active' : ''; ?>">
 				<a href="<?php echo URLROOT; ?>/supplier/collections">
 					<i class='bx bx-history'></i>
@@ -44,18 +61,8 @@
 				</a>
 			</li>
 
-			<li class="<?php echo (basename($_SERVER['REQUEST_URI']) == 'chat') ? 'active' : ''; ?>">
-				<a href="<?php echo URLROOT; ?>/supplier/chat">
-					<i class='bx bxs-message-dots'></i>
-					<span class="text">Send Message</span>
-				</a>
-			</li>
-			<li class="<?php echo (basename($_SERVER['REQUEST_URI']) == 'announcements') ? 'active' : ''; ?>">
-				<a href="<?php echo URLROOT; ?>/supplier/announcements">
-					<i class='bx bxs-megaphone'></i>
-					<span class="text">View Announcements</span>
-				</a>
-			</li>
+
+
 			
 			<li class="<?php echo (basename($_SERVER['REQUEST_URI']) == 'complaints') ? 'active' : ''; ?>">
 				<a href="<?php echo URLROOT; ?>/supplier/complaints">
@@ -80,4 +87,38 @@
         </ul>
     </section>
 
-	
+	<style>
+
+	.side-menu li a {
+		position: relative;
+	}
+
+	.notification-badge {
+		position: absolute;
+		top: 8px;
+		right: 15px;
+		background-color: #ff4d4d;
+		color: white;
+		border-radius: 50%;
+		width: 22px;
+		height: 22px;
+		font-size: 13px;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		font-weight: bold;
+		margin-top: 4px;
+	}
+
+
+	.notification-indicator {
+		position: absolute;
+		top: 8px;
+		right: 15px;
+		background-color: #ff4d4d;
+		border-radius: 50%;
+		width: 10px;
+		height: 10px;
+	}
+
+	</style>

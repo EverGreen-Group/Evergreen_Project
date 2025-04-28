@@ -52,6 +52,13 @@ class Manager extends Controller
         $this->appointmentModel = $this->model('M_Appointment');
         $this->logModel = $this->model('M_Log');
 
+        $activeSuppliers = $this->chatModel->getActiveSuppliers();
+        $unreadCount = 0;
+        foreach ($activeSuppliers as $supplier) {
+            $unreadCount += $supplier->unread_count;
+        }
+        $_SESSION['manager_unread_messages'] = $unreadCount;
+
     }
 
 
