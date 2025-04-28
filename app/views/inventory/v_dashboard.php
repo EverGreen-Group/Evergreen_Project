@@ -90,12 +90,12 @@
 			<?php
 			$machines = $data['machines'];
 			// Example PHP array
-			// $machines = [
-			// 	(object) ["id" => 2, "machine_name" => "Machine A", "total_working_hours" => "200 items"],
-			// 	(object) ["id" => 3, "machine_name" => "Machine B", "total_working_hours" => "300 items"],
-			// 	(object) ["id" => 4, "machine_name" => "Machine C", "total_working_hours" => "150 hours"],
-			// 	(object) ["id" => 5, "machine_name" => "Machine D", "total_working_hours" => "500 hours"],
-			// ];
+			$machinesdata2 = [
+				(object) ["id" => 2, "machine_name" => "Machine A", "total_working_hours" => "200 items"],
+				(object) ["id" => 3, "machine_name" => "Machine B", "total_working_hours" => "300 items"],
+				(object) ["id" => 4, "machine_name" => "Machine C", "total_working_hours" => "150 hours"],
+				(object) ["id" => 5, "machine_name" => "Machine D", "total_working_hours" => "500 hours"],
+			];
 			
 			// Extract machine names and working hours
 			$chartdata = [

@@ -184,12 +184,12 @@ class M_Fertilizer_Order {
         return $this->db->single();
     }
 	
-    // public function updatePaymentStatus($order_id, $payment_status) {
-    //     $this->db->query("UPDATE fertilizer_orders SET payment_status = :payment_status WHERE order_id = :order_id");
-    //     $this->db->bind(':payment_status', $payment_status);
-    //     $this->db->bind(':order_id', $order_id);
-    //     return $this->db->execute();
-    // }
+    public function C_updatePaymentStatus($order_id, $payment_status) {
+        $this->db->query("UPDATE fertilizer_orders SET payment_status = :payment_status WHERE order_id = :order_id");
+        $this->db->bind(':payment_status', $payment_status);
+        $this->db->bind(':order_id', $order_id);
+        return $this->db->execute();
+    }
 
     
     public function getfertilizerorderforInventory(){
