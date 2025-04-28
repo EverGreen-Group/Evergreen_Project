@@ -37,31 +37,37 @@ class Supplier extends Controller {
         $this->complaintModel = new M_Complaint();
         $this->bagModel = new M_Bag();
         $this->appointmentModel = $this->model('M_Appointment');
-        $this->chatModel = new M_Chat(); // Initialize the chat model
+        $this->chatModel = new M_Chat(); 
 
         $this->bagModel = new M_Bag();
         $this->userModel = $this->model('M_User');
         $supplierDetails = $this->supplierModel->getSupplierDetailsByUserId($_SESSION['user_id']);
         $_SESSION['supplier_id'] = $supplierDetails->supplier_id;
+
+        $activeManagers = $this->chatModel->getActiveManagers();
+        $unreadCount = 0;
+        foreach ($activeManagers as $manager) {
+            $unreadCount += $manager->unread_count;
+        }
+        $_SESSION['unread_messages'] = $unreadCount;
     }
 
     public function index() {
         $supplierId = $_SESSION['supplier_id'];
-    
-        // Tea leaves data
-        // $teaLeavesKg = $this->supplierModel->getTotalKgThisMonth($supplierId);
-        // $teaLeavesKgLastCollection = $this->supplierModel->kgSuppliedLastCollection($supplierId);
+
         $vehicleModel = $this->model('M_Vehicle');
     
-        // Assigned schedule (general one)
         $assignedSchedule = $this->supplierModel->getSupplierSchedule($supplierId);
-    
+
+        $getLatestCollection = $this->supplierModel->getLatestCollection($supplierId);
+        
+        if ($getLatestCollection) {
+            $data['getLatestCollection'] = $getLatestCollection;
+        }
+
         $supplierStatus = $this->supplierModel->getSupplierStatus($supplierId);
         $data['is_active'] = $supplierStatus;
-        // $data['teaLeavesKg'] = $teaLeavesKg;
-        // $data['teaLeavesKgLastCollection'] = $teaLeavesKgLastCollection;
-    
-        // Add general assigned schedule if available
+
         if ($assignedSchedule) {
             $data['assignedSchedule'] = $assignedSchedule;
         }
@@ -180,14 +186,14 @@ class Supplier extends Controller {
     public function payments() {
         $supplierId = $_SESSION['supplier_id'];
         
-        // Get filter values
+
         $month = isset($_GET['month']) ? $_GET['month'] : 'all';
         $year = isset($_GET['year']) ? $_GET['year'] : date('Y');
         
-        // Get earnings data based on filters
+
         $earnings = $this->supplierModel->getSupplierEarnings($supplierId, $month, $year);
         
-        // Calculate totals
+
         $totals = (object)[
             'total_normal_kg' => 0,
             'total_super_kg' => 0,
@@ -484,9 +490,7 @@ class Supplier extends Controller {
         $this->view('supplier/v_fertilizer_request', $data);
     }
 
-    /*private function logUnitUsage($unit){
-        error_log ($unit);
-    }*/
+
 
     public function requestFertilizer() {                       // bug free function
 

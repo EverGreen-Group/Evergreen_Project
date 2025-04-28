@@ -36,7 +36,7 @@ class M_CollectionSchedule {
     }
 
 
-    public function getFilteredSchedules($route_id = null, $vehicle_id = null, $driver_id = null, $day = null) { // tested ok
+    public function getFilteredSchedules($route_id = null, $vehicle_id = null, $driver_id = null, $day = null) {
         $sql = "SELECT 
                     cs.schedule_id,
                     cs.route_id,
@@ -394,33 +394,30 @@ class M_CollectionSchedule {
         $this->db->bind(':day', $data['day']);
         $this->db->bind(':start_time', $data['start_time']);
         $this->db->bind(':end_time', $data['end_time']);
-        $this->db->bind(':is_active', 1); // Default to active
+        $this->db->bind(':is_active', 1);
         
         return $this->db->execute();
     }
 
     public function delete($schedule_id) {
-        // First check if the schedule exists and is not currently in use
         $this->db->query('SELECT * FROM collection_schedules 
                           WHERE schedule_id = :schedule_id 
                           AND schedule_id NOT IN (
                               SELECT schedule_id 
                               FROM collections 
-                              WHERE status = "ongoing"
+                              WHERE status = "In Progress"
                           )');
         $this->db->bind(':schedule_id', $schedule_id);
         
         $schedule = $this->db->single();
         
         if (!$schedule) {
-            return false; // Schedule doesn't exist or is in use
+            return false; 
         }
 
-        // If schedule exists and is not in use, proceed with deletion
         $this->db->query('UPDATE collection_schedules SET is_deleted = 1 WHERE schedule_id = :schedule_id');
         $this->db->bind(':schedule_id', $schedule_id);
 
-        // Execute
         if ($this->db->execute()) {
             return true;
         } else {
@@ -999,11 +996,9 @@ class M_CollectionSchedule {
      need this in creating collection schedules
      **/
     public function checkDriverScheduleConflict($driverId, $day, $startTime, $endTime) {
-        // Convert times for comparison
         $newStartTime = strtotime("2000-01-01 " . $startTime);
         $newEndTime = strtotime("2000-01-01 " . $endTime);
         
-        // Get all schedules for this driver on this day
         $this->db->query("SELECT * FROM collection_schedules 
                          WHERE driver_id = :driver_id 
                          AND day = :day 
@@ -1014,7 +1009,6 @@ class M_CollectionSchedule {
         
         $schedules = $this->db->resultSet();
         
-        // Check for conflicts using the new method
         return $this->hasScheduleConflict($newStartTime, $newEndTime, $schedules);
     }
 
@@ -1065,7 +1059,6 @@ class M_CollectionSchedule {
         
         $result = $this->db->single();
         
-        // if the route is already scheduled on this day then we have to return conflict
         return $result->count > 0;
     }
 

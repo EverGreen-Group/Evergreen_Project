@@ -1,18 +1,11 @@
 <?php require APPROOT . '/views/inc/components/header.php'; ?>
 
 
-<!-- Side bar -->
 <?php require APPROOT . '/views/inc/components/sidebar_vehicle_manager.php'; ?>
-<!-- Top nav bar -->
 <?php require APPROOT . '/views/inc/components/topnavbar.php'; ?>
 <link rel="stylesheet" href="<?php echo URLROOT; ?>/css/vehicle_manager/vehicle/vehicle_card.css">
 <link rel="stylesheet" href="<?php echo URLROOT; ?>/css/vehicle_manager/vehicle/vehicle.css">
 <link rel="stylesheet" href="<?php echo URLROOT; ?>/css/vehicle_manager/driver/driver.css">
-<script>
-    const URLROOT = '<?php echo URLROOT; ?>';
-    const UPLOADROOT = '<?php echo UPLOADROOT; ?>';
-</script>
-<script src="<?php echo URLROOT; ?>/public/js/driver_manager/driver.js"></script>
 
 <!-- MAIN -->
 <main>
@@ -27,12 +20,6 @@
         </div>
     </div>
     
-    <!-- Error Messages -->
-    <?php if(!empty($data['error'])): ?>
-        <div class="alert alert-danger">
-            <?php echo $data['error']; ?>
-        </div>
-    <?php endif; ?>
     
     <form id="createScheduleForm" method="POST" action="<?php echo URLROOT; ?>/manager/createSchedule">
     
@@ -68,7 +55,7 @@
         </div>
     </div>
 
-    <!-- Route Selection Section -->
+
     <div class="table-data">
         <div class="order">
             <div class="head">
@@ -95,7 +82,6 @@
         </div>
     </div>
 
-    <!-- Driver Selection Section -->
     <div class="table-data">
         <div class="order">
             <div class="head">
@@ -122,7 +108,6 @@
         </div>
     </div>
 
-    <!-- Submit Button -->
     <button type="submit" class="btn btn-primary">Create Schedule</button>
     </form>
     
@@ -130,7 +115,6 @@
 
 
 <style>
-    /* Table Data Container */
     .table-data {
         margin-bottom: 24px;
     }
@@ -141,7 +125,6 @@
         box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
     }
 
-    /* Section Headers */
     .head {
         padding: 16px 20px;
         border-bottom: 1px solid #f0f0f0;
@@ -153,12 +136,10 @@
         color: #2c3e50;
     }
 
-    /* Content Sections */
     .section-content {
         padding: 8px 0;
     }
 
-    /* Info Rows */
     .info-row {
         display: flex;
         align-items: center;
@@ -182,7 +163,6 @@
         color: #2c3e50;
     }
 
-    /* Alert styling */
     .alert {
         padding: 12px 20px;
         margin-bottom: 20px;
@@ -196,7 +176,6 @@
         border: 1px solid #f5c6cb;
     }
 
-    /* Breadcrumb Refinements */
     .breadcrumb {
         display: flex;
         align-items: center;
@@ -225,7 +204,6 @@
         font-size: 14px;
     }
 
-    /* Add styles for selection dropdowns */
     .user-selection-container {
         padding: 20px;
     }
@@ -252,7 +230,6 @@
         outline: none;
     }
 
-    /* Submit button styling */
     .btn-primary {
         display: inline-flex;
         align-items: center;

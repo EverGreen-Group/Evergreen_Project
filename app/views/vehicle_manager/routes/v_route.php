@@ -49,40 +49,6 @@
     </ul>
 
 
-    <!-- <div class="table-data">
-        <div class="order">
-            <div class="head">
-                <h3>Create Route</h3>
-            </div>
-            <div class="filter-options">
-                <form action="<?php echo URLROOT; ?>/route/createRoute" method="POST">
-                    <div class="filter-group">
-                        <label for="route-name">Route Name:</label>
-                        <input type="text" id="route-name" name="route_name" placeholder="Enter route name" required>
-                    </div>
-                    <div class="filter-group">
-                        <label for="select-vehicle">Select Vehicle:</label>
-                        <select id="select-vehicle" name="vehicle_id" required>
-                            <option value="">-- Select Vehicle --</option>
-                            <?php foreach ($data['availableVehicles'] as $vehicle): ?>
-                                <option value="<?php echo $vehicle->vehicle_id; ?>">
-                                    <?php echo $vehicle->license_plate; ?> - 
-                                    <?php echo $vehicle->vehicle_type; ?> - 
-                                    <?php echo $vehicle->make; ?> - 
-                                    <?php echo $vehicle->model; ?> - 
-                                    Capacity: <?php echo $vehicle->capacity; ?> - 
-                                    Color: <?php echo $vehicle->color; ?>
-                                </option>
-                            <?php endforeach; ?>
-                        </select>
-                    </div>
-                    <button type="submit" class="btn btn-primary">Create Route</button>
-                </form>
-            </div>
-        </div>
-    </div> -->
-
-
     <div class="table-data">
         <div class="order">
             <div class="head">
@@ -90,6 +56,12 @@
                 <a href="<?php echo URLROOT; ?>/route/createRoute" class="btn btn-primary">
                     <i class='bx bx-plus'></i>Create a route
                 </a>
+                <form action="<?php echo URLROOT?>/route/route" method="GET">
+                    <label for="search">Search: </label>
+                    <input type="text" name="search" placeholder="Search">  <!-- Use 'search' instead of 'Search' -->
+                    <button class="btn btn-primary">Search</button>
+                </form>
+
             </div>
             <table>
                 <thead>

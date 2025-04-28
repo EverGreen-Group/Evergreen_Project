@@ -40,16 +40,6 @@
                 </div>
             </div>
         </li>
-
-        <li class="stat-card">
-            <div class="stat-content">
-                <i class='bx bx-time'></i>
-                <div class="stat-info">
-                    <h3><?php echo $availableSchedules; ?></h3>
-                    <p>Current Schedules Available</p>
-                </div>
-            </div>
-        </li>
     </ul>
 
 

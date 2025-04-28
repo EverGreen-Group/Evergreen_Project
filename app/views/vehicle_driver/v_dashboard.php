@@ -111,7 +111,6 @@ require APPROOT . '/views/inc/components/topnavbar.php';
             <table class="schedules-table">
                 <thead>
                     <tr>
-                        <th>Date</th>
                         <th>Day</th>
                         <th>Time</th>
                         <th>Route</th>
@@ -121,7 +120,6 @@ require APPROOT . '/views/inc/components/topnavbar.php';
                 <tbody>
                     <?php foreach ($data['allSchedules'] as $schedule): ?>
                     <tr>
-                        <td><?php echo date('M d, Y', strtotime($schedule->start_time)); ?></td>
                         <td><?php echo htmlspecialchars($schedule->day); ?></td>
                         <td><?php echo date('h:i A', strtotime($schedule->start_time)); ?></td>
                         <td><?php echo htmlspecialchars($schedule->route_name); ?></td>
