@@ -736,9 +736,8 @@ class Manager extends Controller
         $data = [
             'vehicle_id' => $vehicleId,
             'vehicle_info' => $vehicle,
-            'maintenance_type' => 'Repair',
-            'description' => '',
-            'cost' => ''
+            'maintenance_type' => '',
+            'description' => ''
         ];
     
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
@@ -747,19 +746,10 @@ class Manager extends Controller
                 'vehicle_id' => $vehicleId,
                 'vehicle_info' => $vehicle,
                 'maintenance_type' => trim($_POST['maintenance_type']),
-                'description' => trim($_POST['description']),
-                'cost' => trim($_POST['cost'])
+                'description' => trim($_POST['description'])
             ];
     
-            if (empty($data['description']) || empty($data['cost'])) {
-                setFlashMessage('Please fill in all required fields', 'error');
-                redirect('manager/addMaintenance/' . $vehicleId);
-            }
     
-            if (!is_numeric($data['cost']) || $data['cost'] < 0) {
-                setFlashMessage('Cost must be a positive value', 'error');
-                redirect('manager/addMaintenance/' . $vehicleId);
-            }
     
             if ($this->vehicleModel->addMaintenanceLog($data) && 
                 $this->vehicleModel->updateVehicleStatus($vehicleId, 'Maintenance')) {
@@ -807,27 +797,20 @@ class Manager extends Controller
             'vehicle_id' => $maintenance->vehicle_id,
             'vehicle_info' => $vehicle,
             'maintenance_type' => $maintenance->maintenance_type,
-            'description' => $maintenance->description,
-            'cost' => $maintenance->cost
+            'description' => $maintenance->description
         ];
 
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
             $data['maintenance_type'] = trim($_POST['maintenance_type']);
             $data['description'] = trim($_POST['description']);
-            $data['cost'] = trim($_POST['cost']);
             $data['end_date'] = date('Y-m-d');
-            $data['status'] = 'Completed'; 
+            $data['status'] = 'Ongoing'; 
             $data['vehicle_id'] = $maintenance->vehicle_id; 
 
 
-            if (empty($data['description']) || empty($data['cost'])) {
+            if (empty($data['description'])) {
                 setFlashMessage('Please fill in all required fields', 'error');
-                redirect('manager/updateMaintenance/' . $maintenanceId);
-            }
-
-            if (!is_numeric($data['cost']) || $data['cost'] < 0) {
-                setFlashMessage('Cost must be a positive value', 'error');
                 redirect('manager/updateMaintenance/' . $maintenanceId);
             }
 
@@ -842,7 +825,7 @@ class Manager extends Controller
                 );
 
                 setFlashMessage('Maintenance record updated successfully!');
-                redirect('manager/updateMaintenance/' . $maintenance->vehicle_id);
+                redirect('manager/viewMaintenance/');
             } else {
                 setFlashMessage('Failed to update maintenance record', 'error');
             }
@@ -1637,10 +1620,7 @@ class Manager extends Controller
     }
     
 
-    /** 
-     * Appointment Management
-     * ------------------------------------------------------------
-     */
+
 
     public function appointments() {
         $this->requireLogin(); 
