@@ -421,7 +421,7 @@ class Auth extends Controller
 
                 $managers = $this->userModel->getAllManagers();
                 foreach ($managers as $manager) {
-                    $this->notificationModel->createNotification($manager->user_id, 'New supplier application submitted.', 'manager/viewApplications/' . $result);
+                    $this->notificationModel->createNotification($manager->user_id, 'New supplier application submitted.', 'New supplier application submitted.' . $result);
                 }
 
                 redirect('pages/supplier_application_status?submitted=true');

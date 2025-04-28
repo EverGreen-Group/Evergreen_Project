@@ -1252,247 +1252,6 @@ class Manager extends Controller
     }
 
 
-    /** 
-     * Route Management
-     * ------------------------------------------------------------
-     */
-
-    // public function route() {
-    //     $allRoutes = $this->routeModel->getAllUndeletedRoutes();
-    //     $totalRoutes = $this->routeModel->getTotalRoutes();
-    //     $totalActive = $this->routeModel->getTotalActiveRoutes();
-    //     $totalInactive = $this->routeModel->getTotalInactiveRoutes();
-    //     $unallocatedSuppliers = $this->routeModel->getUnallocatedSuppliers();
-
-    //     // Format suppliers for the map/dropdown
-    //     $suppliersForMap = array_map(function ($supplier) {
-    //         return [
-    //             'id' => $supplier->supplier_id,
-    //             'name' => $supplier->full_name, // Changed from supplier_name to full_name
-    //             'preferred_day' => $supplier->preferred_day, // Include preferred_day
-    //             'location' => [
-    //                 'lat' => (float) $supplier->latitude,
-    //                 'lng' => (float) $supplier->longitude
-    //             ],
-    //             'average_collection' => $supplier->average_collection,
-    //             'number_of_collections' => $supplier->number_of_collections
-
-    //         ];
-    //     }, $unallocatedSuppliers);
-
-    //     $data = [
-    //         'allRoutes' => $allRoutes,
-    //         'totalRoutes' => $totalRoutes,
-    //         'totalActive' => $totalActive,
-    //         'totalInactive' => $totalInactive,
-    //         'unallocatedSuppliers' => $suppliersForMap,
-    //         'unassignedSuppliersList' => $unallocatedSuppliers
-    //     ];
-
-    //     //$this->view('vehicle_manager/v_route', $data);
-    // }
-
-    // public function createRoute(){
-    //     // Clear any previous output
-    //     ob_clean();
-
-    //     // Set JSON headers
-    //     header('Content-Type: application/json');
-
-    //     try {
-    //         // Get and validate JSON input
-    //         $json = file_get_contents('php://input');
-    //         error_log("Received data: " . $json); // Debug log
-
-    //         $data = json_decode($json);
-
-    //         if (!$data) {
-    //             throw new Exception('Invalid JSON data received');
-    //         }
-
-    //         // Create the route
-    //         $result = $this->routeModel->createRoute($data);
-
-    //         $response = [
-    //             'success' => true,
-    //             'message' => 'Route created successfully',
-    //             'routeId' => $result 
-    //         ];
-
-    //         $this->logModel->create(
-    //             $_SESSION['user_id'],
-    //             $_SESSION['email'],
-    //             $_SERVER['REMOTE_ADDR'],
-    //             "Created a new route",
-    //             $_SERVER['REQUEST_URI'],     
-    //             http_response_code()     
-    //         );
-
-    //         echo json_encode($response);
-
-    //     } catch (Exception $e) {
-    //         error_log("Error in createRoute: " . $e->getMessage());
-    //         echo json_encode([
-    //             'success' => false,
-    //             'message' => $e->getMessage()
-    //         ]);
-    //     }
-    //     exit;
-    // }
-
-    // public function getRouteSuppliers($routeId){
-    //     // Clear any previous output and set JSON header
-    //     ob_clean();
-    //     header('Content-Type: application/json');
-
-    //     if (!$routeId) {
-    //         echo json_encode(['error' => 'Route ID is required']);
-    //         return;
-    //     }
-
-    //     try {
-    //         // Get route details
-    //         $route = $this->routeModel->getRouteById($routeId);
-    //         if (!$route) {
-    //             throw new Exception('Route not found');
-    //         }
-
-    //         // Get suppliers for this route
-    //         $suppliers = $this->routeModel->getRouteSuppliers($routeId);
-
-    //         // Combine the data
-    //         $response = [
-    //             'success' => true,
-    //             'data' => [
-    //                 'route' => [
-    //                     'id' => $route->route_id,
-    //                     'name' => $route->route_name,
-    //                     'status' => $route->status,
-    //                     'start_location' => [
-    //                         'lat' => $route->start_location_lat,
-    //                         'lng' => $route->start_location_long
-    //                     ],
-    //                     'end_location' => [
-    //                         'lat' => $route->end_location_lat,
-    //                         'lng' => $route->end_location_long
-    //                     ],
-    //                     'date' => $route->date,
-    //                     'number_of_suppliers' => $route->number_of_suppliers
-    //                 ],
-    //                 'suppliers' => array_map(function ($supplier) {
-    //                     return [
-    //                         'id' => $supplier->supplier_id,
-    //                         'name' => $supplier->full_name,
-    //                         'location' => [
-    //                             'lat' => $supplier->latitude,
-    //                             'lng' => $supplier->longitude
-    //                         ],
-    //                         'stop_order' => $supplier->stop_order,
-    //                         'supplier_order' => $supplier->supplier_order
-    //                     ];
-    //                 }, $suppliers)
-    //             ]
-    //         ];
-
-    //         error_log('Sending response: ' . json_encode($response));
-    //         echo json_encode($response);
-
-    //     } catch (Exception $e) {
-    //         error_log('Error in getRouteSuppliers: ' . $e->getMessage());
-    //         echo json_encode([
-    //             'success' => false,
-    //             'error' => $e->getMessage()
-    //         ]);
-    //     }
-    //     exit;
-    // }
-
-    // public function getRouteDetails($routeId){
-    //     // Clear any previous output
-    //     ob_clean();
-
-    //     // Set JSON headers
-    //     header('Content-Type: application/json');
-
-    //     try {
-    //         if (!$routeId) {
-    //             throw new Exception('Route ID is required');
-    //         }
-
-    //         // Get route details from model
-    //         $routeDetails = $this->routeModel->getRouteById($routeId);
-
-    //         if (!$routeDetails) {
-    //             throw new Exception('Route not found');
-    //         }
-
-    //         // Get route suppliers
-    //         $routeSuppliers = $this->routeModel->getRouteSuppliers($routeId);
-
-    //         // Combine route details with suppliers
-    //         $response = [
-    //             'success' => true,
-    //             'route' => [
-    //                 'id' => $routeId,
-    //                 'name' => $routeDetails->route_name,
-    //                 'status' => $routeDetails->status,
-    //                 'suppliers' => array_map(function ($supplier) {
-    //                     return [
-    //                         'id' => $supplier->supplier_id,
-    //                         'name' => $supplier->full_name,
-    //                         'coordinates' => [
-    //                             'lat' => (float) $supplier->latitude,
-    //                             'lng' => (float) $supplier->longitude
-    //                         ]
-    //                     ];
-    //                 }, $routeSuppliers)
-    //             ]
-    //         ];
-
-    //         error_log("Sending route details: " . json_encode($response)); // Debug log
-    //         echo json_encode($response);
-
-    //     } catch (Exception $e) {
-    //         error_log("Error in getRouteDetails: " . $e->getMessage());
-    //         echo json_encode([
-    //             'success' => false,
-    //             'message' => $e->getMessage()
-    //         ]);
-    //     }
-    //     exit;
-    // }
-
-    // public function getRoutesByDay($day){
-    //     $routes = $this->routeModel->getRoutesByDay($day);
-    //     echo json_encode(['routes' => $routes]);
-    // }
-
-    // public function removeCollectionSupplier($recordId){
-    //     if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    //         $data = json_decode(file_get_contents('php://input'));
-    //         if ($this->collectionSupplierRecordModel->removeCollectionSupplier($recordId)) {
-    //             echo json_encode(['success' => true]);
-    //         } else {
-    //             echo json_encode(['success' => false]);
-    //         }
-    //     }
-    // }
-
-    // private function getCurrentStop($supplierRecords){
-    //     // Find the last collected supplier
-    //     foreach ($supplierRecords as $index => $record) {
-    //         if ($record->status === 'Collected') {
-    //             return $index;
-    //         }
-    //     }
-    //     return 0; // Return 0 if no collections yet
-    // }
-
-
-    /** 
-     * Collection Management
-     * ------------------------------------------------------------
-     */
 
     public function collection() {
         $stats = $this->userModel->getDashboardStats();
@@ -1503,31 +1262,20 @@ class Manager extends Controller
         $status = isset($_GET['status']) ? $_GET['status'] : null;
         $start_date = isset($_GET['start_date']) ? $_GET['start_date'] : null;
         $end_date = isset($_GET['end_date']) ? $_GET['end_date'] : null;
+        
 
-        $page = isset($_GET['page']) && is_numeric($_GET['page']) ? (int)$_GET['page'] : 1;
+        $allCollections = $this->collectionModel->getFilteredCollections(
+            $collection_id, 
+            $schedule_id, 
+            $status, 
+            $start_date, 
+            $end_date
+        );
 
-        if ($collection_id || $schedule_id || $status || $start_date || $end_date) {
-            $allCollections = $this->collectionModel->getFilteredCollections(
-                $collection_id, 
-                $schedule_id, 
-                $status, 
-                $start_date, 
-                $end_date
-            );
-        } else {
-            $allCollections = $this->collectionModel->getFilteredCollections(
-                null, 
-                null, 
-                "Completed", 
-                null, 
-                null
-            );
-        }
 
         $data = [
             'stats' => $stats,
             'all_collections' => $allCollections,
-            'currentPage' => $page,
             'totalCollections' => $this->collectionModel->getTotalCollections(),
             'filters' => [
                 'collection_id' => $collection_id,
@@ -1542,19 +1290,18 @@ class Manager extends Controller
     }
 
 
-    /** 
-     * Schedule Management
-     * ------------------------------------------------------------
-     */
 
-     public function schedule() 
+     public function schedule()
      {
-         // Stats
-         $totalSchedules = $this->scheduleModel->getTotalSchedules();   
+
+         $totalSchedules = $this->scheduleModel->getTotalSchedules();
          $availableSchedules = $this->scheduleModel->getActiveSchedulesCount(); 
-    
      
-         // Filters from GET
+
+         $routes = $this->routeModel->getAllUndeletedRoutes(); 
+         $drivers = $this->driverModel->getAllDrivers();     
+         $vehicles = $this->vehicleModel->getAllAvailableVehicles();  
+     
          $route_id = $_GET['route_id'] ?? null;
          $vehicle_id = $_GET['vehicle_id'] ?? null;
          $driver_id = $_GET['driver_id'] ?? null;
@@ -1563,7 +1310,7 @@ class Manager extends Controller
          if ($route_id || $vehicle_id || $driver_id || $day) {
              $schedules = $this->scheduleModel->getFilteredSchedules($route_id, $vehicle_id, $driver_id, $day);
          } else {
-             $schedules = $this->scheduleModel->getFilteredSchedules(); 
+             $schedules = $this->scheduleModel->getFilteredSchedules();
          }
      
          $filters = compact('route_id', 'vehicle_id', 'driver_id', 'day');
@@ -1571,6 +1318,9 @@ class Manager extends Controller
          $this->view('vehicle_manager/v_collectionschedule', [
              'totalSchedules' => $totalSchedules,
              'availableSchedules' => $availableSchedules,
+             'routes' => $routes,
+             'drivers' => $drivers,
+             'vehicles' => $vehicles,
              'schedules' => $schedules,
              'filters' => $filters
          ]);
@@ -1581,15 +1331,15 @@ class Manager extends Controller
         if (!isLoggedIn()) {
             redirect('users/login');
         }
-    
+
         $drivers = $this->driverModel->getAllDrivers();
         $routes = $this->routeModel->getAllUnAssignedRoutes(); 
-    
+
         $data = [
             'drivers' => $drivers,
             'routes' => $routes
         ];
-    
+
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $data = [
                 'day' => htmlspecialchars(trim($_POST['day'])),
@@ -1600,7 +1350,7 @@ class Manager extends Controller
                 'drivers' => $drivers,
                 'routes' => $routes
             ];
-    
+
             if (empty($data['day']) || 
                 empty($data['driver_id']) || empty($data['route_id']) || 
                 empty($data['start_time']) || empty($data['end_time'])) {
@@ -1609,86 +1359,86 @@ class Manager extends Controller
                 $startTime = strtotime("2000-01-01 " . $data['start_time']);
                 $endTime = strtotime("2000-01-01 " . $data['end_time']);
 
-                if($endTime < $startTime) {
+                if ($endTime < $startTime) {
                     setFlashMessage('Start time cannot be after the end time!', 'error');
                     redirect('manager/createSchedule');
-
                 }
-                
 
-                    $minGap = 2 * 60 * 60; 
-                    if (($endTime - $startTime) < $minGap) {
-                        setFlashMessage('There must be at least a 2-hour gap between shifts.', 'error');
+                $minGap = 2 * 60 * 60; 
+                $maxGap = 8 * 60 * 60; 
+
+                if (($endTime - $startTime) < $minGap) {
+                    setFlashMessage('There must be at least a 2-hour gap between shifts.', 'error');
+                } elseif (($endTime - $startTime) > $maxGap) {
+                    setFlashMessage('The maximum gap between start time and end time is 8 hours.', 'error');
+                } else {
+                    $driverScheduleConflict = $this->scheduleModel->checkDriverScheduleConflict(   
+                        $data['driver_id'],
+                        $data['day'],
+                        $data['start_time'],
+                        $data['end_time']
+                    );
+
+                    $routeScheduleConflict = $this->scheduleModel->checkRouteScheduleConflict( 
+                        $data['route_id'],
+                        $data['day']
+                    );
+
+                    if ($driverScheduleConflict) {
+                        setFlashMessage('This driver is already scheduled during this time period.', 'error');
+                    } elseif ($routeScheduleConflict) {
+                        setFlashMessage('This route is already scheduled for this day.', 'error');
                     } else {
-                        $driverScheduleConflict = $this->scheduleModel->checkDriverScheduleConflict(   
-                            $data['driver_id'],
-                            $data['day'],
-                            $data['start_time'],
-                            $data['end_time']
-                        );
-    
-                        $routeScheduleConflict = $this->scheduleModel->checkRouteScheduleConflict( 
-                            $data['route_id'],
-                            $data['day']
-                        );
-    
-                        if ($driverScheduleConflict) {
-                            setFlashMessage('This driver is already scheduled during this time period.', 'error');
-                        } elseif ($routeScheduleConflict) {
-                            setFlashMessage('This route is already scheduled for this day.', 'error');
-                        } else {
-                            if ($this->scheduleModel->create($data)) {
-                                $driverUserId = $this->userModel->getUserIdByDriverId($data['driver_id']);  
-                                if ($driverUserId) {
-                                    $this->notificationModel->createNotification(  
-                                        $driverUserId,
-                                        'New Schedule Assigned',
-                                        'You have been assigned a new collection schedule.',
-                                        ['link' => 'vehicledriver/']
-                                    );
-
-                                    $this->notificationModel->createNotification( 
-                                        $_SESSION['user_id'],
-                                        'You assigned a new schedule Assigned',
-                                        'You have created a new collection schedule.',
-                                        ['link' => 'manager/schedule']
-                                    );
-                                }
-    
-                                $suppliers = $this->userModel->getSuppliersByRouteId($data['route_id']);   
-                                foreach ($suppliers as $supplierId) {
-                                    $supplierUserId = $this->userModel->getUserIdBySupplierId($supplierId); 
-                                    if ($supplierUserId) {
-                                        $this->notificationModel->createNotification(
-                                            $supplierUserId,
-                                            'New Schedule Created',
-                                            'A new collection schedule has been created for your route.',
-                                            ['link' => 'supplier/schedule']
-                                        );
-                                    } else {
-
-                                    }
-                                }
-
-                                $this->logModel->create(    
-                                    $_SESSION['user_id'],
-                                    $_SESSION['email'],
-                                    $_SERVER['REMOTE_ADDR'],
-                                    "Created a new schedule",
-                                    $_SERVER['REQUEST_URI'],     
-                                    http_response_code()     
+                        if ($this->scheduleModel->create($data)) {
+                            $driverUserId = $this->userModel->getUserIdByDriverId($data['driver_id']);  
+                            if ($driverUserId) {
+                                $this->notificationModel->createNotification(  
+                                    $driverUserId,
+                                    'New Schedule Assigned',
+                                    'You have been assigned a new collection schedule.',
+                                    ['link' => 'vehicledriver/']
                                 );
-    
-                                setFlashMessage('Schedule created successfully!');
-                                redirect('manager/schedule');
-                            } else {
-                                setFlashMessage('Could not create the schedule, please try again later', 'error');
+
+                                $this->notificationModel->createNotification( 
+                                    $_SESSION['user_id'],
+                                    'You assigned a new schedule Assigned',
+                                    'You have created a new collection schedule.',
+                                    ['link' => 'manager/schedule']
+                                );
                             }
+
+                            $suppliers = $this->userModel->getSuppliersByRouteId($data['route_id']);   
+                            foreach ($suppliers as $supplierId) {
+                                $supplierUserId = $this->userModel->getUserIdBySupplierId($supplierId); 
+                                if ($supplierUserId) {
+                                    $this->notificationModel->createNotification(
+                                        $supplierUserId,
+                                        'New Schedule Created',
+                                        'A new collection schedule has been created for your route.',
+                                        ['link' => 'supplier/schedule']
+                                    );
+                                }
+                            }
+
+                            $this->logModel->create(    
+                                $_SESSION['user_id'],
+                                $_SESSION['email'],
+                                $_SERVER['REMOTE_ADDR'],
+                                "Created a new schedule",
+                                $_SERVER['REQUEST_URI'],     
+                                http_response_code()     
+                            );
+
+                            setFlashMessage('Schedule created successfully!');
+                            redirect('manager/schedule');
+                        } else {
+                            setFlashMessage('Could not create the schedule, please try again later', 'error');
                         }
                     }
                 }
             }
-    
+        }
+
         $this->view('vehicle_manager/v_create_schedule', $data);
     }
     
@@ -1697,27 +1447,27 @@ class Manager extends Controller
         if (!isLoggedIn()) {
             redirect('users/login');
         }
-    
+
         if (!$scheduleId) {
             setFlashMessage('Invalid schedule!', 'error');
             redirect('manager/schedule');
         }
-    
+
         $schedule = $this->scheduleModel->getScheduleById($scheduleId);
         if (!$schedule) {
-            setFlashMessage('Schedule doesnt exist, please try again later!', 'error');
+            setFlashMessage('Schedule doesn\'t exist, please try again later!', 'error');
             redirect('manager/schedule');
         }
-    
+
         $drivers = $this->driverModel->getAllDrivers();
         $routes = $this->routeModel->getAllUndeletedRoutes();
-    
+
         $data = [
             'schedule' => $schedule,
             'drivers' => $drivers,
             'routes' => $routes
         ];
-    
+
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $data = [
                 'schedule_id' => $scheduleId,
@@ -1731,7 +1481,7 @@ class Manager extends Controller
                 'routes' => $routes,
                 'status' => $_POST['status']
             ];
-    
+
             if (empty($data['day'])) {
                 setFlashMessage('Please enter the day!', 'error');
             } 
@@ -1746,23 +1496,26 @@ class Manager extends Controller
             } 
             if (empty($data['end_time'])) {
                 setFlashMessage('Please enter the end time!', 'error');
-            }
-            else {
+            } else {
                 $startTime = strtotime("2000-01-01 " . $data['start_time']);
                 $endTime = strtotime("2000-01-01 " . $data['end_time']);
 
-                if($endTime < $startTime) {
+                if ($endTime < $startTime) {
                     setFlashMessage('Start time cannot be after the end time!', 'error');
                     redirect('manager/updateSchedule/' . $scheduleId);
-
                 }
-                
-                if (($endTime - $startTime) < (2 * 60 * 60)) {
+
+                $minGap = 2 * 60 * 60; 
+                $maxGap = 8 * 60 * 60; 
+
+                if (($endTime - $startTime) < $minGap) {
                     setFlashMessage('There must be at least a 2-hour gap between shifts.', 'error');
+                } elseif (($endTime - $startTime) > $maxGap) {
+                    setFlashMessage('The maximum gap between start time and end time is 8 hours.', 'error');
                 } else {
                     $driverConflict = false;
                     $routeConflict = false;
-                    
+
                     if ($data['driver_id'] != $schedule->driver_id || 
                         $data['day'] != $schedule->day || 
                         $data['start_time'] != $schedule->start_time || 
@@ -1791,7 +1544,7 @@ class Manager extends Controller
                     } elseif ($routeConflict) {
                         setFlashMessage('This route is already scheduled', 'error');
                     } else {
-                        if ($this->scheduleModel->updateSchedule($data)) {  //tested
+                        if ($this->scheduleModel->updateSchedule($data)) {
                             $this->logModel->create(
                                 $_SESSION['user_id'],
                                 $_SESSION['email'],
@@ -1801,7 +1554,7 @@ class Manager extends Controller
                                 http_response_code()     
                             );
 
-                            $driverUserId = $this->userModel->getUserIdByDriverId($data['driver_id']);  //tested
+                            $driverUserId = $this->userModel->getUserIdByDriverId($data['driver_id']);
                             $this->notificationModel->createNotification(
                                 $driverUserId,
                                 'Schedule Updated',
@@ -1809,9 +1562,9 @@ class Manager extends Controller
                                 ['link' => 'vehicledriver/']
                             );
 
-                            $suppliers = $this->userModel->getSuppliersByRouteId($data['route_id']);    //tested
+                            $suppliers = $this->userModel->getSuppliersByRouteId($data['route_id']);
                             foreach ($suppliers as $supplierId) {
-                                $supplierUserId = $this->userModel->getUserIdBySupplierId($supplierId); //tested
+                                $supplierUserId = $this->userModel->getUserIdBySupplierId($supplierId);
                                 if ($supplierUserId) {
                                     $this->notificationModel->createNotification(
                                         $supplierUserId,
@@ -1831,7 +1584,7 @@ class Manager extends Controller
                 }
             }
         }
-    
+
         $this->view('vehicle_manager/v_update_schedule', $data);
     }
 

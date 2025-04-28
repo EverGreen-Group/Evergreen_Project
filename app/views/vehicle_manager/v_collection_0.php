@@ -46,15 +46,6 @@
             </div>
         </li>
 
-        <!-- <li class="stat-card">
-            <div class="stat-content">
-                <i class='bx bx-station'></i>
-                <div class="stat-info">
-                    <h3><?php echo $stats['collections']['total_ongoing']; ?></h3>
-                    <p>Collections Ongoing</p>
-                </div>
-            </div>
-        </li> -->
 
     </ul>
 
