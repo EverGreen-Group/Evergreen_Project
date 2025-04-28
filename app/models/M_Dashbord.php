@@ -176,15 +176,15 @@ class M_Dashbord
         return $this->db->single();
     }
     
-    // public function getLeafTypeRate($leafTypeId) {
-    //     // Get the most recent entry for this leaf type
-    //     $this->db->query('SELECT * FROM leaf_type_rates 
-    //                       WHERE leaf_type_id = :leaf_type_id 
-    //                       ORDER BY id DESC 
-    //                       LIMIT 1'); // Assuming 'id' is the primary key
-    //     $this->db->bind(':leaf_type_id', $leafTypeId);
-    //     return $this->db->single(); // This will return the latest row
-    // }
+    public function c_getLeafTypeRate($leafTypeId) {
+        // Get the most recent entry for this leaf type
+        $this->db->query('SELECT * FROM leaf_type_rates 
+                          WHERE leaf_type_id = :leaf_type_id 
+                          ORDER BY id DESC 
+                          LIMIT 1'); // Assuming 'id' is the primary key
+        $this->db->bind(':leaf_type_id', $leafTypeId);
+        return $this->db->single(); // This will return the latest row
+    }
     
     public function approveBag($historyId, $paymentAmount) {
         $this->db->query('UPDATE bag_usage_history 
