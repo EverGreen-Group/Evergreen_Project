@@ -84,8 +84,8 @@
                     </div>
                     <div class="info-row">
                         <div id="imagePreview" style="width:100%; text-align:center;">
-                            <?php if(isset($data['fertilizer']->image_path) && !empty($data['fertilizer']->image_path)): ?>
-                                <img src="<?php echo '../../public/uploads/fertilizers/' . $data['fertilizer']->image_path ?>" alt="Current Image" id="preview" style="max-width:300px; display:block;">
+                            <?php if(isset($data['fertilizer']->image_path)): ?>
+                                <img src="<?php echo URLROOT . '/uploads/fertilizers/' . $data['fertilizer']->image_path ?>" alt="Current Image" id="preview" style="max-width:300px; display:block;">
                             <?php else: ?>
                                 <img src="" alt="Image Preview" id="preview" style="max-width:300px; display:none;">
                             <?php endif;?>
