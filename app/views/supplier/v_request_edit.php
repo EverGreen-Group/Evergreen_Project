@@ -59,7 +59,7 @@
       <h2>Update Request</h2>
     </div>
     <div class="card-body">
-      <form id="fertilizerForm" method="POST" action="<?php echo URLROOT . '/supplier/editFertilizerRequest/' . $data['order']->order_id; ?>">
+      <form method="POST" action="<?php echo URLROOT . '/supplier/editFertilizerRequest/' . $data['order']->order_id; ?>">
         <div class="form-group">
           <label for="fertilizer_name">Fertilizer Name:</label>
           <input type="text" id="fertilizer_name" name="fertilizer_name" value="<?php echo $data['order']->fertilizer_name; ?>" required readonly>
@@ -93,6 +93,8 @@
 <div id="notification" class="notification" style="display: none;"></div>
 <script src="<?php echo URLROOT; ?>/css/script.js"></script>
 <script>
+  const price = <?php echo isset($data['order']->total_amount) && isset($data['order']->quantity) ? 
+                ($data['order']->total_amount / $data['order']->quantity) : 0; ?>;
 function updateTotalPrice() {
   const quantityInput = document.getElementById('quantity');
   const pricePerUnitInput = document.getElementById('price_per_unit');
@@ -100,8 +102,7 @@ function updateTotalPrice() {
 
   const quantity = parseFloat(quantityInput.value);
   // Calculate price per unit from the existing order data
-  const price = <?php echo isset($data['order']->total_amount) && isset($data['order']->quantity) ? 
-                ($data['order']->total_amount / $data['order']->quantity) : 0; ?>;
+  
 
   pricePerUnitInput.value = price.toFixed(2);
   
@@ -119,30 +120,6 @@ document.addEventListener('DOMContentLoaded', function() {
   // Add event listener to quantity input for real-time updates
   document.getElementById('quantity').addEventListener('input', updateTotalPrice);
   
-  // Form submission handler
-  document.getElementById('fertilizerForm').addEventListener('submit', function(e) {
-    const quantityInput = document.getElementById('quantity');
-    const totalPriceInput = document.getElementById('total_price');
-    
-    const quantity = parseFloat(quantityInput.value);
-    if (isNaN(quantity) || quantity <= 0 || quantity > 100) {
-      e.preventDefault();
-      alert("Please enter a valid quantity between 1 and 100");
-      return false;
-    }
-    
-    // Ensure price calculation was performed
-    if (totalPriceInput.value === "") {
-      e.preventDefault();
-      updateTotalPrice(); // Recalculate price
-      if (totalPriceInput.value === "") {
-        alert("Unable to calculate total price. Please check your inputs.");
-        return false;
-      }
-    }
-    
-    return true;
-  });
 });
 </script>
 

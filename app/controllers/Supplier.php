@@ -612,7 +612,6 @@ class Supplier extends Controller {
                 // Calculate price per unit based on original order
                 $price_per_unit = $order->total_amount / $order->quantity;
                 $total_price = $price_per_unit * $quantity;
-                return;
             }
     
             if (empty($fertilizer_id) || $quantity < 1 || $quantity > 100) {
@@ -622,7 +621,7 @@ class Supplier extends Controller {
             }
             
             $updateData = [
-                //'fertilizer_id' => $fertilizer_id,
+                'fertilizer_id' => $fertilizer_id,
                 'quantity' => $quantity,
                 'total_amount' => $total_price,
                 'last_modified' => date('Y-m-d H:i:s')

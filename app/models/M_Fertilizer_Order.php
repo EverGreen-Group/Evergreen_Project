@@ -99,15 +99,14 @@ class M_Fertilizer_Order {
             $this->db->query(
                 "UPDATE fertilizer_orders 
                  SET fertilizer_id = :fertilizer_id,
-                    quantity = :quantity,
-                    total_amount = :total_amount,
-                    order_time = :last_modified
+                     quantity = :quantity,
+                     total_amount = :total_amount,
+                     order_time = :last_modified
                  WHERE order_id = :order_id AND status = 'Pending'
             ");
     
             $this->db->bind(':order_id', $order_id);
             $this->db->bind(':fertilizer_id', $data['fertilizer_id']);
-            $this->db->bind(':total_amount', $data['total_amount']);
             $this->db->bind(':quantity', $data['quantity']);
             $this->db->bind(':total_amount', $data['total_amount']);
             $this->db->bind(':last_modified', $data['last_modified']);
