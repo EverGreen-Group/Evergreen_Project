@@ -116,38 +116,70 @@
         <div class="no-schedule-message">
             <i class='bx bx-calendar-x'></i>
             <p>You're not assigned to any collection schedule yet.</p>
-            <a href="<?php echo URLROOT; ?>/supplier/support" class="btn-contact-support">Contact Support</a>
+            <a href="<?php echo URLROOT; ?>/supplier/complaints" class="btn-contact-support">Notify Manager</a>
         </div>
         <?php endif; ?>
     </div>
+
 
     <!-- Recent Activity Section -->
     <div class="recent-activity-section">
         <div class="section-header">
             <h2><i class='bx bx-history'></i> Recent Activity</h2>
-            <a href="<?php echo URLROOT; ?>/supplier/history" class="view-all-button">View All <i class='bx bx-right-arrow-alt'></i></a>
+            <a href="<?php echo URLROOT; ?>/supplier/collections/" class="view-all-button">View All <i class='bx bx-right-arrow-alt'></i></a>
         </div>
         
         <div class="activity-list">
-            <?php if (isset($data['recent_activities']) && !empty($data['recent_activities'])): ?>
-                <?php foreach($data['recent_activities'] as $activity): ?>
-                <div class="activity-item">
-                    <div class="activity-icon">
-                        <i class='bx <?php echo htmlspecialchars($activity->icon ?? 'bx-check-circle'); ?>'></i>
-                    </div>
+            <?php if (isset($data['getLatestCollection']) && $data['getLatestCollection']): ?>
+                <?php $collection = $data['getLatestCollection']; ?>
+                <div class="collection-activity-item">
                     <div class="activity-content">
-                        <p><?php echo htmlspecialchars($activity->description); ?></p>
-                        <span class="activity-time"><?php echo htmlspecialchars($activity->created_at); ?></span>
+                        <div class="activity-header">
+                            <h4><?php echo htmlspecialchars($collection->status); ?> Collection</h4>
+                            <span class="status-badge <?php echo strtolower(htmlspecialchars($collection->status)); ?>">
+                                <?php echo htmlspecialchars($collection->status); ?>
+                            </span>
+                        </div>
+                        <div class="activity-details">
+                            <div class="detail-item">
+                                <i class='bx bx-calendar'></i>
+                                <span><?php echo date('M d, Y', strtotime($collection->start_time)); ?></span>
+                            </div>
+                            <div class="detail-item">
+                                <i class='bx bx-time'></i>
+                                <span><?php echo date('h:i A', strtotime($collection->start_time)); ?></span>
+                            </div>
+                            <div class="detail-item">
+                                <i class='bx bx-map'></i>
+                                <span><?php echo htmlspecialchars($collection->route_name); ?> Route</span>
+                            </div>
+                            <div class="detail-item">
+                                <i class='bx bx-user'></i>
+                                <span>Driver: <?php echo htmlspecialchars($collection->driver_name); ?></span>
+                            </div>
+                            <?php if (isset($collection->quantity)): ?>
+                            <div class="detail-item">
+                                <i class='bx bx-package'></i>
+                                <span><?php echo htmlspecialchars($collection->quantity); ?> kg collected</span>
+                            </div>
+                            <?php endif; ?>
+                        </div>
+                        <div class="activity-actions">
+                            <a href="<?php echo URLROOT; ?>/supplier/collectionBags/<?php echo $collection->collection_id; ?>" class="btn-view-details">
+                                <i class='bx bx-info-circle'></i> View Details
+                            </a>
+                        </div>
                     </div>
                 </div>
-                <?php endforeach; ?>
             <?php else: ?>
                 <div class="no-activity-message">
-                    <p>No recent activity to display.</p>
+                    <i class='bx bx-calendar-x'></i>
+                    <p>No recent collections to display.</p>
                 </div>
             <?php endif; ?>
         </div>
     </div>
+
 </main>
 
 <script src="<?php echo URLROOT; ?>/public/css/script.js"></script>
@@ -215,7 +247,7 @@
         margin-right: 5px;
     }
 
-    /* Card Components */
+
     .profile-card, .availability-section, .schedule-section, .stats-container, .recent-activity-section {
         background-color: #ffffff;
         border-radius: var(--radius);
@@ -320,7 +352,7 @@
         color: var(--red);
     }
 
-    /* Availability Section */
+
     .availability-section {
         padding: 20px;
     }
@@ -421,7 +453,6 @@
         border-radius: 50%;
     }
 
-    /* Schedule Section */
     .schedule-section {
         padding: 0;
     }
@@ -842,52 +873,256 @@
     }
 
 
-    /* Add this to your existing CSS, preferably in the media query section for max-width: 768px */
 
 @media screen and (max-width: 768px) {
-    /* Your existing media query styles */
     .availability-container {
         flex-direction: column;
         align-items: flex-start;
     }
     
     .availability-left {
-        margin-bottom: 15px; /* Add spacing between status and toggle */
+        margin-bottom: 15px; 
     }
     
     .toggle-wrapper {
         width: 100%;
         display: flex;
-        justify-content: flex-start; /* Align toggle to the left on mobile */
+        justify-content: flex-start;
     }
     
-    /* Make toggle width consistent */
+
     .toggle-switch {
         width: 60px;
         height: 30px;
-        display: block; /* Ensure proper display */
+        display: block; 
     }
     
-    /* Ensure slider keeps correct position */
+
     input:checked + .slider:before {
         transform: translateX(30px);
     }
 }
 
-/* For even smaller screens, you might want to adjust further */
+
 @media screen and (max-width: 480px) {
     .availability-section {
-        padding: 15px; /* Slightly reduce padding on very small screens */
+        padding: 15px; 
     }
     
     .toggle-wrapper form {
-        width: 100%; /* Full width form */
+        width: 100%; 
     }
     
     .status-pill {
         width: 100%;
         text-align: center;
         margin-bottom: 10px;
+    }
+}
+</style>
+
+<style>
+/* Improved Recent Activity Section Styling */
+.recent-activity-section {
+    padding: 0;
+    transition: var(--transition);
+}
+
+.recent-activity-section:hover {
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
+}
+
+.section-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 18px 24px;
+    border-bottom: 1px solid #eee;
+    background-color: #f9f9f9;
+}
+
+.activity-list {
+    padding: 16px 24px;
+    background-color: #ffffff;
+    border-radius: 0 0 var(--radius) var(--radius);
+}
+
+.collection-activity-item {
+    display: flex;
+    align-items: flex-start;
+    padding: 20px;
+    margin-bottom: 15px;
+    border-radius: var(--radius-sm);
+    background-color: #f9f9f9;
+    transition: var(--transition);
+    border: 1px solid #eee;
+}
+
+.collection-activity-item:hover {
+    box-shadow: 0 3px 8px rgba(0, 0, 0, 0.15);
+    transform: translateY(-2px);
+}
+
+.collection-activity-item:last-child {
+    margin-bottom: 0;
+}
+
+.activity-icon {
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    background-color: var(--main-light);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-right: 16px;
+    flex-shrink: 0;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+}
+
+.activity-icon i {
+    font-size: 1.4rem;
+    color: var(--main);
+}
+
+.activity-content {
+    flex: 1;
+}
+
+.activity-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 12px;
+}
+
+.activity-header h4 {
+    margin: 0;
+    font-size: 1.1rem;
+    color: var(--gray-dark);
+}
+
+
+
+.activity-details {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    margin-bottom: 15px;
+    padding-bottom: 15px;
+    border-bottom: 1px dashed #e0e0e0;
+}
+
+.detail-item {
+    display: flex;
+    align-items: center;
+    font-size: 0.9rem;
+    color: var(--gray);
+    margin-right: 15px;
+}
+
+.detail-item i {
+    margin-right: 8px;
+    color: var(--main);
+    font-size: 1rem;
+}
+
+.activity-actions {
+    margin-top: 15px;
+    display: flex;
+    justify-content: flex-end;
+}
+
+.btn-view-details {
+    display: inline-flex;
+    align-items: center;
+    background-color: var(--main-light);
+    color: var(--main);
+    padding: 8px 16px;
+    border-radius: var(--radius-sm);
+    text-decoration: none;
+    font-weight: 500;
+    font-size: 0.9rem;
+    transition: var(--transition);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.btn-view-details:hover {
+    background-color: var(--main);
+    color: white;
+    transform: translateY(-2px);
+    box-shadow: 0 3px 6px rgba(0, 0, 0, 0.15);
+}
+
+.btn-view-details i {
+    margin-right: 8px;
+}
+
+.no-activity-message {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 40px 24px;
+    color: var(--gray);
+    background-color: #f9f9f9;
+    border-radius: 0 0 var(--radius) var(--radius);
+}
+
+.no-activity-message i {
+    font-size: 3rem;
+    margin-bottom: 16px;
+    color: var(--gray);
+}
+
+.no-activity-message p {
+    margin: 0;
+    font-size: 1.1rem;
+}
+
+/* Responsive adjustments */
+@media screen and (max-width: 768px) {
+    .collection-activity-item {
+        padding: 15px;
+    }
+    
+    .activity-header {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .status-badge {
+        margin-top: 8px;
+        align-self: flex-start;
+    }
+
+    .activity-details {
+        flex-direction: column;
+        gap: 10px;
+    }
+
+    .detail-item {
+        margin-right: 0;
+    }
+    
+    .activity-actions {
+        justify-content: flex-start;
+    }
+}
+
+@media screen and (max-width: 480px) {
+    .activity-icon {
+        width: 40px;
+        height: 40px;
+    }
+    
+    .activity-icon i {
+        font-size: 1.2rem;
+    }
+    
+    .btn-view-details {
+        width: 100%;
+        justify-content: center;
     }
 }
 </style>

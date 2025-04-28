@@ -52,6 +52,13 @@ class Manager extends Controller
         $this->appointmentModel = $this->model('M_Appointment');
         $this->logModel = $this->model('M_Log');
 
+        $activeSuppliers = $this->chatModel->getActiveSuppliers();
+        $unreadCount = 0;
+        foreach ($activeSuppliers as $supplier) {
+            $unreadCount += $supplier->unread_count;
+        }
+        $_SESSION['manager_unread_messages'] = $unreadCount;
+
     }
 
 
@@ -535,7 +542,7 @@ class Manager extends Controller
         ]);
     }
 
-    public function createVehicle() {   // tested fully
+    public function createVehicle() { 
         if (!isLoggedIn()) {
             redirect('users/login');
         }
@@ -551,7 +558,6 @@ class Manager extends Controller
         ];
 
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-            // $_POST = filter_input_array(INPUT_POST, FILTER_SANITIZE_STRING);
 
             $data = [
                 'license_plate' => trim($_POST['license_plate']),
@@ -572,12 +578,12 @@ class Manager extends Controller
                 empty($data['manufacturing_year'])) {
                 setFlashMessage("Please Enter All the Fields", 'error');
             } else {
-                if ($this->vehicleModel->isLicensePlateTaken($data['license_plate'])) { // tested
+                if ($this->vehicleModel->isLicensePlateTaken($data['license_plate'])) { 
                     setFlashMessage("License Plate is already used", 'error');
                     redirect('manager/createVehicle');
                 } else {
                     if (isset($_FILES['image']) && $_FILES['image']['error'] == 0) {
-                        $uploadResult = uploadVehicleImage($_FILES['image'], $data['license_plate']);   // tested
+                        $uploadResult = uploadVehicleImage($_FILES['image'], $data['license_plate']);   
                         if ($uploadResult['success']) {
                             $data['image_path'] = $uploadResult['path'];
                         } else {
@@ -610,12 +616,12 @@ class Manager extends Controller
         $this->view('vehicle_manager/v_create_vehicle', $data);
     }
 
-    public function updateVehicle($vehicle_id) {    // tested
+    public function updateVehicle($vehicle_id) {   
         if (!isLoggedIn()) {
             redirect('users/login');
         }
     
-        $vehicle = $this->vehicleModel->getVehicleById($vehicle_id);    // tested
+        $vehicle = $this->vehicleModel->getVehicleById($vehicle_id);   
         if (!$vehicle) {
             setFlashMessage('Vehicle not found', 'error');
             redirect('manager/vehicle');
@@ -644,7 +650,7 @@ class Manager extends Controller
             ];
     
             if (isset($_FILES['vehicle_image']) && $_FILES['vehicle_image']['error'] == 0) {
-                $uploadResult = uploadVehicleImage($_FILES['vehicle_image'], $license_plate);   // tested this custom function
+                $uploadResult = uploadVehicleImage($_FILES['vehicle_image'], $license_plate);   
                 if ($uploadResult['success']) {
                     $data['image_path'] = $uploadResult['path']; 
                 } else {
@@ -653,7 +659,7 @@ class Manager extends Controller
                 }
             }
     
-            if ($this->vehicleModel->updateVehicle($data)) {    // working , tested
+            if ($this->vehicleModel->updateVehicle($data)) {   
                 $this->logModel->create(
                     $_SESSION['user_id'],
                     $_SESSION['email'],
@@ -673,7 +679,7 @@ class Manager extends Controller
         $this->view('vehicle_manager/v_update_vehicle', ['vehicle' => $vehicle]);
     }
 
-    public function getVehicleById($id){    // tested
+    public function getVehicleById($id){  
         $vehicle = $this->vehicleModel->getVehicleById($id);
         if ($vehicle) {
             echo json_encode(['success' => true, 'vehicle' => $vehicle]);
@@ -682,13 +688,13 @@ class Manager extends Controller
         }
     }
 
-    public function deleteVehicle($id){ // tested
+    public function deleteVehicle($id){ 
 
         if ($this->vehicleModel->isVehicleAssignedToRoute($id)) {
             setFlashMessage('Cannot delete vehicle. It is currently assigned to a route', 'error');
             redirect('manager/vehicle');
         }
-        if ($this->vehicleModel->markAsDeleted($id)) {  // tested
+        if ($this->vehicleModel->markAsDeleted($id)) {  
             $this->logModel->create(
                 $_SESSION['user_id'],
                 $_SESSION['email'],
@@ -896,89 +902,6 @@ class Manager extends Controller
         
         redirect('manager/viewMaintenance');
     }
-
-    // public function addVehicle() {
-    //     if ($_SERVER['REQUEST_METHOD'] == 'POST') {
-    //         $license_plate = htmlspecialchars(trim($_POST['license_plate']));
-    //         $vehicle_type = htmlspecialchars(trim($_POST['vehicle_type']));
-    //         $make = htmlspecialchars(trim($_POST['make']));
-    //         $model = htmlspecialchars(trim($_POST['model']));
-    //         $manufacturing_year = htmlspecialchars(trim($_POST['manufacturing_year']));
-    //         $color = htmlspecialchars(trim($_POST['color']));
-    //         $capacity = htmlspecialchars(trim($_POST['capacity']));
-
-    //         if (isset($_FILES['vehicle_image']) && $_FILES['vehicle_image']['error'] == 0) {
-    //             $image = $_FILES['vehicle_image'];
-    //             $target_dir = "/opt/lampp/htdocs/Evergreen_Project/public/uploads/vehicle_photos/";
-    //             $target_file = $target_dir . $license_plate . ".jpg";
-
-    //             if (move_uploaded_file($image['tmp_name'], $target_file)) {
-    //                 $this->vehicleModel->addVehicle([
-    //                     'license_plate' => $license_plate,
-    //                     'vehicle_type' => $vehicle_type,
-    //                     'make' => $make,
-    //                     'model' => $model,
-    //                     'manufacturing_year' => $manufacturing_year,
-    //                     'color' => $color,
-    //                     'capacity' => $capacity,
-    //                     'image_path' => $target_file
-    //                 ]);
-
-    //                 $this->logModel->create(
-    //                     $_SESSION['user_id'],
-    //                     $_SESSION['email'],
-    //                     $_SERVER['REMOTE_ADDR'],
-    //                     "Vehicle with license plate {$license_plate} added successfully.",
-    //                     $_SERVER['REQUEST_URI'],     
-    //                     http_response_code()     
-    //                 );
-
-    //                 header('Location: ' . URLROOT . '/manager/vehicle');
-    //                 exit();
-    //             } else {
-    //                 setFlashMessage('Error uploading file.', 'error');
-    //             }
-    //         } else {
-    //             setFlashMessage('No file uploaded or there was an error.', 'error');
-    //         }
-    //     }
-    // }
-
-
-
-
-    // public function removeVehicle() {
-    //     if ($_SERVER['REQUEST_METHOD'] == 'POST') {
-    //         $license_plate = htmlspecialchars(trim($_POST['license_plate']));
-
-    //         $vehicle = $this->vehicleModel->getVehicleByLicensePlate($license_plate);
-    //         if ($vehicle) {
-    //             if ($this->vehicleModel->deleteVehicle($license_plate)) {
-    //                 $imagePath = "/opt/lampp/htdocs/Evergreen_Project/public/uploads/vehicle_photos/" . $license_plate . ".jpg";
-    //                 if (file_exists($imagePath)) {
-    //                     unlink($imagePath);
-    //                 }
-
-    //                 $this->logModel->create(
-    //                     $_SESSION['user_id'],
-    //                     $_SESSION['email'],
-    //                     $_SERVER['REMOTE_ADDR'],
-    //                     "Vehicle with license plate {$license_plate} removed successfully.",
-    //                     $_SERVER['REQUEST_URI'],     
-    //                     http_response_code()     
-    //                 );
-
-    //                 setFlashMessage('Vehicle removed successfully!');
-    //                 header('Location: ' . URLROOT . '/manager/vehicle');
-    //                 exit();
-    //             } else {
-    //                 setFlashMessage('Error removing vehicle.', 'error');
-    //             }
-    //         } else {
-    //             setFlashMessage('Vehicle not found.', 'error');
-    //         }
-    //     }
-    // }
 
     public function checkVehicleUsage($id){
         $schedules = $this->scheduleModel->getSchedulesByVehicleId($id);
@@ -1624,16 +1547,12 @@ class Manager extends Controller
      * ------------------------------------------------------------
      */
 
-     public function schedule() // TESTED
+     public function schedule() 
      {
          // Stats
-         $totalSchedules = $this->scheduleModel->getTotalSchedules();   // TESTED
-         $availableSchedules = $this->scheduleModel->getActiveSchedulesCount(); // tested
-     
-         // for the drop down
-         $routes = $this->routeModel->getAllUndeletedRoutes();  // tested
-         $drivers = $this->driverModel->getAllDrivers();       // tested
-         $vehicles = $this->vehicleModel->getAllAvailableVehicles();    // tested
+         $totalSchedules = $this->scheduleModel->getTotalSchedules();   
+         $availableSchedules = $this->scheduleModel->getActiveSchedulesCount(); 
+    
      
          // Filters from GET
          $route_id = $_GET['route_id'] ?? null;
@@ -1644,7 +1563,7 @@ class Manager extends Controller
          if ($route_id || $vehicle_id || $driver_id || $day) {
              $schedules = $this->scheduleModel->getFilteredSchedules($route_id, $vehicle_id, $driver_id, $day);
          } else {
-             $schedules = $this->scheduleModel->getFilteredSchedules(); // tested
+             $schedules = $this->scheduleModel->getFilteredSchedules(); 
          }
      
          $filters = compact('route_id', 'vehicle_id', 'driver_id', 'day');
@@ -1652,22 +1571,19 @@ class Manager extends Controller
          $this->view('vehicle_manager/v_collectionschedule', [
              'totalSchedules' => $totalSchedules,
              'availableSchedules' => $availableSchedules,
-             'routes' => $routes,
-             'drivers' => $drivers,
-             'vehicles' => $vehicles,
              'schedules' => $schedules,
              'filters' => $filters
          ]);
      }
      
 
-    public function createSchedule() {  // tested
+    public function createSchedule() { 
         if (!isLoggedIn()) {
             redirect('users/login');
         }
     
-        $drivers = $this->driverModel->getAllDrivers(); // tested
-        $routes = $this->routeModel->getAllUnAssignedRoutes();  // tested
+        $drivers = $this->driverModel->getAllDrivers();
+        $routes = $this->routeModel->getAllUnAssignedRoutes(); 
     
         $data = [
             'drivers' => $drivers,
@@ -1685,14 +1601,11 @@ class Manager extends Controller
                 'routes' => $routes
             ];
     
-            // base case noh
             if (empty($data['day']) || 
                 empty($data['driver_id']) || empty($data['route_id']) || 
                 empty($data['start_time']) || empty($data['end_time'])) {
                 setFlashMessage('Please enter all the fields!', 'error');
             } else {
-                // we use the timestamp in the database therefore we need to convert to unix timestamp
-                // thats why we are using this dummy date, because only the time matters for this part
                 $startTime = strtotime("2000-01-01 " . $data['start_time']);
                 $endTime = strtotime("2000-01-01 " . $data['end_time']);
 
@@ -1702,26 +1615,19 @@ class Manager extends Controller
 
                 }
                 
-                // Check if end time is before midnight
-                $midnight = strtotime("2000-01-01 23:59:59");
-                if ($endTime > $midnight) {
-                    setFlashMessage('Shift end time cannot be after 11.59 PM.', 'error');
-                } else {
-                    // Check for a minimum gap of 2 hours between shifts
-                    $minGap = 2 * 60 * 60; // 2 hours in seconds
+
+                    $minGap = 2 * 60 * 60; 
                     if (($endTime - $startTime) < $minGap) {
                         setFlashMessage('There must be at least a 2-hour gap between shifts.', 'error');
                     } else {
-                        // Check if the driver is already scheduled for this day and time
-                        $driverScheduleConflict = $this->scheduleModel->checkDriverScheduleConflict(    // tested
+                        $driverScheduleConflict = $this->scheduleModel->checkDriverScheduleConflict(   
                             $data['driver_id'],
                             $data['day'],
                             $data['start_time'],
                             $data['end_time']
                         );
     
-                        // just like for driver we have to check for the route
-                        $routeScheduleConflict = $this->scheduleModel->checkRouteScheduleConflict(  //tesed
+                        $routeScheduleConflict = $this->scheduleModel->checkRouteScheduleConflict( 
                             $data['route_id'],
                             $data['day']
                         );
@@ -1731,18 +1637,17 @@ class Manager extends Controller
                         } elseif ($routeScheduleConflict) {
                             setFlashMessage('This route is already scheduled for this day.', 'error');
                         } else {
-                            // nw can create a schedule
                             if ($this->scheduleModel->create($data)) {
-                                $driverUserId = $this->userModel->getUserIdByDriverId($data['driver_id']);  // tested
+                                $driverUserId = $this->userModel->getUserIdByDriverId($data['driver_id']);  
                                 if ($driverUserId) {
-                                    $this->notificationModel->createNotification(   // tested
+                                    $this->notificationModel->createNotification(  
                                         $driverUserId,
                                         'New Schedule Assigned',
                                         'You have been assigned a new collection schedule.',
                                         ['link' => 'vehicledriver/']
                                     );
 
-                                    $this->notificationModel->createNotification(   // tested
+                                    $this->notificationModel->createNotification( 
                                         $_SESSION['user_id'],
                                         'You assigned a new schedule Assigned',
                                         'You have created a new collection schedule.',
@@ -1750,9 +1655,9 @@ class Manager extends Controller
                                     );
                                 }
     
-                                $suppliers = $this->userModel->getSuppliersByRouteId($data['route_id']);    // tested
+                                $suppliers = $this->userModel->getSuppliersByRouteId($data['route_id']);   
                                 foreach ($suppliers as $supplierId) {
-                                    $supplierUserId = $this->userModel->getUserIdBySupplierId($supplierId); // tested
+                                    $supplierUserId = $this->userModel->getUserIdBySupplierId($supplierId); 
                                     if ($supplierUserId) {
                                         $this->notificationModel->createNotification(
                                             $supplierUserId,
@@ -1761,11 +1666,11 @@ class Manager extends Controller
                                             ['link' => 'supplier/schedule']
                                         );
                                     } else {
-                                        // just a small test for my notification controller!!! error_log("Notification failed: No user ID for supplier ID: $supplierId");
+
                                     }
                                 }
 
-                                $this->logModel->create(    // adding to the admins log, tested
+                                $this->logModel->create(    
                                     $_SESSION['user_id'],
                                     $_SESSION['email'],
                                     $_SERVER['REMOTE_ADDR'],
@@ -1783,7 +1688,6 @@ class Manager extends Controller
                     }
                 }
             }
-        }
     
         $this->view('vehicle_manager/v_create_schedule', $data);
     }
@@ -1853,10 +1757,7 @@ class Manager extends Controller
 
                 }
                 
-                $midnight = strtotime("2000-01-01 23:59:59");
-                if ($endTime > $midnight) {
-                    setFlashMessage('Shift end time cannot be after 11.59 PM.', 'error');
-                } elseif (($endTime - $startTime) < (2 * 60 * 60)) {
+                if (($endTime - $startTime) < (2 * 60 * 60)) {
                     setFlashMessage('There must be at least a 2-hour gap between shifts.', 'error');
                 } else {
                     $driverConflict = false;
@@ -1867,7 +1768,7 @@ class Manager extends Controller
                         $data['start_time'] != $schedule->start_time || 
                         $data['end_time'] != $schedule->end_time) {
                         
-                        $driverConflict = $this->scheduleModel->checkDriverScheduleConflictExcludingCurrent(    //tested
+                        $driverConflict = $this->scheduleModel->checkDriverScheduleConflictExcludingCurrent(    
                             $data['driver_id'],
                             $data['day'],
                             $data['start_time'],
@@ -1879,7 +1780,7 @@ class Manager extends Controller
                     if ($data['route_id'] != $schedule->route_id || 
                         $data['day'] != $schedule->day) {
                         
-                        $routeConflict = $this->scheduleModel->checkRouteScheduleConflictExcludingCurrent(  //tested
+                        $routeConflict = $this->scheduleModel->checkRouteScheduleConflictExcludingCurrent(  
                             $data['route_id'],
                             $scheduleId
                         );
@@ -1962,8 +1863,6 @@ class Manager extends Controller
                             ['link' => 'supplier/viewSchedule']
                         );
                         
-                    } else {
-                        // not sure to put flash or nt
                     }
                 }
 

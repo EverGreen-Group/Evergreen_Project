@@ -72,58 +72,51 @@
 
     <br><br> 
     
-    <div class="complaint-history-section">
-        <div class="section-header">
-        <h3>Complaints History</h3>
+    <!-- Improved Complaint History Section -->
+    <div class="complaints-history-container">
+        <div class="history-header">
+            <h3>Complaints History</h3>
+            <div class="history-counter"><?php echo !empty($data['complaints']) ? count($data['complaints']) : '0'; ?> complaints</div>
         </div>
 
         <?php if (!empty($data['complaints'])): ?>
-            <?php foreach($data['complaints'] as $complaint): ?>
-                <div class="complaint-card">
-                    <div class="card-content">
-                        <div class="card-header">
-                            <div class="status-badge">
-                                Complaint #<?php echo $complaint->complaint_id; ?>
+            <div class="complaints-grid">
+                <?php foreach($data['complaints'] as $complaint): ?>
+                    <div class="complaint-card">
+                        <div class="complaint-header">
+                            <div class="complaint-type-badge"><?php echo $complaint->complaint_type; ?></div>
+                            <div class="complaint-status status-<?php echo strtolower(str_replace(' ', '-', $complaint->status)); ?>">
+                                <?php echo $complaint->status; ?>
                             </div>
                         </div>
-                        <div class="card-body">
-                            <div class="schedule-info">
-                                <div class="info-item">
-                                <span>Complaint ID: <?php echo $complaint->complaint_id; ?></span>
-                                </div>
-                                <div class="info-item">
-                                <span>Complaint type: <?php echo $complaint->complaint_type; ?></span>
-                                </div>
-                                <div class="info-item">
-                                <span>Description: <?php echo $complaint->description; ?></span>
-                                </div>
+                        
+                        <div class="complaint-body">
+                            <h4 class="complaint-subject"><?php echo $complaint->subject; ?></h4>
+                            <div class="complaint-meta">
+                                <span class="complaint-id">ID: #<?php echo $complaint->complaint_id; ?></span>
+                                <span class="complaint-date"><?php echo date('M d, Y', strtotime($complaint->created_at)); ?></span>
                             </div>
-                        </div>
-                        <div class="card-body">
-                            <div class="schedule-info">
-                                <div class="info-item">
-                                <span>Status: <?php echo $complaint->status; ?></span>
-                                </div>
-                                <div class="info-item">
-                                <span>Subject: <?php echo $complaint->subject; ?></span>
-                                </div>
-                                <div class="info-item">
-                                <span>Created: <?php echo $complaint->created_at; ?></span>
-                                </div>
+                            <div class="complaint-description">
+                                <p><?php echo $complaint->description; ?></p>
                             </div>
                         </div>
                     </div>
-                </div>
-            <?php endforeach; ?>
+                <?php endforeach; ?>
+            </div>
         <?php else: ?>
-        <div class="no-schedule">
-            <p>No complaints found.</p>
-        </div>
+            <div class="no-complaints">
+                <div class="empty-icon">
+                    <i class='bx bx-message-square-x'></i>
+                </div>
+                <p>No complaints found</p>
+                <span>Your submitted complaints will appear here</span>
+            </div>
         <?php endif; ?>
     </div>
 </main>
 
 <style>
+    /* Original Form Styles */
     .form-group {
         margin-bottom: 20px;
     }
@@ -224,6 +217,199 @@
         background: #e0e0e0;
     }
 
+    .form-container {
+        max-width: 1000px; 
+        margin: 0 auto;
+        background: #fff; 
+        padding: 20px;  
+        border-radius: 8px;
+    }
+
+    /* Improved Complaint History Styles */
+    .complaints-history-container {
+        background: #fff;
+        border-radius: 8px;
+        padding: 25px;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+        margin-bottom: 30px;
+    }
+
+    .history-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 20px;
+        padding-bottom: 15px;
+        border-bottom: 1px solid #eaeaea;
+    }
+
+    .history-header h3 {
+        color: #2c3e50;
+        font-size: 1.5rem;
+        font-weight: 600;
+        margin: 0;
+    }
+
+    .history-counter {
+        background-color: #f1f2f6;
+        color: #606060;
+        padding: 5px 12px;
+        border-radius: 20px;
+        font-size: 0.9rem;
+        font-weight: 500;
+    }
+
+    .complaints-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+        gap: 20px;
+    }
+
+    .complaint-card {
+        background-color: #f8f9fa;
+        border-radius: 8px;
+        overflow: hidden;
+        box-shadow: 0 3px 6px rgba(0, 0, 0, 0.05);
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    .complaint-card:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08);
+    }
+
+    .complaint-header {
+        display: flex;
+        justify-content: space-between;
+        padding: 12px 15px;
+        background-color: #f1f2f6;
+        border-bottom: 1px solid #eaeaea;
+    }
+
+    .complaint-type-badge {
+        background-color: var(--main);
+        color: white;
+        font-size: 0.8rem;
+        padding: 3px 10px;
+        border-radius: 20px;
+        font-weight: 500;
+    }
+
+    .complaint-status {
+        font-size: 0.8rem;
+        font-weight: 600;
+        padding: 3px 10px;
+        border-radius: 20px;
+        text-align: center;
+    }
+
+    .status-pending {
+        color: #f39c12;
+        background-color: rgba(243, 156, 18, 0.1);
+    }
+
+    .status-resolved {
+        color: #27ae60;
+        background-color: rgba(39, 174, 96, 0.1);
+    }
+
+    .status-processing {
+        color: #3498db;
+        background-color: rgba(52, 152, 219, 0.1);
+    }
+
+    .status-rejected {
+        color: #e74c3c;
+        background-color: rgba(231, 76, 60, 0.1);
+    }
+
+    .complaint-body {
+        padding: 15px;
+    }
+
+    .complaint-subject {
+        margin: 0 0 10px 0;
+        color: #2c3e50;
+        font-size: 1.1rem;
+        font-weight: 600;
+        display: -webkit-box;
+        -webkit-box-orient: vertical;
+        -webkit-line-clamp: 1;
+        overflow: hidden;
+    }
+
+    .complaint-meta {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 12px;
+        font-size: 0.85rem;
+        color: #7f8c8d;
+    }
+
+    .complaint-id {
+        font-weight: 500;
+    }
+
+    .complaint-description {
+        background-color: #fff;
+        border-radius: 6px;
+        padding: 12px;
+        margin-top: 10px;
+        border: 1px solid #eaeaea;
+        max-height: 100px;
+        overflow-y: auto;
+    }
+
+    .complaint-description p {
+        margin: 0;
+        color: #34495e;
+        line-height: 1.5;
+        font-size: 0.95rem;
+    }
+
+    .no-complaints {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        padding: 40px 20px;
+        text-align: center;
+        background-color: #f8f9fa;
+        border-radius: 8px;
+        border: 1px dashed #e0e0e0;
+    }
+
+    .no-complaints .empty-icon {
+        font-size: 40px;
+        color: #bdc3c7;
+        margin-bottom: 15px;
+    }
+
+    .no-complaints p {
+        margin: 0 0 5px 0;
+        font-size: 1.1rem;
+        color: #7f8c8d;
+        font-weight: 500;
+    }
+
+    .no-complaints span {
+        color: #95a5a6;
+        font-size: 0.9rem;
+    }
+
+    /* Media Queries for Responsiveness */
+    @media screen and (max-width: 768px) {
+        .complaints-grid {
+            grid-template-columns: 1fr;
+        }
+        
+        .history-header {
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 10px;
+        }
+    }
+
     @media screen and (max-width: 360px) {
         .form-group input,
         .form-group select,
@@ -244,122 +430,12 @@
             width: 60px;
             height: 60px;
         }
-    }
-
-    .form-container {
-        max-width: 1000px; 
-        margin: 0 auto;
-        background: #fff; 
-        padding: 20px;  
-        border-radius: 8px;
-    }
-
-    /* Complaints Section Styles */
-    .complaint-history-section {
-        margin-bottom: 2rem;
-    }
-
-    .complaint-history-section .section-header {
-        margin-bottom: 1rem;
-    }
-
-    .complaint-history-section .section-header h3 {
-        color: #2c3e50;
-        font-size: 1.5rem;
-        font-weight: 600;
-    }
-
-    .complaint-card {
-        background-color: white;
-        padding: 1.5rem;
-        border-radius: 12px;
-        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-        margin-bottom: 1rem;
-    }
-
-    .complaint-card .card-header {
-        margin-bottom: 1rem;
-        padding-bottom: 0.75rem;
-    }
-
-    .complaint-card .status-badge {
-        display: inline-block;
-        background-color:rgb(1, 146, 20);
-        color: white;
-        padding: 0.25rem 0.5rem;
-        border-radius: 4px;
-        font-size: 0.875rem;
-        font-weight: 500;
-    }
-
-    .complaint-card .card-body {
-        padding: 0.5rem 0;
-        flex: 1 1 30%;
-        min-width: 100px;
-    }
-
-    .complaint-card .card-content {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 2rem;
-    }
-
-    .complaint-card .schedule-info {
-        display: flex;
-        flex-wrap: wrap;
-    }
-
-    .complaint-card .info-item {
-        display: flex;
-        align-items: center;
-        padding: 0.25rem 0;
-        width: 100%;
-    }
-
-    .complaint-card .info-item span {
-        font-size: 0.95rem;
-        color: #2c3e50;
-    }
-
-    .complaint-card .info-item:has(span:contains("Description")) span {
-        display: block;
-        margin-top: 0.25rem;
-    }
-
-    .no-schedule {
-        background-color: #f8f9fa;
-        padding: 1.5rem;
-        border-radius: 12px;
-        text-align: center;
-        color: #7f8c8d;
-        border: 1px dashed #e0e0e0;
-        margin-top: 1rem;
-    }
-
-    /* Media queries for responsiveness */
-    @media (max-width: 768px) {
-        .complaint-card {
-            padding: 1rem;
-        }
         
-        .complaint-card .info-item {
+        .complaint-header {
             flex-direction: column;
-            align-items: flex-start;
+            gap: 8px;
         }
     }
-
-    .complaint-card .grouped-info .schedule-info {
-        display: flex;
-        justify-content: space-between;
-        gap: 1rem;
-    }
-
-    .complaint-card .grouped-info .info-item {
-        width: auto;
-        flex: 1;
-    }
-
-
 </style>
 
 <script>
@@ -378,6 +454,5 @@
             reader.readAsDataURL(file);
         }
     });
-
 </script>
 <script src="<?php echo URLROOT; ?>/css/script.js"></script>

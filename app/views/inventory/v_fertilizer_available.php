@@ -36,7 +36,7 @@
                 <i class='bx bxs-leaf'></i>
                 <div class="stat-info">
                     <h3><?php echo isset($data['totalorder']) ? $data['totalorder'] : 0; ?></h3>
-                    <p>Total Orders</p>
+                    <p>Total Requests</p>
                 </div>
             </div>
         </li>
@@ -46,7 +46,7 @@
                 <i class='bx bx-check-circle'></i>
                 <div class="stat-info">
                     <h3><?php echo isset($data['approvedCount']) ? $data['approvedCount'] : 0; ?></h3>
-                    <p>Approved</p>
+                    <p>Approved this month</p>
                 </div>
             </div>
         </li>
@@ -56,7 +56,7 @@
                 <i class='bx bx-time'></i>
                 <div class="stat-info">
                     <h3><?php echo isset($data['pendingCount']) ? $data['pendingCount'] : 0; ?></h3>
-                    <p>Pending</p>
+                    <p>Currently Pending</p>
                 </div>
             </div>
         </li>

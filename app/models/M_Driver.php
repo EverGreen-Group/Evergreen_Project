@@ -52,23 +52,23 @@ class M_Driver{
         $this->db->query("INSERT INTO drivers (employee_id, user_id, status, is_deleted) 
                           VALUES (:employee_id, :user_id, :status, :is_deleted)");
         
-        // Bind values
         $this->db->bind(':employee_id', $data['employee_id']);
         $this->db->bind(':user_id', $data['user_id']);
         $this->db->bind(':status', $data['status']);
         $this->db->bind(':is_deleted', $data['is_deleted']);
         
-        return $this->db->execute(); // Execute the query and return the result
+        return $this->db->execute(); 
     }
 
 
-    public function getAllDrivers() {   // tested
+    public function getAllDrivers() {   
         $this->db->query("
             SELECT d.*, p.first_name, p.last_name, p.nic, p.date_of_birth, p.contact_number, u.email, CONCAT(p.first_name, ' ', p.last_name) AS full_name
             FROM drivers d
             JOIN profiles p ON d.profile_id = p.profile_id
             JOIN users u ON p.user_id = u.user_id
             WHERE d.is_deleted = 0
+            AND d.Status = 'Active'
             ORDER BY d.driver_id DESC
         ");
         
