@@ -64,7 +64,6 @@ class M_Fertilizer
          
         if (!empty($data['image_path'])) {
             $sql .= ", image_path = :image_path";
-            $this->db->bind(':image_path', $data['image_path']);
         }
         $sql .= " WHERE id = :id";
 
@@ -80,6 +79,9 @@ class M_Fertilizer
         $this->db->bind(':unit', $data['unit']);
         
 
+        if (!empty($data['image_path'])) {
+            $this->db->bind(':image_path', $data['image_path']);
+        }
         return $this->db->execute();
     }
 
