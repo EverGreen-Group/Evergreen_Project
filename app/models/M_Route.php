@@ -41,6 +41,35 @@ class M_Route {
         return $this->db->execute();
     }
 
+    public function search($string) {
+        $sql = "
+                    SELECT r.*, 
+                        v.*, 
+                        (SELECT COUNT(*) FROM route_suppliers WHERE route_id = r.route_id) AS supplier_count,
+                        COALESCE(assigned.is_assigned, 0) AS is_assigned
+                    FROM routes r 
+                    INNER JOIN vehicles v ON r.vehicle_id = v.vehicle_id 
+                    LEFT JOIN (
+                        SELECT cs.route_id, 
+                            CASE 
+                                WHEN cs.route_id IS NOT NULL AND cs.is_deleted = 0 THEN 1 
+                                ELSE 0 
+                            END AS is_assigned
+                        FROM collection_schedules cs 
+                        WHERE cs.is_deleted = 0
+                    ) AS assigned ON r.route_id = assigned.route_id
+                    WHERE r.is_deleted = 0 AND
+                    r.route_name LIKE :search_term
+                    GROUP BY r.route_id
+                    ORDER BY r.route_id ASC
+        
+        ";
+        $this->db->query($sql);
+        $this->db->bind(':search_term', '%' . $string . '%');
+        return $this->db->resultSet();
+
+    }
+
     public function editRoute($routeId, $routeName, $vehicleId) {
         $this->db->query("SELECT vehicle_id, remaining_capacity FROM routes WHERE route_id = :route_id");
         $this->db->bind(':route_id', $routeId);

@@ -8,15 +8,21 @@
 </head>
 <body>
 <section id="sidebar">
-		<a href="index.html" class="brand">
+		<a href="" class="brand">
 			<img src="<?php echo URLROOT; ?>/img/logo.svg" alt="Logo" />
 			<span class="text">EVERGREEN</span>
 		</a>
         <ul class="side-menu top">
-			<li class="<?php echo (basename($_SERVER['REQUEST_URI']) == '') ? 'active' : ''; ?>">
+			<li class="<?php echo (basename($_SERVER['REQUEST_URI']) == 'index') ? 'active' : ''; ?>">
 				<a href="<?php echo URLROOT; ?>/supplier/index">
 					<i class='bx bxs-dashboard'></i>
 					<span class="text">Dashboard</span>
+				</a>
+			</li>
+			<li class="<?php echo (basename($_SERVER['REQUEST_URI']) == 'collections') ? 'active' : ''; ?>">
+				<a href="<?php echo URLROOT; ?>/supplier/collections">
+					<i class='bx bx-history'></i>
+					<span class="text">History</span>
 				</a>
 			</li>
 			<li class="<?php echo (basename($_SERVER['REQUEST_URI']) == 'requestFertilizer') ? 'active' : ''; ?>">

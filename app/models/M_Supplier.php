@@ -557,6 +557,27 @@ class M_Supplier {
         return $this->db->resultSet();
     }
 
+    public function getLatestCollection($supplierId) {
+        $sql = "SELECT 
+                c.collection_id, c.start_time, r.route_name, p.first_name AS driver_name, cs.day,  csr.status,  csr.quantity 
+
+                FROM collections c
+                LEFT JOIN collection_schedules cs ON c.schedule_id = cs.schedule_id
+                LEFT JOIN routes r ON cs.route_id = r.route_id
+                LEFT JOIN route_suppliers rs ON r.route_id = rs.route_id
+                LEFT JOIN drivers d on cs.driver_id = d.driver_id
+                LEFT JOIN profiles p ON d.profile_id = p.profile_id
+                LEFT JOIN collection_supplier_records csr ON csr.collection_id = c.collection_id
+                WHERE rs.supplier_id = :supplier_id
+                AND c.created_at IS NOT NULL
+                ORDER BY c.created_at DESC
+                LIMIT 1
+        ";
+        $this->db->query($sql);
+        $this->db->bind(':supplier_id', $supplierId);
+        return $this->db->single();
+    }
+
 
 
 

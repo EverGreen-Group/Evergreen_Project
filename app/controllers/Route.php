@@ -39,28 +39,39 @@ class Route extends Controller{
     }
 
 
-    public function route() {  
-
-        $allRoutes = $this->routeModel->getAllUndeletedRoutes();
-        $totalRoutes = $this->routeModel->getTotalRoutes(); 
+    public function route() {
+        // baseline data
+        $allRoutes        = $this->routeModel->getAllUndeletedRoutes();
+        $totalRoutes      = $this->routeModel->getTotalRoutes();
         $unassignedRoutes = $this->routeModel->getUnassignedRoutesCount();
-        $totalActive = $this->routeModel->getTotalActiveRoutes();
-        $totalInactive = $this->routeModel->getTotalInactiveRoutes();
-
-
-        $availableVehicles = $this->vehicleModel->getAllAvailableVehicles();
-
+        $totalActive      = $this->routeModel->getTotalActiveRoutes();
+        $totalInactive    = $this->routeModel->getTotalInactiveRoutes();
+        $availableVehicles= $this->vehicleModel->getAllAvailableVehicles();
+    
+        // initialize view-data
         $data = [
-            'allRoutes' => $allRoutes,
-            'totalRoutes' => $totalRoutes,
-            'totalActive' => $totalActive,
-            'totalInactive' => $totalInactive,
-            'unassignedRoutes' => $unassignedRoutes,
-            'availableVehicles' => $availableVehicles
+            'allRoutes'         => $allRoutes,
+            'totalRoutes'       => $totalRoutes,
+            'totalActive'       => $totalActive,
+            'totalInactive'     => $totalInactive,
+            'unassignedRoutes'  => $unassignedRoutes,
+            'availableVehicles' => $availableVehicles,
+            'searchString'      => ''            // so view can show what was searched
         ];
-
+    
+        if ($_SERVER['REQUEST_METHOD'] === 'GET' && !empty($_GET['search'])) {
+            $searchString = trim($_GET['search']);
+            $searchResults = $this->routeModel->search($searchString);
+        
+            $data['allRoutes'] = $searchResults;  // show only matching routes
+            $data['searchString'] = $searchString;   // echo back into the input
+            $data['totalRoutes'] = count($searchResults);
+        }
+        
+    
         $this->view('vehicle_manager/routes/v_route', $data);
     }
+    
 
     //  =====================================================
     // VIEW FILES METHODS HERE

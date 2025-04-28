@@ -6,6 +6,7 @@
 <?php require APPROOT . '/views/inc/components/topnavbar.php' ?>
 <link rel="stylesheet" href="<?php echo URLROOT; ?>/css/inventory_manager/dashboard/dashboard.css">
 <script src="<?php echo URLROOT; ?>/public/js/inventory_manager/dashboard/dashboard.js"></script>
+<link rel="stylesheet" href="<?php echo URLROOT; ?>/css/vehicle_manager/vehicle/vehicle.css">
 <script>
 	const URLROOT = '<?php echo URLROOT; ?>';
 	const UPLOADROOT = '<?php echo UPLOADROOT; ?>';
@@ -17,13 +18,13 @@
 <main>
 	<div class="head-title">
 		<div class="left">
-			<h1>Dashboard</h1>
+			<h1>Inventory Management</h1>
 
 		</div>
 
 	</div>
 
-	<ul class="box-info">
+	<!-- <ul class="box-info">
 		<li>
 			<i class='bx bxs-calendar-check'></i>
 			<span class="text">
@@ -57,6 +58,29 @@
 		</li>
 	</ul>
 
+	<ul class="dashboard-stats">
+        <li class="stat-card">
+            <div class="stat-content">
+                <i class='bx bxs-basket'></i>
+                <div class="stat-info">
+                    <h3><?php echo isset($data['totalProducts']) ? $data['totalProducts'] : 0; ?></h3>
+                    <p>Total Products</p>
+                </div>
+            </div>
+        </li>
+
+        <li class="stat-card">
+            <div class="stat-content">
+                <i class='bx bx-basket'></i>
+                <div class="stat-info">
+                    <h3><?php echo isset($data['totalInactive']) ? $data['totalInactive'] : 0; ?></h3>
+                    <p>Total Inactive</p>
+                </div>
+            </div>
+        </li>
+
+    </ul> -->
+
 
 	<div class="table-data">
 		<div class="order">
@@ -84,7 +108,7 @@
 
 		<div class="todo">
 			<div class="head">
-				<h3>Machine Allocation Statics</h3>
+				<h3>Machine Allocation Statistics</h3>
 
 			</div>
 			<?php

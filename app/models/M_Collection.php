@@ -131,17 +131,22 @@ class M_Collection {
                 c.collection_id,
                 c.status,
                 c.created_at,
+                p.first_name AS driver_name,
+                v.license_plate,
                 cs.driver_id,
                 r.vehicle_id,
                 csr.quantity,
                 csr.notes
             FROM collection_supplier_records csr
-            JOIN collections c ON csr.collection_id = c.collection_id
-            JOIN collection_schedules cs on c.schedule_id = cs.schedule_id
-            JOIN routes r on cs.route_id = r.route_id
+            LEFT JOIN collections c ON csr.collection_id = c.collection_id
+            LEFT JOIN collection_schedules cs on c.schedule_id = cs.schedule_id
+            LEFT JOIN routes r on cs.route_id = r.route_id
+            LEFT JOIN drivers d on cs.driver_id = d.driver_id
+            LEFT JOIN profiles p ON d.profile_id = p.profile_id
+            LEFT JOIN vehicles v on r.vehicle_id = v.vehicle_id
             WHERE csr.supplier_id = :supplier_id
             AND c.status = 'Completed' OR c.status = 'Pending'
-            ORDER BY c.collection_id DESC
+            ORDER BY c.created_at DESC
         ");
         
         $this->db->bind(':supplier_id', $supplierId);
@@ -371,7 +376,6 @@ class M_Collection {
         $this->db->beginTransaction();
         try {
 
-            //getting all the suppliers from the route suppliers and then adding them to the collection supplier records
 
                 $this->db->query('SELECT cs.start_time 
                                   FROM collection_schedules cs

@@ -20,12 +20,12 @@
         </li>
     </ul>
     <ul class="side-menu">
-        <li class="<?php echo (basename($_SERVER['REQUEST_URI']) == 'settings') ? 'active' : ''; ?>">
-            <a href="<?php echo URLROOT; ?>/vehicledriver/settings">
-                <i class="bx bxs-cog"></i>
-                <span class="text">Settings</span>
-            </a>
-        </li>
+        <li>
+				<a href="<?php echo URLROOT; ?>/auth/profile">
+					<i class='bx bxs-group'></i>
+					<span class="text">Profile</span>
+				</a>
+			</li>
         <li>
             <a href="<?php echo URLROOT; ?>/auth/logout" class="logout">
                 <i class="bx bxs-log-out-circle"></i>

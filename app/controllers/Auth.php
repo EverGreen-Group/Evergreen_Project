@@ -24,7 +24,6 @@ class Auth extends Controller
 
     public function register()
     {
-        // Redirect if already logged in
         $this->preventLoginAccess();
     
         $data = [
@@ -40,10 +39,7 @@ class Auth extends Controller
         ];
     
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-            // Sanitize POST data
-            // $_POST = filter_input_array(INPUT_POST, FILTER_SANITIZE_STRING);
-    
-            // Check if this is an OTP verification submission
+
             if (isset($_POST['otp'])) {
                 // Verify OTP
                 $sessionOTP = isset($_SESSION['registration_otp']) ? $_SESSION['registration_otp'] : null;
@@ -220,13 +216,10 @@ class Auth extends Controller
                 $user = $this->userModel->findUserByEmail($data['username']);
 
                 if ($user) {
-                    // Verify password
                     if (password_verify($data['password'], $user->password)) {
-                        // Check role-specific conditions
                         $canLogin = true;
                         $loginErrorMessage = '';
 
-                        // For drivers, check if theyre marked as deleted
                         if ($user->role_id == RoleHelper::DRIVER) {
                             $driverId = $this->userModel->getDriverId($user->user_id);
                             if (!$driverId) {
@@ -288,10 +281,10 @@ class Auth extends Controller
                                     header('Location: ' . URLROOT . '/manager/');
                                     break;
                                 case RoleHelper::SUPPLIER:
-                                    header('Location: ' . URLROOT . '/supplier/');
+                                    header('Location: ' . URLROOT . '/supplier/index');
                                     break;
                                 case RoleHelper::ADMIN:
-                                    header('Location: ' . URLROOT . '/admin/');
+                                    header('Location: ' . URLROOT . '/admin/index');
                                     break;
                                 case RoleHelper::INVENTORY_MANAGER:
                                     header('Location: ' . URLROOT . '/inventory/');
