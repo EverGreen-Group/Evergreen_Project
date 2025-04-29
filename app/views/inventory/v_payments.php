@@ -14,7 +14,7 @@
 <main>
     <div class="head-title">
         <div class="left">
-            <h1>Payment Management</h1>
+            <h1>Record</h1>
             <ul class="breadcrumb">
                 <li>
                     <a href="#">Dashboard</a>

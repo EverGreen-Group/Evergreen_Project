@@ -24,62 +24,6 @@
 
 	</div>
 
-	<!-- <ul class="box-info">
-		<li>
-			<i class='bx bxs-calendar-check'></i>
-			<span class="text">
-				<h3>
-					<?= isset($data['awaitingInventory'])
-						? $data['awaitingInventory']
-						: "0"; ?>
-				</h3>
-
-				<p>Today Stock</p>
-			</span>
-		</li>
-		<li>
-			<i class='bx bxs-group'></i>
-			<span class="text">
-				<h3><?= isset($data['kgApprovedToday'])
-					? $data['kgApprovedToday']
-					: "0"; ?></h3>
-				<p>Approved Stock</p>
-
-			</span>
-		</li>
-		<li>
-			<i class='bx bxs-dollar-circle'></i>
-			<span class="text">
-				<h3><?= isset($data['fertilizerOrders'])
-					? $data['fertilizerOrders']
-					: "0"; ?></h3>
-				<p>Fertilizer Orders</p>
-			</span>
-		</li>
-	</ul>
-
-	<ul class="dashboard-stats">
-        <li class="stat-card">
-            <div class="stat-content">
-                <i class='bx bxs-basket'></i>
-                <div class="stat-info">
-                    <h3><?php echo isset($data['totalProducts']) ? $data['totalProducts'] : 0; ?></h3>
-                    <p>Total Products</p>
-                </div>
-            </div>
-        </li>
-
-        <li class="stat-card">
-            <div class="stat-content">
-                <i class='bx bx-basket'></i>
-                <div class="stat-info">
-                    <h3><?php echo isset($data['totalInactive']) ? $data['totalInactive'] : 0; ?></h3>
-                    <p>Total Inactive</p>
-                </div>
-            </div>
-        </li>
-
-    </ul> -->
 
 
 	<div class="table-data">
@@ -91,10 +35,7 @@
 					View Raw Leaf History
 				</a>
 
-				<!-- <a href="<?php echo URLROOT; ?>/inventory/payments" class="btn btn-primary">
-					<i class='bx bx-cog'></i>
-					Manage Rates
-				</a> -->
+				
 
 			</div>
 			<div class="chart-container-wrapper" style="position:relative; width:100%; height:300px; padding:20px;">
