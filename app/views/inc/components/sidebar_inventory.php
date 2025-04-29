@@ -44,7 +44,7 @@
     <li class="<?php echo (basename($_SERVER['REQUEST_URI']) == 'payments') ? 'active' : ''; ?>">
       <a href="<?php echo URLROOT; ?>/inventory/payments">
       <i class="bx bxs-file-doc"></i>
-        <span class="text">Recodes</span>
+        <span class="text">Records</span>
       </a>
     </li>
     <!-- <li>

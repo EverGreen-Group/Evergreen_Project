@@ -33,7 +33,7 @@
                     <div class="info-row">
                         <label class="label" for="capacity">Capacity (kg):</label>
                         <input type="number" step="0.01" id="capacity" name="capacity_kg" class="form-control" required
-                            min="1" value="50.00">
+                            min="1" value="40.00">
                     </div>
                 </div>
             </div>

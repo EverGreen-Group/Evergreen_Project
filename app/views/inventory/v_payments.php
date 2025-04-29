@@ -14,7 +14,7 @@
 <main>
     <div class="head-title">
         <div class="left">
-            <h1>Record</h1>
+            <h1>Records</h1>
             <ul class="breadcrumb">
                 <li>
                     <a href="#">Dashboard</a>
