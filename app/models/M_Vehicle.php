@@ -403,12 +403,11 @@ class M_Vehicle {
     }
 
     public function addMaintenanceLog($data) {
-        $this->db->query('INSERT INTO maintenance_log (vehicle_id, maintenance_type, description, cost, status) 
-                         VALUES (:vehicle_id, :maintenance_type, :description, :cost, :status)');
+        $this->db->query('INSERT INTO maintenance_log (vehicle_id, maintenance_type, description,  status) 
+                         VALUES (:vehicle_id, :maintenance_type, :description,  :status)');
         $this->db->bind(':vehicle_id', $data['vehicle_id']);
         $this->db->bind(':maintenance_type', $data['maintenance_type']);
         $this->db->bind(':description', $data['description']);
-        $this->db->bind(':cost', $data['cost']);
         $this->db->bind(':status', 'Ongoing');
         
         if ($this->db->execute()) {
@@ -482,7 +481,6 @@ class M_Vehicle {
             "UPDATE maintenance_log 
              SET maintenance_type = :maintenance_type,
                  description = :description,
-                 cost = :cost,
                  end_date = :end_date,
                  status = :status
              WHERE log_id = :log_id"
@@ -490,7 +488,6 @@ class M_Vehicle {
 
         $this->db->bind(':maintenance_type', $data['maintenance_type']);
         $this->db->bind(':description', $data['description']);
-        $this->db->bind(':cost', $data['cost']);
         $this->db->bind(':end_date', $data['end_date']);
         $this->db->bind(':status', $data['status']);
         $this->db->bind(':log_id', $logId);

@@ -79,15 +79,32 @@ require APPROOT . '/views/inc/components/topnavbar.php';
                             <?php endif; ?>
                         </div>
                         
-                        <?php if (!isset($data['collection_completed'])): ?>
-                        <div class="schedule-actions">
-                            <form action="<?php echo URLROOT; ?>/vehicledriver/createCollection/<?php echo htmlspecialchars($data['schedule']->schedule_id); ?>" method="POST">
-                                <button type="submit" class="btn-action start">
-                                    <i class='bx bx-play-circle'></i> Start Collection
-                                </button>
-                            </form>
-                        </div>
-                        <?php endif; ?>
+                        <?php
+                        if (!isset($data['collection_completed'])):
+                            $currentTime = date('H:i:s');
+
+                            $scheduleStartTime = $data['schedule']->start_time;
+                            
+                            if ($currentTime >= $scheduleStartTime):
+                        ?>
+                            <div class="schedule-actions">
+                                <form action="<?php echo URLROOT; ?>/vehicledriver/createCollection/<?php echo htmlspecialchars($data['schedule']->schedule_id); ?>" method="POST">
+                                    <button type="submit" class="btn-action start">
+                                        <i class='bx bx-play-circle'></i> Start Collection
+                                    </button>
+                                </form>
+                            </div>
+                        <?php else: ?>
+                            <div class="schedule-actions">
+                                <div class="pending-time-notice">
+                                    <i class='bx bx-time'></i>
+                                    Collection can be started at <?php echo date("h:i A", strtotime($scheduleStartTime)); ?>
+                                </div>
+                            </div>
+                        <?php 
+                            endif;
+                        endif; 
+                        ?>
                     </div>
                 </div>
             </div>

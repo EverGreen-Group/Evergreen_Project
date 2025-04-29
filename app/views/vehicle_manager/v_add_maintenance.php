@@ -49,19 +49,11 @@
                 <div class="section-content">
                     <div class="info-row">
                         <label class="label" for="maintenance_type">Maintenance Type:</label>
-                        <select id="maintenance_type" name="maintenance_type" class="form-control" required>
-                            <option value="Repair" <?= ($data['maintenance_type'] == 'Repair') ? 'selected' : '' ?>>Repair</option>
-                            <option value="Service" <?= ($data['maintenance_type'] == 'Service') ? 'selected' : '' ?>>Service</option>
-                            <option value="Inspection" <?= ($data['maintenance_type'] == 'Inspection') ? 'selected' : '' ?>>Inspection</option>
-                        </select>
+                        <input id="maintenance_type" name="maintenance_type" class="form-control" required>
                     </div>
                     <div class="info-row">
                         <label class="label" for="description">Description:</label>
                         <textarea id="description" name="description" class="form-control" required rows="4"><?= $data['description'] ?></textarea>
-                    </div>
-                    <div class="info-row">
-                        <label class="label" for="cost">Cost (LKR):</label>
-                        <input type="number" id="cost" name="cost" class="form-control" value="<?= $data['cost'] ?>" step="0.01" min="0" required>
                     </div>
                 </div>
             </div>

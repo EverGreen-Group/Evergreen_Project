@@ -40,7 +40,6 @@ class Route extends Controller{
 
 
     public function route() {
-        // baseline data
         $allRoutes        = $this->routeModel->getAllUndeletedRoutes();
         $totalRoutes      = $this->routeModel->getTotalRoutes();
         $unassignedRoutes = $this->routeModel->getUnassignedRoutesCount();
@@ -48,7 +47,7 @@ class Route extends Controller{
         $totalInactive    = $this->routeModel->getTotalInactiveRoutes();
         $availableVehicles= $this->vehicleModel->getAllAvailableVehicles();
     
-        // initialize view-data
+
         $data = [
             'allRoutes'         => $allRoutes,
             'totalRoutes'       => $totalRoutes,
@@ -56,15 +55,15 @@ class Route extends Controller{
             'totalInactive'     => $totalInactive,
             'unassignedRoutes'  => $unassignedRoutes,
             'availableVehicles' => $availableVehicles,
-            'searchString'      => ''            // so view can show what was searched
+            'searchString'      => ''    
         ];
     
         if ($_SERVER['REQUEST_METHOD'] === 'GET' && !empty($_GET['search'])) {
             $searchString = trim($_GET['search']);
             $searchResults = $this->routeModel->search($searchString);
         
-            $data['allRoutes'] = $searchResults;  // show only matching routes
-            $data['searchString'] = $searchString;   // echo back into the input
+            $data['allRoutes'] = $searchResults; 
+            $data['searchString'] = $searchString; 
             $data['totalRoutes'] = count($searchResults);
         }
         
