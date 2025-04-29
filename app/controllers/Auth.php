@@ -39,46 +39,44 @@ class Auth extends Controller
         ];
     
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-
+    
             if (isset($_POST['otp'])) {
                 // Verify OTP
                 $sessionOTP = isset($_SESSION['registration_otp']) ? $_SESSION['registration_otp'] : null;
                 $sessionOTPExpiry = isset($_SESSION['registration_otp_expiry']) ? $_SESSION['registration_otp_expiry'] : 0;
                 $enteredOTP = trim($_POST['otp']);
                 
-                // Get stored registration data
                 foreach ($_SESSION['registration_data'] as $key => $value) {
                     $data[$key] = $value;
                 }
                 
-                // Check if OTP has expired
                 if (time() > $sessionOTPExpiry) {
                     $data['error'] = 'OTP has expired. Please request a new one.';
-                    // Reset OTP session
+
                     unset($_SESSION['registration_otp']);
                     unset($_SESSION['registration_otp_expiry']);
                     $data['otp_sent'] = false;
                 } 
-                // Check if OTP matches
+
                 elseif ($sessionOTP !== $enteredOTP) {
                     $data['error'] = 'Invalid OTP. Please try again.';
                     $data['otp_sent'] = true;
                 } 
-                // OTP is valid, proceed with registration
+
                 else {
-                    // Prepare user data
+
                     $userData = [
                         'email' => $data['email'],
                         'password' => $data['password'], 
                         'role_id' => RoleHelper::getRoleByTitle('Website User'),
                         'account_status' => 'Active'
                     ];
-
+    
                     // Register user
                     $userId = $this->userModel->registerUser($userData);
-
+    
                     if ($userId) {
-                        // Prepare profile data
+
                         $profileData = [
                             'user_id' => $userId,
                             'first_name' => $data['first_name'],
@@ -87,14 +85,13 @@ class Auth extends Controller
                             'date_of_birth' => $data['date_of_birth'],
                             'contact_number' => $data['contact_number']
                         ];
-
-                        // Create profile
+    
                         if ($this->userModel->createProfile($profileData)) {
-                            // Clear session data
+
                             unset($_SESSION['registration_otp']);
                             unset($_SESSION['registration_otp_expiry']);
                             unset($_SESSION['registration_data']);
-
+    
                             $this->logModel->create(
                                 $userId,
                                 $data['email'],
@@ -103,8 +100,8 @@ class Auth extends Controller
                                 $_SERVER['REQUEST_URI'],     
                                 http_response_code()     
                             );
-
-                            // Set success message and redirect
+    
+    
                             setFlashMessage('Register Successful, you can now log in!');
                             redirect('auth/login');
                         } else {
@@ -114,11 +111,11 @@ class Auth extends Controller
                         $data['error'] = 'Registration failed. Please try again.';
                     }
                 }
-
+    
             } 
-            // Initial form submission - validate data and send OTP
+    
             else {
-                // Extract data from POST
+    
                 $data['first_name'] = trim($_POST['first_name']);
                 $data['last_name'] = trim($_POST['last_name']);
                 $data['email'] = trim($_POST['email']);
@@ -127,24 +124,26 @@ class Auth extends Controller
                 $data['contact_number'] = trim($_POST['contact_number']);
                 $data['password'] = trim($_POST['password']);
     
-                // Validate data
+    
                 if (empty($data['first_name']) || empty($data['last_name']) || empty($data['email']) || 
                     empty($data['nic']) || empty($data['date_of_birth']) || 
                     empty($data['contact_number']) || empty($data['password'])) {
                     $data['error'] = 'Please fill in all fields';
                 } elseif (!filter_var($data['email'], FILTER_VALIDATE_EMAIL)) {
                     $data['error'] = 'Please enter a valid email';
+                } elseif (!$this->validateNIC($data['nic'])) {
+                    $data['error'] = 'Please enter a valid NIC number';
                 } elseif (!$this->isOlderThan18($data['date_of_birth'])) {
                     $data['error'] = 'You must be at least 18 years old to register';
-                } elseif (strlen($data['password']) < 8) { // at least 8 characters
+                } elseif (strlen($data['password']) < 8) { 
                     $data['error'] = 'Password must be at least 8 characters long';
-                } elseif (!preg_match('/[A-Z]/', $data['password'])) { // at least one uppercase letter
+                } elseif (!preg_match('/[A-Z]/', $data['password'])) { 
                     $data['error'] = 'Password must contain at least one uppercase letter';
-                } elseif (!preg_match('/[a-z]/', $data['password'])) { // at least one lowercase letter
+                } elseif (!preg_match('/[a-z]/', $data['password'])) { 
                     $data['error'] = 'Password must contain at least one lowercase letter';
-                } elseif (!preg_match('/[0-9]/', $data['password'])) { // at least one number
+                } elseif (!preg_match('/[0-9]/', $data['password'])) { 
                     $data['error'] = 'Password must contain at least one number';
-                } elseif (!preg_match('/[\W_]/', $data['password'])) { //at least one special character
+                } elseif (!preg_match('/[\W_]/', $data['password'])) { 
                     $data['error'] = 'Password must contain at least one special character';
                 } elseif ($this->userModel->findUserByEmail($data['email'])) {
                     $data['error'] = 'Email is already registered';
@@ -153,19 +152,20 @@ class Auth extends Controller
                 } elseif ($this->userModel->findProfileByContactNumber($data['contact_number'])) {
                     $data['error'] = 'Contact number is already registered';
                 } else {
-                    // Hash password before storing in session
+                    $age = $this->calculateAge($data['date_of_birth']);
+                    
+
                     $data['password'] = password_hash($data['password'], PASSWORD_DEFAULT);
+
+                    $otp = rand(100000, 999999); 
+                    $otpExpiry = time() + (10 * 60); 
                     
-                    // Generate OTP
-                    $otp = rand(100000, 999999); // 6-digit OTP
-                    $otpExpiry = time() + (10 * 60); // 10 minutes expiry
-                    
-                    // Store OTP and form data in session
-                    $_SESSION['registration_otp'] = (string)$otp; // Store as string to match user input
+
+                    $_SESSION['registration_otp'] = (string)$otp; 
                     $_SESSION['registration_otp_expiry'] = $otpExpiry;
                     $_SESSION['registration_data'] = $data;
                     
-                    // Send OTP via email
+
                     if ($this->sendOTPEmail($data['email'], $otp)) {
                         $data['otp_sent'] = true;
                     } else {
@@ -191,6 +191,34 @@ class Auth extends Controller
         return $age >= 18; 
     }
 
+    private function validateNIC($nic)
+    {
+        $nicLength = strlen($nic);
+        
+        if ($nicLength === 10) {
+            $lastChar = strtoupper(substr($nic, 9, 1));
+            $firstNine = substr($nic, 0, 9);
+            
+            if (($lastChar === 'V' || $lastChar === 'X') && ctype_digit($firstNine)) {
+                return true;
+            }
+        } 
+        elseif ($nicLength === 12 && ctype_digit($nic)) {
+            return true;
+        }
+        
+        return false;
+    }
+
+    private function calculateAge($dateOfBirth)
+    {
+        $dob = new DateTime($dateOfBirth);
+        $today = new DateTime('today');
+        $age = $dob->diff($today)->y;
+        
+        return $age;
+    }
+
     public function login()
     {
         $this->preventLoginAccess();
@@ -202,8 +230,6 @@ class Auth extends Controller
         ];
 
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-            // $_POST = filter_input_array(INPUT_POST);
-
             $data['username'] = trim($_POST['username']);
             $data['password'] = trim($_POST['password']);
 
