@@ -74,7 +74,7 @@
                 <thead>
                     <tr>
                         <th>Fertilizer Type</th>
-                        <th>Total Quantity (kg)</th>
+                        <th>Total Quantity</th>
                         <th>Unit Price (Rs.)</th>
                         <th>Total Value (Rs.)</th>
                        

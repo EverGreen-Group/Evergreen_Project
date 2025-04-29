@@ -1125,8 +1125,7 @@ class M_Collection {
         return $this->db->resultSet();
     }
 
-    public function getFilteredCollections($collection_id = null, $schedule_id = null, $status = null,$start_date = null, $end_date = null) {
-        // TESTED
+    public function getFilteredCollections($collection_id = null, $schedule_id = null, $status = null, $start_date = null, $end_date = null) {
         $sql = "SELECT 
                 c.*,
                 cs.schedule_id,
@@ -1139,13 +1138,45 @@ class M_Collection {
             JOIN vehicles v ON r.vehicle_id = v.vehicle_id
             JOIN drivers d ON cs.driver_id = d.driver_id
             JOIN profiles p ON d.profile_id = p.profile_id
-            WHERE 1=1
-            ";
-        $this->db->query($sql);    
+            WHERE 1=1";
+    
+        $params = [];
+    
+        if ($collection_id !== null && $collection_id !== '') {
+            $sql .= " AND c.collection_id = :collection_id";
+            $params[':collection_id'] = $collection_id;
+        }
+        if ($schedule_id !== null && $schedule_id !== '') {
+            $sql .= " AND cs.schedule_id = :schedule_id";
+            $params[':schedule_id'] = $schedule_id;
+        }
+        if ($status !== null && $status !== '') {
+            if (strpos($status, 'Completed') !== false) {
+                $status = 'Completed'; 
+            }
+            $sql .= " AND c.status = :status";
+            $params[':status'] = $status;
+        }
+        if ($start_date !== null && $start_date !== '') {
+            $sql .= " AND DATE(c.created_at) >= :start_date";
+            $params[':start_date'] = $start_date;
+        }
+        if ($end_date !== null && $end_date !== '') {
+            $sql .= " AND DATE(c.created_at) <= :end_date";
+            $params[':end_date'] = $end_date;
+        }
+    
+        $this->db->query($sql);
+    
+        foreach ($params as $key => $value) {
+            $this->db->bind($key, $value);
+        }
+    
         return $this->db->resultSet();
     }
+    
 
-    public function getTotalCollections() { // tested
+    public function getTotalCollections() { 
         $sql = "SELECT COUNT(*) as total FROM collections";
         $this->db->query($sql);
         $row = $this->db->single();

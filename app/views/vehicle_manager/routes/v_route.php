@@ -53,14 +53,14 @@
         <div class="order">
             <div class="head">
                 <h3>Routes</h3>
+                <form action="<?php echo URLROOT?>/route/route" method="GET">
+                    <input type="text" name="search" placeholder="Search"> 
+                    <button class="btn btn-primary">Search</button>
+                </form>
                 <a href="<?php echo URLROOT; ?>/route/createRoute" class="btn btn-primary">
                     <i class='bx bx-plus'></i>Create a route
                 </a>
-                <form action="<?php echo URLROOT?>/route/route" method="GET">
-                    <label for="search">Search: </label>
-                    <input type="text" name="search" placeholder="Search">  <!-- Use 'search' instead of 'Search' -->
-                    <button class="btn btn-primary">Search</button>
-                </form>
+
 
             </div>
             <table>

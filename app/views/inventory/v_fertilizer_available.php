@@ -175,7 +175,7 @@
                         <th>Name</th>
                         <th>Company</th>
                         <th>Price</th>
-                        <th>Quantity</th>
+                        <th>Stock</th>
                         <!-- <th>Unit</th> -->
 
                         <th>Actions</th>
@@ -191,7 +191,7 @@
                             <td><?php echo htmlspecialchars($item->fertilizer_name); ?></td>
                             <td><?php echo htmlspecialchars($item->company_name); ?></td>
                             <td> රු.  <?php echo htmlspecialchars($item->price); ?></td>
-                            <td><?php echo htmlspecialchars($item->quantity); ?> kg</td>
+                            <td><?php echo htmlspecialchars($item->quantity); ?></td>
                             <!-- <td><?php echo htmlspecialchars($item->unit); ?></td> -->
 
                             <td>

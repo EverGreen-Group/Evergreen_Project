@@ -40,7 +40,7 @@
     </div>
     
     <!-- Maintenance Form -->
-    <form method="POST" action="<?php echo URLROOT; ?>/manager/updateMaintenance/<?= $data['maintenance_id'] ?>/<?= $data['maintenance_id'] ?>">
+    <form method="POST" action="<?php echo URLROOT; ?>/manager/updateMaintenance/<?= $data['maintenance_id'] ?>">
         <div class="table-data">
             <div class="order">
                 <div class="head">
@@ -49,30 +49,20 @@
                 <div class="section-content">
                     <div class="info-row">
                         <label class="label" for="maintenance_type">Maintenance Type:</label>
-                        <select id="maintenance_type" name="maintenance_type" class="form-control" required>
-                            <option value="Repair" <?= ($data['maintenance_type'] == 'Repair') ? 'selected' : '' ?>>Repair</option>
-                            <option value="Service" <?= ($data['maintenance_type'] == 'Service') ? 'selected' : '' ?>>Service</option>
-                            <option value="Inspection" <?= ($data['maintenance_type'] == 'Inspection') ? 'selected' : '' ?>>Inspection</option>
-                        </select>
+                        <input type="text" id="maintenance_type" name="maintenance_type" class="form-control"  value="<?php echo $data['maintenance_type'] ?>" required>
                     </div>
                     <div class="info-row">
                         <label class="label" for="description">Description:</label>
-                        <textarea id="description" name="description" class="form-control" required rows="4"><?= $data['description'] ?></textarea>
-                    </div>
-                    <div class="info-row">
-                        <label class="label" for="cost">Cost (LKR):</label>
-                        <input type="number" id="cost" name="cost" class="form-control" value="<?= $data['cost'] ?>" step="0.01" min="0" required>
+                        <textarea id="description" name="description" class="form-control" required rows="4"><?= htmlspecialchars($data['description']) ?></textarea>
                     </div>
                 </div>
             </div>
         </div>
-        
-        <button type="submit" class="btn btn-primary">Update Maintenance Record</button>
+        <button type="submit" class="btn btn-primary">Update Maintenance</button>
     </form>
 </main>
 
 <style>
-    /* Table Data Container */
     .table-data {
         margin-bottom: 24px;
     }
@@ -83,7 +73,6 @@
         box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
     }
 
-    /* Section Headers */
     .head {
         padding: 16px 20px;
         border-bottom: 1px solid #f0f0f0;
@@ -95,12 +84,10 @@
         color: #2c3e50;
     }
 
-    /* Content Sections */
     .section-content {
         padding: 8px 0;
     }
 
-    /* Info Rows */
     .info-row {
         display: flex;
         align-items: center;
@@ -124,7 +111,6 @@
         color: #2c3e50;
     }
 
-    /* Form Controls */
     .form-control {
         width: 100%;
         padding: 10px;

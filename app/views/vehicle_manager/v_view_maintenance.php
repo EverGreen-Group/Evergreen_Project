@@ -34,7 +34,6 @@
                         <th>Vehicle</th>
                         <th>Maintenance Type</th>
                         <th>Description</th>
-                        <th>Cost (LKR)</th>
                         <th>Started On</th>
                         <th>Action</th>
                     </tr>
@@ -51,7 +50,6 @@
                                 </td>
                                 <td><?php echo htmlspecialchars($log->maintenance_type); ?></td>
                                 <td><?php echo htmlspecialchars($log->description); ?></td>
-                                <td><?php echo number_format($log->cost, 2); ?></td>
                                 <td><?php echo date('Y-m-d', strtotime($log->created_at)); ?></td>
                                 <td>
                                 <div style="display: flex; gap: 5px;">
@@ -90,7 +88,6 @@
                         <th>Vehicle</th>
                         <th>Maintenance Type</th>
                         <th>Description</th>
-                        <th>Cost (LKR)</th>
                         <th>Started On</th>
                         <th>Completed On</th>
 
@@ -108,7 +105,6 @@
                                 </td>
                                 <td><?php echo htmlspecialchars($log->maintenance_type); ?></td>
                                 <td><?php echo htmlspecialchars($log->description); ?></td>
-                                <td><?php echo number_format($log->cost, 2); ?></td>
                                 <td><?php echo date('Y-m-d', strtotime($log->created_at)); ?></td>
                                 <td><?php echo date('Y-m-d', strtotime($log->end_date)); ?></td>
                             </tr>
