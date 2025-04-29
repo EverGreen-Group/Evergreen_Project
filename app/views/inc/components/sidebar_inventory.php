@@ -1,6 +1,6 @@
 <section id="sidebar">
-  <a href="index.html" class="brand">
-    <img src="../img/logo.svg" alt="Logo" />
+  <a href="<?php echo URLROOT; ?>" class="brand">
+    <img src="<?php echo URLROOT; ?>/img/logo.svg" alt="Logo" />
     <span class="text">EVERGREEN</span>
   </a>
   <ul class="side-menu top">
@@ -12,39 +12,39 @@
     </li>
     <li class="<?php echo (basename($_SERVER['REQUEST_URI']) == 'product') ? 'active' : ''; ?>">
       <a href="<?php echo URLROOT; ?>/inventory/product">
-        <i class="bx bxs-car"></i>
+      <i class="bx bxs-package"></i>
         <span class="text">Product</span>
       </a>
     </li>
     <li class="<?php echo (basename($_SERVER['REQUEST_URI']) == 'fertilizer') ? 'active' : ''; ?>">
       <a href="<?php echo URLROOT; ?>/inventory/fertilizer">
-        <i class="bx bxs-group"></i>
+      <i class="bx bxs-leaf"></i>
         <span class="text">Fertilizer</span>
       </a>
     </li>
     <li class="<?php echo (basename($_SERVER['REQUEST_URI']) == 'collectionBags') ? 'active' : ''; ?>">
       <a href="<?php echo URLROOT; ?>/inventory/collectionBags">
-        <i class="bx bx-trip"></i>
+      <i class="bx bxs-shopping-bag"></i>
         <span class="text">Bag</span>
       </a>
     </li>
     <li class="<?php echo (basename($_SERVER['REQUEST_URI']) == 'machine') ? 'active' : ''; ?>">
       <a href="<?php echo URLROOT; ?>/inventory/machine">
-        <i class="bx bxs-time-five"></i>
+      <i class="bx bxs-cog"></i>
         <span class="text">Machine Allocation</span>
       </a>
     </li>
     <li class="<?php echo (basename($_SERVER['REQUEST_URI']) == 'release') ? 'active' : ''; ?>">
       <a href="<?php echo URLROOT; ?>/export/release">
-        <i class="bx bxs-group"></i>
+      <i class="bx bxs-plane-take-off"></i>
         <span class="text">Export</span>
       </a>
     </li>
 
     <li class="<?php echo (basename($_SERVER['REQUEST_URI']) == 'payments') ? 'active' : ''; ?>">
       <a href="<?php echo URLROOT; ?>/inventory/payments">
-        <i class="bx bxs-group"></i>
-        <span class="text">Payments</span>
+      <i class="bx bxs-file-doc"></i>
+        <span class="text">Records</span>
       </a>
     </li>
     <!-- <li>

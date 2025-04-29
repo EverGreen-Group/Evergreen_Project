@@ -24,7 +24,6 @@ class Auth extends Controller
 
     public function register()
     {
-        // Redirect if already logged in
         $this->preventLoginAccess();
     
         $data = [
@@ -40,49 +39,44 @@ class Auth extends Controller
         ];
     
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-            // Sanitize POST data
-            // $_POST = filter_input_array(INPUT_POST, FILTER_SANITIZE_STRING);
     
-            // Check if this is an OTP verification submission
             if (isset($_POST['otp'])) {
                 // Verify OTP
                 $sessionOTP = isset($_SESSION['registration_otp']) ? $_SESSION['registration_otp'] : null;
                 $sessionOTPExpiry = isset($_SESSION['registration_otp_expiry']) ? $_SESSION['registration_otp_expiry'] : 0;
                 $enteredOTP = trim($_POST['otp']);
                 
-                // Get stored registration data
                 foreach ($_SESSION['registration_data'] as $key => $value) {
                     $data[$key] = $value;
                 }
                 
-                // Check if OTP has expired
                 if (time() > $sessionOTPExpiry) {
                     $data['error'] = 'OTP has expired. Please request a new one.';
-                    // Reset OTP session
+
                     unset($_SESSION['registration_otp']);
                     unset($_SESSION['registration_otp_expiry']);
                     $data['otp_sent'] = false;
                 } 
-                // Check if OTP matches
+
                 elseif ($sessionOTP !== $enteredOTP) {
                     $data['error'] = 'Invalid OTP. Please try again.';
                     $data['otp_sent'] = true;
                 } 
-                // OTP is valid, proceed with registration
+
                 else {
-                    // Prepare user data
+
                     $userData = [
                         'email' => $data['email'],
                         'password' => $data['password'], 
                         'role_id' => RoleHelper::getRoleByTitle('Website User'),
                         'account_status' => 'Active'
                     ];
-
+    
                     // Register user
                     $userId = $this->userModel->registerUser($userData);
-
+    
                     if ($userId) {
-                        // Prepare profile data
+
                         $profileData = [
                             'user_id' => $userId,
                             'first_name' => $data['first_name'],
@@ -91,14 +85,13 @@ class Auth extends Controller
                             'date_of_birth' => $data['date_of_birth'],
                             'contact_number' => $data['contact_number']
                         ];
-
-                        // Create profile
+    
                         if ($this->userModel->createProfile($profileData)) {
-                            // Clear session data
+
                             unset($_SESSION['registration_otp']);
                             unset($_SESSION['registration_otp_expiry']);
                             unset($_SESSION['registration_data']);
-
+    
                             $this->logModel->create(
                                 $userId,
                                 $data['email'],
@@ -107,8 +100,8 @@ class Auth extends Controller
                                 $_SERVER['REQUEST_URI'],     
                                 http_response_code()     
                             );
-
-                            // Set success message and redirect
+    
+    
                             setFlashMessage('Register Successful, you can now log in!');
                             redirect('auth/login');
                         } else {
@@ -118,11 +111,11 @@ class Auth extends Controller
                         $data['error'] = 'Registration failed. Please try again.';
                     }
                 }
-
+    
             } 
-            // Initial form submission - validate data and send OTP
+    
             else {
-                // Extract data from POST
+    
                 $data['first_name'] = trim($_POST['first_name']);
                 $data['last_name'] = trim($_POST['last_name']);
                 $data['email'] = trim($_POST['email']);
@@ -131,24 +124,26 @@ class Auth extends Controller
                 $data['contact_number'] = trim($_POST['contact_number']);
                 $data['password'] = trim($_POST['password']);
     
-                // Validate data
+    
                 if (empty($data['first_name']) || empty($data['last_name']) || empty($data['email']) || 
                     empty($data['nic']) || empty($data['date_of_birth']) || 
                     empty($data['contact_number']) || empty($data['password'])) {
                     $data['error'] = 'Please fill in all fields';
                 } elseif (!filter_var($data['email'], FILTER_VALIDATE_EMAIL)) {
                     $data['error'] = 'Please enter a valid email';
+                } elseif (!$this->validateNIC($data['nic'])) {
+                    $data['error'] = 'Please enter a valid NIC number';
                 } elseif (!$this->isOlderThan18($data['date_of_birth'])) {
                     $data['error'] = 'You must be at least 18 years old to register';
-                } elseif (strlen($data['password']) < 8) { // at least 8 characters
+                } elseif (strlen($data['password']) < 8) { 
                     $data['error'] = 'Password must be at least 8 characters long';
-                } elseif (!preg_match('/[A-Z]/', $data['password'])) { // at least one uppercase letter
+                } elseif (!preg_match('/[A-Z]/', $data['password'])) { 
                     $data['error'] = 'Password must contain at least one uppercase letter';
-                } elseif (!preg_match('/[a-z]/', $data['password'])) { // at least one lowercase letter
+                } elseif (!preg_match('/[a-z]/', $data['password'])) { 
                     $data['error'] = 'Password must contain at least one lowercase letter';
-                } elseif (!preg_match('/[0-9]/', $data['password'])) { // at least one number
+                } elseif (!preg_match('/[0-9]/', $data['password'])) { 
                     $data['error'] = 'Password must contain at least one number';
-                } elseif (!preg_match('/[\W_]/', $data['password'])) { //at least one special character
+                } elseif (!preg_match('/[\W_]/', $data['password'])) { 
                     $data['error'] = 'Password must contain at least one special character';
                 } elseif ($this->userModel->findUserByEmail($data['email'])) {
                     $data['error'] = 'Email is already registered';
@@ -157,19 +152,20 @@ class Auth extends Controller
                 } elseif ($this->userModel->findProfileByContactNumber($data['contact_number'])) {
                     $data['error'] = 'Contact number is already registered';
                 } else {
-                    // Hash password before storing in session
+                    $age = $this->calculateAge($data['date_of_birth']);
+                    
+
                     $data['password'] = password_hash($data['password'], PASSWORD_DEFAULT);
+
+                    $otp = rand(100000, 999999); 
+                    $otpExpiry = time() + (10 * 60); 
                     
-                    // Generate OTP
-                    $otp = rand(100000, 999999); // 6-digit OTP
-                    $otpExpiry = time() + (10 * 60); // 10 minutes expiry
-                    
-                    // Store OTP and form data in session
-                    $_SESSION['registration_otp'] = (string)$otp; // Store as string to match user input
+
+                    $_SESSION['registration_otp'] = (string)$otp; 
                     $_SESSION['registration_otp_expiry'] = $otpExpiry;
                     $_SESSION['registration_data'] = $data;
                     
-                    // Send OTP via email
+
                     if ($this->sendOTPEmail($data['email'], $otp)) {
                         $data['otp_sent'] = true;
                     } else {
@@ -195,6 +191,34 @@ class Auth extends Controller
         return $age >= 18; 
     }
 
+    private function validateNIC($nic)
+    {
+        $nicLength = strlen($nic);
+        
+        if ($nicLength === 10) {
+            $lastChar = strtoupper(substr($nic, 9, 1));
+            $firstNine = substr($nic, 0, 9);
+            
+            if (($lastChar === 'V' || $lastChar === 'X') && ctype_digit($firstNine)) {
+                return true;
+            }
+        } 
+        elseif ($nicLength === 12 && ctype_digit($nic)) {
+            return true;
+        }
+        
+        return false;
+    }
+
+    private function calculateAge($dateOfBirth)
+    {
+        $dob = new DateTime($dateOfBirth);
+        $today = new DateTime('today');
+        $age = $dob->diff($today)->y;
+        
+        return $age;
+    }
+
     public function login()
     {
         $this->preventLoginAccess();
@@ -206,8 +230,6 @@ class Auth extends Controller
         ];
 
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-            // $_POST = filter_input_array(INPUT_POST);
-
             $data['username'] = trim($_POST['username']);
             $data['password'] = trim($_POST['password']);
 
@@ -220,13 +242,10 @@ class Auth extends Controller
                 $user = $this->userModel->findUserByEmail($data['username']);
 
                 if ($user) {
-                    // Verify password
                     if (password_verify($data['password'], $user->password)) {
-                        // Check role-specific conditions
                         $canLogin = true;
                         $loginErrorMessage = '';
 
-                        // For drivers, check if theyre marked as deleted
                         if ($user->role_id == RoleHelper::DRIVER) {
                             $driverId = $this->userModel->getDriverId($user->user_id);
                             if (!$driverId) {
@@ -288,10 +307,10 @@ class Auth extends Controller
                                     header('Location: ' . URLROOT . '/manager/');
                                     break;
                                 case RoleHelper::SUPPLIER:
-                                    header('Location: ' . URLROOT . '/supplier/');
+                                    header('Location: ' . URLROOT . '/supplier/index');
                                     break;
                                 case RoleHelper::ADMIN:
-                                    header('Location: ' . URLROOT . '/admin/');
+                                    header('Location: ' . URLROOT . '/admin/index');
                                     break;
                                 case RoleHelper::INVENTORY_MANAGER:
                                     header('Location: ' . URLROOT . '/inventory/');
@@ -428,7 +447,7 @@ class Auth extends Controller
 
                 $managers = $this->userModel->getAllManagers();
                 foreach ($managers as $manager) {
-                    $this->notificationModel->createNotification($manager->user_id, 'New supplier application submitted.', 'manager/viewApplications/' . $result);
+                    $this->notificationModel->createNotification($manager->user_id, 'New supplier application submitted.', 'New supplier application submitted.' . $result);
                 }
 
                 redirect('pages/supplier_application_status?submitted=true');
@@ -500,57 +519,151 @@ class Auth extends Controller
         $data = [
             'email' => '',
             'error' => '',
-            'success' => ''
+            'success' => '',
+            'otp_sent' => false
         ];
-
+    
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-            // $_POST = filter_input_array(INPUT_POST);
-            $data['email'] = trim($_POST['email']);
-
-            // Validate email
-            if (empty($data['email'])) {
-                $data['error'] = 'Please enter your email address.';
-            } elseif (!$this->userModel->findUserByEmail($data['email'])) {
-                $data['error'] = 'No account found with that email address.';
-            } else {
-                // Generate a password reset token
-                $resetToken = bin2hex(random_bytes(16)); // Generate a random token
-                $this->userModel->storeResetToken($data['email'], $resetToken, 5*60);
-
-                // Create reset link
-                $resetLink = URLROOT . "/auth/resetPassword?token=" . $resetToken;
-
-                // Send email using PHPMailer
-                $mail = new PHPMailer(true);
-                try {
-                    //Server settings
-                    $mail->isSMTP();                                            // Send using SMTP
-                    $mail->Host       = 'smtp.gmail.com';                     // Set the SMTP server to send through
-                    $mail->SMTPAuth   = true;                                   // Enable SMTP authentication
-                    $mail->Username   = 'simaakniyaz@gmail.com';               // SMTP username
-                    $mail->Password   = 'yslhjwsnmozojika';                    // SMTP password
-                    $mail->SMTPSecure = PHPMailer::ENCRYPTION_STARTTLS;       // Enable TLS encryption
-                    $mail->Port       = 587;                                   // TCP port to connect to
-
-                    //Recipients
-                    $mail->setFrom('your_email@example.com', 'Password Reset');
-                    $mail->addAddress($data['email']);                         // Add a recipient
-
-                    // Content
-                    $mail->isHTML(true);                                       // Set email format to HTML
-                    $mail->Subject = 'Password Reset Request';
-                    $mail->Body    = "Please click the following link to reset your password: <a href='$resetLink'>$resetLink</a>";
-
-                    $mail->send();
-                    $data['success'] = 'A password reset link has been sent to your email address.';
-                } catch (Exception $e) {
-                    $data['error'] = "Message could not be sent. Mailer Error: {$mail->ErrorInfo}";
+            // Check if this is an OTP verification submission
+            if (isset($_POST['otp'])) {
+                // Verify OTP
+                $sessionOTP = isset($_SESSION['reset_password_otp']) ? $_SESSION['reset_password_otp'] : null;
+                $sessionOTPExpiry = isset($_SESSION['reset_password_otp_expiry']) ? $_SESSION['reset_password_otp_expiry'] : 0;
+                $enteredOTP = trim($_POST['otp']);
+                
+                // Get stored email
+                $data['email'] = $_SESSION['reset_password_email'];
+                
+                // Check if OTP has expired
+                if (time() > $sessionOTPExpiry) {
+                    $data['error'] = 'OTP has expired. Please request a new one.';
+                    // Reset OTP session
+                    unset($_SESSION['reset_password_otp']);
+                    unset($_SESSION['reset_password_otp_expiry']);
+                    $data['otp_sent'] = false;
+                } 
+                // Check if OTP matches
+                elseif ($sessionOTP !== $enteredOTP) {
+                    $data['error'] = 'Invalid OTP. Please try again.';
+                    $data['otp_sent'] = true;
+                } 
+                // OTP is valid, proceed with password reset
+                else {
+                    // Generate a new password
+                    $newPassword = substr(md5(rand()), 0, 8); // 8-character simple password
+                    
+                    // Hash the new password
+                    $hashedPassword = password_hash($newPassword, PASSWORD_DEFAULT);
+                    
+                    // Update user's password in the database
+                    if ($this->userModel->updateUserPassword($data['email'], $hashedPassword)) {
+                        // Send email with new password
+                        $emailService = new EmailService();
+                        
+                        $subject = 'Your New Password';
+                        $htmlBody = "Your new password is: <b>{$newPassword}</b><br>
+                                    Please login with this password.";
+                                    
+                        $plainBody = "Your new password is: {$newPassword}\nPlease login with this password.";
+                        
+                        if ($emailService->send($data['email'], $subject, $htmlBody, $plainBody)) {
+                            // Clear session data
+                            unset($_SESSION['reset_password_otp']);
+                            unset($_SESSION['reset_password_otp_expiry']);
+                            unset($_SESSION['reset_password_email']);
+                            
+                            // Set success message and redirect
+                            setFlashMessage('Password reset successful. Check your email for your new password.');
+                            redirect('auth/login');
+                        } else {
+                            $data['error'] = 'Failed to send email. Please try again.';
+                        }
+                    } else {
+                        $data['error'] = 'Failed to update password. Please try again.';
+                    }
+                }
+            } 
+            // Initial form submission - validate email and send OTP
+            else {
+                $data['email'] = trim($_POST['email']);
+    
+                // Validate email
+                if (empty($data['email'])) {
+                    $data['error'] = 'Please enter your email address.';
+                } elseif (!filter_var($data['email'], FILTER_VALIDATE_EMAIL)) {
+                    $data['error'] = 'Please enter a valid email.';
+                } elseif (!$this->userModel->findUserByEmail($data['email'])) {
+                    $data['error'] = 'No account found with that email address.';
+                } else {
+                    // Generate OTP
+                    $otp = rand(100000, 999999); // 6-digit OTP
+                    $otpExpiry = time() + (10 * 60); // 10 minutes expiry
+                    
+                    // Store OTP and email in session
+                    $_SESSION['reset_password_otp'] = (string)$otp; // Store as string to match user input
+                    $_SESSION['reset_password_otp_expiry'] = $otpExpiry;
+                    $_SESSION['reset_password_email'] = $data['email'];
+                    
+                    // Send OTP via email
+                    if ($this->sendOTPEmail($data['email'], $otp)) {
+                        $data['otp_sent'] = true;
+                        $data['success'] = 'A verification code has been sent to your email.';
+                    } else {
+                        $data['error'] = 'Failed to send OTP. Please try again.';
+                    }
                 }
             }
         }
-
+    
         $this->view('auth/v_forgot_password', $data);
     }
+
+    public function verifyPasswordResetOTP()
+{
+    $data = [
+        'email' => isset($_GET['email']) ? $_GET['email'] : '',
+        'otp' => '',
+        'error' => '',
+        'success' => ''
+    ];
+
+    if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+        $data['otp'] = trim($_POST['otp']);
+        $data['email'] = trim($_POST['email']);
+        
+        if (empty($data['otp'])) {
+            $data['error'] = 'Please enter the verification code.';
+        } elseif (!$this->userModel->verifyOTP($data['email'], $data['otp'])) {
+            $data['error'] = 'Invalid or expired verification code.';
+        } else {
+            $newPassword = substr(md5(rand()), 0, 8); 
+            $hashedPassword = password_hash($newPassword, PASSWORD_DEFAULT);
+            
+            if ($this->userModel->updateUserPassword($data['email'], $hashedPassword)) {
+                $emailService = new EmailService();
+                
+                $subject = 'Your New Password';
+                $htmlBody = "Your new password is: <b>{$newPassword}</b><br>
+                            Please login with this password.";
+                            
+                $plainBody = "Your new password is: {$newPassword}\nPlease login with this password.";
+                
+                if ($emailService->send($data['email'], $subject, $htmlBody, $plainBody)) {
+                    $data['success'] = 'Your password has been reset. A new password has been sent to your email.';
+                    
+
+                    header("refresh:3;url=" . URLROOT . "/auth/login");
+                } else {
+                    $data['error'] = 'Failed to send email. Please try again.';
+                }
+            } else {
+                $data['error'] = 'Failed to update password. Please try again.';
+            }
+        }
+    }
+
+    $this->view('auth/v_verify_otp', $data);
+}
 
 
     public function profile()

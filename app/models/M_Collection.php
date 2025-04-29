@@ -131,17 +131,22 @@ class M_Collection {
                 c.collection_id,
                 c.status,
                 c.created_at,
+                p.first_name AS driver_name,
+                v.license_plate,
                 cs.driver_id,
                 r.vehicle_id,
                 csr.quantity,
                 csr.notes
             FROM collection_supplier_records csr
-            JOIN collections c ON csr.collection_id = c.collection_id
-            JOIN collection_schedules cs on c.schedule_id = cs.schedule_id
-            JOIN routes r on cs.route_id = r.route_id
+            LEFT JOIN collections c ON csr.collection_id = c.collection_id
+            LEFT JOIN collection_schedules cs on c.schedule_id = cs.schedule_id
+            LEFT JOIN routes r on cs.route_id = r.route_id
+            LEFT JOIN drivers d on cs.driver_id = d.driver_id
+            LEFT JOIN profiles p ON d.profile_id = p.profile_id
+            LEFT JOIN vehicles v on r.vehicle_id = v.vehicle_id
             WHERE csr.supplier_id = :supplier_id
             AND c.status = 'Completed' OR c.status = 'Pending'
-            ORDER BY c.collection_id DESC
+            ORDER BY c.created_at DESC
         ");
         
         $this->db->bind(':supplier_id', $supplierId);
@@ -371,7 +376,6 @@ class M_Collection {
         $this->db->beginTransaction();
         try {
 
-            //getting all the suppliers from the route suppliers and then adding them to the collection supplier records
 
                 $this->db->query('SELECT cs.start_time 
                                   FROM collection_schedules cs
@@ -1121,8 +1125,7 @@ class M_Collection {
         return $this->db->resultSet();
     }
 
-    public function getFilteredCollections($collection_id = null, $schedule_id = null, $status = null,$start_date = null, $end_date = null) {
-        // TESTED
+    public function getFilteredCollections($collection_id = null, $schedule_id = null, $status = null, $start_date = null, $end_date = null) {
         $sql = "SELECT 
                 c.*,
                 cs.schedule_id,
@@ -1135,13 +1138,45 @@ class M_Collection {
             JOIN vehicles v ON r.vehicle_id = v.vehicle_id
             JOIN drivers d ON cs.driver_id = d.driver_id
             JOIN profiles p ON d.profile_id = p.profile_id
-            WHERE 1=1
-            ";
-        $this->db->query($sql);    
+            WHERE 1=1";
+    
+        $params = [];
+    
+        if ($collection_id !== null && $collection_id !== '') {
+            $sql .= " AND c.collection_id = :collection_id";
+            $params[':collection_id'] = $collection_id;
+        }
+        if ($schedule_id !== null && $schedule_id !== '') {
+            $sql .= " AND cs.schedule_id = :schedule_id";
+            $params[':schedule_id'] = $schedule_id;
+        }
+        if ($status !== null && $status !== '') {
+            if (strpos($status, 'Completed') !== false) {
+                $status = 'Completed'; 
+            }
+            $sql .= " AND c.status = :status";
+            $params[':status'] = $status;
+        }
+        if ($start_date !== null && $start_date !== '') {
+            $sql .= " AND DATE(c.created_at) >= :start_date";
+            $params[':start_date'] = $start_date;
+        }
+        if ($end_date !== null && $end_date !== '') {
+            $sql .= " AND DATE(c.created_at) <= :end_date";
+            $params[':end_date'] = $end_date;
+        }
+    
+        $this->db->query($sql);
+    
+        foreach ($params as $key => $value) {
+            $this->db->bind($key, $value);
+        }
+    
         return $this->db->resultSet();
     }
+    
 
-    public function getTotalCollections() { // tested
+    public function getTotalCollections() { 
         $sql = "SELECT COUNT(*) as total FROM collections";
         $this->db->query($sql);
         $row = $this->db->single();

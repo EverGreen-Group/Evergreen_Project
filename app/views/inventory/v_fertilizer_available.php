@@ -24,9 +24,7 @@
                 <li><a class="active" href="#">Fertilizer</a></li>
             </ul>
         </div>
-        <!-- <a href="<?php echo URLROOT; ?>/inventory/fertilizerdashboard">
-            <button class="btn btn-primary">Fertilizer Dashboard</button>
-        </a> -->
+       
     </div>
 
     <!-- Stats section similar to collection bags -->
@@ -36,7 +34,7 @@
                 <i class='bx bxs-leaf'></i>
                 <div class="stat-info">
                     <h3><?php echo isset($data['totalorder']) ? $data['totalorder'] : 0; ?></h3>
-                    <p>Total Orders</p>
+                    <p>Total Requests</p>
                 </div>
             </div>
         </li>
@@ -46,7 +44,7 @@
                 <i class='bx bx-check-circle'></i>
                 <div class="stat-info">
                     <h3><?php echo isset($data['approvedCount']) ? $data['approvedCount'] : 0; ?></h3>
-                    <p>Approved</p>
+                    <p>Approved this month</p>
                 </div>
             </div>
         </li>
@@ -56,7 +54,7 @@
                 <i class='bx bx-time'></i>
                 <div class="stat-info">
                     <h3><?php echo isset($data['pendingCount']) ? $data['pendingCount'] : 0; ?></h3>
-                    <p>Pending</p>
+                    <p>Currently Pending</p>
                 </div>
             </div>
         </li>
@@ -175,7 +173,7 @@
                         <th>Name</th>
                         <th>Company</th>
                         <th>Price</th>
-                        <th>Quantity</th>
+                        <th>Stock</th>
                         <!-- <th>Unit</th> -->
 
                         <th>Actions</th>
@@ -191,7 +189,7 @@
                             <td><?php echo htmlspecialchars($item->fertilizer_name); ?></td>
                             <td><?php echo htmlspecialchars($item->company_name); ?></td>
                             <td> රු.  <?php echo htmlspecialchars($item->price); ?></td>
-                            <td><?php echo htmlspecialchars($item->quantity); ?> kg</td>
+                            <td><?php echo htmlspecialchars($item->quantity); ?></td>
                             <!-- <td><?php echo htmlspecialchars($item->unit); ?></td> -->
 
                             <td>

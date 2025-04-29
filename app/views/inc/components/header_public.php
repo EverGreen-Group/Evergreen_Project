@@ -6,7 +6,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title><?php echo SITENAME; ?></title>
     <link rel="stylesheet" href="<?php echo URLROOT; ?>/public/css/style.css">
-    <!-- <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500&display=swap" rel="stylesheet"> -->
 </head>
 <style>
     body {
@@ -162,7 +161,7 @@
                     HOME
                 </a>
                 <a href="<?php echo URLROOT; ?>/pages/store"
-                    class="<?php echo ($_GET['url'] ?? '') === 'pages/store' ? 'active' : ''; ?>">
+                    class="<?php echo ($_GET['url'] ?? '') === 'auth/profile' ? 'active' : ''; ?>">
                     PRODUCT
                 </a>
                 <a href="<?php echo URLROOT; ?>/pages/about"
@@ -176,18 +175,6 @@
                     </a>
                 <?php endif; ?>
 
-                <?php if (RoleHelper::hasRole(RoleHelper::SUPPLIER_MANAGER)): ?>
-                    <a href="<?php echo URLROOT; ?>/suppliermanager/index" class="<?php echo ($_GET['url'] ?? '') === 'suppliermanager/index' ? 'active' : ''; ?>">
-                        SUPPLIER MANAGER
-                    </a>
-                <?php endif; ?>
-
-                <?php if (RoleHelper::hasRole(RoleHelper::EMPLOYEE)): ?>
-                    <a href="<?php echo URLROOT; ?>/employeemanager/index" class="<?php echo ($_GET['url'] ?? '') === 'employeemanager/index' ? 'active' : ''; ?>">
-                        EMPLOYEE DASHBOARD
-                    </a>
-                <?php endif; ?>
-
                 <?php if (RoleHelper::isAdmin()): ?>
                     <a href="<?php echo URLROOT; ?>/admin/index" class="<?php echo ($_GET['url'] ?? '') === 'admin/index' ? 'active' : ''; ?>">
                         ADMIN DASHBOARD
@@ -195,7 +182,7 @@
                 <?php endif; ?>
 
                 <?php if (isset($_SESSION['user_id'])): ?>
-                    <a href="<?php echo URLROOT; ?>/profile" class="<?php echo ($_GET['url'] ?? '') === 'profile' ? 'active' : ''; ?>">
+                    <a href="<?php echo URLROOT; ?>/auth/profile" class="<?php echo ($_GET['url'] ?? '') === 'profile' ? 'active' : ''; ?>">
                         Profile
                     </a>
                 <?php endif; ?>

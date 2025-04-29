@@ -30,13 +30,11 @@ class M_Payment {
 
     // Main method to generate the monthly payment report and supplier details
     public function generateMonthlyPayment($year, $month, $normalLeafRate, $superLeafRate) {
-        // Fetch configuration values for deductions, transport cost, etc.
         $moistureDeductions = $this->getDeductionRates('moisture');
         $ageDeductions = $this->getDeductionRates('leaf_age');
-        $transportCost = $this->getTransportCost();  // cost per unique collection
+        $transportCost = $this->getTransportCost();  
     
-        // Fetch bag usage history rows that are finalized for the given month and year.
-        // We now also select 'finalized_at' so we can group daily.
+
         $this->db->query("
             SELECT 
                 supplier_id,
@@ -55,9 +53,9 @@ class M_Payment {
         $this->db->bind(':month', $month);
         $bags = $this->db->resultSet();
     
-        // Initialize arrays to hold aggregated data.
-        $suppliers = [];       // For monthly aggregation.
-        $dailyBreakdown = [];  // For supplier daily aggregation, keyed by supplier and date.
+
+        $suppliers = [];    
+        $dailyBreakdown = [];  
     
         foreach ($bags as $bag) {
             $sid = $bag->supplier_id;
@@ -136,8 +134,8 @@ class M_Payment {
             $dailyBreakdown[$sid][$date]['deduct_amount'] += $deductionAmount;
             $dailyBreakdown[$sid][$date]['collections'][$bag->collection_id] = true;
         }
-    
-        // Compute overall monthly totals for summary report
+
+        
         $total_suppliers = count($suppliers);
         $totalKg = 0;
         $totalPayment = 0;
@@ -148,7 +146,7 @@ class M_Payment {
             $collectionCount = count($data['collections']);
             $transportCharge = $transportCost * $collectionCount;
             $totalTransportCost += $transportCharge;
-            $totalPayment += ($data['total_payment'] - $transportCharge); // Subtract transport charge
+            $totalPayment += ($data['total_payment'] - $transportCharge); 
         }
     
         // Insert summary row into factory_payments
@@ -276,9 +274,9 @@ class M_Payment {
         return $rates;
     }
 
-    // Helper to get the transport cost per unique collection
+
     private function getTransportCost() {
-        return 100;
+        return 40;
     }
 
 

@@ -1,5 +1,4 @@
 <?php require APPROOT . '/views/inc/components/header.php'; ?>
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
 <!-- Side bar -->
 <?php require APPROOT.'/views/inc/components/sidebar_vehicle_manager.php'; ?>
@@ -47,15 +46,6 @@
             </div>
         </li>
 
-        <li class="stat-card">
-            <div class="stat-content">
-                <i class='bx bx-station'></i>
-                <div class="stat-info">
-                    <h3><?php echo $stats['collections']['total_ongoing']; ?></h3>
-                    <p>Collections Ongoing</p>
-                </div>
-            </div>
-        </li>
 
     </ul>
 

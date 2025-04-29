@@ -118,7 +118,7 @@
                 <div class="section-content">
                     <div class="info-row">
                         <label class="label" for="quantity">Quantity:</label>
-                        <input type="number" id="quantity" name="quantity" class="form-control"  min=0
+                        <input type="number" id="quantity" name="quantity" class="form-control"
                             value="<?php echo isset($data['quantity']) ? $data['quantity'] : ''; ?>">
                     </div>
                     <div class="info-row">

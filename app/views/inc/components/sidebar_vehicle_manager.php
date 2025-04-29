@@ -1,49 +1,52 @@
 <section id="sidebar">
   <a href="<?php echo URLROOT; ?>" class="brand">
-    <img src="../img/logo.svg" alt="Logo" />
+    <img src="<?php echo URLROOT; ?>/img/logo.svg" alt="Logo" />
     <span class="text">EVERGREEN</span>
   </a>
   <ul class="side-menu top">
 
-			<li class="<?php echo (basename($_SERVER['REQUEST_URI']) == 'index') ? 'active' : ''; ?>">
-				<a href="<?php echo URLROOT; ?>/manager/">
-					<i class='bx bxs-envelope'></i>
-					<span class="text">Applications</span>
-				</a>
-			</li>
+        <li class="<?php echo (basename($_SERVER['REQUEST_URI']) == 'index') ? 'active' : ''; ?>">
+            <a href="<?php echo URLROOT; ?>/manager/">
+                <i class='bx bxs-envelope'></i>
+                <span class="text">Applications</span>
+            </a>
+        </li>
 
       <li>
-				<a href="<?php echo URLROOT; ?>/manager/announcements">
+            <a href="<?php echo URLROOT; ?>/manager/announcements">
           <i class='bx bxs-megaphone'></i>
-					<span class="text">Announcement</span>
-				</a>
-			</li>
+                <span class="text">Announcement</span>
+            </a>
+        </li>
 
       <li>
-				<a href="<?php echo URLROOT; ?>/manager/chat">
-					<i class='bx bxs-message-dots' ></i>
-					<span class="text">Chat</span>
-				</a>
-			</li>
+            <a href="<?php echo URLROOT; ?>/manager/chat">
+                <i class='bx bxs-message-dots' ></i>
+                <span class="text">Chat</span>
+                <?php if(isset($_SESSION['manager_unread_messages']) && $_SESSION['manager_unread_messages'] > 0): ?>
+                    <span class="notification-badge"><?php echo $_SESSION['manager_unread_messages']; ?></span>
+                <?php endif; ?>
+            </a>
+        </li>
 
       <li class="<?php echo (basename($_SERVER['REQUEST_URI']) == 'index') ? 'active' : ''; ?>">
-				<a href="<?php echo URLROOT; ?>/manager/appointments">
+            <a href="<?php echo URLROOT; ?>/manager/appointments">
         <i class='bx bxs-calendar-check' ></i>
-					<span class="text">Appointments</span>
-				</a>
-			</li>
-			<li class="<?php echo (basename($_SERVER['REQUEST_URI']) == 'suppliers') ? 'active' : ''; ?>">
-				<a href="<?php echo URLROOT; ?>/manager/supplier">
-					<i class='bx bxs-network-chart'></i>
-					<span class="text">Suppliers</span>
-				</a>
-			</li>		
-			<li>
-				<a href="<?php echo URLROOT; ?>/manager/complaints">
-					<i class='bx bxs-alarm-exclamation' ></i>
-					<span class="text">Complaints</span>
-				</a>
-			</li>
+                <span class="text">Appointments</span>
+            </a>
+        </li>
+        <li class="<?php echo (basename($_SERVER['REQUEST_URI']) == 'suppliers') ? 'active' : ''; ?>">
+            <a href="<?php echo URLROOT; ?>/manager/supplier">
+                <i class='bx bxs-network-chart'></i>
+                <span class="text">Suppliers</span>
+            </a>
+        </li>       
+        <li>
+            <a href="<?php echo URLROOT; ?>/manager/complaints">
+                <i class='bx bxs-alarm-exclamation' ></i>
+                <span class="text">Complaints</span>
+            </a>
+        </li>
 
     <li class="<?php echo (basename($_SERVER['REQUEST_URI']) == 'index') ? 'active' : ''; ?>">
       <a href="<?php echo URLROOT; ?>/manager/collection">
@@ -86,3 +89,41 @@
     </li>
   </ul>
 </section>
+
+
+
+<style>
+
+.side-menu li a {
+  position: relative;
+}
+
+.notification-badge {
+  position: absolute;
+  top: 8px;
+  right: 15px;
+  background-color: #ff4d4d;
+  color: white;
+  border-radius: 50%;
+  width: 22px;
+  height: 22px;
+  font-size: 13px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: bold;
+  margin-top: 4px;
+}
+
+
+.notification-indicator {
+  position: absolute;
+  top: 8px;
+  right: 15px;
+  background-color: #ff4d4d;
+  border-radius: 50%;
+  width: 10px;
+  height: 10px;
+}
+
+</style>

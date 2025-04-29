@@ -39,51 +39,51 @@ class Route extends Controller{
     }
 
 
-    public function route() {   // tested
-        $page = isset($_GET['page']) && is_numeric($_GET['page']) ? (int)$_GET['page'] : 1;
-        $limit = 5; 
-        $offset = ($page - 1) * $limit;
-
-        $allRoutes = $this->routeModel->getAllUndeletedRoutes($limit, $offset); // tested
-        $totalRoutes = $this->routeModel->getTotalRoutes(); // tested
+    public function route() {
+        $allRoutes        = $this->routeModel->getAllUndeletedRoutes();
+        $totalRoutes      = $this->routeModel->getTotalRoutes();
         $unassignedRoutes = $this->routeModel->getUnassignedRoutesCount();
-        $totalActive = $this->routeModel->getTotalActiveRoutes();
-        $totalInactive = $this->routeModel->getTotalInactiveRoutes();
-
-        $totalPages = ceil($totalRoutes / $limit);
-
-        $availableVehicles = $this->vehicleModel->getAllAvailableVehicles();
+        $totalActive      = $this->routeModel->getTotalActiveRoutes();
+        $totalInactive    = $this->routeModel->getTotalInactiveRoutes();
+        $availableVehicles= $this->vehicleModel->getAllAvailableVehicles();
+    
 
         $data = [
-            'allRoutes' => $allRoutes,
-            'totalRoutes' => $totalRoutes,
-            'totalActive' => $totalActive,
-            'totalInactive' => $totalInactive,
-            'unassignedRoutes' => $unassignedRoutes,
+            'allRoutes'         => $allRoutes,
+            'totalRoutes'       => $totalRoutes,
+            'totalActive'       => $totalActive,
+            'totalInactive'     => $totalInactive,
+            'unassignedRoutes'  => $unassignedRoutes,
             'availableVehicles' => $availableVehicles,
-            'currentPage' => $page,
-            'totalPages' => $totalPages
+            'searchString'      => ''    
         ];
-
+    
+        if ($_SERVER['REQUEST_METHOD'] === 'GET' && !empty($_GET['search'])) {
+            $searchString = trim($_GET['search']);
+            $searchResults = $this->routeModel->search($searchString);
+        
+            $data['allRoutes'] = $searchResults; 
+            $data['searchString'] = $searchString; 
+            $data['totalRoutes'] = count($searchResults);
+        }
+        
+    
         $this->view('vehicle_manager/routes/v_route', $data);
     }
+    
 
     //  =====================================================
     // VIEW FILES METHODS HERE
     // ===================================================== 
 
     public function manageRoute($routeId) {
-        // Fetch the route details from the model
-        $routeDetails = $this->routeModel->getRouteById($routeId);  // tested
+        $routeDetails = $this->routeModel->getRouteById($routeId);  
         $vehicleId = $routeDetails->vehicle_id;
         $vehicleDetails = $this->vehicleModel->getVehicleByVehicleId($vehicleId);
         
         $unassignedSuppliers = $this->routeModel->getUnallocatedSuppliers();
-
-        // Fetch route suppliers
         $routeSuppliers = $this->routeModel->getRouteSuppliersByRouteId($routeId);
 
-        // Prepare the data to be passed to the view
         $data = [
             'route_id' => $routeId,
             'route_name' => $routeDetails->route_name,
@@ -91,18 +91,16 @@ class Route extends Controller{
             'vehicle_id' => $vehicleId,
             'vehicleDetails' => $vehicleDetails,
             'remainingCapacity' => $routeDetails->remaining_capacity,
-            'unassignedSuppliers' => $unassignedSuppliers, // Pass unassigned suppliers to the view
-            'routeSuppliers' => $routeSuppliers // Pass route suppliers to the view
+            'unassignedSuppliers' => $unassignedSuppliers, 
+            'routeSuppliers' => $routeSuppliers 
         ];
 
-        // Load the view with the data
         $this->view('vehicle_manager/routes/v_manage_route', $data);
     }
 
     public function viewMap($routeId) {
         $routeSuppliers = $this->routeModel->getRouteSuppliersByRouteId($routeId);
-    
-        // Sort by stop_order
+
         usort($routeSuppliers, function($a, $b) {
             return $a->stop_order - $b->stop_order;
         });
@@ -117,13 +115,7 @@ class Route extends Controller{
     
 
 
-    //  =====================================================
-    // JSON/AJAX FETCH METHODS HERE
-    // ===================================================== 
-
-
     public function getRouteSuppliers($routeId) {
-        // Fetch bag details from the model using the collection ID
         $routeSuppliers = $this->routeModel->getRouteSuppliersByRouteId($routeId);
 
         header('Content-Type: application/json');
@@ -136,12 +128,8 @@ class Route extends Controller{
     }
 
 
-    //  =====================================================
-    // CONTROLLER CRUDS
-    // ===================================================== 
 
-
-    public function createRoute() {     // tested!!!!!!
+    public function createRoute() { 
         $availableVehicles = $this->vehicleModel->getAllAvailableVehicles();
 
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
@@ -171,7 +159,7 @@ class Route extends Controller{
         $this->view('vehicle_manager/routes/v_create_route', $data);
     }
 
-    public function editRoute($id = null) { // tested
+    public function editRoute($id = null) { 
         if (!$id) {
             setFlashMessage('Invalid route ID', 'error');
             redirect('route');
@@ -193,7 +181,6 @@ class Route extends Controller{
         $availableVehicles = $this->vehicleModel->getAllAvailableVehicles();
         $currentVehicle = $this->vehicleModel->getVehicleById($route->vehicle_id);
         
-        // making sure current vehicle is in the list
         $currentVehicleInList = false;
         foreach ($availableVehicles as $vehicle) {
             if ($vehicle->vehicle_id == $route->vehicle_id) {
@@ -251,7 +238,7 @@ class Route extends Controller{
         $this->view('vehicle_manager/routes/v_edit_route', $data);
     }
 
-    public function deleteRoute()// tested
+    public function deleteRoute()
     {
         if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             $route_id = $_POST['route_id'];
@@ -261,7 +248,7 @@ class Route extends Controller{
                 setFlashMessage('Route deleted successfully!');
                 redirect('route/');
             } else {
-                // setFlashMessage('Route deletion failed!');
+
                 redirect('route/');
             }
         }
@@ -293,7 +280,7 @@ class Route extends Controller{
     }
 
 
-    public function addSupplier() { // tested
+    public function addSupplier() { 
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $supplierId = $_POST['supplier_id'];
             $routeId = $_POST['route_id'];
@@ -311,7 +298,7 @@ class Route extends Controller{
                 setFlashMessage('Cannot add supplier. Exceeding the capacity', 'error');
                 redirect('route/manageRoute/' . $routeId);
             }
-            // Fjust a temp value, can use null also, used my index number here.
+
             $tempStopOrder = 22001913;
             if ($this->routeModel->addSupplierToRoute($routeId, $supplierId, $tempStopOrder)) {
                 $this->routeModel->updateRemainingCapacity($routeId, 'add');

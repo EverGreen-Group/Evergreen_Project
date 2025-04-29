@@ -343,27 +343,33 @@ class M_User {
 
     
 
-    public function updateUser($data) { // tested
+    public function updateUser($data) { 
         $this->db->query("UPDATE users SET 
             email = :email,
-            first_name = :first_name,
-            last_name = :last_name,
-            nic = :nic,
-            date_of_birth = :date_of_birth,
             role_id = :role_id
             WHERE user_id = :user_id");
 
-        // Bind parameters
         $this->db->bind(':email', $data['email']);
+        $this->db->bind(':role_id', $data['role']);
+        $this->db->bind(':user_id', $data['user_id']);
+        $userUpdateResult = $this->db->execute();
+
+        $sql = "UPDATE profiles SET
+            first_name = :first_name,
+            last_name = :last_name,
+            nic = :nic,
+            date_of_birth = :date_of_birth
+            WHERE user_id = :user_id";
+
+        $this->db->query($sql);
         $this->db->bind(':first_name', $data['first_name']);
         $this->db->bind(':last_name', $data['last_name']);
         $this->db->bind(':nic', $data['nic']);
         $this->db->bind(':date_of_birth', $data['date_of_birth']);
-        $this->db->bind(':role_id', $data['role']);
-        $this->db->bind(':user_id', $data['user_id']);
+        $this->db->bind(':user_id', $data['user_id']); 
+        $profileUpdateResult = $this->db->execute(); 
 
-        // Execute the query
-        return $this->db->execute();
+        return $userUpdateResult && $profileUpdateResult;
     }
 
     // app/models/M_User.php

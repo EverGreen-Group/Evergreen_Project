@@ -6,6 +6,7 @@
 <?php require APPROOT . '/views/inc/components/topnavbar.php' ?>
 <link rel="stylesheet" href="<?php echo URLROOT; ?>/css/inventory_manager/dashboard/dashboard.css">
 <script src="<?php echo URLROOT; ?>/public/js/inventory_manager/dashboard/dashboard.js"></script>
+<link rel="stylesheet" href="<?php echo URLROOT; ?>/css/vehicle_manager/vehicle/vehicle.css">
 <script>
 	const URLROOT = '<?php echo URLROOT; ?>';
 	const UPLOADROOT = '<?php echo UPLOADROOT; ?>';
@@ -17,45 +18,12 @@
 <main>
 	<div class="head-title">
 		<div class="left">
-			<h1>Dashboard</h1>
+			<h1>Inventory Management</h1>
 
 		</div>
 
 	</div>
 
-	<ul class="box-info">
-		<li>
-			<i class='bx bxs-calendar-check'></i>
-			<span class="text">
-				<h3>
-					<?= isset($data['awaitingInventory'])
-						? $data['awaitingInventory']
-						: "0"; ?>
-				</h3>
-
-				<p>Today Stock</p>
-			</span>
-		</li>
-		<li>
-			<i class='bx bxs-group'></i>
-			<span class="text">
-				<h3><?= isset($data['kgApprovedToday'])
-					? $data['kgApprovedToday']
-					: "0"; ?></h3>
-				<p>Approved Stock</p>
-
-			</span>
-		</li>
-		<li>
-			<i class='bx bxs-dollar-circle'></i>
-			<span class="text">
-				<h3><?= isset($data['fertilizerOrders'])
-					? $data['fertilizerOrders']
-					: "0"; ?></h3>
-				<p>Fertilizer Orders</p>
-			</span>
-		</li>
-	</ul>
 
 
 	<div class="table-data">
@@ -67,10 +35,7 @@
 					View Raw Leaf History
 				</a>
 
-				<!-- <a href="<?php echo URLROOT; ?>/inventory/payments" class="btn btn-primary">
-					<i class='bx bx-cog'></i>
-					Manage Rates
-				</a> -->
+				
 
 			</div>
 			<div class="chart-container-wrapper" style="position:relative; width:100%; height:300px; padding:20px;">
@@ -84,18 +49,18 @@
 
 		<div class="todo">
 			<div class="head">
-				<h3>Machine Allocation Statics</h3>
+				<h3>Machine Allocation Statistics</h3>
 
 			</div>
 			<?php
 			$machines = $data['machines'];
 			// Example PHP array
-			// $machines = [
-			// 	(object) ["id" => 2, "machine_name" => "Machine A", "total_working_hours" => "200 items"],
-			// 	(object) ["id" => 3, "machine_name" => "Machine B", "total_working_hours" => "300 items"],
-			// 	(object) ["id" => 4, "machine_name" => "Machine C", "total_working_hours" => "150 hours"],
-			// 	(object) ["id" => 5, "machine_name" => "Machine D", "total_working_hours" => "500 hours"],
-			// ];
+			$machinesdata2 = [
+				(object) ["id" => 2, "machine_name" => "Machine A", "total_working_hours" => "200 items"],
+				(object) ["id" => 3, "machine_name" => "Machine B", "total_working_hours" => "300 items"],
+				(object) ["id" => 4, "machine_name" => "Machine C", "total_working_hours" => "150 hours"],
+				(object) ["id" => 5, "machine_name" => "Machine D", "total_working_hours" => "500 hours"],
+			];
 			
 			// Extract machine names and working hours
 			$chartdata = [

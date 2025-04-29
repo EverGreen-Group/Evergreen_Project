@@ -3,7 +3,6 @@
 <?php require APPROOT . '/views/inc/components/topnavbar.php'; ?>
 
 <link rel="stylesheet" href="<?php echo URLROOT; ?>/css/chat.css">
-<link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
 
 
 <main>

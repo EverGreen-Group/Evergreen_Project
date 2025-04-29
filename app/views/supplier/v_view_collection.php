@@ -21,7 +21,25 @@
 
   <div class="collections-section">
     <div class="section-header">
-
+      <div class="filter-container">
+        <input type="text" id="searchInput" placeholder="Search collections...">
+        <div class="filter-controls">
+          <select id="statusFilter">
+            <option value="">All Statuses</option>
+            <option value="Pending">Pending</option>
+            <option value="Completed">Completed</option>
+          </select>
+          <select id="dateFilter">
+            <option value="">All Dates</option>
+            <option value="7">Last 7 days</option>
+            <option value="30">Last 30 days</option>
+            <option value="90">Last 90 days</option>
+          </select>
+          <button id="resetFilters" class="reset-btn">
+            <i class='bx bx-reset'></i> Reset
+          </button>
+        </div>
+      </div>
     </div>
     <?php if (!empty($data['collections'])): ?>
       <div class="collections-container">
@@ -29,27 +47,25 @@
           <table class="collections-table">
             <thead>
               <tr>
-                <th>Collection ID</th>
                 <th>Date</th>
                 <th>Status</th>
-                <!-- <th>Driver ID</th>
-                <th>Vehicle ID</th> -->
+                <th>Driver</th>
+                <th>Vehicle</th>
                 <th>Quantity</th>
                 <th>Action</th>
               </tr>
             </thead>
             <tbody>
               <?php foreach($data['collections'] as $collection): ?>
-                <tr>
-                  <td data-label="Collection ID"><?php echo $collection->collection_id; ?></td>
+                <tr data-date="<?php echo strtotime($collection->created_at); ?>" data-status="<?php echo $collection->status; ?>">
                   <td data-label="Date"><?php echo date('M d, Y', strtotime($collection->created_at)); ?></td>
                   <td data-label="Status">
                     <span class="status-badge <?php echo $collection->status === 'Pending' ? 'pending' : 'completed'; ?>">
                       <?php echo $collection->status; ?>
                     </span>
                   </td>
-                  <!-- <td data-label="Driver ID"><?php echo $collection->driver_id; ?></td>
-                  <td data-label="Vehicle ID"><?php echo $collection->vehicle_id; ?></td> -->
+                  <td data-label="Driver ID"><?php echo $collection->driver_name; ?></td>
+                  <td data-label="Vehicle ID"><?php echo $collection->license_plate; ?></td>
                   <td data-label="Quantity"><?php echo $collection->quantity; ?> kg</td>
                   <td data-label="Action">
                     <a href="<?php echo URLROOT; ?>/supplier/collectionBags/<?php echo $collection->collection_id; ?>" class="view-btn">
@@ -65,7 +81,7 @@
       <!-- Mobile Cards View (Only shown on small screens) -->
       <div class="collections-cards">
         <?php foreach($data['collections'] as $collection): ?>
-          <div class="collection-card">
+          <div class="collection-card" data-date="<?php echo strtotime($collection->created_at); ?>" data-status="<?php echo $collection->status; ?>">
             <div class="card-header">
               <div class="card-id">
                 <span class="label">Collection ID:</span>
@@ -111,27 +127,59 @@
   </div>
 
   <script>
-    // Add this before the closing </main> tag
     document.addEventListener('DOMContentLoaded', function() {
-      // Add search input
-      const sectionHeader = document.querySelector('.section-header');
-      sectionHeader.innerHTML += '<input type="text" id="searchInput" placeholder="Search collections..." style="margin-left: 10px;">';
+      const searchInput = document.getElementById('searchInput');
+      const statusFilter = document.getElementById('statusFilter');
+      const dateFilter = document.getElementById('dateFilter');
+      const resetFilters = document.getElementById('resetFilters');
+      const tableRows = document.querySelectorAll('.collections-table tbody tr');
+      const cards = document.querySelectorAll('.collection-card');
       
-      // Simple search function
-      document.getElementById('searchInput').addEventListener('keyup', function() {
-        const searchText = this.value.toLowerCase();
-        const rows = document.querySelectorAll('.collections-table tbody tr');
-        const cards = document.querySelectorAll('.collection-card');
+
+      function applyFilters() {
+        const searchText = searchInput.value.toLowerCase();
+        const statusValue = statusFilter.value;
+        const dateValue = dateFilter.value ? parseInt(dateFilter.value) : 0;
+        const currentDate = Math.floor(Date.now() / 1000); 
         
-        // Filter table rows
-        rows.forEach(row => {
-          row.style.display = row.textContent.toLowerCase().includes(searchText) ? '' : 'none';
+
+        tableRows.forEach(row => {
+          const rowText = row.textContent.toLowerCase();
+          const rowStatus = row.getAttribute('data-status');
+          const rowDate = parseInt(row.getAttribute('data-date'));
+          
+          const matchesSearch = searchText === '' || rowText.includes(searchText);
+          const matchesStatus = statusValue === '' || rowStatus === statusValue;
+          const matchesDate = dateValue === 0 || (currentDate - rowDate) < (dateValue * 24 * 60 * 60);
+          
+          row.style.display = (matchesSearch && matchesStatus && matchesDate) ? '' : 'none';
         });
         
-        // Filter cards
+
         cards.forEach(card => {
-          card.style.display = card.textContent.toLowerCase().includes(searchText) ? '' : 'none';
+          const cardText = card.textContent.toLowerCase();
+          const cardStatus = card.getAttribute('data-status');
+          const cardDate = parseInt(card.getAttribute('data-date'));
+          
+          const matchesSearch = searchText === '' || cardText.includes(searchText);
+          const matchesStatus = statusValue === '' || cardStatus === statusValue;
+          const matchesDate = dateValue === 0 || (currentDate - cardDate) < (dateValue * 24 * 60 * 60);
+          
+          card.style.display = (matchesSearch && matchesStatus && matchesDate) ? '' : 'none';
         });
+      }
+      
+
+      searchInput.addEventListener('input', applyFilters);
+      statusFilter.addEventListener('change', applyFilters);
+      dateFilter.addEventListener('change', applyFilters);
+      
+
+      resetFilters.addEventListener('click', function() {
+        searchInput.value = '';
+        statusFilter.value = '';
+        dateFilter.value = '';
+        applyFilters();
       });
     });
   </script>
@@ -204,26 +252,55 @@
     color: var(--primary-color);
   }
 
-  .section-header {
+  /* Filter Styles */
+  .filter-container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--spacing-md);
     margin-bottom: var(--spacing-md);
+    align-items: center;
   }
 
-  .section-header h3 {
-    font-size: 1.25rem;
-    color: var(--text-primary);
+  .filter-controls {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--spacing-sm);
   }
 
-  /* Flash Messages */
-  .alert {
-    padding: var(--spacing-md);
-    margin-bottom: var(--spacing-lg);
-    border-radius: var(--border-radius-md);
-    background-color: var(--secondary-color);
+  #searchInput, 
+  #statusFilter, 
+  #dateFilter {
+    padding: var(--spacing-sm);
+    border: 1px solid var(--border-color);
+    border-radius: var(--border-radius-sm);
+    font-size: 0.9rem;
+  }
+
+  #searchInput {
+    flex: 1;
+    min-width: 200px;
+  }
+
+  #statusFilter, 
+  #dateFilter {
+    min-width: 120px;
+  }
+
+  .reset-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--spacing-xs);
+    padding: var(--spacing-sm);
+    background-color: var(--text-secondary);
     color: white;
+    border: none;
+    border-radius: var(--border-radius-sm);
+    cursor: pointer;
+    transition: background-color 0.3s ease;
   }
 
-  .alert-error {
-    background-color: #e74c3c;
+  .reset-btn:hover {
+    background-color: var(--text-primary);
   }
 
   /* Collections Section */
@@ -389,8 +466,17 @@
       font-size: 1.5rem;
     }
 
-    .section-header h3 {
-      font-size: 1.125rem;
+    .filter-container {
+      flex-direction: column;
+      align-items: stretch;
+    }
+
+    #searchInput {
+      width: 100%;
+    }
+
+    .filter-controls {
+      width: 100%;
     }
   }
 
@@ -427,6 +513,16 @@
     }
 
     .view-btn {
+      width: 100%;
+      justify-content: center;
+    }
+
+    #statusFilter, 
+    #dateFilter {
+      width: 100%;
+    }
+
+    .reset-btn {
       width: 100%;
       justify-content: center;
     }

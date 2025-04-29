@@ -151,18 +151,16 @@ class Admin extends Controller
                 'role' => trim($_POST['role'])
             ];
 
-            // Update the user in the database
+
             if ($this->userModel->updateUser($data)) {
-                // Redirect to the user management page or show a success message
                 setFlashMessage('User updated successfully');
-                redirect('admin/users'); // Adjust the redirect as necessary
+                redirect('admin/users'); 
             } else {
 
                 setFlashMessage('User updating failed!', 'error');
-                redirect('admin/manageUser/' . $data['user_id']); // Redirect back to the edit page
+                redirect('admin/manageUser/' . $data['user_id']); 
             }
         } else {
-            // If not a POST request, redirect to the user management page
             redirect('admin/users');
         }
     }

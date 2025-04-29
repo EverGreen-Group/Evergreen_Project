@@ -217,42 +217,7 @@
           }
           ?>
 
-          <!-- <tr>
-                    <td>John Doe</td>
-                    <td>Black Tea</td>
-                    <td>BOPF</td>
-                    <td>1000 kg</td>
-                    <td>Rs.120.00</td>
-                    <td>Tea Co.</td>
-                    <td>2023-10-05</td>
-                </tr>
-                <tr>
-                    <td>Jane Smith</td>
-                    <td>Green Tea</td>
-                    <td>FBOP</td>
-                    <td>500 kg</td>
-                    <td>Rs.120.00</td>
-                    <td>Green Leaf Ltd.</td>
-                    <td>2023-10-06</td>
-                </tr>
-                <tr>
-                    <td>John Doe</td>
-                    <td>Herbal Tea</td>
-                    <td>Chamomile</td>
-                    <td>300 kg</td>
-                    <td>Rs.130.00</td>
-                    <td>Herbal Solutions</td>
-                    <td>2023-10-07</td>
-                </tr>
-                <tr>
-                    <td>Jane Smith</td>
-                    <td>Oolong Tea</td>
-                    <td>Tieguanyin</td>
-                    <td>200 kg</td>
-                    <td>Rs.100.00</td>
-                    <td>Oolong Traders</td>
-                    <td>2023-10-08</td>
-                </tr> -->
+          
         </tbody>
       </table>
     </div>

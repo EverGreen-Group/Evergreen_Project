@@ -60,7 +60,13 @@ class M_Fertilizer
 
     public function updateFertilizer($id, $data)
     {
-        $sql = 'UPDATE Fertilizer SET fertilizer_name = :fertilizer_name, company_name = :company_name, details = :details, code = :code, price = :price, quantity = :quantity, unit = :unit, image_path = :image_path WHERE id = :id';
+        $sql = 'UPDATE Fertilizer SET fertilizer_name = :fertilizer_name, company_name = :company_name, details = :details, code = :code, price = :price, quantity = :quantity, unit = :unit';
+         
+        if (!empty($data['image_path'])) {
+            $sql .= ", image_path = :image_path";
+        }
+        $sql .= " WHERE id = :id";
+
 
         $this->db->query($sql);
         $this->db->bind(':id', $id);
@@ -71,8 +77,11 @@ class M_Fertilizer
         $this->db->bind(':price', $data['price']);
         $this->db->bind(':quantity', $data['quantity']);
         $this->db->bind(':unit', $data['unit']);
-        $this->db->bind(':image_path', $data['image_path']);
+        
 
+        if (!empty($data['image_path'])) {
+            $this->db->bind(':image_path', $data['image_path']);
+        }
         return $this->db->execute();
     }
 

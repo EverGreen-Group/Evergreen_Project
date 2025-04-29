@@ -377,7 +377,8 @@ class Inventory extends controller
                 }
             } else {
                 // Handle error: Fertilizer not found
-                setFlashMessage("Fertilizer not found");
+                setFlashMessage("Fertilizer not found","error");
+                redirect('Inventory/fertilizer');
             }
 
             $this->fertilizerOrderModel->updateFertilizerByStatus($us, 'Approved');
@@ -1084,7 +1085,7 @@ class Inventory extends controller
                 setFlashMessage('Fertilizer removal failed!', 'error');
             }
         }
-        redirect('inventory/fertilizerdashboard');
+        redirect('inventory/fertilizer');
     }
 
 
